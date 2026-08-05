@@ -78,15 +78,41 @@ function cmdSweep(nowIso) {
     const price = num(typeof q === 'object' ? q.price : q);
     const high = num(typeof q === 'object' ? (q.high ?? q.price) : q);
     const low = num(typeof q === 'object' ? (q.low ?? q.price) : q);
+    const open = num(typeof q === 'object' ? (q.open ?? null) : null);
     if (price == null) continue;
     // Niveaux ≤ 0 (ou NaN) = ABSENTS, pas des cibles/stop à prix 0 (sinon high>=0 déclenche tp2 à tort → R aberrant).
     const stopLvl = (s.stop != null && s.stop > 0) ? s.stop : null;
     const tp1Lvl = (s.tp1 != null && s.tp1 > 0) ? s.tp1 : null;
     const tp2Lvl = (s.tp2 != null && s.tp2 > 0) ? s.tp2 : null;
     const denom = (s.entry != null && stopLvl != null) ? (s.entry - stopLvl) : null;
-    const rOf = (exit) => (denom && denom !== 0) ? +(((exit - s.entry) / denom).toFixed(2)) : null;
+    const rOf = (exit) => (denom && denom !== 0) ? +(((exit - s.entry) / denom).toFixed(4)) : null;
+
+    // PORTE D'ENTRÉE. Sans elle, une ligne jamais déclenchée pouvait être enregistrée « stopped »
+    // (le stop se compare au bas de barre même si l'entrée n'a jamais été touchée) et le champ
+    // `triggered` restait faux sur TOUTE la base — 1 entrée sur 34 le portait, gagnants tp2 compris.
+    // Pour un long, l'entrée est servie dès que la barre CONTIENT le niveau : vrai pour une limite
+    // sur repli comme pour un ordre de cassure.
+    if (!s.triggered) {
+      const touche = s.entry != null && low != null && high != null && low <= s.entry && s.entry <= high;
+      if (!touche) {
+        // Pas encore en position : seule l'expiration de l'ordre peut la fermer, jamais un stop.
+        const ageOrdre = s.date ? Math.round((Date.parse(asof) - Date.parse(s.date)) / 86400000) : 0;
+        if (ageOrdre >= (s.maxHoldDays || DEFAULT_HOLD) * 1.4) { s.status = 'skipped'; s.closedDate = asof; updated++; }
+        continue;
+      }
+      s.triggered = true; s.triggeredDate = asof; s.status = 'open'; updated++;
+    }
+
     // stop d'abord (conservateur), puis cibles
-    if (stopLvl != null && low != null && low <= stopLvl) { s.status = 'stopped'; s.outcomeR = rOf(stopLvl); s.closedDate = asof; updated++; continue; }
+    if (stopLvl != null && low != null && low <= stopLvl) {
+      // Trou de cotation : si la barre OUVRE déjà sous le stop, le remplissage réel est l'ouverture,
+      // pas le niveau. Compter −1R dans ce cas idéalise la perte (cas TAK du 04/08 : ouverture 16,35
+      // pour un stop à 16,80, soit −1,56R et non −1R).
+      const fill = (open != null && open < stopLvl) ? open : stopLvl;
+      s.status = 'stopped'; s.outcomeR = rOf(fill); s.closedDate = asof;
+      if (fill !== stopLvl) s.gapThroughStop = { open, stop: stopLvl };
+      updated++; continue;
+    }
     if (tp2Lvl != null && high != null && high >= tp2Lvl) { s.status = 'tp2'; s.outcomeR = rOf(tp2Lvl); s.closedDate = asof; updated++; continue; }
     if (tp1Lvl != null && high != null && high >= tp1Lvl && s.status !== 'tp1') { s.status = 'tp1'; s.outcomeR = rOf(tp1Lvl); updated++; continue; }
     // expiration par horizon
