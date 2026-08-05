@@ -2,51 +2,173 @@
   "content": "scanner/20260805",
   "generated_at": "2026-08-04T23:35:00Z",
   "sources": [
-    { "name": "market_data_health", "as_of": "2026-08-04T23:12:00Z", "max_age_h": 6, "required": true,
-      "origin": "GetStatus — bar_service_1d_max_last_bar_date=2026-08-04, ref_lag_sessions=0, témoins SPY/QQQ/^VIX au 04/08" },
-    { "name": "regime_ensemble", "as_of": "2026-08-04T23:12:19Z", "max_age_h": 6, "required": true,
-      "origin": "GetMarketContext facets=regime model=ensemble horizon=5j (moteur context_conditional) — risk_on 0,562 / neutre 0,438 / ERO 0 / crise 0" },
-    { "name": "regime_switcher", "as_of": "2026-08-04T23:12:31Z", "max_age_h": 6, "required": true,
-      "origin": "RunAutoScreener metadata.regime_score=0,804 + 6 composantes de marché (crédit, DXY, liquidité, SPX, TLT, VIX)" },
-    { "name": "regime_shadow_systematic", "as_of": "2026-08-04T21:49:06Z", "max_age_h": 12, "required": true,
-      "origin": "GetHealth moteur systématique — regime_shadow RISK_ON 0,76 vs legacy RECOVERY 0,72, divergent=true, VIX 15,86" },
-    { "name": "us_close_indices", "as_of": "2026-08-04T23:31:47Z", "max_age_h": 24, "required": true,
-      "origin": "QueryData indices — S&P 7736,52 / Nasdaq 26584,99 / Russell 3036,98 / Dow 54085,88 + DXY, HYG, LQD, TLT, TIP, FTSE, DAX, CAC, Nikkei, Hang Seng, ASX" },
-    { "name": "vix_bars", "as_of": "2026-08-04T23:32:07Z", "max_age_h": 24, "required": true,
-      "origin": "QueryData bars_daily ^VIX — clôture 15,74 au 04/08, 18,21 au 28/07 (delta 5 séances = −2,47)" },
-    { "name": "screeners_universe", "as_of": "2026-08-04T23:12:38Z", "max_age_h": 24, "required": true,
-      "origin": "RunScreener ×4 DSL (Breakout US, Pullback US, Pre-Squeeze US, Europe) + RunScreener asset=etf + RunAutoScreener — 190 lignes sur clôtures du 04/08" },
-    { "name": "earnings_calendar", "as_of": "2026-08-04T23:12:52Z", "max_age_h": 24, "required": true,
-      "origin": "GetEarningsCalendarFiltered days_ahead=10 (36 événements) + QueryData calendar sur 51 candidats en 2 lots" },
-    { "name": "sec_filings_8k_screen", "as_of": "2026-08-04T23:20:13Z", "max_age_h": 168, "required": true,
-      "origin": "QueryData sec_filings form_types=8-K days=45 end_date=2026-08-04 sur les 6 valeurs à calendrier vide (Vague 1) — a écarté ANET, ET, MTCH, CRBG, VSAT sur dépôt item 2.02 du 04/08" },
-    { "name": "anti_dilution_filings", "as_of": "2026-08-04T23:23:48Z", "max_age_h": 168, "required": true,
-      "origin": "QueryData sec_filings form_types=S-3,S-3ASR,424B5,S-1 days=180 end_date=2026-08-04 sur les finalistes + BOX et WT en appoint" },
-    { "name": "technicals_finalists", "as_of": "2026-08-04T23:26:07Z", "max_age_h": 24, "required": true,
-      "origin": "QueryData technicals (RSI, ATR, MACD/signal, EMA20/50/200) sur 27 + 6 + 5 candidats ; GetInstruments instrument_technicals + support_resistance + vwap sur 5 finalistes" },
-    { "name": "quotes_bars_finalists", "as_of": "2026-08-04T23:32:51Z", "max_age_h": 24, "required": true,
-      "origin": "QueryData quote + bars_daily (limit=12) sur les 10 lignes retenues — clôtures du 04/08, sessions_complete=true" },
-    { "name": "flags_regulatory", "as_of": "2026-08-04T23:29:32Z", "max_age_h": 96, "required": true,
-      "origin": "QueryData flags sur les 10 lignes — zéro compliance_issue, zéro halt récent, aucune en top_ctb / most_shorted / ftd_threshold" },
-    { "name": "trading_signals_engine", "as_of": "2026-08-04T23:29:32Z", "max_age_h": 96, "required": true,
-      "origin": "QueryData trading_signals (moteur AmericanBulls) sur les 10 lignes — signal ITA de VENTE au 29/07 tracé comme réserve, non masqué" },
-    { "name": "correlation_matrix", "as_of": "2026-08-04T23:33:11Z", "max_age_h": 24, "required": true,
-      "origin": "PortfolioRisk action=correlation, 11 finalistes cotés US, 60 séances, pearson — max 0,661 (SAN/FER), moyenne hors diagonale 0,1345 ; passe antérieure a rejeté WBS/SAN à 0,968" },
-    { "name": "position_sizing", "as_of": "2026-08-04T23:29:11Z", "max_age_h": 24, "required": true,
-      "origin": "PortfolioRisk action=sizing mode=balanced — equal_weight 10%/ligne, vol attendue 17,98%, réserve de liquidité 0,54%" },
-    { "name": "prediction_markets", "as_of": "2026-08-04T23:12:19Z", "max_age_h": 24, "required": true,
-      "origin": "GetMarketContext facets=prediction_markets limit=12 (Polymarket) — Fed −25pb septembre à 1,45%, Ormuz normalisé au 31/08 à 15,5%, intervention Iran avant 2027 à 16,5%" },
-    { "name": "economic_events", "as_of": "2026-08-04T23:31:47Z", "max_age_h": 24, "required": true,
-      "origin": "QueryData economic_events days=10 — ISM services 05/08, emploi 07/08, prix à la consommation 12/08, prix à la production 13/08, ventes au détail 14/08" },
-    { "name": "financials_debt_ratios", "as_of": "2026-08-04T23:28:52Z", "max_age_h": 168, "required": true,
-      "origin": "QueryData financials sur 8 valeurs — ratios dette/capitalisation pour le classement de conformité (ILMN 8%, ST 40%, EL 30%, FER 21%, BOX 10%, TCOM trésorerie nette)" },
-    { "name": "dtx_engine_health", "as_of": "2026-08-04T21:48:57Z", "max_age_h": 12, "required": true,
-      "origin": "GetHealth moteur systématique — last_data_date=2026-08-04, freshness_sessions_behind=0, prefetch 6/6 réussis" },
-    { "name": "dtx_decide_6_modes", "as_of": "2026-08-04T23:18:00Z", "max_age_h": 12, "required": true,
-      "origin": "DtxDecide asof=2026-08-05 expected_data_date=2026-08-04 sur book_honest, ep, etf_us, hvep, stockbox_pit, us_highvol — sessions_behind=0 sur les 6" },
-    { "name": "dtx_replay_6_modes", "as_of": "2026-08-04T23:25:00Z", "max_age_h": 12, "required": true,
-      "origin": "DtxReplay from=2021-01-01 to=2026-08-05 sur les 6 configs — garde de cohérence des métriques verte (metricsSuspect=false) après ingestion" },
-    { "name": "dark_pool", "as_of": "2026-08-04T23:29:32Z", "max_age_h": 96, "required": false,
-      "origin": "QueryData dark_pool — retour vide côté serveur pour toutes les lignes (volume 0, date nulle) : donnée traitée comme absente, jamais estimée" }
+    {
+      "name": "market_data_health",
+      "as_of": "2026-08-04T23:12:00Z",
+      "max_age_h": 6,
+      "required": true,
+      "origin": "GetStatus — bar_service_1d_max_last_bar_date=2026-08-04, ref_lag_sessions=0, témoins SPY/QQQ/^VIX au 04/08"
+    },
+    {
+      "name": "regime_ensemble",
+      "as_of": "2026-08-04T23:12:19Z",
+      "max_age_h": 6,
+      "required": true,
+      "origin": "GetMarketContext facets=regime model=ensemble horizon=5j (moteur context_conditional) — risk_on 0,562 / neutre 0,438 / ERO 0 / crise 0"
+    },
+    {
+      "name": "regime_switcher",
+      "as_of": "2026-08-04T23:12:31Z",
+      "max_age_h": 6,
+      "required": true,
+      "origin": "RunAutoScreener metadata.regime_score=0,804 + 6 composantes de marché (crédit, DXY, liquidité, SPX, TLT, VIX)"
+    },
+    {
+      "name": "regime_shadow_systematic",
+      "as_of": "2026-08-04T21:49:06Z",
+      "max_age_h": 12,
+      "required": true,
+      "origin": "GetHealth moteur systématique — regime_shadow RISK_ON 0,76 vs legacy RECOVERY 0,72, divergent=true, VIX 15,86"
+    },
+    {
+      "name": "us_close_indices",
+      "as_of": "2026-08-04T23:31:47Z",
+      "max_age_h": 24,
+      "required": true,
+      "origin": "QueryData indices — S&P 7736,52 / Nasdaq 26584,99 / Russell 3036,98 / Dow 54085,88 + DXY, HYG, LQD, TLT, TIP, FTSE, DAX, CAC, Nikkei, Hang Seng, ASX"
+    },
+    {
+      "name": "vix_bars",
+      "as_of": "2026-08-04T23:32:07Z",
+      "max_age_h": 24,
+      "required": true,
+      "origin": "QueryData bars_daily ^VIX — clôture 15,74 au 04/08, 18,21 au 28/07 (delta 5 séances = −2,47)"
+    },
+    {
+      "name": "screeners_universe",
+      "as_of": "2026-08-04T23:12:38Z",
+      "max_age_h": 24,
+      "required": true,
+      "origin": "RunScreener ×4 DSL (Breakout US, Pullback US, Pre-Squeeze US, Europe) + RunScreener asset=etf + RunAutoScreener — 190 lignes sur clôtures du 04/08"
+    },
+    {
+      "name": "earnings_calendar",
+      "as_of": "2026-08-04T23:12:52Z",
+      "max_age_h": 24,
+      "required": true,
+      "origin": "GetEarningsCalendarFiltered days_ahead=10 (36 événements) + QueryData calendar sur 51 candidats en 2 lots"
+    },
+    {
+      "name": "sec_filings_8k_screen",
+      "as_of": "2026-08-04T23:20:13Z",
+      "max_age_h": 168,
+      "required": true,
+      "origin": "QueryData sec_filings form_types=8-K days=45 end_date=2026-08-04 sur les 6 valeurs à calendrier vide (Vague 1) — a écarté ANET, ET, MTCH, CRBG, VSAT sur dépôt item 2.02 du 04/08"
+    },
+    {
+      "name": "anti_dilution_filings",
+      "as_of": "2026-08-04T23:23:48Z",
+      "max_age_h": 168,
+      "required": true,
+      "origin": "QueryData sec_filings form_types=S-3,S-3ASR,424B5,S-1 days=180 end_date=2026-08-04 sur les finalistes + BOX et WT en appoint"
+    },
+    {
+      "name": "technicals_finalists",
+      "as_of": "2026-08-04T23:26:07Z",
+      "max_age_h": 24,
+      "required": true,
+      "origin": "QueryData technicals (RSI, ATR, MACD/signal, EMA20/50/200) sur 27 + 6 + 5 candidats ; GetInstruments instrument_technicals + support_resistance + vwap sur 5 finalistes"
+    },
+    {
+      "name": "quotes_bars_finalists",
+      "as_of": "2026-08-04T23:32:51Z",
+      "max_age_h": 24,
+      "required": true,
+      "origin": "QueryData quote + bars_daily (limit=12) sur les 10 lignes retenues — clôtures du 04/08, sessions_complete=true"
+    },
+    {
+      "name": "flags_regulatory",
+      "as_of": "2026-08-04T23:29:32Z",
+      "max_age_h": 96,
+      "required": true,
+      "origin": "QueryData flags sur les 10 lignes — zéro compliance_issue, zéro halt récent, aucune en top_ctb / most_shorted / ftd_threshold"
+    },
+    {
+      "name": "trading_signals_engine",
+      "as_of": "2026-08-04T23:29:32Z",
+      "max_age_h": 96,
+      "required": true,
+      "origin": "QueryData trading_signals (moteur AmericanBulls) sur les 10 lignes — signal ITA de VENTE au 29/07 tracé comme réserve, non masqué"
+    },
+    {
+      "name": "correlation_matrix",
+      "as_of": "2026-08-04T23:33:11Z",
+      "max_age_h": 24,
+      "required": true,
+      "origin": "PortfolioRisk action=correlation, 11 finalistes cotés US, 60 séances, pearson — max 0,661 (SAN/FER), moyenne hors diagonale 0,1345 ; passe antérieure a rejeté WBS/SAN à 0,968"
+    },
+    {
+      "name": "position_sizing",
+      "as_of": "2026-08-04T23:29:11Z",
+      "max_age_h": 24,
+      "required": true,
+      "origin": "PortfolioRisk action=sizing mode=balanced — equal_weight 10%/ligne, vol attendue 17,98%, réserve de liquidité 0,54%"
+    },
+    {
+      "name": "prediction_markets",
+      "as_of": "2026-08-04T23:12:19Z",
+      "max_age_h": 24,
+      "required": true,
+      "origin": "GetMarketContext facets=prediction_markets limit=12 (Polymarket) — Fed −25pb septembre à 1,45% et −50pb ou plus à 0,95% ; trafic normal dans le détroit d'Ormuz au 15/08 à 2,85% et au 31/08 à 15,5% ; intervention américaine en Iran avant 2027 à 16,5% sur 56 M$ de volume"
+    },
+    {
+      "name": "economic_events",
+      "as_of": "2026-08-04T23:31:47Z",
+      "max_age_h": 24,
+      "required": true,
+      "origin": "QueryData economic_events days=10 — ISM services 05/08, emploi 07/08, prix à la consommation 12/08, prix à la production 13/08, ventes au détail 14/08"
+    },
+    {
+      "name": "financials_debt_ratios",
+      "as_of": "2026-08-04T23:28:52Z",
+      "max_age_h": 168,
+      "required": true,
+      "origin": "QueryData financials sur 8 valeurs (ratios dette/capitalisation, marges, croissance du bénéfice, objectif consensuel des analystes) + QueryData quote (multiple de résultats prévisionnel et historique, rendement du dividende, plus haut et plus bas de 52 semaines, moyennes mobiles simples 50 et 200 jours). Trésorerie et dette de Trip.com libellées en YUAN (81,0 Md de liquidités contre 31,4 Md de dette), capitalisation en dollars — ne pas comparer les deux directement"
+    },
+    {
+      "name": "dtx_engine_health",
+      "as_of": "2026-08-04T21:48:57Z",
+      "max_age_h": 12,
+      "required": true,
+      "origin": "GetHealth moteur systématique — last_data_date=2026-08-04, freshness_sessions_behind=0, prefetch 6/6 réussis"
+    },
+    {
+      "name": "dtx_decide_6_modes",
+      "as_of": "2026-08-04T23:18:00Z",
+      "max_age_h": 12,
+      "required": true,
+      "origin": "DtxDecide asof=2026-08-05 expected_data_date=2026-08-04 sur book_honest, ep, etf_us, hvep, stockbox_pit, us_highvol — sessions_behind=0 sur les 6"
+    },
+    {
+      "name": "dtx_replay_6_modes",
+      "as_of": "2026-08-04T23:25:00Z",
+      "max_age_h": 12,
+      "required": true,
+      "origin": "DtxReplay from=2021-01-01 to=2026-08-05 sur les 6 configs — garde de cohérence des métriques verte (metricsSuspect=false) après ingestion"
+    },
+    {
+      "name": "dark_pool",
+      "as_of": "2026-08-04T23:29:32Z",
+      "max_age_h": 96,
+      "required": false,
+      "origin": "QueryData dark_pool — retour vide côté serveur pour toutes les lignes (volume 0, date nulle) : donnée traitée comme absente, jamais estimée"
+    },
+    {
+      "name": "factor_review_correlations",
+      "as_of": "2026-08-05T00:05:00Z",
+      "max_age_h": 24,
+      "required": false,
+      "origin": "PortfolioRisk action=correlation, mesures de la revue de risque (panel Phase 6) : régression du panier contre un panier de financières européennes et contre les obligations longues, analyse en composantes principales de la matrice 10x10. Reproduit à l'identique les paires déjà mesurées en Phase 2 (Santander/Ferrovial 0,66101, Webster/Santander 0,96804, Box/Sensata −0,42518), ce qui valide la méthode"
+    }
   ]
 }

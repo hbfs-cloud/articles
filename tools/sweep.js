@@ -953,7 +953,9 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   // 2R synthétique), appliquer ce gate aux spécialistes exclurait ~68% de leurs
   // trades du sim et casserait la parité Go.
   const RR_GATE_STRATEGIES = new Set(['momentum', 'breakout', 'pullback', 'pre_squeeze', 'hybrid_megacap']);
-  const rrStratKey = (setup.strategy || '').toLowerCase().replace(/[^a-z_]/g, '');
+  // Normaliser tirets/espaces AVANT le nettoyage : « Pre-Squeeze » donnait « presqueeze »,
+  // absent du set, donc toute ligne Pre-Squeeze CONTOURNAIT silencieusement le plancher R/R.
+  const rrStratKey = (setup.strategy || '').toLowerCase().replace(/[\s-]+/g, '_').replace(/[^a-z_]/g, '');
   const rrRatio = (setup.tp1 - setup.entry) / originalRisk;
   if ((!rrStratKey || RR_GATE_STRATEGIES.has(rrStratKey)) && rrRatio < 1.5) return null;
 

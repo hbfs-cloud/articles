@@ -4066,3 +4066,42 @@ a.related-card:hover {
 @media (max-width: 640px) {
     .breadcrumb { padding: 0.4rem 1rem; font-size: 0.73rem; }
 }
+
+
+/* ── Correctifs panel UX (scan 20260805) ───────────────────────────────────── */
+
+/* Le FAB était à z-index:200 sous la barre de nav basse mobile (z-index:1000) :
+   sur mobile, plus AUCUNE navigation intra-page n'était atteignable. */
+.fnav { z-index: 1200; }
+@media (max-width: 768px) {
+  .fnav { bottom: calc(56px + 1rem); }
+}
+
+/* Cibles tactiles des dépliants de setup : 15px mesurés, seuil WCAG 2.5.8 = 24px,
+   confort tactile = 44px. */
+.setup-civ-details summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.setup-civ-details summary:focus-visible {
+  outline: 2px solid var(--accent, #50b4ee);
+  outline-offset: 2px;
+}
+
+/* Impact événementiel élevé : ambre, jamais vert (le vert = gain partout ailleurs). */
+.data-table td.warn-cell, td.warn-cell { color: #b45309; font-weight: 700; }
+
+/* Aucune règle de mouvement réduit n'existait dans la feuille. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .ticker-metric:hover, .fnav-btn:hover { transform: none !important; }
+}

@@ -112,6 +112,16 @@ function guardDataQuality(data, strict) {
 
 guardDataQuality(d, STRICT);
 
+/** Plancher R/R RÉELLEMENT publié sur ce scan, mesuré au HAUT de zone (pire remplissage).
+ *  Remplace un « 1:1.3 » qui était codé en dur et contredisait le plancher de régime. */
+const minRR = (() => {
+  const rs = (d.setups || [])
+    .map(s => (typeof s.entry_high === 'number' && typeof s.stop === 'number' && typeof s.tp1 === 'number' && s.entry_high > s.stop)
+      ? (s.tp1 - s.entry_high) / (s.entry_high - s.stop) : null)
+    .filter(x => x != null && Number.isFinite(x));
+  return rs.length ? Math.min(...rs).toFixed(2) : '1.5';
+})();
+
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 /** Escape for HTML attribute values (id, data-*, src, href) */
@@ -180,7 +190,7 @@ function regimeBadgeColor(regime) {
 /** Format price display (number → string with $) */
 function fmtPrice(v) {
   if (v == null) return '';
-  return '$' + Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return '$' + Number(v).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 /** Format change_pct with sign and color class */
@@ -196,13 +206,13 @@ function fmtChangePct(pct) {
 function regimeGaugeConfig(score) {
   // Convert 0-1 score to 0-100 for display; determine progress color
   const v = typeof score === 'number' && score <= 1 ? Math.round(score * 100) : score;
-  const pColor = v <= 30 ? '#22c55e' : v <= 50 ? '#f59e0b' : v <= 70 ? '#f97316' : '#ef4444';
+  const pColor = v <= 30 ? 'var(--pos)' : v <= 50 ? '#f59e0b' : v <= 70 ? '#f97316' : '#ef4444';
   return JSON.stringify({
     series: [{
       type: 'gauge', startAngle: 200, endAngle: -20, min: 0, max: 100,
       progress: { show: true, width: 18, itemStyle: { color: pColor } },
       pointer: { show: true, length: '60%', width: 6 },
-      axisLine: { lineStyle: { width: 18, color: [[0.3,'#ef4444'],[0.5,'#f59e0b'],[0.7,'#22c55e'],[1,'#3b82f6']] } },
+      axisLine: { lineStyle: { width: 18, color: [[0.3,'#ef4444'],[0.5,'#f59e0b'],[0.7,'var(--pos)'],[1,'#3b82f6']] } },
       axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
       detail: { valueAnimation: true, formatter: '{value}', fontSize: 28, fontWeight: 800, offsetCenter: [0,'70%'] },
       data: [{ value: v, name: 'Regime Score' }]
@@ -212,7 +222,7 @@ function regimeGaugeConfig(score) {
 
 // ─── STRATEGY PIE CHART ──────────────────────────────────────────────────────
 
-const PIE_COLORS = { Momentum: '#22c55e', Breakout: '#3b82f6', Pullback: '#f59e0b', 'Pre-Squeeze': '#8b5cf6' };
+const PIE_COLORS = { Momentum: 'var(--pos)', Breakout: '#3b82f6', Pullback: '#f59e0b', 'Pre-Squeeze': '#8b5cf6' };
 
 function strategyPieConfig(weights) {
   const data = Object.entries(weights).map(([name, value]) => ({
@@ -279,7 +289,7 @@ function scoreBarConfig(setups) {
   // Horizontal bar (like 20260415 reference) with per-ticker colors
   const sorted = [...setups].sort((a, b) => a.score - b.score); // ascending for horizontal
   const data = sorted.map(s => {
-    const color = (s.logo_gradient && s.logo_gradient[0]) || (s.score >= 90 ? '#22c55e' : s.score >= 87 ? '#3b82f6' : '#f59e0b');
+    const color = (s.logo_gradient && s.logo_gradient[0]) || (s.score >= 90 ? 'var(--pos)' : s.score >= 87 ? '#3b82f6' : '#f59e0b');
     return { value: s.score, itemStyle: { color } };
   });
   return JSON.stringify({
@@ -306,7 +316,7 @@ function correlationHeatmapConfig(pairs, tickers) {
       data.push([j, i, +val.toFixed(2)]);
     }
   }
-  return `{tooltip:{position:'top',formatter:function(p){return p.name+': \\u03C1 = '+p.data[2]}},grid:{left:'15%',right:'5%',top:'5%',bottom:'15%'},xAxis:{type:'category',data:${JSON.stringify(tickers)},axisLabel:{fontSize:11,fontWeight:700},splitArea:{show:true}},yAxis:{type:'category',data:${JSON.stringify(tickers)},axisLabel:{fontSize:11,fontWeight:700},splitArea:{show:true}},visualMap:{min:-1,max:1,calculable:true,orient:'horizontal',left:'center',bottom:0,inRange:{color:['#ef4444','#fbbf24','#f8fafc','#86efac','#22c55e']}},series:[{type:'heatmap',data:${JSON.stringify(data)},label:{show:true,fontSize:10},emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.5)'}}}]}`;
+  return `{tooltip:{position:'top',formatter:function(p){return p.name+': \\u03C1 = '+p.data[2]}},grid:{left:'15%',right:'5%',top:'5%',bottom:'15%'},xAxis:{type:'category',data:${JSON.stringify(tickers)},axisLabel:{fontSize:11,fontWeight:700},splitArea:{show:true}},yAxis:{type:'category',data:${JSON.stringify(tickers)},axisLabel:{fontSize:11,fontWeight:700},splitArea:{show:true}},visualMap:{min:-1,max:1,calculable:true,orient:'horizontal',left:'center',bottom:0,inRange:{color:['#ef4444','#fbbf24','#f8fafc','#86efac','var(--pos)']}},series:[{type:'heatmap',data:${JSON.stringify(data)},label:{show:true,fontSize:10},emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.5)'}}}]}`;
 }
 
 // ─── SANKEY CHART (Sector → Strategy → Ticker) ─────────────────────────────
@@ -324,7 +334,7 @@ function sankeyConfig(setups) {
     const k2 = `${strategy}→${ticker}`;
     linkMap[k2] = (linkMap[k2] || 0) + 1;
   });
-  const STRAT_COLORS = { 'strat:Momentum': '#22c55e', 'strat:Breakout': '#3b82f6', 'strat:Pullback': '#f59e0b', 'strat:Pre-Squeeze': '#8b5cf6' };
+  const STRAT_COLORS = { 'strat:Momentum': 'var(--pos)', 'strat:Breakout': '#3b82f6', 'strat:Pullback': '#f59e0b', 'strat:Pre-Squeeze': '#8b5cf6' };
   const nodeArr = [...nodes].map(n => ({ name: n, itemStyle: { color: STRAT_COLORS[n] || '#64748b' } }));
   const links = Object.entries(linkMap).map(([k, v]) => {
     const [src, tgt] = k.split('→');
@@ -342,7 +352,7 @@ function setupGaugeConfig(score, tickerColor) {
       type: 'gauge', startAngle: 200, endAngle: -20, min: 0, max: 100,
       progress: { show: true, width: 14, itemStyle: { color: pColor } },
       pointer: { show: true, length: '55%', width: 5 },
-      axisLine: { lineStyle: { width: 14, color: [[0.6,'#e2e8f0'],[0.85,'#fbbf24'],[1,'#22c55e']] } },
+      axisLine: { lineStyle: { width: 14, color: [[0.6,'#e2e8f0'],[0.85,'#fbbf24'],[1,'var(--pos)']] } },
       axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
       detail: { valueAnimation: true, formatter: '{value}', fontSize: 24, fontWeight: 800, offsetCenter: [0,'70%'] },
       data: [{ value: score, name: 'Score' }]
@@ -541,8 +551,9 @@ function macroCalendarTable(rows) {
   if (!Array.isArray(rows) || !rows.length) return '';
   const trs = rows.map(r => {
     const dirClass = r.dir === 'up' ? 'up' : r.dir === 'down' ? 'down' : '';
-    const impactClass = (r.impact || '').toUpperCase().includes('HIGH') ? 'up' : '';
-    return `            <tr><td><strong>${esc(r.date)}</strong></td><td>${esc(r.event)}</td><td class="${impactClass}"><strong>${esc(r.impact || '')}</strong></td><td>${esc(r.note || '')}</td></tr>`;
+    const impact = r.impact ?? r.importance ?? '';
+    const impactClass = /HIGH|\u00C9LEV|ELEV/i.test(impact) ? 'warn-cell' : '';
+    return `            <tr><td><strong>${esc(r.date)}</strong></td><td>${esc(r.event)}</td><td class="${impactClass}"><strong>${esc(impact)}</strong></td><td>${esc(r.note ?? r.risk ?? '')}</td></tr>`;
   });
   return `        <div style="overflow-x:auto"><table class="data-table">
           <thead><tr><th>Date</th><th>&Eacute;v&eacute;nement</th><th>Impact</th><th>Sens du risque</th></tr></thead>
@@ -550,13 +561,25 @@ function macroCalendarTable(rows) {
         </table></div>`;
 }
 
-// ─── SECTOR ROTATION TABLE ───────────────────────────────────────────────────
+/** Direction d'une ligne de tableau : `dir`/`trend` explicite, sinon dérivée du SIGNE de la
+ *  variation. Sans cela une variation positive tombait dans le `else` et s'affichait en rouge
+ *  (bug de contrat de champs, scans <= 20260804). */
+function rowDir(r) {
+  const d = r.dir || r.trend;
+  if (d === 'up' || d === 'down') return d;
+  const raw = String(r.change ?? r.perf ?? '').trim();
+  if (/^[-\u2212\u2013\u2014]/.test(raw)) return 'down';
+  if (/^\+/.test(raw) || /^[0-9]/.test(raw)) return 'up';
+  return '';
+}
+
+// ─── SECTOR ROTATION TABLE ───
 
 function sectorRotationTable(rows) {
   if (!Array.isArray(rows) || !rows.length) return '';
   const trs = rows.map(r => {
-    const dirClass = r.dir === 'up' ? 'up' : r.dir === 'down' ? 'down' : '';
-    return `            <tr><td>${esc(r.sector)}</td><td class="${dirClass}">${esc(r.perf)}</td><td>${esc(r.signal)}</td><td><strong>${esc(r.exposure)}</strong></td></tr>`;
+    const dirClass = rowDir(r);
+    return `            <tr><td>${esc(r.sector)}</td><td class="${dirClass}">${esc(r.perf)}</td><td>${esc(r.signal ?? r.note ?? '')}</td><td><strong>${esc(r.exposure ?? '')}</strong></td></tr>`;
   });
   return `        <div style="overflow-x:auto"><table class="data-table">
           <thead><tr><th>Secteur (ETF)</th><th>Perf. s&eacute;ance</th><th>Signal de r&eacute;gime</th><th>Exposition du scan</th></tr></thead>
@@ -576,7 +599,7 @@ function num(v) {
   if (v == null || v === '') return '—';
   const n = Number(v);
   if (!isFinite(n)) return '—';
-  return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  return n.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
 }
 
 /** Trim a truncated string back to the last safe boundary before the unmatched "(" cut */
@@ -614,7 +637,9 @@ function confirmInvalidDetails(s) {
   const invalidItems = (s.invalidations || []).map(c => `<li>${esc(c)}</li>`).join('');
   if (!confirmItems && !invalidItems) return '';
   return `        <details class="setup-civ-details" style="margin:.2rem 0 .6rem;">
-          <summary style="cursor:pointer;font-size:.82rem;font-weight:600;color:#334155;">${esc(s.ticker)} — Confirmations / Invalidations</summary>
+          <summary style="cursor:pointer;font-size:.82rem;font-weight:600;color:#334155;">${esc(s.ticker)} — Thèse, confirmations et invalidations${s.score ? ` · score ${esc(s.score)}/100` : ''}${s.horizon_days ? ` · ${esc(s.horizon_days)} séances` : ''}</summary>
+${s.thesis ? `          <p style="margin:.5rem 0 .2rem;font-size:.85rem;line-height:1.5;">${esc(s.thesis)}</p>` : ''}
+${s.tp2 ? `          <p style="margin:.2rem 0 .5rem;font-size:.8rem;color:#475569;">Deuxième objectif : ${esc(num(s.tp2))} · Horizon : ${esc(s.horizon_days || 10)} séances</p>` : ''}
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.6rem;margin-top:.5rem;">
 ${confirmItems ? `            <div class="confirm-box" style="margin:0;"><h4>&#x2705; Confirmations</h4><ul style="margin:0;padding-left:1.1rem;font-size:.82rem;">${confirmItems}</ul></div>` : ''}
 ${invalidItems ? `            <div class="invalid-box" style="margin:0;"><h4>&#x274C; Invalidations</h4><ul style="margin:0;padding-left:1.1rem;font-size:.82rem;">${invalidItems}</ul></div>` : ''}
@@ -629,9 +654,9 @@ function strategyTable(title, subtitle, rows) {
     const entry = s.entry_low ?? s.entry_high ?? s.entry ?? '';
     const tp = s.tp1 ?? s.tp2 ?? '';
     const shariaBadge = s.sharia === true
-      ? ' <span class="badge badge-green" style="font-size:.6rem">&#x262A;</span>'
+      ? ' <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span>'
       : s.sharia === false
-        ? ' <span class="badge" style="background:#94a3b8;color:#fff;font-size:.6rem">CONV</span>'
+        ? ' <span class="badge" style="background:#e2e8f0;color:#334155;border:1px solid #94a3b8;font-size:.68rem">CONV</span>'
         : '';
     return `        <tr data-ticker="${escAttr(s.ticker)}" data-sharia="${s.sharia === true ? 'true' : s.sharia === false ? 'false' : ''}" data-entry="${entry || 0}" data-stop="${s.stop || 0}" data-tp1="${s.tp1 || 0}" data-tp2="${s.tp2 || 0}">`
       + `<td><strong>${esc(s.ticker)}</strong>${shariaBadge}</td>`
@@ -668,8 +693,8 @@ function buildPage(d) {
   // (dérivé VIX/S&P). On ne ré-ajuste QUE si le score est clairement sur l'échelle 0-100.
   const scoreOn100 = (typeof d.regime_score === 'number' && d.regime_score >= 38 && d.regime_score <= 100);
   const regime = scoreOn100 ? adjustRegimeLabel(rawRegime, d.regime_score) : rawRegime;
-  const REGIME_COLORS = { 'RISK-ON': '#16a34a', 'RECOVERY': '#3b82f6', 'NEUTRAL': '#94a3b8', 'EARLY RISK-OFF': '#f59e0b', 'RISK-OFF': '#ef4444' };
-  const regColor = REGIME_COLORS[regime] || d.regime_color || '#16a34a';
+  const REGIME_COLORS = { 'RISK-ON': 'var(--pos)', 'RECOVERY': '#3b82f6', 'NEUTRAL': '#94a3b8', 'EARLY RISK-OFF': '#f59e0b', 'RISK-OFF': '#ef4444' };
+  const regColor = REGIME_COLORS[regime] || d.regime_color || 'var(--pos)';
 
   // ── Group setups by strategy (compact tables — no per-card charts) ──────────
   const PATTERN_ORDER = ['Momentum', 'Breakout', 'Pullback', 'Combiné'];
@@ -692,9 +717,9 @@ function buildPage(d) {
   // ── KPI boxes ──────────────────────────────────────────────────────────────
   const dominantStr = (d.kpis && d.kpis.dominant_patterns || []).join(' + ');
   const vixVal   = (d.kpis && d.kpis.vix)  ? `${d.kpis.vix.value} (${d.kpis.vix.label})` : '';
-  const vixColor = (d.kpis && d.kpis.vix && d.kpis.vix.color) || '#22c55e';
+  const vixColor = (d.kpis && d.kpis.vix && d.kpis.vix.color) || 'var(--pos)';
   const spxVal   = (d.kpis && d.kpis.spx)  ? `${d.kpis.spx.value}` : '';
-  const spxColor = (d.kpis && d.kpis.spx && d.kpis.spx.color) || '#22c55e';
+  const spxColor = (d.kpis && d.kpis.spx && d.kpis.spx.color) || 'var(--pos)';
   const avgScore = (d.kpis && d.kpis.avg_score) || (setups.reduce((a, s) => a + s.score, 0) / (setups.length || 1)).toFixed(1);
 
   // ── Hero badges ────────────────────────────────────────────────────────────
@@ -798,12 +823,12 @@ ${alertsHtml(d.alerts)}
 <section id="regime" class="section-block">
   <div class="section-header"><h2><i class="fas fa-gauge"></i> Régime de marché : ${regime} (confiance ${d.regime_score ? String((d.regime_score * 100).toFixed(1)).replace('.', ',') + '%' : 'n/a'})</h2></div>
   <div class="content-card">
-    <p>${d.regime_prose || ''}</p>
+    <p>${''}</p>
     <h3 style="margin:1.25rem 0 0.6rem;font-weight:700;">Market Snapshot (${d.session_label || d.date})</h3>
     <div style="overflow-x:auto"><table class="data-table">
       <thead><tr><th>Indice / Actif</th><th>Prix</th><th>Variation</th><th>Signal</th></tr></thead>
       <tbody>
-${(d.market_snapshot || []).map(r => `        <tr><td><strong>${esc(r.name)}</strong></td><td>${esc(r.price)}</td><td class="${r.dir === 'up' ? 'up' : 'down'}">${esc(r.change)}</td><td>${esc(r.signal)}</td></tr>`).join('\n')}
+${(d.market_snapshot || []).map(r => `        <tr><td><strong>${esc(r.name ?? r.label)}</strong></td><td>${esc(r.price ?? r.value)}</td><td class="${rowDir(r)}">${esc(r.change)}</td><td>${esc(r.signal ?? r.note)}</td></tr>`).join('\n')}
       </tbody>
     </table></div>
     ${d.pedagogy ? `<div class="pedagogy-box">
@@ -842,7 +867,7 @@ ${sectorRotationTable(d.sector_rotation)}
 ${strategyTablesHtml}
     <div class="pedagogy-box">
       <h4><i class="fas fa-info-circle"></i> Comment utiliser ces niveaux</h4>
-      <p>Entrée = zone d'exécution à l'ouverture (9h30–9h45 ET) si le prix s'y trouve. Le stop est un ordre dur, pas mental. TP = objectif principal : prendre 50% à l'objectif, remonter le stop au point mort, laisser courir le reste. Le R/R suppose une entrée au niveau indiqué. R/R minimum retenu : 1:1.3.</p>
+      <p>Entrée = zone d'exécution à l'ouverture (9h30–9h45 ET) si le prix s'y trouve. Le stop est un ordre dur, pas mental. TP = objectif principal : prendre 50% à l'objectif, remonter le stop au point mort, laisser courir le reste. Le R/R publié suppose une entrée au HAUT de la zone, c'est-à-dire au pire remplissage possible. R/R minimum retenu sur ce scan : 1:${minRR}.</p>
     </div>
   </div>
 </section>
@@ -869,7 +894,7 @@ ${strategyTablesHtml}
     </div>
     <div class="pedagogy-box">
       <h4>5. Anti-dilution &amp; ranking</h4>
-      <p>Vérification SEC (pas de S-3 récent, ATM, PIPE, underwriter agressif). Diversification secteur/géographie. R/R minimum 1:1.3. Conformité Sharia taggée sur chaque ligne.</p>
+      <p>Vérification SEC (pas de S-3 récent, ATM, PIPE, underwriter agressif). Diversification secteur/géographie. R/R minimum 1:${minRR}, mesuré au haut de la zone d'entrée. Conformité Sharia taggée sur chaque ligne.</p>
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:1rem;">
       <h4 style="margin:0 0 0.5rem;">Sources de données</h4>
@@ -903,7 +928,7 @@ ${strategyTablesHtml}
     <a href="#synthese" class="fnav-item" data-section="synthese"><i class="fas fa-table-list"></i><span>Signaux</span></a>
     <a href="#methodo" class="fnav-item" data-section="methodo"><i class="fas fa-flask"></i><span>Méthodologie</span></a>
     <a href="#disclaimer" class="fnav-item" data-section="disclaimer"><i class="fas fa-triangle-exclamation"></i><span>Disclaimer</span></a>
-    <a href="#regime" class="fnav-item" data-section="top"><i class="fas fa-arrow-up"></i><span>Haut</span></a>
+    <a href="#" class="fnav-item"><i class="fas fa-arrow-up"></i><span>Haut</span></a>
   </div>
   <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
     <i class="fas fa-bars" id="fnavIcon"></i>

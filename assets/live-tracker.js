@@ -466,7 +466,17 @@
     } else {
       // Fallback: after the first heading
       var h = setup.card.querySelector('h3, h4, .setup-ticker');
-      if (h) h.parentElement.appendChild(badge);
+      if (h) {
+        h.parentElement.appendChild(badge);
+      } else if (setup.card && setup.card.tagName === 'TD') {
+        // Format compact (tableau) : la cellule ne contient qu'un <strong>, aucun titre.
+        // Sans ce repli, injectBadge sortait sans rien faire : la page interrogeait
+        // dix cotations pour n'afficher aucun prix, tout en publiant une legende
+        // expliquant un code couleur absent.
+        badge.style.display = 'block';
+        badge.style.marginTop = '.25rem';
+        setup.card.appendChild(badge);
+      }
     }
 
     // Apply card-level visual effects
