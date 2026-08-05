@@ -1,0 +1,30 @@
+{
+  "content": "scanner/20260806",
+  "generated_at": "2026-08-05T22:00:00Z",
+  "sources": [
+    { "name": "market_data_health", "as_of": "2026-08-05T21:43:40Z", "max_age_h": 6, "required": true,
+      "origin": "GetStatus — bar_service_1d_max_last_bar_date=2026-08-05, ref_lag_sessions=0, témoins SPY/QQQ/^VIX au 05/08, statut ready sur 22 782 symboles" },
+    { "name": "regime_ensemble", "as_of": "2026-08-05T21:44:11Z", "max_age_h": 6, "required": true,
+      "origin": "GetMarketContext facets=regime model=ensemble horizon=5j (moteur context_conditional) — risk_on 0,5792 / neutre 0,4208 / ERO 0 / crise 0 ; transition 5j : 0,489 / 0,270 / 0,165 / 0,077" },
+    { "name": "regime_switcher", "as_of": "2026-08-05T21:44:20Z", "max_age_h": 6, "required": true,
+      "origin": "RunAutoScreener metadata.regime_score=0,8062 + 6 composantes de marché (crédit 1,0, DXY 1,0, liquidité 0,50, SPX 0,766, TLT 0,50, VIX 0,805)" },
+    { "name": "prediction_markets", "as_of": "2026-08-05T21:44:11Z", "max_age_h": 24, "required": false,
+      "origin": "GetMarketContext facets=prediction_markets — Fed septembre : statu quo 52,5% / +25 pb 44,5% ; Ormuz normalisé au 31/08 : 14,5%" },
+    { "name": "us_close_indices", "as_of": "2026-08-05T21:54:09Z", "max_age_h": 24, "required": true,
+      "origin": "QueryData indices — S&P 7723,55 (−0,17%) / Nasdaq 26363,44 (−0,83%) / Dow 54349,12 (+0,49%) / Russell 3019,19 (−0,59%) + DXY, HYG, LQD, TLT, TIP, FTSE, DAX, CAC, Nikkei, Hang Seng, ASX" },
+    { "name": "vix_bars", "as_of": "2026-08-05T21:50:30Z", "max_age_h": 24, "required": true,
+      "origin": "QueryData bars_daily ^VIX 8 séances — 15,95 au 05/08 contre 20,66 au 29/07, soit −4,71 points sur 5 séances" },
+    { "name": "screeners", "as_of": "2026-08-05T21:44:26Z", "max_age_h": 24, "required": true,
+      "origin": "RunAutoScreener US (40) + RunScreener Momentum US (30) + Breakout US (30) + ETF (30) + Europe (30) — 190 lignes brutes, 105 candidats uniques" },
+    { "name": "earnings_screen_8k", "as_of": "2026-08-05T21:46:00Z", "max_age_h": 24, "required": true,
+      "origin": "QueryData sec_filings form_types=8-K days=21 sur les 105 candidats (4 lots) + GetEarningsCalendarFiltered days_ahead=10 sur 73 valeurs — 23 exclusions" },
+    { "name": "anti_dilution", "as_of": "2026-08-05T21:48:20Z", "max_age_h": 168, "required": true,
+      "origin": "QueryData sec_filings form_types=S-3,424B5,S-1,S-3ASR days=180 + flags sur 12 candidats — aucun programme d'émission au fil de l'eau, drapeaux tous négatifs" },
+    { "name": "technicals_quotes", "as_of": "2026-08-05T21:52:55Z", "max_age_h": 24, "required": true,
+      "origin": "QueryData technicals+quote sur les 10 lignes retenues — RSI, ATR, EMA 20/50/200, clôtures du 05/08 20:00Z" },
+    { "name": "insider_options", "as_of": "2026-08-05T21:50:39Z", "max_age_h": 96, "required": false,
+      "origin": "QueryData insider_transactions+unusual_options 90j sur les 10 lignes — flux calls LUV 8,9× (strike 49,5), puts XLV 17× (strike 163) ; dark_pool INDISPONIBLE côté fournisseur, non substitué" },
+    { "name": "risk_gating", "as_of": "2026-08-05T21:54:36Z", "max_age_h": 6, "required": true,
+      "origin": "PortfolioRisk correlation (60j, 57 obs, max PHM/LUV 0,663, moyenne hors diagonale 0,157) + sizing balanced (vol 12,04%, corrélation max 0,571)" }
+  ]
+}
