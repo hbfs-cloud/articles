@@ -225,7 +225,7 @@ if (tab === 'analyses') {
         if (ogPublishedTime) {
             const d = new Date(ogPublishedTime.getAttribute('content'));
             if (!isNaN(d)) {
-                const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+                const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
                 date = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
             }
         }
@@ -238,7 +238,7 @@ if (tab === 'analyses') {
             const ds = folderMatch[1];
             const d = new Date(`${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}`);
             if (!isNaN(d)) {
-                const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+                const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
                 date = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
             }
         }
@@ -247,7 +247,7 @@ if (tab === 'analyses') {
     // 4. Last fallback: today's date
     if (!date) {
         const now = new Date();
-        const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+        const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
         date = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
     }
 }
@@ -278,7 +278,7 @@ if (tab === 'daily' || tab === 'weekly' || tab === 'scanner') {
                 const ds = folderMatch[1];
                 const d = new Date(`${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}`);
                 if (!isNaN(d)) {
-                    const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+                    const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
                     date = `Semaine du ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
                 }
             }
@@ -301,7 +301,7 @@ if (tab === 'daily' || tab === 'weekly' || tab === 'scanner') {
                 const ds = folderMatch[1];
                 const d = new Date(`${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}`);
                 if (!isNaN(d)) {
-                    const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+                    const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
                     date = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
                 } else {
                     date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });

@@ -128,3 +128,4 @@
 - [Les correctifs du panel vivent dans le HTML, pas dans le JSON](feedback_panel_fixes_html_only_lost_on_rerender.md) — un `render-analysis.js` après panel écrase 40 correctifs en silence (CCJ 03/08) ; reporter dans le JSON source AVANT de re-rendre, récupération via journal.jsonl
 
 - `feedback_lire_nos_propres_publications.md` — lire les 3 derniers daily/weekly avant toute thèse macro ; deux thèses réfutées le même jour par notre propre archive (5 août 2026)
+- `project_dette_technique_analyses.md` — 7 défauts de gabarit corrigés dans le moteur mais non propagés (60 modals orphelins, 27 icônes vides, 39 tuiles N/A) ; le re-rendu global casse sur des champs manquants

@@ -303,6 +303,7 @@ function renderHeader(d) {
         <span class="badge badge-blue">Score ${verdict.score}</span>
         <span style="background:${gradeColor(meta.grade)};color:#fff;padding:0.3rem 0.7rem;border-radius:8px;font-weight:800;">${meta.grade}</span>
         ${halalBadge}
+${(d.archiveHistory && d.archiveHistory.length) ? `        <button type="button" onclick="document.getElementById('historyModal').style.display='flex'" style="background:none;border:1px solid #e2e8f0;color:#64748b;cursor:pointer;padding:0.3rem 0.7rem;border-radius:8px;font-size:0.8rem;display:inline-flex;align-items:center;gap:0.4rem;"><i class="fa-solid fa-clock-rotate-left"></i>Historique</button>` : ''}
       </div>
       <div class="ticker-metrics" style="display:flex;flex-wrap:wrap;gap:1rem;">
 ${metrics.map(([label, val]) => `        <div class="ticker-metric"><div class="tm-value">${esc(val)}</div><div class="tm-label">${esc(label)}</div></div>`).join('\n')}

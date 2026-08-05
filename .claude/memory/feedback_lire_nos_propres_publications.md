@@ -44,3 +44,34 @@ réellement imprimé. Cela fait fuiter la boucle de révision dans le produit.
 Deux réécritures complètes, deux blocages de panel, un daily non publiable en fin de journée.
 
 Voir aussi : [[feedback_no_hallucination]], [[reference_aplus_screening_and_screener_dsl]]
+
+## Récidive le même jour, 3e version (5 août 2026)
+
+La v3 ne contredisait plus la note du 3 août : elle la citait **sélectivement**, ce qui est pire dans
+un article dont le produit est justement l'honnêteté du bilan.
+
+Lundi publiait DEUX affirmations et un seuil chiffré :
+1. le niveau — « soit le baril se retourne, soit ces 56,5% sont trop hauts » (juste, la probabilité
+   est tombée) ;
+2. le mécanisme — « ce qui tient ces trois voix, c'est le marché du travail, pas l'énergie » ;
+3. le seuil de rupture — « **si la probabilité d'une hausse en septembre recule sous 45% d'ici
+   vendredi alors que le pétrole reste bas, alors le canal énergétique fonctionnait et nous avions
+   tort de l'écarter** ».
+
+J'ai titré « notre appel était juste » en ne citant que (1), alors que (2) était à un demi-point de (3).
+
+**Règle complémentaire** : quand on marque au marché sa propre note, lister TOUTES ses affirmations
+et TOUS ses seuils publiés, puis les arbitrer une par une. Ne jamais publier un bilan partiel — un
+bilan qui ne retient que ce qui nous donne raison n'est pas un bilan.
+
+**Deuxième récidive dans la même v3** : « aucune donnée d'emploi n'est sortie entre les deux séances »
+était faux, et la réfutation venait de MON PROPRE appel `QueryData types=economic_events` du matin,
+qui liste `2026-08-03 Euro Area Unemployment Rate`. Tirer une donnée puis écrire le contraire.
+
+**Troisième** : une note qui rend des comptes doit reprendre le **livre vivant** de la note qu'elle
+audite. Lundi laissait 10 lignes ouvertes et une règle de demi-taille conditionnée à l'emploi de
+vendredi ; ma v3 ne cite pas un ticker alors que la variable directrice venait de bouger de 11 points.
+
+**Quatrième, sourcing** : ne jamais changer d'instrument en cours d'audit. Lundi citait le WTI ;
+j'ai publié USO, GLD et SLV en les appelant « pétrole », « or », « argent ». Mon « or +0,66%, du
+bruit » est un artefact de GLD — le contrat faisait +2,48%, ce qui inversait mon propre argument.
