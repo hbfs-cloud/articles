@@ -89,7 +89,29 @@ function riskGaugeColor(score) {
 }
 
 function signalBadgeClass(c) {
-  return ({ green: 'badge-green', red: 'badge-red', blue: 'badge-blue', amber: 'badge-purple', gray: 'badge-gray' })[c] || 'badge-blue';
+  // 'gray' mappait vers .badge-gray, classe INEXISTANTE dans report.css (seules
+  // blue/green/red/purple/orange sont définies) : chaque cellule Signal en gris
+  // rendait un badge nu. .badge-gray est désormais défini côté CSS.
+  return ({ green: 'badge-green', red: 'badge-red', blue: 'badge-blue', amber: 'badge-purple', orange: 'badge-orange', gray: 'badge-gray' })[c] || 'badge-blue';
+}
+
+// Le gabarit écrivait `class="fa-solid ${rc.icon}"`. Quand la donnée porte
+// icon:"fa-solid" (cas EONR), on obtient `fa-solid fa-solid` : aucun glyphe,
+// neuf encarts de risque vides. On retire le préfixe de famille et on retombe
+// sur un glyphe réel si rien d'exploitable ne reste.
+// Une tuile .tm-value est un CHIFFRE (1.1rem, poids 800, chiffres tabulaires,
+// centré dans une petite carte) : une valeur absente y imprimait « N/A », que la
+// règle maison interdit, et une phrase longue y cassait la mise en page. On omet
+// la tuile dans les deux cas — la prose a sa place dans `notes`.
+function metricTile(value, label) {
+  const v = String(value == null ? '' : value).trim();
+  if (!v || v === 'N/A' || v === '.' || v.length > 40) return '';
+  return `          <div class="ticker-metric"><div class="tm-value">${esc(v)}</div><div class="tm-label">${esc(label)}</div></div>\n`;
+}
+
+function riskIcon(icon) {
+  const g = String(icon || '').replace(/\bfa-(solid|regular|light|thin|duotone|brands)\b/g, '').trim();
+  return /^fa-[a-z0-9-]+$/.test(g) ? g : 'fa-triangle-exclamation';
 }
 
 function impactBadge(i) {
@@ -424,10 +446,7 @@ function renderCapitalStructure(d) {
       <div id="capital" class="content-card">
         <h2><i class="fa-solid fa-money-bill-trend-up"></i> Capital Structure &amp; Dilution</h2>
         <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
-          <div class="ticker-metric"><div class="tm-value">${esc(cs.sharesOutstanding || 'N/A')}</div><div class="tm-label">Shares Out.</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(cs.sharesAuthorized || 'N/A')}</div><div class="tm-label">Authorized</div></div>
-          <div class="ticker-metric"><div class="tm-value"><span class="badge badge-${cs.dilutionRisk === 'low' ? 'green' : cs.dilutionRisk === 'moderate' ? 'blue' : 'red'}">${esc(cs.dilutionRisk || 'N/A')}</span></div><div class="tm-label">Dilution Risk</div></div>
-        </div>`;
+${metricTile(cs.sharesOutstanding, 'Shares Out.')}${metricTile(cs.sharesAuthorized, 'Authorized')}${cs.dilutionRisk ? `          <div class="ticker-metric"><div class="tm-value"><span class="badge badge-${cs.dilutionRisk === 'low' ? 'green' : cs.dilutionRisk === 'moderate' ? 'blue' : 'red'}">${esc(cs.dilutionRisk)}</span></div><div class="tm-label">Dilution Risk</div></div>\n` : ''}        </div>`;
   if (cs.warrants && cs.warrants.length) {
     html += `\n        <h4>Warrants</h4>
         <table class="data-table"><thead><tr><th>Series</th><th>Type</th><th>Strike</th><th>Shares</th><th>Exp.</th><th>Dilution</th><th>Status</th></tr></thead><tbody>
@@ -482,7 +501,7 @@ function renderTechnicals(d) {
       <div id="technique" class="content-card">
         <h2><i class="fa-solid fa-chart-area"></i> Technical Analysis</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;margin-bottom:1.5rem;">
-          <div><div id="radarTech${d.header.ticker.replace(/[^a-zA-Z0-9]/g,'')}" class="echart-box" style="height:320px;"></div></div>
+${t.radarValues && Object.keys(rv).length ? `          <div><div id="radarTech${d.header.ticker.replace(/[^a-zA-Z0-9]/g,'')}" class="echart-box" style="height:320px;"></div></div>` : ''}
           <div>
             <table class="data-table"><tbody>
               <tr><td><strong>RSI (14)</strong></td><td style="color:${t.rsi14 > 70 ? '#ef4444' : t.rsi14 < 30 ? '#22c55e' : '#334155'};font-weight:600;">${t.rsi14.toFixed(1)}</td></tr>
@@ -583,7 +602,7 @@ function renderRisks(d) {
 ${r.riskRadarValues ? `        <div style="display:flex;justify-content:center;margin:1rem 0;"><div id="riskRadarChart" style="width:320px;height:260px;"></div></div>` : ''}
         <div class="risk-grid">
 ${r.riskCards.map(rc => `          <div class="risk-card ${severityClass(rc.severity)}">
-            <div class="risk-card-header"><div class="risk-card-icon"><i class="fa-solid ${rc.icon || 'fa-triangle-exclamation'}"></i></div><h4>${esc(rc.title)}</h4><span class="risk-severity">${esc(rc.severity.charAt(0).toUpperCase() + rc.severity.slice(1))}</span></div>
+            <div class="risk-card-header"><div class="risk-card-icon"><i class="fa-solid ${riskIcon(rc.icon)}"></i></div><h4>${esc(rc.title)}</h4><span class="risk-severity">${esc(rc.severity.charAt(0).toUpperCase() + rc.severity.slice(1))}</span></div>
             <div class="risk-card-body"><ul>${(rc.points||[]).map(p => `<li>${esc(p)}</li>`).join('')}</ul>
               <div class="risk-meters"><div class="risk-meter"><div class="risk-meter-label">Probability</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${rc.probability||50}%;"></div></div></div><div class="risk-meter"><div class="risk-meter-label">Impact</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${rc.impact||50}%;"></div></div></div></div>
             </div>
@@ -881,7 +900,7 @@ function renderModals(d) {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;"><h3 style="margin:0;font-size:1.2rem;">History &mdash; ${t}</h3><button onclick="document.getElementById('historyModal').style.display='none'" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#64748b;">&times;</button></div>
         <div style="display:flex;flex-direction:column;gap:0.75rem;">
           <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 1rem;border:1px solid #22c55e;border-radius:10px;background:#f0fdf4;"><div style="width:40px;height:40px;border-radius:8px;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-star" style="color:#22c55e;"></i></div><div><div style="font-weight:600;font-size:0.9rem;">${esc(d.meta.dateDisplay || d.meta.date)} <span style="background:#22c55e;color:white;font-size:0.65rem;padding:2px 6px;border-radius:4px;margin-left:6px;">CURRENT</span></div><div style="font-size:0.75rem;color:#64748b;">${t} Analysis (${d.meta.grade})</div></div></div>
-${archives.map(a => `          <a href="archive/${a.date}/" style="display:flex;align-items:center;gap:1rem;padding:0.75rem 1rem;border:1px solid #e2e8f0;border-radius:10px;text-decoration:none;color:#0f172a;"><div style="width:40px;height:40px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-file-lines" style="color:#64748b;"></i></div><div><div style="font-weight:600;font-size:0.9rem;">${esc(a.dateDisplay || a.date)}</div><div style="font-size:0.75rem;color:#64748b;">${esc(a.note || 'Previous version')}${a.grade ? ` (${a.grade})` : ''}</div></div></a>`).join('\n')}
+${archives.map(a => `          <a href="archive/${String(a.date).replace(/-/g, '')}/" style="display:flex;align-items:center;gap:1rem;padding:0.75rem 1rem;border:1px solid #e2e8f0;border-radius:10px;text-decoration:none;color:#0f172a;"><div style="width:40px;height:40px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-file-lines" style="color:#64748b;"></i></div><div><div style="font-weight:600;font-size:0.9rem;">${esc(a.dateDisplay || a.date)}</div><div style="font-size:0.75rem;color:#64748b;">${esc(a.note || 'Previous version')}${a.grade ? ` (${a.grade})` : ''}</div></div></a>`).join('\n')}
         </div>
       </div>
     </div>`;
