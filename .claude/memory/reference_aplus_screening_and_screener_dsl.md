@@ -37,3 +37,48 @@ A deep 4-lens war room (quant/alpha/risk/bear) downgraded ALL 10 of a freshly-sc
 - **Genuine actionable A+ from the re-screen (R/R ~2.0 AT MARKET, clean, reasonable val):** IBKR (strongest — +5.7% over EMA20, beta 1.33, clean 424B5 shelf only), STX (AI/HDD catalyst, PEG 0.61, accelerating beats), COLB (defensive bank, 1.12x book, below resistance). CRDO/ALAB rightly rejected (nosebleed + active ATM/SBC).
 
 Related: [[feedback_dilution_check]], [[feedback_pipeline_gotchas]], [[feedback_no_hallucination]], [[feedback_no_false_caveats]]
+
+## War-room contre-screen (5 août 2026) — 9 défauts d'entonnoir, verdict ZÉRO A+ confirmé
+
+Run `/aplus` sur ~188 candidats liquides US, 3 passages RSI complémentaires (44-60, 48-60, 59-70).
+Entonnoir : 57 survivent structure+extension ≤3%, 12 les dépassements + fenêtre résultats, 4 la guidance,
+0 les contrôles risque. Quatre agents adversariaux + un synthétiseur refaisant ses propres appels ont
+**confirmé le zéro** mais trouvé neuf défauts de méthode. Les cinq premiers sont réutilisables partout.
+
+1. **Plancher de liquidité en TITRES = biais de prix déguisé.** 1,2-2,5 M titres/jour a masqué FFIV
+   (714k titres mais **294 M$/jour**), qui passe les 4 éliminatoires sans dépôt dilutif. Idem CASY
+   (337k = 287 M$/j), MUSA (263k = 155 M$/j). ⇒ plancher en DOLLARS : `close*avg_volume > 20e6`.
+2. **`macd>0` teste le NIVEAU de la ligne, pas le croisement** — ne sélectionne aucun momentum.
+   BCS MACD 0,3011 sous signal 0,3907 ; CL 0,1180 sous 0,2633 : les deux finalistes décéléraient.
+   ⇒ comparer `macd` à `signal` en code (les deux sont dans `QueryData types=technicals`).
+3. **`earnings_quarterly` ne sert que 4 trimestres**, quel que soit `limit`/`days` (vérifié sur 6 titres).
+   L'éliminatoire « ≥5 dépassements » n'est donc PAS vérifiable sur donnée. Sourcer le 5e explicitement
+   et DIRE qu'il vient de la presse, ou assumer une règle 4/4. Ne jamais imprimer « 5 vérifiés ».
+4. **Le flux de résultats peut être FAUX.** XOM 2T2026 servi à 4,11 contre 3,629 (dépassement) ; le
+   communiqué du 30/07 donne 3,52 ajusté contre ~3,68 (MANQUE). Détecteur : somme des 4 trimestres 8,86 $
+   contre PE historique 25,92 à 153,96 impliquant ~5,92 $. ⇒ **réconcilier Σ4T contre `trailingPE × prix`**
+   pour tout titre ayant publié dans les ~15 derniers jours.
+5. **R/R : tester la cible contre l'OFFRE RÉELLE, pas contre le plus haut 52 s.** J'ai écrit « CL est le
+   seul dont le R/R 1,5 tient au cours ». Faux : la cible 98,31 traverse le palier 95,42 / 96,01 / 95,93 /
+   95,46 ; vers la première résistance effective le R/R vaut **0,90**. Et le stop 88,68 se logeait 0,6% sous
+   le plancher de range (89,25 / 89,36), donc dans le bruit, pas sous structure.
+6. **Ordre des opérations.** CL relevait du rejet dur « catalyseur inversé par la macro » (défensive
+   bêta 0,327 en risk-on confirmé) : élimination AVANT scoring, pas malus pondéré.
+7. **Émetteurs non domestiques : `sec_filings` est AVEUGLE.** Pas de 8-K item 2.02 pour les 6-K/20-F
+   (TNK, BUD, BCS) ni pour le régime MJDS 40-F (CM, BMO). Un retour vide = absence de DONNÉE, pas absence
+   de dilution. Dater la publication et vérifier la dilution à la source presse/IR.
+8. **Contrôle dilution non généralisé** : mené sur un seul finaliste au lieu de tous les survivants.
+9. **Périmètre d'univers à écrire dans le skill** : les ETF sont structurellement inéligibles
+   (`earnings_quarterly` et `calendar` vides ⇒ 2 éliminatoires sur 4 indéfinis) ; la grille est
+   majoritairement incalculable sur l'Europe ; « 4 trimestres consécutifs » n'a pas de sens sur un
+   émetteur à publication semestrielle ; la borne des 10 séances doit être déclarée inclusive ou exclusive
+   (cas RNR, 8-K item 2.02 du 22/07, pile dessus).
+
+**Leçon de régime, plus importante que les neuf.** Le zéro ne vient pas d'un filtre trop dur mais du
+régime : en risk-on avancé à ATR comprimé, tout ce qui est structurellement propre est collé sous son
+plus haut annuel, donc une cible à 1,5 R depuis un stop 1,5×ATR sort AU-DESSUS du plus haut 52 semaines.
+Vérifié sur FFIV, BCS, EOG, BBY, FHN, AZZ, MSM, CRS, PSMT. Ce qui rouvre le jeu : une respiration qui
+recrée de la distance sous le plus haut, ou une cassure confirmée en volume.
+
+⚠️ Mémoire MCP indisponible au moment de l'écriture (`get_context` en timeout 60s ×2) : cette entrée n'est
+persistée QUE côté git, la règle de double écriture reste à honorer quand le serveur répond.
