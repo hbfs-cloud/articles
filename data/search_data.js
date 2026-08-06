@@ -1367,6 +1367,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "IOVA",
+    "exchange": "NASDAQ · Healthcare",
+    "name": "IOVA — Revenus T2 à 99,313 M$ (+66%), perte nette divisée par 2,4. Le marché paie 39% de plus ...",
+    "title": "IOVA — Revenus T2 à 99,313 M$ (+66%), perte nette divisée par 2,4. Le marché paie 39% de plus ...",
+    "desc": "IOVA post-résultats T2 2026 : revenus 99,313 M$ contre 59,952 M$ un an plus tôt, titre en hausse d'environ 39% en séance au-dessus de son plus-haut annuel. Mais la fourchette 2026 n'a pas été relevée et 41 millions d'actions ont été créées depuis février.",
+    "tags": "us,healthcare,biotech,earnings,trade-idea",
+    "grade": "B-",
+    "href": "/analyses/IOVA/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "EONR",
     "exchange": "NYSE American (listed, late filer) · Oil & Gas E&P",
     "name": "EONR — EON Resources held at D. Management bought 1.1m shares with their own cash, but a 10% h...",
@@ -1778,19 +1791,6 @@ window.searchDataPrebuilt = [
     "tags": "asia,consumer,tech,trade-idea,macro",
     "grade": "B-",
     "href": "/analyses/JD/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "IOVA",
-    "exchange": "NASDAQ · Healthcare",
-    "name": "IOVA — première thérapie TIL approuvée FDA, revenus +44,8%, cours $4.26 (+74% YTD). 24,8% shor...",
-    "title": "IOVA — première thérapie TIL approuvée FDA, revenus +44,8%, cours $4.26 (+74% YTD). 24,8% shor...",
-    "desc": "Analyse Iovance Biotherapeutics : cours $4.26 (+74% depuis janvier), revenus +44,8% (TTM $285.6M), seule thérapie TIL approuvée FDA. Burn EBITDA -$322M, mixed shelf déposé, 24,8% short. Consensus $8.80. Grade B+.",
-    "tags": "us,healthcare,biotech,trade-idea",
-    "grade": "B-",
-    "href": "/analyses/IOVA/",
     "date": ""
   },
   {
