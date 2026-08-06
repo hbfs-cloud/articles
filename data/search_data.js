@@ -1367,6 +1367,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "TARA",
+    "exchange": "NasdaqGM • Santé • Biotechnologie\n            — Oncologie / Maladies rares",
+    "name": "TARA — -47,6% sous son plus-haut, 100 M$ d'émission au fil de l'eau au-dessus de la tête, burn...",
+    "title": "TARA — -47,6% sous son plus-haut, 100 M$ d'émission au fil de l'eau au-dessus de la tête, burn...",
+    "desc": "Protara Therapeutics à 4,10 $ : le programme d'émission de 100 M$ non tiré, un burn réel de 21,3 M$ au trimestre et 15 mois de trésorerie. Revue contrarienne chiffrée.",
+    "tags": "us,healthcare,biotech,speculative,trade-idea",
+    "grade": "C",
+    "href": "/analyses/TARA/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "TBLA",
     "exchange": "NasdaqGS · Communication Services",
     "name": "TBLA — Taboola at 5.7x forward earnings: a discount the market earned the right to apply.",
@@ -3143,19 +3156,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,ai,trade-idea,software",
     "grade": "B",
     "href": "/analyses/TEAM/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "TARA",
-    "exchange": "NASDAQ • Biotechnology • PHASE 2 SUCCESS",
-    "name": "TARA — Succès Phase 2 & Setup Post-Catalyseur",
-    "title": "TARA — Succès Phase 2 & Setup Post-Catalyseur",
-    "desc": "Analyse de la réussite exceptionnelle de la Phase 2\n    (TARA-002, cancer NMIBC), solide cash runway de 132M$, anomalie de\n    marché \"Sell-the-News\". Décortication du niveau\n    technique institutionnel.",
-    "tags": "us,healthcare,speculative,trade-idea",
-    "grade": "A",
-    "href": "/analyses/TARA/",
     "date": ""
   },
   {
