@@ -4789,9 +4789,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ RISK-ON · JCI, ROST, IOO, ITX.MC, KBC.BR, LMT, CPER, EWS, NSC, GD",
+    "title": "Top 8 A+ RISK-ON · JCI, ROST, ITX.MC, KBC.BR, LMT, CPER, EWS, NSC",
     "desc": "Le marché américain a clôturé sans direction jeudi : S&P 500 à 7 709,96 (−0,18%), Nasdaq quasi stable à 26 348 (−0,06%), Dow Jones en retrait de 0,85% et Russell 2000 à −0,58%. L'Europe a mieux tenu — CAC 40 +0,35%, DAX +0,05%, pendant que l'Asie corrigeait : Hang Seng −1,49%, Nikkei −0,93%. Le rend...",
-    "tags": "scanner,momentum,breakout,us,eu,asia,etf,industrials,defense,consumer,materials",
+    "tags": "scanner,momentum,breakout,us,eu,asia,etf,industrials,consumer,materials,defense",
     "grade": "",
     "href": "/scanner/20260807/",
     "date": "Vendredi 7 août 2026"

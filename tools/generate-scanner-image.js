@@ -167,9 +167,14 @@ function fetchChartBase64(ticker) {
       timeout: 10000,
     };
     https.get(url, opts, (res) => {
-      // Handle redirects
+      // Handle redirects. FinViz renvoie un Location RELATIF ("/chart?t=JCI&…") : le passer tel quel
+      // à https.get lève un ERR_INVALID_URL synchrone, hors du handler .on('error'), qui tue le process.
+      // On le résout donc contre l'URL d'origine avant de suivre.
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        https.get(res.headers.location, opts, (res2) => {
+        let next;
+        try { next = new URL(res.headers.location, url).href; }
+        catch { return resolve(null); }
+        https.get(next, opts, (res2) => {
           const chunks = [];
           res2.on('data', c => chunks.push(c));
           res2.on('end', () => {
