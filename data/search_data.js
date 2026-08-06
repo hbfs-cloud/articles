@@ -1367,6 +1367,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "TBLA",
+    "exchange": "NasdaqGS · Communication Services",
+    "name": "TBLA — Taboola at 5.7x forward earnings: a discount the market earned the right to apply.",
+    "title": "TBLA — Taboola at 5.7x forward earnings: a discount the market earned the right to apply.",
+    "desc": "TBLA trades at 5.7x forward earnings after a 27.5% one-day fall. The trailing multiple contains a $77M courtroom win, and Google made the revenue decline permanent in June.",
+    "tags": "us,comms,earnings,value",
+    "grade": "C+",
+    "href": "/analyses/TBLA/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "INV",
     "exchange": "NasdaqGM · Financial Services / Asset Management",
     "name": "INV — INV at $3.42: $55.4M cash, $34.0M burned in one quarter, a $75.0M equity facility alrea...",
