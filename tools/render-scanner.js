@@ -83,9 +83,20 @@ function looksTruncated(s) {
   return opens > closes;
 }
 
+// Noms propres qui collisionnent avec la liste FR_UNACCENTED_WORDS (match insensible à la casse) :
+// « General Dynamics » n'est pas un « général » désaccentué. On les retire du texte AVANT le scan
+// plutôt que d'assouplir la règle, pour garder le garde-fou strict sur la vraie prose française.
+const PROPER_NOUN_EXCEPTIONS = [
+  /\bGeneral Dynamics\b/g,
+  /\bGeneral Motors\b/g,
+  /\bGeneral Electric\b/g,
+  /\bGeneral Mills\b/g,
+];
+
 function guardDataQuality(data, strict) {
   const strings = collectStrings(data, []);
-  const text = strings.join('\n');
+  let text = strings.join('\n');
+  for (const re of PROPER_NOUN_EXCEPTIONS) text = text.replace(re, ' ');
 
   const accentHits = text.match(FR_UNACCENTED_RE) || [];
   const accentUniq = [...new Set(accentHits.map(w => w.toLowerCase()))];
