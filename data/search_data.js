@@ -1367,6 +1367,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "INV",
+    "exchange": "NasdaqGM · Financial Services / Asset Management",
+    "name": "INV — INV at $3.42: $55.4M cash, $34.0M burned in one quarter, a $75.0M equity facility alrea...",
+    "title": "INV — INV at $3.42: $55.4M cash, $34.0M burned in one quarter, a $75.0M equity facility alrea...",
+    "desc": "Innventure burned $34.0M of operating cash in Q1 2026 against $55.4M on hand, and an effective shelf carries a $75.0M standby equity facility. Q2 prints 13 August. The dilution is not a risk, it is a schedule.",
+    "tags": "us,financials,small-cap,speculative,earnings",
+    "grade": "D",
+    "href": "/analyses/INV/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "IOVA",
     "exchange": "NASDAQ · Healthcare",
     "name": "IOVA — Revenus T2 à 99,313 M$ (+66%), perte nette divisée par 2,4. Le marché paie 39% de plus ...",
