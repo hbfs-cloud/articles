@@ -1380,6 +1380,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "PSIX",
+    "exchange": "NASDAQ · Industrials — Engines & Power Systems",
+    "name": "PSIX — PSIX gapped +21% on Q2. Squeeze fuel meets a broken chart: entry, stop and targets inside.",
+    "title": "PSIX — PSIX gapped +21% on Q2. Squeeze fuel meets a broken chart: entry, stop and targets inside.",
+    "desc": "Power Solutions International: Q2 revenue beat, 420bps margin repair and $30.8M of debt paid down, against a 7.3M-share float carrying 14% short interest. A trade, not an investment.",
+    "tags": "us,industrials,ai,momentum,short-squeeze,trade-idea",
+    "grade": "B",
+    "href": "/analyses/PSIX/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "TARA",
     "exchange": "NasdaqGM • Santé • Biotechnologie\n            — Oncologie / Maladies rares",
     "name": "TARA — -47,6% sous son plus-haut, 100 M$ d'émission au fil de l'eau au-dessus de la tête, burn...",
