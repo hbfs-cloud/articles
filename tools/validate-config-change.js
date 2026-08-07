@@ -232,10 +232,30 @@ async function main() {
     .filter(d => (d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8)) >= FROM_DATE)
     .sort();
   const scans = scanDirs.map(sweep.parseScan).filter(Boolean);
-  const allSetups = scans.flatMap(s => {
-    const list = s.setups.slice(); list.push(...(s.tklPool || []));
-    return list.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir, regime: s.regime }));
-  });
+  // Pool de setups PAR MODE. `setups[] + tklPool` ne concerne que le scanner LLM ; les modes a
+  // `assetClass` sont alimentes par des pools dedies que parseScan expose deja (dtxPool,
+  // cryptoPool, factorPool…). Les modes dtx sont en plus partitionnes par `universe = <modeId>`.
+  // Avant ce cablage, interroger l'outil sur un mode dtx simulait SILENCIEUSEMENT le pool LLM :
+  // n=97 pour un mode qui compte 18 trades reels, et book_honest / stockbox_pit — deux univers
+  // distincts — rendaient exactement le meme resultat.
+  const POOL_BY_ASSET_CLASS = {
+    dtx: 'dtxPool', crypto: 'cryptoPool', metals: 'metalsPool', forex: 'forexPool',
+    equity_ma: 'casablancaPool', equity_eu: 'euSmallcapPool', us_factor: 'factorPool',
+  };
+  const stamp = (s, list) => list.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir, regime: s.regime }));
+  function setupsFor(modeId) {
+    const cfg = CUR[modeId] || {};
+    const poolKey = POOL_BY_ASSET_CLASS[cfg.assetClass];
+    if (!poolKey) return scans.flatMap(s => stamp(s, [...s.setups, ...(s.tklPool || [])]));
+    return scans.flatMap(s => {
+      let list = s[poolKey] || [];
+      // dtx : un pool commun partitionne par universe. Sans ce filtre, les 6 modes seraient
+      // evalues sur les memes signaux et donneraient des resultats identiques.
+      if (cfg.assetClass === 'dtx') list = list.filter(x => x.universe === modeId);
+      return stamp(s, list);
+    });
+  }
+  const allSetups = [...new Set(VARIANTS.map(v => v.base))].flatMap(setupsFor);
   const sortedDates = [...new Set(scans.map(s => s.scanDate))].sort();
   const oosStartDate = sortedDates[Math.floor(sortedDates.length * OOS_FRAC)];
   console.log(`${scans.length} scans, ${allSetups.length} setups, OOS from ${oosStartDate}\n`);
@@ -254,11 +274,11 @@ async function main() {
   // La ligne CURRENT etant toujours en position 1, le biais jouait systematiquement CONTRE
   // les propositions. Constate et corrige le 2026-08-07.
   const tradeCache = {};
-  function tradesFor(c) {
-    const k = exitKey(c);
+  function tradesFor(c, modeId) {
+    const k = modeId + '|' + exitKey(c);
     if (tradeCache[k]) return tradeCache[k].map(t => ({ ...t }));
     const trades = [];
-    for (const setup of allSetups) {
+    for (const setup of setupsFor(modeId)) {
       const r = sweep.simulateTrade(setup, setup.scanDate, sweep.priceCache[setup.ticker], {
         horizonDays: c.horizon, partialTP: c.partialTP || false, partialTPPct: c.partialTPPct || 0.5,
         trailingStop: c.trailingStop || false, maxStopPct: c.maxStopPct || 0, atrStopMult: c.atrStopMult || 0,
@@ -280,7 +300,7 @@ async function main() {
   const rows = [];
   for (const v of VARIANTS) {
     const c = cfgFrom(v.base, v.cfg);
-    const trades = tradesFor(c);
+    const trades = tradesFor(c, v.base);
     const m = sweep.simulatePortfolio(trades, scans, {
       portfolioSize: c.portfolioSize, topN: c.topN, minScore: c.minScore || 0, rotation: c.rotation,
       strategyFilter: STRAT[c.filterName], horizonDays: c.horizon, partialTP: c.partialTP || false,
