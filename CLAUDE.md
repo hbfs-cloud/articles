@@ -88,7 +88,13 @@ Outils MCP :
 `engineMode:"mcp"`**. Le staging alimente AUSSI le tracking live : `publish-daily-card.sh` Step 2q
 (`tools/dtx-pool-bridge.js`) convertit les ordres CREATE en signaux `dtx_pool` consommés par le sweep
 (modes `assetClass:'dtx'`, partition `universe=<modeId>`) — staging stale = zéro candidat pour le mode ce
-soir-là (skip bruyant, fix « 0 trades depuis D0 » du 2026-07-16). `tools/dtx-scan.js` ne fait plus tourner de binaire : il porte le schéma partagé
+soir-là (skip bruyant, fix « 0 trades depuis D0 » du 2026-07-16). **Historisation (2026-08-07)** : le staging
+est un INSTANTANÉ écrasé à chaque ingestion — `tools/dtx-history-append.js` (pipeline, juste après le
+pont) l'archive dans `data/dtx-engine-history.json`, registre append-only **immuable par (mode, date)**
+portant ordres/updates/cancels + metrics. C'est la source point-in-time du champ `engine_decision` des
+snapshots et du panneau « Décisions du moteur » de `scanner/status` (artefact publié :
+`scanner/status/engine-history.json`). Les séances antérieures au 07/08 sont reconstruites depuis le
+`dtx_pool` des scans et marquées `provenance:'dtx_pool'` — forme pontée, sans metrics. `tools/dtx-scan.js` ne fait plus tourner de binaire : il porte le schéma partagé
 (`buildStaging`/`extractReplayMetrics`/…) + `stagingStatus()`/`--list` ; un `--mode` affiche la marche à
 suivre et sort en 0 (dégradation gracieuse, jamais bloquant). Voir skill `scanner-pipeline` §"dtx refresh
 — MCP SEUL MOTEUR". Le MCP est accessible en headless : `claude -p` (bot cloud, même compte claude.ai)

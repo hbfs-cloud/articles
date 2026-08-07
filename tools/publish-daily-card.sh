@@ -253,6 +253,15 @@ if [ "$SKIP_SWEEP" = false ]; then
   # par mode) — dégradation honnête, jamais fabriquée, jamais silencieuse.
   node tools/dtx-pool-bridge.js --folder "$CS_FOLDER" --date "$SCAN_DATE_ISO" || echo "⚠️  dtx pool bridge incomplet (modes skippés ou erreur — voir résumé ci-dessus, non-bloquant)"
 
+  # Historise la décision du moteur pour CETTE séance dans data/dtx-engine-history.json.
+  # Le staging data/dtx/<mode>.json est un instantané écrasé à chaque ingestion : sans cette
+  # étape, les ordres du jour sont perdus dès le lendemain et la Time Machine ne peut rien
+  # remonter. Le registre est immuable par (mode, date) — relancer le pipeline sur la même
+  # séance ne réécrit rien, il le signale. Doit tourner AVANT gen-status-page, qui lit le
+  # registre pour le champ engine_decision du snapshot et pour l'artefact publié.
+  # Non bloquant : une absence d'historisation ne doit jamais empêcher la publication du scan.
+  node tools/dtx-history-append.js || echo "⚠️  historisation moteur incomplète (staging illisible — non-bloquant)"
+
   echo ""
   echo "🔄 Step 3: Running sweep (~5 min)..."
   SWEEP_START=$(date +%s)
