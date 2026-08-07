@@ -81,7 +81,7 @@
       "maxStopPct": 7,
       "atrStopMult": 2,
       "dailyTrailPct": 0,
-      "breakevenPct": 0.5,
+      "breakevenPct": 0,
       "beGraceDays": 0,
       "staleDays": 0,
       "staleGraceDays": 0,
@@ -106,7 +106,8 @@
         "neutral": "mom_bo",
         "recovery": "mom_bo"
       },
-      "tklPoolEnabled": false
+      "tklPoolEnabled": false,
+      "_changeReason": "breakevenPct 0,5→0 le 2026-08-07 : avec beGraceDays=0 le verrou s'armait sur la barre d'entree (daysHeld++ sweep.js:989 avant la garde :1122), posant le stop pile a l'entree des J0 ; depuis le retablissement du remplissage sur gap le 01/07 (7bf9d8fa2) toute ouverture en baisse le traverse. beGraceDays=1 a ete teste et REFUSE par le gate (full ret -9,89% vs -0,08%, DD -10,77% > 8%). Variante retenue = cliquet desactive, alignee sur balanced et secured. Validee par validate-config-change.js : GO (30j +9,83% PF 3,37 n=2 vs actuel inactif ; OOS et full periode battus ; DD <= 8%)."
     },
     "balanced": {
       "status": "live",
@@ -371,7 +372,8 @@
         "risk_on": "all",
         "neutral": "all",
         "early_risk_off": "momentum_only",
-        "risk_off": "breakout_only"
+        "risk_off": "breakout_only",
+        "recovery": "all"
       },
       "shariaOnly": true
     },
@@ -389,7 +391,7 @@
       "_effectiveFrom": "2026-07-01",
       "_priorPortfolioSize": 4,
       "_priorTopN": 4,
-      "_changeReason": "Pivot progressif vers 10-pos PM Halal effectif 2026-07-01. Forward-only: les scans avant cette date gardent la capacité P4 (pas de backfill de positions fantômes). Les slots 5-10 se remplissent progressivement via ordres en séance, pas overnight. shariaOnly exclut les tickers non-Halal (ex: ING/riba).",
+      "_changeReason": "Pivot progressif vers 10-pos PM Halal effectif 2026-07-01. Forward-only: les scans avant cette date gardent la capacité P4 (pas de backfill de positions fantômes). Les slots 5-10 se remplissent progressivement via ordres en séance, pas overnight. shariaOnly exclut les tickers non-Halal (ex: ING/riba). || beGraceDays 0→1 le 2026-08-07 : le verrou de seuil s'armait sur la barre d'entrée (daysHeld++ sweep.js:989 avant la garde daysHeld>beGraceDays :1122), posant le stop pile à l'entrée dès J0. Depuis le rétablissement du remplissage sur gap le 01/07 (7bf9d8fa2), 20 sorties sur 35 passent SOUS l'entrée (-41,6 pts) contre 0 sur 33 avant. Validé par validate-config-change.js : GO (30j +1,43% PF 3,77 vs -0,49% PF 1,27 ; OOS -0,64% vs -2,68% ; full +6,96% PF 1,60 vs +3,24% PF 1,27 ; DD -2,18% vs -3,45%).",
       "minScore": 85,
       "filterName": "fortress_pm",
       "rotation": "none",
@@ -401,7 +403,7 @@
       "atrStopMult": 0,
       "dailyTrailPct": 2,
       "breakevenPct": 1,
-      "beGraceDays": 0,
+      "beGraceDays": 1,
       "staleDays": 0,
       "positionSizePct": 0.5,
       "entryGatePct": 0,
@@ -497,8 +499,8 @@
       }
     },
     "hybrid": {
-      "status": "live",
-      "statusSince": "2026-07-06T08:56:42.465Z",
+      "status": "pausing",
+      "statusSince": "2026-08-07T16:51:26.057Z",
       "label": "Hybrid-AF",
       "color": "#7c3aed",
       "goal": "Trend Hybrid Adaptive-Fractal (US, breadth-switching)",
@@ -553,7 +555,7 @@
         "recovery": "hybrid_af"
       },
       "tklPoolEnabled": false,
-      "statusReason": "Passage live demandé user — modes scriptés visibles comme les LLM (scorecard KEEP)",
+      "statusReason": "Esperance negative confirmee: -10.33%/trade sur n=14 (total -144.6 pts, WR 29%). Filtre inoperant: minScore=25 alors que le score minimum observe sur les 14 trades scelles est 65.15 -> aucun candidat n'a jamais ete rejete. Negatif dans ET hors cohorte invalide 2026-06-16..2026-07-13 (-6.08 sur n=13 / -65.57 sur n=1).",
       "universeFilter": null,
       "regimeParams": {
         "maxPositions": {
@@ -572,7 +574,8 @@
         }
       },
       "configVersion": "v10.9-20260723",
-      "_changeReason": " | 2026-07-22 (v10.9): coupe-circuit loss-based forward (effectiveFrom 2026-07-23). Verdict trader retail agile Option A. Regime macro etait aveugle au crash momentum juin-juil (score switcher 0.70-0.76, VIX ~16) => loss-based only. Valide vs config ACTUELLE (war room vs-current), calme dormant. hybrid: maxStopPct 20->12 (depth-cap calme-safe, plafonne pertes catastrophiques). War room vs-actuel: +1.03."
+      "_changeReason": " | 2026-07-22 (v10.9): coupe-circuit loss-based forward (effectiveFrom 2026-07-23). Verdict trader retail agile Option A. Regime macro etait aveugle au crash momentum juin-juil (score switcher 0.70-0.76, VIX ~16) => loss-based only. Valide vs config ACTUELLE (war room vs-current), calme dormant. hybrid: maxStopPct 20->12 (depth-cap calme-safe, plafonne pertes catastrophiques). War room vs-actuel: +1.03.",
+      "statusNextReviewAt": "2026-09-07"
     },
     "forex": {
       "status": "stopped",
@@ -959,7 +962,7 @@
     },
     "book_honest": {
       "status": "live",
-      "statusSince": "2026-07-13T16:00:00.000Z",
+      "statusSince": "2026-08-07T17:51:00.774Z",
       "label": "Honest Book",
       "color": "#16a34a",
       "goal": "Blended core hv30/sbp30/etf20/ep15 (dtx book_honest)",
@@ -980,7 +983,7 @@
       "trailMultR": 1.5,
       "trailGraceDays": 3,
       "trailTriggerPct": 12,
-      "maxStopPct": 15,
+      "maxStopPct": 25,
       "atrStopMult": 2.5,
       "dailyTrailPct": 0,
       "breakevenPct": 0,
@@ -1004,7 +1007,7 @@
       "circuitBreakerWindow": 5,
       "circuitBreakerPause": 3,
       "tklPoolEnabled": false,
-      "statusReason": "dtx v15 viable (cost-honest) — Cut-over dtx MCP v15 (cost-honest): dashboard reduit aux 6 strategies viables; anciens scriptings scanner retires (statut stopped, historique conserve).",
+      "statusReason": "Reprise: la mise en pause reposait sur un diagnostic errone (bloc de risque juge clone d'un mode arrete). Les modes dtx sont pilotes par le moteur systematic via MCP -- c'est le design voulu. Le vrai defaut etait maxStopPct=15 ecrasant le disaster-stop de 25% declare par dtx-pool-bridge.js (DISASTER_STOP_PCT), corrige le 2026-08-07. Les 12 sorties a -15,00% exact etaient le tracker liquidant des positions que le moteur tenait encore.",
       "universeFilter": "book_honest",
       "regimeParams": {
         "maxPositions": {
@@ -1021,7 +1024,8 @@
           "early_risk_off": 20,
           "risk_off": 15
         }
-      }
+      },
+      "statusNextReviewAt": "2026-08-21"
     },
     "us_highvol": {
       "status": "live",
@@ -1046,7 +1050,7 @@
       "trailMultR": 1.5,
       "trailGraceDays": 3,
       "trailTriggerPct": 12,
-      "maxStopPct": 15,
+      "maxStopPct": 25,
       "atrStopMult": 2.5,
       "dailyTrailPct": 0,
       "breakevenPct": 0,
@@ -1091,7 +1095,7 @@
     },
     "hvep": {
       "status": "live",
-      "statusSince": "2026-07-13T16:00:00.000Z",
+      "statusSince": "2026-08-07T17:51:00.893Z",
       "label": "HighVol + EP",
       "color": "#f59e0b",
       "goal": "us_highvol70 + episodic-pivot30 (dtx hvep)",
@@ -1112,7 +1116,7 @@
       "trailMultR": 1.5,
       "trailGraceDays": 3,
       "trailTriggerPct": 12,
-      "maxStopPct": 15,
+      "maxStopPct": 25,
       "atrStopMult": 2.5,
       "dailyTrailPct": 0,
       "breakevenPct": 0,
@@ -1136,7 +1140,7 @@
       "circuitBreakerWindow": 5,
       "circuitBreakerPause": 3,
       "tklPoolEnabled": false,
-      "statusReason": "dtx v15 viable (cost-honest) — Cut-over dtx MCP v15 (cost-honest): dashboard reduit aux 6 strategies viables; anciens scriptings scanner retires (statut stopped, historique conserve).",
+      "statusReason": "Reprise: la mise en pause reposait sur un diagnostic errone (bloc de risque juge clone d'un mode arrete). Les modes dtx sont pilotes par le moteur systematic via MCP -- c'est le design voulu. Le vrai defaut etait maxStopPct=15 ecrasant le disaster-stop de 25% declare par dtx-pool-bridge.js (DISASTER_STOP_PCT), corrige le 2026-08-07. Les 12 sorties a -15,00% exact etaient le tracker liquidant des positions que le moteur tenait encore.",
       "universeFilter": "hvep",
       "regimeParams": {
         "maxPositions": {
@@ -1153,11 +1157,12 @@
           "early_risk_off": 20,
           "risk_off": 15
         }
-      }
+      },
+      "statusNextReviewAt": "2026-08-21"
     },
     "stockbox_pit": {
       "status": "live",
-      "statusSince": "2026-07-13T16:00:00.000Z",
+      "statusSince": "2026-08-07T17:51:01.011Z",
       "label": "StockBox PIT",
       "color": "#8b5cf6",
       "goal": "Nasdaq index rotation, point-in-time membership (dtx stockbox_pit)",
@@ -1178,7 +1183,7 @@
       "trailMultR": 1.5,
       "trailGraceDays": 3,
       "trailTriggerPct": 12,
-      "maxStopPct": 15,
+      "maxStopPct": 25,
       "atrStopMult": 2.5,
       "dailyTrailPct": 0,
       "breakevenPct": 0,
@@ -1202,7 +1207,7 @@
       "circuitBreakerWindow": 5,
       "circuitBreakerPause": 3,
       "tklPoolEnabled": false,
-      "statusReason": "dtx v15 viable (cost-honest) — Cut-over dtx MCP v15 (cost-honest): dashboard reduit aux 6 strategies viables; anciens scriptings scanner retires (statut stopped, historique conserve).",
+      "statusReason": "Reprise: la mise en pause reposait sur un diagnostic errone (bloc de risque juge clone d'un mode arrete). Les modes dtx sont pilotes par le moteur systematic via MCP -- c'est le design voulu. Le vrai defaut etait maxStopPct=15 ecrasant le disaster-stop de 25% declare par dtx-pool-bridge.js (DISASTER_STOP_PCT), corrige le 2026-08-07. Les 12 sorties a -15,00% exact etaient le tracker liquidant des positions que le moteur tenait encore.",
       "universeFilter": "stockbox_pit",
       "regimeParams": {
         "maxPositions": {
@@ -1219,7 +1224,8 @@
           "early_risk_off": 20,
           "risk_off": 15
         }
-      }
+      },
+      "statusNextReviewAt": "2026-08-21"
     },
     "etf_us": {
       "status": "live",
@@ -1244,7 +1250,7 @@
       "trailMultR": 1.5,
       "trailGraceDays": 3,
       "trailTriggerPct": 12,
-      "maxStopPct": 15,
+      "maxStopPct": 25,
       "atrStopMult": 2.5,
       "dailyTrailPct": 0,
       "breakevenPct": 0,
@@ -1310,7 +1316,7 @@
       "trailMultR": 1.5,
       "trailGraceDays": 3,
       "trailTriggerPct": 12,
-      "maxStopPct": 15,
+      "maxStopPct": 25,
       "atrStopMult": 2.5,
       "dailyTrailPct": 0,
       "breakevenPct": 0,

@@ -20,6 +20,7 @@ const path = require('path');
 const parser = require('./lib/scanner-parser');
 const { recentDilutionFilings } = require('./pre-scan-filter');
 const { computeAllowedActions, boundDecision } = require('./lib/allowed-actions');
+const scoreContract = require('./lib/score-contract');
 
 const ROOT = path.join(__dirname, '..');
 const FILTERS_FILE = path.join(ROOT, 'data', 'scanner-filters.json');
@@ -619,6 +620,43 @@ async function main() {
           message: `${s.ticker}: entry pick propose un BUY mais le menu d'actions pré-borné ne permet que [${menu.actions.join(', ')}] (${menu.reason}) — un pick ne peut jamais dépasser le menu permis (borne #7).`
         });
       }
+    }
+  }
+
+  // 20. score-contract (hard_block) — CONTRAT DE SCORE entre producteurs de signaux.
+  // Lu sur le fichier RAW (comme 17/18) : c'est la SEULE règle qui couvre aussi les scanners
+  // spécialistes, précisément parce que leurs scores « hors échelle par construction » sont ce
+  // que le contrat encadre. Deux violations distinctes, toutes deux bloquantes :
+  //   (a) score_out_of_range / unknown_family — un producteur sort de la plage qu'il déclare,
+  //       ou émet un signal qu'on ne sait rattacher à aucune famille : ni seuillable, ni classable.
+  //   (b) cross_family_comparison — signals[] mélange des familles d'échelle. C'est le composite
+  //       que sweep/pit-engine/gen-status-page seuillent (`minScore`) et trient (`b.score-a.score`)
+  //       EN BLOC : y mélanger de l'ETFMomentum (37→323) avec de la conviction éditoriale (76→95),
+  //       c'est classer l'échelle et non la qualité, et rendre AdaptiveFractal (max 77) ou forex
+  //       (max 27.5) structurellement inéligible à un minScore de 90.
+  // Un scan conforme ne coûte rien (le composite éditorial est mono-famille — vérifié sur les
+  // scans du 20260731 au 20260807). Détail : node tools/lib/score-contract.js --check <dir>
+  {
+    const rawSc = loadRawSignalsJson(dir);
+    if (!rawSc) {
+      violations.push({ rule: 'score_contract', message: 'signals.json brut illisible — contrat de score invérifiable (fail-closed).' });
+    } else {
+      const POOL_SUBLISTS = ['momentum', 'breakout', 'pullback', 'pre_squeeze', 'bull'];
+      const composite = [];
+      const seen = [];
+      for (const s of rawSc.signals || []) { composite.push(s); seen.push({ s, label: 'signals[]' }); }
+      for (const k of POOL_SUBLISTS) for (const s of rawSc[k] || []) { composite.push(s); seen.push({ s, label: `${k}[]` }); }
+      for (const k of Object.keys(rawSc)) {
+        if (!/_pool$/.test(k) || !Array.isArray(rawSc[k])) continue;
+        // La clé de pool est AUTORITAIRE pour l'identité (parité scanner-parser.poolFrom).
+        for (const s of rawSc[k]) seen.push({ s: Object.assign({}, s, { source: k }), label: k });
+      }
+      for (const { s, label } of seen) {
+        const r = scoreContract.checkSignal(s, `${dirName}:${label}`);
+        for (const v of r.violations) violations.push({ rule: 'score_contract', message: v.message });
+      }
+      const cmp = scoreContract.checkComparable(composite, `${dirName}:signals[] (seuil minScore + tri)`);
+      for (const v of cmp.violations) violations.push({ rule: 'score_contract', message: v.message });
     }
   }
 

@@ -275,6 +275,7 @@ Règles critiques issues de feedbacks et incidents passés. S'appliquent à tout
 - **No Hallucination** : JAMAIS inventer de données financières (52W, cash, mcap, événements). Toujours MCP/WebSearch. Leçon ALT/IOVA/ALLR juin 2026.
 - **Analyses Factcheck** : Toujours fact-checker les analyses avec MCP avant publication. Les fork agents hallucinent 52W range, cash, market cap.
 - **Sweep pSize History** : `portfolioSize` varie dans le temps (`modes-config-history.json`). Jamais batch-reset sans consentement explicite.
+- **Invalid Cohorts** : un trade scellé qu'on ne peut plus exploiter statistiquement (filtre inopérant, bug de sélection) ne se supprime NI ne se corrige — il se **déclare** dans `data/invalid-cohorts.json` (fenêtre de dates + champ + modes + raison). Lecture : `tools/lib/invalid-cohorts.js`, branché dans `tools/lib/mode-stats.js`. Le **marquage** est systématique (`invalidCohortTrades` / `invalidCohorts` / `invalidCohortExcluded` dans toutes les stats) ; l'**exclusion** est opt-in (`opts.excludeInvalidCohorts` ou `EXCLUDE_INVALID_COHORTS=1`) pour ne pas réécrire une equity curve publiée par accident. Impact : `node tools/invalid-cohort-report.js`. Cohorte active : `scanDate` ∈ [2026-06-16 … 2026-07-13] (93 trades) — seuils de score jamais atteignables, donc aucune sélection réelle.
 
 ### Scanner Pipeline
 - **No Skip** : Jamais skipper une étape du pipeline (anti-dilution, MCP enrichment, risk gating, validation) sans accord explicite.

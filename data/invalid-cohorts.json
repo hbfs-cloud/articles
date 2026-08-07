@@ -1,0 +1,34 @@
+{
+  "_comment": "Registre DÉCLARATIF des cohortes de trades invalides. Aucun trade n'est jamais modifié ni supprimé (règle d'immutabilité + chaîne SHA-256 de data/trade-chain.json) : ce fichier se contente de MARQUER des trades scellés pour que les statistiques et les backtests puissent les exclure EXPLICITEMENT. Lu par tools/lib/invalid-cohorts.js, branché dans tools/lib/mode-stats.js (source unique de la comptabilité des modes → sweep.js / gen-status-page.js / gen-api.js). Le marquage est TOUJOURS reporté dans les stats (champs invalidCohort*) ; l'EXCLUSION est opt-in (opts.excludeInvalidCohorts ou env EXCLUDE_INVALID_COHORTS=1) pour que la comptabilité point-in-time publiée reste inchangée tant qu'un re-baseline n'a pas été décidé.",
+  "_version": "1.0.0",
+  "_updated": "2026-08-07",
+  "_schema": {
+    "id": "identifiant stable de la cohorte (référencé dans les stats)",
+    "field": "champ date du trade servant à l'appartenance (scanDate | entryDate | exitDate)",
+    "from": "borne basse INCLUSE, YYYY-MM-DD",
+    "to": "borne haute INCLUSE, YYYY-MM-DD",
+    "modes": "\"*\" pour tous les modes, ou tableau d'ids de modes",
+    "action": "exclude-from-stats (seule valeur reconnue à ce jour)",
+    "severity": "invalid | suspect — seul `invalid` déclenche l'exclusion",
+    "reason": "pourquoi ces trades ne sont pas exploitables statistiquement"
+  },
+  "cohorts": [
+    {
+      "id": "filtre-inoperant-20260616-20260713",
+      "field": "scanDate",
+      "from": "2026-06-16",
+      "to": "2026-07-13",
+      "inclusive": true,
+      "modes": "*",
+      "action": "exclude-from-stats",
+      "severity": "invalid",
+      "label": "Fenêtre de filtre d'entrée inopérant",
+      "reason": "Les trades dont scanDate tombe dans cette fenêtre (bornes incluses) sont entrés via un filtre de sélection inopérant : le seuil de score configuré ne mordait sur aucun candidat, donc AUCUNE sélection n'a réellement eu lieu. Les entrées de la fenêtre ne sont pas un échantillon de la stratégie annoncée mais un tirage non filtré du pool de candidats. Leur P&L ne mesure donc rien d'exploitable — ni pour valider/invalider une config, ni pour calibrer un backtest — et doit être écarté explicitement de toute statistique d'espérance, de win-rate ou de profit-factor.",
+      "evidence": "Seuils configurés vs scores réellement observés sur les trades scellés de data/backtest-trades.json : hybrid minScore=25 vs score minimum observé 65.15 (14/14 trades au-dessus du seuil) ; book_honest, hvep, stockbox_pit, etf_us, us_highvol, ep minScore=50 vs score minimum observé 80.00 (stockbox_pit : les 11 trades portent exactement 80.00). Dans aucun de ces modes le seuil n'a jamais rejeté un candidat.",
+      "impact": "394 trades scellés au total dans data/backtest-trades.json (tous modes confondus), dont 93 dans la fenêtre. La cohorte est nettement plus mauvaise que le reste : -2,97 %/trade de moyenne simple dans la fenêtre (n=93) contre +0,42 %/trade hors fenêtre (n=301).",
+      "declaredBy": "assainissement-modes",
+      "declaredAt": "2026-08-07",
+      "reviewNote": "Fenêtre fermée le 2026-07-13 : c'est la date du cut-over dtx v15 (cost-honest) qui a re-statué l'ensemble des modes scriptés. Ne pas étendre la borne haute sans preuve que le filtre est resté inopérant après cette date."
+    }
+  ]
+}

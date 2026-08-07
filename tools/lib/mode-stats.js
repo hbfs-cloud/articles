@@ -20,6 +20,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const invalidCohorts = require('./invalid-cohorts');
 
 const ROOT = path.join(__dirname, '..', '..');
 
@@ -119,10 +120,26 @@ function getWeight(trade, modeId, cfgVersions, defaultWeight) {
 // par l'appelant (sweep.js injecte son cache de module ; gen-status-page/gen-api
 // passent le leur). Absent → {} (getClose → null, unrealized 0 : « pas de data »).
 // `opts.priorEC`    : courbe d'equity scellée (append-only) à préfixer.
+//
+// `opts.excludeInvalidCohorts` : retire du calcul les trades marqués par
+// `data/invalid-cohorts.json` (registre déclaratif — voir lib/invalid-cohorts.js).
+// DÉFAUT = false : la comptabilité point-in-time publiée reste byte-identique.
+// Le MARQUAGE, lui, est toujours reporté dans le retour (`invalidCohortTrades`,
+// `invalidCohorts`, `invalidCohortExcluded`) : les trades entrés via un filtre
+// inopérant sont visibles partout, y compris quand on ne les exclut pas.
+// Activation globale possible via `EXCLUDE_INVALID_COHORTS=1`.
 function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, modeId, calendar, opts = {}) {
   const DF = dayFnsFor(calendar);
   const priceCache = opts.priceCache || {};
-  const allTrades = (closedTrades || []).filter(t => t.actualEntry > 0);
+  let allTrades = (closedTrades || []).filter(t => t.actualEntry > 0);
+
+  // ─── Cohortes invalides : marquage systématique, exclusion sur demande ─────
+  const excludeInvalid = invalidCohorts.isExclusionEnabled(opts);
+  const cohortInfo = invalidCohorts.summarize(allTrades, modeId, excludeInvalid);
+  if (excludeInvalid && cohortInfo.invalidCohortTrades > 0) {
+    allTrades = invalidCohorts.partitionTrades(allTrades, modeId).valid;
+  }
+
   if (allTrades.length === 0) return null;
   const defaultWeight = (1 / portfolioSize) * (positionSizePct || 1);
 
@@ -320,6 +337,9 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
     sharpe,
     returnDDRatio,
     equityCurve,
+    // Marquage cohortes invalides — informatif quand `invalidCohortExcluded`
+    // est false (chiffres ci-dessus inchangés), effectif quand il est true.
+    ...cohortInfo,
   };
 }
 

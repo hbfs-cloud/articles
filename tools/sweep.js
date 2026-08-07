@@ -2103,6 +2103,13 @@ async function main() {
             trailMultR: cfg.trailMultR ?? 1.5, trailGraceDays: cfg.trailGraceDays ?? 0,
             postWideningRRMin: cfg.postWideningRRMin || 0,
             blacklist: cfg.blacklist || null,
+            // regimeParams était DÉCLARÉ en config par 8 modes et n'arrivait jamais ici : la
+            // liste des champs passés est explicite, et il n'y figurait pas. Le bloc de parité
+            // Go (`if (config.regimeParams && config.regimeParams.maxLoss && setup.regime)`)
+            // ne s'exécutait donc jamais — capacité et perte max par régime silencieusement
+            // inertes depuis leur introduction. Non détecté parce qu'un champ absent ne lève
+            // rien : la garde `if (config.regimeParams ...)` est simplement fausse.
+            regimeParams: cfg.regimeParams || null,
             // v10.4 — opt-in Go PositionManager ports (see simulateTrade doc comment)
             trailTriggerPct: cfg.trailTriggerPct || 0,
             earlyExitLossPct: cfg.earlyExitLossPct || 0, earlyExitDays: cfg.earlyExitDays || 0,
@@ -2733,6 +2740,7 @@ async function main() {
                 disableTP2: priorCfg.disableTP2 || false, entryGatePct: priorCfg.entryGatePct || 0, vwapGate: priorCfg.vwapGate || false,
                 trailMultR: priorCfg.trailMultR ?? 1.5, trailGraceDays: priorCfg.trailGraceDays ?? 0,
                 postWideningRRMin: priorCfg.postWideningRRMin || 0, blacklist: priorCfg.blacklist || null,
+                regimeParams: priorCfg.regimeParams || null, // idem site live : était absent, donc inerte
                 trailTriggerPct: priorCfg.trailTriggerPct || 0,
                 earlyExitLossPct: priorCfg.earlyExitLossPct || 0, earlyExitDays: priorCfg.earlyExitDays || 0,
                 tightenAfterDays: priorCfg.tightenAfterDays || 0, tightenToPct: priorCfg.tightenToPct || 0,

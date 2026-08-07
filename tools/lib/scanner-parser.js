@@ -35,6 +35,7 @@ const fs = require('fs');
 const path = require('path');
 const cfg = require('../config');
 const { isHaramForHalalMode } = require('./sharia-filter');
+const scoreContract = require('./score-contract');
 
 const SCANNER_DIR = path.join(__dirname, '..', '..', 'scanner');
 
@@ -73,7 +74,7 @@ function extractRegimeFromHtml(html) {
   return m ? m[1] : null;
 }
 
-function loadSignals(dir) {
+function loadSignalsRaw(dir) {
   const jsonPath = path.join(SCANNER_DIR, dir, 'signals.json');
   if (fs.existsSync(jsonPath)) {
     try {
@@ -306,8 +307,51 @@ function parseThesisMap(html) {
   return map;
 }
 
+// ─── CONTRAT DE SCORE (tools/lib/score-contract.js) ─────────────────────────
+// `loadSignals` est LE point de chargement partagé (sweep, pit-engine, gen-status-page,
+// validate-scan, gen-scanner-notifications…). C'est donc ici qu'on tamponne la métadonnée
+// d'échelle sur CHAQUE signal et qu'on hurle si un producteur sort de sa plage déclarée.
+//
+// Ce qui est fait :  ajout des champs `scoreFamily` / `scoreScale` / `scoreBounded` /
+//                    `scoreUnit` (purement ADDITIF — `score` n'est jamais touché) + garde.
+// Ce qui n'est PAS fait : aucun filtrage, aucun tri, aucune normalisation implicite. Aucun
+//                    résultat de replay ne bouge du fait de ce module.
+//
+// La garde respecte l'env SCORE_CONTRACT (warn par défaut, strict = lève). Elle est
+// DÉLIBÉRÉMENT posée en DEHORS du try/catch du parseur JSON : à l'intérieur, un throw serait
+// avalé par le `catch (_) { fall through to HTML }` et la violation disparaîtrait en silence —
+// exactement le mode de défaillance que ce contrat existe pour supprimer.
+const CONTRACT_POOL_KEYS = [
+  ['signals', 'signals[]'], ['tklPool', 'tkl_pool'], ['cryptoPool', 'crypto_pool'],
+  ['metalsPool', 'metals_pool'], ['forexPool', 'forex_pool'], ['casablancaPool', 'casablanca_pool'],
+  ['euSmallcapPool', 'eu_smallcap_pool'], ['factorPool', 'factor_pool'], ['peadPool', 'pead_pool'],
+  ['filingsPool', 'filings_pool'], ['gapPool', 'gap_pool'], ['dtxPool', 'dtx_pool'],
+  ['fortressPool', 'fortress_pool'],
+];
+
+function loadSignals(dir) {
+  const loaded = loadSignalsRaw(dir);
+  if (!loaded) return loaded;
+  for (const [key, label] of CONTRACT_POOL_KEYS) {
+    const arr = loaded[key];
+    if (!Array.isArray(arr)) continue;
+    for (const s of arr) {
+      scoreContract.stamp(s);
+      scoreContract.guardSignal(s, `${dir}:${label}`);
+    }
+  }
+  // `signals[]` est le composite que TOUS les consommateurs en aval seuillent (`minScore`) et
+  // trient (`b.score - a.score`) en bloc. S'il mélange des familles, ce seuil et ce tri sont
+  // dénués de sens — on le signale ici, une fois, au chargement.
+  if (Array.isArray(loaded.signals)) {
+    scoreContract.guardComparable(loaded.signals, `${dir}:signals[] (seuil minScore + tri)`);
+  }
+  return loaded;
+}
+
 module.exports = {
   loadSignals,
+  loadSignalsRaw,
   parsePrice,
   parseSynthese,
   parseSetupCards,
