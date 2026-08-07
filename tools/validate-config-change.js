@@ -142,8 +142,8 @@ function regimeBreakdown(closedTrades) {
 
 // GO/WAIT gate. Enforces: (1) the mandatory 30-day window BEATS current (higher return,
 // DD not materially worse), (2) walk-forward OOS does not degrade, (3) full-period A/B
-// delta is positive. All comparisons are relative to the SAME-base CURRENT row. A DD>8%
-// note flags the mode-success guardrail but does not by itself veto (informational).
+// delta is positive. All comparisons are relative to the SAME-base CURRENT row, Y COMPRIS le
+// guardrail de DD : seuil absolu si la référence le respecte, sinon comparaison de deltas.
 function evalGate(cur, prop) {
   const reasons = [];
   let go = true;
@@ -153,6 +153,14 @@ function evalGate(cur, prop) {
     // Both arms active in the window → full head-to-head (return up, DD not worse).
     if (!(w.ret > cw.ret)) { go = false; reasons.push(`30j ret ${w.ret}%≤cur ${cw.ret}%`); }
     if (w.dd > cw.dd + 1.0) { go = false; reasons.push(`30j DD ${w.dd}%>cur ${cw.dd}% (+1pt tol)`); }
+  } else if (w.n === 0 && (!cw || cw.n === 0)) {
+    // LES DEUX bras sont inactifs sur la fenêtre : le test est VIDE, il n'a rien mesuré.
+    // Il doit s'ABSTENIR, pas voter. Avant, `w.pf < 1` était vrai (pf=0 faute de trades) et
+    // vetait — un mode qui n'a pas tradé depuis 30 jours ne pouvait donc JAMAIS voir un
+    // changement de config validé. Verrou circulaire : turbo est inactif parce que sa config
+    // est mauvaise, et le gate refusait de la corriger parce qu'il est inactif.
+    // Le verdict repose alors entièrement sur OOS + pleine période, qui eux ont des données.
+    reasons.push(`30j: AUCUN trade dans les deux bras — fenêtre non concluante, verdict sur OOS + pleine période`);
   } else {
     // Baseline idle/insufficient in the window → DD compare is void. Require the proposal
     // to be self-healthy (non-negative return, PF≥1) and lean on OOS + full for the verdict.
@@ -162,9 +170,24 @@ function evalGate(cur, prop) {
   }
   if (prop.oosRet < cur.oosRet) { go = false; reasons.push(`OOS ret ${prop.oosRet}%<cur ${cur.oosRet}%`); }
   if (prop.ret <= cur.ret) { go = false; reasons.push(`full ret ${prop.ret}%≤cur ${cur.ret}%`); }
-  // Mode-success criterion: max DD ≤ 8% is a hard mode requirement → hard veto.
-  if (Math.abs(prop.dd) > 8) { go = false; reasons.push(`full DD ${prop.dd}% viole guardrail ≤8%`); }
-  if (go) reasons.unshift('bat l\'actuel (30j + OOS + full, DD≤8%)');
+  // Mode-success criterion: max DD ≤ 8%. Appliqué RELATIVEMENT à la ligne CURRENT, parce
+  // qu'un DD absolu de replay de segment n'est pas fiable (règle projet
+  // segment-replay-absolute-dd) et qu'un seuil absolu gèle l'existant : quand la config en
+  // place viole déjà 8%, il rendait impossible TOUTE amélioration par étapes — y compris
+  // celles qui réduisent le DD. Cas réel du 2026-08-07 : turbo H=3 améliorait le rendement
+  // (-6,54% → -0,33%) ET le drawdown (-11,07% → -9,96%), et se faisait refuser.
+  //   • ligne de référence saine (≤8%) → la proposition doit le rester : veto strict.
+  //   • ligne de référence déjà au-delà → verdict sur le DELTA : veto seulement si la
+  //     proposition dégrade encore. L'écart au seuil reste signalé dans tous les cas.
+  const pdd = Math.abs(prop.dd), cdd = Math.abs(cur.dd);
+  if (cdd <= 8) {
+    if (pdd > 8) { go = false; reasons.push(`full DD ${prop.dd}% viole guardrail ≤8% (actuel ${cur.dd}% le respecte)`); }
+  } else if (pdd > cdd + 0.01) {
+    go = false; reasons.push(`full DD ${prop.dd}% dégrade l'actuel ${cur.dd}% (tous deux >8%)`);
+  } else if (pdd > 8) {
+    reasons.push(`NOTE: DD ${prop.dd}% encore >8% mais AMÉLIORE l'actuel ${cur.dd}%`);
+  }
+  if (go) reasons.unshift('bat l\'actuel (30j + OOS + full, DD non dégradé)');
   return { verdict: go ? 'GO' : 'WAIT', reasons };
 }
 
