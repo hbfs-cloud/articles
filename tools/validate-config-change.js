@@ -180,6 +180,19 @@ function evalGate(cur, prop) {
     if (w.pf < 1) { go = false; reasons.push(`30j PF ${w.pf}<1 (baseline idle)`); }
     reasons.push(`30j: prop +${w.ret}% PF${w.pf} n${w.n} vs cur idle n${cw ? cw.n : 0}`);
   }
+  // Effectif minimum. Un changement de stop ou de sizing modifie l'occupation des slots du
+  // portefeuille, donc le LIVRE lui-meme : une variante peut ressortir avec 3 trades la ou la
+  // reference en a 18. Ce n'est pas une meilleure config, c'est un autre echantillon. Le depot
+  // marque d'ailleurs deja ces cas `pfReliable: false` dans portfolio/v1/modes.json.
+  // Sans ce garde-fou, `secured maxStop12` passait GO avec PF 7,58 sur n=3 (2026-08-07).
+  const MIN_N = 10;
+  if (prop.n < MIN_N) {
+    go = false;
+    reasons.push(`echantillon insuffisant n=${prop.n}<${MIN_N} (ref n=${cur.n}) — variante non concluante`);
+  } else if (cur.n >= MIN_N && prop.n < cur.n * 0.5) {
+    go = false;
+    reasons.push(`livre trop different n=${prop.n} vs ref n=${cur.n} (<50%) — comparaison non valide`);
+  }
   if (prop.oosRet < cur.oosRet) { go = false; reasons.push(`OOS ret ${prop.oosRet}%<cur ${cur.oosRet}%`); }
   if (prop.ret <= cur.ret) { go = false; reasons.push(`full ret ${prop.ret}%≤cur ${cur.ret}%`); }
   // Mode-success criterion: max DD ≤ 8%. Appliqué RELATIVEMENT à la ligne CURRENT, parce
@@ -233,10 +246,17 @@ async function main() {
   console.log('done\n');
 
   // Pre-sim trades per unique exit key needed by variants
+  // ATTENTION — le cache doit rendre une COPIE. `simulatePortfolio` mute les objets trades
+  // (marques, dates, statut de slot). En rendant le tableau cache tel quel, la 2e variante
+  // partageant la meme cle de sortie recevait des trades DEJA consommes par la 1re : deux
+  // configurations identiques donnaient alors des resultats differents selon leur POSITION
+  // dans VARIANTS (+7,09% en 1re ligne contre +6,73% en 2e, n=145 contre 144, reproductible).
+  // La ligne CURRENT etant toujours en position 1, le biais jouait systematiquement CONTRE
+  // les propositions. Constate et corrige le 2026-08-07.
   const tradeCache = {};
   function tradesFor(c) {
     const k = exitKey(c);
-    if (tradeCache[k]) return tradeCache[k];
+    if (tradeCache[k]) return tradeCache[k].map(t => ({ ...t }));
     const trades = [];
     for (const setup of allSetups) {
       const r = sweep.simulateTrade(setup, setup.scanDate, sweep.priceCache[setup.ticker], {
@@ -248,11 +268,12 @@ async function main() {
         entryGatePct: c.entryGatePct || 0, vwapGate: c.vwapGate || false,
         trailMultR: c.trailMultR ?? 1.5, trailGraceDays: c.trailGraceDays ?? 0,
         postWideningRRMin: c.postWideningRRMin || 0, blacklist: c.blacklist || null,
+        regimeParams: c.regimeParams || null, // idem sweep.js : absent de la liste, donc inerte
       });
       if (r) trades.push({ ...r, regime: setup.regime || null });
     }
     tradeCache[k] = trades;
-    return trades;
+    return trades.map(t => ({ ...t }));
   }
 
   const STRAT = sweep.STRATEGY_FILTERS_MAP;
