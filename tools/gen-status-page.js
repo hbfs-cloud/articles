@@ -13,6 +13,7 @@ const ms = require('./lib/mode-status');
 // "Halal" page never surface a haram ticker that the backtest itself would refuse to hold.
 const { isHaramForHalalMode } = require('./lib/sharia-filter');
 const dlt = require('./lib/dtx-live-track');
+const dxh = require('./lib/dtx-engine-history');
 // Comptabilité POINT-IN-TIME partagée (UNIQUE, verbatim depuis sweep.js). Réutilisée pour
 // calculer courbe/stats des modes FRAIS (non scellés) depuis LEURS propres trades — jamais
 // depuis pit-state/modeEquityHistory (décision owner 2026-07-22 : SOURCE UNIQUE = sweep frozen).
@@ -1485,6 +1486,24 @@ ${renderStatusBanner(cfg)}
   </details>
 </div>
 
+<!-- ══ 2bis. DÉCISIONS DU MOTEUR — modes scriptés uniquement ══ -->
+<!-- Ce que le moteur systematic a dit CHAQUE JOUR, historisé et point-in-time. Le staging
+     data/dtx/<mode>.json est un instantané écrasé à chaque ingestion : sans ce registre, les
+     ordres d'hier sont perdus. Source : data/dtx-engine-history.json, publié en
+     /scanner/status/engine-history.json. Immuable par (mode, date). -->
+${cfg.assetClass === 'dtx' ? `<div class="section-card">
+  <details>
+    <summary class="sc-summary">
+      <span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Décisions du moteur <span class="count" id="engHistCount-${id}">—</span></span>
+    </summary>
+    <div style="margin-top:.7rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+      <label style="font-size:.74rem;color:var(--muted)">Séance</label>
+      <select id="engHistSel-${id}" onchange="engHistRender('${id}')" style="font-size:.76rem;padding:.25rem .4rem;border:1px solid var(--line);border-radius:var(--r-s);background:var(--bg-1);color:var(--ink-1)"></select>
+      <span id="engHistMeta-${id}" style="font-size:.72rem;color:var(--muted)"></span>
+    </div>
+    <div id="engHistBody-${id}" style="margin-top:.6rem"></div>
+  </details>
+</div>` : ''}
 <!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <!-- Modes scriptés: 'Today's Signals' est redondant avec 'Orders to Place' (les signaux SONT les ordres) → masqué -->
 <div class="section-card${isScripted ? ' hide-section' : ''}">
@@ -2894,6 +2913,10 @@ document.addEventListener('DOMContentLoaded',function(){
   window.switchMode=function(id,opts){
     if(!VALID_MODES.includes(id))return;
     activeMode=id;
+    // Panneau "Decisions du moteur" : present uniquement pour les modes pilotes par le moteur
+    // systematic. On l'initialise a l'activation du mode (le registre est charge une seule fois
+    // puis mis en cache cote client).
+    try{ if(document.getElementById('engHistSel-'+id)) engHistInit(id); }catch(e){}
     // If mode isn't in favorites, temporarily show its tab (deep link)
     var tabEl=document.querySelector('.mode-tab[data-mode="'+id+'"]');
     if(tabEl&&!tabEl.classList.contains('fav'))tabEl.classList.add('fav');
@@ -3424,6 +3447,59 @@ document.addEventListener('DOMContentLoaded',function(){
       var hCount=hSec.querySelector('.count'); if(hCount) hCount.textContent=ct.length+' closed';
     }
   }
+
+  // ── Décisions du moteur (modes scriptés) ────────────────────────────────────
+  // Lit le registre publié et rend la séance choisie. Point-in-time : on n'affiche QUE la
+  // décision de la date sélectionnée. Si la Time Machine est active, on s'y aligne.
+  var _engHist = null, _engHistLoading = false;
+  function engHistLoad(cb){
+    if(_engHist) return cb(_engHist);
+    if(_engHistLoading) return setTimeout(function(){engHistLoad(cb)},120);
+    _engHistLoading = true;
+    fetch('/scanner/status/engine-history.json?v='+_v).then(function(r){return r.json()})
+      .then(function(d){_engHist=d;_engHistLoading=false;cb(d)})
+      .catch(function(){_engHistLoading=false;cb(null)});
+  }
+  function engHistInit(modeId){
+    engHistLoad(function(d){
+      var sel=document.getElementById('engHistSel-'+modeId);
+      var cnt=document.getElementById('engHistCount-'+modeId);
+      if(!sel) return;
+      var byDate=(d&&d.modes&&d.modes[modeId])||{};
+      var dates=Object.keys(byDate).sort().reverse();
+      if(!dates.length){ if(cnt)cnt.textContent='aucune séance'; sel.innerHTML='<option>—</option>'; return; }
+      if(cnt)cnt.textContent=dates.length+' séance'+(dates.length>1?'s':'');
+      sel.innerHTML=dates.map(function(x){return '<option value="'+x+'">'+x+'</option>'}).join('');
+      // alignement Time Machine : si une date passée est affichée, on la sélectionne
+      if(window._leTM){
+        var tmIso=tmDates&&tmDates[tmCurrentIdx]?tmDates[tmCurrentIdx]:null;
+        if(tmIso){ var iso=tmIso.slice(0,4)+'-'+tmIso.slice(4,6)+'-'+tmIso.slice(6,8);
+          var best=dates.filter(function(x){return x<=iso})[0]; if(best) sel.value=best; }
+      }
+      engHistRender(modeId);
+    });
+  }
+  function engHistRender(modeId){
+    var sel=document.getElementById('engHistSel-'+modeId);
+    var body=document.getElementById('engHistBody-'+modeId);
+    var meta=document.getElementById('engHistMeta-'+modeId);
+    if(!sel||!body||!_engHist) return;
+    var e=((_engHist.modes||{})[modeId]||{})[sel.value];
+    if(!e){ body.innerHTML='<div style="font-size:.78rem;color:var(--muted)">Aucune décision enregistrée pour cette séance.</div>'; if(meta)meta.textContent=''; return; }
+    // La provenance est AFFICHÉE : une entrée reconstruite depuis le pool publié n'a pas la
+    // même richesse qu'une décision brute du moteur, et le lecteur doit le savoir.
+    var prov = e.provenance==='staging' ? 'décision brute du moteur' : (e.provenance==='dtx_pool' ? 'reconstruite depuis le pool publié' : '—');
+    if(meta) meta.textContent = prov + (e.engineMode?(' · moteur '+e.engineMode):'') + ' · ' + (e.orders||[]).length + ' ordre(s)' + (e.updates?(' · '+e.updates+' maj'):'') + (e.cancels?(' · '+e.cancels+' annul.'):'');
+    var o=e.orders||[];
+    if(!o.length){ body.innerHTML='<div style="font-size:.78rem;color:var(--muted)">Le moteur n\'a émis aucun ordre ce jour-là.</div>'; return; }
+    body.innerHTML='<table class="t"><thead><tr><th>Symbole</th><th>Sens</th><th>Type</th><th>Qté</th><th>Limite</th><th>Stop</th><th>Motif</th></tr></thead><tbody>'+
+      o.map(function(x){
+        var f=function(v){return v==null?'—':(typeof v==='number'?v.toFixed(2):v)};
+        return '<tr><td><b>'+(x.symbol||'—')+'</b></td><td>'+(x.side||'—')+'</td><td>'+(x.orderType||'—')+'</td><td>'+f(x.qty)+'</td><td>'+f(x.limitPrice)+'</td><td>'+f(x.stopLoss)+'</td><td style="font-size:.7rem;color:var(--muted)">'+((x.reason||'').slice(0,80))+'</td></tr>';
+      }).join('')+'</tbody></table>';
+  }
+  window.engHistRender=engHistRender; window.engHistInit=engHistInit;
+
   window.tmUpdateLive = tmUpdateLive;
 
   function tmShowLive(){
@@ -3954,6 +4030,10 @@ document.addEventListener('DOMContentLoaded',function(){
   // prevSnap is loaded earlier in main() (so panel() can use it during HTML render).
   // Reuse the same closure-bound prevSnap here for snapshot annotation.
 
+  // Registre du moteur charge UNE fois pour tout le snapshot (lecture seule).
+  let _dxhStore = null;
+  try { _dxhStore = dxh.load(); } catch (e) { console.error('  [warn] registre moteur illisible :', e.message); }
+
   const snapshot = { date: todayISO, updatedAt, scanDir };
   snapshot.modes = {};
   // NOTE: each mode is an independent alternative strategy — a user replicating
@@ -4058,6 +4138,21 @@ document.addEventListener('DOMContentLoaded',function(){
       closedTrades: mTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, exitDate: t.exitDate || null, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
       config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1, ddBreakerPct: cfg.ddBreakerPct || 0, sectorCapMax: cfg.sectorCapMax || 0, sizingMethod: cfg.sizingMethod || null, targetRiskPct: cfg.targetRiskPct || 0, vixKillThreshold: cfg.vixKillThreshold || 0, correlationCap: cfg.correlationCap || 0, crossModeDedup: cfg.crossModeDedup || false, label: cfg.label || id },
       risk: getRiskFor(id),
+      // Decision du MOTEUR systematic pour cette seance — ADDITIF, prefixe engine_, jamais
+      // en remplacement des champs sim ci-dessus. Lu depuis le registre append-only
+      // data/dtx-engine-history.json en mode POINT-IN-TIME (asOf) : on ne rend que ce qui
+      // etait connu a la date du snapshot, jamais une seance posterieure. null pour les
+      // modes non pilotes par le moteur.
+      engine_decision: (cfg.assetClass === 'dtx') ? (() => {
+        const e = dxh.asOf(id, todayISO, _dxhStore);
+        if (!e) return null;
+        return {
+          asof: e.asof, provenance: e.provenance || null, engineMode: e.engineMode || null,
+          stale: e.asof !== todayISO,   // le moteur n'a pas tourne ce jour-la : on le DIT
+          orders: e.orders || [], updates: e.updates || [], cancels: e.cancels || [],
+          metrics: e.metrics || null,
+        };
+      })() : null,
       // Live-book (pit-state) beside the sim-derived fields above — ADDITIVE, prefixed pit_
       // so the existing snapshot schema (stats/equity = sim) is never broken. null when the
       // mode has no meaningful live data yet.
@@ -4069,6 +4164,31 @@ document.addEventListener('DOMContentLoaded',function(){
   snapshot.regimeProbability = getGlobalRegimeProb();
 
   fs.writeFileSync(path.join(historyDir, todayKey + '.json'), JSON.stringify(snapshot));
+
+  // Registre du moteur publie comme artefact consultable par la page (Time Machine incluse).
+  // On NE reecrit PAS les snapshots passes pour y injecter la decision moteur : ce serait
+  // reecrire des artefacts historiques. Le registre est la source point-in-time, la page y lit
+  // la seance demandee via asOf. Emis a chaque generation, en lecture seule cote navigateur.
+  if (_dxhStore) {
+    const _pub = { _version: dxh.VERSION, _updated: _dxhStore._updated || null, modes: {} };
+    for (const [mId, byDate] of Object.entries(_dxhStore.modes || {})) {
+      _pub.modes[mId] = {};
+      for (const [d, e] of Object.entries(byDate)) {
+        _pub.modes[mId][d] = {
+          asof: e.asof, provenance: e.provenance || null, engineMode: e.engineMode || null,
+          orders: (e.orders || []).map(o => ({ symbol: o.symbol, side: o.side, orderType: o.orderType,
+            qty: o.qty, entry: o.entry, limitPrice: o.limitPrice, stopLoss: o.stopLoss,
+            takeProfit: o.takeProfit, reason: o.reason })),
+          updates: (e.updates || []).length, cancels: (e.cancels || []).length,
+          metrics: e.metrics ? { win_rate: e.metrics.win_rate ?? null, total_trades: e.metrics.total_trades ?? null,
+            final_equity: e.metrics.final_equity ?? null } : null,
+        };
+      }
+    }
+    fs.writeFileSync(path.join(ROOT, 'scanner/status/engine-history.json'), JSON.stringify(_pub));
+    const _n = Object.values(_pub.modes).reduce((a, m) => a + Object.keys(m).length, 0);
+    console.log(`  [engine] registre publie : ${Object.keys(_pub.modes).length} modes, ${_n} seances`);
+  }
   const existingDates = fs.readdirSync(historyDir).filter(f => /^\d{8}\.json$/.test(f)).map(f => f.replace('.json', '')).sort();
   fs.writeFileSync(path.join(historyDir, 'dates.json'), JSON.stringify(existingDates));
   console.log(`   Snapshot: history/${todayKey}.json (${existingDates.length} dates)`);
