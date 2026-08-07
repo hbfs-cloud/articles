@@ -1380,6 +1380,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "",
+    "exchange": "7 août 2026",
+    "name": "DailyTickers",
+    "title": "DailyTickers",
+    "desc": "The S&P 500 sits 0.5% from its record with VIX at 14.8. Meanwhile Western Digital is down 45% from its high, SanDisk 48%, AppLovin 54% after growing revenue 53%. Where the pullback actually lives, what SK Hynix's $38B capex decision broke, and how to trade leaders, high beta and defensives while the Fed's next move might be a hike.",
+    "tags": "us,tech,semis,macro,technique,momentum",
+    "grade": "",
+    "href": "/analyses/pullback-under-the-tape/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "PSIX",
     "exchange": "NASDAQ · Industrials — Engines & Power Systems",
     "name": "PSIX — PSIX gapped +21% on Q2. Squeeze fuel meets a broken chart: entry, stop and targets inside.",
