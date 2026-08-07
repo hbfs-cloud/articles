@@ -35,3 +35,27 @@ situation où l'amélioration est la plus nécessaire.
    outre un gate de config sur des modes live.
 
 Cas ouvert : turbo H=3 attend une décision. Voir [[llm-modes-horizon-redefined]].
+
+## Troisième défaut, même famille (2026-08-07)
+
+La fenêtre de 30 jours exigeait un rendement **strictement supérieur** (`!(w.ret > cw.ret)`).
+Or une mesure **protectrice** — plafond de perte, coupe-circuit — ne mord que dans la queue de
+distribution : elle est **neutre par construction** sur toute fenêtre où la queue ne s'est pas
+produite, et ne peut donc jamais battre strictement.
+
+Cas réel : `fortress` tournait à 10 positions **sans aucun plafond de perte** depuis le 29/06.
+Sa pire sortie des 30 derniers jours vaut −5,07%, donc un plafond à −7% ou −8% n'a mordu sur
+aucune et laisse le rendement de la fenêtre identique (1,43% contre 1,43%). L'exigence stricte
+rendait **toute restauration de garde-fou inapprouvable, quelle que soit sa valeur**.
+
+Corrigé : la fenêtre veto sur **dégradation**, pas sur absence d'amélioration. L'exigence
+« bat l'actuel » reste STRICTE sur la pleine période et sur le hors-échantillon.
+
+**Vérification que le gate garde ses dents** — sur 9 variantes testées après le correctif, **une
+seule** passe : maxStop 5 et 6 dégradent la fenêtre, 7 et 9 échouent sur le rendement, l'ajout
+d'un ATR stop échoue partout, et deux contre-tests délibérés sont bien refusés (`dynamic H=6`
+sur le hors-échantillon — signature de surapprentissage — et `dynamic H=2` sur le drawdown).
+
+**Règle générale à retenir :** un gate de validation doit distinguer une mesure qui **cherche du
+rendement** (exiger qu'elle en produise) d'une mesure qui **borne le risque** (exiger seulement
+qu'elle ne coûte rien). Les confondre bloque exactement les garde-fous qu'on veut restaurer.

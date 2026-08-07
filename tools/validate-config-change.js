@@ -150,8 +150,20 @@ function evalGate(cur, prop) {
   const w = prop.win, cw = cur.win;
   if (!w) { go = false; reasons.push('30j window indisponible'); }
   else if (cw && cw.n >= 3 && w.n >= 3) {
-    // Both arms active in the window → full head-to-head (return up, DD not worse).
-    if (!(w.ret > cw.ret)) { go = false; reasons.push(`30j ret ${w.ret}%≤cur ${cw.ret}%`); }
+    // Both arms active in the window → head-to-head. La fenêtre veto sur DÉGRADATION, pas
+    // sur absence d'amélioration : une mesure PROTECTRICE (plafond de perte, coupe-circuit)
+    // ne mord que dans la queue de distribution, donc elle est NEUTRE par construction sur
+    // toute fenêtre où la queue ne s'est pas produite — et ne peut jamais battre strictement.
+    // Cas réel du 2026-08-07 : fortress tourne sans aucun plafond de perte sur 10 positions
+    // depuis le 29/06 ; sa pire sortie des 30 derniers jours vaut -5,07%, donc un plafond à
+    // -7% ou -8% n'a mordu sur aucune et laisse le rendement de la fenêtre INCHANGÉ (1,43%
+    // contre 1,43%). L'exigence stricte rendait donc toute restauration de garde-fou
+    // inapprouvable, quelle que soit sa valeur.
+    // L'exigence « bat l'actuel » n'est PAS relâchée : elle reste stricte sur la pleine
+    // période ET sur le hors-échantillon, plus bas. La fenêtre reste un contrôle de
+    // non-régression sur petit échantillon, ce qu'elle est réellement.
+    if (w.ret < cw.ret) { go = false; reasons.push(`30j ret ${w.ret}% DÉGRADE cur ${cw.ret}%`); }
+    else if (w.ret === cw.ret) reasons.push(`30j: égalité ${w.ret}% (changement non contraignant sur la fenêtre)`);
     if (w.dd > cw.dd + 1.0) { go = false; reasons.push(`30j DD ${w.dd}%>cur ${cw.dd}% (+1pt tol)`); }
   } else if (w.n === 0 && (!cw || cw.n === 0)) {
     // LES DEUX bras sont inactifs sur la fenêtre : le test est VIDE, il n'a rien mesuré.
