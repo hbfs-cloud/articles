@@ -1,6 +1,6 @@
 ---
 name: engine-stop-is-volatility-scaled
-description: Le moteur systematic émet un stop calé sur la volatilité de chaque titre (−18% à −47%) ; tout plafond fixe du tracker le préempte et liquide des positions que le moteur tient encore
+description: Le moteur émet DEUX familles de stop — un plancher forfaitaire à −20% (73%) et un stop calé sur la volatilité (27%, −11% à −46%) ; 99% sont plus larges que le plafond de −15% du tracker, qui liquidait donc des positions que le moteur tenait
 metadata:
   type: feedback
 ---
@@ -54,3 +54,25 @@ tableau de bord affiche une perte, rien ne signale que ce stop n'était pas celu
 
 Voir [[tracker-must-not-preempt-external-engine]] — même famille, découverte en deux temps : d'abord
 le plafond à 15 contre le disaster stop déclaré à 25, puis ici le vrai stop du moteur.
+
+## Correction du 2026-08-07, après rejeu complet des 13 séances × 6 portefeuilles
+
+La première version de cette note, écrite sur DEUX appels, généralisait à tort : « le moteur cale
+son stop sur la volatilité ». Le rejeu complet (239 ordres) montre **deux familles distinctes** :
+
+| famille | part | valeur |
+|---|---|---|
+| garde-fou catastrophe forfaitaire | **175 ordres (73%)** | **−20,00% pile**, invariant |
+| stop calé sur la volatilité | 64 ordres (27%) | médiane −27,33%, de −11,16% à −45,72% |
+
+Les sleeves ETF (`etf_us`, et la poche ETF de `book_honest`) reçoivent le plancher forfaitaire ;
+les sleeves de rotation et les entrées scorées (`stockbox_pit`, `us_highvol`, `ep`) reçoivent le
+stop volatilité.
+
+**La conclusion, elle, se renforce** : **237 des 239 stops (99%) sont plus larges que le plafond
+de −15% du tracker**, et **38 des 38** trades scellés ont leur stop posé à exactement −15,00%.
+Les deux seules exceptions sont CSCO au 04/08, à −11,16%.
+
+Leçon de méthode : deux points de mesure suffisaient à établir le FAIT (le tracker préempte),
+pas à décrire le MÉCANISME. Généraliser une forme fonctionnelle sur deux observations était
+prématuré — le fait tenait, l'explication non.

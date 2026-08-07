@@ -41,6 +41,7 @@ const DRY = has('--dry');
 const FORCE = has('--force');
 const ONLY = val('--mode');
 const BACKFILL = has('--backfill');
+const REPLAY = has('--replay');
 
 function backfill(store) {
   const SC = path.join(ROOT, 'scanner');
@@ -81,6 +82,58 @@ function backfill(store) {
   return res;
 }
 
+// Ingestion des rejeux moteur produits par le workflow (data/dtx-replay/<mode>.json).
+// provenance 'replay' : c'est le moteur qui a repondu, pour cette date, en point-in-time
+// (data_asof == asof, sessions_behind 0) — donc PLUS riche que dtx_pool (forme pontee) mais
+// PAS identique a ce qui a ete emis en direct : le livre passe en entree est reconstruit.
+// Precedence : staging > replay > dtx_pool.
+const RANK = { staging: 3, replay: 2, dtx_pool: 1 };
+function ingestReplay(store) {
+  const dir = path.join(ROOT, 'data', 'dtx-replay');
+  const res = { appended: [], duplicate: [], unreadable: [] };
+  if (!fs.existsSync(dir)) return res;
+  for (const f of fs.readdirSync(dir).filter(x => x.endsWith('.json'))) {
+    const mode = f.replace(/\.json$/, '');
+    if (ONLY && mode !== ONLY) continue;
+    let payload;
+    try { payload = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); }
+    catch (e) { res.unreadable.push(`${mode}: ${e.message}`); continue; }
+    const sessions = Array.isArray(payload) ? payload : (payload.sessions || []);
+    for (const sess of sessions) {
+      const date = sess.asof || sess.date;
+      if (!date) continue;
+      const cur = hist.at(mode, date, store);
+      if (cur && (RANK[cur.provenance] || 0) >= RANK.replay && !FORCE) {
+        res.duplicate.push(`${mode.padEnd(14)} ${date}  (deja ${cur.provenance}, non remplace)`); continue;
+      }
+      const ords = sess.orders || (sess.actions && sess.actions.CREATE) || [];
+      store.modes[mode] = store.modes[mode] || {};
+      store.modes[mode][date] = {
+        asof: date, generatedAt: sess.generatedAt || null,
+        engineMode: 'mcp-replay', engine: 'systematic-tss', currency: sess.currency || null,
+        provenance: 'replay',
+        dataAsof: sess.data_asof || null, sessionsBehind: sess.sessions_behind ?? null,
+        orders: ords.map(o => ({
+          symbol: o.symbol || null, side: o.side || null,
+          orderType: o.order_type || o.orderType || null,
+          qty: o.qty != null ? Number(o.qty) : null,
+          entry: o.limit_price != null ? Number(o.limit_price) : (o.entry != null ? Number(o.entry) : null),
+          limitPrice: o.limit_price != null ? Number(o.limit_price) : (o.limitPrice != null ? Number(o.limitPrice) : null),
+          stopLoss: o.stop_loss != null ? Number(o.stop_loss) : (o.stopLoss != null ? Number(o.stopLoss) : null),
+          takeProfit: o.take_profit != null ? Number(o.take_profit) : null,
+          reason: o.reason || null, orderId: o.order_id || null,
+        })),
+        updates: (sess.actions && sess.actions.UPDATE) || [],
+        cancels: (sess.actions && sess.actions.CANCEL) || [],
+        metrics: null,
+        recordedAt: new Date().toISOString(),
+      };
+      res.appended.push(`${mode.padEnd(14)} ${date}  ordres=${ords.length}  (rejeu moteur)`);
+    }
+  }
+  return res;
+}
+
 function main() {
   if (!fs.existsSync(DTX_DIR)) {
     console.error(`data/dtx/ absent — rien à historiser.`);
@@ -91,6 +144,11 @@ function main() {
 
   const store = hist.load();
   const res = { appended: [], duplicate: [], forced: [], skipped: [], unreadable: [] };
+
+  if (REPLAY) {
+    const r = ingestReplay(store);
+    res.appended.push(...r.appended); res.duplicate.push(...r.duplicate); res.unreadable.push(...r.unreadable);
+  }
 
   if (BACKFILL) {
     const b = backfill(store);
