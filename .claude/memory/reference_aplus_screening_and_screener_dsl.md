@@ -82,3 +82,44 @@ recrée de la distance sous le plus haut, ou une cassure confirmée en volume.
 
 ⚠️ Mémoire MCP indisponible au moment de l'écriture (`get_context` en timeout 60s ×2) : cette entrée n'est
 persistée QUE côté git, la règle de double écriture reste à honorer quand le serveur répond.
+
+## Run 7 août 2026 — zéro A+ confirmé une 2e fois, avec le chiffre qui tranche
+
+421 candidats bruts (7 passages RSI complémentaires) → 343 après plancher DOLLARS + mcap → 305 après
+exclusion des dossiers couverts → 199 sur `macd > signal` comparé par ticker → 89 sur l'empilement →
+41 sur extension ≤3% → 32 sur PE fwd <35× → 31 sur la fenêtre résultats (borne INCLUSIVE) → 12 sur
+4/4 dépassements → 7 après réconciliation Σ4T vs `trailingPE × prix` → 6 domestiques → **2 sur la
+guidance relevée** → 1 après contrôles de risque → **0 au seuil de 92/100**.
+
+Seul survivant des 4 éliminatoires : **BOKF** (144,47 ; EMA 141,34/137,79/126,39 empilées ; extension
++2,21% ; RSI 65,3 ; MACD 2,102 > signal 1,976 ; PE fwd 13,50 ; guidance crédits relevée >10%). Score
+final **49/100**, tué par le R/R : le titre a touché son plus haut 52 s à 145,57 le 6/08 et clôturé à
+**11,3% de l'amplitude**. Stop sous EMA20 à 140,90 (vérifié : 140,90 < 141,34) ⇒ risque 3,57 $.
+Première offre réelle = le plus haut lui-même ⇒ **R/R 0,31**. Viser 2,5R impose 153,4 $, soit 5,4%
+au-dessus du plus haut historique, dans une zone jamais testée. Ce n'est pas un R/R, c'est une
+extrapolation.
+
+### Nouveaux gotchas DSL (vérifiés ce run)
+- **`sma` exige un nom de série ENTRE GUILLEMETS** : `sma('vol',20)`. Sans guillemets ⇒ 0 candidat avec
+  `eval error` sur 1 217 symboles. (Complète la règle « 2 arguments ».)
+- **`top_k` trie par RSI décroissant et tronque la bande basse** ⇒ faire des passages RSI ÉTROITS
+  complémentaires, jamais une seule large.
+- Plancher DOLLARS revalidé : **BOKF ne traite que 253 601 titres/jour (37 M$/j)**. Un plancher en titres
+  aurait supprimé le seul nom passant les 4 éliminatoires. La règle #1 du 5 août tient.
+
+### ⚠️ NOUVEAU — angle mort majeur : bloc technique CORROMPU ⇒ ticker INVISIBLE
+Certains titres reviennent avec `rsi=0, atr=0, ema20=0, ema50=0, ema200=0` et un MACD absurde. Un RSI à 0
+échoue MÉCANIQUEMENT toute bande RSI ⇒ le titre ne franchit aucun passage et n'est **jamais évalué** —
+il n'est pas rejeté, il est invisible, et l'entonnoir ne le compte nulle part.
+Cas vérifiés le 7/08 : **TEAM** (Atlassian, 694 M$/jour de volume, MACD 99,50 sur un titre à 110 $) et
+**PAA**. ⇒ AJOUTER un contrôle systématique en tête d'entonnoir : compter les titres de l'univers liquide
+dont `rsi` ou `atr` vaut 0, et les traiter comme « non évaluables » explicitement, jamais en silence.
+
+### Leçon de régime, affinée
+La distribution ESPÉRÉE a bien eu lieu le 6/08 (BOKF clôture à 11,3% de son amplitude sur son plus haut
+annuel, PB 13,5%, SNX 12,8%, WMS 13,8% sur 1,94× le volume) — mais elle **n'a pas encore recréé de
+distance exploitable**. Les noms qui ONT de la distance sous leur plus haut échouent chacun pour une
+raison indépendante du régime : SNX R/R 0,70 contre la vraie offre, WMS guidance seulement confirmée le
+jour même, STX conversion d'obligations en actions datée au 8 septembre (dilution DANS la fenêtre).
+Ce qui rouvrirait le jeu : 2-4 séances de respiration ramenant BOKF vers son EMA50 (−4,6%) sans casser
+l'empilement, ou une cassure confirmée en volume au-delà de 145,57.
