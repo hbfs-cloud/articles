@@ -43,6 +43,66 @@ Telegram (token `.env`) ou marqueur `HEARTBEAT-RETRO-STALE` relayé par la routi
 (MCP notification, alias `alerts`). Généralisation du correctif « staging stale bruyant »
 du 17/07. Évidence : bloc figé du 2 au 19 juillet (regex no-op silencieuses).
 
+### G5 — `tp1_reachability` (remplace le plancher de R/R comme critère de sélection)
+
+`active_from: 2026-08-10`. Config : `data/scanner-filters.json#editorial_targets`.
+Enforcement : `tools/validate-scan.js` (règle `tp1_reachability`).
+
+**La cible doit être à une distance que le titre PARCOURT RÉELLEMENT sur l'horizon** :
+`1,0 ≤ (tp1 − entry) / ATR14 ≤ 2,0`, optimum mesuré **1,5×ATR**. `extension.atr` absent =
+**fail-closed** : sans ATR la cible n'est pas vérifiable, donc pas publiable.
+
+**Pourquoi le plancher de R/R ne suffisait pas — et nuisait.** Backtest des 21 scans publiés
+du 10/07 au 07/08 (196 lignes éditoriales, 169 tickers, barres réelles, règles de remplissage
+et de sortie du dépôt), sur les 96 trades dont l'horizon était écoulé :
+
+| | |
+|---|---|
+| espérance | **+0,025 R** |
+| cible atteinte | **12 / 96 = 12,5%** |
+| distance moyenne à la cible | **8,48%** |
+| meilleur gain latent moyen | **4,38%** |
+
+La cible était deux fois plus loin que là où le prix va. Il aurait fallu 37,0% de réussite
+pour qu'un R/R annoncé de 1,704 ait un sens. L'espérance ne tenait que par les sorties à
+l'horizon (39,6% des trades, +0,71 R), jamais par les cibles.
+
+**Mesure de la correction** — mêmes lignes, mêmes entrées, mêmes stops, SEULE la cible change
+(n=88, les lignes sans `extension.atr` exclues) :
+
+| cible | TP1 atteint | espérance |
+|---|---|---|
+| publiée | 12 | +0,025 R |
+| 1,0×ATR | 41 | +0,071 R |
+| 1,25×ATR | 36 | +0,089 R |
+| **1,5×ATR** | **31** | **+0,108 R** |
+| 1,75×ATR | 27 | +0,061 R |
+| 2,0×ATR | 21 | +0,055 R |
+| 2,5×ATR | 14 | +0,035 R |
+
+Courbe à optimum net, monotone de part et d'autre. La bande `[1,0 ; 2,0]` retenue est celle où
+l'espérance vaut au moins le double de la méthode publiée.
+
+**L'incompatibilité qui a motivé le changement.** Un stop doit être ≥ 1,5×ATR
+(`stops-min-atr-multiple`). Une cible à 1,5×ATR donne donc un R/R ≤ 1,0. Exiger R/R ≥ 1,5
+revenait à exiger une cible à **≥ 2,25×ATR**, atteinte 12 à 21% du temps. **Le plancher de R/R
+ne protégeait pas des mauvais trades : il causait les cibles inatteignables.**
+
+**Ce qu'est devenu le plancher de R/R.** Abaissé à 0,7 (0,9 en EARLY RISK-OFF / RISK-OFF) et
+rétrogradé au rôle de garde-fou de dernier recours — écarter un rapport structurellement
+absurde. Il ne sélectionne plus. Les scans antérieurs au 2026-08-10 restent jugés à l'ancien
+seuil (1,5 / 2,0) : `_previous` dans la config, grand-pérage appliqué par `validate-scan.js`
+ET par `qa-check.js`.
+
+**Portée.** Scanner ÉDITORIAL uniquement (`signals[]`, stratégies Momentum / Breakout /
+Pullback / Pre-Squeeze). Le scanner ÉVÉNEMENTIEL (`gap-scanner.js`,
+`scanner-filters.json#event_driven`) conserve ses planchers de 1,5 / 2,0 : le backtest ne
+porte pas sur lui, et ses setups ont une dynamique propre.
+
+**Réserve ouverte.** La bande a été mesurée sur 30 jours dominés par RISK-ON et RECOVERY.
+Question ouverte `tp1-reachability-regime-dependence` dans `scanner-lessons.json`, à revoir
+le 2026-09-15 une fois 40 trades accumulés en régime défensif.
+
 ## Politique de fill unique (scan + rétro)
 
 Module : **`tools/lib/fill-policy.js`** — la SEULE définition de rempli / chase / NON REMPLI.

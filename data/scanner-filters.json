@@ -507,11 +507,46 @@
     },
     "rr_min_by_regime": {
       "_comment": "R/R floor per regime. Reuses the regime_labels.allowed taxonomy (no new labels invented). spec §2.1/§2.3: >= 1.5 in RISK-ON/NEUTRAL, >= 2.0 in EARLY RISK-OFF/RISK-OFF.",
+      "_note": "INCHANGÉ le 2026-08-10 : le backtest d atteignabilité porte sur le scanner ÉDITORIAL, pas sur le scanner événementiel (gap-scanner.js) dont les setups ont une dynamique propre. Ne pas transposer sans mesure dédiée.",
       "RISK-ON": 1.5,
       "NEUTRAL": 1.5,
       "RECOVERY": 1.5,
       "EARLY RISK-OFF": 2,
       "RISK-OFF": 2
+    }
+  },
+  "editorial_targets": {
+    "_comment": "Politique de CIBLE du scanner éditorial (signals[] : Momentum/Breakout/Pullback/Pre-Squeeze). Introduite le 2026-08-10 en remplacement du plancher de R/R comme critère de sélection.",
+    "tp1_reachability": {
+      "_comment": "GATE PRINCIPAL depuis le 2026-08-10, en remplacement du plancher de R/R. La cible doit se situer à une distance que le titre PARCOURT RÉELLEMENT sur l'horizon, mesurée en multiples d'ATR14 depuis le haut de la zone d'entrée. Preuve : backtest des 21 scans publiés du 10/07 au 07/08 (196 lignes, 169 tickers, 96 trades à horizon écoulé). La méthode publiée plaçait la cible à 8,48% en moyenne quand le meilleur gain latent moyen n'était que de 4,38% — deux fois trop loin. Résultat : cible atteinte 12,5% du temps pour un R/R annoncé de 1,70, qui en exigeait 37%. En ne changeant QUE la cible : 1,0×ATR → +0,071 R ; 1,25× → +0,089 ; 1,5× → +0,108 (optimum) ; 1,75× → +0,061 ; 2,0× → +0,055 ; 2,5× → +0,035 ; publiée → +0,025. La bande retenue [1,0 ; 2,0] est celle où l'espérance vaut au moins le double de la méthode publiée.",
+      "_active_from": "2026-08-10",
+      "_evidence": {
+        "sample": 88,
+        "window": "2026-07-10..2026-08-07",
+        "optimum_atr": 1.5,
+        "expectancy_at_optimum_R": 0.108,
+        "expectancy_published_R": 0.025
+      },
+      "min_atr_multiple": 1,
+      "max_atr_multiple": 2,
+      "target_atr_multiple": 1.5,
+      "requires": "extension.atr par signal — champ manquant = fail-closed, la cible n'est pas vérifiable"
+    },
+    "rr_min_by_regime": {
+      "_comment": "Plancher de R/R ABAISSÉ le 2026-08-10 sur preuve chiffrée. Les valeurs antérieures (1,5 / 2,0) étaient arithmétiquement incompatibles avec une cible atteignable : stop au plancher de bruit (1,5×ATR) + cible à portée (≈1,5×ATR) donne un R/R de 1,0. Exiger 1,5 revenait à exiger une cible à ≥2,25×ATR, atteinte 12 à 21% du temps sur 88 trades. Subsiste en garde-fou de dernier recours, plus comme critère de sélection : c est tp1_reachability qui sélectionne.",
+      "_active_from": "2026-08-10",
+      "_previous": {
+        "RISK-ON": 1.5,
+        "NEUTRAL": 1.5,
+        "RECOVERY": 1.5,
+        "EARLY RISK-OFF": 2,
+        "RISK-OFF": 2
+      },
+      "RISK-ON": 0.7,
+      "NEUTRAL": 0.7,
+      "RECOVERY": 0.7,
+      "EARLY RISK-OFF": 0.9,
+      "RISK-OFF": 0.9
     }
   }
 }

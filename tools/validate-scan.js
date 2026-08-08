@@ -347,10 +347,12 @@ async function main() {
   // ── HARD BLOCKS from scanner-lessons.json v2.0 ─────────────────────────────
 
   // 8. R/R minimum by regime (HARD BLOCK — promoted from advisory 2026-06-30)
-  const RR_MIN_BY_REGIME = {
-    'RISK-ON': 1.5, 'RECOVERY': 1.5, 'NEUTRAL': 1.5,
-    'EARLY RISK-OFF': 2.0, 'RISK-OFF': 2.0
-  };
+  // Planchers lus depuis la CONFIG (`editorial_targets`), plus en dur : le gate et la config
+  // vivaient séparément et pouvaient diverger sans que rien ne le dise. Abaissés le 2026-08-10,
+  // cf. `tp1_reachability` et la mémoire rr-gate-forces-unreachable-targets.
+  const ET = filters.editorial_targets || {};
+  const RR_MIN_BY_REGIME = ET.rr_min_by_regime
+    || { 'RISK-ON': 0.7, 'RECOVERY': 0.7, 'NEUTRAL': 0.7, 'EARLY RISK-OFF': 0.9, 'RISK-OFF': 0.9 };
   // Scope: stratégies ÉDITORIALES uniquement. Pour les spécialistes (HighVolBreakout,
   // ETFMomentum, MomentumRotation, TrendlineBreakout, AdaptiveFractal, Candlestick),
   // tp1 = déclencheur de prise PARTIELLE (partialTPGain) — le payoff réel inclut le
@@ -393,6 +395,45 @@ async function main() {
           rule: 'rr_min_by_regime',
           message: `${s.ticker}: R/R recalculé 1:${ratio} < minimum de régime 1:${rrMin} (${regime}) — hard block${gap}.`
         });
+      }
+    }
+  }
+
+  // 8bis. ATTEIGNABILITÉ DE LA CIBLE — gate principal depuis le 2026-08-10.
+  // Le plancher de R/R ne disait rien de la capacité du titre à ATTEINDRE sa cible : sur les
+  // 21 scans publiés du 10/07 au 07/08, la cible était à 8,48% en moyenne quand le meilleur
+  // gain latent moyen n'était que de 4,38%. Elle n'a été touchée que 12,5% du temps, pour un
+  // R/R annoncé de 1,70 qui en exigeait 37%. En ne changeant QUE la cible, 1,5×ATR porte
+  // l'espérance de +0,025 R à +0,108 R sur 88 trades.
+  // Fail-closed : sans `extension.atr`, la cible n'est pas vérifiable, donc pas publiable.
+  {
+    const reach = ET.tp1_reachability;
+    const activeFrom = reach && reach._active_from;
+    const inScope = reach && (!activeFrom || dirName >= String(activeFrom).replace(/-/g, ''));
+    if (inScope) {
+      const lo = reach.min_atr_multiple ?? 1.0, hi = reach.max_atr_multiple ?? 2.0;
+      for (const s of signals) {
+        const stratKey = String(s.strategy || '').toLowerCase().replace(/[\s-]/g, '');
+        if (stratKey && !RR_GATE_STRATEGIES.has(stratKey)) continue;
+        const atr = s.extension && s.extension.atr;
+        if (!Number.isFinite(atr) || atr <= 0) {
+          violations.push({
+            rule: 'tp1_reachability',
+            message: `${s.ticker}: extension.atr absent ou nul — distance à la cible non vérifiable, fail-closed.`
+          });
+          continue;
+        }
+        if (s.entry == null || s.tp1 == null) continue;   // déjà signalé par le gate R/R
+        const mult = (s.tp1 - s.entry) / atr;
+        if (mult < lo || mult > hi) {
+          const why = mult > hi
+            ? `hors de portée sur l'horizon — sur 88 trades mesurés, une cible au-delà de ${hi}×ATR n'est atteinte que 12 à 21% du temps`
+            : `trop proche pour justifier le risque pris`;
+          violations.push({
+            rule: 'tp1_reachability',
+            message: `${s.ticker}: cible à ${mult.toFixed(2)}×ATR, hors de la bande [${lo} ; ${hi}] — ${why}.`
+          });
+        }
       }
     }
   }

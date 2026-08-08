@@ -1,6 +1,6 @@
 {
   "_comment": "Synthesized rules accumulated from weekly retrospectives. Updated at end of each scanner/retrospective/YYYYMMDD/ — append-only with conflict resolution. Read by /scanner Phase 0 step 8 and applied during Phase 2 selection.",
-  "_version": "v3.5-20260803",
+  "_version": "v3.5-20260810",
   "_updated": "2026-08-03",
   "_source_retros": [
     "20260220",
@@ -115,7 +115,7 @@
     {
       "id": "rr-min-by-regime",
       "class": "market_truth",
-      "status": "active",
+      "status": "deprecated",
       "severity": "hard_block",
       "rule": "R/R minimum (H10): RISK-ON 1:1.5, NEUTRAL 1:1.5, EARLY RISK-OFF 1:2.0, RISK-OFF 1:2.0. For H15+, NEUTRAL/RECOVERY R/R can target 1:1.7. validate-scan.js must emit VIOLATION (not advisory). Regime-horizon linkage: RISK-ON/NEUTRAL default to H10, EARLY RISK-OFF/RISK-OFF extend to H15.",
       "scope": {
@@ -183,7 +183,9 @@
         "20260522",
         "20260529",
         "20260619"
-      ]
+      ],
+      "superseded_by": "tp1-reachability",
+      "deprecation_reason": "Abaissée puis remplacée le 2026-08-10 sur preuve chiffrée. Le plancher de 1,5 était arithmétiquement incompatible avec une cible atteignable : un stop au plancher de bruit (1,5×ATR, règle stops-min-atr-multiple) plus une cible à la portée du titre (≈1,5×ATR) donne un R/R de 1,0. Exiger 1,5 revenait à exiger une cible à ≥2,25×ATR. Backtest sur 21 scans publiés (10/07→07/08), 96 trades à horizon écoulé : cible atteinte 12,5% du temps pour un R/R annoncé de 1,70 qui en exigeait 37%. Le plancher ne protégeait pas des mauvais trades, il causait les cibles inatteignables. Un plancher résiduel de 0,7 (0,9 en régime défensif) subsiste en garde-fou, sans rôle de sélection."
     },
     {
       "id": "regime-score-label-lag",
@@ -2795,6 +2797,42 @@
         "20260720"
       ],
       "expires_at": "2026-08-03"
+    },
+    {
+      "id": "tp1-reachability",
+      "from_retros": [
+        "backtest-20260808"
+      ],
+      "rule": "La cible TP1 doit se situer entre 1,0 et 2,0 fois l ATR14 au-dessus du HAUT de la zone d entrée. Optimum mesuré : 1,5×ATR. Champ extension.atr absent = fail-closed, la cible n est pas vérifiable donc pas publiable. Enforcement : validate-scan.js règle tp1_reachability, config scanner-filters.json#editorial_targets.tp1_reachability, active_from 2026-08-10 (scans antérieurs grand-pérés).",
+      "rationale": "Sur les 21 scans publiés du 10/07 au 07/08 (196 lignes, 169 tickers, 96 trades à horizon écoulé, barres réelles et règles de remplissage du dépôt), la cible était placée à 8,48% du prix d entrée en moyenne alors que le meilleur gain latent moyen n atteignait que 4,38% : deux fois trop loin. Résultat, cible touchée 12,5% du temps contre les 37% qu exigeait le R/R annoncé de 1,70. L espérance ne tenait que par les sorties à l horizon (+0,71 R sur 39,6% des trades), jamais par les cibles. En ne changeant QUE la cible, toutes choses égales par ailleurs : 1,0×ATR → +0,071 R ; 1,25× → +0,089 ; 1,5× → +0,108 (optimum) ; 1,75× → +0,061 ; 2,0× → +0,055 ; 2,5× → +0,035 ; publiée → +0,025. Courbe à optimum net, monotone de part et d autre.",
+      "applies_to": {
+        "setups": [
+          "momentum",
+          "breakout",
+          "pullback",
+          "pre-squeeze"
+        ],
+        "regimes": [],
+        "modes": []
+      },
+      "enforced_by": "tools/validate-scan.js (rule tp1_reachability) + data/scanner-filters.json#editorial_targets.tp1_reachability",
+      "validation": "encoded",
+      "status": "active",
+      "severity": "hard_block",
+      "confidence": 0.82,
+      "evidence": {
+        "sample_size": 88,
+        "wins": 31,
+        "losses": 38,
+        "expectancy": 0.108,
+        "period": "2026-07-10 to 2026-08-07",
+        "tickers": [],
+        "clusters": [],
+        "source_retros": [
+          "backtest-20260808"
+        ],
+        "notes": "n=88 sur les lignes portant extension.atr ; 96 trades au total à horizon écoulé. Espérance publiée de référence +0,025 R. Piège de mesure documenté : sur l échantillon complet non filtré (n=123) l espérance ressort à −0,072 R, artefact de censure — sur un scan récent seuls les stops rapides sont clos."
+      }
     }
   ],
   "_open_questions": [
@@ -3016,6 +3054,11 @@
       "opened_by": "20260720",
       "status": "open",
       "check_at": "20260814"
+    },
+    {
+      "id": "tp1-reachability-regime-dependence",
+      "question": "La bande d atteignabilité [1,0 ; 2,0]×ATR a été mesurée sur une fenêtre de 30 jours dominée par RISK-ON et RECOVERY. Vérifier si l optimum se déplace en EARLY RISK-OFF et RISK-OFF, où la volatilité réalisée et la persistance des tendances diffèrent. Re-mesurer dès qu au moins 40 trades à horizon écoulé auront été accumulés dans un régime défensif.",
+      "next_retro_check": "2026-09-15"
     }
   ],
   "_closed_questions": [

@@ -794,8 +794,20 @@ check('signals.json (dernier scan): R:R ≥ 1.5 pour tous les signaux', () => {
     const risk = entry - stop;
     if (risk <= 0) { bad.push(`${ticker}: risk≤0 (entry=${entry} stop=${stop})`); continue; }
     if (stratKey && !RR_GATE_STRATEGIES.has(stratKey)) continue; // structurel seulement pour les spécialistes
+    // Plancher lu depuis la config (abaissé le 2026-08-10), plus en dur : ce contrôle et
+    // validate-scan portaient chacun leur copie du seuil et pouvaient diverger en silence.
+    // Le vrai critère de sélection est désormais l'ATTEIGNABILITÉ de la cible
+    // (scanner-filters.json#editorial_targets.tp1_reachability) ; ce ratio ne subsiste qu'en
+    // garde-fou de dernier recours. Grand-pérage par `_active_from` : appliquer 0,7 aux scans
+    // antérieurs les ferait passer à tort pour conformes à une règle qui n'existait pas.
+    const et = (readJSON('data/scanner-filters.json') || {}).editorial_targets || {};
+    const floors = et.rr_min_by_regime || {};
+    const from = String(floors._active_from || '').replace(/-/g, '');
+    const reg = String(sig.regime || '').toUpperCase().trim();
+    const applicable = (from && scanDir >= from) ? floors : (floors._previous || {});
+    const min = applicable[reg] ?? (from && scanDir >= from ? 0.7 : 1.5);
     const rr = reward / risk;
-    if (rr < 1.5) bad.push(`${ticker}: R:R=${rr.toFixed(2)} < 1.5`);
+    if (rr < min) bad.push(`${ticker}: R:R=${rr.toFixed(2)} < ${min}`);
   }
   if (bad.length) return `${scanDir} — ${bad.join(', ')}`;
 });
