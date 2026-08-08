@@ -1,58 +1,19 @@
 {
   "role": "marche",
-  "seance_cible": "2026-08-10",
-  "generated_at_utc": "2026-08-08",
-  "status": "MCP_UNAVAILABLE_HARD_STOP",
-  "data_collected": false,
-  "blocking": true,
-  "summary": "Aucune donnee de marche n'a pu etre collectee. Le serveur MCP marketdata est injoignable ('MCP server \"marketdata\" is not connected') sur la totalite des appels. Conformement a la regle MCP HARD STOP (CLAUDE.md), aucune valeur n'a ete estimee, inventee, ni reprise de memoire.",
-  "attempts": [
-    { "tool": "GetMarketContext", "params": { "facets": "overview", "analysis_depth": "deep" }, "result": "error: MCP server \"marketdata\" is not connected" },
-    { "tool": "QueryData", "params": { "types": "bars_daily", "symbols": "^VIX", "limit": 10 }, "result": "error: MCP server \"marketdata\" is not connected" },
-    { "tool": "GetStatus", "params": {}, "result": "error: MCP server \"marketdata\" is not connected" },
-    { "tool": "ToolSearch reconnect wait #1", "params": {}, "result": "schemas rechargees, serveur toujours non connecte" },
-    { "tool": "GetMarketContext", "params": { "facets": "overview", "analysis_depth": "deep" }, "result": "error (2e tentative apres attente reconnexion)" },
-    { "tool": "GetStatus", "params": {}, "result": "error (2e tentative apres attente reconnexion)" },
-    { "tool": "QueryData", "params": { "types": "bars_daily", "symbols": "^VIX", "limit": 10 }, "result": "error (2e tentative)" }
-  ],
-  "force_refresh_attempted": false,
-  "force_refresh_note": "RefreshBars non tentee : le probleme n'est PAS de la donnee stale mais une absence totale de connexion au serveur MCP. Aucun appel outil n'aboutit, donc RefreshBars echouerait de la meme facon.",
-  "indices": null,
-  "matieres_premieres": null,
-  "crypto": null,
-  "taux": null,
-  "vix": {
-    "niveau": null,
-    "variation_5_seances_points": null,
-    "bars_daily": null,
-    "note": "NON COLLECTE. QueryData(types=bars_daily, symbols=^VIX, limit=10) a echoue."
-  },
-  "rotation_sectorielle": null,
-  "plus_grosses_hausses": null,
-  "plus_grosses_baisses": null,
-  "titres_presse": null,
-  "impact_lecons": {
-    "lecon_vix_breakout_minus_15": {
-      "applicable": "INDETERMINE",
-      "raison": "La variation du VIX sur 5 seances est l'intrant obligatoire de cette lecon. Elle n'a pas pu etre mesuree. Ne PAS appliquer le malus -15 par defaut, et ne PAS supposer qu'il ne s'applique pas : le statut est inconnu et doit etre resolu avant toute notation des setups Breakout."
-    }
-  },
-  "regime_fourni_en_entree": {
-    "source": "fourni par l'orchestrateur, non recollecte",
-    "risk_on_pct": 50.72,
-    "neutral_pct": 49.28,
-    "early_risk_off_pct": 0,
-    "crisis_pct": 0,
-    "score_defensive_sur_100": 0.3,
-    "transition_5_seances": {
-      "risk_on_pct": 46.24,
-      "neutral_pct": 28.15,
-      "early_risk_off_pct": 17.37,
-      "crisis_pct": 8.24
-    },
-    "gate_reduction_declenche": false,
-    "nb_setups": 10,
-    "rr_minimum": 1.5
-  },
-  "next_action": "Reconnecter le MCP marketdata, puis rejouer ce role a l'identique : GetMarketContext(facets='overview') avec polling Jobs(job_id), et QueryData(types='bars_daily', symbols='^VIX', limit=10). Verifier la fraicheur via GetStatus (max_last_bar_date / ref_lag_sessions) avant d'exploiter les resultats."
+  "status": "OK",
+  "blocking": false,
+  "collected_at": "2026-08-08T10:35:53Z",
+  "reference_close": "2026-08-07",
+  "regime_systematic": { "regime": "RISK_ON", "score": 0.81, "scale": "0-1 bullish", "index": 7757.64, "sma_regime": "ABOVE_ALL", "vix": 14.9, "vix_sma14": 17.13, "vix_rising": false, "sessions_behind": 0 },
+  "regime_marketdata": { "state": "risk_on", "confidence": 0.507, "probabilities": { "risk_on": 0.5072, "neutral": 0.4928, "early_risk_off": 0, "crisis": 0 }, "transition_5d": { "risk_on": 0.4624, "neutral": 0.2815, "early_risk_off": 0.1737, "crisis": 0.0824 }, "scale": "0-100 defensiveness (inverse du moteur systematic)" },
+  "gates_derived": {
+    "pullback_forbidden": true,
+    "pullback_reason": "confiance de regime 50.7% < seuil 60% (pullback-regime-confidence-gate). Regle relevee par le panel du 2026-08-08 et non appliquee au scan precedent.",
+    "reduce_to_5": false,
+    "reduce_reason": "crise 8.2% < 30% et early risk-off 0% < 50% — pas de reduction",
+    "breakout_vix_penalty": false,
+    "breakout_reason": "VIX 14.9 SOUS sa moyenne 14j (17.13) et non haussier — la penalite -15 sur Breakout ne s'applique pas",
+    "healthcare_tilt": false,
+    "healthcare_reason": "early_risk_off_prob = 0 < 40% — le tilt defensif ne se declenche pas"
+  }
 }

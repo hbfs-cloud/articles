@@ -1,44 +1,31 @@
 {
   "role": "calendrier",
-  "gate": "G4",
-  "gate_type": "bloquant",
-  "target_session": "2026-08-10",
-  "status": "BLOCKED",
-  "verdict": "G4 NON FRANCHI — criblage earnings impossible, aucune donnée obtenue",
-  "earnings_screened_at": null,
-  "attempted_at": "2026-08-08T04:47:22Z",
-  "exclusion_window": {
-    "definition": "±3 séances de bourse autour du 2026-08-10",
-    "sessions": ["2026-08-05", "2026-08-06", "2026-08-07", "2026-08-10", "2026-08-11", "2026-08-12", "2026-08-13"],
-    "note": "Fenêtre calculée a priori. Aucun ticker n'a pu y être confronté faute de données."
+  "status": "OK",
+  "blocking": false,
+  "earnings_screened_at": "2026-08-08T10:40:45Z",
+  "methode": "8-K item 2.02 sur le vivier COMPLET (42 titres US), AVANT toute salve d enrichissement",
+  "candidats_screenes": 82,
+  "calendrier_prospectif": {
+    "outil": "calendrier resultats filtre, 12 jours",
+    "resultat": "0 evenement sur les 42 titres US — recoupe par les dates de l AutoScreener (MTB 15/07, RF 17/07, TFC 17/07, CZR 28/07, PAYO 05/08, toutes passees)"
   },
-  "excluded_tickers": [],
-  "excluded_count": 0,
-  "data_availability": {
-    "mcp_server": "marketdata",
-    "reachable": false,
-    "error": "MCP server \"marketdata\" is not connected",
-    "attempts": [
-      { "at": "2026-08-08T04:45Z", "tool": "GetEarningsCalendarFiltered", "params": { "days_ahead": 7, "include_implied_move": true }, "result": "not connected" },
-      { "at": "2026-08-08T04:45Z", "tool": "QueryData", "params": { "types": "earnings_calendar", "days": 14 }, "result": "not connected" },
-      { "at": "2026-08-08T04:46Z", "tool": "GetStatus", "params": {}, "result": "not connected" },
-      { "at": "2026-08-08T04:46Z", "tool": "ToolSearch (attente reconnexion serveur)", "params": {}, "result": "schémas rechargés, serveur toujours injoignable" },
-      { "at": "2026-08-08T04:46Z", "tool": "GetStatus", "params": {}, "result": "not connected" },
-      { "at": "2026-08-08T04:47Z", "tool": "GetEarningsCalendarFiltered", "params": { "days_ahead": 7 }, "result": "not connected" },
-      { "at": "2026-08-08T04:47Z", "tool": "QueryData", "params": { "types": "earnings_calendar", "days": 14 }, "result": "not connected" }
-    ],
-    "sec_8k_item_202_verification": {
-      "performed": false,
-      "reason": "La vérification 8-K item 2.02 (QueryData types=sec_filings form_types=8-K) dépend du même serveur MCP, injoignable. Aucune date de résultats n'a donc pu être confirmée à la source ; le champ calendrier prévisionnel n'est de toute façon pas recevable (incident du 30/07 : 10 titres ayant DÉJÀ publié laissés passer)."
+  "excluded_tickers": ["DELL", "HPE", "PANW", "CRWD", "PFGC", "AMBA", "HRB", "VIK", "EQNR", "BUD"],
+  "exclusion_detail": {
+    "n_ont_pas_encore_publie": {
+      "DELL": "dernier 8-K 2.02 le 2026-05-28 (72 j)",
+      "HPE": "dernier 8-K 2.02 le 2026-06-01 (68 j)",
+      "PANW": "dernier 8-K 2.02 le 2026-06-02 (67 j)",
+      "CRWD": "dernier 8-K 2.02 le 2026-06-03 (66 j)",
+      "PFGC": "dernier 8-K 2.02 le 2026-05-06 (94 j)",
+      "AMBA": "dernier 8-K 2.02 le 2026-05-28 (72 j)",
+      "HRB": "dernier 8-K 2.02 le 2026-05-06 (94 j)"
+    },
+    "emetteur_etranger_filtre_aveugle": {
+      "VIK": "aucun depot 8-K — 20-F/6-K",
+      "EQNR": "aucun depot 8-K — 20-F/6-K",
+      "BUD": "aucun depot 8-K — 20-F/6-K"
     }
   },
-  "hallucination_guard": "Aucune date de résultats, aucun mouvement implicite et aucun ticker n'ont été produits. Rien n'a été estimé, déduit ni repris de mémoire. Une liste d'exclusion vide ici signifie DONNÉE MANQUANTE, jamais « aucun titre en fenêtre de résultats ».",
-  "consumer_warning": "NE PAS interpréter excluded_tickers: [] comme un feu vert. G4 est bloquant et n'est pas franchi : la sélection des 10 setups ne doit pas être publiée tant que ce criblage n'a pas tourné sur données réelles.",
-  "next_steps": [
-    "Attendre la reconnexion du MCP marketdata puis relancer GetStatus (contrôle de fraîcheur : max_last_bar_date, ref_lag_sessions).",
-    "Si les bars sont en retard, RefreshBars puis poller GetStatus avant toute salve.",
-    "Rejouer GetEarningsCalendarFiltered(days_ahead=7) + QueryData(types=earnings_calendar, days=14).",
-    "Confirmer chaque date candidate via QueryData(types=sec_filings, form_types=8-K, end_date=2026-08-10) et ne retenir que l'item 2.02.",
-    "Réécrire ce fichier avec earnings_screened_at horodaté au moment du criblage réel."
-  ]
+  "confirmes_publies": 32,
+  "note": "32 titres US portent un 8-K item 2.02 de moins de 25 jours : l evenement est DERRIERE eux, pas devant."
 }

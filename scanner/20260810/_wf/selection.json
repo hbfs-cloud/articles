@@ -1,225 +1,37 @@
 {
   "role": "selection",
-  "target_session": "2026-08-10",
-  "generated_at_utc": "2026-08-08T05:09:38Z",
-  "status": "BLOCKED_MCP_UNAVAILABLE",
-  "blocking": true,
-
-  "setups_requested": 10,
-  "setups_delivered": 0,
-  "selection": [],
-  "tkl_pool": [],
-
-  "files_written": {
-    "data.json": "NON ÉCRIT — DÉLIBÉRÉ",
-    "signals.json": "NON ÉCRIT — DÉLIBÉRÉ",
-    "justification": "Ces deux fichiers sont les artefacts PUBLIABLES du scan : data.json alimente tools/render-scanner.js pour produire index.html, signals.json alimente le sweep et le suivi live. Les écrire avec des setups fabriqués publierait 10 recommandations d'achat inventées, avec entrées, stops et objectifs, sur un site de recommandations financières. Les écrire en « stub bloqué » n'est pas plus sûr : un consommateur aval qui teste l'EXISTENCE du fichier plutôt que son contenu enchaînerait quand même. Leur ABSENCE est le seul signal non ambigu que le scan n'a produit aucune sortie. Ce fichier de rôle est le seul écrit, conformément à la règle « un agent, un fichier nommé par son rôle »."
-  },
-
-  "verdict": "Aucune sélection n'a été produite, et aucune ne POUVAIT l'être. Les six fichiers d'entrée sont TOUS en statut bloquant, tous sur la même cause racine : le serveur MCP marketdata est injoignable. Il n'existe aucun candidat à classer, aucun prix, aucun ATR, aucun niveau, aucune date de résultats, aucun contrôle de dilution. J'ai revérifié moi-même l'état du serveur plutôt que d'hériter du constat amont : il est toujours mort, 1h20 après la première détection. Conformément au MCP HARD STOP (CLAUDE.md), rien n'a été inventé, estimé, déduit, ni repris du scan précédent ou de la mémoire.",
-
-  "why_empty_is_not_a_result": "selection: [] signifie DONNÉE ABSENTE, JAMAIS « aucun setup ne franchit le score 90 » ni « le régime ne produit pas d'opportunités ». Le vivier n'a jamais existé. Ne PAS consommer ce fichier comme une sélection vide légitime, et ne PAS en conclure que la séance du 2026-08-10 est sans signal.",
-
-  "verification_independante_du_serveur": {
-    "principe": "Les six fichiers amont datent de 04:47Z à 05:12Z. Une panne peut se résorber. J'ai refait le diagnostic de bout en bout au lieu de recopier leur conclusion.",
-    "fenetre_utc": "2026-08-08T05:04:50Z → 2026-08-08T05:09:20Z",
-    "sondes_http_directes": [
-      { "cible": "POST https://mcp.dailytickers.com/mcp (initialize)", "resultat": "HTTP 404" },
-      { "cible": "GET  https://mcp.dailytickers.com/", "resultat": "HTTP 404" },
-      { "cible": "POST https://systematic.dailytickers.com/mcp (initialize) — TÉMOIN", "resultat": "HTTP 401" }
-    ],
-    "polling_endpoint": {
-      "methode": "9 sondes POST /mcp espacées de 20s sur ~3 minutes",
-      "fenetre": "05:05:57Z → 05:08:41Z",
-      "resultats": "404 sur les 9 sondes, sans aucune variabilité",
-      "conclusion": "Échec DÉTERMINISTE. Ni throttling, ni contention passagère, ni fenêtre de redéploiement — un back-off supplémentaire est sans objet."
-    },
-    "interpretation_du_temoin": "systematic répond 401 à un curl non authentifié : c'est la réponse correcte d'un endpoint vivant protégé par OAuth2. Le réseau sortant fonctionne et la méthode de sonde est saine. Le 404 est SPÉCIFIQUE à marketdata et servi par l'origine après résolution DNS et poignée de main TLS : l'hôte est vivant, la route /mcp n'existe plus. Ce n'est pas un défaut d'authentification, qui renverrait 401.",
-    "conclusion": "Panne serveur confirmée de façon indépendante, toujours active. Le constat amont est corroboré, pas simplement hérité."
-  },
-
-  "risk_gating": {
-    "execute": false,
-    "obligatoire": true,
-    "consequence": "Le bloc engine_meta.risk_gating de data.json ne peut porter AUCUNE valeur réelle. Le scan est donc non conforme par construction — c'est précisément ce que le contrôle « un bloc vide rend le scan non conforme » est censé attraper.",
-    "appels_tentes_par_moi": [
-      {
-        "ts_utc": "2026-08-08T05:08:55Z",
-        "appel": "GetMarketContext(facets=\"regime\", model=\"ensemble\", horizon_days=5)",
-        "resultat": "error: MCP server \"marketdata\" is not connected",
-        "champ_cible": "ensemble_confidence, crisis_prob_5d"
-      },
-      {
-        "ts_utc": "2026-08-08T05:09:05Z",
-        "appel": "PortfolioRisk(action=\"correlation\", symbols=\"SPY,QQQ,IWM\", lookback_days=60, method=\"pearson\")",
-        "resultat": "error: MCP server \"marketdata\" is not connected",
-        "champ_cible": "max_pair_correlation, avg_off_diagonal_correlation",
-        "note": "Sonde de CONTRÔLE sur trois ETF liquides, faute des 10 symboles sélectionnés qui n'existent pas. Confirme que l'échec est au transport, pas dû à un CSV de symboles mal formé ni à un mélange US/EU."
-      },
-      {
-        "ts_utc": "2026-08-08T05:09:15Z",
-        "appel": "PortfolioRisk(action=\"sizing\", signals=[1 signal témoin], constraints={...}, mode=\"balanced\")",
-        "resultat": "error: MCP server \"marketdata\" is not connected",
-        "champ_cible": "sizing"
-      }
-    ],
-    "fallback_concentration_manuelle": {
-      "applique": false,
-      "raison": "Le repli prévu par la consigne (max 2 par secteur, dispersion géographique) suppose une liste de 10 titres avec leur secteur et leur région. Cette liste n'existe pas. Un repli ne fabrique pas les positions qu'il est censé contrôler.",
-      "rho_invente": false
-    },
-    "valeurs_produites": {
-      "ensemble_confidence": null,
-      "crisis_prob_5d": null,
-      "max_pair_correlation": null,
-      "avg_off_diagonal_correlation": null,
-      "sizing": null,
-      "note": "Aucun placeholder numérique n'a été écrit. Un 0 ou un 0.0 typé se lit trop facilement comme une mesure réelle en aval."
-    },
-    "regles_non_appliquees": [
-      "rho max > 0,85 → écarter le score le plus faible",
-      "corrélation moyenne hors-diagonale > 0,65 → forcer au moins 2 secteurs"
-    ]
-  },
-
-  "gates_bloquants_non_franchis": [
-    {
-      "gate": "G4 — fenêtre de résultats",
-      "source": "calendrier.json",
-      "statut": "NON FRANCHI",
-      "detail": "excluded_tickers: [] = DONNÉE MANQUANTE, pas « aucun titre en fenêtre de résultats ». La vérification 8-K item 2.02 n'a jamais tourné. La consigne exige earnings_source: \"8k_item_202\" par signal — cette valeur ne peut être écrite sans le contrôle correspondant, sinon elle atteste une vérification qui n'a pas eu lieu.",
-      "rappel_incident": "Incident du 30/07 : 10 titres ayant DÉJÀ publié laissés passer sur un calendrier prévisionnel."
-    },
-    {
-      "gate": "Anti-dilution",
-      "source": "anti-dilution.json",
-      "statut": "NON FRANCHI",
-      "detail": "verdicts: [], pass: [], drop: [] = CONTRÔLE NON EFFECTUÉ. Piège fail-open explicitement documenté en amont : tester « le ticker est-il dans drop[] ? » renvoie faux pour TOUT symbole de l'univers, y compris un dilueur sériel. dilution_clear ne peut donc être mis à true pour aucun signal.",
-      "rappel_incident": "Leçon INDO."
-    },
-    {
-      "gate": "Vivier / présélection",
-      "source": "preselection.json",
-      "statut": "NON FRANCHI",
-      "detail": "candidates_screened: 0, shortlist: []. Plancher de diversification requis (18-25 noms) non satisfiable."
-    }
-  ],
-
-  "planchers_de_selection_non_evaluables": {
-    "note": "Enregistrés pour la reprise. AUCUN n'a pu être évalué — il n'y a aucun titre à compter.",
-    "geographie": { "us_min": 5, "eu_min": 2, "apac_min": 1, "etf_min": 2, "atteint": null },
-    "secteur_max_par_secteur": 3,
-    "repetitions_scan_precedent_max": 3,
-    "score_min": 90,
-    "confluence_min_signaux_independants": 3,
-    "rr_min_risk_on": 1.5,
-    "libelles_strategie_autorises": ["Momentum", "Breakout", "Pullback", "Pre-Squeeze"],
-    "tickers_interdits_zero_chevauchement": ["ABT", "BOX", "CFG", "CP", "ELE.MC", "ESTC", "FER", "FRO", "ITRK.L", "PHM", "ROST", "RTX", "TT", "VTV", "VTWO"],
-    "scan_precedent_20260807": ["JCI", "ROST", "ITX.MC", "KBC.BR", "LMT", "CPER", "EWS", "NSC"],
-    "repetitions_comptees": 0
-  },
-
-  "_pipelineOrder": {
-    "earnings_screened_at": null,
-    "enrichment_started_at": "2026-08-08T04:56:10Z",
-    "candidates_screened": 0,
-    "method": "NON EXÉCUTÉ — aucun criblage n'a eu lieu",
-    "contrainte": "earnings_screened_at DOIT être strictement antérieur à enrichment_started_at, sinon publication refusée.",
-    "satisfaite": false,
-    "diagnostic": "La contrainte est INSATISFIABLE en l'état, et pas seulement par donnée manquante. earnings_screened_at est null dans calendrier.json ET dans preselection.json : le gate résultats n'a jamais abouti. L'enrichissement, lui, porte un horodatage de démarrage réel (04:56:10Z, sa première tentative d'appel). Autrement dit l'enrichissement a démarré alors que le gate résultats n'avait pas abouti — l'ordre attendu n'est pas seulement inconnu, il est violé. Aucune valeur n'a été fabriquée pour rendre ce bloc conforme : antidater earnings_screened_at à quelques secondes avant 04:56:10Z suffirait mécaniquement à passer le contrôle de publication tout en attestant un criblage qui n'a jamais tourné. C'est exactement le contrôle que ce bloc existe pour exercer.",
-    "horodatages_source": {
-      "calendrier.json": { "earnings_screened_at": null, "attempted_at": "2026-08-08T04:47:22Z", "status": "BLOCKED" },
-      "preselection.json": { "earnings_screened_at": null, "generated_at_utc": "2026-08-08T04:55:10Z", "candidates_screened": 0 },
-      "enrichissement.json": { "premiere_tentative_utc": "2026-08-08T04:56:10Z", "generated_at_utc": "2026-08-08T05:04:20Z", "tickers_enrichis": 0 }
+  "status": "OK",
+  "blocking": false,
+  "enrichment_started_at": "2026-08-08T10:44:00Z",
+  "grille_quantitative": {
+    "candidats_testes": 32,
+    "retenus": 8,
+    "methode": "entree = cloture (gate G1) + 0,6% ; stop = dernier creux de swing, sinon MM50, sinon 1,5xATR, borne a 3-8% ET >= 1,5xATR ; cible = pivot haut REEL a >= 1,5x le risque, sinon mouvement mesure en zone vierge",
+    "note_pivots": "La grille supports/resistances du service est inexploitable (resistances vides ou marquees cassees, premiers supports 15-38% sous le cours, jusqu a -31% sur STT). Les pivots ont ete recalcules sur 272-279 barres quotidiennes.",
+    "rejets_par_motif": {
+      "R/R < 1,5": ["PAYO","RF","STT","MTB","BNY","ONB","PNC","KBWB","VLO","PSX","PCAR","XLI","GE","SOLV","CZR","EBC","STAN.L","EMG.L","SHELL.AS","CPG.L"],
+      "aucun stop valide dans 3-8% et >= 1,5xATR": ["TENB","ANET"],
+      "extension 50j > 20%": ["RHI"],
+      "moyennes enchevetrees (MM20 sous MM50)": ["AAXJ","VPL"],
+      "cassure ratee sur resultats": ["HWM"],
+      "dilution averee": ["COMP","AMRX"]
     }
   },
-
-  "_memoryImpact": {
-    "rules_applied": [],
-    "decision_changed": false,
-    "sizing_delta": null,
-    "reason": "AUCUNE leçon n'a changé quoi que ce soit, parce qu'aucune n'a pu être évaluée : les leçons ajustent confiance, taille ou tag sur des signaux quantitatifs existants, et il n'existe ici aucun signal. Ce n'est pas « les leçons ont été appliquées et n'ont rien changé » — c'est « les leçons n'ont pas eu de matière à s'appliquer ». Détail par leçon dans lecons_actives_statut.",
-    "garde_fou_doctrinal": "Rappel : une leçon ne peut JAMAIS inverser un signal quantitatif, seulement ajuster confiance/taille/tag. Elle ne peut a fortiori pas en CRÉER un. Aucune leçon n'a été utilisée pour justifier un setup en l'absence de données."
+  "correlation": {
+    "univers_mesure": "FTNT,CGNX,APH,TFC,INCY",
+    "note": "US uniquement — melanger les places europeennes casse le decompte des seances communes",
+    "observations": 57,
+    "lookback_days": 60,
+    "avg_off_diagonal": 0.0986,
+    "max_pair": "CGNX/APH 0.697",
+    "min_pair": "APH/INCY -0.243",
+    "verdict": "0,697 < seuil de rejet 0,85 ; moyenne hors diagonale 0,0986 = panier reellement decorrele. L etiquette sectorielle comptait 4 technologiques, la mesure dit que FTNT/APH ne corrolent qu a 0,145.",
+    "couverture": "5 des 8 lignes publiees mesurees (62,5%) — les 3 lignes europeennes (LOGN.SW, TTE.PA, ENI.MI) ne sont pas mesurables par cet outil"
   },
-
-  "lecons_actives_statut": {
-    "breakout_malus_15_si_vix_plus_3pts_5s": {
-      "applicable": "INDÉTERMINÉ",
-      "raison": "La variation du VIX sur 5 séances est l'intrant obligatoire. QueryData(types=bars_daily, symbols=^VIX) a échoué chez l'agent marché comme chez moi. Ne PAS appliquer le malus par défaut, et ne PAS supposer qu'il ne s'applique pas — c'est un statut inconnu, à résoudre AVANT toute notation d'un setup Breakout.",
-      "impact_reel": "aucun"
-    },
-    "pullback_seulement_au_dessus_mm20_haussiere_sans_plus_bas_5s": {
-      "applicable": "NON ÉVALUÉ",
-      "raison": "Aucune barre journalière → ni MM20, ni pente de MM20, ni plus-bas 5 séances calculables.",
-      "impact_reel": "aucun"
-    },
-    "stop_min_1_5_atr": {
-      "applicable": "NON ÉVALUÉ",
-      "raison": "Aucun ATR collecté — c'est précisément le champ que l'enrichissement devait fournir au dimensionnement des stops.",
-      "impact_reel": "aucun"
-    },
-    "fill_stop_a_l_ouverture_si_gap": {
-      "applicable": "NON ÉVALUÉ",
-      "raison": "Règle de comptabilisation de sortie. Aucune position, aucun stop, aucune séance à comptabiliser.",
-      "impact_reel": "aucun"
-    },
-    "entree_min_ouverture_vwap_bornee_au_plus_bas": {
-      "applicable": "NON ÉVALUÉ",
-      "raison": "Règle d'exécution. Aucun VWAP n'a pu être lu (QueryData types=vwap injoignable), donc aucune valeur de VWAP ne peut être affichée comme l'exige la consigne.",
-      "impact_reel": "aucun"
-    }
-  },
-
-  "niveaux_non_calcules": {
-    "note": "Entrée, stop, TP1, TP2 par setup : NON PRODUITS pour les 10 setups, puisqu'il n'y a pas de setup. Aucun niveau n'a été dérivé d'un scan antérieur ni de mémoire.",
-    "intrants_manquants": ["prix", "ATR", "supports", "résistances", "VWAP", "plus-bas de séance", "ouverture"],
-    "rr_calcule": null
-  },
-
-  "regime_porte_intact": {
-    "source": "fourni par l'orchestrateur, NON recollecté conformément à la consigne",
-    "risk_on_pct": 50.72,
-    "neutral_pct": 49.28,
-    "early_risk_off_pct": 0,
-    "crisis_pct": 0,
-    "score_defensive_sur_100": 0.3,
-    "transition_5_seances": { "risk_on_pct": 46.24, "neutral_pct": 28.15, "early_risk_off_pct": 17.37, "crisis_pct": 8.24 },
-    "gate_reduction_declenche": false,
-    "nb_setups_cible": 10,
-    "rr_minimum": 1.5,
-    "avertissement": "Ce régime est le SEUL paramètre valide de tout le scan. Il ne compense rien : connaître le régime sans connaître un seul titre ne permet aucune sélection. Il ne doit pas servir à donner une apparence de fondement à des setups reconstitués."
-  },
-
-  "entrees_lues": {
-    "preselection.json":   { "status": "BLOCKED_MCP_UNAVAILABLE", "blocking": true, "shortlist": 0 },
-    "anti-dilution.json":  { "status": "BLOCKED_NO_INPUT_AND_MCP_UNAVAILABLE", "blocking": true, "verdicts": 0 },
-    "enrichissement.json": { "status": "BLOCKED_UPSTREAM_EMPTY_AND_MCP_UNAVAILABLE", "blocking": true, "tickers_enrichis": 0 },
-    "tkl.json":            { "status": "BLOCKED_MCP_UNAVAILABLE", "blocking": true, "pool": 0 },
-    "marche.json":         { "status": "MCP_UNAVAILABLE_HARD_STOP", "blocking": true, "data_collected": false },
-    "calendrier.json":     { "status": "BLOCKED", "gate": "G4", "blocking": true, "excluded_tickers": 0 },
-    "bilan": "6 fichiers sur 6 en statut bloquant, cause racine unique et partagée. Aucune source de repli n'existe dans le dossier _wf : screen-us.json et screen-eu-etf.json sont eux aussi vides.",
-    "reconstruction_depuis_amont": "NON FAITE. harness.json évoque « RunScreener US — 60 candidats » mais ne contient aucun symbole, aucun prix, aucun ATR. Reconstruire un vivier depuis cette phrase reviendrait à inventer 60 tickers."
-  },
-
-  "hallucination_guard": "Aucun ticker, prix, score, RSI, ATR, distance à la MM50, entrée, stop, TP1, TP2, R/R, VWAP, corrélation, date de résultats, verdict de dilution ni tag Sharia n'a été produit. Zéro valeur inventée, estimée, interpolée, reprise de mémoire ou du scan 20260807. Le scan précédent est particulièrement tentant comme source de repli — il contient 8 tickers réels et récents — et c'est précisément pourquoi il n'a pas été utilisé : ces titres n'ont ni prix à jour, ni contrôle de dilution à jour, ni contrôle de fenêtre de résultats pour le 2026-08-10. Un data.json conforme au schéma et rempli de setups plausibles serait ici la pire sortie possible : il franchirait tous les gates en silence et publierait 10 recommandations d'achat inventées.",
-
-  "recommandation": {
-    "action": "SUSPENDRE la publication du scan 20260810.",
-    "condition_de_reprise": "Reprendre UNIQUEMENT quand https://mcp.dailytickers.com/mcp répond de nouveau (attendu : 401 sur curl non authentifié, comme systematic) ET qu'un QueryData de contrôle renvoie des données fraîches, avec GetStatus montrant bar_service_1d_max_last_bar_date >= 2026-08-07 et ref_lag_sessions <= 1.",
-    "escalade": "Panne d'infrastructure côté serveur : la route /mcp de mcp.dailytickers.com renvoie 404 alors que l'hôte répond. Aucune action agent ne peut la corriger — ni relance, ni rechargement de schémas, ni changement de paramètres. Nécessite une intervention sur le déploiement.",
-    "a_ne_pas_faire": [
-      "Ne pas relancer les agents de scan en boucle : l'échec est déterministe (404), pas un throttling.",
-      "Ne pas publier un scan dégradé « avec les moyens du bord » — il n'y a aucun moyen du bord, seulement le régime.",
-      "Ne pas rejouer le scan du 20260807 en changeant la date."
-    ],
-    "sequence_de_reprise": [
-      "1. Rétablir mcp.dailytickers.com/mcp, puis vérifier via GetStatus (fraîcheur des barres 1d).",
-      "2. Si le serveur répond mais que les barres sont en retard : RefreshBars, puis poller GetStatus jusqu'au rattrapage. Ne PAS enchaîner sur des barres périmées.",
-      "3. Rejouer marche, screen-us, screen-eu-etf, puis le calendrier (gate G4 en vague 1) — l'ordre calendrier avant enrichissement doit être respecté cette fois, il ne l'a pas été.",
-      "4. Rejouer preselection (vivier 18-25 noms), anti-dilution sur la shortlist complète, puis enrichissement.",
-      "5. Mesurer la variation du VIX sur 5 séances AVANT toute notation d'un setup Breakout (malus −15 actuellement indéterminé).",
-      "6. Rejouer ce rôle : sélection, risk gating réel (GetMarketContext regime + PortfolioRisk correlation + sizing), niveaux, puis écriture de data.json et signals.json.",
-      "7. Contrôler que _pipelineOrder.earnings_screened_at est strictement antérieur à enrichment_started_at, sur des horodatages réels."
-    ]
+  "diversification": {
+    "us": 5, "eu": 3, "apac": 0, "etf": 0,
+    "plancher": "5 US / 2 EU / 1 APAC / 2 ETF",
+    "non_respecte": ["apac", "etf"],
+    "cause": "Aucun candidat APAC ni ETF ne passe la grille. AAXJ et VPL ont leur MM20 SOUS leur MM50 (base plate, pas de tendance) ; KBWB (R/R 1,14), XLI (0,79) et XLE echouent au R/R. Le compte n a pas ete force — c est un plancher indicatif, pas un gate bloquant."
   }
 }
