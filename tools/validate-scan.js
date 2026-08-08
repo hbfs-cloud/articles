@@ -41,6 +41,19 @@ function loadScanSignals(arg) {
   if (fs.statSync(abs).isFile()) dir = path.dirname(abs);
 
   const dirName = path.basename(dir);
+  // Un scan RETIRÉ avant diffusion porte `_withdrawn` dans son signals.json et un tableau
+  // `signals` vide : valider ses lignes éditoriales n'a pas de sens puisqu'il n'en publie
+  // aucune. On le dit en clair plutôt que de laisser remonter une pile d'appels, qui donne
+  // à un retrait délibéré l'apparence d'un plantage de l'outil.
+  try {
+    const rawSig = JSON.parse(fs.readFileSync(path.join(dir, 'signals.json'), 'utf8'));
+    if (rawSig && rawSig._withdrawn && !(rawSig.signals || []).length) {
+      console.log(`↩︎  ${dirName} : scan RETIRÉ avant diffusion le ${String(rawSig._withdrawn.at || '').slice(0, 10)} — aucune ligne éditoriale à valider.`);
+      console.log(`   motif : ${rawSig._withdrawn.reason || '(non précisé)'}`);
+      process.exit(0);
+    }
+  } catch { /* pas de signals.json lisible : on laisse le chemin d'erreur normal opérer */ }
+
   const loaded = parser.loadSignals(dirName);
   if (!loaded || !loaded.signals.length) {
     throw new Error(`No signals found in ${dir}`);

@@ -142,11 +142,18 @@ const FAMILY_LIST = [
   {
     id: 'dtx_engine',
     producer: 'tools/dtx-pool-bridge.js (moteur systematic-tss)',
-    unit: 'score moteur 0-100',
-    min: 0, max: 100, bounded: true,
+    // Composite ADDITIF émis par le moteur, non borné par construction : il l'écrit lui-même
+    // dans le motif de l'ordre (« BUY IOVA @ $6.50 | Score=114 | Risk=29.1% … »). La borne
+    // [0,100] déclarée jusqu'au 2026-08-08 était une INFÉRENCE tirée d'un échantillon de 454
+    // valeurs dont le maximum tombait à 100 — pas une propriété du producteur. Le 2026-08-10
+    // le moteur a rendu 104, 109 et 114, et le contrat a bloqué la publication d'un scan dont
+    // la donnée était pourtant fidèle. Aligné sur les autres producteurs additifs du fichier
+    // (highvol_breakout, candlestick_pattern, adaptive_fractal) : bounded:false + plafond large.
+    unit: 'composite additif du moteur — SANS BORNE déclarée par le producteur',
+    min: 0, max: 200, bounded: false,
     pools: ['dtx_pool'],
     strategies: [],
-    observed: { min: 30, max: 100, n: 454 },
+    observed: { min: 30, max: 114, n: 510 },
   },
   {
     id: 'fortress_pm',
