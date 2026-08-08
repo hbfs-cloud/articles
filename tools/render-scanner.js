@@ -101,6 +101,19 @@ const PROPER_NOUN_EXCEPTIONS = [
 const RULE_SLUG_RE = /\b[a-z0-9]+(?:-[a-z0-9]+){2,}\b/g;
 
 function guardDataQuality(data, strict) {
+  // ÉCHELLE DU SCORE DE RÉGIME. Convention du dépôt : `data.json#regime_score` vit sur 0-1,
+  // `signals.json#regimeScore` sur 0-100 — même grandeur, deux échelles, et rien ne l'imposait.
+  // Le 2026-08-08 un data.json écrit à 85 au lieu de 0,85 a produit « confiance 8500,0% » dans
+  // le titre de section, rendu tel quel jusqu'à la publication. On refuse plutôt que de
+  // normaliser en silence : normaliser masquerait l'erreur du producteur au lieu de la montrer.
+  const rs = data.regime_score;
+  if (typeof rs === 'number' && (rs < 0 || rs > 1)) {
+    const msg = `regime_score = ${rs} hors de l'échelle 0-1 attendue dans data.json `
+      + `(signals.json#regimeScore porte, lui, le 0-100 : ici ${Math.round(rs)}). `
+      + `Corriger à ${(rs / 100).toFixed(2)} — sinon le titre de section publie « confiance ${(rs * 100).toFixed(1)}% ».`;
+    console.error(`${strict ? '[render-scanner] STRICT — BLOQUANT' : '[render-scanner] WARNING'}: ${msg}`);
+    if (strict) process.exit(1);
+  }
   const strings = collectStrings(data, []);
   let text = strings.join('\n');
   for (const re of PROPER_NOUN_EXCEPTIONS) text = text.replace(re, ' ');

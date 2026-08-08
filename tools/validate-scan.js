@@ -348,14 +348,37 @@ async function main() {
     for (const s of signals) {
       const stratKey = String(s.strategy || '').toLowerCase().replace(/[\s-]/g, '');
       if (stratKey && !RR_GATE_STRATEGIES.has(stratKey)) continue;
-      if (!s.rr) continue;
-      const m = String(s.rr).match(/1:(\d+\.?\d*)/);
-      if (!m) continue;
-      const ratio = parseFloat(m[1]);
-      if (ratio < rrMin) {
+      // Le R/R est RECALCULÉ, jamais lu. Avant le 2026-08-08 ce gate parsait le champ texte
+      // `rr` — il validait donc l'affirmation du producteur, contrôle tautologique qui n'a
+      // rejeté aucune ligne sur 48 publiées. Le même jour, qa-check (qui recalcule) échouait
+      // là où celui-ci passait, sur le même scan.
+      // Base de calcul = `entry`, la borne HAUTE de la zone, donc le pire remplissage. C'est
+      // la convention de fill-policy.js (le chase se mesure à cette borne), celle de qa-check,
+      // et celle que reproduisent au centième les 8 lignes publiées le 2026-08-07.
+      if (s.entry == null || s.stop == null || s.tp1 == null) {
         violations.push({
           rule: 'rr_min_by_regime',
-          message: `${s.ticker}: R/R 1:${ratio} < regime min 1:${rrMin} (${regime}) — hard block per scanner-lessons v2.0.`
+          message: `${s.ticker}: entry/stop/tp1 manquant — R/R non recalculable, fail-closed.`
+        });
+        continue;
+      }
+      const risk = s.entry - s.stop;
+      if (risk <= 0) {
+        violations.push({
+          rule: 'rr_min_by_regime',
+          message: `${s.ticker}: risque nul ou négatif (entry ${s.entry} ≤ stop ${s.stop}).`
+        });
+        continue;
+      }
+      const ratio = Math.round(((s.tp1 - s.entry) / risk) * 100) / 100;
+      if (ratio < rrMin) {
+        const claimed = String(s.rr || '').match(/1:(\d+\.?\d*)/);
+        const gap = claimed && Math.abs(parseFloat(claimed[1]) - ratio) > 0.02
+          ? ` (le champ rr annonce 1:${claimed[1]} — écart de ${(parseFloat(claimed[1]) - ratio).toFixed(2)}, typiquement un calcul au milieu de zone au lieu du haut)`
+          : '';
+        violations.push({
+          rule: 'rr_min_by_regime',
+          message: `${s.ticker}: R/R recalculé 1:${ratio} < minimum de régime 1:${rrMin} (${regime}) — hard block${gap}.`
         });
       }
     }
