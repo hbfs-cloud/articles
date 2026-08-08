@@ -93,10 +93,18 @@ const PROPER_NOUN_EXCEPTIONS = [
   /\bGeneral Mills\b/g,
 ];
 
+// Identifiants de règles du moteur de leçons (`data/scanner-lessons.json`) : des slugs ASCII en
+// kebab-case, jamais de la prose française — `pullback-regime-confidence-gate`, `rr-min-by-regime`,
+// `regime-score-label-lag`. Un scan qui documente QUELLE règle a mordu les cite nécessairement ;
+// bloquer dessus pousserait à masquer la règle appliquée, soit l'inverse de l'intention du garde-fou.
+// Trois segments minimum + ASCII minuscule strict : la prose française n'a pas cette forme.
+const RULE_SLUG_RE = /\b[a-z0-9]+(?:-[a-z0-9]+){2,}\b/g;
+
 function guardDataQuality(data, strict) {
   const strings = collectStrings(data, []);
   let text = strings.join('\n');
   for (const re of PROPER_NOUN_EXCEPTIONS) text = text.replace(re, ' ');
+  text = text.replace(RULE_SLUG_RE, ' ');
 
   const accentHits = text.match(FR_UNACCENTED_RE) || [];
   const accentUniq = [...new Set(accentHits.map(w => w.toLowerCase()))];
