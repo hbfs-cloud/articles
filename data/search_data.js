@@ -1380,6 +1380,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ITRG",
+    "exchange": "NYSE American • Basic Materials • Gold Mining",
+    "name": "ITRG — Ahead of Aug 11 earnings: why the $3,850-3,950/oz AISC estimate is the bear case, not t...",
+    "title": "ITRG — Ahead of Aug 11 earnings: why the $3,850-3,950/oz AISC estimate is the bear case, not t...",
+    "desc": "ITRG ahead of Q2 results on Aug 11: Q1 AISC came in at $3,310/oz, the margin threshold sits near $3,300/oz, and enterprise value is $450M — not the $376M widely quoted. Contrarian analysis with a full data-integrity log.",
+    "tags": "us,materials,gold,mining,small-cap,earnings,trade-idea",
+    "grade": "C",
+    "href": "/analyses/ITRG/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "",
     "exchange": "7 août 2026",
     "name": "DailyTickers",
@@ -2805,19 +2818,6 @@ window.searchDataPrebuilt = [
     "tags": "us,materials,speculative,trade-idea",
     "grade": "C+",
     "href": "/analyses/ABAT/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "ITRG",
-    "exchange": "NYSE American • Basic Materials • Gold Mining",
-    "name": "ITRG — Florida Canyon gold producer + DeLamar 4.8M oz developer. Debt-free, $105.6M cash, anal...",
-    "title": "ITRG — Florida Canyon gold producer + DeLamar 4.8M oz developer. Debt-free, $105.6M cash, anal...",
-    "desc": "Integra Resources deep-dive: Florida Canyon producing 70-75K oz/year, DeLamar 4.8M oz AuEq pipeline, $105.6M cash, debt-free. Gold play at $3.01 with analyst target $6.50. Trade Idea inside.",
-    "tags": "us,materials,gold,mining,small-cap,trade-idea",
-    "grade": "D",
-    "href": "/analyses/ITRG/",
     "date": ""
   },
   {
