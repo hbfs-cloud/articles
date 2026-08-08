@@ -820,6 +820,11 @@ check('signals.json (dernier scan): distance_50dma_pct ≤ cap par stratégie', 
   if (!caps) return 'scanner-filters.json#overextension manquant';
   const missing = [];
   const violations = [];
+  // Liste VIDE ≠ « tous les signaux échouent ». Sans ce garde, `missing.length === signals.length`
+  // vaut 0 === 0 sur un scan sans signal éditorial (scan retiré, scan 100% spécialistes) et le
+  // contrôle échoue alors qu'il n'a RIEN à contrôler. Même piège que `anti-dilution.drop[]` vide,
+  // qui fait répondre « faux » à tout test d'appartenance.
+  if (!Array.isArray(sig.signals) || sig.signals.length === 0) return;
   for (const s of (sig.signals || [])) {
     if (!s.extension || s.extension.distance_50dma_pct === undefined) {
       missing.push(s.ticker);
