@@ -24,6 +24,24 @@ const ROOT = path.resolve(__dirname, '..');
 const STRICT = process.argv.includes('--strict');
 const DISCORD = process.argv.includes('--discord');
 
+// Un argument positionnel était AVALÉ EN SILENCE. `node tools/qa-check.js scanner/20260810`
+// auditait en réalité le scan du dernier jour ouvré (20260807) et sortait 0 : l'appelant croyait
+// avoir contrôlé une cible, l'outil en contrôlait une autre et le disait vert. C'est le pire mode
+// de défaillance de ce dépôt — une réponse fausse et crédible. Constaté le 2026-08-08 sur le scan
+// bloqué du 20260810, qui n'a donc reçu AUCUNE couverture QA tout en affichant un exit 0.
+// Cet outil audite délibérément le dernier scan publié et ne prend PAS de cible : on refuse donc
+// l'argument au lieu de l'ignorer.
+{
+  const stray = process.argv.slice(2).filter(a => !a.startsWith('--'));
+  if (stray.length) {
+    console.error(`❌ [qa-check] argument positionnel non reconnu : ${stray.join(' ')}`);
+    console.error(`   qa-check.js audite le dernier scan publié et n'accepte PAS de cible.`);
+    console.error(`   Usage : node tools/qa-check.js [--strict] [--discord]`);
+    console.error(`   Pour valider un scan précis : node tools/validate-scan.js <dossier>`);
+    process.exit(2);
+  }
+}
+
 const errors = [];
 const warnings = [];
 const ok = [];

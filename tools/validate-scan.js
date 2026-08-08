@@ -976,6 +976,43 @@ async function main() {
     }
   }
 
+  // ── L'univers de corrélation doit être le panier RÉELLEMENT publié ─────────────────────
+  // Constaté sur le scan PUBLIÉ du 20260807 : engine_meta.risk_gating.correlation_universe
+  // valait « ROST,JCI,NSC,V,PNC,EWS,VFLO,IOO » — le crible INITIAL — alors que le panier
+  // publié était JCI, ROST, ITX.MC, KBC.BR, LMT, CPER, EWS, NSC. Quatre des huit titres
+  // publiés (CPER, ITX.MC, KBC.BR, LMT) n'ont jamais été mesurés, et trois titres mesurés
+  // (V, PNC, VFLO, IOO) n'ont jamais été publiés. Les max_pair_correlation et
+  // avg_off_diagonal_correlation affichés décrivaient donc un panier qui n'a pas existé —
+  // et les deux règles de dé-concentration (rho > 0,85 ; moyenne hors-diagonale > 0,65)
+  // ne pouvaient pas mordre sur la moitié du panier.
+  // Cause structurelle : PortfolioRisk est US-only, les lignes EU/APAC cassent le calcul.
+  // Ce n'est PAS une raison de publier une métrique partielle sans le dire.
+  // NOTE — la première version de ce contrôle lisait une variable `raw` HORS PORTÉE et son
+  // `catch` muet avalait la ReferenceError : le contrôle ne s'exécutait jamais et ne le disait
+  // pas. Exactement le défaut qu'il est censé combattre. Le catch signale désormais.
+  try {
+    const dataPath = path.join(dir, 'data.json');
+    const dataJson = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf8')) : null;
+    const rg = (dataJson && dataJson.engine_meta && dataJson.engine_meta.risk_gating) || {};
+    const uni = rg.correlation_universe;
+    if (uni && Array.isArray(allSignals) && allSignals.length) {
+      const inUni = new Set(String(uni).match(/[A-Z][A-Z0-9.\-]{0,7}/g) || []);
+      const published = allSignals.map(x => x.ticker).filter(Boolean);
+      const missing = published.filter(t => !inUni.has(t));
+      if (missing.length) {
+        const pct = Math.round((published.length - missing.length) / published.length * 100);
+        advisories.push(
+          `correlation_universe ne couvre que ${pct}% du panier publié — non mesurés : ${missing.join(', ')}. ` +
+          `Les métriques de corrélation décrivent un autre panier que celui publié. ` +
+          `Recalculer sur la liste FINALE, ou déclarer explicitement la couverture partielle. [correlation_universe_coverage]`);
+      }
+    }
+  } catch (e) {
+    // Jamais bloquant, mais JAMAIS muet : un contrôle qui échoue en silence vaut moins que
+    // pas de contrôle du tout, parce qu'il fait croire qu'il a tourné.
+    advisories.push(`correlation_universe : contrôle NON EXÉCUTÉ (${e.message}) [correlation_universe_coverage]`);
+  }
+
   if (advisories.length) {
     console.warn(`\n⚠️  ${advisories.length} advisory note(s) from scanner-lessons.json (non-blocking — selection-time hints):`);
     advisories.forEach((a, i) => console.warn(`  ${i + 1}. ${a}`));

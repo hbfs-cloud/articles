@@ -1,0 +1,126 @@
+{
+  "role": "enrichissement",
+  "target_session": "2026-08-10",
+  "generated_at_utc": "2026-08-08T05:04:20Z",
+  "status": "BLOCKED_UPSTREAM_EMPTY_AND_MCP_UNAVAILABLE",
+  "blocking": true,
+
+  "tickers_enrichis": 0,
+  "batches_executes": 0,
+  "enrichissements": [],
+
+  "verdict": "Aucun enrichissement n'a été produit. Deux blocages INDÉPENDANTS et cumulatifs : (1) la shortlist amont est vide — preselection.json est lui-même en BLOCKED_MCP_UNAVAILABLE avec shortlist: [] et candidates_screened: 0, donc il n'existe aucun symbole à enrichir ; (2) le serveur MCP marketdata est toujours injoignable au niveau transport, donc même avec une shortlist valide aucun QueryData n'aurait abouti. Conformément au MCP HARD STOP (CLAUDE.md), aucune donnée n'a été estimée, déduite, ni reprise de mémoire ou d'un scan antérieur.",
+
+  "why_empty_is_not_a_result": "enrichissements: [] signifie DONNÉE ABSENTE, jamais « aucun ticker n'a passé l'enrichissement » ni « les flux sont neutres ». Ne PAS consommer ce fichier comme un enrichissement légitime aux valeurs nulles. La phase de génération (sélection et rédaction des 10 setups) doit rester BLOQUÉE.",
+
+  "upstream_input": {
+    "fichier": "/Users/melouadi/code/articles/scanner/20260810/_wf/preselection.json",
+    "lu": true,
+    "status_amont": "BLOCKED_MCP_UNAVAILABLE",
+    "blocking_amont": true,
+    "shortlist_length": 0,
+    "candidates_screened": 0,
+    "consequence": "Zéro lot de 4 à 6 symboles constituable. Aucun appel QueryData par lot n'a même eu de cible.",
+    "note_amont": "preselection.json signale explicitement que ses TROIS sources (marche, screen-us, screen-eu-etf) et le gate résultats (calendrier, G4) sont toutes en échec sur le même serveur MCP. Le défaut est en amont de la chaîne entière, pas propre à l'enrichissement."
+  },
+
+  "mcp_failure": {
+    "server": "marketdata",
+    "error": "MCP server \"marketdata\" is not connected",
+    "window_utc": "2026-08-08T04:56:10Z → 2026-08-08T05:04:12Z",
+    "duree_totale_retry_sec": 482,
+    "attempts_this_role": 7,
+    "attempts": [
+      { "ts_utc": "2026-08-08T04:56:10Z", "tool": "GetStatus", "params": {}, "result": "not connected" },
+      { "ts_utc": "2026-08-08T04:56:25Z", "tool": "QueryData", "params": { "types": "quote", "symbols": "SPY" }, "result": "not connected" },
+      { "ts_utc": "2026-08-08T04:58:15Z", "tool": "GetStatus (après attente 90s)", "params": {}, "result": "not connected" },
+      { "ts_utc": "2026-08-08T05:00:52Z", "tool": "QueryData (après attente 150s)", "params": { "types": "quote,technicals,support_resistance", "symbols": "SPY,QQQ" }, "result": "not connected" },
+      { "ts_utc": "2026-08-08T05:00:58Z", "tool": "GetSymbolSignals (voie alternative, schéma rechargé via ToolSearch)", "params": { "symbol": "SPY" }, "result": "not connected" },
+      { "ts_utc": "2026-08-08T05:04:05Z", "tool": "GetStatus (après attente 180s)", "params": {}, "result": "not connected" },
+      { "ts_utc": "2026-08-08T05:04:12Z", "tool": "QueryData (forçage async)", "params": { "types": "sentiment_overall,insider_transactions,dark_pool,unusual_options,trading_signals", "symbols": "SPY", "execution_mode": "async" }, "result": "not connected" }
+    ],
+    "retry_strategy": "3 fenêtres d'attente bloquantes (90s, 150s, 180s) entrecoupées de relances, d'un rechargement de schémas via ToolSearch, d'une voie d'accès alternative (GetSymbolSignals) et d'un forçage execution_mode=async.",
+    "diagnostic": "Échec au niveau TRANSPORT, pas au niveau donnée. Aucun appel n'atteint le serveur : pas de job_id, pas de réponse vide, pas de payload dégradé. Le polling Jobs(job_id) est donc sans objet — aucun job n'a jamais été créé.",
+    "force_refresh_attempted": false,
+    "force_refresh_skipped_reason": "RefreshBars emprunte le même transport, injoignable. Le force-refresh de CLAUDE.md ne s'applique qu'à des données STALE sur un serveur qui RÉPOND ; ici aucun appel n'aboutit, donc le HARD STOP s'applique directement.",
+    "data_freshness_checked": false,
+    "data_freshness_note": "bar_service_1d_max_last_bar_date et bar_service_1d_ref_lag_sessions n'ont pas pu être lus. La fraîcheur des barres 1d pour la séance cible du 2026-08-10 reste INCONNUE."
+  },
+
+  "champs_attendus_non_produits": {
+    "note": "Schéma de sortie que ce rôle aurait dû remplir par ticker. Listé ici comme contrat pour la reprise, avec ZÉRO valeur — aucun placeholder numérique n'a été écrit, car un 0 ou un null typé se lit trop facilement comme une mesure réelle en aval.",
+    "extension": {
+      "rsi": "NON COLLECTÉ",
+      "atr": "NON COLLECTÉ",
+      "distance_50dma_pct": "NON COLLECTÉ — formule prévue (prix − ema50) / ema50 × 100, jamais évaluée faute de prix et d'ema50"
+    },
+    "niveaux": {
+      "supports": "NON COLLECTÉ — source prévue QueryData(types=support_resistance). Aucun niveau n'a été inventé ni dérivé de mémoire.",
+      "resistances": "NON COLLECTÉ — idem."
+    },
+    "flux": {
+      "sentiment": "NON COLLECTÉ (types=sentiment_overall)",
+      "initiés_achats_ventes": "NON COLLECTÉ (types=insider_transactions ; rappel : seuls les codes P/S comptent comme achat/vente)",
+      "part_traitée_hors_marché_principal": "NON COLLECTÉ (types=dark_pool)",
+      "options_inhabituelles_ratio_achats_ventes": "NON COLLECTÉ (types=unusual_options)",
+      "signaux_techniques": "NON COLLECTÉ (types=trading_signals)"
+    }
+  },
+
+  "garde_fous_portes_non_appliques": {
+    "note": "Enregistrés pour l'agent de reprise. NON appliqués : il n'y a aucune valeur à filtrer.",
+    "vol_implicite_degradee": "Une volatilité implicite lue à 0,01 ou 0,02 est une donnée DÉGRADÉE : à ne jamais citer en sortie. Filtre prévu, jamais exercé.",
+    "part_hors_marche_principal": "Mesure un MODE D'EXÉCUTION, pas un sens directionnel. Ne jamais la présenter comme un signal haussier ou baissier. Cadrage prévu, jamais exercé.",
+    "signaux_us_only": "ctb, dark_pool et une partie des détecteurs de flux sont US-only par construction : un symbole EU (.MC, .BR, .L, .PA) y lit 0 par ABSENCE DE SOURCE, pas par absence de flux. Distinction à préserver à la reprise — un 0 sur un titre EU ne doit jamais être noté comme un flux nul mesuré."
+  },
+
+  "lecons_actives_statut": {
+    "rappel": "Ces leçons ajustent confiance, taille ou tag — elles ne peuvent JAMAIS inverser un signal quantitatif. Aucune n'a pu être évaluée.",
+    "breakout_malus_15_si_vix_plus_3pts_5s": {
+      "applicable": "INDETERMINE",
+      "raison": "La variation du VIX sur 5 séances est l'intrant obligatoire ; marche.json est en hard stop et aucune barre ^VIX n'a pu être lue. Ne PAS appliquer le malus par défaut, et ne PAS supposer qu'il ne s'applique pas."
+    },
+    "pullback_seulement_au_dessus_mm20_haussiere_sans_plus_bas_5s": {
+      "applicable": "NON EVALUE",
+      "raison": "Aucune barre journalière disponible → ni MM20, ni pente de MM20, ni plus-bas 5 séances calculables."
+    },
+    "stop_min_1_5_atr": {
+      "applicable": "NON EVALUE",
+      "raison": "ATR non collecté. C'est précisément le champ que ce rôle devait fournir au dimensionnement des stops en aval."
+    },
+    "fill_stop_a_l_ouverture_si_gap": { "applicable": "N/A a ce stade", "raison": "Règle d'exécution/comptabilisation, hors périmètre de l'enrichissement." },
+    "entree_min_ouverture_vwap_bornee_au_plus_bas": { "applicable": "N/A a ce stade", "raison": "Règle d'exécution, hors périmètre de l'enrichissement." }
+  },
+
+  "regime_porte_intact": {
+    "note": "Transmis tel que fourni en entrée, NON recollecté conformément à la consigne.",
+    "risk_on_pct": 50.72,
+    "neutral_pct": 49.28,
+    "early_risk_off_pct": 0,
+    "crisis_pct": 0,
+    "score_defensive_sur_100": 0.3,
+    "transition_5_seances": { "risk_on_pct": 46.24, "neutral_pct": 28.15, "early_risk_off_pct": 17.37, "crisis_pct": 8.24 },
+    "gate_reduction_declenche": false,
+    "nb_setups_cible": 10,
+    "rr_minimum": 1.5
+  },
+
+  "contraintes_portees": {
+    "tickers_interdits_positions_ouvertes": ["ABT", "BOX", "CFG", "CP", "ELE.MC", "ESTC", "FER", "FRO", "ITRK.L", "PHM", "ROST", "RTX", "TT", "VTV", "VTWO"],
+    "scan_precedent_20260807_max_3_repetitions": ["JCI", "ROST", "ITX.MC", "KBC.BR", "LMT", "CPER", "EWS", "NSC"],
+    "appliquees": false,
+    "raison": "Aucun candidat à confronter à ces listes."
+  },
+
+  "hallucination_guard": "Aucun symbole, prix, RSI, ATR, distance à la moyenne 50, support, résistance, sentiment, transaction d'initié, part hors marché principal ni ratio d'options n'a été produit. Zéro valeur inventée, estimée, interpolée, ou reprise de mémoire ou d'un scan antérieur. Un fichier conforme au schéma mais rempli de métriques plausibles serait la pire sortie possible ici : il franchirait silencieusement le gate et contaminerait les 10 setups publiés.",
+
+  "next_steps": [
+    "Reconnecter le serveur MCP marketdata — l'incident touche TOUS les rôles du scan (marche, screen-us, screen-eu-etf, calendrier, presélection, enrichissement), ce n'est pas un défaut propre à l'enrichissement.",
+    "Contrôle de reprise : GetStatus → vérifier bar_service_1d_max_last_bar_date >= 2026-08-07 et bar_service_1d_ref_lag_sessions <= 1.",
+    "Si le serveur répond mais que les barres sont en retard : RefreshBars puis poller GetStatus jusqu'au rattrapage — ne PAS enchaîner sur des barres périmées.",
+    "Rejouer la chaîne amont DANS L'ORDRE (calendrier/gate résultats en vague 1, enrichissement en vague 3) pour reconstituer une shortlist de 18 à 25 noms.",
+    "Ne relancer ce rôle QUE sur un preselection.json dont status n'est pas BLOCKED et dont shortlist est non vide — sinon il reproduira à l'identique ce fichier.",
+    "À la reprise, borner explicitement les appels point-in-time : QueryData(end_date=2026-08-10) pour ne jamais lire un filing postérieur à la séance cible.",
+    "Mesurer la variation du VIX sur 5 séances avant toute notation de setup Breakout — le malus −15 est actuellement INDÉTERMINÉ, ni acquis ni écarté."
+  ]
+}

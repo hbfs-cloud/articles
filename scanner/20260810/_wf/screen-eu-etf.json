@@ -1,0 +1,52 @@
+{
+  "role": "screen-eu-etf",
+  "target_session": "2026-08-10",
+  "generated_at": "2026-08-08T04:50:30Z",
+  "status": "mcp_unavailable",
+  "blocking": true,
+  "data_source": "none",
+  "eu": [],
+  "etf": [],
+  "apac": [],
+  "counts": { "eu": 0, "etf": 0, "apac": 0 },
+  "diversification_floor_check": {
+    "required": { "eu": 2, "apac": 1, "etf": 2 },
+    "satisfiable": false,
+    "reason": "Aucun candidat collecté — MCP marketdata injoignable."
+  },
+  "mcp_failure": {
+    "server": "marketdata",
+    "error": "MCP server \"marketdata\" is not connected",
+    "tools_attempted": [
+      "mcp__marketdata__GetStatus",
+      "mcp__marketdata__RunScreener (region=EU, pass_expr=\"rsi14>48 && rsi14<70 && macd>0 && close>ema('close',50)\", score_expr=rsi14, top_k=40, force_async=true)",
+      "mcp__marketdata__RunScreener (asset=etf, region=US, pass_expr=\"rsi14>45 && rsi14<65 && macd>0 && vol>800000\", score_expr=rsi14, top_k=30, force_async=true)"
+    ],
+    "schemas_loaded_via_toolsearch": true,
+    "attempts": 9,
+    "window_utc": "2026-08-08T04:46:00Z → 2026-08-08T04:50:30Z",
+    "retry_strategy": "ToolSearch (attend les serveurs en cours de connexion) + 3 attentes bloquantes (25s, 60s, 90s) — jamais de reconnexion",
+    "apac_step_reached": false,
+    "note": "L'étape APAC (QueryData types=quote sur EWJ/EWY/EWT/EWS/MCHI/INDA/BABA/PDD/TSM/SONY) n'a pas pu etre lancee : meme serveur MCP, meme indisponibilite."
+  },
+  "policy": {
+    "rule": "MCP HARD STOP (CLAUDE.md) — aucune substitution par des donnees inventees, estimees ou memorisees.",
+    "hallucination_guard": "Aucun ticker, RSI, MACD, MM50, ATR ou niveau n'a ete produit sans donnee MCP.",
+    "resume_condition": "Reprendre quand le serveur marketdata est reconnecte ET qu'un GetStatus + un QueryData de controle renvoient des barres fraiches (max_last_bar_date >= 2026-08-07, ref_lag_sessions <= 1). Si les barres sont vieilles mais le MCP repond : appeler RefreshBars puis poller GetStatus avant de relancer les screeners."
+  },
+  "context_received": {
+    "regime": {
+      "risk_on_pct": 50.72,
+      "neutral_pct": 49.28,
+      "early_risk_off_pct": 0,
+      "crisis_pct": 0,
+      "defensive_score": 0.3,
+      "reduction_gate_triggered": false,
+      "setups_target": 10,
+      "min_rr": 1.5
+    },
+    "banned_tickers": ["ABT","BOX","CFG","CP","ELE.MC","ESTC","FER","FRO","ITRK.L","PHM","ROST","RTX","TT","VTV","VTWO"],
+    "previous_scan_20260807": ["JCI","ROST","ITX.MC","KBC.BR","LMT","CPER","EWS","NSC"],
+    "max_repeats": 3
+  }
+}

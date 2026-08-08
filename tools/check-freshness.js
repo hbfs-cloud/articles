@@ -34,6 +34,7 @@
  */
 
 const fs = require('fs');
+const path = require('path');
 
 function fail(msg) { console.error(`❌ [freshness] ${msg}`); return 1; }
 
@@ -73,6 +74,54 @@ function main() {
       console.log(`✅ ${name}: ${ageH.toFixed(1)}h (max ${maxH}h)`);
     }
   }
+  // ── Contrôle de RÉALISATION, en plus du contrôle d'âge ────────────────────────────────
+  // Le contrôle d'âge seul est FAIL-OPEN : le 2026-08-08, ce gate a certifié « 4 sources
+  // vérifiées, 0 bloquante(s) », exit 0, sur le scan 20260810 dont la collecte avait
+  // intégralement échoué (connecteur marketdata en 404). Le manifeste attestait des
+  // horodatages frais pour des données qui n'existaient nulle part. Un manifeste décrit une
+  // INTENTION de collecte ; il ne prouve pas qu'elle a abouti.
+  //
+  // Deux vérifications ajoutées, toutes deux sur le répertoire déclaré par `content` :
+  //  (a) les fichiers de rôle du harnais (<content>/_wf/*.json) sont lus, et tout statut
+  //      bloquant fait échouer. Ces fichiers existaient déjà et n'étaient lus PAR AUCUN
+  //      outil du dépôt (`grep -rln "_wf" tools/` → zéro) : les agents consignaient
+  //      correctement leur blocage dans le vide.
+  //  (b) `--require-artifacts` exige la présence non vide des artefacts publiables. Non
+  //      activé par défaut : le manifeste est légitimement écrit PENDANT la collecte,
+  //      avant que les artefacts existent. Les commandes de publication doivent le passer.
+  const contentDir = m.content ? path.join(path.dirname(path.resolve(file)), '..', path.basename(m.content)) : null;
+  const baseDir = m.content && fs.existsSync(m.content) ? m.content : path.dirname(path.resolve(file));
+
+  const wfDir = path.join(baseDir, '_wf');
+  if (fs.existsSync(wfDir)) {
+    const BLOCKING_RE = /BLOCK|UNAVAIL|ERROR|HARD_STOP|FAIL/i;
+    for (const f of fs.readdirSync(wfDir).filter(x => x.endsWith('.json'))) {
+      let d;
+      try { d = JSON.parse(fs.readFileSync(path.join(wfDir, f), 'utf8')); }
+      catch (e) { errors++; console.error(`❌ _wf/${f}: illisible (${e.message})`); continue; }
+      // Un fichier de rôle SANS champ `blocking` explicite est traité comme bloquant :
+      // l'absence de déclaration ne vaut pas feu vert (calendrier.json, le fichier du gate
+      // G4 lui-même, était le seul des 9 à ne pas porter ce champ).
+      const st = String(d.status || d.state || '');
+      if (d.blocking === true || BLOCKING_RE.test(st)) {
+        errors++; console.error(`❌ _wf/${f}: statut bloquant « ${st || 'blocking:true'} » — la collecte de ce rôle a échoué`);
+      } else if (d.blocking === undefined && !st) {
+        errors++; console.error(`❌ _wf/${f}: ni champ blocking ni status — indéterminé, donc traité comme bloquant`);
+      }
+    }
+  }
+
+  if (args.includes('--require-artifacts')) {
+    const REQUIRED = { scanner: ['data.json', 'signals.json'], analyses: ['index.html'] };
+    const kind = (m.content || '').split('/')[0];
+    for (const f of (REQUIRED[kind] || ['index.html'])) {
+      const p = path.join(baseDir, f);
+      if (!fs.existsSync(p) || fs.statSync(p).size === 0) {
+        errors++; console.error(`❌ artefact publiable absent ou vide : ${path.join(m.content || baseDir, f)}`);
+      }
+    }
+  }
+
   console.log(`[freshness] ${checked} sources datées vérifiées — ${errors} bloquante(s)`);
   if (errors && warnOnly) { console.error('⚠️  --warn-only : erreurs non bloquantes (INTERDIT en publication)'); return 0; }
   return errors ? 1 : 0;

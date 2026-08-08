@@ -1,0 +1,116 @@
+{
+  "role": "anti-dilution",
+  "target_session": "2026-08-10",
+  "generated_at_utc": "2026-08-08T05:12:40Z",
+  "status": "BLOCKED_NO_INPUT_AND_MCP_UNAVAILABLE",
+  "blocking": true,
+  "gate_franchi": false,
+
+  "verdict_global": "Le contrôle anti-dilution N'A PAS EU LIEU. Aucun ticker n'a été examiné, et aucun n'aurait pu l'être : les deux conditions nécessaires sont absentes simultanément. (1) L'entrée est vide — preselection.json porte status BLOCKED_MCP_UNAVAILABLE et shortlist: [], donc il n'existe aucun symbole à contrôler. (2) Mon propre canal de contrôle est mort — QueryData(types=sec_filings,flags) renvoie « MCP server marketdata is not connected » à chaque appel, donc même avec une shortlist je n'aurais rien pu vérifier. Ce fichier est un constat d'impossibilité, pas un résultat.",
+
+  "tickers_examines": 0,
+  "verdicts": [],
+  "pass": [],
+  "drop": [],
+
+  "⚠️_lecture_obligatoire_du_champ_verdicts": {
+    "regle": "verdicts: [] signifie CONTRÔLE NON EFFECTUÉ. Cela ne signifie PAS « aucun ticker disqualifié », ni « tous les tickers passent », ni « rien à signaler ».",
+    "piege_fail_open": "Le gate anti-dilution est BLOQUANT. Un consommateur aval qui teste « le ticker figure-t-il dans drop[] ? » obtiendra faux pour n'importe quel symbole de l'univers, y compris un émetteur en dilution sérielle, et le laissera passer. L'absence de DROP n'est pas un feu vert. Tout aval doit tester status != OK AVANT de lire drop[] / pass[].",
+    "consequence": "La publication du scan du 2026-08-10 reste bloquée. Aucun setup ne peut être promu en recommandation tant que ce fichier n'a pas été régénéré avec un contrôle réel."
+  },
+
+  "portee_exacte_du_controle": {
+    "couverture": "NULLE",
+    "univers_couvert": "aucun",
+    "requetes_sec_filings_reussies": 0,
+    "requetes_flags_reussies": 0,
+    "fenetre_prevue_jours": 180,
+    "requete_prevue_par_ticker": "QueryData(symbols=\"<T>\", types=\"sec_filings,flags\", days=180)",
+    "note": "Aucun dépôt SEC n'a été lu. Aucun flag n'a été lu. Aucun nombre d'actions, aucun dilution_risk_score, aucune date de dépôt n'apparaît dans ce fichier — parce qu'aucun n'a été obtenu. Rien n'a été estimé, déduit d'un scan antérieur, ni repris de mémoire (MCP HARD STOP, CLAUDE.md)."
+  },
+
+  "les_deux_questions_distinctes": {
+    "doctrine": "Leçon de 4 récidives dans ce dépôt (INDO, bon de souscription AMD, programme CCJ, rémunération en titres AMZN) : la question (b) ne se lit JAMAIS dans la réponse à (a).",
+    "a_dilution_constatee": {
+      "question": "Y a-t-il eu dilution ? → évolution du nombre d'actions en circulation",
+      "repondue": false,
+      "raison": "Aucune donnée sur le nombre d'actions n'a pu être lue."
+    },
+    "b_capacite_d_emission_ouverte": {
+      "question": "Existe-t-il une CAPACITÉ d'émission ouverte ? → programme au fil de l'eau (ATM), prospectus préalable (S-3/shelf), enregistrement automatique couvrant les ACTIONS et pas seulement la dette, obligations convertibles, bons de souscription",
+      "repondue": false,
+      "raison": "Aucun dépôt S-3 / 424B5 / S-8 / prospectus supplémentaire n'a pu être lu."
+    },
+    "formulation_interdite_ici": "Ni « aucune dilution » ni « aucune dilution constatée » ne peuvent être écrits pour un quelconque ticker. La seconde formulation suppose qu'au moins la question (a) a été vérifiée — ce n'est pas le cas ici. La seule formulation exacte est : « contrôle non effectué, capacité d'émission inconnue »."
+  },
+
+  "criteres_de_disqualification_non_appliques": {
+    "note": "Grille enregistrée pour la reprise. AUCUN critère n'a été évalué contre un quelconque symbole.",
+    "criteres": [
+      "dilution_risk_score >= 70",
+      "prospectus préalable actif (S-3 / shelf registration)",
+      "programme d'émission au fil de l'eau (ATM)",
+      "placement PIPE récent",
+      "bons de souscription dans la monnaie",
+      "regroupement d'actions récent (reverse split)",
+      "souscripteur agressif",
+      "émetteur en dilution sérielle (plusieurs S-3 / 424B5 sur 12 mois)"
+    ]
+  },
+
+  "angle_mort_emetteurs_etrangers": {
+    "statut": "NON LEVÉ, et structurellement aggravé",
+    "principe": "Pour un émetteur étranger (formulaires 40-F, F-10, 6-K), le filtre SEC américain est STRUCTURELLEMENT AVEUGLE : un retour vide n'est pas une information, c'est une absence de couverture. Le contrôle doit alors se faire à la source société, ou être déclaré explicitement aveugle.",
+    "application_ici": "Le vivier amont devait inclure de l'EU, de l'APAC et des ETF (screen-eu-etf.json : plancher de diversification eu>=2, apac>=1, etf>=2). Ces lignes-là auraient de toute façon exigé un contrôle hors SEC. À la reprise, ne PAS traiter un sec_filings vide sur un .MC / .BR / .L / .PA comme un PASS — le marquer BLIND et vérifier à la source (AMF via QueryData types=eu_filings pour les .PA ; site investisseurs de la société sinon).",
+    "tickers_etrangers_pressentis_dans_les_contraintes_amont": ["ELE.MC", "FER", "ITRK.L", "ITX.MC", "KBC.BR"],
+    "avertissement": "Cette liste provient des contraintes de portée (positions ouvertes / scan précédent 20260807) transmises dans la consigne, PAS d'une shortlist. Ce ne sont pas des candidats du 2026-08-10 et ils n'ont pas été contrôlés."
+  },
+
+  "entree": {
+    "fichier": "/Users/melouadi/code/articles/scanner/20260810/_wf/preselection.json",
+    "lu": true,
+    "status_lu": "BLOCKED_MCP_UNAVAILABLE",
+    "blocking": true,
+    "shortlist_length": 0,
+    "candidates_screened": 0,
+    "interpretation": "preselection.json déclare lui-même que shortlist: [] veut dire DONNÉE ABSENTE et non « vivier vide légitime », et demande explicitement que la phase suivante reste bloquée. Je m'y conforme.",
+    "autres_fichiers_amont_inspectes": {
+      "screen-us.json": "candidates: [], status ERROR_MCP_UNAVAILABLE — aucune source de repli",
+      "screen-eu-etf.json": "eu/etf/apac tous vides, status mcp_unavailable — aucune source de repli",
+      "calendrier.json": "gate G4 BLOQUANT non franchi",
+      "marche.json": "MCP_UNAVAILABLE_HARD_STOP"
+    },
+    "reconstruction_de_shortlist": "NON FAITE. Aucun fichier amont ne contient de symbole exploitable. Fabriquer une shortlist plausible pour pouvoir « exécuter » le contrôle produirait un gate anti-dilution vert sur des tickers imaginaires — exactement le mode de défaillance que ce rôle existe pour empêcher."
+  },
+
+  "mcp_failure": {
+    "server": "marketdata",
+    "error": "MCP server \"marketdata\" is not connected",
+    "window_utc": "2026-08-08T05:05:10Z → 2026-08-08T05:12:20Z",
+    "attempts_this_role": 4,
+    "attempts": [
+      { "tool": "GetStatus", "params": {}, "result": "not connected" },
+      { "tool": "QueryData", "params": { "types": "sec_filings,flags", "symbols": "SPY", "days": 180 }, "result": "not connected", "but": "appel de contrôle sur un symbole témoin, pour distinguer une panne de transport d'un problème de symbole — c'est bien le transport" },
+      { "tool": "GetStatus", "params": {}, "result": "not connected", "note": "après première fenêtre d'attente ~90s" },
+      { "tool": "QueryData", "params": { "types": "flags", "symbols": "AAPL", "days": 180 }, "result": "not connected", "note": "après seconde fenêtre d'attente" }
+    ],
+    "schemas_recharges_via_toolsearch": true,
+    "schemas_recharges_resultat": "Schémas QueryData / Jobs / GetStatus / GetInstruments chargés sans erreur — la panne est bien au niveau du transport MCP, pas de la découverte d'outils.",
+    "force_refresh_attempted": false,
+    "force_refresh_skipped_reason": "RefreshBars emprunte le même transport, injoignable. Le force-refresh de CLAUDE.md ne s'applique qu'à des données STALE sur un serveur qui RÉPOND ; ici aucun appel n'aboutit → HARD STOP direct.",
+    "data_freshness_checked": false,
+    "incident_partage": "Même serveur, même erreur, même fenêtre que marche / screen-us / screen-eu-etf / calendrier / preselection. Incident d'infrastructure transverse au scan, pas une défaillance propre à ce rôle. Total cumulé des tentatives sur l'ensemble des rôles : >29."
+  },
+
+  "hallucination_guard": "Zéro dépôt SEC, zéro dilution_risk_score, zéro nombre d'actions, zéro date de S-3/424B5/PIPE/warrant, zéro verdict PASS ou DROP n'a été produit. Aucune valeur inventée, estimée, extrapolée d'un scan antérieur ou reprise de mémoire. Un fichier conforme au schéma et rempli de PASS plausibles serait ici la pire sortie possible : il déverrouillerait un gate bloquant sans qu'aucun contrôle n'ait eu lieu.",
+
+  "next_steps": [
+    "Reconnecter le serveur MCP marketdata — préalable commun à tous les rôles du scan.",
+    "Contrôle de reprise : GetStatus → vérifier bar_service_1d_max_last_bar_date >= 2026-08-07 et bar_service_1d_ref_lag_sessions <= 1. Si les barres sont en retard mais le serveur répond : RefreshBars puis poller GetStatus jusqu'au rattrapage.",
+    "Rejouer marche / screen-us / screen-eu-etf / calendrier, puis preselection, pour obtenir une shortlist réelle de 18 à 25 noms.",
+    "Rejouer CE rôle sur la shortlist complète : QueryData(symbols=\"<T>\", types=\"sec_filings,flags\", days=180) par ticker, avec end_date=2026-08-10 pour interdire tout dépôt POSTÉRIEUR à la séance visée (point-in-time, leçons IOVA / INDO).",
+    "Répondre SÉPARÉMENT aux questions (a) dilution constatée et (b) capacité d'émission ouverte pour chaque ticker — ne jamais déduire la seconde de la première.",
+    "Marquer BLIND (et non PASS) tout émetteur étranger dont sec_filings revient vide ; vérifier à la source société, ou via QueryData(types=eu_filings) pour les .PA.",
+    "Ne lever le gate qu'une fois verdicts[] non vide et couvrant l'intégralité de la shortlist."
+  ]
+}

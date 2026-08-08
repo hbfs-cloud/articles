@@ -1,0 +1,126 @@
+{
+  "role": "preselection",
+  "target_session": "2026-08-10",
+  "generated_at_utc": "2026-08-08T04:55:10Z",
+  "status": "BLOCKED_MCP_UNAVAILABLE",
+  "blocking": true,
+
+  "earnings_screened_at": null,
+  "candidates_screened": 0,
+  "rejected_earnings": [],
+  "rejected_blocked": [],
+  "rejected_liquidity": [],
+  "shortlist": [],
+
+  "verdict": "Aucun vivier n'a pu être constitué. Les TROIS sources amont (screen-us, screen-eu-etf, calendrier) sont toutes en échec transport sur le même serveur MCP marketdata, et mes propres relances ont échoué à l'identique. Il n'existe donc AUCUN candidat à fusionner, à cribler, ni à classer. Conformément au MCP HARD STOP (CLAUDE.md), rien n'a été estimé, déduit, ni repris de mémoire.",
+
+  "why_empty_is_not_a_result": "candidates_screened: 0 et shortlist: [] signifient DONNÉE ABSENTE, jamais « aucun titre ne passe le filtre » ni « aucun titre en fenêtre de résultats ». Ne PAS consommer ce fichier comme un vivier vide légitime. La phase suivante (enrichissement / sélection des 10 setups) doit rester bloquée.",
+
+  "upstream_inputs": {
+    "marche.json": { "status": "MCP_UNAVAILABLE_HARD_STOP", "usable": false, "note": "Aucun indice, aucune rotation sectorielle, aucun VIX." },
+    "screen-us.json": { "status": "ERROR_MCP_UNAVAILABLE", "usable": false, "candidate_count": 0, "retries_upstream": 7 },
+    "screen-eu-etf.json": { "status": "mcp_unavailable", "usable": false, "counts": { "eu": 0, "etf": 0, "apac": 0 }, "attempts_upstream": 9 },
+    "calendrier.json": { "status": "BLOCKED", "gate": "G4", "usable": false, "note": "Gate résultats BLOQUANT non franchi — excluded_tickers: [] = donnée manquante." },
+    "harness.json": {
+      "usable_as_source": false,
+      "note": "harness.json mentionne « RunScreener US — 60 candidats » dans le champ origin de la source screener_momentum_us, mais ne contient AUCUNE liste de tickers, aucun prix, aucun ATR, aucune capitalisation. Reconstruire un vivier depuis cette phrase reviendrait à inventer 60 symboles. Non fait."
+    }
+  },
+
+  "ordre_impose_doctrine_perf": {
+    "regle": "Calendrier (gate résultats) en vague 1, enrichissement en vague 3 — leçon du 30/07 (15 min de reprise pure quand l'ordre est inversé).",
+    "respecte": true,
+    "consequence": "Le gate résultats a bien été traité AVANT tout enrichissement. Il échoue en vague 1 → l'enrichissement n'a jamais été lancé. Aucune minute gaspillée en aval, mais aucun candidat non plus."
+  },
+
+  "earnings_gate": {
+    "applique": false,
+    "raison": "Deux blocages cumulés : (1) aucun vivier à cribler, (2) le calendrier de résultats lui-même est indisponible (GetEarningsCalendarFiltered et QueryData types=earnings_calendar injoignables).",
+    "fenetre_exclusion_prevue": {
+      "definition": "±3 séances de bourse autour du 2026-08-10",
+      "sessions": ["2026-08-05", "2026-08-06", "2026-08-07", "2026-08-10", "2026-08-11", "2026-08-12", "2026-08-13"],
+      "note": "Fenêtre calculée a priori sur le calendrier de bourse. Aucun ticker n'y a été confronté."
+    },
+    "verification_8k_item_202": {
+      "effectuee": false,
+      "raison": "QueryData(types=sec_filings, form_types=8-K, end_date=2026-08-10) dépend du même transport, injoignable."
+    }
+  },
+
+  "liquidity_gate": {
+    "applique": false,
+    "seuils_prevus": { "mcap_min_usd_top10": 500000000, "volume_moyen_min_usd_par_jour": 10000000 },
+    "raison": "Aucun symbole à mesurer. Ni capitalisation ni volume moyen n'ont pu être lus (GetInstruments / QueryData types=stats indisponibles)."
+  },
+
+  "contraintes_portees_sans_etre_appliquees": {
+    "note": "Enregistrées pour l'agent aval. NON appliquées : il n'y a aucun candidat à exclure, donc rejected_blocked est vide par absence de vivier, pas par absence de collision.",
+    "tickers_interdits_positions_ouvertes": ["ABT", "BOX", "CFG", "CP", "ELE.MC", "ESTC", "FER", "FRO", "ITRK.L", "PHM", "ROST", "RTX", "TT", "VTV", "VTWO"],
+    "scan_precedent_20260807_max_3_repetitions": ["JCI", "ROST", "ITX.MC", "KBC.BR", "LMT", "CPER", "EWS", "NSC"],
+    "repetitions_comptees": 0,
+    "collision_notee": "ROST figure à la fois dans les tickers interdits et dans le scan précédent — il serait de toute façon exclu d'emblée par la règle positions ouvertes.",
+    "regime": {
+      "risk_on_pct": 50.72,
+      "neutral_pct": 49.28,
+      "early_risk_off_pct": 0,
+      "crisis_pct": 0,
+      "score_defensive_sur_100": 0.3,
+      "transition_5_seances": { "risk_on_pct": 46.24, "neutral_pct": 28.15, "early_risk_off_pct": 17.37, "crisis_pct": 8.24 },
+      "gate_reduction_declenche": false,
+      "nb_setups_cible": 10,
+      "rr_minimum": 1.5
+    }
+  },
+
+  "lecons_actives_statut": {
+    "breakout_malus_15_si_vix_plus_3pts_5s": {
+      "applicable": "INDETERMINE",
+      "raison": "La variation du VIX sur 5 séances est l'intrant obligatoire et n'a pas pu être mesurée (marche.json le signale explicitement). Ne PAS appliquer le malus par défaut, et ne PAS supposer qu'il ne s'applique pas."
+    },
+    "pullback_seulement_au_dessus_mm20_haussiere": { "applicable": "NON EVALUE", "raison": "Aucune barre journalière, donc aucune MM20 ni plus-bas 5 séances calculables." },
+    "stop_min_1_5_atr": { "applicable": "NON EVALUE", "raison": "Aucun ATR disponible." },
+    "fill_stop_a_l_ouverture_si_gap": { "applicable": "N/A a ce stade", "raison": "Règle d'exécution/comptabilisation, pas de présélection." },
+    "entree_min_ouverture_vwap_bornee_au_plus_bas": { "applicable": "N/A a ce stade", "raison": "Règle d'exécution, pas de présélection." }
+  },
+
+  "mcp_failure": {
+    "server": "marketdata",
+    "error": "MCP server \"marketdata\" is not connected",
+    "window_utc": "2026-08-08T04:50:55Z → 2026-08-08T04:55:05Z",
+    "attempts_this_role": 9,
+    "attempts": [
+      { "tool": "GetStatus", "params": {}, "result": "not connected" },
+      { "tool": "ToolSearch (rechargement des schémas marketdata)", "params": {}, "result": "schémas rechargés OK, transport toujours down" },
+      { "tool": "GetStatus", "params": {}, "result": "not connected" },
+      { "tool": "QueryData", "params": { "types": "quote", "symbols": "SPY" }, "result": "not connected" },
+      { "tool": "RunAutoScreener", "params": { "region": "US", "top_k": 40, "force_async": true }, "result": "not connected" },
+      { "tool": "GetStatus (après attente 75s)", "params": {}, "result": "not connected" },
+      { "tool": "GetEarningsCalendarFiltered", "params": { "days_ahead": 7, "include_implied_move": false }, "result": "not connected" },
+      { "tool": "GetStatus (après attente cumulée ~6 min)", "params": {}, "result": "not connected" },
+      { "tool": "RunScreener", "params": { "region": "US", "pass_expr": "rsi14>50 && rsi14<70 && macd>0 && close>ema('close',50) && vol>1500000", "score_expr": "rsi14", "top_k": 60, "force_async": true }, "result": "not connected" }
+    ],
+    "retry_strategy": "3 fenêtres d'attente bloquantes (75s, 100s, 180s) entrecoupées de relances et d'un rechargement de schémas via ToolSearch.",
+    "force_refresh_attempted": false,
+    "force_refresh_skipped_reason": "RefreshBars emprunte le même transport, injoignable. Le force-refresh ne s'applique qu'à des données STALE sur un serveur qui RÉPOND ; ici aucun appel n'aboutit, donc le HARD STOP s'applique directement.",
+    "data_freshness_checked": false,
+    "data_freshness_note": "bar_service_1d_max_last_bar_date et ref_lag_sessions n'ont pas pu être lus. La fraîcheur des barres 1d pour la séance du 2026-08-10 est INCONNUE."
+  },
+
+  "hallucination_guard": "Aucun symbole, prix, ATR, capitalisation, volume, date de résultats ni score n'a été produit. Zéro valeur inventée, estimée, ou reprise de mémoire ou d'un scan antérieur. La shortlist attendue de 18 à 25 noms n'a PAS été fabriquée pour satisfaire le format — un fichier conforme au schéma mais rempli de tickers plausibles serait la pire sortie possible ici.",
+
+  "diversification_floor_check": {
+    "requis_apres_disqualifications": { "shortlist_min": 18, "shortlist_max": 25 },
+    "satisfiable": false,
+    "raison": "0 candidat disponible."
+  },
+
+  "next_steps": [
+    "Reconnecter le serveur MCP marketdata (l'incident touche TOUS les rôles du scan, ce n'est pas un problème propre à la présélection).",
+    "Contrôle de reprise : GetStatus → vérifier bar_service_1d_max_last_bar_date >= 2026-08-07 et ref_lag_sessions <= 1.",
+    "Si les barres sont en retard mais le serveur répond : RefreshBars puis poller GetStatus jusqu'à rattrapage — ne PAS enchaîner sur des barres périmées.",
+    "Rejouer marche, screen-us et screen-eu-etf pour reconstituer le vivier (60 candidats momentum US + EU + ETF + APAC).",
+    "Rejouer le gate résultats G4 : GetEarningsCalendarFiltered(days_ahead=7) + QueryData(types=earnings_calendar, days=14), puis confirmation 8-K item 2.02 via QueryData(types=sec_filings, form_types=8-K, end_date=2026-08-10) sur CHAQUE candidat du vivier complet.",
+    "Mesurer la variation du VIX sur 5 séances avant toute notation de setup Breakout — le malus −15 est actuellement INDÉTERMINÉ, ni acquis ni écarté.",
+    "Rejouer ce rôle à l'identique et réécrire ce fichier avec earnings_screened_at horodaté au moment du criblage réel et candidates_screened couvrant le vivier COMPLET."
+  ]
+}

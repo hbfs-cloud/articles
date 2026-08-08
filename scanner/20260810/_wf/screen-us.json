@@ -1,0 +1,67 @@
+{
+  "role": "screen-us",
+  "target_session": "2026-08-10",
+  "generated_at_utc": "2026-08-08",
+  "status": "ERROR_MCP_UNAVAILABLE",
+  "blocking": true,
+  "candidates": [],
+  "candidate_count": 0,
+  "error": {
+    "code": "mcp_not_connected",
+    "server": "marketdata",
+    "message": "MCP server \"marketdata\" is not connected — every call returned this transport error. No screener data could be retrieved.",
+    "attempts": [
+      { "tool": "RunAutoScreener", "params": { "region": "US", "top_k": 40, "force_async": true }, "result": "mcp_not_connected" },
+      { "tool": "RunScreener", "params": { "region": "US", "pass_expr": "near_breakout(0.03) && vol_spike45(1.5) && rsi14<72 && rsi14>45", "score_expr": "rsi14", "top_k": 50, "force_async": true }, "result": "mcp_not_connected" },
+      { "tool": "GetStatus", "params": {}, "result": "mcp_not_connected" },
+      { "tool": "ToolSearch reload of marketdata schemas", "params": {}, "result": "schemas reloaded OK, but transport still down" },
+      { "tool": "GetStatus (retry after wait)", "params": {}, "result": "mcp_not_connected" },
+      { "tool": "RunScreener (retry after wait)", "params": {}, "result": "mcp_not_connected" },
+      { "tool": "GetStatus (final retry)", "params": {}, "result": "mcp_not_connected" }
+    ],
+    "retries": 7,
+    "force_refresh_attempted": false,
+    "force_refresh_skipped_reason": "RefreshBars requires the same marketdata transport, which is down. Force-refresh only applies to STALE data on a responding server; here the server never answered, so the CLAUDE.md HARD STOP applies directly."
+  },
+  "data_freshness": {
+    "checked": false,
+    "reason": "GetStatus unreachable — bar_service_1d_max_last_bar_date and ref_lag_sessions could not be read. Freshness of the 1d bars for the 2026-08-10 session is UNKNOWN."
+  },
+  "screens_requested": {
+    "auto_screener": {
+      "tool": "RunAutoScreener",
+      "region": "US",
+      "top_k": 40,
+      "force_async": true,
+      "purpose": "regime cross-check + setup_type classification; candidates are hot-movers, to be treated as a pool not a selection",
+      "delivered": false
+    },
+    "breakout_screener": {
+      "tool": "RunScreener",
+      "region": "US",
+      "pass_expr": "near_breakout(0.03) && vol_spike45(1.5) && rsi14<72 && rsi14>45",
+      "score_expr": "rsi14",
+      "top_k": 50,
+      "force_async": true,
+      "delivered": false
+    }
+  },
+  "warnings_array_read": false,
+  "warnings_note": "warnings[] could not be read: no response payload was ever returned. Zero candidates here is NOT a screening result (no title passed) — it is a transport failure. Do not interpret it as an empty market.",
+  "constraints_carried_forward": {
+    "note": "Recorded for the downstream agent; NOT applied, since there are no candidates to filter.",
+    "banned_tickers_open_positions": ["ABT", "BOX", "CFG", "CP", "ELE.MC", "ESTC", "FER", "FRO", "ITRK.L", "PHM", "ROST", "RTX", "TT", "VTV", "VTWO"],
+    "previous_scan_20260807_max_3_repeats": ["JCI", "ROST", "ITX.MC", "KBC.BR", "LMT", "CPER", "EWS", "NSC"],
+    "regime": {
+      "risk_on_pct": 50.72,
+      "neutral_pct": 49.28,
+      "early_risk_off_pct": 0,
+      "crisis_pct": 0,
+      "defensive_score": 0.3,
+      "reduction_gate_triggered": false,
+      "setups_target": 10,
+      "min_rr": 1.5
+    }
+  },
+  "recommendation": "BLOCK the US screening leg. Reconnect the marketdata MCP, confirm with GetStatus that bar_service_1d_max_last_bar_date covers the 2026-08-07 close (and ref_lag_sessions is back to 0-1, calling RefreshBars and polling if not), then re-run both screens. Publishing or selecting setups for 2026-08-10 without this leg would mean inventing US candidates."
+}
