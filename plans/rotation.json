@@ -1,0 +1,12 @@
+{
+  "artifact": "rotation sectorielle",
+  "waves": [
+    { "name": "rotation", "calls": [
+      { "as": "bars_sectors", "server": "marketdata", "tool": "QueryData", "args": { "types": "bars_daily", "symbols": "XLK,XLF,XLE,XLV,XLI,XLY,XLP,XLU,XLC,XLRE,XLB", "end_date": "$refdate", "limit": 130 }, "freshness": { "max_age_h": 24, "required": true } },
+      { "as": "bars_bench", "server": "marketdata", "tool": "QueryData", "args": { "types": "bars_daily", "symbols": "SPY,QQQ,IWM,USO,TLT,GLD", "end_date": "$refdate", "limit": 130 }, "freshness": { "max_age_h": 24, "required": true } },
+      { "as": "rotations", "server": "marketdata", "tool": "QueryData", "args": { "types": "performance_rotations" }, "freshness": { "max_age_h": 24, "required": true, "note": "moyenne par industrie — c'est ce qui a révélé le -10% optique du 10/08" } },
+      { "as": "correlations", "server": "marketdata", "tool": "PortfolioRisk", "args": { "action": "correlation", "symbols": "SPY,QQQ,IWM,GLD,SLV,TLT,USO", "lookback_days": 60, "method": "pearson" }, "freshness": { "max_age_h": 48, "required": true } },
+      { "as": "sectors_ref", "server": "marketdata", "tool": "GetReferentialData", "args": { "category": "sector" }, "freshness": { "max_age_h": 168, "required": false } }
+    ] }
+  ]
+}

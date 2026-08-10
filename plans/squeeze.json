@@ -1,0 +1,11 @@
+{
+  "artifact": "radar squeeze",
+  "waves": [
+    { "name": "squeeze", "calls": [
+      { "as": "ctb_top", "server": "marketdata", "tool": "QueryData", "args": { "types": "ctb_top" }, "freshness": { "max_age_h": 24, "required": true } },
+      { "as": "si", "server": "marketdata", "tool": "QueryData", "args": { "types": "short_interest,ctb,ftd_threshold", "symbols": "$symbols", "days": 365 }, "freshness": { "max_age_h": 168, "required": true } },
+      { "as": "flow", "server": "marketdata", "tool": "QueryData", "args": { "types": "unusual_options,dark_pool,max_pain", "symbols": "$symbols" }, "freshness": { "max_age_h": 24, "required": false } },
+      { "as": "bars", "server": "marketdata", "tool": "QueryData", "args": { "types": "bars_daily", "symbols": "$symbols", "end_date": "$refdate", "limit": 120 }, "freshness": { "max_age_h": 24, "required": true } }
+    ] }
+  ]
+}

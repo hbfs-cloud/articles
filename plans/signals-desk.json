@@ -1,0 +1,12 @@
+{
+  "artifact": "signaux du jour",
+  "waves": [
+    { "name": "univers", "calls": [
+      { "as": "status", "server": "marketdata", "tool": "GetStatus", "args": {}, "freshness": { "max_age_h": 6, "required": true } },
+      { "as": "regime", "server": "marketdata", "tool": "GetMarketContext", "args": { "facets": "regime,prediction_markets", "model": "ensemble", "horizon_days": 5 }, "freshness": { "max_age_h": 6, "required": true } },
+      { "as": "screen_swing", "server": "marketdata", "tool": "RunScreener", "args": { "pass_expr": "market_cap>2e9 and avg_volume>1e7 and near_breakout(0.03) and inrange('rsi14',45,68,5)", "score_expr": "trend_strength(20)", "region": "us", "top_k": 40, "force_async": true }, "freshness": { "max_age_h": 24, "required": true } },
+      { "as": "economic_events", "server": "marketdata", "tool": "QueryData", "args": { "types": "economic_events", "days": 5 }, "freshness": { "max_age_h": 24, "required": true, "note": "date macro VÉRIFIÉE — jamais un jour non contrôlé" } },
+      { "as": "earnings_3d", "server": "marketdata", "tool": "GetEarningsCalendarFiltered", "args": { "days_ahead": 3 }, "freshness": { "max_age_h": 24, "required": true } }
+    ] }
+  ]
+}
