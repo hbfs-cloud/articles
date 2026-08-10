@@ -1,0 +1,216 @@
+{
+  "artifact": "data/dtx/<mode>.json",
+  "waves": [
+    {
+      "name": "dtx-decide-replay",
+      "calls": [
+        {
+          "as": "dtx_health",
+          "server": "systematic",
+          "tool": "GetHealth",
+          "args": {},
+          "freshness": {
+            "max_age_h": 6,
+            "required": true
+          }
+        },
+        {
+          "as": "dtx_configs",
+          "server": "systematic",
+          "tool": "DtxListConfigs",
+          "args": {},
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "decide_etf_us",
+          "server": "systematic",
+          "tool": "DtxDecide",
+          "args": {
+            "portfolio": "etf_us",
+            "asof": "$asof",
+            "expected_data_date": "$refdate",
+            "balances": {
+              "base_currency": "USD",
+              "cash_by_currency": {
+                "USD": 100000
+              },
+              "total_equity": 100000
+            }
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "decide_us_highvol",
+          "server": "systematic",
+          "tool": "DtxDecide",
+          "args": {
+            "portfolio": "us_highvol",
+            "asof": "$asof",
+            "expected_data_date": "$refdate",
+            "balances": {
+              "base_currency": "USD",
+              "cash_by_currency": {
+                "USD": 100000
+              },
+              "total_equity": 100000
+            }
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "decide_ep",
+          "server": "systematic",
+          "tool": "DtxDecide",
+          "args": {
+            "portfolio": "ep",
+            "asof": "$asof",
+            "expected_data_date": "$refdate",
+            "balances": {
+              "base_currency": "USD",
+              "cash_by_currency": {
+                "USD": 100000
+              },
+              "total_equity": 100000
+            }
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "decide_stockbox_pit",
+          "server": "systematic",
+          "tool": "DtxDecide",
+          "args": {
+            "portfolio": "stockbox_pit",
+            "asof": "$asof",
+            "expected_data_date": "$refdate",
+            "balances": {
+              "base_currency": "USD",
+              "cash_by_currency": {
+                "USD": 100000
+              },
+              "total_equity": 100000
+            }
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "decide_book_honest",
+          "server": "systematic",
+          "tool": "DtxDecide",
+          "args": {
+            "portfolio": "book_honest",
+            "asof": "$asof",
+            "expected_data_date": "$refdate",
+            "balances": {
+              "base_currency": "USD",
+              "cash_by_currency": {
+                "USD": 100000
+              },
+              "total_equity": 100000
+            }
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "decide_hvep",
+          "server": "systematic",
+          "tool": "DtxDecide",
+          "args": {
+            "portfolio": "hvep",
+            "asof": "$asof",
+            "expected_data_date": "$refdate",
+            "balances": {
+              "base_currency": "USD",
+              "cash_by_currency": {
+                "USD": 100000
+              },
+              "total_equity": 100000
+            }
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "replay_etf_us",
+          "server": "systematic",
+          "tool": "DtxReplay",
+          "args": {
+            "portfolio": "etf_us",
+            "from": "2021-01-01",
+            "to": "$asof"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": false
+          },
+          "job_max_ms": 900000
+        },
+        {
+          "as": "replay_us_highvol",
+          "server": "systematic",
+          "tool": "DtxReplay",
+          "args": {
+            "portfolio": "us_highvol",
+            "from": "2021-01-01",
+            "to": "$asof"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": false
+          },
+          "job_max_ms": 900000
+        },
+        {
+          "as": "replay_ep",
+          "server": "systematic",
+          "tool": "DtxReplay",
+          "args": {
+            "portfolio": "ep",
+            "from": "2021-01-01",
+            "to": "$asof"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": false
+          },
+          "job_max_ms": 900000
+        },
+        {
+          "as": "replay_book_honest",
+          "server": "systematic",
+          "tool": "DtxReplay",
+          "args": {
+            "portfolio": "book_honest",
+            "from": "2021-01-01",
+            "to": "$asof"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": false
+          },
+          "job_max_ms": 900000
+        }
+      ]
+    }
+  ]
+}

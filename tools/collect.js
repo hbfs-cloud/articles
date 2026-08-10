@@ -59,6 +59,13 @@ const outDir = arg('--out');
 const dryRun = has('--dry-run');
 const quiet = has('--quiet');
 const tokenStdin = has('--token-stdin');
+const cliVars = {};
+process.argv.forEach((a, i) => {
+  if (a === '--var' && process.argv[i + 1]) {
+    const eq = process.argv[i + 1].indexOf('=');
+    if (eq > 0) cliVars[process.argv[i + 1].slice(0, eq)] = process.argv[i + 1].slice(eq + 1);
+  }
+});
 
 /**
  * Lecture du jeton sur stdin — chemin PRÉFÉRÉ.
@@ -89,30 +96,47 @@ if (!planPath || !outDir) {
 
 const log = (...a) => { if (!quiet) console.log(...a); };
 
-function substitute(value, refdate) {
-  if (typeof value === 'string') return refdate ? value.replace(/\$refdate/g, refdate) : value;
-  if (Array.isArray(value)) return value.map(v => substitute(v, refdate));
+/**
+ * Substitution de variables dans les arguments : $refdate, plus tout ce qui est
+ * passé en --var nom=valeur. Un plan devient ainsi réutilisable — le même
+ * plans/analyse.json sert pour n'importe quel ticker sans réécriture, et le
+ * contrat de date reste structurel.
+ * Une variable référencée mais non fournie est une ERREUR : substituer par vide
+ * produirait un appel silencieusement faux (un end_date absent = « le monde
+ * d'aujourd'hui » au lieu de la date visée).
+ */
+function substitute(value, vars) {
+  if (typeof value === 'string') {
+    return value.replace(/\$([a-zA-Z_][a-zA-Z0-9_]*)/g, (m, name) => {
+      if (!(name in vars)) throw new Error(`Variable $${name} référencée par le plan mais non fournie (--var ${name}=…)`);
+      return vars[name];
+    });
+  }
+  if (Array.isArray(value)) return value.map(v => substitute(v, vars));
   if (value && typeof value === 'object') {
     const o = {};
-    for (const [k, v] of Object.entries(value)) o[k] = substitute(v, refdate);
+    for (const [k, v] of Object.entries(value)) o[k] = substitute(v, vars);
     return o;
   }
   return value;
 }
 
 /** Un appel async renvoie {job_id,status:'pending'} → on poll jusqu'au bout. */
-async function resolveAsync(server, value) {
+async function resolveAsync(server, value, maxMs) {
   if (!value || typeof value !== 'object') return value;
   const jobId = value.job_id || (value.data && value.data.job_id);
   const status = value.status || (value.data && value.data.status);
   if (!jobId || (status !== 'pending' && status !== 'running' && status !== 'async_pending')) return value;
   const pollTool = server === 'systematic' ? 'DtxJobStatus' : 'Jobs';
-  return awaitJob(server, jobId, { pollTool });
+  // Les books multi-poches (book_honest, hvep, best) rejouent 4 stratégies :
+  // 300 s ne suffisent pas. Plafond réglable par appel via job_max_ms.
+  return awaitJob(server, jobId, { pollTool, maxMs: maxMs || 300_000 });
 }
 
 (async function main() {
   const plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));
-  const refdate = plan.reference_date || null;
+  const refdate = cliVars.refdate || plan.reference_date || null;
+  const vars = { ...(plan.vars || {}), ...cliVars, ...(refdate ? { refdate } : {}) };
   const waves = plan.waves || [];
   const totalCalls = waves.reduce((n, w) => n + (w.calls || []).length, 0);
 
@@ -148,7 +172,7 @@ async function resolveAsync(server, value) {
   let failures = 0;
 
   for (const wave of waves) {
-    const calls = (wave.calls || []).map(c => ({ ...c, args: substitute(c.args || {}, refdate) }));
+    const calls = (wave.calls || []).map(c => ({ ...c, args: substitute(c.args || {}, vars) }));
     if (!calls.length) continue;
     const t0 = Date.now();
     log(`[collect] vague « ${wave.name} » — ${calls.length} appel(s) en parallèle`);
@@ -170,7 +194,7 @@ async function resolveAsync(server, value) {
     await Promise.all(results.map(async (r, i) => {
       if (!r.ok) return;
       const tw = Date.now();
-      try { r.value = await resolveAsync(calls[i].server, r.value); }
+      try { r.value = await resolveAsync(calls[i].server, r.value, calls[i].job_max_ms); }
       catch (e) { r.ok = false; r.error = `job async : ${e.message}`; }
       r.waitMs = Date.now() - tw;
       r.ms += r.waitMs;

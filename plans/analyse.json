@@ -1,0 +1,19 @@
+{
+  "artifact": "analyses/$symbol/index.html",
+  "waves": [
+    { "name": "socle", "calls": [
+      { "as": "status", "server": "marketdata", "tool": "GetStatus", "args": {}, "freshness": { "max_age_h": 6, "required": true } },
+      { "as": "instrument", "server": "marketdata", "tool": "GetInstruments", "args": { "symbols": "$symbol", "as_of": "$refdate", "bars_depth": 260 }, "freshness": { "max_age_h": 24, "required": true } },
+      { "as": "bars", "server": "marketdata", "tool": "QueryData", "args": { "types": "bars_daily", "symbols": "$symbol", "end_date": "$refdate", "limit": 260 }, "freshness": { "max_age_h": 24, "required": true } },
+      { "as": "fundamentals", "server": "marketdata", "tool": "QueryData", "args": { "types": "financials,stats,earnings_quarterly,analyst_actions", "symbols": "$symbol", "end_date": "$refdate" }, "freshness": { "max_age_h": 168, "required": true } },
+      { "as": "dilution", "server": "marketdata", "tool": "QueryData", "args": { "types": "sec_filings,flags", "symbols": "$symbol", "end_date": "$refdate", "days": 365 }, "freshness": { "max_age_h": 168, "required": true, "note": "anti-dilution : S-3/424B/ATM/warrants — BLOQUANT, leçon INDO" } },
+      { "as": "insiders", "server": "marketdata", "tool": "QueryData", "args": { "types": "insider_transactions,institutional_holdings", "symbols": "$symbol", "end_date": "$refdate", "days": 365 }, "freshness": { "max_age_h": 96, "required": false } },
+      { "as": "short_squeeze", "server": "marketdata", "tool": "QueryData", "args": { "types": "short_interest,ctb,ftd_threshold,dark_pool", "symbols": "$symbol", "days": 365 }, "freshness": { "max_age_h": 168, "required": false } },
+      { "as": "options", "server": "marketdata", "tool": "QueryData", "args": { "types": "unusual_options,max_pain", "symbols": "$symbol" }, "freshness": { "max_age_h": 24, "required": false } },
+      { "as": "technicals", "server": "marketdata", "tool": "QueryData", "args": { "types": "technicals,support_resistance,volume_profile,trading_signals", "symbols": "$symbol", "end_date": "$refdate" }, "freshness": { "max_age_h": 24, "required": true } },
+      { "as": "sentiment", "server": "marketdata", "tool": "QueryData", "args": { "types": "sentiment_overall,sentiment_stocktwits,sentiment_reddit,news", "symbols": "$symbol", "days": 14 }, "freshness": { "max_age_h": 24, "required": false } },
+      { "as": "peers", "server": "marketdata", "tool": "GetReferentialData", "args": { "correlated_with": "$symbol" }, "freshness": { "max_age_h": 168, "required": false } },
+      { "as": "move", "server": "marketdata", "tool": "ExplainSymbolMove", "args": { "symbol": "$symbol" }, "freshness": { "max_age_h": 24, "required": false } }
+    ] }
+  ]
+}
