@@ -164,16 +164,22 @@ async function resolveAsync(server, value) {
     }
 
     // résolution des jobs async, elle aussi en parallèle
+    // Le temps d'un appel async est dominé par l'ATTENTE du job, pas par la
+    // soumission. Journaliser seulement la soumission donnait « 0,5 s » sur un
+    // screener qui tourne 5 minutes — diagnostic inutilisable.
     await Promise.all(results.map(async (r, i) => {
       if (!r.ok) return;
+      const tw = Date.now();
       try { r.value = await resolveAsync(calls[i].server, r.value); }
       catch (e) { r.ok = false; r.error = `job async : ${e.message}`; }
+      r.waitMs = Date.now() - tw;
+      r.ms += r.waitMs;
     }));
 
     const waveLog = { name: wave.name, ms: Date.now() - t0, calls: [] };
     for (let i = 0; i < results.length; i++) {
       const r = results[i], c = calls[i];
-      waveLog.calls.push({ as: r.as, server: c.server, tool: c.tool, ok: r.ok, ms: r.ms, error: r.error || null });
+      waveLog.calls.push({ as: r.as, server: c.server, tool: c.tool, ok: r.ok, ms: r.ms, wait_ms: r.waitMs || 0, error: r.error || null });
       if (!r.ok) { failures++; continue; }
       fs.writeFileSync(path.join(outDir, `${r.as}.json`), JSON.stringify(r.value, null, 2));
       if (c.freshness) {

@@ -227,7 +227,14 @@ async function awaitJob(server, jobId, { pollTool = 'Jobs', idArg = 'job_id', in
     const r = await callTool(server, pollTool, { [idArg]: jobId });
     const status = r && (r.status || (r.data && r.data.status));
     if (status === 'completed' || status === 'done') return r;
-    if (status === 'failed') throw new McpCallError(`Job ${jobId} en échec`, { server, tool: pollTool });
+    if (status === 'failed') {
+      // Remonter la RAISON du serveur : « job en échec » sans motif oblige à
+      // rejouer l'appel à la main pour diagnostiquer, ce qui annule le gain.
+      const d = r.data || r;
+      const why = d.error || d.message || d.reason || (d.result && d.result.error) || '';
+      throw new McpCallError(`Job ${jobId} en échec${why ? ' — ' + String(why).slice(0, 300) : ' (aucun motif renvoyé)'}`,
+        { server, tool: pollTool, body: JSON.stringify(d).slice(0, 500) });
+    }
     if (Date.now() > deadline) throw new McpCallError(`Job ${jobId} non terminé après ${maxMs}ms`, { server, tool: pollTool });
     await new Promise(r => setTimeout(r, intervalMs));
   }

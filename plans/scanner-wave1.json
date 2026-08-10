@@ -1,0 +1,185 @@
+{
+  "artifact": "scanner/<DATE>/data.json",
+  "reference_date": "2026-08-10",
+  "waves": [
+    {
+      "name": "vivier",
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 6,
+            "required": true
+          }
+        },
+        {
+          "as": "regime_marketdata",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "args": {
+            "facets": "regime,prediction_markets",
+            "model": "ensemble",
+            "horizon_days": 5
+          },
+          "freshness": {
+            "max_age_h": 6,
+            "required": true
+          }
+        },
+        {
+          "as": "overview",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "args": {
+            "facets": "overview",
+            "timeout": 90,
+            "analysis_depth": "standard"
+          },
+          "freshness": {
+            "max_age_h": 6,
+            "required": true
+          }
+        },
+        {
+          "as": "regime_systematic",
+          "server": "systematic",
+          "tool": "DtxRegime",
+          "args": {
+            "asof": "$refdate",
+            "expected_data_date": "$refdate"
+          },
+          "freshness": {
+            "max_age_h": 48,
+            "required": true
+          }
+        },
+        {
+          "as": "dtx_configs",
+          "server": "systematic",
+          "tool": "DtxListConfigs",
+          "args": {},
+          "freshness": {
+            "max_age_h": 168,
+            "required": false
+          }
+        },
+        {
+          "as": "autoscreen",
+          "server": "marketdata",
+          "tool": "RunAutoScreener",
+          "args": {},
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "screen_momentum_us",
+          "server": "marketdata",
+          "tool": "RunScreener",
+          "args": {
+            "pass_expr": "market_cap>2e9 and avg_volume>1e7 and inrange('rsi14',50,70,5) and close>ema50 and rising('ema50',10)",
+            "score_expr": "trend_strength(20)",
+            "region": "us",
+            "top_k": 40,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "screen_breakout_us",
+          "server": "marketdata",
+          "tool": "RunScreener",
+          "args": {
+            "pass_expr": "market_cap>2e9 and avg_volume>1e7 and near_breakout(0.02) and vol_spike45(1.5)",
+            "score_expr": "obvz",
+            "region": "us",
+            "top_k": 40,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "screen_pullback_us",
+          "server": "marketdata",
+          "tool": "RunScreener",
+          "args": {
+            "pass_expr": "market_cap>2e9 and avg_volume>1e7 and close<ema20 and close>ema50 and inrange('rsi14',40,58,5)",
+            "score_expr": "trend_strength(20)",
+            "region": "us",
+            "top_k": 40,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "screen_eu",
+          "server": "marketdata",
+          "tool": "RunScreener",
+          "args": {
+            "pass_expr": "market_cap>2e9 and close>ema50 and rising('ema50',10)",
+            "score_expr": "trend_strength(20)",
+            "region": "eu",
+            "top_k": 25,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "earnings_7d",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "args": {
+            "days_ahead": 7,
+            "min_expected_move_pct": 4
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "economic_events",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "economic_events",
+            "days": 7
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "insiders_7d",
+          "server": "marketdata",
+          "tool": "GetInsiderActivity",
+          "args": {
+            "days": 7,
+            "limit": 25
+          },
+          "freshness": {
+            "max_age_h": 96,
+            "required": false
+          }
+        }
+      ]
+    }
+  ]
+}

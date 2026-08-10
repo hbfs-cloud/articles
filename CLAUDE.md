@@ -286,7 +286,11 @@ Règles critiques issues de feedbacks et incidents passés. S'appliquent à tout
 ### Scanner Pipeline
 - **No Skip** : Jamais skipper une étape du pipeline (anti-dilution, MCP enrichment, risk gating, validation) sans accord explicite.
 - **Dilution Check** : Toujours vérifier SEC filings (S-3, warrants, ATM, fonds toxiques) avant de recommander. Leçon INDO.
-- **Screener Mcap Filter** : RunScreener DSL DOIT inclure `market_cap>$2B` sinon ne retourne que des penny stocks.
+- **Screener Mcap Filter** : RunScreener DSL DOIT borner la capitalisation, sinon ne retourne que des penny stocks.
+  ⚠️ La notation `$2B` / `$10M` **n'est pas du DSL valide** — le moteur renvoie `unknown name $2B` et le job
+  échoue en compilation (vérifié le 2026-08-10). Écrire des littéraux numériques : `market_cap>2e9`,
+  `avg_volume>1e7`. Un screener qui échoue à la compilation rend un vivier VIDE, pas un vivier dégradé —
+  d'où des scans « 0 candidat » inexpliqués.
 - **Candlestick Bull Pipeline** : `/scanner` doit exécuter `candlestick-scanner.js` avant sweep/gen-status-page, sinon bull = 0 signaux.
 - **Candlestick No MCP** : `candlestick-scanner.js` utilise le fichier univers local, JAMAIS MCP RunScreener.
 - **Scanner Date Convention** : Dossier scanner = prochaine séance (D+1 après 22h30, D+3 vendredi soir).
