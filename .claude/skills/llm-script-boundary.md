@@ -92,6 +92,37 @@ Trois bénéfices immédiats :
   R2 de `perf-parallel-mcp` (« une salve = un message, N appels ») n'a plus besoin d'être
   rappelée au modèle : elle est dans le moteur.
 
+## Les jetons réels — surfaces vérifiées le 2026-08-10
+
+Deux outils, **un par serveur**, et les jetons **ne sont pas interchangeables** (le JWT
+marketdata porte `aud=dailytickers-mcp`, celui de systematic `aud=dtx-mcp`). D'où
+`MCP_TOKEN_MARKETDATA` et `MCP_TOKEN_SYSTEMATIC`.
+
+| | `GetReadOnlyToken(minutes)` | `DtxMintReadOnlyToken(ttl_minutes)` |
+|---|---|---|
+| Serveur | marketdata | systematic |
+| TTL | 15 min par défaut, **max 60** | 15 min par défaut, **max 1440** |
+| Surface | **38 outils** — QueryData, GetMarketContext, RunScreener, RunAutoScreener, PortfolioRisk, GetInstruments, GetEarningsCalendarFiltered, GetInsiderActivity, RunBacktest, Jobs… | **5 outils** — GetHealth, DtxListConfigs, DtxHowTo, DtxRegime, DtxJobStatus |
+
+### Ce qui reste OBLIGATOIREMENT à l'agent
+
+Vérifié en appelant, pas déduit :
+
+- **`RefreshBars` et `DtxRefreshBars`** — refusés au jeton read-only. Le force-refresh
+  imposé par la règle anti-stale de `CLAUDE.md` passe donc **toujours** par l'agent.
+- **`DtxReplay` et `DtxDecide`** — hors de la surface systematic. Le staging dtx des
+  6 modes scriptés **reste un travail d'agent**. C'est la limite la plus structurante
+  pour `/scanner` : sa collecte marketdata se script entièrement, sa partie systematic non.
+- **Toute écriture** — notification, substack, memory, brokers.
+
+### Aucun jeton ne se renouvelle lui-même
+
+`GetReadOnlyToken` n'est pas sur sa propre surface read-only — vérifié, il se refuse
+lui-même. Un script qui voit son jeton expirer **ne peut pas en obtenir un autre** : il
+échoue franchement et l'agent réémet. Conséquence pratique : un pipeline dont la collecte
+dépasse 60 minutes doit être **découpé en segments**, avec un jeton par segment. Ne jamais
+tenter de contourner — c'est une décision de sécurité du serveur, pas un obstacle.
+
 ## Sécurité du jeton
 
 - Par **l'environnement uniquement** (`MCP_ACCESS_TOKEN`), jamais en argv — un argument est

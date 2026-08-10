@@ -130,9 +130,11 @@ async function resolveAsync(server, value) {
     process.env.MCP_ACCESS_TOKEN = t;
   }
 
-  if (!canCallDirectly()) {
+  const neededServers = [...new Set(waves.flatMap(w => (w.calls || []).map(c => c.server)))];
+  const missing = neededServers.filter(s => !canCallDirectly(s));
+  if (missing.length) {
     console.error(
-      "[collect] Pas de jeton MCP utilisable — collecte directe impossible.\n" +
+      `[collect] Aucun jeton utilisable pour : ${missing.join(", ")} — collecte directe impossible.\n` +
       "  L'AGENT doit obtenir un jeton à TTL court et relancer avec MCP_ACCESS_TOKEN positionné.\n" +
       "  Le chemin historique (agent → JSON de staging → --ingest) reste disponible et n'est pas cassé."
     );

@@ -58,32 +58,61 @@ class McpCallError extends Error {
  * Échoue tôt et avec un message actionnable : un run à moitié fait sur un token
  * périmé produit un staging partiel qu'on prendrait pour complet.
  */
-function requireToken() {
-  const token = process.env.MCP_ACCESS_TOKEN;
+/**
+ * Les jetons sont émis PAR SERVEUR et ne sont pas interchangeables : le JWT
+ * marketdata porte aud=dailytickers-mcp, celui de systematic aud=dtx-mcp.
+ * On lit donc MCP_TOKEN_<SERVEUR> en priorité, MCP_ACCESS_TOKEN en repli.
+ *
+ * ⚠️ AUCUN JETON NE PEUT SE RENOUVELER LUI-MÊME. L'outil d'émission est
+ * volontairement hors de la surface read-only des deux serveurs : un script qui
+ * voit son jeton expirer NE PEUT PAS en obtenir un autre, il doit repasser par
+ * une session authentifiée (l'agent). C'est une décision de sécurité du serveur,
+ * pas une limite à contourner — d'où l'échec franc plutôt que la tentative.
+ */
+function tokenEnvNames(server) {
+  const up = String(server || '').toUpperCase();
+  return { tok: `MCP_TOKEN_${up}`, exp: `MCP_TOKEN_${up}_EXPIRES_AT` };
+}
+
+function requireToken(server) {
+  const { tok, exp } = tokenEnvNames(server);
+  const token = (server && process.env[tok]) || process.env.MCP_ACCESS_TOKEN;
   if (!token) {
     throw new McpAuthError(
-      "MCP_ACCESS_TOKEN absent.\n" +
-      "Ce script appelle le MCP directement et a besoin d'un jeton à TTL court.\n" +
-      "L'AGENT doit en obtenir un puis relancer avec la variable d'environnement positionnée.\n" +
+      `Aucun jeton pour le serveur « ${server || '?'} ».\n` +
+      `Attendu : ${tok} (ou MCP_ACCESS_TOKEN en repli).\n` +
+      "L'AGENT doit émettre un jeton read-only et relancer :\n" +
+      "  marketdata → GetReadOnlyToken(minutes)        max 60 min\n" +
+      "  systematic → DtxMintReadOnlyToken(ttl_minutes) max 1440 min\n" +
       "Repli : le chemin historique agent → JSON de staging → --ingest reste valide."
     );
   }
-  const exp = process.env.MCP_TOKEN_EXPIRES_AT;
-  if (exp) {
-    const ms = Date.parse(exp);
-    if (Number.isFinite(ms) && ms - Date.now() < TOKEN_SAFETY_MARGIN_MS) {
-      throw new McpAuthError(
-        `Jeton MCP expiré ou sur le point de l'être (expire ${exp}).\n` +
-        "Redemander un jeton — ne JAMAIS prolonger ni réutiliser un jeton périmé."
-      );
-    }
+  const expIso = (server && process.env[exp]) || process.env.MCP_TOKEN_EXPIRES_AT;
+  const deadline = expIso ? Date.parse(expIso) : jwtExpiryMs(token);
+  if (Number.isFinite(deadline) && deadline - Date.now() < TOKEN_SAFETY_MARGIN_MS) {
+    throw new McpAuthError(
+      `Jeton « ${server} » expiré ou sur le point de l'être (${new Date(deadline).toISOString()}).\n` +
+      "Un script NE PEUT PAS se renouveler : réémettre depuis une session authentifiée.\n" +
+      "Ne JAMAIS prolonger ni réutiliser un jeton périmé."
+    );
   }
   return token;
 }
 
-/** true si un appel direct est possible ; permet une dégradation gracieuse. */
-function canCallDirectly() {
-  try { requireToken(); return true; } catch { return false; }
+/** Lit `exp` d'un JWT sans le vérifier — sert uniquement à échouer tôt côté client. */
+function jwtExpiryMs(token) {
+  try {
+    const p = token.split('.')[1];
+    if (!p) return NaN;
+    const json = Buffer.from(p.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+    const exp = JSON.parse(json).exp;
+    return typeof exp === 'number' ? exp * 1000 : NaN;
+  } catch { return NaN; }
+}
+
+/** true si un appel direct est possible sur ce serveur ; dégradation gracieuse. */
+function canCallDirectly(server) {
+  try { requireToken(server); return true; } catch { return false; }
 }
 
 function serverUrl(server) {
@@ -99,7 +128,7 @@ let _rpcId = 0;
  * Retourne le contenu déjà déballé : si l'outil renvoie du JSON on le parse.
  */
 async function callTool(server, tool, args = {}, opts = {}) {
-  const token = requireToken();
+  const token = requireToken(server);
   const url = serverUrl(server);
   const timeout = opts.timeoutMs || DEFAULT_TIMEOUT_MS;
 
@@ -163,7 +192,7 @@ function unwrap(result) {
  * qu'un échec isolé n'annule pas une collecte de 40 appels.
  */
 async function callMany(calls, { concurrency = DEFAULT_CONCURRENCY, onResult } = {}) {
-  requireToken(); // échoue tôt plutôt qu'à mi-salve
+  for (const s of new Set(calls.map(c => c.server))) requireToken(s); // échoue tôt, par serveur
   const out = new Array(calls.length);
   let cursor = 0;
 
