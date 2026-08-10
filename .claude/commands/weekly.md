@@ -5,6 +5,35 @@ Produit `weekly/YYYYMMDD/index.html` (YYYYMMDD = lundi de la semaine COUVERTE, 1
 Skills compagnons : `daily-weekly-analysis-workflows`, `sector-rotation`, `macro-event-playbook`,
 `perf-parallel-mcp`, `senior-review`.
 
+
+## ⚡ Phase de collecte — SCRIPTÉE (obligatoire depuis 2026-08-10)
+
+**Ne joue plus les salves MCP à la main.** Émets un jeton, lance la collecte, lis les
+artefacts. Le modèle déclare le besoin ; il ne transporte plus la donnée.
+
+```bash
+# 1. l'AGENT émet le jeton (max 60 min marketdata, 1440 systematic)
+#    GetReadOnlyToken(minutes=60) / DtxMintReadOnlyToken(ttl_minutes=240)
+#    → export MCP_TOKEN_MARKETDATA=… MCP_TOKEN_SYSTEMATIC=…
+# 2. collecte parallèle + gate de fraîcheur en une commande
+bash tools/run-collect.sh weekly <dossier>/_data --var refdate=<derniere_cloture> [--var symbol=X]
+```
+
+Ce que ça règle mécaniquement, et qu'on oubliait :
+- `$refdate` est substitué dans TOUS les arguments → le contrat de date devient structurel,
+  plus aucun `end_date` oublié (cause des inversions de signe du weekly du 10/08) ;
+- `harness.json` est un sous-produit de la collecte → une source collectée mais non déclarée
+  devient impossible ;
+- les appels d'une vague partent en parallèle → la règle R2 de `perf-parallel-mcp` est dans le
+  moteur, plus dans un rappel de prompt.
+
+Une variable référencée par le plan mais non fournie est une **erreur**, pas un vide : un
+`end_date` absent renverrait « le monde d'aujourd'hui » au lieu de la date visée.
+
+Reste à l'agent, et à lui seul : `RefreshBars` / `DtxRefreshBars` (vraies écritures), la
+sélection, la rédaction, les gates adversariaux, la décision de publier.
+Doctrine complète : skill `llm-script-boundary`.
+
 ## Arguments
 `$ARGUMENTS`
 - vide → prochain lundi (ou lundi courant si on est dimanche/lundi).
