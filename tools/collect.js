@@ -58,6 +58,29 @@ const planPath = arg('--plan');
 const outDir = arg('--out');
 const dryRun = has('--dry-run');
 const quiet = has('--quiet');
+const tokenStdin = has('--token-stdin');
+
+/**
+ * Lecture du jeton sur stdin — chemin PRÉFÉRÉ.
+ * Un jeton passé en argv est visible dans `ps` pour tout utilisateur de la
+ * machine ; passé par un préfixe d'environnement il ne l'est pas, mais il reste
+ * dans la ligne de commande que la plupart des harnais journalisent. Stdin ne
+ * laisse de trace ni dans l'un ni dans l'autre.
+ *   printf '%s' "$TOKEN" | node tools/collect.js --plan … --token-stdin
+ */
+function readTokenFromStdin() {
+  const fd = 0;
+  const chunks = [];
+  const buf = Buffer.alloc(65536);
+  for (;;) {
+    let n;
+    try { n = fs.readSync(fd, buf, 0, buf.length, null); }
+    catch (e) { if (e.code === 'EAGAIN') continue; if (e.code === 'EOF') break; throw e; }
+    if (!n) break;
+    chunks.push(Buffer.from(buf.slice(0, n)));
+  }
+  return Buffer.concat(chunks).toString('utf8').trim();
+}
 
 if (!planPath || !outDir) {
   console.error('Usage: node tools/collect.js --plan <manifeste.json> --out <dossier> [--dry-run]');
@@ -99,6 +122,12 @@ async function resolveAsync(server, value) {
       log(`  ${w.name.padEnd(14)} ${c.as.padEnd(22)} ${c.server}.${c.tool}`);
     }
     process.exit(0);
+  }
+
+  if (tokenStdin) {
+    const t = readTokenFromStdin();
+    if (!t) { console.error('[collect] --token-stdin demandé mais stdin est vide.'); process.exit(3); }
+    process.env.MCP_ACCESS_TOKEN = t;
   }
 
   if (!canCallDirectly()) {
