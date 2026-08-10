@@ -104,7 +104,33 @@ function main() {
       // G4 lui-même, était le seul des 9 à ne pas porter ce champ).
       const st = String(d.status || d.state || '');
       if (d.blocking === true || BLOCKING_RE.test(st)) {
-        errors++; console.error(`❌ _wf/${f}: statut bloquant « ${st || 'blocking:true'} » — la collecte de ce rôle a échoué`);
+        // Une tentative bloquée peut avoir été REPRISE avec succès (cas du 2026-08-08 :
+        // panne du connecteur à 05h, reprise complète à 10h). Le fichier en échec reste le
+        // journal véridique de la panne ; il déclare son successeur via `superseded_by`.
+        // La levée n'est accordée que si le successeur EXISTE, est lui-même non bloquant,
+        // et porte un horodatage POSTÉRIEUR — sinon l'échec tient.
+        const succName = d.superseded_by ? String(d.superseded_by) : null;
+        const succPath = succName ? path.join(wfDir, succName) : null;
+        let lifted = false, why = '';
+        if (!succPath) why = 'aucun champ superseded_by';
+        else if (!fs.existsSync(succPath)) why = `successeur « ${succName} » introuvable`;
+        else {
+          let s2 = null;
+          try { s2 = JSON.parse(fs.readFileSync(succPath, 'utf8')); } catch { /* illisible */ }
+          const st2 = s2 ? String(s2.status || s2.state || '') : '';
+          const t1 = Date.parse(d.generated_at_utc || d.generated_at || d.as_of || 0) || 0;
+          const t2 = s2 ? (Date.parse(s2.generated_at_utc || s2.generated_at || s2.as_of || 0) || 0) : 0;
+          if (!s2) why = `successeur « ${succName} » illisible`;
+          else if (s2.blocking === true || BLOCKING_RE.test(st2)) why = `successeur « ${succName} » lui-même bloquant (${st2})`;
+          else if (!t2) why = `successeur « ${succName} » sans horodatage`;
+          else if (t2 <= t1) why = `successeur « ${succName} » antérieur ou simultané à la tentative en échec`;
+          else lifted = true;
+        }
+        if (lifted) {
+          console.log(`↩︎  _wf/${f}: « ${st} » — repris avec succès par ${succName}`);
+        } else {
+          errors++; console.error(`❌ _wf/${f}: statut bloquant « ${st || 'blocking:true'} » — la collecte de ce rôle a échoué (${why})`);
+        }
       } else if (d.blocking === undefined && !st) {
         errors++; console.error(`❌ _wf/${f}: ni champ blocking ni status — indéterminé, donc traité comme bloquant`);
       }

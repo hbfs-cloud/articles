@@ -910,7 +910,7 @@ ${strategyTablesHtml}
   <div class="content-card">
     <div class="pedagogy-box">
       <h4>1. Détection du régime</h4>
-      <p>Score composite sur 6 composantes (VIX, largeur SPX, crédit HYG, DXY, liquidité Fed, TLT). 0–0,30 = RISK-ON, 0,30–0,50 = NEUTRAL/Early Risk-Off, 0,50–0,70 = RISK-OFF, &gt;0,70 = DEEP RISK-OFF.</p>
+      <p>Score composite sur 6 composantes (VIX, largeur SPX, crédit HYG, DXY, liquidité Fed, TLT). Le score publié monte avec l&rsquo;appétit pour le risque : &gt;0,70 = RISK-ON, 0,50–0,70 = RECOVERY ou NEUTRAL, 0,30–0,50 = EARLY RISK-OFF, &lt;0,30 = RISK-OFF.</p>
     </div>
     <div class="pedagogy-box">
       <h4>2. Screening multi-stratégie</h4>

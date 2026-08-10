@@ -5,17 +5,13 @@
   "generated_at_utc": "2026-08-08T04:57:27Z",
   "status": "BLOCKED_MCP_UNAVAILABLE",
   "blocking": true,
-
   "pool_size_requested": "8-12",
   "pool_size_delivered": 0,
   "candidates_screened": 0,
   "retained": [],
   "rejected": [],
-
   "verdict": "Aucun vivier TKL n'a pu être constitué. Le serveur MCP marketdata est INJOIGNABLE — non pas expiré ni lent, mais ABSENT : son endpoint renvoie HTTP 404. Les quatre étapes de mon rôle (vivier, enrichissement par lots, disqualification, tag Sharia) dépendent EXCLUSIVEMENT de ce serveur. Aucune n'a pu démarrer. Conformément au MCP HARD STOP (CLAUDE.md), rien n'a été inventé, estimé, déduit, ni repris de mémoire ou d'un scan antérieur.",
-
   "why_empty_is_not_a_result": "retained: [] et rejected: [] signifient DONNÉE ABSENTE, JAMAIS « aucune small/mid cap ne passe les seuils » ni « toutes les candidates ont été disqualifiées ». Le pool TKL n'a pas été screené du tout. Ne PAS consommer ce fichier comme un pool vide légitime, et ne PAS en conclure que le régime risk_on ne produit pas de candidats small-cap. Toute phase aval consommant le pool TKL doit rester bloquée.",
-
   "root_cause": {
     "code": "mcp_endpoint_not_found",
     "server": "marketdata",
@@ -27,41 +23,92 @@
     "transient": false,
     "evidence_of_permanence": "10 appels d'outils distincts + 3 sondes HTTP directes, sur ~10 minutes, tous en échec identique et déterministe. Aucune variabilité, aucun succès partiel, aucun back-off utile."
   },
-
   "diagnostic_probes": {
     "method": "curl direct hors client MCP, pour distinguer « mon client est cassé » de « l'endpoint a disparu »",
     "probes": [
-      { "target": "POST https://mcp.dailytickers.com/mcp (initialize)", "result": "HTTP 404" },
-      { "target": "GET  https://mcp.dailytickers.com/", "result": "HTTP 404" },
-      { "target": "POST https://systematic.dailytickers.com/mcp (initialize) — TÉMOIN", "result": "HTTP 401" }
+      {
+        "target": "POST https://mcp.dailytickers.com/mcp (initialize)",
+        "result": "HTTP 404"
+      },
+      {
+        "target": "GET  https://mcp.dailytickers.com/",
+        "result": "HTTP 404"
+      },
+      {
+        "target": "POST https://systematic.dailytickers.com/mcp (initialize) — TÉMOIN",
+        "result": "HTTP 401"
+      }
     ],
     "control_interpretation": "Le témoin est décisif. systematic répond 401 à un curl non authentifié, ce qui est la réponse CORRECTE d'un endpoint vivant protégé par OAuth2. La méthode de sonde est donc saine et le réseau sortant fonctionne. Le 404 est spécifique à marketdata — ce n'est ni un artefact de sandbox, ni une coupure réseau générale, ni une erreur de ma part.",
     "cli_health_check": "`claude mcp list` confirme : marketdata ✘ Failed to connect (HTTP 404) tandis que systematic, memory, notification, simulator, substack sont tous ✔ Connected."
   },
-
   "attempts": [
-    { "tool": "GetStatus", "params": {}, "result": "mcp_not_connected" },
-    { "tool": "RunScreener", "params": { "region": "US", "min_market_cap": 1e7, "min_avg_volume": 5e5, "top_k": 40, "force_async": true }, "result": "mcp_not_connected" },
-    { "tool": "RunAutoScreener", "params": { "region": "US", "min_market_cap": 1e7, "min_avg_volume": 5e5, "top_k": 40, "force_async": true }, "result": "mcp_not_connected" },
-    { "tool": "ToolSearch — rechargement des schémas marketdata", "params": {}, "result": "schémas rechargés OK, transport toujours mort — confirme que ce n'est PAS un problème de schéma" },
-    { "tool": "QueryData", "params": { "types": "quote", "symbols": "SPY" }, "result": "mcp_not_connected" },
-    { "tool": "curl POST /mcp", "params": {}, "result": "HTTP 404" },
-    { "tool": "curl GET /", "params": {}, "result": "HTTP 404" },
-    { "tool": "curl POST systematic /mcp (témoin)", "params": {}, "result": "HTTP 401 — endpoint vivant" }
+    {
+      "tool": "GetStatus",
+      "params": {},
+      "result": "mcp_not_connected"
+    },
+    {
+      "tool": "RunScreener",
+      "params": {
+        "region": "US",
+        "min_market_cap": 10000000,
+        "min_avg_volume": 500000,
+        "top_k": 40,
+        "force_async": true
+      },
+      "result": "mcp_not_connected"
+    },
+    {
+      "tool": "RunAutoScreener",
+      "params": {
+        "region": "US",
+        "min_market_cap": 10000000,
+        "min_avg_volume": 500000,
+        "top_k": 40,
+        "force_async": true
+      },
+      "result": "mcp_not_connected"
+    },
+    {
+      "tool": "ToolSearch — rechargement des schémas marketdata",
+      "params": {},
+      "result": "schémas rechargés OK, transport toujours mort — confirme que ce n'est PAS un problème de schéma"
+    },
+    {
+      "tool": "QueryData",
+      "params": {
+        "types": "quote",
+        "symbols": "SPY"
+      },
+      "result": "mcp_not_connected"
+    },
+    {
+      "tool": "curl POST /mcp",
+      "params": {},
+      "result": "HTTP 404"
+    },
+    {
+      "tool": "curl GET /",
+      "params": {},
+      "result": "HTTP 404"
+    },
+    {
+      "tool": "curl POST systematic /mcp (témoin)",
+      "params": {},
+      "result": "HTTP 401 — endpoint vivant"
+    }
   ],
   "retries": 10,
-
   "force_refresh": {
     "attempted": false,
     "skipped_reason": "NON APPLICABLE par doctrine. Le force-refresh (RefreshBars) traite des données STALE sur un serveur QUI RÉPOND. Ici le serveur ne répond jamais, et RefreshBars emprunterait exactement le même transport mort. La branche « STALE ≠ hard stop » de CLAUDE.md ne s'applique pas : on est sur la branche « MCP bloque » (erreur réseau), qui déclenche le HARD STOP directement."
   },
-
   "data_freshness": {
     "checked": false,
     "reason": "GetStatus injoignable — bar_service_1d_max_last_bar_date et ref_lag_sessions illisibles. La fraîcheur des barres 1d pour la séance du 2026-08-10 est INCONNUE.",
     "date_contract_note": "Le contrat de date de référence (end_date=2026-08-10 / as_of) n'a même pas pu être posé : aucun appel de données n'a abouti."
   },
-
   "role_steps_status": {
     "1_vivier_8_12_candidats": {
       "done": false,
@@ -97,7 +144,6 @@
       ]
     }
   },
-
   "inputs_recus_non_consommes": {
     "note": "Ces paramètres m'ont été fournis et sont valides, mais n'ont pu être appliqués faute de tout candidat à filtrer. Ils sont consignés pour la reprise.",
     "regime": {
@@ -109,8 +155,33 @@
       "gate_reduction_declenche": false,
       "rr_minimum": 1.5
     },
-    "tickers_interdits": ["ABT", "BOX", "CFG", "CP", "ELE.MC", "ESTC", "FER", "FRO", "ITRK.L", "PHM", "ROST", "RTX", "TT", "VTV", "VTWO"],
-    "scan_precedent_20260807_max_3_repetitions": ["JCI", "ROST", "ITX.MC", "KBC.BR", "LMT", "CPER", "EWS", "NSC"],
+    "tickers_interdits": [
+      "ABT",
+      "BOX",
+      "CFG",
+      "CP",
+      "ELE.MC",
+      "ESTC",
+      "FER",
+      "FRO",
+      "ITRK.L",
+      "PHM",
+      "ROST",
+      "RTX",
+      "TT",
+      "VTV",
+      "VTWO"
+    ],
+    "scan_precedent_20260807_max_3_repetitions": [
+      "JCI",
+      "ROST",
+      "ITX.MC",
+      "KBC.BR",
+      "LMT",
+      "CPER",
+      "EWS",
+      "NSC"
+    ],
     "lecons_actives_non_appliquees": [
       "VIX +3 pts sur 5 séances → score Breakout −15 (VIX illisible, marche non évaluable)",
       "Pullback long uniquement si MM20 en hausse et pas de plus-bas 5 séances",
@@ -119,16 +190,25 @@
       "Entrée = min(ouverture, VWAP) séance suivante, bornée au plus bas du jour"
     ]
   },
-
   "upstream_context": {
     "note": "Panne partagée, pas un incident isolé à mon rôle. Les agents amont du même scan ont échoué à l'identique sur le même serveur.",
-    "screen-us.json": { "status": "ERROR_MCP_UNAVAILABLE", "retries": 7 },
-    "screen-eu-etf.json": { "status": "mcp_unavailable", "attempts": 9 },
-    "calendrier.json": { "status": "BLOCKED", "gate": "G4" },
-    "preselection.json": { "status": "BLOCKED_MCP_UNAVAILABLE" },
+    "screen-us.json": {
+      "status": "ERROR_MCP_UNAVAILABLE",
+      "retries": 7
+    },
+    "screen-eu-etf.json": {
+      "status": "mcp_unavailable",
+      "attempts": 9
+    },
+    "calendrier.json": {
+      "status": "BLOCKED",
+      "gate": "G4"
+    },
+    "preselection.json": {
+      "status": "BLOCKED_MCP_UNAVAILABLE"
+    },
     "implication": "Même si mon pool TKL avait abouti, le gate résultats (±3 séances) serait resté infranchissable puisque le calendrier de résultats est lui aussi indisponible. Aucun candidat TKL ne pourrait être validé pour publication en l'état."
   },
-
   "no_substitution_declaration": {
     "invented_tickers": false,
     "estimated_fundamentals": false,
@@ -136,11 +216,12 @@
     "reused_memory": false,
     "statement": "Aucun symbole n'a été produit. Reconstituer un vivier small-cap depuis la mémoire ou depuis le scan du 20260807 aurait produit des tickers plausibles mais non vérifiés, sans capitalisation, volume, ni contrôle de dilution à jour — exactement le mode de défaillance des incidents INDO / IOVA / ALLR. Non fait."
   },
-
   "recommendation": {
     "action": "SUSPENDRE le scan 20260810 dans son intégralité.",
     "resume_condition": "Reprendre UNIQUEMENT quand https://mcp.dailytickers.com/mcp répond de nouveau (attendu : 401 sur curl non authentifié, comme systematic) ET qu'un QueryData de contrôle renvoie des données fraîches, avec GetStatus montrant un ref_lag_sessions normal.",
     "escalation": "Panne d'infrastructure côté serveur — aucune action agent ne peut la corriger. Ni un nouvel essai, ni un rechargement de schéma, ni un changement de paramètres. Nécessite une intervention sur le déploiement de mcp.dailytickers.com.",
     "not_to_do": "Ne pas relancer les agents de scan en boucle : l'échec est déterministe (404), pas un throttling ni une contention passagère."
-  }
+  },
+  "superseded_by": "tkl-reprise.json",
+  "superseded_note": "Tentative du 2026-08-08 05:00-06:11 UTC, échouée sur panne du connecteur (404). Conservée telle quelle comme journal de la panne ; les résultats publiés viennent de la reprise déclarée ci-dessus."
 }

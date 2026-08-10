@@ -11,13 +11,51 @@
     "server": "marketdata",
     "message": "MCP server \"marketdata\" is not connected — every call returned this transport error. No screener data could be retrieved.",
     "attempts": [
-      { "tool": "RunAutoScreener", "params": { "region": "US", "top_k": 40, "force_async": true }, "result": "mcp_not_connected" },
-      { "tool": "RunScreener", "params": { "region": "US", "pass_expr": "near_breakout(0.03) && vol_spike45(1.5) && rsi14<72 && rsi14>45", "score_expr": "rsi14", "top_k": 50, "force_async": true }, "result": "mcp_not_connected" },
-      { "tool": "GetStatus", "params": {}, "result": "mcp_not_connected" },
-      { "tool": "ToolSearch reload of marketdata schemas", "params": {}, "result": "schemas reloaded OK, but transport still down" },
-      { "tool": "GetStatus (retry after wait)", "params": {}, "result": "mcp_not_connected" },
-      { "tool": "RunScreener (retry after wait)", "params": {}, "result": "mcp_not_connected" },
-      { "tool": "GetStatus (final retry)", "params": {}, "result": "mcp_not_connected" }
+      {
+        "tool": "RunAutoScreener",
+        "params": {
+          "region": "US",
+          "top_k": 40,
+          "force_async": true
+        },
+        "result": "mcp_not_connected"
+      },
+      {
+        "tool": "RunScreener",
+        "params": {
+          "region": "US",
+          "pass_expr": "near_breakout(0.03) && vol_spike45(1.5) && rsi14<72 && rsi14>45",
+          "score_expr": "rsi14",
+          "top_k": 50,
+          "force_async": true
+        },
+        "result": "mcp_not_connected"
+      },
+      {
+        "tool": "GetStatus",
+        "params": {},
+        "result": "mcp_not_connected"
+      },
+      {
+        "tool": "ToolSearch reload of marketdata schemas",
+        "params": {},
+        "result": "schemas reloaded OK, but transport still down"
+      },
+      {
+        "tool": "GetStatus (retry after wait)",
+        "params": {},
+        "result": "mcp_not_connected"
+      },
+      {
+        "tool": "RunScreener (retry after wait)",
+        "params": {},
+        "result": "mcp_not_connected"
+      },
+      {
+        "tool": "GetStatus (final retry)",
+        "params": {},
+        "result": "mcp_not_connected"
+      }
     ],
     "retries": 7,
     "force_refresh_attempted": false,
@@ -50,8 +88,33 @@
   "warnings_note": "warnings[] could not be read: no response payload was ever returned. Zero candidates here is NOT a screening result (no title passed) — it is a transport failure. Do not interpret it as an empty market.",
   "constraints_carried_forward": {
     "note": "Recorded for the downstream agent; NOT applied, since there are no candidates to filter.",
-    "banned_tickers_open_positions": ["ABT", "BOX", "CFG", "CP", "ELE.MC", "ESTC", "FER", "FRO", "ITRK.L", "PHM", "ROST", "RTX", "TT", "VTV", "VTWO"],
-    "previous_scan_20260807_max_3_repeats": ["JCI", "ROST", "ITX.MC", "KBC.BR", "LMT", "CPER", "EWS", "NSC"],
+    "banned_tickers_open_positions": [
+      "ABT",
+      "BOX",
+      "CFG",
+      "CP",
+      "ELE.MC",
+      "ESTC",
+      "FER",
+      "FRO",
+      "ITRK.L",
+      "PHM",
+      "ROST",
+      "RTX",
+      "TT",
+      "VTV",
+      "VTWO"
+    ],
+    "previous_scan_20260807_max_3_repeats": [
+      "JCI",
+      "ROST",
+      "ITX.MC",
+      "KBC.BR",
+      "LMT",
+      "CPER",
+      "EWS",
+      "NSC"
+    ],
     "regime": {
       "risk_on_pct": 50.72,
       "neutral_pct": 49.28,
@@ -63,5 +126,7 @@
       "min_rr": 1.5
     }
   },
-  "recommendation": "BLOCK the US screening leg. Reconnect the marketdata MCP, confirm with GetStatus that bar_service_1d_max_last_bar_date covers the 2026-08-07 close (and ref_lag_sessions is back to 0-1, calling RefreshBars and polling if not), then re-run both screens. Publishing or selecting setups for 2026-08-10 without this leg would mean inventing US candidates."
+  "recommendation": "BLOCK the US screening leg. Reconnect the marketdata MCP, confirm with GetStatus that bar_service_1d_max_last_bar_date covers the 2026-08-07 close (and ref_lag_sessions is back to 0-1, calling RefreshBars and polling if not), then re-run both screens. Publishing or selecting setups for 2026-08-10 without this leg would mean inventing US candidates.",
+  "superseded_by": "screen-us-reprise.json",
+  "superseded_note": "Tentative du 2026-08-08 05:00-06:11 UTC, échouée sur panne du connecteur (404). Conservée telle quelle comme journal de la panne ; les résultats publiés viennent de la reprise déclarée ci-dessus."
 }
