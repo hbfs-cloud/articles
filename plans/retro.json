@@ -1,0 +1,12 @@
+{
+  "artifact": "scanner/$scandate/retro/index.html",
+  "waves": [
+    { "name": "resultat", "calls": [
+      { "as": "status", "server": "marketdata", "tool": "GetStatus", "args": {}, "freshness": { "max_age_h": 6, "required": true } },
+      { "as": "bars_positions", "server": "marketdata", "tool": "QueryData", "args": { "types": "bars_daily", "symbols": "$symbols", "end_date": "$refdate", "limit": 40 }, "freshness": { "max_age_h": 24, "required": true, "note": "OHLC réels pour la politique de fill — un stop non traité n'est PAS une sortie" } },
+      { "as": "bars_intraday", "server": "marketdata", "tool": "QueryData", "args": { "types": "bars_15m", "symbols": "$symbols", "limit": 200 }, "freshness": { "max_age_h": 24, "required": false } },
+      { "as": "regime_periode", "server": "marketdata", "tool": "GetMarketContext", "args": { "facets": "regime", "model": "ensemble", "horizon_days": 5, "include_history": true }, "freshness": { "max_age_h": 6, "required": true } },
+      { "as": "bench", "server": "marketdata", "tool": "QueryData", "args": { "types": "bars_daily", "symbols": "SPY,QQQ,IWM", "end_date": "$refdate", "limit": 40 }, "freshness": { "max_age_h": 24, "required": true } }
+    ] }
+  ]
+}

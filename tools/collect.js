@@ -59,7 +59,9 @@ const outDir = arg('--out');
 const dryRun = has('--dry-run');
 const quiet = has('--quiet');
 const tokenStdin = has('--token-stdin');
+const varsFile = arg('--vars-file');
 const cliVars = {};
+if (varsFile) Object.assign(cliVars, JSON.parse(require('fs').readFileSync(varsFile, 'utf8')));
 process.argv.forEach((a, i) => {
   if (a === '--var' && process.argv[i + 1]) {
     const eq = process.argv[i + 1].indexOf('=');
