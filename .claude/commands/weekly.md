@@ -22,6 +22,12 @@ anti-doublon `ls weekly/` + `grep "YYYYMMDD" data/weekly.json` ; créer `weekly/
 - `QueryData(types='quote,social_sentiment,capital_flow,trading_signals', symbols='SPY,QQQ,DIA,IWM,GLD,SLV,USO,TLT,EFA,EEM,FXI,BTC-USD,ETH-USD,SOL-USD,XRP-USD')`
   (petits lots si approval-gated).
 - `OptionsAnalytics(action='sentiment')` — term structure VIX : la pente 9D→6M EST une section du weekly.
+- **`QueryData(types='unusual_options,dark_pool,max_pain', symbols=<noms de la thèse>)` — OBLIGATOIRE.**
+  L'empreinte L2 d'`EDITORIAL_STYLE` exige au moins un flux institutionnel réel ; un weekly sans aucun
+  (intérêt ouvert, dark pool, put-call, max pain) est BLOQUÉ au panel quelle que soit la qualité du reste.
+- ⛔ Toute valeur présentée comme « clôture du <jour> » se demande en `bars_daily` **avec `end_date`**.
+  `indices`/`commodities`/`quote` nus renvoient le dernier prix : lancés un lundi matin ils rapportent du
+  live que l'on étiquette ensuite « clôture de vendredi » (incident 20260810, 4 inversions de signe).
 - `ExplainSymbolMove` sur les 3 mouvements de la semaine qu'on raconte.
 
 **Salve 2 (semaine à venir)** :
@@ -48,6 +54,14 @@ aussi ce qu'on NE fait PAS (et pourquoi).
 
 ## Phase 4 — Rédaction
 18 sections, > 100 KB, anglais intermediate par défaut (sauf demande contraire), badge « Latest Report »
+
+⛔ **Le seuil de 100 KB se franchit par la DONNÉE, jamais par la prose** (incident 20260810 : BLOCK slop L4,
+13 391 mots sur 40 sections pour ~20 faits, dont 5 sections qui se dupliquent). Cible rédactionnelle :
+**~4 000 mots**. Le volume vient des tableaux, cartes de métriques, blocs de niveaux et graphiques ECharts —
+denses en octets, sobres en mots. Si l'article approche 100 KB en ajoutant des paragraphes, c'est le signe
+qu'il manque des données, pas des mots : retourner en collecte. Deux sections qui disent la même chose sous
+deux titres = coupe immédiate. Un weekly qui n'atteint pas 100 KB avec ~4 000 mots denses doit collecter
+plus (flux institutionnels, niveaux par titre, comparaisons datées), pas écrire plus.
 géré par JS (jamais en dur), FAB, `/assets/report.css`, chiffres horodatés, sources par section.
 
 ## Phase 5-6 — QA + Panel (H4-H5, bloquants)

@@ -53,9 +53,39 @@ en petits lots, puis basculer sur `GetMarketContext`/`GetInstruments`/press dat�
 correlation : `symbols` = CSV string, PAS un array. Moves implicites indisponibles hors séance options →
 le DIRE dans l'article, jamais l'estimer.
 
+### ⛔ TOUTE VALEUR DATÉE SE DEMANDE AVEC SA DATE (incident weekly 20260810)
+`QueryData(types='indices,commodities,currencies,rates')` **sans `end_date` renvoie le DERNIER prix**, pas
+la clôture. Lancée un lundi matin pour un article qui parle de la clôture de vendredi, la salve rapporte
+du live que l'on étiquette ensuite « clôture du vendredi » : le 20260810 a produit **4 inversions de signe
+et une section entière bâtie sur un fait faux**, rattrapées par le panel et pas par l'auteur.
+
+**Règle : tout chiffre publié comme daté doit être demandé borné.**
+- Cours et variations d'une séance de référence → `QueryData(types='bars_daily', end_date=<clôture>)`,
+  jamais `indices`/`commodities`/`quote` nus. Ces types-là ne servent qu'à dire « en ce moment ».
+- Fondamentaux / dépôts / résultats point-in-time → `end_date=D` ou `GetInstruments(as_of=D)`.
+- Un `timestamp` de réponse postérieur à la clôture de référence = la valeur est du live. Soit on la
+  réétiquette « en séance, <heure> », soit on la recollecte bornée. Jamais on ne garde le libellé « clôture ».
+- **Contrôle avant rédaction** : comparer le `timestamp` renvoyé à `reference_close` du harness. Écart de
+  plus d'une séance sur une valeur présentée comme la clôture = STOP.
+
+### ⛔ FENÊTRE D'AGRÉGAT INCONNUE = NON PUBLIABLE TEL QUEL
+`performance_rotations` renvoie des agrégats secteur/industrie/thème **sans déclarer sa fenêtre**. Les
+étiqueter « semaine » sans confirmation est un défaut d'intégrité (relevé le 20260810). Soit la fenêtre est
+établie, soit l'agrégat est publié comme « ordre de grandeur directionnel, fenêtre non confirmée ».
+
 ## H2 — Gate de fraîcheur (bloquant, `tools/check-freshness.js`)
 Chaque source collectée est tracée dans `<dossier-artefact>/harness.json` avec son `as_of` RÉEL
-(timestamp renvoyé par l'appel — jamais « now », jamais arrondi). Puis :
+(timestamp renvoyé par l'appel — jamais « now », jamais arrondi).
+
+**Le manifeste doit couvrir les faits QUI PORTENT LA THÈSE, pas seulement les cotations.** Au 20260810, le
+harness déclarait 9 sources de marché pendant que l'article reposait sur les payrolls de juillet, le vote
+FOMC du 29/07 et des probabilités de marchés de prédiction — aucun des trois au manifeste, alors que le
+texte revendiquait « neuf sources datées et vérifiées ». Revendication invérifiable.
+Règle : tout fait non trivial qui soutient une conclusion entre au harness (macro, banque centrale,
+géopolitique, marchés de prédiction, recherche documentaire), OU l'article déclare explicitement qu'il
+sort du périmètre contrôlé. Pas de troisième option.
+
+Puis :
 ```bash
 node tools/check-freshness.js <dossier>/harness.json   # exit 1 = PUBLICATION INTERDITE
 ```
@@ -73,6 +103,15 @@ Budgets d'âge standard (les commandes peuvent durcir, jamais assouplir sans acc
 `--warn-only` est INTERDIT dans un pipeline de publication. Un timestamp futur = donnée inventée = STOP.
 Règle d'honnêteté : tout chiffre affiché porte son moment (« clôture mardi », « ~12h20 Paris ») — un
 prix d'hier présenté comme courant est un bug bloquant même si le gate passe.
+
+### ⛔ EMPREINTE L2 — LES FLUX INSTITUTIONNELS SONT OBLIGATOIRES, PAS OPTIONNELS
+Un daily ou un weekly sans un seul flux institutionnel échoue la couche 2 d'`EDITORIAL_STYLE.md`, quelle
+que soit la qualité du reste. C'est le seul contenu qu'un prompt ne peut pas reproduire, donc c'est
+précisément ce qui distingue une analyse d'un commentaire. Au 20260810 : **zéro occurrence** d'intérêt
+ouvert, dark pool, flux d'options ou put-call dans 13 000 mots — BLOCK.
+Collecte minimale : `QueryData(types='unusual_options,dark_pool,max_pain', symbols=<les noms de la thèse>)`
++ `short_interest`/`ctb` sur les titres où la thèse porte, `OptionsAnalytics(action='sentiment')` pour la
+structure de vol. Un retour vide se DÉCLARE (« flux non disponibles sur ce nom »), il ne se contourne pas.
 
 ## H3 — War room retail (AVANT rédaction, pas après)
 Débat court et tracé (3-6 bullets dans la réflexion, pas dans l'article) entre trois chapeaux :
@@ -119,3 +158,7 @@ escalader au user avec la liste blocking[]. Relancer H4 après les fixes du pane
 | senior-review BLOCK | ne pas publier, escalader |
 | doublon d'URL dans l'index | ne pas add_card, signaler |
 | chiffre sans source de session | supprimer le chiffre ou recollecter |
+| valeur « clôture » dont le timestamp est postérieur à la clôture | recollecter bornée (`bars_daily` + `end_date`) ou réétiqueter « en séance » |
+| fait porteur absent du harness | l'ajouter, ou déclarer explicitement qu'il sort du périmètre contrôlé |
+| zéro flux institutionnel dans un daily/weekly | recollecter (`unusual_options`, `dark_pool`, `max_pain`, `short_interest`) — empreinte L2 obligatoire |
+| densité : plus de ~4 000 mots sans faits nouveaux à proportion | couper, ne JAMAIS gonfler pour franchir un seuil de taille |

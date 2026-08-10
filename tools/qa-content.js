@@ -48,8 +48,17 @@ const JSON_OUT = ARGV.includes('--json');
 const typeFlag = (() => { const i = ARGV.indexOf('--type'); return i >= 0 ? ARGV[i + 1] : null; })();
 const positional = ARGV.filter((a, i) => !a.startsWith('--') && ARGV[i - 1] !== '--type');
 
-// Seuils de taille par type (bytes) — sous ce seuil = tronqué / sections manquantes
-const SIZE_MIN = { analyse: 10 * 1024, daily: 30 * 1024, weekly: 100 * 1024 };
+// Seuils de taille par type (bytes) — plancher de TRONCATURE, pas objectif rédactionnel.
+// Incident weekly 20260810 : le seuil weekly était à 100 KB et servait de proxy de complétude.
+// Un rédacteur qui vise 100 KB en ajoutant de la prose produit exactement ce que la couche 4
+// d'EDITORIAL_STYLE interdit — l'article a été gonflé à 13 391 mots / 40 sections pour ~20 faits,
+// dont 5 sections qui se dupliquaient, et le panel senior l'a BLOQUÉ pour slop.
+// Un article de 4 800 mots, 20 sections et 16 tableaux n'est PAS tronqué : le proxy était faux.
+// Nouveau contrat : la complétude se mesure en SECTIONS (une troncature réelle en laisse peu),
+// le plancher d'octets ne sert plus qu'à attraper un fichier manifestement coupé.
+const SIZE_MIN = { analyse: 10 * 1024, daily: 25 * 1024, weekly: 35 * 1024 };
+// Nombre minimal de sections <h2> attendues — c'est CE signal qui détecte une troncature réelle.
+const SECTIONS_MIN = { analyse: 5, daily: 8, weekly: 12 };
 
 // ─── Waivers (dérogations éditoriales) ────────────────────────────────────────
 // Fichier `.qa-content-waivers.json` à la racine : liste de
@@ -244,7 +253,17 @@ function validate(file) {
   // ── COMMUN : taille ──
   check('taille suffisante (non tronqué)', () => {
     const min = SIZE_MIN[type] || 10 * 1024;
-    if (size < min) return `${Math.round(size / 1024)}KB < ${Math.round(min / 1024)}KB (${type}) — article tronqué ou sections manquantes`;
+    if (size < min) return `${Math.round(size / 1024)}KB < ${Math.round(min / 1024)}KB (${type}) — fichier manifestement coupé`;
+  });
+
+  // Complétude structurelle : c'est ce compte, pas le poids en octets, qui détecte une troncature.
+  // NE PAS transformer ce seuil en objectif : au-delà, ajouter des sections sans faits nouveaux
+  // est un défaut (slop L4), pas une qualité. Cf. incident 20260810.
+  check('sections attendues présentes (complétude)', () => {
+    const minSec = SECTIONS_MIN[type];
+    if (!minSec) return;
+    const n = (html.match(/<h2\b/g) || []).length;
+    if (n < minSec) return `${n} section(s) <h2> < ${minSec} attendues (${type}) — article incomplet`;
   });
 
   // ── COMMUN : balise <html> ──
