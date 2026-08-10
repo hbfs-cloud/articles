@@ -364,6 +364,19 @@ window.searchDataPrebuilt = [
     "date": "29 décembre 2025 - 3 janvier 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Le choc de l'emploi qui n'en était pas un",
+    "desc": "Weekly DailyTickers du 10 au 14 août 2026. L'emploi américain de juillet recule de 23 000 postes contre +83 000 attendus — mais le privé crée 30 000 emplois et le public en perd 53 000, sur des facteurs saisonniers révisables. Le marché a basculé sur la composante la moins fiable. CPI mercredi, PPI jeudi, ventes de détail vendredi. Niveaux, trois scénarios et ce qu'on ne fait pas.",
+    "tags": "us,eu,asia,commodity,macro,earnings,technique,trade-idea,etf,gold,mining,defense,healthcare,small-cap",
+    "grade": "",
+    "href": "/weekly/20260810/",
+    "date": "10 août 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
