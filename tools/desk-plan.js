@@ -237,6 +237,25 @@ function requireFields(label, items, groups) {
 const EARNINGS_DENSITY_MIN = 8;      // sous ce seuil, un digest earnings n'a rien à dire
 const EARNINGS_MIN_MCAP = 10e9;
 const TIER1 = /\b(CPI|FOMC|FED|NFP|NON.?FARM|PCE|OPEC|OPEP|UNEMPLOYMENT|PAYROLL)\b/i;
+
+// Décalages des fuseaux que le calendrier économique emploie réellement, en
+// minutes depuis UTC. Table explicite plutôt que parsing générique : la liste
+// est courte, publique, et une abréviation inconnue doit rendre « je ne sais
+// pas » (null) au lieu d'une heure inventée — un événement mal daté vaut moins
+// qu'un événement sans heure, parce qu'il a l'air fiable.
+const TZ_OFFSET_MIN = { UTC: 0, GMT: 0, EDT: -240, EST: -300, ET: -240, CDT: -300, CST: -360, PDT: -420, PST: -480, CEST: 120, CET: 60, BST: 60, JST: 540 };
+
+// Instant (ms) d'un événement du calendrier, ou null si l'heure est absente ou
+// dans un format qu'on ne sait pas lire.
+function eventInstant(e) {
+  const date = String(e.date || e.event_date || e.datetime || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+  const m = String(e.time || e.event_time || '').match(/^(\d{1,2}):(\d{2})\s*([A-Z]{2,4})?$/);
+  if (!m) return null;
+  const off = m[3] ? TZ_OFFSET_MIN[m[3].toUpperCase()] : 0;
+  if (off === undefined) return null;
+  return Date.parse(`${date}T${m[1].padStart(2, '0')}:${m[2]}:00Z`) - off * 60000;
+}
 const RETRO_LOOKBACK_DAYS = 60;      // au-delà, c'est de l'archéologie, pas une rétro
 
 function evalScanner() {
@@ -378,17 +397,37 @@ function evalMacro() {
   // qu'on ne veut pas comme barrière sur ce produit.
   gate('macro');
   if (!socle) return R({ due: false, pending: true, reason: 'calendrier économique non collecté — à réévaluer après le socle' });
-  const target = shift(P.date, 1);
   const raw = flat(itemsOf(socle.events));
   requireFields('macro', raw, [
     ['date', 'event_date', 'datetime'],
     ['name', 'event', 'title'],
   ]);
-  const hits = raw.filter(e => {
+  // Le bon critère n'est pas « l'événement est demain », c'est « l'événement n'a
+  // pas encore eu lieu ». Un J-1 en date CALENDAIRE de Paris excluait toute la
+  // matinée du jour J : le 12/08 à 00h01, le CPI de 14h30 n'était plus dû alors
+  // qu'il restait 14 heures pour se positionner — soit exactement la fenêtre où
+  // la note sert. On regarde donc J et J+1, et on ne retient que ce qui est
+  // ENCORE DEVANT nous. Le doublon reste impossible : l'identité du déclencheur
+  // est la date de l'ÉVÉNEMENT, pas celle du run, et la cadence de 36 h couvre
+  // les deux occasions de le publier (veille au soir, matin même).
+  const horizon = [P.date, shift(P.date, 1)];
+  const candidates = raw.filter(e => {
     const d = String(e.date || e.event_date || e.datetime || '').slice(0, 10);
-    return d === target && TIER1.test(String(e.name || e.event || e.title || ''));
+    return horizon.includes(d) && TIER1.test(String(e.name || e.event || e.title || ''));
   });
-  if (!hits.length) return R({ due: false, reason: `aucun événement de tier 1 le ${target}` });
+  const upcoming = candidates.filter(e => {
+    const at = eventInstant(e);
+    return at === null ? true : at > NOW.getTime();   // heure illisible → on garde, on ne perd pas un événement sur un format
+  });
+  const target = upcoming.length
+    ? String(upcoming[0].date || upcoming[0].event_date || upcoming[0].datetime).slice(0, 10)
+    : shift(P.date, 1);
+  const hits = upcoming.filter(e => String(e.date || e.event_date || e.datetime || '').slice(0, 10) === target);
+  if (!hits.length) {
+    return R({ due: false, reason: candidates.length
+      ? `événement de tier 1 déjà passé (${candidates.map(h => h.name || h.event || h.title).join(', ')}) — une note de positionnement après le chiffre n'en est plus une`
+      : `aucun événement de tier 1 le ${horizon.join(' ni le ')}` });
+  }
   // Identité du déclencheur = date visée + jetons TIER1 retenus, triés. On prend
   // le JETON (CPI, FOMC…) et non le libellé complet : un intitulé qui change de
   // formulation d'un mois à l'autre produirait un déclencheur « neuf » pour le
