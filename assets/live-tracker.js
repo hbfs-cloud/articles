@@ -388,15 +388,19 @@
     // Determine direction: if stop < entry → long, else short
     var isLong = isNaN(stop) || stop < entry;
 
-    if (!isNaN(tp2)) {
+    // tp2 > 0 et pas seulement « pas NaN » : le renderer écrit data-tp2="0" quand la
+    // deuxième cible n'existe pas (elle a été supprimée du scanner éditorial le
+    // 2026-08-11). parseFloat("0") vaut 0, qui n'est pas NaN — sans ce garde, toute
+    // ligne sans TP2 s'affichait « TP2 Hit » dès la première cotation.
+    if (!isNaN(tp2) && tp2 > 0) {
       if (isLong && livePrice >= tp2) return { label: 'TP2 Hit', color: '#7c3aed', icon: 'fa-trophy' };
       if (!isLong && livePrice <= tp2) return { label: 'TP2 Hit', color: '#7c3aed', icon: 'fa-trophy' };
     }
-    if (!isNaN(tp1)) {
+    if (!isNaN(tp1) && tp1 > 0) {
       if (isLong && livePrice >= tp1) return { label: 'TP1 Hit', color: '#16a34a', icon: 'fa-check-circle' };
       if (!isLong && livePrice <= tp1) return { label: 'TP1 Hit', color: '#16a34a', icon: 'fa-check-circle' };
     }
-    if (!isNaN(stop)) {
+    if (!isNaN(stop) && stop > 0) {
       if (isLong && livePrice <= stop) return { label: 'Stopped', color: '#dc2626', icon: 'fa-times-circle' };
       if (!isLong && livePrice >= stop) return { label: 'Stopped', color: '#dc2626', icon: 'fa-times-circle' };
       // Near stop: within 2% of stop

@@ -434,6 +434,21 @@ async function main() {
             message: `${s.ticker}: cible à ${mult.toFixed(2)}×ATR, hors de la bande [${lo} ; ${hi}] — ${why}.`
           });
         }
+
+        // Le champ MACHINE doit dire la même chose que le calcul. Sur le scan du
+        // 2026-08-10, `tp1_atr_multiple` était faux sur 5 lignes sur 7 (BNY annonçait
+        // 1,5 pour 1,61 réel, TTE.PA 1,5 pour 1,24, SOLV 1,5 pour 1,72, SHELL.AS 1,5
+        // pour 1,70, FTNT 1,37 pour 1,62). Un gate qui valide une valeur RECOPIÉE ne
+        // valide rien : la valeur écrite doit être le résultat du calcul, à 0,01 près.
+        if (s.tp1_atr_multiple != null) {
+          const gap = Math.abs(Number(s.tp1_atr_multiple) - mult);
+          if (!Number.isFinite(gap) || gap > 0.01) {
+            violations.push({
+              rule: 'tp1_atr_multiple_coherence',
+              message: `${s.ticker}: tp1_atr_multiple annonce ${s.tp1_atr_multiple} pour ${mult.toFixed(3)} recalculé depuis (tp1 − entry)/atr — écart de ${gap.toFixed(3)} > 0,01. Le champ doit être ÉCRIT par le calcul, jamais recopié.`
+            });
+          }
+        }
       }
     }
   }

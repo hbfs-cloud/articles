@@ -3,7 +3,7 @@
  "generated_at": "2026-08-08T10:36:00Z",
  "target_session": "2026-08-10",
  "reference_close": "2026-08-07",
- "note": "Collecte du 2026-08-08 apres retablissement du connecteur marketdata. La tentative du 2026-08-08 05:00-06:11 UTC a integralement echoue (404) : ses 5 fiches de role sont conservees comme journal de la panne et declarent chacune leur fiche de reprise. Donnees de marche et regime rafraichis le 2026-08-09 apres refonte complete du scan sur retour de panel. | 2026-08-10 : les QUATRE sources ont été recollectées après retour des connecteurs marketdata puis systematic. Aucune valeur estimée ni reprise de mémoire.",
+ "note": "Collecte du 2026-08-08 apres retablissement du connecteur marketdata. La tentative du 2026-08-08 05:00-06:11 UTC a integralement echoue (404) : ses 5 fiches de role sont conservees comme journal de la panne et declarent chacune leur fiche de reprise. Donnees de marche et regime rafraichis le 2026-08-09 apres refonte complete du scan sur retour de panel. | 2026-08-10 : les QUATRE sources ont été recollectées après retour des connecteurs marketdata puis systematic. Aucune valeur estimée ni reprise de mémoire. | 2026-08-11 : révision après revue de panel. Six sources supplémentaires collectées (barres du panier et du livre ouvert, registre AMF, registre SEC de Shell plc, cotes de paris), journal dans _fix/_collect.json.",
  "sources": [
   {
    "name": "service_health",
@@ -11,7 +11,31 @@
    "max_age_h": 6,
    "required": true,
    "origin": "controle de service — bar_service ready, derniere barre 2026-08-07, lag 1 seance (lundi non ouvert)",
-   "note": "Recollecté le 10/08 07:44Z : status healthy, base connectée, bar_service ready, max_last_bar_date 2026-08-08, ref_lag_sessions 1."
+   "note": "Recollecté le 10/08 07:44Z : status healthy, base connectée, bar_service ready, max_last_bar_date 2026-08-07, ref_lag_sessions 1. Correction du 11/08 : cette note portait 2026-08-08, un samedi, en contradiction avec son propre champ origin. La dernière barre disponible au moment du scan est bien la clôture du vendredi 2026-08-07, qui est aussi la clôture de référence du scan."
+  },
+  {
+   "name": "prix_publies",
+   "as_of": "2026-08-11T12:03:00Z",
+   "max_age_h": 48,
+   "required": true,
+   "origin": "barres quotidiennes des 6 lignes publiées, end_date 2026-08-07 — artefact _fix/bars_panier.json",
+   "note": "Collecté le 11/08 pour donner une source datée aux prix publiés. Clôtures du 2026-08-07 : BNY 157,61 · RF 31,43 · TTE.PA 74,09 · SOLV 82,98 · INCY 120,56 · FTNT 159,64 — identiques aux prix de signals.json et data.json. verified.json porte pour INCY 119,83 : c'est une valeur ANTÉRIEURE à la correction des séries, documentée par l'alerte « des cotations corrigées avant tout calcul » (25 des 32 séries américaines renvoyaient une dernière cotation erronée selon la profondeur d'historique demandée). Les prix publiés sont ceux des séries corrigées."
+  },
+  {
+   "name": "correlations",
+   "as_of": "2026-08-11T12:05:00Z",
+   "max_age_h": 48,
+   "required": true,
+   "origin": "recalcul sur 60 séances de log-rendements, dates communes par paire, closes bruts arrêtés au 2026-08-07",
+   "note": "Panier : SOLV/INCY 0,406 · RF/SOLV 0,402 · BNY/RF 0,220 · min RF/TTE.PA −0,248 · moyenne hors diagonale 0,067. Contre les 26 positions réellement ouvertes au 10/08 (scanner/status/history/20260810.json), 156 paires : plus forte TTE.PA/DBE 0,677. Le −0,038 de BNY/RF publié le 10/08 n'est reproductible à aucune fenêtre et est retiré."
+  },
+  {
+   "name": "anti_dilution_eu",
+   "as_of": "2026-08-11T12:07:00Z",
+   "max_age_h": 48,
+   "required": true,
+   "origin": "registre AMF (Info-Financière) pour TTE.PA, registre SEC pour Shell plc — artefacts _fix/eu_filings_tte.json et _fix/sec_filings_shel.json",
+   "note": "TTE.PA : 91 dépôts du 13/02 au 10/08, 25 rachats d'actions propres, 12 relevés de capital, zéro émission d'actions → dilution_clear passé à true. SHELL.AS : aucune voie de contrôle disponible (AMF = Paris uniquement, SEC = dette de Shell plc) → ligne retirée du panier, règle fail-closed."
   },
   {
    "name": "regime_marketdata",
@@ -35,7 +59,7 @@
    "max_age_h": 24,
    "required": true,
    "origin": "cotes de paris — Fed septembre et Hormuz, relevees a la source",
-   "note": "Recollecté le 10/08 07:44Z : 8 marchés. Dominante géopolitique — trafic du détroit d'Hormuz de retour à la normale au 31/08 coté à 4,05% de probabilité, au 15/08 à 0,35% ; fin du blocus iranien annoncée au 15/08 à 8,5%."
+   "note": "Recollecté le 10/08 07:44Z : 8 marchés. Dominante géopolitique — trafic du détroit d'Hormuz de retour à la normale au 31/08 coté à 4,05% de probabilité, au 15/08 à 0,35% ; fin du blocus iranien annoncée au 15/08 à 8,5%. C'est ce 4,05% qui est publié. Contrôle du 11/08 12:02Z : 4,35%, cote stable. Le 7,5% et les 10,2 M$ de volume qui figuraient dans la prose du 10/08 n'avaient de source nulle part — retirés. Détail : _wf/prediction-markets.json."
   }
  ]
 }

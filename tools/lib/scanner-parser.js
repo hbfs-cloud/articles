@@ -109,6 +109,11 @@ function loadSignalsRaw(dir) {
           // whitelist), so candlestick-scanner.js's emitted sector never reached validate-scan
           // no matter what it wrote to signals.json.
           sector: s.sector || null,
+          // tp1_atr_multiple — lu par le gate tp1_atr_multiple_coherence de validate-scan.js,
+          // qui recalcule (tp1 − entry)/atr et refuse un écart > 0,01. Absent de cette liste,
+          // le champ n'atteignait jamais le gate : la valeur ÉCRITE dans signals.json pouvait
+          // être fausse sans que rien ne le dise (5 lignes sur 7 le 2026-08-10).
+          tp1_atr_multiple: s.tp1_atr_multiple != null ? s.tp1_atr_multiple : null,
         };
       };
       const baseSignals = (data.signals || []).map(mapSignal);

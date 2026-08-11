@@ -3,35 +3,64 @@
   "status": "OK",
   "blocking": false,
   "enrichment_started_at": "2026-08-08T10:44:00Z",
+  "revised_at_utc": "2026-08-11T12:30:00Z",
+  "_revision_note": "Régénéré le 2026-08-11. La version du 2026-08-08 décrivait la méthode ANTÉRIEURE (cible = pivot haut à >= 1,5x le risque) et rejetait explicitement quatre des lignes finalement publiées ; sa matrice de corrélation portait sur des titres absents du panier. Elle documentait un autre scan que celui en ligne. Le panier a été refondu le 2026-08-09 sous la règle d'atteignabilité de la cible, puis corrigé le 2026-08-11 après revue.",
+  "panier_final": ["BNY", "RF", "TTE.PA", "SOLV", "INCY", "FTNT"],
   "grille_quantitative": {
     "candidats_testes": 32,
-    "retenus": 8,
-    "methode": "entree = cloture (gate G1) + 0,6% ; stop = dernier creux de swing, sinon MM50, sinon 1,5xATR, borne a 3-8% ET >= 1,5xATR ; cible = pivot haut REEL a >= 1,5x le risque, sinon mouvement mesure en zone vierge",
+    "retenus": 6,
+    "methode": "entree = cloture de reference (gate G1) -> +0,6%, borne HAUTE = base de tous les ratios publies ; stop = multiple d'ATR14 >= 1,5, descendu sous un creux pivot reel quand il en existe un, borne a 3-8% du haut de zone ; cible = ATTEIGNABILITE (gate G5) : entre 1,0 et 2,0 x ATR14 au-dessus du haut de zone, optimum 1,5x, posee juste sous un niveau reellement cote quand il en existe un dans la bande, sinon par la regle seule et c'est ecrit sur la fiche.",
+    "convention_rr": "HAUT de la zone d'entree, sans exception — pipeline, gate de publication et texte publie. C'est le pire remplissage possible.",
+    "plancher_rr": "0,7 en RISK-ON depuis le 2026-08-10 (data/scanner-filters.json#editorial_targets.rr_min_by_regime). L'ancien plancher de 1,5 est RETIRE : avec un stop au plancher de bruit (>=1,5xATR) et une cible a portee (<=2,0xATR), le rapport maximal atteignable est de 1,33 — le plancher etait arithmetiquement inatteignable et selectionnait pour l'inatteignabilite. Preuve : .claude/memory/feedback_rr_gate_forces_unreachable_targets.md, 88 trades.",
     "note_pivots": "La grille supports/resistances du service est inexploitable (resistances vides ou marquees cassees, premiers supports 15-38% sous le cours, jusqu a -31% sur STT). Les pivots ont ete recalcules sur 272-279 barres quotidiennes.",
+    "multiples_publies": {
+      "TTE.PA": 1.24, "FTNT": 1.35, "RF": 1.5, "INCY": 1.5, "BNY": 1.61, "SOLV": 1.72
+    },
+    "rr_publies": {
+      "BNY": 0.73, "SOLV": 0.78, "TTE.PA": 0.83, "RF": 0.84, "FTNT": 0.9, "INCY": 0.92
+    },
     "rejets_par_motif": {
-      "R/R < 1,5": ["PAYO","RF","STT","MTB","BNY","ONB","PNC","KBWB","VLO","PSX","PCAR","XLI","GE","SOLV","CZR","EBC","STAN.L","EMG.L","SHELL.AS","CPG.L"],
-      "aucun stop valide dans 3-8% et >= 1,5xATR": ["TENB","ANET"],
+      "plafond de grappe sectorielle (2 par secteur)": ["STAN.L", "TFC", "MTB", "KBWB", "EBC", "EMG.L", "PSX"],
+      "aucun stop valide dans 3-8% et >= 1,5xATR": ["TENB", "ANET"],
       "extension 50j > 20%": ["RHI"],
-      "moyennes enchevetrees (MM20 sous MM50)": ["AAXJ","VPL"],
+      "moyennes enchevetrees (MM20 sous MM50)": ["AAXJ", "VPL"],
       "cassure ratee sur resultats": ["HWM"],
-      "dilution averee": ["COMP","AMRX"]
+      "dilution averee": ["COMP", "AMRX"],
+      "controle anti-dilution impossible (fail-closed)": ["SHELL.AS"],
+      "famille Pullback interdite (confiance de regime 50,48% < 60%)": "13 candidats"
     }
   },
   "correlation": {
-    "univers_mesure": "FTNT,CGNX,APH,TFC,INCY",
-    "note": "US uniquement — melanger les places europeennes casse le decompte des seances communes",
-    "observations": 57,
+    "univers_mesure": "BNY,RF,TTE.PA,SOLV,INCY,FTNT — les 6 lignes publiees, aucune exclusion",
+    "methode": "rendements logarithmiques, dates communes appariees PAR PAIRE (ce qui permet de mesurer Paris contre New York), closes bruts du service arretes au 2026-08-07",
+    "observations": 60,
     "lookback_days": 60,
-    "avg_off_diagonal": 0.0986,
-    "max_pair": "CGNX/APH 0.697",
-    "min_pair": "APH/INCY -0.243",
-    "verdict": "0,697 < seuil de rejet 0,85 ; moyenne hors diagonale 0,0986 = panier reellement decorrele. L etiquette sectorielle comptait 4 technologiques, la mesure dit que FTNT/APH ne corrolent qu a 0,145.",
-    "couverture": "5 des 8 lignes publiees mesurees (62,5%) — les 3 lignes europeennes (LOGN.SW, TTE.PA, ENI.MI) ne sont pas mesurables par cet outil"
+    "paires": {
+      "SOLV/INCY": 0.406, "RF/SOLV": 0.402, "BNY/RF": 0.22, "BNY/FTNT": 0.188,
+      "RF/INCY": 0.153, "RF/FTNT": 0.113, "BNY/TTE.PA": 0.058, "TTE.PA/FTNT": 0.046,
+      "SOLV/FTNT": 0.04, "BNY/SOLV": -0.021, "TTE.PA/INCY": -0.022, "BNY/INCY": -0.029,
+      "TTE.PA/SOLV": -0.119, "INCY/FTNT": -0.187, "RF/TTE.PA": -0.248
+    },
+    "avg_off_diagonal": 0.0666,
+    "max_pair": "SOLV/INCY 0.406",
+    "min_pair": "RF/TTE.PA -0.248",
+    "couverture": "6 des 6 lignes publiees (100%)",
+    "correction": "Le coefficient BNY/RF de -0,038 publie le 2026-08-10 n'est reproductible a aucune fenetre (40, 50, 60, 70, 80 seances ; rendements logarithmiques ou simples). Valeur reelle +0,220 a 60 seances, +0,315 a 40, +0,291 a 80. Les deux autres paires publiees ce jour-la sont, elles, reproductibles au centieme (TTE.PA/SHELL.AS 0,844 pour 0,84 ; SOLV/INCY 0,406 pour 0,40) : la methode n'etait pas en cause, ce chiffre-la l'etait."
+  },
+  "livre_ouvert": {
+    "as_of": "2026-08-10",
+    "source": "scanner/status/history/20260810.json — positions[] de tous les modes",
+    "tickers": ["ABT", "ATKR", "BKNG", "BOX", "CP", "CSCO", "DBE", "ESTC", "ITRK.L", "ITX.MC", "JCI", "LUV", "MSFO", "NTAP", "PAYC", "PFIX", "PHM", "REMX", "ROST", "RTX", "SAFT", "SION", "TT", "VOYG", "VTV", "VTWO"],
+    "correction": "FRO et CFG etaient CLOTURES avant cette seance (FRO 2026-08-03 au point mort et 2026-08-07 a +2,13% ; CFG 2026-08-07 a +1,42%). La version du 2026-08-10 les comptait encore ouverts pour son decompte sectoriel : le decompte est refait sur les positions reelles.",
+    "paires_mesurees": 156,
+    "plus_fortes": { "TTE.PA/DBE": 0.677, "FTNT/NTAP": 0.493, "FTNT/ESTC": 0.48, "TTE.PA/BKNG": -0.474, "RF/LUV": 0.471 },
+    "moyenne_valeur_absolue": 0.165,
+    "recoupement_sectoriel": "ABT (sante) est la SEULE position ouverte qui recoupe un secteur du panier : avec SOLV et INCY, la sante atteint 3 lignes. Aucune financiere ni aucune energie n'est ouverte en direct — mais DBE, fonds petrolier, correle a 0,677 avec TTE.PA."
   },
   "diversification": {
-    "us": 5, "eu": 3, "apac": 0, "etf": 0,
+    "us": 5, "eu": 1, "apac": 0, "etf": 0,
     "plancher": "5 US / 2 EU / 1 APAC / 2 ETF",
-    "non_respecte": ["apac", "etf"],
-    "cause": "Aucun candidat APAC ni ETF ne passe la grille. AAXJ et VPL ont leur MM20 SOUS leur MM50 (base plate, pas de tendance) ; KBWB (R/R 1,14), XLI (0,79) et XLE echouent au R/R. Le compte n a pas ete force — c est un plancher indicatif, pas un gate bloquant."
+    "non_respecte": ["eu", "apac", "etf"],
+    "cause": "Aucun candidat APAC ni ETF ne passe la grille : AAXJ et VPL ont leur MM20 SOUS leur MM50 (base plate, pas de tendance). Le compte EU tombe a 1 apres le retrait de SHELL.AS pour controle anti-dilution impossible. Le compte n'a pas ete force — c'est un plancher indicatif, pas un gate bloquant."
   }
 }

@@ -1,0 +1,63 @@
+{
+  "artifact": "scanner/20260810/data.json",
+  "reference_date": "2026-08-07",
+  "waves": [
+    {
+      "name": "reprise-panel",
+      "calls": [
+        {
+          "as": "bars_panier",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "BNY,RF,TTE.PA,SHELL.AS,SOLV,INCY,FTNT",
+            "end_date": "$refdate",
+            "days": 200
+          },
+          "freshness": { "max_age_h": 24, "required": true }
+        },
+        {
+          "as": "bars_livre_ouvert",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "ABT,ATKR,BKNG,BOX,CP,CSCO,DBE,ESTC,ITRK.L,ITX.MC,JCI,LUV,MSFO,NTAP,PAYC,PFIX,PHM,REMX,ROST,RTX,SAFT,SION,TT,VOYG,VTV,VTWO",
+            "end_date": "$refdate",
+            "days": 200
+          },
+          "freshness": { "max_age_h": 24, "required": true }
+        },
+        {
+          "as": "eu_filings_tte",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": { "types": "eu_filings", "symbols": "TTE.PA", "days": 180, "limit": 100 },
+          "freshness": { "max_age_h": 24, "required": true }
+        },
+        {
+          "as": "sec_filings_shel",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": { "types": "sec_filings", "symbols": "SHEL", "days": 180, "limit": 100, "end_date": "2026-08-10" },
+          "freshness": { "max_age_h": 24, "required": true }
+        },
+        {
+          "as": "capital_eu",
+          "server": "marketdata",
+          "tool": "GetInstruments",
+          "args": { "symbols": "TTE.PA,SHELL.AS", "as_of": "2026-08-10" },
+          "freshness": { "max_age_h": 24, "required": true }
+        },
+        {
+          "as": "prediction_markets_hormuz",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "args": { "facets": "prediction_markets", "query": "Hormuz", "limit": 20 },
+          "freshness": { "max_age_h": 24, "required": true }
+        }
+      ]
+    }
+  ]
+}
