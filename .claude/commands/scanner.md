@@ -63,7 +63,7 @@ RunScreener call params: `pass_expr` (boolean filter), `score_expr` (numeric ran
 - *(empty)* — auto-detect next trading day, full pipeline with validation
 - `--date YYYYMMDD` — target a specific scan date
 - `--skip-validation` — skip the 7-agent QA pass. **RÉSERVÉ à un run interactif avec accord explicite du user dans la session. INTERDIT aux routines/runs autonomes** : la règle durable `analysis-senior-review-first` exige le panel AVANT publication, jamais en rattrapage (violée par le run nocturne du 22/07 — risk_gating vide + zéro panel, corrigé a posteriori).
-- `--skip-downstream` — stop after publish (no sweep, status page, API, Telegram)
+- `--skip-downstream` — stop after publish (ni `downstream-split.sh compute` ni `distribute` : pas de sweep, pas de status page, pas d'API, pas de push, pas de Telegram)
 - `--dry-run` — generate data.json only, no publish or push
 
 ## Phase 0 — Date Resolution & Anti-Doublon
@@ -227,20 +227,73 @@ This validation is NOT optional — it runs as part of Phase 2, immediately afte
    - Display VWAP value in setup card AND status table (commit 58bac3bb)
    - Applied uniformly across `sweep.js`, `signal-monitor.js`, status page how-to-trade, portfolio API
 
-## Phase 4 — Render & Publish
+## Phase 4 — Render & Publish (LOCAL — rien ne devient public ici)
 
 ```bash
 node tools/render-scanner.js scanner/YYYYMMDD/ --strict   # bloque si data.json désaccentué/tronqué (garde qualité amont)
-node tools/publish.js --type scanner --path scanner/YYYYMMDD/index.html --no-notify
+node tools/check-freshness.js scanner/YYYYMMDD/harness.json   # exit 1 = publication INTERDITE
+node tools/qa-check.js                                        # lit signals.json, pas le HTML — 0 ❌ exigé
+node tools/publish.js --type scanner --path scanner/YYYYMMDD/index.html --no-notify --no-push
 ```
+
+⚠️ **`--no-push` est obligatoire, et ce n'est pas du confort.** Le panel adversarial passe en
+Phase 6, donc APRÈS. Sans lui, la page est déjà en ligne quand le panel la refuse et la Phase 8
+n'est plus qu'un décor. `publish.js` indexe, valide le contenu et commite **en local** ; la mise
+en ligne est une décision de Phase 8. N'ajoute aucun `git push` ici.
 
 If publish validation fails (filter violations), return to Phase 2 with the specific violations and re-select.
 
 ## Phase 5 — Downstream Pipeline (skip with --skip-downstream)
 
+### ⚡ Coupure CALCUL / DIFFUSION — `tools/downstream-split.sh` (obligatoire depuis 2026-08-11)
+
+**N'enchaîne plus le downstream en une seule coulée qui finit par un `git push`.** Le panel de
+la Phase 6 juge le contenu ; le downstream ne le modifie pas. Les deux tournent donc ENSEMBLE
+— 8 à 12 min de mur en moins. Mais paralléliser le downstream *entier* serait une faute : il
+contient des actions irréversibles. D'où la coupure, et l'ordre réel des phases :
+
+```
+Phase 4  publish.js --no-push --no-notify          ← indexe et commite EN LOCAL, rien de public
+Phase 5A  bash tools/downstream-split.sh compute <DATE> <ASOF>   ┐ MÊME parallel()
+Phase 6   les 7 relecteurs adversariaux                          ┘ que le calcul
+Phase 7   arbitrage : corrections + rejeu conditionnel du compute
+Phase 8   bash tools/downstream-split.sh distribute <DATE>  → image, push, Telegram
+```
+
+- `compute` = ingestion dtx (decide **et** replay), history-append, pont `dtx_pool`,
+  `gen-status-page`, puis `gen-api` / `gen-mode-cards` / `daily-synthesis` en parallèle, et
+  `qa-check`. **Local, idempotent, rejouable autant de fois qu'il faut.** Il prend un verrou :
+  `/desk` et `/scanner` écrivent les mêmes fichiers, deux `gen-status-page` simultanés
+  corrompent SANS lever d'erreur. S'il annonce qu'il attend, laisse-le attendre.
+- `distribute` = `publish-daily-card.sh --no-sweep --no-telegram` (image + QA + push).
+  **Après le verdict, jamais avant.** Coût d'un panel qui refuse : recalculer des fichiers
+  locaux, 1 à 2 min. On ne retire pas un message déjà parti.
+- **Ce que `compute` ne contient PAS, et qui reste à lancer avant lui** (une seule fois, pas
+  rejoué après une correction, car indépendant du contenu publié) : `update-tracking.js`,
+  `sweep.js --quick`, puis `refresh-risk-metrics.js --ingest /tmp/risk-mcp.json`.
+
+**Rejouer `compute` ou non — un seul critère, et il est mécanique.** Le constat du panel
+touche-t-il `data.json` ou `signals.json` ?
+
+```bash
+shasum -a 256 scanner/YYYYMMDD/data.json scanner/YYYYMMDD/signals.json > /tmp/scan-hash-before.txt
+# … corrections du panel, re-render, re-validation …
+shasum -a 256 scanner/YYYYMMDD/data.json scanner/YYYYMMDD/signals.json > /tmp/scan-hash-after.txt
+diff /tmp/scan-hash-before.txt /tmp/scan-hash-after.txt   # différent → relancer compute
+```
+
+Niveau faux, R/R erroné, ticker retiré → les artefacts dérivés décrivent un scan qui n'existe
+plus, **relance `compute`**. Tournure, lien, réserve éditoriale → ils sont intacts, ne le
+relance pas. `qa-check.js` tranche de la même façon : il lit `signals.json`, pas le HTML.
+
+⚠️ Les relecteurs de la Phase 6 **ne modifient aucun fichier** pendant que `compute` tourne —
+ils lisent et rapportent, l'arbitrage corrige. La seule clé que `compute` réécrit dans
+`signals.json` est `dtx_pool` (vivier du moteur scripté, hors sélection publiée) et cette
+écriture est atomique (tmp + rename) : aucun relecteur ne peut lire un JSON tronqué.
+
 **⚡ Doctrine « le MCP fait foi » (OAuth2, ZÉRO token) : un subprocess `node` NE PEUT PAS appeler le MCP. Donc l'AGENT (toi) appelle le MCP, écrit des JSON, et les scripts INGÈRENT. Ça évite les 3 bugs d'aujourd'hui (risk-metrics auth-fail, Telegram token-fail, sweep re-run redondant).**
 
-Ordre (le sweep tourne UNE SEULE fois ici — `publish-daily-card.sh` reçoit `--no-sweep`) :
+Détail des commandes que `downstream-split.sh` enchaîne pour toi (le sweep tourne UNE SEULE fois — `publish-daily-card.sh` reçoit `--no-sweep`) :
 ```bash
 node tools/update-tracking.js                                                # Yahoo prices → exit triggers (pas de MCP)
 node tools/sweep.js                                                          # Append-only: closed trades + advisor_* (LENT ~5-7 min, CPU-bound — normal)
@@ -345,22 +398,32 @@ Each agent returns PASS/WARN/FAIL per check area with required fixes.
 
 ## Phase 8 — Final Commit & Notify
 
-⚠️ En Phase 5, `publish-daily-card.sh --no-sweep --no-telegram` fait l'image + le `git push` + le QA, MAIS **PAS le Telegram** (envoyé par l'AGENT via le MCP notification). Phase 8 ne sert que dans deux cas :
+C'est ici — et **seulement** ici — que quelque chose devient public. Tout ce qui précède est
+local et défaisable ; à partir de cette ligne, plus rien ne se rétracte.
 
-1. **`--skip-downstream` was used** — manual commit + push:
-   ```bash
-   git add scanner/YYYYMMDD/ data/scanner.json data/scanner-history.json
-   git commit -m "feat: scanner YYYYMMDD — auto-published"
-   git push origin main
-   ```
-2. **Phase 7 made post-publish fixes** — additional commit:
-   ```bash
-   git add -p   # review only intended files (no .env, no large binaries)
-   git commit -m "fix: scanner YYYYMMDD — post-validation fixes"
-   git push origin main
-   ```
+```bash
+bash tools/downstream-split.sh distribute YYYYMMDD   # image + QA avant push + commit + push
+```
 
-Si la Phase 5 s'est bien déroulée, `publish-daily-card.sh --no-sweep --no-telegram` a déjà poussé — ne pas push deux fois. Le Telegram, lui, part via le MCP notification (AGENT).
+`distribute` appelle `publish-daily-card.sh --no-sweep --no-telegram` : image, QA **avant** le
+push, commit, push — mais **PAS le Telegram** (envoyé par l'AGENT via le MCP notification).
+
+⚠️ Avec `--no-sweep`, `publish-daily-card.sh` ne stage que la carte, `scanner-metrics.json` et
+`scanner-positions.json`. Les artefacts recalculés par `compute` doivent être ajoutés à la
+main, de façon CIBLÉE (jamais `-A`) :
+
+```bash
+git add scanner/YYYYMMDD/ data/scanner.json data/scanner-history.json
+git add scanner/status/ portfolio/v1/
+git add data/backtest-results.json data/backtest-trades.json data/risk-snapshots.json data/dtx/
+git commit -m "feat: scanner YYYYMMDD — auto-published"
+git push origin main
+```
+
+Le `git push` de `distribute` emporte aussi le commit local laissé par `publish.js --no-push`
+en Phase 4 — c'est voulu, il n'y a qu'un seul moment de mise en ligne. Si `--skip-downstream`
+a été utilisé, ni `compute` ni `distribute` n'ont tourné : le commit + push ci-dessus est
+alors entièrement à ta charge.
 
 ## Error Handling
 - MCP screener returns empty → use GetMarketContext(facets="overview") top movers + manual candidate selection

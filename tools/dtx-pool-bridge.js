@@ -140,7 +140,17 @@ function main() {
 
   const data = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
   data.dtx_pool = pool; // remplacement idempotent — le pool du jour reflète LE staging du jour
-  if (!opts.dryRun) fs.writeFileSync(sigPath, JSON.stringify(data, null, 2), 'utf8');
+  if (!opts.dryRun) {
+    // Écriture ATOMIQUE (tmp + rename). Depuis que le calcul du downstream tourne en
+    // parallèle du panel adversarial, des relecteurs lisent signals.json PENDANT que ce
+    // pont le réécrit. Un writeFileSync direct tronque le fichier puis le remplit : une
+    // lecture tombant dans cette fenêtre récupère du JSON incomplet et fait échouer un
+    // relecteur sur un défaut qui n'existe pas. rename() est atomique sur POSIX — un
+    // lecteur voit l'ancien fichier entier ou le nouveau entier, jamais un état moyen.
+    const tmp = `${sigPath}.tmp-${process.pid}`;
+    fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf8');
+    fs.renameSync(tmp, sigPath);
+  }
 
   console.log(`dtx-pool-bridge — scan ${opts.folder} (séance ${opts.date})${opts.dryRun ? ' [DRY-RUN]' : ''}`);
   console.log(`  ✅ ingérés : ${ingested.length ? ingested.join(' · ') : '—'}`);
