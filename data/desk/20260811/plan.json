@@ -1,0 +1,234 @@
+{
+  "generated_at": "2026-08-11T11:15:56.097Z",
+  "now_paris": "2026-08-11 13:15",
+  "after_close": false,
+  "reference_close": "2026-08-10",
+  "session": "2026-08-11",
+  "session_compact": "20260811",
+  "socle": {
+    "plan": "plans/socle.json",
+    "overview_plan": "plans/socle-overview.json",
+    "out": "data/desk/20260811/_socle",
+    "resolved": false,
+    "covered_names": 19,
+    "calls_saved": 15,
+    "detail": [
+      "daily.status ← socle.status",
+      "daily.regime ← socle.regime",
+      "daily.overview ← socle.overview",
+      "daily.regime_systematic ← socle.regime_systematic",
+      "daily.bars_indices ← socle.bars_indices",
+      "daily.bars_sectors ← socle.bars_sectors",
+      "daily.bars_crypto ← socle.bars_crypto",
+      "daily.economic_events ← socle.economic_events",
+      "daily.options_sentiment ← socle.options_sentiment",
+      "signals-desk.status ← socle.status",
+      "signals-desk.regime ← socle.regime",
+      "signals-desk.economic_events ← socle.economic_events",
+      "signals-desk.earnings_3d ← socle.earnings_all_7d",
+      "retro.status ← socle.status",
+      "retro.bench ← socle.bars_indices"
+    ],
+    "mismatches": []
+  },
+  "due": [
+    {
+      "type": "daily",
+      "reason": "aucun daily pour 20260811, cadence OK",
+      "chain": "S+O",
+      "plans": [
+        "daily"
+      ],
+      "artifacts": [
+        "daily/20260811/index.html"
+      ],
+      "vars": {},
+      "variant": "briefing de séance",
+      "llm": null,
+      "blocker": null,
+      "cadence_h": 20,
+      "distribution": {
+        "web": true,
+        "substack": {
+          "lang": "en",
+          "send_email": false
+        },
+        "telegram": {
+          "lang": "fr",
+          "format": "html"
+        }
+      }
+    },
+    {
+      "type": "signals",
+      "reason": "cadence OK et séance ouvrée",
+      "chain": "S",
+      "plans": [
+        "signals-desk"
+      ],
+      "artifacts": [],
+      "vars": {},
+      "variant": null,
+      "llm": "sélection de 2 à 3 familles (swing / squeeze / earnings / rotation / macro) au vu du régime live, avec la raison écrite",
+      "blocker": null,
+      "cadence_h": 12,
+      "distribution": {
+        "web": true,
+        "substack": {
+          "lang": "en",
+          "send_email": false
+        },
+        "telegram": {
+          "lang": "fr",
+          "format": "html"
+        }
+      }
+    },
+    {
+      "type": "retro",
+      "reason": "scan 20260612 : horizon de 10 séances échu le 2026-06-29, aucune rétro",
+      "chain": "S",
+      "plans": [
+        "retro"
+      ],
+      "artifacts": [
+        "scanner/20260612/retro/index.html"
+      ],
+      "vars": {
+        "scan": "20260612",
+        "horizon_end": "2026-06-29"
+      },
+      "variant": null,
+      "llm": null,
+      "blocker": "tools/extract-retro-symbols.js manquant — sans lui, $symbols devrait être recopié à la main par le modèle, ce que la doctrine interdit",
+      "cadence_h": 144,
+      "distribution": {
+        "web": true,
+        "substack": {
+          "lang": "en",
+          "send_email": false
+        },
+        "telegram": {
+          "lang": "fr",
+          "format": "html"
+        }
+      }
+    }
+  ],
+  "pending": [
+    {
+      "type": "earnings",
+      "reason": "densité de saison inconnue — à réévaluer une fois le socle collecté",
+      "chain": null,
+      "plans": [],
+      "artifacts": [],
+      "vars": {},
+      "variant": null,
+      "llm": null,
+      "blocker": null,
+      "cadence_h": 20,
+      "distribution": null
+    },
+    {
+      "type": "macro",
+      "reason": "calendrier économique non collecté — à réévaluer après le socle",
+      "chain": null,
+      "plans": [],
+      "artifacts": [],
+      "vars": {},
+      "variant": null,
+      "llm": null,
+      "blocker": null,
+      "cadence_h": 0,
+      "distribution": null
+    }
+  ],
+  "skipped": [
+    {
+      "type": "scanner",
+      "reason": "il est 13:15 à Paris — la clôture de la séance visée n'existe pas encore (seuil 22h30)",
+      "chain": null,
+      "plans": [],
+      "artifacts": [],
+      "vars": {},
+      "variant": null,
+      "llm": null,
+      "blocker": null,
+      "cadence_h": null,
+      "distribution": null
+    },
+    {
+      "type": "weekly",
+      "reason": "le weekly se produit du vendredi au dimanche, pour la semaine à venir",
+      "chain": null,
+      "plans": [],
+      "artifacts": [],
+      "vars": {},
+      "variant": null,
+      "llm": null,
+      "blocker": null,
+      "cadence_h": null,
+      "distribution": null
+    },
+    {
+      "type": "rotation",
+      "reason": "la rotation se calcule sur la semaine close (vendredi après clôture au dimanche)",
+      "chain": null,
+      "plans": [],
+      "artifacts": [],
+      "vars": {},
+      "variant": null,
+      "llm": null,
+      "blocker": null,
+      "cadence_h": null,
+      "distribution": null
+    },
+    {
+      "type": "squeeze",
+      "reason": "hors fenêtre de publication FINRA (règlement bimensuel + ~8 séances)",
+      "chain": null,
+      "plans": [],
+      "artifacts": [],
+      "vars": {},
+      "variant": null,
+      "llm": null,
+      "blocker": null,
+      "cadence_h": 0,
+      "distribution": null
+    }
+  ],
+  "proposed": [
+    {
+      "type": "aplus",
+      "reason": "cohorte mensuelle : ~10 analyses profondes, chacune avec sa war room. /desk le PROPOSE, il ne le lance pas."
+    }
+  ],
+  "excluded": [
+    {
+      "type": "analyse",
+      "reason": "à la demande uniquement — /desk ne déclenche jamais une analyse de son propre chef"
+    },
+    {
+      "type": "series",
+      "reason": "workflow dédié par série, hors périmètre"
+    },
+    {
+      "type": "run-session",
+      "reason": "touche l'exécution broker : aucune exécution broker dans un pipeline autonome"
+    },
+    {
+      "type": "make-video",
+      "reason": "règle No Auto Video — jamais sans demande explicite dans la session courante"
+    }
+  ],
+  "config_gaps": [
+    "« macro » absent de CADENCE_H dans publication-gate.js — aucune barrière de cadence, seul le déclencheur événementiel de desk-plan le retient",
+    "« squeeze » absent de CADENCE_H dans publication-gate.js — aucune barrière de cadence, seul le déclencheur événementiel de desk-plan le retient",
+    "« insiders » a une cadence de 20 h dans publication-gate.js mais AUCUN producteur n'existe (ni commande, ni skill, ni plan). Une cadence qui pointe vers rien est un mensonge dans la config : écrire le producteur (la donnée insiders_7d est déjà dans le socle, coût marginal nul) ou supprimer la clé."
+  ],
+  "email_policy": {
+    "default": "send_email=false",
+    "rule": "aucun email n'est autorisé par ce plan. Autorisation séparée, après le panel, sous verrou : bash tools/desk-run.sh --authorize-email <type> --materiality N",
+    "quota": "1 email / 24 h, TOUS types confondus (publication-gate.js)"
+  }
+}

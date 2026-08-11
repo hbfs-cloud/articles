@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Le choc de l'emploi qui n'en était pas un",
+    "desc": "Weekly DailyTickers du 10 au 14 août 2026. L'emploi américain de juillet recule de 23 000 postes contre +83 000 attendus — mais le privé crée 30 000 emplois et le public en perd 53 000, sur des facteurs saisonniers révisables. Le marché a basculé sur la composante la moins fiable. CPI mercredi, PPI jeudi, ventes de détail vendredi. Niveaux, trois scénarios et ce qu'on ne fait pas.",
+    "tags": "us,eu,asia,commodity,macro,earnings,technique,trade-idea,etf,gold,mining,defense,healthcare,small-cap",
+    "grade": "",
+    "href": "/weekly/20260810/",
+    "date": "10 août 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "L'indice monte, la moitié du marché baisse",
     "desc": "Weekly DailyTickers du 3 au 7 août 2026. Le S&P a pris 1,1% pendant que 56% des actions baissaient. Le 30 ans à 5,275% touche son plus haut depuis juillet 2007, le dollar casse 100. Emploi américain vendredi, AMD et Caterpillar mardi, Palantir lundi soir. Plan complet, niveaux et 3 trades.",
     "tags": "us,eu,asia,crypto,commodity,macro,geopolitique,earnings,technique,trade-idea,etf,financials,semis,mining",
@@ -362,19 +375,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/weekly/20251229/",
     "date": "29 décembre 2025 - 3 janvier 2026"
-  },
-  {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Le choc de l'emploi qui n'en était pas un",
-    "desc": "Weekly DailyTickers du 10 au 14 août 2026. L'emploi américain de juillet recule de 23 000 postes contre +83 000 attendus — mais le privé crée 30 000 emplois et le public en perd 53 000, sur des facteurs saisonniers révisables. Le marché a basculé sur la composante la moins fiable. CPI mercredi, PPI jeudi, ventes de détail vendredi. Niveaux, trois scénarios et ce qu'on ne fait pas.",
-    "tags": "us,eu,asia,commodity,macro,earnings,technique,trade-idea,etf,gold,mining,defense,healthcare,small-cap",
-    "grade": "",
-    "href": "/weekly/20260810/",
-    "date": "10 août 2026"
   },
   {
     "type": "daily",
@@ -4834,6 +4834,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/status/",
     "date": "Updated continuously"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ RISK-ON · KO, XLE, T, CPR.MI, KWEB, TSCO, PGE.WA, CRM, CLF, AMP.MI",
+    "desc": "Le score de régime retenu est 0,81 sur l'échelle haussière, celui du moteur systematic, avec l'indice au-dessus de ses moyennes 50 (7 494,24), 100 (7 258,18) et 200 (7 050,03), un VIX à 14,90 sous sa moyenne 14 séances à 17,13, un score crédit de 0,59, un dollar à 1,00 et une liquidité à 0,50. Le cl...",
+    "tags": "us,eu,etf,energy,staples,healthcare,utilities,consumer,materials,comms,technique,macro,trade-idea",
+    "grade": "",
+    "href": "/scanner/20260811/",
+    "date": "Mardi 11 août 2026"
   },
   {
     "type": "scanner",
