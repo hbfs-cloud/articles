@@ -48,7 +48,12 @@ log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
 # ── C : suivi + sweep (ne portent que sur des trades déjà scellés) ───────────
 (
   node tools/update-tracking.js > /tmp/C.log 2>&1
-  node tools/sweep.js >> /tmp/C.log 2>&1
+  # --quick : 1m27 contre 6m47 en complet, pour des stats frozen_* IDENTIQUES
+  # (A/B du 2026-08-11, 14/14). 362 des 403 trades sont scellés et immuables par
+  # règle projet — les re-simuler chaque soir ne change rien. Le sweep COMPLET
+  # reste nécessaire une fois par semaine et après tout changement de config.
+  SWEEP_MODE="${SWEEP_MODE:---quick}"
+  node tools/sweep.js $SWEEP_MODE >> /tmp/C.log 2>&1
   echo "C rc=$?" > /tmp/C.status
 ) & PC=$!
 
