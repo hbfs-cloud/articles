@@ -4,16 +4,23 @@
 
 ## À VÉRIFIER EN PREMIER (deux risques concrets)
 
-### 1. Le scanner du 11/08 n'a pas de ligne de registre
-`scanner/20260811/` est **publié et en ligne**, mais son `--record` n'a jamais été passé.
-Sans elle, `/desk` le croit non publié et **le republiera** — page en double, notification
-en double. C'est le mode de panne que `/desk` identifie lui-même comme le plus probable :
-pas le contournement, l'oubli.
+### 1. ✅ RÉSOLU — le scanner EST enregistré
 
-```bash
-bash tools/desk-run.sh --verify                      # doit sortir en 0
-bash tools/desk-run.sh --record scanner --channels web,telegram   # si absent
-```
+Fausse alerte de ma part : le workflow avait bien passé le `--record` à 13h36.
+`{"type":"scanner","channels":["web"]}` est dans `data/publication-ledger.ndjson`.
+
+Nuance non corrigée volontairement : la ligne déclare `["web"]` alors que le Telegram du
+scanner a bien été envoyé. Ajouter une seconde ligne ferait un doublon ; réécrire la ligne
+violerait le caractère append-only du registre — mis en place précisément parce qu'un
+read-modify-write perdait des écritures. Un canal sous-déclaré est une imprécision ; une
+ligne réécrite est une brèche.
+
+⚠️ `desk-run.sh` est un script BASH. `node tools/desk-run.sh` échoue sur une SyntaxError
+trompeuse qui ressemble à un bug de l'outil.
+
+**Seul écart restant, et il ne doit PAS être enregistré :** `daily/20260811/index.html`
+existe sur disque mais n'a jamais été publié (dossier non suivi par git, aucun commit).
+L'enregistrer masquerait un produit réellement dû. Le fichier est un artefact orphelin.
 
 ### 2. Aucun email ne doit être parti
 Le workflow `desk-produire-20260811` (run `wf_24eac3d9-1dc`) tournait sans jeton
