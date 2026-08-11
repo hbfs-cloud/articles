@@ -25,6 +25,8 @@
 - [Sweep Psize History](feedback_sweep_psize_history.md) — Never assume portfolioSize is constant — check modes-config-history.json before comparing concurrent positions across time
 
 ## 🛰️ Scanner pipeline
+- [Un champ déclaré doit être calculé](feedback_declared_fields_must_be_computed.md) — tp1_atr_multiple recopié à la main était faux sur 5 lignes sur 7, et le gate qui le lit était mort-né parce que scanner-parser.js strippait le champ. Tester tout nouveau gate DANS LES DEUX SENS ; « absent » n'est pas « 0 ».
+- [Contrôle de dilution fail-closed pour les émetteurs européens](feedback_dilution_check_fail_closed_eu_issuers.md) — dilution_clear=false signifie « contrôle NON FAIT », jamais « risque faible » : la ligne ne se publie pas. .PA → eu_filings (AMF) ; .AS/.MC/.L/.BR → aucune source câblée, donc non publiables en éditorial.
 - [Bull 8x Parity](feedback_bull_8x_parity.md) — Bull mode 0 signals on quiet days is LEGITIMATE — high-conviction 8× volume gate, parity with systematic-tss. Never lower the threshold to force sig…
 - [Candlestick Bull Pipeline](feedback_candlestick_bull_pipeline.md) — The /scanner pipeline MUST run candlestick-scanner.js before sweep/gen-status-page, else the \"bull\" mode shows 0 signals
 - [Candlestick No Mcp](feedback_candlestick_no_mcp.md) — candlestick-scanner.js must use local universe file, never MCP RunScreener for ticker listing
