@@ -260,12 +260,27 @@ const RETRO_LOOKBACK_DAYS = 60;      // au-delà, c'est de l'archéologie, pas u
 
 function evalScanner() {
   const dir = `scanner/${compact(SESSION)}`;
-  if (!AFTER_CLOSE) return R({ due: false, reason: `il est ${P.hhmm} à Paris — la clôture de la séance visée n'existe pas encore (seuil 22h30)` });
+  // On ne scanne pas pour une séance DÉJÀ OUVERTE : les zones d'entrée sont
+  // calculées sur la clôture précédente et seraient périmées dès la lecture.
+  // Le garde-fou précédent exprimait cela par « il est plus de 22h30 », ce qui
+  // réduisait la production à 90 minutes par jour : passé minuit, la séance
+  // visée n'a toujours pas ouvert et le scan restait pourtant refusé. La bonne
+  // question n'est pas l'heure qu'il est, c'est si la séance visée a commencé.
+  const SESSION_OPEN_MIN = 15 * 60 + 30;          // 9h30 à New York, heure de Paris
+  if (P.date === SESSION && P.minutes >= SESSION_OPEN_MIN) {
+    return R({ due: false, reason: `la séance ${SESSION} est déjà ouverte (il est ${P.hhmm} à Paris) — un scan calculé sur la clôture de la veille serait périmé` });
+  }
+  if (P.date > SESSION) return R({ due: false, reason: `la séance ${SESSION} est passée` });
   if (nonEmptyJSON(`${dir}/data.json`)) return R({ due: false, reason: `${dir}/data.json existe déjà et n'est pas vide` });
-  const g = gate('scanner');
+  // L'anti-doublon du scanner porte sur la SÉANCE, pas sur l'horloge. Deux
+  // séances distinctes sont deux produits distincts : le scan du 11 publié à
+  // 13h36 ne doit pas interdire celui du 12 le soir même, ce que faisait la
+  // cadence de 12 h — mesuré le 11/08.
+  const trigger = `session:${SESSION}`;
+  const g = gate('scanner', trigger);
   if (!g.publish_web) return R({ due: false, reason: webReason(g) });
   return R({
-    due: true, reason: `séance ${SESSION} non scannée, cadence OK`,
+    due: true, reason: `séance ${SESSION} non scannée, cadence OK`, trigger,
     chain: 'V+D+T', artifacts: [`${dir}/index.html`],
     exec: ['bash tools/scan-parallel.sh ' + compact(SESSION) + ' ' + REFDATE + ' ' + SESSION,
            'bash tools/downstream-parallel.sh ' + compact(SESSION) + ' ' + SESSION],
