@@ -4,6 +4,7 @@
  * dtx-replay-cache — évite de rejouer chaque soir un backtest de 2021 à aujourd'hui.
  *
  *   node tools/dtx-replay-cache.js --dir <staging> --asof YYYY-MM-DD [--max-age-days 7] [--force]
+ *                                  [--plan plans/scanner-dtx.json]
  *
  * Un DtxReplay coûtait 300 à 348 s par portefeuille (393 s pour la vague complète le
  * 2026-08-10) — le plus gros poste de /scanner. Or il couvre 2021→aujourd'hui et
@@ -28,8 +29,38 @@ const has = n => process.argv.includes(n);
 const dir = arg('--dir'), asof = arg('--asof');
 const maxAgeDays = Number(arg('--max-age-days', 7));
 const force = has('--force');
+const planPath = arg('--plan');
 const CACHE = 'data/dtx-replay-cache';
-if (!dir || !asof) { console.error('Usage: --dir <staging> --asof YYYY-MM-DD [--max-age-days 7] [--force]'); process.exit(2); }
+if (!dir || !asof) { console.error('Usage: --dir <staging> --asof YYYY-MM-DD [--max-age-days 7] [--force] [--plan <plan.json>]'); process.exit(2); }
+
+/**
+ * Portefeuilles ATTENDUS, lus dans le plan de collecte.
+ *
+ * Sans ça, ce script n'inventorie que ce qu'il TROUVE déjà dans le staging : un
+ * portefeuille jamais rejoué n'y a aucun fichier, donc il n'est ni « frais » ni
+ * « périmé » — il est INVISIBLE. Le compte tombe à « 0 à rejouer », scan-parallel.sh
+ * bascule sur le plan decide-only, et le portefeuille n'est jamais collecté. C'est
+ * la boucle qui a laissé hvep et stockbox_pit sans backtest jusqu'au 2026-08-11
+ * (ingestion sautée à chaque run, collecte manuelle pour rattraper).
+ *
+ * Le plan est la seule source de vérité de ce qui DOIT exister. Drapeau optionnel :
+ * sans --plan, comportement strictement inchangé.
+ */
+function expectedFromPlan(p) {
+  if (!p) return [];
+  try {
+    const plan = JSON.parse(fs.readFileSync(p, 'utf8'));
+    return (plan.waves || [])
+      .flatMap(w => w.calls || [])
+      .filter(c => c && typeof c.as === 'string' && c.as.startsWith('replay_'))
+      .map(c => (c.args && c.args.portfolio) || c.as.slice('replay_'.length));
+  } catch (e) {
+    // Un plan illisible ne doit pas faire échouer le run : on retombe sur
+    // l'inventaire par fichiers, qui est le comportement historique.
+    console.error(`[replay-cache] plan illisible (${p}) : ${e.message} — inventaire par fichiers seul`);
+    return [];
+  }
+}
 
 function configFingerprint() {
   // Toute modification de config invalide le cache : un backtest calculé sur des
@@ -42,12 +73,22 @@ function configFingerprint() {
 }
 
 fs.mkdirSync(CACHE, { recursive: true });
+// Le staging d'une séance neuve n'existe pas encore. Sans ce mkdir, servir le cache
+// ou écrire _replay_needed.json lève ENOENT : le script sortait en 1, le fichier
+// manquait, et l'appelant retombait sur le plan complet PAR ACCIDENT. On préfère un
+// inventaire qui s'écrit toujours à une sécurité qui tient à un plantage.
+fs.mkdirSync(dir, { recursive: true });
 const fp = configFingerprint();
 const stale = [], fresh = [];
 
-for (const f of (fs.existsSync(dir) ? fs.readdirSync(dir) : [])) {
-  if (!f.startsWith('replay_') || !f.endsWith('.json')) continue;
-  const pf = f.slice('replay_'.length, -'.json'.length);
+// Union : ce qui traîne déjà dans le staging + ce que le plan exige. Un portefeuille
+// attendu mais sans cache ni fichier tombe en « aucun cache » donc en « à rejouer ».
+const found = (fs.existsSync(dir) ? fs.readdirSync(dir) : [])
+  .filter(f => f.startsWith('replay_') && f.endsWith('.json'))
+  .map(f => f.slice('replay_'.length, -'.json'.length));
+const portfolios = [...new Set([...found, ...expectedFromPlan(planPath)])];
+
+for (const pf of portfolios) {
   const cf = path.join(CACHE, `${pf}.json`);
   let meta = null;
   try { meta = JSON.parse(fs.readFileSync(cf + '.meta', 'utf8')); } catch { /* pas de cache */ }

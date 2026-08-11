@@ -39,14 +39,19 @@ log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
 (
   # Le cache décide AVANT la collecte quels backtests méritent d'être rejoués.
   # Un DtxReplay coûte 300-348 s et n'avance que d'une séance par jour.
-  node tools/dtx-replay-cache.js --dir "$DIR/_dtx" --asof "$ASOF" > /tmp/B-cache.log 2>&1 || true
-  PLAN=plans/scanner-dtx.json
+  # --plan : le cache doit connaître les 6 portefeuilles ATTENDUS, pas seulement ceux
+  # qui ont déjà un fichier dans le staging. Sans ça, un portefeuille jamais rejoué est
+  # invisible, le compte tombe à « 0 à rejouer », on bascule en decide-only et il n'est
+  # JAMAIS collecté (hvep et stockbox_pit, jusqu'au 2026-08-11).
+  DTX_PLAN=plans/scanner-dtx.json
+  node tools/dtx-replay-cache.js --dir "$DIR/_dtx" --asof "$ASOF" --plan "$DTX_PLAN" > /tmp/B-cache.log 2>&1 || true
+  PLAN="$DTX_PLAN"
   if [ -f "$DIR/_dtx/_replay_needed.json" ] && [ "$(node -e "try{console.log((require('./$DIR/_dtx/_replay_needed.json').replay||[]).length)}catch(e){console.log(99)}")" = "0" ]; then
     PLAN=plans/scanner-dtx-decide-only.json   # tous les backtests sont à jour
   fi
   node tools/collect.js --plan "$PLAN" --out "$DIR/_dtx" --quiet \
     --var refdate="$REF" --var asof="$ASOF" > /tmp/B.log 2>&1
-  node tools/dtx-replay-cache.js --dir "$DIR/_dtx" --asof "$ASOF" >> /tmp/B-cache.log 2>&1 || true
+  node tools/dtx-replay-cache.js --dir "$DIR/_dtx" --asof "$ASOF" --plan "$DTX_PLAN" >> /tmp/B-cache.log 2>&1 || true
   echo "B rc=$? (plan $PLAN)" > /tmp/B.status
 ) & PB=$!
 

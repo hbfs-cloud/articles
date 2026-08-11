@@ -96,11 +96,17 @@ const R = (o) => o; // lisibilité des retours
 // donner la même réponse quel que soit le répertoire d'où on l'appelle.
 const GATE = path.join(__dirname, 'publication-gate.js');
 const gateCache = new Map();
-function gate(type) {
-  if (gateCache.has(type)) return gateCache.get(type);
+// `trigger` : identité de l'événement qui rend le produit dû (voir --trigger du
+// gate). Sur les produits événementiels, c'est LUI qui fait l'anti-doublon, pas
+// l'horloge — deux jours déclencheurs consécutifs sont deux notes distinctes.
+function gate(type, trigger) {
+  const key = trigger ? `${type}\u0000${trigger}` : type;
+  if (gateCache.has(key)) return gateCache.get(key);
+  const args = [GATE, '--check', type, '--json'];
+  if (trigger) args.push('--trigger', trigger);
   let out;
   try {
-    out = execFileSync(process.execPath, [GATE, '--check', type, '--json'],
+    out = execFileSync(process.execPath, args,
       { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   } catch (e) {
     // exit 1 = « ne pas publier » : c'est une réponse, pas une panne. Le JSON est
@@ -109,7 +115,11 @@ function gate(type) {
     if (!out.trim()) { console.error(`[desk-plan] gate injoignable pour « ${type} » : ${e.message}`); process.exit(2); }
   }
   const r = JSON.parse(out);
-  gateCache.set(type, r);
+  gateCache.set(key, r);
+  // L'assemblage relit gateCache PAR TYPE pour publier cadence_h et détecter les
+  // cadences à 0. Sans cette seconde clé, un produit interrogé uniquement avec un
+  // déclencheur sortait avec cadence_h = null et échappait au contrôle.
+  if (!gateCache.has(type)) gateCache.set(type, r);
   return r;
 }
 // SEULS les motifs web ont leur place ici. Joindre `reasons` en bloc faisait
@@ -144,9 +154,43 @@ const socle = SOCLE_DIR ? {
   events: readJSON(path.join(SOCLE_DIR, 'economic_events.json')),
 } : null;
 
+// Le socle ne rend pas UNE forme mais trois, et itemsOf n'en lisait que deux :
+//   a) { items|events|earnings|calendar: [...] }        — outils « métier »
+//   b) [ … ]                                            — liste nue
+//   c) { results:[ { data:["date,time,event,…", "2026-08-12,…", …] } ] }
+// (c) est la forme de QueryData, donc celle de `economic_events` — le seul
+// fournisseur du déclencheur macro. itemsOf renvoyait [] pour elle : evalMacro
+// n'a jamais pu se déclencher UNE SEULE FOIS et annonçait « aucun événement de
+// tier 1 » avec le CPI du 12/08 écrit en toutes lettres dans le fichier qu'il
+// venait de lire. Un motif faux est pire qu'une erreur : il rassure.
+function csvToObjects(rows) {
+  const lines = rows.filter(r => typeof r === 'string' && r.trim());
+  if (lines.length < 2) return [];   // en-tête seul = zéro ligne, pas une erreur
+  const head = lines[0].split(',').map(s => s.trim());
+  return lines.slice(1).map(l => {
+    const cells = l.split(',');
+    const o = {};
+    head.forEach((h, i) => { o[h] = (cells[i] || '').trim(); });
+    // La colonne CSV s'appelle « event » ; les formes objet utilisent « name ».
+    // L'alias est posé ICI, une fois, plutôt qu'éparpillé en `|| e.event` chez
+    // chaque lecteur — c'est ce genre de dispersion qui laisse un lecteur derrière.
+    if (o.event && !o.name) o.name = o.event;
+    return o;
+  });
+}
 function itemsOf(d) {
   if (!d) return [];
   const box = d.data || d;
+  if (Array.isArray(box.results)) {
+    const out = [];
+    for (const r of box.results) {
+      const rows = r && r.data;
+      if (!Array.isArray(rows)) continue;
+      // QueryData rend soit du CSV brut (lignes = chaînes), soit des objets.
+      out.push(...(rows.every(x => typeof x === 'string') ? csvToObjects(rows) : rows));
+    }
+    return out;
+  }
   return box.items || box.events || box.earnings || box.calendar || (Array.isArray(box) ? box : []);
 }
 function flat(items) {
@@ -159,6 +203,30 @@ function flat(items) {
     else out.push(it);
   }
   return out;
+}
+
+// ── Détecteur de dérive de schéma ───────────────────────────────────────────
+// Un filtre qui rejette 100 % d'une entrée NON VIDE parce que le champ qu'il lit
+// n'existe sur AUCUN élément ne rend pas un résultat : il rend un motif faux.
+// C'est ce qui a tenu « earnings » à zéro sans que personne ne le voie — le socle
+// écrit `market_cap_b` (en MILLIARDS), le filtre lisait `market_cap`, la densité
+// valait donc toujours 0 et le plan affichait « densité insuffisante » comme si
+// c'était la saison qui était creuse. Le contrôle des cadences orphelines ne
+// pouvait rien y voir : il compare des NOMS, pas la capacité d'un évaluateur à
+// renvoyer `due`. Celui-ci compare le champ LU au champ PRÉSENT.
+const schemaGaps = [];
+function requireFields(label, items, groups) {
+  if (!items.length) return;   // entrée vide = absence de données, pas une dérive
+  const seen = new Set();
+  for (const it of items) {
+    if (it && typeof it === 'object') for (const k of Object.keys(it)) seen.add(k);
+  }
+  for (const g of groups) {
+    if (g.some(f => seen.has(f))) continue;
+    schemaGaps.push(`« ${label} » : ${items.length} élément(s) collecté(s), mais aucun ne porte de champ `
+      + `${g.map(f => `« ${f} »`).join(' ou ')}. Le filtre lit un champ que la donnée n'a pas — c'est une `
+      + `dérive de schéma, pas une absence de données, et le motif affiché plus haut est donc faux.`);
+  }
 }
 
 // ── Les produits ────────────────────────────────────────────────────────────
@@ -281,9 +349,19 @@ function evalEarnings() {
   // vide est exactement le « parce que c'est dans la liste » qu'on proscrit.
   if (!socle) return R({ due: false, pending: true, reason: 'densité de saison inconnue — à réévaluer une fois le socle collecté' });
   const lo = shift(P.date, -3), hi = shift(P.date, 3);
-  const rows = flat(itemsOf(socle.earnings)).filter(e => {
+  const raw = flat(itemsOf(socle.earnings));
+  requireFields('earnings', raw, [
+    ['date', 'report_date', 'earnings_date'],
+    ['market_cap', 'marketCap', 'market_cap_b', 'marketCapB'],
+  ]);
+  const rows = raw.filter(e => {
     const d = String(e.date || e.report_date || e.earnings_date || '').slice(0, 10);
-    const mc = Number(e.market_cap || e.marketCap || 0);
+    // L'UNITÉ fait partie du nom : le socle écrit `market_cap_b`, en MILLIARDS.
+    // Lire `market_cap` seul renvoyait 0 pour TOUS les événements, donc une
+    // densité éternellement nulle et un digest earnings qui ne pouvait jamais
+    // être dû — 11 des 13 publications du 11/08 franchissaient le seuil.
+    const mc = Number(e.market_cap || e.marketCap || 0)
+            || Number(e.market_cap_b || e.marketCapB || 0) * 1e9;
     return d >= lo && d <= hi && mc >= EARNINGS_MIN_MCAP;
   });
   if (rows.length < EARNINGS_DENSITY_MIN) {
@@ -293,21 +371,35 @@ function evalEarnings() {
 }
 
 function evalMacro() {
-  // Événementiel pur : dû à J-1 d'un événement de tier 1. Le gate est quand même
-  // interrogé — pas pour la cadence (elle vaut 0), mais pour que l'absence de
-  // barrière soit REMONTÉE dans config_gaps au lieu de passer inaperçue.
-  const g = gate('macro');
-  if (!g.publish_web) return R({ due: false, reason: webReason(g) });
+  // Événementiel pur : dû à J-1 d'un événement de tier 1. Le gate est interrogé
+  // une première fois SANS déclencheur, uniquement pour que sa cadence entre dans
+  // gateCache (config_gaps la lit) — son verdict n'est pas utilisé ici : sans nom
+  // d'événement il ne saurait que comparer des horloges, et c'est précisément ce
+  // qu'on ne veut pas comme barrière sur ce produit.
+  gate('macro');
   if (!socle) return R({ due: false, pending: true, reason: 'calendrier économique non collecté — à réévaluer après le socle' });
   const target = shift(P.date, 1);
-  const hits = flat(itemsOf(socle.events)).filter(e => {
+  const raw = flat(itemsOf(socle.events));
+  requireFields('macro', raw, [
+    ['date', 'event_date', 'datetime'],
+    ['name', 'event', 'title'],
+  ]);
+  const hits = raw.filter(e => {
     const d = String(e.date || e.event_date || e.datetime || '').slice(0, 10);
     return d === target && TIER1.test(String(e.name || e.event || e.title || ''));
   });
   if (!hits.length) return R({ due: false, reason: `aucun événement de tier 1 le ${target}` });
+  // Identité du déclencheur = date visée + jetons TIER1 retenus, triés. On prend
+  // le JETON (CPI, FOMC…) et non le libellé complet : un intitulé qui change de
+  // formulation d'un mois à l'autre produirait un déclencheur « neuf » pour le
+  // même événement, donc un doublon. Le tri rend la chaîne stable entre deux runs.
+  const tokens = [...new Set(hits.map(h => TIER1.exec(String(h.name || h.event || h.title))[1].toUpperCase()))].sort();
+  const trigger = `${target}:${tokens.join('+')}`;
+  const g = gate('macro', trigger);
+  if (!g.publish_web) return R({ due: false, reason: webReason(g) });
   return R({
     due: true, reason: `tier 1 le ${target} : ${hits.map(h => h.name || h.event || h.title).join(', ')}`,
-    chain: 'S', plans: [],
+    chain: 'S', plans: [], trigger, vars: { target },
     // Leçon macro-date-verify : le calendrier donne le jour, il ne donne ni
     // l'heure exacte ni le consensus. Les deux se vérifient avant d'écrire.
     llm: 'vérifier date ET consensus à la source avant toute production',
@@ -334,13 +426,19 @@ function finraWindow(iso) {
 }
 
 function evalSqueeze() {
-  const g = gate('squeeze');
-  if (!g.publish_web) return R({ due: false, reason: webReason(g) });
+  gate('squeeze');   // pour cadence_h / config_gaps — verdict non utilisé, cf. evalMacro
   const w = finraWindow(P.date);
   if (!w) return R({ due: false, reason: 'hors fenêtre de publication FINRA (règlement bimensuel + ~8 séances)' });
+  // La DATE DE RÈGLEMENT est l'identité naturelle de la donnée : les ~7 jours
+  // d'une même fenêtre la partagent, et deux fenêtres consécutives ne la
+  // partagent jamais. Une horloge, elle, ne peut pas couvrir les 7 jours sans
+  // risquer de mordre sur la publication FINRA suivante, qui est une donnée neuve.
+  const trigger = `finra:${w.settlement}`;
+  const g = gate('squeeze', trigger);
+  if (!g.publish_web) return R({ due: false, reason: webReason(g) });
   return R({
     due: true, reason: `données FINRA du ${w.settlement} publiées le ${w.published}`,
-    chain: 'S', plans: ['squeeze'], vars: w,
+    chain: 'S', plans: ['squeeze'], vars: w, trigger,
     blocker: 'plans/squeeze.json exige $symbols et aucune charnière ne le produit — vivier à fournir avant lancement',
   });
 }
@@ -402,6 +500,10 @@ for (const [type, fn] of PRODUCTS) {
     type, reason: r.reason, chain: r.chain || null, plans: r.plans || [],
     artifacts: r.artifacts || [], vars: r.vars || {}, variant: r.variant || null,
     llm: r.llm || null, blocker: r.blocker || null,
+    // Le déclencheur DOIT ressortir dans le plan : il est l'identité que le
+    // `--record` de fin de course devra recopier. Enregistré sans lui, le produit
+    // repasse dû demain pour le même événement.
+    trigger: r.trigger || null,
     cadence_h: g ? g.cadence_h : null,
     // Distribution : ce que /desk a le droit de faire de ce produit. send_email
     // est FAUX ici par construction — voir l'en-tête.
@@ -420,9 +522,33 @@ for (const [type] of PRODUCTS) {
   const g = gateCache.get(type);
   if (g && g.cadence_h === 0) configGaps.push(`« ${type} » absent de CADENCE_H dans publication-gate.js — aucune barrière de cadence, seul le déclencheur événementiel de desk-plan le retient`);
 }
-if (!exists('tools/insiders-digest.js')) {
-  configGaps.push('« insiders » a une cadence de 20 h dans publication-gate.js mais AUCUN producteur n\'existe (ni commande, ni skill, ni plan). Une cadence qui pointe vers rien est un mensonge dans la config : écrire le producteur (la donnée insiders_7d est déjà dans le socle, coût marginal nul) ou supprimer la clé.');
+// Le trou SYMÉTRIQUE : une cadence déclarée dans publication-gate.js que
+// personne ne produit. C'est le cas qu'a occupé « insiders » — 20 h de cadence,
+// zéro producteur — et il était détecté par un test en dur sur un seul nom, qui
+// n'aurait rien vu du suivant. On énumère donc la table réelle du gate (via
+// --cadences, jamais une copie) et on la confronte à ce que /desk connaît :
+// produits, exclusions assumées, propositions. Ce qui n'est dans aucun des trois
+// est une cadence orpheline, et une cadence qui garde une porte inexistante
+// n'est pas une sécurité, c'est une affirmation fausse dans la config.
+const KNOWN_TYPES = new Set([
+  ...PRODUCTS.map(([t]) => t), ...EXCLUDED.map(([t]) => t), ...PROPOSED.map(([t]) => t),
+]);
+try {
+  const declared = JSON.parse(execFileSync(process.execPath, [GATE, '--cadences', '--json'],
+    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }));
+  for (const { type, cadence_h } of declared) {
+    if (KNOWN_TYPES.has(type)) continue;
+    configGaps.push(`« ${type} » a une cadence de ${cadence_h} h dans publication-gate.js mais /desk ne connaît aucun produit de ce nom (ni PRODUCTS, ni EXCLUDED, ni PROPOSED). Une cadence qui pointe vers rien est un mensonge dans la config : écrire le producteur, ou retirer la clé.`);
+  }
+} catch (e) {
+  // Un gate trop ancien pour connaître --cadences ne doit pas faire tomber le
+  // plan : on perd ce contrôle-là, on le dit, le reste continue.
+  configGaps.push(`contrôle des cadences orphelines impossible : publication-gate.js --cadences a échoué (${e.message.split('\n')[0]})`);
 }
+// Les dérives de schéma relevées pendant l'évaluation sont des trous de config au
+// même titre : une cadence orpheline garde une porte qui n'existe pas, un filtre
+// inopérant ferme une porte qui existe. Les deux sont des affirmations fausses.
+configGaps.push(...schemaGaps);
 
 const plan = {
   generated_at: NOW.toISOString(),
@@ -464,6 +590,10 @@ if (has('--json')) {
   if (!due.length) console.log('    — rien. C\'est un résultat valide, pas une panne.');
   for (const d of due) {
     console.log(`    ${pad(d.type)} ${d.reason}${d.variant ? ` [${d.variant}]` : ''}`);
+    // Affiché avec la commande exacte : un déclencheur qu'on doit reconstituer de
+    // tête finit par être recopié de travers, et un déclencheur de travers ne
+    // bloque pas le doublon de demain.
+    if (d.trigger) console.log(`               ↳ à l'enregistrement : --record ${d.type} --channels web --trigger ${d.trigger}`);
     if (d.llm) console.log(`               ↳ modèle : ${d.llm}`);
     if (d.blocker) console.log(`               ⚠ BLOQUANT : ${d.blocker}`);
   }

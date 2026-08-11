@@ -109,12 +109,27 @@ vivier 104 s → 7,5 s · collecte `/desk` complète en 52 s.
    encore matérialisé, le workflow actuel appelle encore l'ancien downstream séquentiel.
 2. **Tester le verrou de `downstream-split.sh`** — `timeout` n'existe pas sur macOS, le test
    n'a pas pu tourner. Utiliser `gtimeout` ou une boucle en arrière-plan.
-3. **Écrire le producteur `insiders`** — `publication-gate.js` lui donne une cadence de 20 h
-   mais aucun producteur n'existe. La donnée `insiders_7d` est déjà dans le socle, coût
-   marginal quasi nul. Sinon supprimer la clé : une cadence qui pointe vers rien est un
-   mensonge dans la config.
-4. **`macro` et `squeeze` absents de `CADENCE_H`** — seul leur déclencheur événementiel les
-   retient, pas de barrière anti-doublon.
+3. ✅ **RÉSOLU (11/08) — pas de producteur `insiders`, la clé est SUPPRIMÉE.** Décision
+   prise après avoir mesuré `GetInsiderActivity` au lieu de la supposer : 0 à 2 noms par
+   séance (1 le 10/08, 2 à 12h37, 0 à 15h25), 100 symboles couverts sur 944 — l'outil
+   qualifie lui-même un résultat vide de « coverage statement » —, **zéro achat** sur
+   toutes les observations, et un agrégat qui étiquette « net_selling −158 M$ » une
+   levée-revente d'options le jour même (CVX/Hess, 03/08). Le signal qui vaut quelque
+   chose, le cluster-buy code P, a déjà son producteur : `tools/filings-scanner.js`
+   (stratégie InsiderCluster → `filings_pool`). Ne pas remettre la clé, ne pas ajouter de
+   bloc « initiés » au daily. Détail : `.claude/memory/project_pas_de_produit_insiders.md`.
+   Au passage, le contrôle en dur de `desk-plan.js` est devenu générique : il interroge
+   `publication-gate.js --cadences --json` et signale TOUTE cadence orpheline.
+4. ✅ **RÉSOLU (11/08) — `macro: 36` et `squeeze: 168` ajoutés à `CADENCE_H`.** Les deux
+   valeurs sont calées sur l'espacement MESURÉ de leur déclencheur, pas choisies au doigt
+   mouillé. `macro` : calendrier réel 13/02/2026 → 05/02/2027 (219 événements, 44 tier 1 sur
+   42 jours), écarts min 1 j / médiane 5 j — 36 h coupe les 5 paires à 1 j (FOMC→PCE,
+   FOMC→CPI : une seule fenêtre de positionnement) et laisse passer les 48 h ; 48 h donnerait
+   le même résultat à heure fixe mais perd 2 notes dès que le run dérive de 23h30 à 21h00,
+   72 h avale 4 NFP. `squeeze` : 24 fenêtres FINRA en 2026, 119 jours déclencheurs, jusqu'à
+   7 publications d'affilée du même jeu — 168 h rend exactement 1 publication par fenêtre,
+   et reste sous les 216 h qui bloqueraient la publication FINRA suivante. Détail :
+   `.claude/memory/project_cadences_macro_squeeze.md`.
 5. **Compléter `plans/scanner-dtx.json`** — il ne demande des backtests que pour 4
    portefeuilles sur 6. `hvep` et `stockbox_pit` ont vu leur ingestion sautée (correctement,
    le garde-fou a joué) et ont dû être collectés à la main.

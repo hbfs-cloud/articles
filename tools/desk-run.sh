@@ -6,7 +6,7 @@
 #   bash tools/desk-run.sh                      # plan + collecte + gates
 #   bash tools/desk-run.sh --plan-only          # décide, ne collecte rien
 #   bash tools/desk-run.sh --verify             # rapproche disque et registre
-#   bash tools/desk-run.sh --record <type> --channels web,telegram
+#   bash tools/desk-run.sh --record <type> --channels web,telegram [--trigger <id>]
 #   bash tools/desk-run.sh --authorize-email <type> --materiality N --evidence "…"
 #
 # ── Ce que ce script ne fait pas ────────────────────────────────────────────
@@ -59,8 +59,16 @@ OVERVIEW_DEADLINE_S="${OVERVIEW_DEADLINE_S:-240}"
 if [ "${1:-}" = "--record" ]; then
   TYPE="${2:?usage: --record <type> --channels web,telegram}"
   shift 2
-  CH=""
-  while [ $# -gt 0 ]; do case "$1" in --channels) CH="${2:-}"; shift 2;; *) shift;; esac; done
+  CH=""; TRIG=""
+  while [ $# -gt 0 ]; do case "$1" in
+    --channels) CH="${2:-}"; shift 2;;
+    # --trigger : identité de l'événement qui a rendu le produit dû (macro,
+    # squeeze). Elle voyage jusqu'au registre parce que c'est ELLE, et non
+    # l'horodatage, que le --check du lendemain confrontera. desk-plan l'imprime
+    # avec la commande complète, il n'y a rien à reconstituer.
+    --trigger) TRIG="${2:-}"; shift 2;;
+    *) shift;;
+  esac; done
   [ -n "$CH" ] || die "--channels requis"
   # Normalisation AVANT le test. Le filtre littéral laissait passer « web, email »
   # (espace) et « web,EMAIL » (casse) : le premier enregistrait un email par le
@@ -68,6 +76,9 @@ if [ "${1:-}" = "--record" ]; then
   # pas. Le gate normalise de la même façon — les deux doivent voir la même chaîne.
   CH=$(printf '%s' "$CH" | tr 'A-Z' 'a-z' | tr -d '[:space:]')
   case ",$CH," in *,email,*) die "--record ne peut pas enregistrer un email. L'email passe par --authorize-email, qui vérifie la matérialité et le quota sous verrou.";; esac
+  if [ -n "$TRIG" ]; then
+    exec node tools/publication-gate.js --record "$TYPE" --channels "$CH" --trigger "$TRIG"
+  fi
   exec node tools/publication-gate.js --record "$TYPE" --channels "$CH"
 fi
 

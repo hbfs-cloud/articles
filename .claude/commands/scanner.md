@@ -268,9 +268,14 @@ Phase 8   bash tools/downstream-split.sh distribute <DATE>  → image, push, Tel
 - `distribute` = `publish-daily-card.sh --no-sweep --no-telegram` (image + QA + push).
   **Après le verdict, jamais avant.** Coût d'un panel qui refuse : recalculer des fichiers
   locaux, 1 à 2 min. On ne retire pas un message déjà parti.
-- **Ce que `compute` ne contient PAS, et qui reste à lancer avant lui** (une seule fois, pas
-  rejoué après une correction, car indépendant du contenu publié) : `update-tracking.js`,
-  `sweep.js --quick`, puis `refresh-risk-metrics.js --ingest /tmp/risk-mcp.json`.
+- **Ce que `compute` ne contient PAS, et pourquoi** : `update-tracking.js` et `sweep.js --quick`
+  tournent déjà dans la **chaîne C de `scan-parallel.sh`** (Phase 1), en parallèle du vivier.
+  Les relancer ici rejouerait 1 min 27 de sweep pour un résultat identique.
+- **Ce que `compute` fait et que tu dois préparer** : il ingère `/tmp/risk-mcp.json`, que **toi
+  seul** peux produire (le MCP est en OAuth2, un subprocess `node` ne l'atteint pas). Produis-le
+  AVANT la Phase 5A. Si `data/risk-snapshots.json` a plus de 12 h, **`compute` échoue** au lieu
+  de publier la VaR de la veille en silence — c'est voulu, ne le contourne pas avec
+  `RISK_MAX_AGE_H` sans savoir pourquoi tu le fais.
 
 **Rejouer `compute` ou non — un seul critère, et il est mécanique.** Le constat du panel
 touche-t-il `data.json` ou `signals.json` ?
@@ -293,10 +298,16 @@ ils lisent et rapportent, l'arbitrage corrige. La seule clé que `compute` réé
 
 **⚡ Doctrine « le MCP fait foi » (OAuth2, ZÉRO token) : un subprocess `node` NE PEUT PAS appeler le MCP. Donc l'AGENT (toi) appelle le MCP, écrit des JSON, et les scripts INGÈRENT. Ça évite les 3 bugs d'aujourd'hui (risk-metrics auth-fail, Telegram token-fail, sweep re-run redondant).**
 
-Détail des commandes que `downstream-split.sh` enchaîne pour toi (le sweep tourne UNE SEULE fois — `publish-daily-card.sh` reçoit `--no-sweep`) :
+Détail du downstream, **avec qui lance quoi**. Ce bloc n'est PAS une liste à taper : c'est la
+carte de ce que les scripts enchaînent, annotée du script responsable. Le sweep tourne UNE
+SEULE fois — `publish-daily-card.sh` reçoit `--no-sweep`.
+
 ```bash
+# ── chaîne C de scan-parallel.sh (Phase 1), PAS downstream-split ─────────────
 node tools/update-tracking.js                                                # Yahoo prices → exit triggers (pas de MCP)
-node tools/sweep.js                                                          # Append-only: closed trades + advisor_* (LENT ~5-7 min, CPU-bound — normal)
+node tools/sweep.js --quick                                                  # Append-only: closed trades + advisor_* (1m27 en --quick, 6m47 en complet)
+
+# ── downstream-split.sh compute ─────────────────────────────────────────────
 
 # ── refresh-risk-metrics : VOIE --ingest (MCP connecté). NE PAS utiliser MCP_GATEWAY_URL (auth-fail
 #    "Authorization required", pas du JSON). L'AGENT produit risk-mcp.json AVANT :
@@ -313,6 +324,7 @@ node tools/gen-api.js                                                        # R
 node tools/daily-synthesis.js                                               # Per-mode synthesis: entries / exits / equity move
 node tools/dtx-pool-bridge.js --folder YYYYMMDD --date YYYY-MM-DD            # dtx CREATE (6 modes systematic) → dtx_pool[] dans signals.json
 
+# ── downstream-split.sh distribute ──────────────────────────────────────────
 # Push + QA SANS notif token-based ; le sweep n'est PAS relancé :
 bash tools/publish-daily-card.sh --no-sweep --no-telegram                    # image + git push + QA (Step 7)
 

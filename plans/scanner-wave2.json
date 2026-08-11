@@ -1,25 +1,280 @@
 {
   "artifact": "scanner/<DATE>/signals.json",
   "waves": [
-    { "name": "enrichissement", "calls": [
-      { "as": "dilution_b1", "server": "marketdata", "tool": "QueryData", "args": { "types": "sec_filings,flags", "symbols": "$batch1", "end_date": "$refdate", "days": 180 }, "freshness": { "max_age_h": 168, "required": true, "note": "anti-dilution v2 — BLOQUANT (leçon INDO)" } },
-      { "as": "dilution_b2", "server": "marketdata", "tool": "QueryData", "args": { "types": "sec_filings,flags", "symbols": "$batch2", "end_date": "$refdate", "days": 180 }, "freshness": { "max_age_h": 168, "required": true } },
-      { "as": "dilution_b3", "server": "marketdata", "tool": "QueryData", "args": { "types": "sec_filings,flags", "symbols": "$batch3", "end_date": "$refdate", "days": 180 }, "freshness": { "max_age_h": 168, "required": true } },
-      { "as": "dilution_b4", "server": "marketdata", "tool": "QueryData", "args": { "types": "sec_filings,flags", "symbols": "$batch4", "end_date": "$refdate", "days": 180 }, "freshness": { "max_age_h": 168, "required": true } },
-      { "as": "dilution_b5", "server": "marketdata", "tool": "QueryData", "args": { "types": "sec_filings,flags", "symbols": "$batch5", "end_date": "$refdate", "days": 180 }, "freshness": { "max_age_h": 168, "required": true } },
-      { "as": "tech_b1", "server": "marketdata", "tool": "QueryData", "args": { "types": "quote,technicals,support_resistance,trading_signals", "symbols": "$batch1", "end_date": "$refdate" }, "freshness": { "max_age_h": 24, "required": true } },
-      { "as": "tech_b2", "server": "marketdata", "tool": "QueryData", "args": { "types": "quote,technicals,support_resistance,trading_signals", "symbols": "$batch2", "end_date": "$refdate" }, "freshness": { "max_age_h": 24, "required": true } },
-      { "as": "tech_b3", "server": "marketdata", "tool": "QueryData", "args": { "types": "quote,technicals,support_resistance,trading_signals", "symbols": "$batch3", "end_date": "$refdate" }, "freshness": { "max_age_h": 24, "required": true } },
-      { "as": "tech_b4", "server": "marketdata", "tool": "QueryData", "args": { "types": "quote,technicals,support_resistance,trading_signals", "symbols": "$batch4", "end_date": "$refdate" }, "freshness": { "max_age_h": 24, "required": true } },
-      { "as": "tech_b5", "server": "marketdata", "tool": "QueryData", "args": { "types": "quote,technicals,support_resistance,trading_signals", "symbols": "$batch5", "end_date": "$refdate" }, "freshness": { "max_age_h": 24, "required": true } },
-      { "as": "flow_b1", "server": "marketdata", "tool": "QueryData", "args": { "types": "insider_transactions,dark_pool,unusual_options,sentiment_overall", "symbols": "$batch1", "days": 90 }, "freshness": { "max_age_h": 96, "required": false } },
-      { "as": "flow_b2", "server": "marketdata", "tool": "QueryData", "args": { "types": "insider_transactions,dark_pool,unusual_options,sentiment_overall", "symbols": "$batch2", "days": 90 }, "freshness": { "max_age_h": 96, "required": false } },
-      { "as": "flow_b3", "server": "marketdata", "tool": "QueryData", "args": { "types": "insider_transactions,dark_pool,unusual_options,sentiment_overall", "symbols": "$batch3", "days": 90 }, "freshness": { "max_age_h": 96, "required": false } },
-      { "as": "bars_b1", "server": "marketdata", "tool": "QueryData", "args": { "types": "bars_daily", "symbols": "$batch1", "end_date": "$refdate", "limit": 120 }, "freshness": { "max_age_h": 24, "required": true } },
-      { "as": "bars_b2", "server": "marketdata", "tool": "QueryData", "args": { "types": "bars_daily", "symbols": "$batch2", "end_date": "$refdate", "limit": 120 }, "freshness": { "max_age_h": 24, "required": true } },
-      { "as": "bars_b3", "server": "marketdata", "tool": "QueryData", "args": { "types": "bars_daily", "symbols": "$batch3", "end_date": "$refdate", "limit": 120 }, "freshness": { "max_age_h": 24, "required": true } },
-      { "as": "bars_b4", "server": "marketdata", "tool": "QueryData", "args": { "types": "bars_daily", "symbols": "$batch4", "end_date": "$refdate", "limit": 120 }, "freshness": { "max_age_h": 24, "required": true } },
-      { "as": "bars_b5", "server": "marketdata", "tool": "QueryData", "args": { "types": "bars_daily", "symbols": "$batch5", "end_date": "$refdate", "limit": 120 }, "freshness": { "max_age_h": 24, "required": true } }
-    ] }
+    {
+      "name": "enrichissement-gouvernant",
+      "calls": [
+        {
+          "as": "dilution_b1",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "sec_filings,flags",
+            "symbols": "$batch1",
+            "end_date": "$refdate",
+            "days": 180
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true,
+            "note": "anti-dilution v2 — BLOQUANT (leçon INDO)"
+          }
+        },
+        {
+          "as": "dilution_b2",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "sec_filings,flags",
+            "symbols": "$batch2",
+            "end_date": "$refdate",
+            "days": 180
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "dilution_b3",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "sec_filings,flags",
+            "symbols": "$batch3",
+            "end_date": "$refdate",
+            "days": 180
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "dilution_b4",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "sec_filings,flags",
+            "symbols": "$batch4",
+            "end_date": "$refdate",
+            "days": 180
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "dilution_b5",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "sec_filings,flags",
+            "symbols": "$batch5",
+            "end_date": "$refdate",
+            "days": 180
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "tech_b1",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "quote,technicals,support_resistance,trading_signals",
+            "symbols": "$batch1",
+            "end_date": "$refdate"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "tech_b2",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "quote,technicals,support_resistance,trading_signals",
+            "symbols": "$batch2",
+            "end_date": "$refdate"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "tech_b3",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "quote,technicals,support_resistance,trading_signals",
+            "symbols": "$batch3",
+            "end_date": "$refdate"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "tech_b4",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "quote,technicals,support_resistance,trading_signals",
+            "symbols": "$batch4",
+            "end_date": "$refdate"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "tech_b5",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "quote,technicals,support_resistance,trading_signals",
+            "symbols": "$batch5",
+            "end_date": "$refdate"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "bars_b1",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$batch1",
+            "end_date": "$refdate",
+            "limit": 120
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "bars_b2",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$batch2",
+            "end_date": "$refdate",
+            "limit": 120
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "bars_b3",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$batch3",
+            "end_date": "$refdate",
+            "limit": 120
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "bars_b4",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$batch4",
+            "end_date": "$refdate",
+            "limit": 120
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "bars_b5",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$batch5",
+            "end_date": "$refdate",
+            "limit": 120
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "flux-detache",
+      "detached": true,
+      "deadline_ms": 45000,
+      "calls": [
+        {
+          "as": "flow_b1",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "insider_transactions,dark_pool,unusual_options,sentiment_overall",
+            "symbols": "$batch1",
+            "days": 90
+          },
+          "freshness": {
+            "max_age_h": 96,
+            "required": false
+          }
+        },
+        {
+          "as": "flow_b2",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "insider_transactions,dark_pool,unusual_options,sentiment_overall",
+            "symbols": "$batch2",
+            "days": 90
+          },
+          "freshness": {
+            "max_age_h": 96,
+            "required": false
+          }
+        },
+        {
+          "as": "flow_b3",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "insider_transactions,dark_pool,unusual_options,sentiment_overall",
+            "symbols": "$batch3",
+            "days": 90
+          },
+          "freshness": {
+            "max_age_h": 96,
+            "required": false
+          }
+        }
+      ]
+    }
   ]
 }

@@ -1,5 +1,6 @@
 {
   "artifact": "data/dtx/<mode>.json",
+  "note": "6 decides ET 6 replays — un par portefeuille de PORTFOLIO_TO_MODE (tools/dtx-scan.js). La symetrie n'est pas cosmetique : downstream-split.sh n'ingere un portefeuille que si decide_<pf>.json ET replay_<pf>.json existent (sans replay, metrics/equity vides et le dashboard retombe sur un placeholder fige, incident du 23/07). Le plan n'en demandait que 4 : hvep et stockbox_pit etaient sautes a chaque run et collectes a la main. job_max_ms=900000 sur les replays parce que le plafond par defaut de collect.js est 300000 et que replay_ep a mis 348141 ms le 2026-08-11 — le job async etait tue avant sa fin. Meme plafond pour les six : les books multi-poches (book_honest, hvep) rejouent 4 strategies, et un plafond plus haut sur un seul appel ne ferait qu'allonger le blocage de la chaine dtx sur un job pendu.",
   "waves": [
     {
       "name": "dtx-decide-replay",
@@ -196,11 +197,41 @@
           "job_max_ms": 900000
         },
         {
+          "as": "replay_stockbox_pit",
+          "server": "systematic",
+          "tool": "DtxReplay",
+          "args": {
+            "portfolio": "stockbox_pit",
+            "from": "2021-01-01",
+            "to": "$asof"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": false
+          },
+          "job_max_ms": 900000
+        },
+        {
           "as": "replay_book_honest",
           "server": "systematic",
           "tool": "DtxReplay",
           "args": {
             "portfolio": "book_honest",
+            "from": "2021-01-01",
+            "to": "$asof"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": false
+          },
+          "job_max_ms": 900000
+        },
+        {
+          "as": "replay_hvep",
+          "server": "systematic",
+          "tool": "DtxReplay",
+          "args": {
+            "portfolio": "hvep",
             "from": "2021-01-01",
             "to": "$asof"
           },

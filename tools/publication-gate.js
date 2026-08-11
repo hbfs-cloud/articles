@@ -4,8 +4,9 @@
  * publication-gate — décide SI et COMMENT un contenu sort, et surtout s'il mérite
  * un EMAIL.
  *
- *   node tools/publication-gate.js --check <type> [--json]
- *   node tools/publication-gate.js --record <type> --channels web,telegram
+ *   node tools/publication-gate.js --check <type> [--trigger <id>] [--json]
+ *   node tools/publication-gate.js --record <type> --channels web,telegram [--trigger <id>]
+ *   node tools/publication-gate.js --cadences [--json]
  *   node tools/publication-gate.js --authorize <type> --materiality N --evidence "…"
  *   node tools/publication-gate.js --compact          (maintenance hors ligne)
  *
@@ -19,8 +20,11 @@
  * l'EXCEPTION, à mériter.
  *
  * ── Trois barrières cumulatives ─────────────────────────────────────────────
- * 1. CADENCE — chaque type a sa fréquence propre. Un daily deux fois dans la
- *    journée, un weekly deux fois dans la semaine : refusés.
+ * 1. ANTI-DOUBLON — par défaut une CADENCE horaire par type (un daily deux fois
+ *    dans la journée, un weekly deux fois dans la semaine : refusés). Pour les
+ *    produits événementiels, l'appelant passe `--trigger <id>` (l'événement, pas
+ *    l'heure) : le gate refuse alors la republication du MÊME déclencheur et
+ *    laisse passer le suivant, même s'il tombe le lendemain.
  * 2. QUOTA EMAIL — au plus 1 email par 24 h, TOUS types confondus. C'est la
  *    règle anti-spam demandée : pas « un par type », un tout court.
  * 3. MATÉRIALITÉ — l'email exige un score ENTIER 0-100 ≥ 70 **et** une
@@ -68,10 +72,52 @@ const CADENCE_H = {
   analyse: 0,     // à la demande, pas de cadence imposée
   retro: 144,
   rotation: 144,
-  insiders: 20,
   earnings: 20,
   signals: 12,
+  // macro et squeeze ne portaient AUCUNE cadence jusqu'au 11/08 : un type absent
+  // de cette table sort à 0, et 0 fait dire oui au gate à chaque appel — pas une
+  // autorisation, une barrière absente. Mais pour ces deux-là, la cadence n'est
+  // qu'un FILET : leur vraie barrière est l'identité du déclencheur (--trigger,
+  // voir plus bas). Une horloge ne sait pas distinguer « même événement republié »
+  // de « événement suivant », et sur ces deux produits les deux cas sont à un jour
+  // d'écart. Les valeurs ci-dessous ne servent donc qu'aux appelants qui ne
+  // fournissent PAS de déclencheur ; elles sont volontairement larges.
+  macro: 36,
+  // Déclencheur (desk-plan/evalMacro) : J-1 d'un événement de tier 1. Mesuré le
+  // 2026-08-11 sur le calendrier RÉEL (QueryData economic_events, days=365 →
+  // 396 événements du 14/08/2025 au 06/08/2027) : le filtre TIER1 retient
+  // 68 événements sur 66 jours déclencheurs distincts. Écarts : min 1 j,
+  // médiane 5 j, max 31 j — dont 8 paires à 1 jour. Ces 8 paires sont la raison
+  // pour laquelle la cadence NE DOIT PAS être la barrière principale : trois
+  // d'entre elles sont FOMC→PCE (29/07), FOMC→PCE (28/10) et FOMC→CPI (09/12),
+  // où la seconde note est la SEULE qui puisse repositionner après la décision de
+  // la Fed et avant le chiffre d'inflation. La supprimer au motif qu'elle suit de
+  // 24 h, c'est jeter la note la plus utile de la séquence. Avec --trigger, ces
+  // huit-là passent (déclencheurs distincts) et un second run du même soir est
+  // refusé (même déclencheur), ce qu'aucune durée ne sait faire.
+  squeeze: 168,
+  // Déclencheur (desk-plan/evalSqueeze) : fenêtre FINRA, soit ~8 séances après
+  // chaque règlement bimensuel, ouverte 3 séances de plus. Mesuré en interrogeant
+  // desk-plan --only squeeze sur les 365 jours de 2026 : 24 fenêtres, 119 jours
+  // déclencheurs — donc jusqu'à 7 publications d'affilée du MÊME jeu de données
+  // FINRA. Ici encore, l'identité vaut mieux que l'horloge : le déclencheur est la
+  // DATE DE RÈGLEMENT FINRA, et deux jours de la même fenêtre la partagent. 168 h
+  // reste comme filet pour un appelant sans --trigger : au-dessus des 144 h de la
+  // fenêtre la plus large, en dessous des 216 h qui bloqueraient la publication
+  // FINRA suivante — laquelle est une donnée NEUVE.
 };
+// « insiders » a porté une cadence de 20 h ici jusqu'au 11/08 sans qu'aucun
+// producteur n'existe. Clé RETIRÉE, et il ne faut pas la remettre : mesuré ce
+// jour-là sur GetInsiderActivity, le balayage marché rend 0 à 2 noms par séance
+// (100 symboles couverts sur 944, l'outil qualifie lui-même un résultat vide de
+// « coverage statement »), 100 % de ventes, zéro achat — et il étiquette
+// « net_selling -158 M$ » ce qui est en réalité une levée d'options revendue le
+// jour même (CVX/Hess, 03/08). Un digest bâti là-dessus publierait du bruit et
+// des contresens. Le signal insider qui vaut quelque chose — le cluster-buy
+// code P, ≥2 acheteurs distincts — a DÉJÀ son producteur : tools/filings-scanner.js
+// (stratégie InsiderCluster, pool filings_pool), qui sort dans le scanner.
+// Si un jour un vrai produit « insiders » entre dans PRODUCTS de desk-plan.js,
+// ce dernier réclamera lui-même la cadence manquante (garde cadence_h === 0).
 const EMAIL_MIN_MATERIALITY = 70;
 const EMAIL_COOLDOWN_H = 24;
 const EVIDENCE_MIN_CHARS = 120;
@@ -127,7 +173,7 @@ function load() {
 const normChannels = (a) => (Array.isArray(a) ? a : []).map(s => String(s).trim().toLowerCase()).filter(Boolean);
 function hoursSince(iso) { return (Date.now() - Date.parse(iso)) / 3600000; }
 
-function check(type, materiality) {
+function check(type, materiality, trigger) {
   const led = load();
   const now = new Date().toISOString();
   // Deux registres de motifs SÉPARÉS. Les mélanger faisait afficher « matérialité
@@ -136,11 +182,33 @@ function check(type, materiality) {
   const webReasons = [], emailReasons = [];
   const of = t => led.entries.filter(e => e.type === t && e.at).sort((a, b) => String(b.at).localeCompare(String(a.at)))[0];
 
-  // 1. cadence
+  // 1. anti-doublon — par IDENTITÉ du déclencheur si l'appelant en fournit une,
+  //    par horloge sinon.
+  //
+  // Pourquoi l'identité PRIME sur l'horloge, et ne s'y ajoute pas : sur les
+  // produits événementiels, « republier le même événement » et « publier
+  // l'événement suivant » sont séparés par 24 h dans les deux cas. Mesuré le
+  // 2026-08-11 sur le calendrier réel, 8 des 66 jours déclencheurs macro suivent
+  // le précédent d'un jour, dont FOMC→PCE et FOMC→CPI : y appliquer une cadence
+  // supprime exactement la note qu'on veut le plus, celle qui repositionne APRÈS
+  // la Fed. Un cumul cadence+déclencheur reproduirait ce défaut, donc quand le
+  // déclencheur est fourni il REMPLACE la cadence. C'est une barrière plus stricte
+  // sur ce qu'elle couvre (deux runs du même soir : refus net, quelle que soit
+  // l'heure) et plus juste sur ce qu'elle laisse passer.
   const last = of(type);
   const cad = CADENCE_H[type] != null ? CADENCE_H[type] : 0;
+  const trig = trigger != null ? String(trigger).trim() : '';
+  const sameTrigger = trig
+    ? led.entries.filter(e => e.type === type && e.trigger === trig && e.at)
+        .sort((a, b) => String(b.at).localeCompare(String(a.at)))[0]
+    : null;
   let publish = true;
-  if (last && cad > 0 && hoursSince(last.at) < cad) {
+  if (trig) {
+    if (sameTrigger) {
+      publish = false;
+      webReasons.push(`déclencheur déjà publié : « ${type} » est sorti pour « ${trig} » le ${sameTrigger.at}`);
+    }
+  } else if (last && cad > 0 && hoursSince(last.at) < cad) {
     publish = false;
     webReasons.push(`cadence : « ${type} » publié il y a ${hoursSince(last.at).toFixed(1)} h, minimum ${cad} h`);
   }
@@ -192,6 +260,12 @@ function check(type, materiality) {
     // de « barrière inexistante ». Un type absent de CADENCE_H sort à 0 : le gate
     // dira toujours oui, ce qui n'est pas une autorisation mais un trou de config.
     type, cadence_h: cad, last_published_at: (last && last.at) || null,
+    // `trigger` remonte tel quel pour que l'appelant puisse le RECOPIER dans son
+    // --record : un déclencheur vérifié puis enregistré sous un autre nom ne
+    // protège de rien le lendemain.
+    trigger: trig || null,
+    trigger_already_published: !!sameTrigger,
+    anti_duplicate: trig ? 'trigger' : 'cadence',
     publish_web: publish,
     // `email_eligible`, PAS `send_email`. Ce champ ne dit pas « envoie » : il dit
     // « rien dans le registre ne s'y oppose À CET INSTANT ». Il a été renommé
@@ -265,9 +339,9 @@ function withLock(fn) {
  * un email autorisé — c'est le bon sens de l'échec. L'ordre inverse laisse une
  * fenêtre où un second produit voit le quota encore libre.
  */
-function authorize(type, materiality, evidence) {
+function authorize(type, materiality, evidence, trigger) {
   const verdict = withLock(() => {
-    const r = check(type, materiality);
+    const r = check(type, materiality, trigger);
     if (!r.email_eligible) return { code: 1, refus: r.email_reasons, detail: r };
     const ev = String(evidence || '').trim();
     if (ev.length < EVIDENCE_MIN_CHARS) {
@@ -277,7 +351,10 @@ function authorize(type, materiality, evidence) {
     }
     // Le registre d'abord, le jeton ensuite : un jeton sans ligne de registre
     // serait un envoi que le quota ne verrait jamais.
-    record(type, ['web', 'telegram', 'email'], { materiality, materiality_evidence: ev });
+    // Le déclencheur est persisté AVEC la ligne : c'est lui, et pas l'horodatage,
+    // que le prochain --check confrontera.
+    record(type, ['web', 'telegram', 'email'],
+      { materiality, materiality_evidence: ev, ...(trigger ? { trigger: String(trigger).trim() } : {}) });
     return { code: 0, grant: mint(type, { materiality, materiality_evidence: ev }) };
   });
 
@@ -326,16 +403,27 @@ const arg = (n, d) => { const i = argv.indexOf(n); return i > -1 && argv[i + 1] 
 
 if (argv.includes('--compact')) {
   compact();
+} else if (argv.includes('--cadences')) {
+  // Expose la TABLE, pas une copie. desk-plan doit pouvoir vérifier qu'aucune
+  // cadence déclarée ici ne pointe vers un produit inexistant — c'est ce
+  // contrôle qui manquait quand « insiders » a survécu des semaines sans
+  // producteur. Le faire en dupliquant CADENCE_H dans desk-plan aurait recréé
+  // exactement la divergence que l'appel en sous-processus évite.
+  const rows = Object.entries(CADENCE_H).map(([type, cadence_h]) => ({ type, cadence_h }));
+  if (argv.includes('--json')) console.log(JSON.stringify(rows, null, 2));
+  else for (const r of rows) console.log(`${String(r.type).padEnd(12)} ${r.cadence_h} h`);
+  process.exit(0);
 } else if (argv.includes('--authorize')) {
   const type = arg('--authorize');
   const rawM = arg('--materiality', '');
   const m = /^-?\d+$/.test(String(rawM).trim()) ? Number(rawM) : NaN;
   if (!type) { console.error('Usage: --authorize <type> --materiality N --evidence "<justification>"'); process.exit(2); }
   if (!Number.isFinite(m)) { console.error('[gate] --materiality N requis : entier 0-100. Un email sans justification chiffrée n\'est pas un email autorisé.'); process.exit(2); }
-  authorize(type, m, arg('--evidence', arg('--materiality-evidence', '')));
+  authorize(type, m, arg('--evidence', arg('--materiality-evidence', '')), arg('--trigger', ''));
 } else if (argv.includes('--record')) {
   const type = arg('--record');
   const ch = normChannels((arg('--channels', '') || '').split(','));
+  const trigger = String(arg('--trigger', '') || '').trim();
   if (!type || !ch.length) { console.error('Usage: --record <type> --channels web,telegram'); process.exit(2); }
   // Un email ne s'enregistre PAS par ce chemin, et il n'existe plus de drapeau
   // pour le permettre. `--authorized` était une chaîne d'argv que n'importe quel
@@ -348,13 +436,15 @@ if (argv.includes('--compact')) {
     console.error('[gate] refus : un canal « email » ne s\'enregistre que via  node tools/publication-gate.js --authorize <type> --materiality N --evidence "…"  (matérialité + quota vérifiés sous verrou, jeton émis).');
     process.exit(4);
   }
-  record(type, ch);
+  // Le déclencheur, s'il y en a un, est une DONNÉE de la ligne, pas un drapeau
+  // d'autorisation : il ne relâche rien ici, il sert au --check suivant.
+  record(type, ch, trigger ? { trigger } : null);
 } else {
   const type = arg('--check');
-  if (!type) { console.error('Usage: --check <type> [--materiality N] [--json]'); process.exit(2); }
+  if (!type) { console.error('Usage: --check <type> [--materiality N] [--trigger <id>] [--json]'); process.exit(2); }
   const rawM = arg('--materiality', '');
   const m = /^-?\d+$/.test(String(rawM).trim()) ? Number(rawM) : Number(arg('--materiality', NaN));
-  const r = check(type, m);
+  const r = check(type, m, arg('--trigger', ''));
   if (argv.includes('--json')) { console.log(JSON.stringify(r, null, 2)); }
   else {
     console.log(`type            ${r.type}`);

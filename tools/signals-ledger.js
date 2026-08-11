@@ -78,7 +78,11 @@ function cmdSweep(nowIso) {
     const price = num(typeof q === 'object' ? q.price : q);
     const high = num(typeof q === 'object' ? (q.high ?? q.price) : q);
     const low = num(typeof q === 'object' ? (q.low ?? q.price) : q);
-    const open = num(typeof q === 'object' ? (q.open ?? null) : null);
+    // `open` est OPTIONNEL : il ne sert qu'à détecter un trou de cotation sous le stop.
+    // Ne PAS passer par num(null) — Number(null) vaut 0, un 0 fini que le test « open < stop »
+    // accepte : toute ligne sweepée avec le format documenté {price,high,low} (sans `open`)
+    // se retrouvait remplie à 0 et scellée à −30R au lieu de −1R. Absent = pas d'info de gap.
+    const open = (q && typeof q === 'object' && q.open != null) ? num(q.open) : null;
     if (price == null) continue;
     // Niveaux ≤ 0 (ou NaN) = ABSENTS, pas des cibles/stop à prix 0 (sinon high>=0 déclenche tp2 à tort → R aberrant).
     const stopLvl = (s.stop != null && s.stop > 0) ? s.stop : null;

@@ -14,9 +14,16 @@
 # niveau faux, on ne rattrape pas un message déjà parti.
 #
 # D'où la coupure :
-#   compute    → status, api, cartes, synthèse, pont dtx. Local, IDEMPOTENT,
-#                rejouable autant de fois qu'il faut. Tourne EN PARALLÈLE du panel.
+#   compute    → risk-metrics, ingestion dtx, status, api, cartes, synthèse, pont
+#                dtx. Local, IDEMPOTENT, rejouable autant de fois qu'il faut.
+#                Tourne EN PARALLÈLE du panel.
 #   distribute → push, image, notification. APRÈS le verdict, jamais avant.
+#
+# `compute` NE lance PAS update-tracking ni sweep : ils tournent déjà dans la
+# chaîne C de scan-parallel.sh, en parallèle du vivier. Les relancer ici doublerait
+# 1 min 27 de sweep pour un résultat identique. En revanche il ingère bien
+# /tmp/risk-mcp.json (produit par l'AGENT, seul à pouvoir appeler le MCP) et
+# ÉCHOUE si la VaR publiée serait périmée.
 #
 # Coût d'un panel qui refuse : recalculer des fichiers locaux (1-2 min).
 # Jamais retirer quelque chose de déjà envoyé.
@@ -88,10 +95,54 @@ case "$MODE" in
     # faire patienter un run légitime.
     [ -n "$ASOF" ] || { echo "ASOF requis pour compute" >&2; exit 2; }
     acquire
+
+    # ── risk-metrics : l'étape que la coupure CALCUL/DIFFUSION avait PERDUE ────
+    # downstream-parallel.sh la lançait (étape 0) ; downstream-split ne la lançait
+    # plus, et la doc du /scanner continuait d'annoncer qu'il s'en chargeait. Sans
+    # elle, gen-status-page relit data/risk-snapshots.json tel quel et publie la
+    # VaR de la veille sans le dire — aucun contrôle de fraîcheur ne l'en empêche.
+    # Elle a sa place dans `compute` : locale, idempotente, sans appel MCP (c'est
+    # l'AGENT qui produit /tmp/risk-mcp.json, le script ne fait qu'ingérer).
+    RISK_SNAP="data/risk-snapshots.json"
+    RISK_IN="${RISK_MCP_FILE:-/tmp/risk-mcp.json}"
+    # Un risk-mcp.json vieux d'un jour n'est pas une donnée fraîche : l'ingérer
+    # réécrit `asOf` à maintenant et fait passer la VaR d'hier pour celle du jour.
+    # On refuse d'ingérer une capture périmée, au lieu de la relabelliser.
+    RISK_MAX_AGE_H="${RISK_MAX_AGE_H:-12}"
+    if [ -f "$RISK_IN" ] && node -e "
+      const fs=require('fs');
+      const h=(Date.now()-fs.statSync(process.argv[1]).mtimeMs)/3.6e6;
+      process.exit(h <= Number(process.argv[2]) ? 0 : 1);
+    " "$RISK_IN" "$RISK_MAX_AGE_H"; then
+      node tools/refresh-risk-metrics.js --ingest "$RISK_IN" > /tmp/ds-risk.log 2>&1 \
+        || { echo "refresh-risk-metrics ÉCHEC (voir /tmp/ds-risk.log)" >&2; exit 1; }
+      log "risk-metrics ingéré"
+    fi
+    # Garde de fraîcheur, qu'il y ait eu ingestion ou non. Une étape rendue
+    # manuelle sans garde est une étape qui saute : on ÉCHOUE au lieu de publier
+    # une VaR périmée en silence.
+    node -e "
+      const fs=require('fs');
+      const [f,maxH]=process.argv.slice(1);
+      let s; try { s=JSON.parse(fs.readFileSync(f,'utf8')); } catch { s=null; }
+      if(!s||!s.asOf){ console.error('  '+f+' absent ou illisible'); process.exit(1); }
+      const h=(Date.now()-Date.parse(s.asOf))/3.6e6;
+      if(!(h<=Number(maxH))){ console.error('  '+f+' date du '+s.asOf+' ('+h.toFixed(1)+' h) — au-delà de '+maxH+' h'); process.exit(1); }
+    " "$RISK_SNAP" "$RISK_MAX_AGE_H" || {
+      echo "VaR périmée — l'AGENT doit produire $RISK_IN (GetMarketContext regime + PortfolioRisk par mode) AVANT compute." >&2
+      echo "N'INVENTE JAMAIS de VaR. Pour un rejeu délibéré sur des chiffres connus périmés : RISK_MAX_AGE_H=<h> devant la commande." >&2
+      exit 1
+    }
+
     # ingestion dtx : --decide ET --replay obligatoires. Sans replay, metrics/equity
     # vides et le dashboard retombe sur un placeholder figé (incident du 23/07).
-    if [ -d "$DIR/_dtx11" ] || [ -d "$DIR/_dtx" ]; then
-      S="$DIR/_dtx11"; [ -d "$S" ] || S="$DIR/_dtx"
+    # Le staging lu est celui que scan-parallel.sh ÉCRIT (`_dtx`), et lui seul. Une
+    # branche préférait `_dtx11`, un dossier daté en dur du 11/08 que la collecte ne
+    # rafraîchit jamais : relancer la collecte pour le même dossier laissait compute
+    # ingérer un staging figé et publier les décisions de midi comme celles de la
+    # clôture. Un autre emplacement se passe explicitement, il ne se devine pas.
+    S="${DTX_STAGING_DIR:-$DIR/_dtx}"
+    if [ -d "$S" ]; then
       for d in "$S"/decide_*.json; do
         [ -e "$d" ] || continue
         pf=$(basename "$d" .json); pf=${pf#decide_}

@@ -56,6 +56,16 @@ const has = (n) => process.argv.includes(n);
 
 const planPath = arg('--plan');
 const outDir = arg('--out');
+// --socle <dir>[:<dir>…] : réutiliser les sources déjà collectées par le socle de
+// la séance au lieu de les rappeler. Optionnel et strictement additif — sans ce
+// drapeau, le comportement historique est inchangé.
+// La variable d'environnement COLLECT_SOCLE_DIR fait la même chose, et c'est elle
+// qui compte : elle atteint les collect.js lancés par des scripts qu'on ne veut
+// pas modifier (scan-parallel.sh notamment). Plusieurs dossiers parce que le
+// socle rapide et la chaîne overview détachée n'écrivent pas au même endroit —
+// et surtout pas dans le même index, sinon la seconde écrase la première.
+const socleDirs = (arg('--socle', process.env.COLLECT_SOCLE_DIR || '') || '')
+  .split(':').map(s => s.trim()).filter(Boolean);
 const dryRun = has('--dry-run');
 const quiet = has('--quiet');
 const tokenStdin = has('--token-stdin');
@@ -175,6 +185,40 @@ function cacheWrite(c, value) {
   } catch { /* le cache n'est jamais critique */ }
 }
 
+/**
+ * Socle partagé — un appel identique joué une fois pour N produits.
+ *
+ * Le socle écrit `_socle.json` : un index qui dit, pour chaque nom de source
+ * ATTENDU PAR UN CONSOMMATEUR (`covers`), quel fichier le sert, avec quel outil
+ * et à quelle heure RÉELLE. Un plan produit lancé avec `--socle <dir>` y pioche
+ * au lieu de rappeler.
+ *
+ * Trois verrous, parce qu'une réutilisation muette est pire qu'un appel de trop :
+ *  1. le socle doit DÉCLARER couvrir ce nom — pas d'appariement heuristique ;
+ *  2. serveur ET outil doivent coïncider — un GetStatus ne sert pas un QueryData ;
+ *  3. l'âge réel doit tenir dans le max_age_h du CONSOMMATEUR, pas dans celui du
+ *     socle. Si le consommateur est plus exigeant, il rappelle.
+ * Tout écart → appel normal, jamais de dégradation silencieuse.
+ */
+const SOCLES = socleDirs.map(dir => {
+  try { return { dir, index: JSON.parse(fs.readFileSync(path.join(dir, '_socle.json'), 'utf8')) }; }
+  catch { console.error(`[collect] socle ${dir} : index absent ou illisible — les appels concernés seront rejoués.`); return null; }
+}).filter(Boolean);
+
+function socleRead(c) {
+  for (const { dir, index } of SOCLES) {
+    const e = index.entries && index.entries[c.as];
+    if (!e) continue;
+    if (e.server !== c.server || e.tool !== c.tool) continue;
+    const ageMin = (Date.now() - Date.parse(e.as_of)) / 60000;
+    const maxH = (c.freshness && c.freshness.max_age_h) || 24;
+    if (!(ageMin >= 0) || ageMin / 60 > maxH) continue;   // trop vieux POUR CE consommateur
+    try { return { value: JSON.parse(fs.readFileSync(path.join(dir, e.file), 'utf8')), ageMin, as_of: e.as_of }; }
+    catch { continue; }
+  }
+  return null;
+}
+
 (async function main() {
   const plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));
   const refdate = cliVars.refdate || plan.reference_date || null;
@@ -184,9 +228,16 @@ function cacheWrite(c, value) {
 
   if (dryRun) {
     log(`[collect] ${path.basename(planPath)} — ${waves.length} vague(s), ${totalCalls} appel(s), date de référence ${refdate || '(aucune)'}`);
+    let served = 0;
     for (const w of waves) for (const c of w.calls || []) {
-      log(`  ${w.name.padEnd(14)} ${c.as.padEnd(22)} ${c.server}.${c.tool}`);
+      // Le dry-run doit dire ce que le socle SERVIRAIT, pas seulement ce que le
+      // plan demande. Sans ça, la mutualisation n'était vérifiable qu'en dépensant
+      // de vrais appels — donc jamais vérifiée avant de partir en production.
+      const soc = socleRead(c);
+      if (soc) served++;
+      log(`  ${w.name.padEnd(14)} ${c.as.padEnd(22)} ${c.server}.${c.tool}${soc ? `   ♻︎ socle (${soc.ageMin.toFixed(0)} min)` : ''}`);
     }
+    if (SOCLES.length) log(`[collect] socle : ${served}/${totalCalls} appel(s) évité(s)`);
     process.exit(0);
   }
 
@@ -213,7 +264,16 @@ function cacheWrite(c, value) {
   const sources = [];
   let failures = 0;
 
-  for (const wave of waves) {
+  // Une vague parallèle dure le temps de son appel LE PLUS LENT. Or les plus lents
+  // sont souvent les moins gouvernants : sur l'enrichissement scanner, la médiane
+  // est à 9 s et le plafond à 97 s, fixé par les seuls appels de flux (dark_pool,
+  // unusual_options, sentiment) — qui COLORENT une sélection sans la gouverner.
+  // Une vague marquée "detached": true tourne donc en dernier, sous délai, et son
+  // absence n'échoue JAMAIS le run : les données gouvernantes ne l'attendent pas.
+  const critiques = waves.filter(w => !w.detached);
+  const detachees = waves.filter(w => w.detached);
+  for (const wave of [...critiques, ...detachees]) {
+    const estDetachee = !!wave.detached;
     const calls = (wave.calls || []).map(c => ({ ...c, args: substitute(c.args || {}, vars) }));
     if (!calls.length) continue;
     const t0 = Date.now();
@@ -223,6 +283,8 @@ function cacheWrite(c, value) {
     const cached = new Map();
     const toCall = [];
     for (const c of calls) {
+      const soc = socleRead(c);
+      if (soc) { cached.set(c.as, { ...soc, fromSocle: true }); log(`   ♻︎ ${c.as} (socle, ${soc.ageMin.toFixed(0)} min)`); continue; }
       const hit = cacheRead(c);
       if (hit) { cached.set(c.as, hit); log(`   ⚡ ${c.as} (cache, ${hit.ageMin.toFixed(0)} min)`); }
       else toCall.push(c);
@@ -230,9 +292,19 @@ function cacheWrite(c, value) {
 
     let results;
     try {
-      results = await callMany(toCall, {
+      // Le délai doit ANNULER les requêtes, pas seulement cesser de les regarder :
+      // une promesse en vol garde la boucle d'événements vivante et le process
+      // attend quand même. On propage donc le budget en timeoutMs par appel, ce
+      // qui déclenche l'AbortController du client.
+      const budget = estDetachee ? (wave.deadline_ms || 45_000) : 0;
+      if (budget) for (const c of toCall) c.timeoutMs = Math.min(c.timeoutMs || budget, budget);
+      const salve = callMany(toCall, {
         onResult: (r) => log(`   ${r.ok ? '✓' : '✗'} ${r.as} (${r.ms}ms)${r.ok ? '' : ' — ' + r.error}`),
       });
+      results = budget
+        ? await Promise.race([salve, new Promise(res => setTimeout(() => res(
+            toCall.map(c => ({ as: c.as, ok: false, error: `délai détaché ${budget}ms dépassé`, ms: budget }))), budget))])
+        : await salve;
     } catch (e) {
       if (e instanceof McpAuthError) { console.error(`[collect] ${e.message}`); process.exit(3); }
       throw e;
@@ -241,7 +313,13 @@ function cacheWrite(c, value) {
     // résolution des jobs async, elle aussi en parallèle
     // Réinsérer les résultats servis par le cache, dans l'ordre du plan.
     const byAs = new Map(results.map(r => [r.as, r]));
-    for (const [as, hit] of cached) byAs.set(as, { as, ok: true, value: hit.value, ms: 0, fromCache: true });
+    for (const [as, hit] of cached) byAs.set(as, {
+      as, ok: true, value: hit.value, ms: 0, fromCache: true, fromSocle: !!hit.fromSocle,
+      // Horodatage RÉEL de la valeur servie. Déclarer « maintenant » pour un
+      // screener vieux de 5 h ferait mentir le manifeste de fraîcheur — c'est
+      // exactement ce que check-freshness est censé rendre impossible.
+      asOf: hit.as_of || new Date(Date.now() - (hit.ageMin || 0) * 60000).toISOString(),
+    });
     results = calls.map(c => byAs.get(c.as)).filter(Boolean);
 
     // Le temps d'un appel async est dominé par l'ATTENTE du job, pas par la
@@ -260,16 +338,23 @@ function cacheWrite(c, value) {
     for (let i = 0; i < results.length; i++) {
       const r = results[i], c = calls[i];
       waveLog.calls.push({ as: r.as, server: c.server, tool: c.tool, ok: r.ok, ms: r.ms, wait_ms: r.waitMs || 0, error: r.error || null });
-      if (!r.ok) { failures++; continue; }
+      if (!r.ok) {
+        if (estDetachee) { log(`   ~ ${r.as} indisponible — vague détachée, non bloquant`); continue; }
+        failures++; continue;
+      }
       fs.writeFileSync(path.join(outDir, `${r.as}.json`), JSON.stringify(r.value, null, 2));
       if (!r.fromCache) cacheWrite(c, r.value);
       if (c.freshness) {
         sources.push({
           name: r.as,
-          as_of: new Date().toISOString(),
+          as_of: r.asOf || new Date().toISOString(),
           max_age_h: c.freshness.max_age_h,
           required: c.freshness.required !== false,
-          note: c.freshness.note || `${c.server}.${c.tool}${refdate ? ` (date de référence ${refdate})` : ''}`,
+          // Un socle partagé ne doit PAS devenir un harnais partagé : chaque produit
+          // garde SON harness.json, où la source héritée est nommée comme telle.
+          // Sinon on ne sait plus, six mois après, quel article s'appuyait sur quoi.
+          note: (r.fromSocle ? 'socle partagé — ' : '')
+            + (c.freshness.note || `${c.server}.${c.tool}${refdate ? ` (date de référence ${refdate})` : ''}`),
         });
       }
     }
@@ -280,6 +365,29 @@ function cacheWrite(c, value) {
   journal.finished_at = new Date().toISOString();
   journal.failures = failures;
   fs.writeFileSync(path.join(outDir, '_collect.json'), JSON.stringify(journal, null, 2));
+
+  // Index de socle — écrit UNIQUEMENT si le plan se déclare socle. Il ne liste que
+  // ce qui a réellement abouti : un appel en échec ne doit pas apparaître comme
+  // disponible, sinon le consommateur croirait hériter d'une source qui n'existe pas.
+  if (plan.socle) {
+    const entries = {};
+    for (const w of journal.waves) for (const cl of w.calls) {
+      if (!cl.ok) continue;
+      const src = sources.find(s => s.name === cl.as);
+      const decl = waves.flatMap(x => x.calls || []).find(x => x.as === cl.as);
+      if (!decl) continue;   // un appel journalisé sans déclaration = plan modifié en vol, on n'invente pas
+      for (const cover of (decl.covers || [decl.as])) {
+        entries[cover] = {
+          file: `${cl.as}.json`, as: cl.as, server: cl.server, tool: cl.tool,
+          as_of: (src && src.as_of) || journal.finished_at,
+          max_age_h: (decl.freshness && decl.freshness.max_age_h) || null,
+        };
+      }
+    }
+    fs.writeFileSync(path.join(outDir, '_socle.json'),
+      JSON.stringify({ reference_date: refdate, generated_at: journal.finished_at, entries }, null, 2));
+    log(`[collect] index de socle écrit — ${Object.keys(entries).length} nom(s) de source couverts`);
+  }
 
   if (sources.length) {
     const harness = { artifact: plan.artifact || null, reference_close: refdate, sources };
