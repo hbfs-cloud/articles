@@ -771,6 +771,30 @@ async function main() {
     } else {
       const published = rawGates.signals.filter(s => (s.strategy || '') !== 'Candlestick');
 
+      // G0 entry-zone-unambiguous (2026-08-11) : la zone d'entrée doit être LISIBLE PAR
+      // UNE MACHINE, sans convention supposée.
+      //
+      // Constat qui motive ce gate : au 12 juin, LRCX portait entry=350 dans
+      // signals.json, data-entry="345" sur la page publiée, et « zone 350 » dans la prose
+      // — trois nombres, trois sources, aucune faisant autorité. Impossible de savoir si
+      // `entry` désignait le milieu ou une borne. Conséquence : qa-retro ne pouvait pas
+      // mesurer un chase (le chase se mesure AU-DESSUS de la zone), donc AUCUNE rétro
+      // n'était attestable — 55 scans du 20260416 au 20260708 sont dans ce cas et le
+      // resteront : on ne réécrit pas un enregistrement publié pour se donner raison.
+      //
+      // Une zone est non ambiguë si entry_high existe, OU si entry_low existe et
+      // entry > entry_low (auquel cas `entry` EST la borne haute). Sinon on refuse
+      // le scan : un scan publié aujourd'hui doit rester notable dans trois mois.
+      for (const s of published) {
+        const hasHigh = typeof s.entry_high === 'number';
+        const derivable = typeof s.entry_low === 'number' && typeof s.entry === 'number' && s.entry > s.entry_low;
+        if (hasHigh || derivable) continue;
+        violations.push({
+          rule: 'entry_zone_unambiguous',
+          message: `${s.ticker}: zone d'entrée ambiguë — ni entry_high, ni (entry_low < entry). Avec le seul champ \`entry\` (${s.entry}), on ne peut pas savoir si c'est le milieu ou la borne haute, donc la rétro ne pourra pas mesurer le chase. Porter entry_low ET entry_high.`
+        });
+      }
+
       // G1 entry-strategy-coherence : une ligne Momentum/Breakout s'achète en stop-buy
       // AU-DESSUS du niveau de cassure — min(zone d'entrée) >= close de la veille.
       const g1 = ag.entry_strategy_coherence;
