@@ -24,34 +24,22 @@ grep -c '"email"' data/publication-ledger.ndjson 2>/dev/null || echo 0
 ```
 
 
-### 3. Les trois Substack ne sont PAS publiés — état incertain
+### 3. ✅ RÉSOLU — les trois Substack sont publiés (11/08 14:28 UTC)
 
-Le workflow a rapporté trois brouillons anglais créés puis laissés tels quels :
-
-| Produit | draft_id | Titre |
+| Produit | URL | Email |
 |---|---|---|
-| signals | 210752979 | Three signals into tomorrow's CPI — and two of them are the same oil bet |
-| aplus | 210753064 | 180 US names, zero A+ setups — and the best one missed by 58 cents |
-| retro | 210753157 | The same ten trades score +2.13R or −2.02R depending on where you say you got filled |
+| signals | /p/three-signals-into-tomorrows-cpi | **non** |
+| aplus | /p/180-us-names-zero-a-setups-and-the | **non** |
+| retro | /p/the-same-ten-trades-score-213r-or | **non** |
 
-⚠️ **Je n'ai pas pu confirmer qu'ils existent.** `list_drafts` renvoie une liste VIDE, même
-après reconnexion du MCP substack. Les URL renvoient un 302 générique — une URL inventée
-renvoie le même. L'archive publique ne contient aucun des trois titres.
+Publiés avec `send_email=false` : les pages existent et sont partageables, personne n'a été
+réveillé. ⚠️ Les brouillons portaient `should_send_email: true` par défaut — c'est le
+paramètre `send_email` de l'appel `publish` qui décide, et il a été posé à `false` sur les
+trois.
 
-Trois hypothèses, non départagées : brouillons supprimés · `list_drafts` filtré ou en échec
-silencieux · brouillons créés sous un autre compte/publication.
-
-**À faire :** tenter `update_draft(draft_id)` sur un des trois pour trancher (une erreur
-« not found » conclut). S'ils n'existent pas, les recréer depuis les articles publiés sur
-articles.dailytickers.com, puis publier avec **`send_email=false`**.
-
-⛔ **AUCUN EMAIL.** Rien dans ce qui a été produit le 11/08 ne justifie d'interrompre la
-liste, et aucun jeton d'autorisation n'a été demandé.
-
-**Écart de conception à noter** : `/desk` prévoit que Substack PUBLIE avec
-`send_email=false` (page en ligne, personne réveillé). Le workflow s'est arrêté au
-brouillon — plus prudent que la spec, mais trois articles validés par le panel n'ont
-aucune page anglaise en ligne.
+⚠️ **`list_drafts` a menti** : il renvoyait une liste VIDE alors que les trois brouillons
+existaient. Ne jamais conclure à l'absence d'un brouillon sur ce seul outil — vérifier avec
+`update_draft(draft_id)`, qui répond correctement.
 
 ## ÉTAT DU WORKFLOW EN COURS
 
