@@ -36,15 +36,27 @@ const fail = msg => ({ isError: true, content: [{ type: 'text', text: msg }] });
  * l'appel. Les deux consomment le même jeton, une fois chacun — un second envoi
  * se présenterait avec le même rôle et serait refusé.
  *
- * Si le module n'est pas joignable (serveur déployé loin du dépôt), on REFUSE :
- * ne pas savoir vérifier n'est pas une raison d'envoyer.
+ * Si le module n'est pas joignable, on REFUSE par défaut : ne pas savoir
+ * vérifier n'est pas une raison d'envoyer.
+ *
+ * ── L'échappatoire, et pourquoi elle existe ─────────────────────────────────
+ * Déployé loin du dépôt, ce serveur ne voit aucun jeton — le refus par défaut
+ * rendrait alors TOUT email impossible, y compris légitime. Un garde-fou qui
+ * ferme le chemin normal ne se contourne pas : il se désactive en bloc, et on
+ * perd aussi celui qui marchait. `EMAIL_GRANT_MODE=hook-only` délègue donc
+ * explicitement l'application au hook PreToolUse local, qui lui tourne toujours
+ * là où le modèle tourne. C'est un choix de déploiement, conscient et écrit,
+ * pas un défaut silencieux : la valeur par défaut reste le refus.
  */
 function consumeEmailGrant() {
   const rel = process.env.EMAIL_GRANT_LIB || '../tools/lib/email-grant.js';
   let lib;
   try { lib = require(resolve(process.cwd(), rel)); }
   catch (e) {
-    return { ok: false, reason: `garde-fou email injoignable (${e.message}). Un envoi non vérifiable est un envoi refusé : publier avec send_email=false, ou exposer tools/lib/email-grant.js via EMAIL_GRANT_LIB / DESK_EMAIL_GRANT_DIR.` };
+    if (process.env.EMAIL_GRANT_MODE === 'hook-only') {
+      return { ok: true, delegated: true, note: 'vérification déléguée au hook PreToolUse (EMAIL_GRANT_MODE=hook-only)' };
+    }
+    return { ok: false, reason: `garde-fou email injoignable (${e.message}). Un envoi non vérifiable est un envoi refusé. Trois issues : publier avec send_email=false ; exposer tools/lib/email-grant.js au serveur via EMAIL_GRANT_LIB / DESK_EMAIL_GRANT_DIR ; ou, si le serveur est déployé hors du dépôt et que l'application repose sur le hook local, poser EMAIL_GRANT_MODE=hook-only côté déploiement.` };
   }
   return lib.consume('*', 'server');
 }

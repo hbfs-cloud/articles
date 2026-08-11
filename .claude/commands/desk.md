@@ -214,7 +214,10 @@ consommé à deux endroits :
   l'application effective en local ;
 - **handler `publish` du serveur substack** (`substack-mcp/src/tools.js`) : même contrôle côté
   service. S'il ne peut pas joindre le module de vérification, il **refuse** — ne pas savoir
-  vérifier n'est pas une raison d'envoyer.
+  vérifier n'est pas une raison d'envoyer. Déployé hors du dépôt, il ne voit aucun jeton : le
+  déploiement doit alors poser `EMAIL_GRANT_MODE=hook-only` pour déléguer explicitement au
+  hook. Échappatoire assumée : un garde-fou qui ferme aussi le chemin légitime finit désactivé
+  en bloc, et on perd celui qui marchait.
 
 Les deux consomment le même jeton, **une fois chacun** (relais hook → serveur borné à 2 min, un
 rôle par jeton). Deux envois ne peuvent donc pas se partager une autorisation.
