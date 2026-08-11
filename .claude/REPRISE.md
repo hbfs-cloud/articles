@@ -1,115 +1,78 @@
-# REPRISE — état au 2026-08-11 fin de journée
+# REPRISE — scan du 12 août, sélection faite, rédaction à faire
 
-> Lis ce fichier en premier dans une session neuve. Ce qui est soldé a été RETIRÉ : ce qui
-> reste écrit ci-dessous est ce qui reste à faire ou à ne pas refaire.
+## Où ça en est
 
-## SOLDÉ AUJOURD'HUI — ne pas rouvrir
+La collecte et la SÉLECTION du scan 20260812 sont terminées et vérifiées.
+`scanner/20260812/_selection.json` porte les 10 lignes avec leurs niveaux et le
+détail de chaque gate passé. Rien n'est publié, rien n'est poussé.
 
-- **Aucun email n'est parti.** Vérifié en fin de session : `grep -c '"email"'
-  data/publication-ledger.ndjson` → **0**. Les quatre Substack du jour sont publiés
-  `send_email=false` : pages partageables, personne réveillé.
-- **Les quatre Substack sont publiés**, section Boards (417757) :
+Ce qui RESTE : écrire `data.json` (c'est la grosse part — prose éditoriale,
+thèse par ligne, confirmations/invalidations, thèse macro, pédagogie) puis
+`signals.json`, rendre, `validate-scan` + `qa-check`, panel adversarial 5
+lentilles, downstream, diffusion.
 
-  | Produit | URL | Email |
-  |---|---|---|
-  | signals | /p/three-signals-into-tomorrows-cpi | non |
-  | aplus | /p/180-us-names-zero-a-setups-and-the | non |
-  | retro | /p/the-same-ten-trades-score-213r-or | non |
-  | **scanner** | **/p/ten-names-into-the-cpi-print** | **non** |
+## La sélection, et pourquoi elle tient
 
-- **Le daily 20260811 n'est plus orphelin** : commité (`00f552578`) et au registre. La
-  consigne « ne pas l'enregistrer » de la version précédente de ce fichier est PÉRIMÉE.
-- **Cadences `insiders` / `macro` / `squeeze`** : clé `insiders` supprimée (aucun producteur,
-  le cluster-buy a déjà le sien dans `filings-scanner.js`), `macro: 36` et `squeeze: 168`
-  calées sur l'espacement mesuré. Détail : `.claude/memory/project_pas_de_produit_insiders.md`
-  et `project_cadences_macro_squeeze.md`.
-- **`earnings` et `macro` pouvaient ne JAMAIS être dus** — deux produits morts que personne ne
-  voyait parce que le motif affiché était plausible. `earnings` lisait `market_cap` quand le
-  socle écrit `market_cap_b` (en MILLIARDS) : densité éternellement nulle, motif « densité
-  insuffisante » alors que 11 des 13 publications franchissaient le seuil. `macro` ne savait
-  pas lire la forme `{results:[{data:["csv…"]}]}` de QueryData : « aucun événement de tier 1 »
-  avec le CPI écrit en toutes lettres dans le fichier qu'il venait de lire. Les deux sont
-  corrigés ET gardés par un **détecteur de dérive de schéma** (`requireFields` dans
-  desk-plan) : un filtre qui rejette 100 % d'une entrée non vide parce que le champ qu'il lit
-  n'existe sur aucun élément remonte désormais en `config_gaps`.
-- **L'anti-doublon événementiel ne passe plus par l'horloge.** `--trigger <id>` sur le gate :
-  quand l'appelant fournit l'identité de l'événement, elle REMPLACE la cadence. C'est ce qui
-  rend possible la note du lendemain de FOMC quand PCE tombe à J+1 — 36 h l'auraient tuée.
-  Vérifié en bac à sable : même déclencheur à −24 h ⇒ refus ; déclencheur suivant à −24 h ⇒
-  accord ; sans déclencheur à −24 h ⇒ refus par cadence.
+Régime RISK-ON (risk_on 53,6 % · neutre 46,4 % · crise 0 · early risk-off 0) →
+aucune réduction de voilure, les 10 lignes sont permises.
 
-## CHANTIERS OUVERTS, PAR PRIORITÉ
+| # | ticker | score | zone | stop | TP1 | R/R | rég. | secteur |
+|---|---|---|---|---|---|---|---|---|
+| 1 | FRSH | 100 | 11,97–12,07 | 11,12 | 12,91 | 0,99 | US | Tech |
+| 2 | LYFT | 99 | 17,54–17,68 | 16,52 | 18,70 | 1,00 | US | Consumer |
+| 3 | COMP | 96 | 12,69–12,79 | 11,72 | 13,76 | 1,00 | US | RealEstate |
+| 4 | AMP.MI ⟲ | 92 | 12,30–12,40 | 11,68 | 13,03 | 1,01 | EU | Healthcare |
+| 5 | CLF ⟲ | 91 | 12,41–12,51 | 11,46 | 13,49 | 1,03 | US | Materials |
+| 6 | INFY | 89 | 12,60–12,70 | 11,97 | 13,34 | 1,01 | ASIA | Tech |
+| 7 | SNAP | 88 | 5,51–5,55 | 5,12 | 5,94 | 0,99 | US | Comm |
+| 8 | PGE.WA ⟲ | 87 | 11,15–11,24 | 10,59 | 11,81 | 1,01 | EU | Utilities |
+| 9 | SCHD | 83 | 34,27–34,54 | 33,74 | 35,16 | 1,14 | ETF | International |
+| 10 | FXI | 75 | 35,66–35,95 | 35,00 | 36,70 | 1,12 | ETF | International |
 
-1. **Câbler `downstream-split.sh` dans le workflow scanner** — le gain (8-12 min) n'est
-   toujours pas matérialisé, le workflow appelle encore l'ancien downstream séquentiel.
-2. **Tester le verrou de `downstream-split.sh`** — `timeout` n'existe pas sur macOS, le test
-   n'a jamais tourné. Utiliser `gtimeout` ou une boucle en arrière-plan. Les variables
-   `DOWNSTREAM_LOCK_MAX_TRIES` / `DOWNSTREAM_LOCK_POLL_S` existent précisément pour rendre ce
-   test exécutable en secondes.
-3. **`plans/squeeze.json` exige `$symbols` et aucune charnière ne le produit.** `desk-plan`
-   sort le produit avec un `blocker` explicite, donc rien ne casse en silence — mais le
-   produit reste inlançable. Il lui faut son équivalent d'`extract-universe.js`.
-4. **Idem pour la rétro** : `tools/extract-retro-symbols.js` existe maintenant sur disque mais
-   n'est pas suivi par git. Le vérifier, le tester, le commiter — ou le supprimer.
+Diversification 5 US + 2 EU + 1 ASIA + 2 ETF · max 2 par secteur · 3 reprises
+sur 10 (plafond 3) · halal 8/10 (les deux ETF portent des financières).
 
-## PIÈGES — ne pas les refaire
+**Les R/R vont de 0,99 à 1,14**, contre 0,81 à 0,98 la veille. Ce n'est pas de
+la chance : stop à 1,6×ATR et TP1 à 1,5×ATR du haut de zone au lieu de niveaux
+hérités. Le plafond arithmétique du système reste ~1,33.
 
-- **Plusieurs sessions Claude travaillent sur ce dépôt en même temps.** Le 11/08, une session
-  sœur a commité et poussé `b440490f7` pendant qu'une autre lisait les mêmes fichiers : `git
-  status` est passé de « modifié » à « propre » entre deux commandes, et `git diff` a rendu du
-  vide sans erreur. **Toujours `git pull --rebase` avant de commiter**, et ne jamais conclure
-  d'un `git diff` vide que le travail a disparu — relire `git log` d'abord.
-- **Un NUL littéral dans une source JS la rend binaire pour git.** `desk-plan.js` utilisait
-  `` `${type}\x00${trigger}` `` comme clé de cache : valeur juste, octet fatal. Plus de diff,
-  plus de merge, plus de relecture possible. Écrire la séquence d'échappement `\u0000`,
-  jamais l'octet lui-même. Le piège se retend tout seul : la première rédaction de cette
-  phrase-ci contenait un vrai NUL, et rendait ce fichier binaire à son tour.
-- **Une étape rendue manuelle sans garde est une étape qui saute.** La coupure CALCUL/DIFFUSION
-  avait fait disparaître l'ingestion `refresh-risk-metrics` : `gen-status-page` republiait la
-  VaR de la veille sans le dire. `compute` la relance ET **échoue** si
-  `data/risk-snapshots.json` dépasse 12 h (`RISK_MAX_AGE_H` pour un rejeu délibéré).
-- **Ne jamais deviner un chemin de staging.** `downstream-split` préférait `_dtx11`, un dossier
-  daté en dur que la collecte ne rafraîchit jamais, au `_dtx` que `scan-parallel.sh` écrit.
-  C'est `$DIR/_dtx`, surchargeable par `DTX_STAGING_DIR`, jamais deviné.
-- **`list_drafts` (Substack) MENT** — liste vide alors que les brouillons existent. Vérifier
-  avec `update_draft(draft_id)`, qui répond juste. Les brouillons portent
-  `should_send_email: true` par défaut : c'est le paramètre `send_email` de l'appel `publish`
-  qui décide, et lui seul.
-- **`desk-run.sh` est un script BASH.** `node tools/desk-run.sh` échoue sur une SyntaxError
-  trompeuse qui ressemble à un bug de l'outil.
-- **Appariement MCP fail-closed.** `QueryData` renvoie `symbols` = la liste DEMANDÉE mais
-  `data` = seulement les séries TROUVÉES. Apparier par index attribuait les prix de SPY à
-  MSFT. Un lot dont les longueurs diffèrent est JETÉ entier.
-- **La DSL n'accepte pas `$2B`.** Le moteur renvoie `unknown name $2B` et le job échoue à la
-  COMPILATION, rendant un vivier **vide** (pas dégradé). Littéraux numériques : `2e9`.
-- **`/desk` et `/scanner` écrivent les MÊMES fichiers.** Deux `gen-status-page` simultanés
-  corrompent sans lever d'erreur. Le verrou de `downstream-split.sh` est obligatoire.
-- **Les jetons expirent en 60 min** et ne se renouvellent pas seuls. Réémettre entre les phases.
-  Ne jamais coller un jeton en clair dans une commande : `/tmp/scan-env.sh` (chmod 600) puis
-  `source`. Un hook pre-commit refuse tout JWT commité.
+## Gates passés, et ce qu'ils ont coûté
 
-## DÉCISIONS À NE PAS REVISITER
+- **Résultats** : calendrier PAR TICKER (le calendrier global ne rendait que la
+  journée du 11 malgré `days_ahead=7`). TUI1.DE écarté — il publie le 12.
+- **Dilution** : par ticker, sur formulaires dilutifs uniquement
+  (`form_types=S-3,S-1,424B5,…`) — sinon la réponse fait 40 Ko par nom.
+  FRSH/LYFT/COMP/SNAP propres. **CLF porte deux 424B5 d'octobre 2025** : hors
+  fenêtre de 90 jours donc non disqualifiant, mais à SIGNALER dans sa thèse.
+- ⚠️ **Le lot groupé de dilution est INUTILISABLE** : `symbols` porte les 12
+  demandés, `data` seulement les 10 trouvés. L'assembleur jette le lot entier
+  plutôt que d'attribuer les dépôts d'une société à une autre. C'est pour ça
+  que le contrôle se fait par ticker.
 
-- **Le panel adversarial est non négociable** avant publication (mémoire :
-  `project_panel_non_negociable`). La cible des 5 min porte sur la collecte et la publication
-  scriptées, pas sur le pipeline complet. ~30 min pour un `/scanner` complet est accepté.
-- **Plancher R/R laissé à 0,7** (contrat versionné). Le plafond arithmétique du système est
-  1,33 (stop ≥ 1,5×ATR, cible ≤ 2,0×ATR) ; à 1,3 zéro ligne survit sur 60. Les 10 lignes du
-  11/08 vont de 0,81 à 0,98.
-- **`overview` est hors du chemin critique** (`freshness.required=false`). Mesuré 63 s, puis
-  298 s, puis deux dépassements de délai serveur. C'est du contexte, il n'alimente aucune
-  sélection. Ne pas le repasser en requis.
-- **`aplus` du 11/08 : une seule valeur retenue (PEG) est un RÉSULTAT, pas un échec.** Les
-  quatre éliminatoires sont stricts. Ne pas « compléter » la cohorte.
+## Ce qui a été corrigé cette nuit (poussé)
 
-## POINT DE VIGILANCE OUVERT — cadence du scanner
+- `desk-plan` : la fenêtre du scanner passait de 90 min/jour à 22h30 → ouverture
+  du lendemain, et l'anti-doublon porte sur la SÉANCE (`session:2026-08-12`) et
+  non sur une horloge de 12 h. Sans ça, le scan du 11 publié à 13h36 interdisait
+  celui du 12.
+- `desk-plan` : `macro`/`earnings` étaient inatteignables (sortie en 10 sans
+  compter les produits en attente du socle) ; fenêtre macro calée sur
+  l'antériorité réelle de l'événement, plus sur la date calendaire.
+- `gen-status-page` : une apostrophe française tuait 900 lignes de script sur la
+  page publiée. Le générateur vérifie désormais ses scripts avant d'écrire.
+- Catalogue réduit à 5 modes (best/turbo/dynamic/balanced/fortress).
 
-Le scanner porte une cadence de 12 h, calée sur un rythme soir-à-soir (24 h d'écart, large
-marge). Le 11/08 il a été publié à 13h36 UTC, et la ligne `substack` enregistrée à 16h36 a
-déplacé l'horloge d'autant : **la prochaine publication `scanner` sans déclencheur n'est
-autorisée qu'à partir de 04h37 le 12/08**. Le scan du soir du 11/08 était de toute façon
-bloqué par la ligne de 13h36 — l'enregistrement du canal n'a rien aggravé ce soir-là. Mais si
-un scanner doit sortir dans une fenêtre bloquée, la bonne réponse n'est PAS de baisser la
-cadence : c'est de passer un `--trigger scanner:<AAAAMMJJ>` comme le fait déjà `macro`, pour
-que l'anti-doublon porte sur la séance visée et non sur l'horloge. `evalScanner` ne le fait
-pas encore.
+## Pièges de la nuit
+
+- **`scan-parallel` échoue sous concurrence** avec le socle (3 essais, 3 échecs
+  à des endroits différents), alors que chaque étape passe seule. Le `--quiet`
+  de la chaîne masque l'erreur : **corriger d'abord ça**, faire écrire le
+  journal même en mode silencieux. Contourné en lançant les étapes séparément —
+  légitime ici, chaque sortie porte son manifeste et affiche zéro échec.
+- **Archive profonde figée sur une barre partielle** : GLD au 10/08 vaut 402,54
+  en fenêtre courte et 399,39 en fenêtre profonde, `sessions_complete: true`
+  dans les deux cas. Dossier : `.claude/mcp-marketdata-bug-archive-profonde.md`.
+- La note CPI est écrite mais **BLOQUÉE** (5 lentilles, 5 BLOCK) : fausse
+  opposition en thèse centrale, auto-citation fabriquée, rapport emploi du 7/08
+  omis. Fichier `analyses/cpi-20260812/` non commité, non indexé. Ne pas la
+  publier telle quelle.
