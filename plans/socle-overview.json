@@ -1,0 +1,31 @@
+{
+  "artifact": "socle — récit d'état de marché (chaîne détachée)",
+  "socle": true,
+  "_pourquoi": [
+    "overview est l'appel le plus lent ET le plus instable du parc : 62,7 s mesuré le 11/08, plage",
+    "rapportée de 63 s à 298 s. C'était pourtant le seul appel lent NON caché, et il était déclaré",
+    "required:true dans daily ET scanner-wave1 — donc joué deux fois, en plein chemin critique.",
+    "",
+    "Trois mesures, dans cet ordre :",
+    "  1. SORTI DU CHEMIN CRITIQUE — plan séparé, lancé en chaîne détachée à T+5 s, en parallèle du vivier.",
+    "     Personne ne l'attend : la rédaction ne commence de toute façon qu'après le gate de fraîcheur",
+    "     (~T+210 s). Dans le cas médian il est arrivé depuis longtemps ; dans le pire cas on continue sans.",
+    "  2. CACHE 90 min — un récit d'état de marché ne bouge pas d'un quart d'heure à l'autre intra-séance.",
+    "     Le cache est légitime ICI et nulle part ailleurs dans le socle, parce que overview ne porte que",
+    "     de la prose de contexte.",
+    "  3. required:false — CONDITION STRICTE : vrai tant qu'aucun chiffre publié ne dérive de overview.",
+    "     Les nombres publiés viennent de bars_indices / bars_sectors / regime. Si un daily cite un seul",
+    "     chiffre issu de overview, cette ligne repasse à required:true et redevient chemin critique.",
+    "     Le contrôle de traçabilité numérique du panel tranche mécaniquement la question."
+  ],
+  "waves": [
+    { "name": "overview", "calls": [
+      { "as": "overview", "server": "marketdata", "tool": "GetMarketContext",
+        "args": { "facets": "overview", "timeout": 90, "analysis_depth": "standard" },
+        "covers": ["overview"],
+        "cache_minutes": 90,
+        "freshness": { "max_age_h": 6, "required": false,
+          "note": "prose de contexte uniquement — aucun chiffre publié ne doit en dériver" } }
+    ] }
+  ]
+}
