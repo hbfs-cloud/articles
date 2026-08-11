@@ -5491,7 +5491,7 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Rétrospective Scanner",
+    "title": "Rétrospective du scan du 12 juin 2026 — neuf lignes remplies, +2,00 R, et quatre conventions d'entrée qui donnent quatre notes",
     "desc": "Neuf lignes remplies, R total +2,00, trois objectifs atteints. Trois lignes santé, une même secousse sectorielle, trois issues différentes décidées par la largeur du stop et non par la thèse. Et un scan qui se note entre +2,13 et −2,02 R selon la convention d'entrée retenue : quatre références coexistent dans le produit. Note B.",
     "tags": "us,eu,asia,etf,healthcare,industrials,semis,gold,technique,retrospective",
     "grade": "B",
