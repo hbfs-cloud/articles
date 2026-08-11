@@ -230,6 +230,19 @@ launch(){ # launch <nom> <plan> <out> [--var k=v ...]
 is_due daily    && launch daily    daily       "daily/$DAY/_data"
 is_due signals  && launch signals  signals-desk "$DESK/signals"
 is_due rotation && launch rotation rotation    "$DESK/rotation"
+# macro et earnings ne se décident qu'APRÈS le socle (événement de tier 1,
+# densité de la saison) : ils sont donc forcément absents du plan d'avant-socle
+# et n'apparaissent qu'ici, après la barrière B3. Sans ces deux lignes ils
+# ressortaient dus et rien ne les produisait — un produit fantôme, mesuré le
+# 11/08 sur le CPI du lendemain.
+is_due macro    && launch macro    macro       "$DESK/macro"
+if is_due earnings; then
+  # earnings a besoin des symboles qui viennent de publier, pas d'une liste
+  # figée. La charnière qui les extrait du socle n'existe pas ; on refuse de la
+  # remplacer par une recopie du modèle, qui est le transport de données que la
+  # doctrine interdit. Le produit sort du plan en le disant.
+  log "⚠ earnings écartée : aucune charnière n'extrait les symboles publiants du socle (voir plan.json → due[].blocker)"
+fi
 if is_due weekly; then
   MON=$(pj 'const w=p.due.find(d=>d.type==="weekly");process.stdout.write(w&&w.vars.monday?w.vars.monday.replace(/-/g,""):"")')
   [ -n "$MON" ] && launch weekly weekly "weekly/$MON/_data"

@@ -1,0 +1,91 @@
+{
+  "artifact": "note de positionnement macro (J-1 d'un événement de tier 1)",
+  "note": "Produit déclaré dans desk-plan et cadencé dans publication-gate depuis le 11/08, mais SANS plan ni ligne de dispatch : il ressortait dû et rien ne le produisait. Ce plan comble ce trou. L'essentiel de la matière vient du socle (economic_events, regime, bars_indices, options_sentiment) à coût marginal nul ; on n'ajoute ici que ce qui manque à une note macro et que le socle ne porte pas : la courbe des taux, le dollar, les matières premières, et le marché de prédiction. La règle du produit reste dans la commande : la DATE et le CONSENSUS de l'événement se vérifient avant d'écrire, jamais après.",
+  "waves": [
+    {
+      "name": "macro",
+      "calls": [
+        {
+          "as": "economic_events",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "economic_events",
+            "days": 10
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "note": "BLOQUANT — la date de l'événement ne s'écrit jamais de mémoire (leçon macro-date-verify)"
+          }
+        },
+        {
+          "as": "rates",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "rates",
+            "days": 30
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "note": "la courbe est le canal par lequel une surprise d'inflation atteint les multiples"
+          }
+        },
+        {
+          "as": "bars_macro",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "TLT,IEF,UUP,GLD,USO,HYG,LQD",
+            "end_date": "$refdate",
+            "limit": 90
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "currencies",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "currencies"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false
+          }
+        },
+        {
+          "as": "commodities",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "commodities"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false
+          }
+        },
+        {
+          "as": "prediction_markets",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "args": {
+            "facets": "prediction_markets"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false,
+            "note": "contexte : ce que le marché price avant le chiffre. Jamais bloquant."
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -619,4 +619,14 @@ if (has('--json')) {
 // Code de sortie = « y a-t-il quelque chose à faire ». 0 = oui, 10 = non.
 // Volontairement PAS 1 : « rien à produire » est un succès, pas une erreur, et
 // desk-run.sh doit pouvoir distinguer les deux sous `set -e`.
-process.exit(due.length ? 0 : 10);
+//
+// `pending` compte AUTANT que `due`. Un produit en attente du socle n'est pas un
+// produit écarté : c'est un produit dont l'éligibilité se décide sur une donnée
+// qu'on n'a pas encore collectée. Ne compter que `due` rendait ces produits
+// INATTEIGNABLES dès que rien d'autre n'était dû — le run sortait en 10, le socle
+// n'était jamais collecté, et la réévaluation d'après-socle n'avait jamais lieu.
+// Mesuré le 11/08 à 23h49 : `macro` était dû par son déclencheur (CPI le 12 à
+// 08h30) et le pipeline s'est arrêté avant d'aller le vérifier. Un déclencheur
+// événementiel qui ne se déclenche jamais est pire qu'un déclencheur absent : il
+// donne l'illusion d'une couverture.
+process.exit(due.length || pending.length ? 0 : 10);
