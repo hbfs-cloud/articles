@@ -4880,9 +4880,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Signaux du 11 août 2026 — l'inflation est déjà achetée, l'énergie ne l'est pas encore",
-    "desc": "Argent +11,9% en cinq séances, Hecla +20,1%, obligations longues à 37 de RSI : le marché a payé sa couverture avant l'inflation américaine du 12 août. Deux signaux seulement, demi-taille, sur repli — Exxon et Occidental. Niveaux, invalidations et bilan des seize lignes ouvertes.",
-    "tags": "us,energy,commodity,macro,technique,options,trade-idea",
+    "title": "Signaux du jour — 11 août 2026 : l'indice n'a pas bougé, l'énergie a pris 3,92%, l'inflation sort demain",
+    "desc": "Trois signaux retenus sur 35 candidats examinés : Exxon, ConocoPhillips, Medtronic. Deux des trois sont le même pari sur le brut, et on le dit. Six candidats rejetés avec le motif chiffré. Bilan du registre : 17 signaux clos, 53% de réussite, +0,27R.",
+    "tags": "us,energy,healthcare,macro,technique,options,trade-idea",
     "grade": "",
     "href": "/scanner/signaux/20260811/",
     "date": "11 août 2026"
