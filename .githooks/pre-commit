@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Refuse tout commit contenant un JWT (jeton MCP). Les jetons sont à TTL court mais
+# restent des identifiants : ils n'ont rien à faire dans l'historique git, qui est
+# public et permanent.
+if git diff --cached -U0 | grep -qE '\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.'; then
+  echo "⛔ COMMIT REFUSÉ : un JWT (jeton MCP) figure dans les modifications." >&2
+  echo "   Les jetons passent par l'ENVIRONNEMENT uniquement, jamais par un fichier suivi." >&2
+  exit 1
+fi

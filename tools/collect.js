@@ -135,6 +135,46 @@ async function resolveAsync(server, value, maxMs) {
   return awaitJob(server, jobId, { pollTool, maxMs: maxMs || 300_000 });
 }
 
+
+/**
+ * Cache court par appel — `"cache_minutes": N` dans le manifeste.
+ *
+ * Une vague parallèle dure le temps de son appel LE PLUS LENT. Sur le vivier
+ * scanner, screen_eu prend 87 s et fixe à lui seul la durée des 13 appels. Or un
+ * screener européen ne change pas d'une heure à l'autre : le rejouer à chaque run
+ * paie 87 s pour un résultat identique.
+ *
+ * La clé inclut l'outil ET les arguments substitués : changer une expression DSL
+ * ou une date de référence invalide le cache automatiquement. Pas de faux positif
+ * possible sur un plan modifié.
+ *
+ * ⛔ N'utiliser QUE sur des appels dont la péremption est sans conséquence
+ * (screeners, référentiels). JAMAIS sur un prix, un régime ou un calendrier :
+ * le manifeste de fraîcheur cesserait de dire la vérité.
+ */
+const CACHE_DIR = 'data/collect-cache';
+function cacheKey(c) {
+  return require('crypto').createHash('sha256')
+    .update(`${c.server}|${c.tool}|${JSON.stringify(c.args || {})}`).digest('hex').slice(0, 24);
+}
+function cacheRead(c) {
+  if (!c.cache_minutes) return null;
+  try {
+    const f = path.join(CACHE_DIR, cacheKey(c) + '.json');
+    const st = fs.statSync(f);
+    const ageMin = (Date.now() - st.mtimeMs) / 60000;
+    if (ageMin > c.cache_minutes) return null;
+    return { value: JSON.parse(fs.readFileSync(f, 'utf8')), ageMin };
+  } catch { return null; }
+}
+function cacheWrite(c, value) {
+  if (!c.cache_minutes) return;
+  try {
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+    fs.writeFileSync(path.join(CACHE_DIR, cacheKey(c) + '.json'), JSON.stringify(value));
+  } catch { /* le cache n'est jamais critique */ }
+}
+
 (async function main() {
   const plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));
   const refdate = cliVars.refdate || plan.reference_date || null;
@@ -179,9 +219,18 @@ async function resolveAsync(server, value, maxMs) {
     const t0 = Date.now();
     log(`[collect] vague « ${wave.name} » — ${calls.length} appel(s) en parallèle`);
 
+    // Servir d'abord ce qui est en cache frais, n'appeler que le reste.
+    const cached = new Map();
+    const toCall = [];
+    for (const c of calls) {
+      const hit = cacheRead(c);
+      if (hit) { cached.set(c.as, hit); log(`   ⚡ ${c.as} (cache, ${hit.ageMin.toFixed(0)} min)`); }
+      else toCall.push(c);
+    }
+
     let results;
     try {
-      results = await callMany(calls, {
+      results = await callMany(toCall, {
         onResult: (r) => log(`   ${r.ok ? '✓' : '✗'} ${r.as} (${r.ms}ms)${r.ok ? '' : ' — ' + r.error}`),
       });
     } catch (e) {
@@ -190,6 +239,11 @@ async function resolveAsync(server, value, maxMs) {
     }
 
     // résolution des jobs async, elle aussi en parallèle
+    // Réinsérer les résultats servis par le cache, dans l'ordre du plan.
+    const byAs = new Map(results.map(r => [r.as, r]));
+    for (const [as, hit] of cached) byAs.set(as, { as, ok: true, value: hit.value, ms: 0, fromCache: true });
+    results = calls.map(c => byAs.get(c.as)).filter(Boolean);
+
     // Le temps d'un appel async est dominé par l'ATTENTE du job, pas par la
     // soumission. Journaliser seulement la soumission donnait « 0,5 s » sur un
     // screener qui tourne 5 minutes — diagnostic inutilisable.
@@ -208,6 +262,7 @@ async function resolveAsync(server, value, maxMs) {
       waveLog.calls.push({ as: r.as, server: c.server, tool: c.tool, ok: r.ok, ms: r.ms, wait_ms: r.waitMs || 0, error: r.error || null });
       if (!r.ok) { failures++; continue; }
       fs.writeFileSync(path.join(outDir, `${r.as}.json`), JSON.stringify(r.value, null, 2));
+      if (!r.fromCache) cacheWrite(c, r.value);
       if (c.freshness) {
         sources.push({
           name: r.as,
