@@ -3491,7 +3491,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var prov = e.provenance==='staging' ? 'décision brute du moteur' : (e.provenance==='dtx_pool' ? 'reconstruite depuis le pool publié' : '—');
     if(meta) meta.textContent = prov + (e.engineMode?(' · moteur '+e.engineMode):'') + ' · ' + (e.orders||[]).length + ' ordre(s)' + (e.updates?(' · '+e.updates+' maj'):'') + (e.cancels?(' · '+e.cancels+' annul.'):'');
     var o=e.orders||[];
-    if(!o.length){ body.innerHTML='<div style="font-size:.78rem;color:var(--muted)">Le moteur n\'a émis aucun ordre ce jour-là.</div>'; return; }
+    if(!o.length){ body.innerHTML='<div style="font-size:.78rem;color:var(--muted)">Le moteur n’a émis aucun ordre ce jour-là.</div>'; return; }
     body.innerHTML='<table class="t"><thead><tr><th>Symbole</th><th>Sens</th><th>Type</th><th>Qté</th><th>Limite</th><th>Stop</th><th>Motif</th></tr></thead><tbody>'+
       o.map(function(x){
         var f=function(v){return v==null?'—':(typeof v==='number'?v.toFixed(2):v)};
@@ -4006,8 +4006,36 @@ document.addEventListener('DOMContentLoaded',function(){
 </body>
 </html>`;
 
+  // \u2500\u2500 Contr\u00f4le de syntaxe des scripts embarqu\u00e9s, AVANT d'\u00e9crire \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // Une page qui part en production avec un script cass\u00e9 ne l\u00e8ve aucune erreur
+  // au moment de la g\u00e9n\u00e9ration : le fichier s'\u00e9crit, le d\u00e9ploiement r\u00e9ussit, et
+  // seule la console du navigateur le sait. Trouv\u00e9 le 12/08 sur la page publi\u00e9e :
+  // `body.innerHTML='\u2026Le moteur n'a \u00e9mis aucun ordre\u2026'` \u2014 l'apostrophe fran\u00e7aise
+  // fermait la cha\u00eene et tout le bloc de 900 lignes mourait, emportant avec lui
+  // le panneau des d\u00e9cisions du moteur. L'\u00e9chappement `\'` de la source \u00e9tait
+  // consomm\u00e9 par la cha\u00eene englobante et n'atteignait jamais la sortie.
+  // On v\u00e9rifie donc ce qu'on \u00c9MET, pas ce qu'on \u00e9crit dans le g\u00e9n\u00e9rateur.
+  {
+    const bad = [];
+    const re = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;
+    let m, n = 0;
+    while ((m = re.exec(html))) {
+      n++;
+      const line = html.slice(0, m.index).split('\n').length;
+      try { new Function(m[1]); }
+      catch (e) { bad.push(`  bloc #${n} (ligne ${line}) : ${e.message}`); }
+    }
+    if (bad.length) {
+      console.error(`\u274c ${OUT} NON \u00e9crit \u2014 ${bad.length}/${n} script(s) embarqu\u00e9(s) invalides :`);
+      for (const b of bad) console.error(b);
+      console.error("  Cause la plus fr\u00e9quente : une apostrophe fran\u00e7aise dans une cha\u00eene JS \u00e9mise entre quotes simples.");
+      console.error("  Correction : apostrophe typographique (\u2019), qui ne s'\u00e9chappe \u00e0 aucun niveau.");
+      process.exit(1);
+    }
+  }
+
   fs.writeFileSync(OUT, html);
-  console.log(`\u2705 ${OUT} generated (${(html.length / 1024).toFixed(0)}KB)`);
+  console.log(`\u2705 ${OUT} generated (${(html.length / 1024).toFixed(0)}KB, ${'scripts embarqu\u00e9s v\u00e9rifi\u00e9s'})`);
   for (const [id, m] of Object.entries(modes)) {
     console.log(`   ${m.cfg.label}: ${m.m.ret > 0 ? '+' : ''}${m.m.ret}%, DD ${m.m.dd}%, WR ${m.m.wr}%, PF ${m.m.pf == null ? '—' : m.m.pf + 'x'}, ${m.m.trades} trades${m.m.dtxEngine ? ' [dtx]' : ''}`);
   }
