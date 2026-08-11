@@ -26,6 +26,30 @@ const ok = obj => ({ content: [{ type: 'text', text: JSON.stringify(obj, null, 2
 const fail = msg => ({ isError: true, content: [{ type: 'text', text: msg }] });
 
 /**
+ * Garde-fou email, côté serveur. `send_email=true` est un booléen : sans point
+ * d'application ici, le refus du gate de publication n'était qu'une convention
+ * documentaire, et un seul paramètre suffisait à réveiller tous les abonnés.
+ *
+ * Le jeton à usage unique est émis par `publication-gate.js --authorize`, sous
+ * verrou, APRÈS consommation du quota (1 email / 24 h, tous types confondus).
+ * Ceinture ET bretelles : un hook PreToolUse local applique la même règle avant
+ * l'appel. Les deux consomment le même jeton, une fois chacun — un second envoi
+ * se présenterait avec le même rôle et serait refusé.
+ *
+ * Si le module n'est pas joignable (serveur déployé loin du dépôt), on REFUSE :
+ * ne pas savoir vérifier n'est pas une raison d'envoyer.
+ */
+function consumeEmailGrant() {
+  const rel = process.env.EMAIL_GRANT_LIB || '../tools/lib/email-grant.js';
+  let lib;
+  try { lib = require(resolve(process.cwd(), rel)); }
+  catch (e) {
+    return { ok: false, reason: `garde-fou email injoignable (${e.message}). Un envoi non vérifiable est un envoi refusé : publier avec send_email=false, ou exposer tools/lib/email-grant.js via EMAIL_GRANT_LIB / DESK_EMAIL_GRANT_DIR.` };
+  }
+  return lib.consume('*', 'server');
+}
+
+/**
  * @param {import('@modelcontextprotocol/sdk/server/mcp.js').McpServer} server
  * @param {import('./substack-client.js').SubstackClient} client
  */
@@ -80,13 +104,17 @@ export function registerTools(server, client) {
 
   server.tool(
     'publish',
-    'Publish an existing Substack draft by id. send_email=false posts to web only.',
+    'Publish an existing Substack draft by id. send_email=false posts to web only (the default, and the normal path). send_email=true additionally emails every subscriber and CANNOT be undone: it requires a single-use grant minted by `publication-gate.js --authorize`, which enforces cadence, a 24h all-types email quota and a justified materiality score. Without a valid grant the publish is refused.',
     {
       draft_id: z.union([z.string(), z.number()]),
       send_email: z.boolean().default(false),
     },
     async ({ draft_id, send_email }) => {
       try {
+        if (send_email === true) {
+          const g = consumeEmailGrant();
+          if (!g.ok) return fail(`HARD STOP — ${g.reason}`);
+        }
         return ok(await client.publish(draft_id, { sendEmail: send_email }));
       } catch (e) {
         return fail(`${e.code === 'SUBSTACK_AUTH' ? 'HARD STOP — ' : ''}publish failed: ${e.message}`);

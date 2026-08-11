@@ -9,7 +9,14 @@
 #   ./tools/publish-daily-card.sh --no-sweep             # Skip le sweep (déjà lancé en amont par /scanner)
 #   ./tools/publish-daily-card.sh --no-telegram          # Push + QA MAIS pas de notif token-based —
 #                                                        # le Telegram part via le MCP notification (AGENT)
+#   ./tools/publish-daily-card.sh --no-push               # Pipeline complet, artefacts LOCAUX, aucun git push
 #   ./tools/publish-daily-card.sh --no-sweep --no-telegram   # ← recommandé depuis /scanner (voir .claude/commands/scanner.md)
+#
+# ⚠️  --no-push existe pour /desk. Ce script poussait sur main AVANT que la
+#     barrière de fraîcheur, les gates QA et le panel adversarial ne se soient
+#     prononcés : le contenu était déjà public quand le gate le refusait, sans
+#     rollback possible. Depuis /desk, TOUJOURS --no-push ; le push est une
+#     commande séparée, après le panel, jamais un effet de bord de la collecte.
 #
 # Cron (chaque soir à 23h30):
 #   30 23 * * 1-5 cd /home/ci/projects/articles && ./tools/publish-daily-card.sh >> /tmp/scanner-publish.log 2>&1
@@ -22,13 +29,16 @@ SKIP_SWEEP=false
 DRY_RUN=false
 NO_TELEGRAM=false   # --no-telegram : pipeline complet (image, push, QA) SANS notif token-based.
                     # Le Telegram part alors via le MCP notification connecté (envoyé par l'AGENT).
+NO_PUSH=false       # --no-push : tout produire en local, ne rien rendre public.
 for arg in "$@"; do
   case "$arg" in
     --no-sweep)    SKIP_SWEEP=true ;;
     --dry-run)     DRY_RUN=true ;;
     --no-telegram) NO_TELEGRAM=true ;;
+    --no-push)     NO_PUSH=true ;;
   esac
 done
+[ "$DRY_RUN" = true ] && NO_PUSH=true
 # NO_NOTIFY = vrai si dry-run OU no-telegram → gate unique pour les Steps 8/9/10 (notif token-based).
 NO_NOTIFY=false
 { [ "$DRY_RUN" = true ] || [ "$NO_TELEGRAM" = true ]; } && NO_NOTIFY=true
@@ -356,9 +366,34 @@ else
   echo "⏭️  Steps 3-5b: Skipped (--no-sweep)"
 fi
 
-# ─── Step 6: Commit & push everything ────────────────────────────────────────
+# ─── Step 6: QA Check — AVANT le push, jamais après ──────────────────────────
+# Le QA tournait APRÈS le git push : il ne gardait rien, il constatait. Un scan
+# fautif était déjà en ligne quand le rapport sortait, et `set -e` faisait
+# échouer le script sur du contenu déjà public. Le contrôle passe donc devant.
 echo ""
-echo "📤 Step 6: Committing..."
+echo "🔍 Step 6: QA Check (avant publication)..."
+QA_RC=0
+node tools/qa-check.js --discord || QA_RC=$?
+# Post QA report to Discord if there are issues
+if [ -f /tmp/qa-discord-report.txt ]; then
+  QA_MSG=$(cat /tmp/qa-discord-report.txt)
+  # Only post if there are errors/warnings (not just the short OK line)
+  if echo "$QA_MSG" | grep -q "❌\|Erreur\|Avertissement\|warning"; then
+    openclaw message send \
+      --channel discord \
+      --target "1483382014588747778" \
+      --message "$QA_MSG" 2>/dev/null || true
+  fi
+  rm -f /tmp/qa-discord-report.txt
+fi
+if [ "$QA_RC" -ne 0 ]; then
+  echo "⛔ QA en échec (rc=$QA_RC) — RIEN n'est poussé. Corriger, relancer." >&2
+  exit "$QA_RC"
+fi
+
+# ─── Step 7: Commit & push everything ────────────────────────────────────────
+echo ""
+echo "📤 Step 7: Committing..."
 # SCAN_DATE / SCAN_DATE_ISO / TODAY were computed once at the top of this script.
 echo "   Scan date (séance): $SCAN_DATE | Today: $TODAY"
 
@@ -395,27 +430,15 @@ fi
 # Only commit if there are staged changes
 if git diff --cached --quiet; then
   echo "⚠️  No changes to commit"
+elif [ "$NO_PUSH" = true ]; then
+  # Les fichiers restent STAGED, pas commités : rien n'est public, et le diff est
+  # prêt pour la main qui poussera après le panel.
+  echo "⏸️  --no-push : $(git diff --cached --name-only | wc -l | tr -d ' ') fichier(s) stagés, aucun commit, aucun push."
+  echo "    Le push est une décision qui vient APRÈS les gates et le panel, pas un effet de bord de la collecte."
 else
   git commit -m "chore: scanner daily card + sweep update ${TODAY}"
   git push origin main
   echo "✅ Pushed to main"
-fi
-
-# ─── Step 7: QA Check ────────────────────────────────────────────────────────
-echo ""
-echo "🔍 Step 7: QA Check..."
-node tools/qa-check.js --discord
-# Post QA report to Discord if there are issues
-if [ -f /tmp/qa-discord-report.txt ]; then
-  QA_MSG=$(cat /tmp/qa-discord-report.txt)
-  # Only post if there are errors/warnings (not just the short OK line)
-  if echo "$QA_MSG" | grep -q "❌\|Erreur\|Avertissement\|warning"; then
-    openclaw message send \
-      --channel discord \
-      --target "1483382014588747778" \
-      --message "$QA_MSG" 2>/dev/null || true
-  fi
-  rm -f /tmp/qa-discord-report.txt
 fi
 
 # ─── Step 7b: Lessons decay (daily, idempotent, non-blocking) ────────────────

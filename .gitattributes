@@ -1,0 +1,14 @@
+# Registre de publication : append-only NDJSON, une ligne par publication.
+#
+# `merge=union` parce que deux exécuteurs (poste local et routine cloud) clonent
+# le même dépôt et publient chacun de leur côté. Avec un JSON monolithique, la
+# convergence produisait des marqueurs <<<<<<< dans le fichier : le gate
+# continuait d'autoriser le web tout en refusant d'écrire, et le même produit
+# était jugé « jamais publié » à chaque run suivant, indéfiniment. Une union de
+# lignes est la bonne sémantique : deux publications distinctes sont deux faits,
+# pas un conflit.
+#
+# ⚠️ Limite assumée : l'union résout la CONVERGENCE, pas la DIVERGENCE. Tant que
+# deux clones n'ont pas fusionné, chacun voit son propre quota email. Un pull
+# avant toute autorisation d'email reste nécessaire.
+data/publication-ledger.ndjson merge=union

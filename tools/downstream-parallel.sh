@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 # downstream-parallel — downstream de /scanner, parallélisé sur son vrai graphe.
 #
-#   bash tools/downstream-parallel.sh <DATE> <ASOF>
+#   bash tools/downstream-parallel.sh <DATE> <ASOF> [--no-push]
+#
+# --no-push : tout produire, ne rien rendre public. Obligatoire depuis /desk —
+# la dernière étape (publish-daily-card) poussait sur main AVANT la barrière de
+# fraîcheur, les gates et le panel, donc le contenu était déjà en ligne quand un
+# gate le refusait.
 #
 # L'ordre historique était une file d'attente. Le graphe réel :
 #
@@ -16,7 +21,10 @@
 # Seul gen-api dépend vraiment de gen-status-page. Les cartes et la synthèse
 # tournent en parallèle de lui.
 set -uo pipefail
-DATE="${1:?usage: downstream-parallel.sh <DATE> <ASOF>}"; ASOF="${2:?}"
+DATE="${1:?usage: downstream-parallel.sh <DATE> <ASOF> [--no-push]}"; ASOF="${2:?}"
+NO_PUSH=""
+shift 2
+while [ $# -gt 0 ]; do case "$1" in --no-push) NO_PUSH="--no-push";; esac; shift; done
 DIR="scanner/$DATE"
 T0=$(date +%s); log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
 fail(){ echo "ÉCHEC: $*" >&2; exit 1; }
@@ -53,6 +61,6 @@ log "status page faite"
 wait $P1 $P2 $P3
 log "api / cartes / synthèse faits (rc: $(cat /tmp/d-api.rc) $(cat /tmp/d-cards.rc) $(cat /tmp/d-synth.rc))"
 
-# 4. image + push + QA (le sweep a déjà tourné dans la chaîne C)
-bash tools/publish-daily-card.sh --no-sweep --no-telegram > /tmp/d-card.log 2>&1 || fail "publish-daily-card"
-log "publication faite — downstream complet"
+# 4. image + QA + (push, sauf --no-push) — le sweep a déjà tourné dans la chaîne C
+bash tools/publish-daily-card.sh --no-sweep --no-telegram $NO_PUSH > /tmp/d-card.log 2>&1 || fail "publish-daily-card"
+if [ -n "$NO_PUSH" ]; then log "downstream complet — artefacts locaux, aucun push"; else log "downstream complet"; fi

@@ -25,8 +25,13 @@ log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
     --var refdate="$REF" > /tmp/A1.log 2>&1 || { echo "A1 ÉCHEC" > /tmp/A.status; exit 1; }
   node tools/extract-universe.js --in "$DIR/_data" --out "$DIR/_data/vars.json" --limit 60 \
     >> /tmp/A1.log 2>&1 || { echo "A2 ÉCHEC — vivier vide" > /tmp/A.status; exit 1; }
+  # Le code retour de l'enrichissement DOIT être testé. Sans ce garde, un
+  # sous-shell dont l'avant-dernière commande échoue sort en 0 et écrivait « A OK » :
+  # deux lots dilution sur cinq perdus (MCP capricieux, 429, job en timeout)
+  # devenaient un scan réputé complet, sur lequel on publiait.
   node tools/collect.js --plan plans/scanner-wave2.json --out "$DIR/_data2" --quiet \
-    --vars-file "$DIR/_data/vars.json" --var refdate="$REF" >> /tmp/A1.log 2>&1
+    --vars-file "$DIR/_data/vars.json" --var refdate="$REF" >> /tmp/A1.log 2>&1 \
+    || { echo "A3 ÉCHEC — enrichissement incomplet (voir /tmp/A1.log)" > /tmp/A.status; exit 1; }
   echo "A OK" > /tmp/A.status
 ) & PA=$!
 
@@ -58,8 +63,20 @@ log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
 ) & PC=$!
 
 log "3 chaînes lancées (A vivier+enrichissement · B dtx · C suivi+sweep)"
-wait $PA; log "A terminée — $(cat /tmp/A.status 2>/dev/null)"
-wait $PB; log "B terminée — $(cat /tmp/B.status 2>/dev/null)"
-wait $PC; log "C terminée — $(cat /tmp/C.status 2>/dev/null)"
-grep -q "ÉCHEC" /tmp/A.status 2>/dev/null && { echo "Chemin critique en échec — on ne poursuit PAS sur des données partielles." >&2; exit 1; }
+# Le verdict vient du CODE RETOUR de la chaîne, pas d'un grep dans un fichier de
+# statut. Un fichier absent (sous-shell tué, /tmp purgé, deux scans concurrents
+# qui se marchent dessus) faisait échouer le grep, donc passer le test : le
+# chemin critique était déclaré sain par défaut. Un rc, lui, existe toujours.
+wait $PA; ARC=$?; log "A terminée (rc=$ARC) — $(cat /tmp/A.status 2>/dev/null)"
+wait $PB; BRC=$?; log "B terminée (rc=$BRC) — $(cat /tmp/B.status 2>/dev/null)"
+wait $PC; CRC=$?; log "C terminée (rc=$CRC) — $(cat /tmp/C.status 2>/dev/null)"
+if [ "$ARC" -ne 0 ] || grep -q "ÉCHEC" /tmp/A.status 2>/dev/null; then
+  echo "Chemin critique en échec (rc=$ARC) — on ne poursuit PAS sur des données partielles." >&2
+  exit 1
+fi
+# B et C ne sont pas le chemin critique du VIVIER, mais un dtx muet vide le pont
+# de signaux et un sweep en échec fige les stats. On le dit fort au lieu de le
+# laisser dans un log que personne ne rouvre.
+[ "$BRC" -ne 0 ] && log "⚠ chaîne dtx en échec (rc=$BRC) — décisions du moteur absentes ce soir (voir /tmp/B.log)"
+[ "$CRC" -ne 0 ] && log "⚠ chaîne suivi+sweep en échec (rc=$CRC) — stats non rafraîchies (voir /tmp/C.log)"
 log "collecte complète — prêt pour sélection/génération"
