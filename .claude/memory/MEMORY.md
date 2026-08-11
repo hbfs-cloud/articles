@@ -157,3 +157,4 @@
 - [Le registre de dépôts du service est incomplet](feedback_sec_filings_registry_incomplete.md) — `sec_filings` renvoie VIDE sur BNY/NKLR/IOVA alors qu'EDGAR trouve 424B2, 424B3 et S-3ASR réels. Un retour vide de ce service est NON CONCLUANT, jamais négatif : le contrôle EDGAR direct de validate-scan fait foi.
 - [Un seuil de taille n'est pas une preuve de complétude](feedback_size_threshold_is_not_completeness.md) — le weekly 20260810 bloqué deux fois pour des raisons opposées : compter les sections, pas les octets.
 - [Le panel adversarial est non négociable](project_panel_non_negociable.md) — arbitré le 11/08 face à un objectif de latence ; relevé de ce qu'il rattrape en une journée.
+- [REPRISE session 11/08](../REPRISE.md) — à lire en premier dans une session neuve : deux vérifications urgentes, décisions à ne pas revisiter, chantiers ouverts.
