@@ -1,41 +1,33 @@
 {
-  "generated_at": "2026-08-11T12:37:58.424Z",
-  "now_paris": "2026-08-11 14:37",
-  "after_close": false,
-  "reference_close": "2026-08-10",
-  "session": "2026-08-11",
-  "session_compact": "20260811",
+  "generated_at": "2026-08-11T21:53:51.339Z",
+  "now_paris": "2026-08-11 23:53",
+  "after_close": true,
+  "reference_close": "2026-08-11",
+  "session": "2026-08-12",
+  "session_compact": "20260812",
   "socle": {
     "plan": "plans/socle.json",
     "overview_plan": "plans/socle-overview.json",
     "out": "data/desk/20260811/_socle",
     "resolved": true,
     "covered_names": 19,
-    "calls_saved": 6,
-    "detail": [
-      "signals-desk.status ← socle.status",
-      "signals-desk.regime ← socle.regime",
-      "signals-desk.economic_events ← socle.economic_events",
-      "signals-desk.earnings_3d ← socle.earnings_all_7d",
-      "retro.status ← socle.status",
-      "retro.bench ← socle.bars_indices"
-    ],
+    "calls_saved": 0,
+    "detail": [],
     "mismatches": []
   },
   "due": [
     {
-      "type": "signals",
-      "reason": "cadence OK et séance ouvrée",
+      "type": "earnings",
+      "reason": "10 publications > 10 Md$ à J±3",
       "chain": "S",
-      "plans": [
-        "signals-desk"
-      ],
+      "plans": [],
       "artifacts": [],
       "vars": {},
       "variant": null,
-      "llm": "sélection de 2 à 3 familles (swing / squeeze / earnings / rotation / macro) au vu du régime live, avec la raison écrite",
+      "llm": null,
       "blocker": null,
-      "cadence_h": 12,
+      "trigger": null,
+      "cadence_h": 20,
       "distribution": {
         "web": true,
         "substack": {
@@ -49,23 +41,19 @@
       }
     },
     {
-      "type": "retro",
-      "reason": "scan 20260612 : horizon de 10 séances échu le 2026-06-29, aucune rétro",
+      "type": "macro",
+      "reason": "tier 1 le 2026-08-12 : Consumer Price Index (CPI)",
       "chain": "S",
-      "plans": [
-        "retro"
-      ],
-      "artifacts": [
-        "scanner/20260612/retro/index.html"
-      ],
+      "plans": [],
+      "artifacts": [],
       "vars": {
-        "scan": "20260612",
-        "horizon_end": "2026-06-29"
+        "target": "2026-08-12"
       },
       "variant": null,
-      "llm": null,
+      "llm": "vérifier date ET consensus à la source avant toute production",
       "blocker": null,
-      "cadence_h": 144,
+      "trigger": "2026-08-12:CPI",
+      "cadence_h": 36,
       "distribution": {
         "web": true,
         "substack": {
@@ -83,7 +71,7 @@
   "skipped": [
     {
       "type": "scanner",
-      "reason": "il est 14:37 à Paris — la clôture de la séance visée n'existe pas encore (seuil 22h30)",
+      "reason": "cadence : « scanner » publié il y a 5.3 h, minimum 12 h",
       "chain": null,
       "plans": [],
       "artifacts": [],
@@ -91,7 +79,8 @@
       "variant": null,
       "llm": null,
       "blocker": null,
-      "cadence_h": null,
+      "trigger": null,
+      "cadence_h": 12,
       "distribution": null
     },
     {
@@ -104,7 +93,22 @@
       "variant": null,
       "llm": null,
       "blocker": null,
+      "trigger": null,
       "cadence_h": null,
+      "distribution": null
+    },
+    {
+      "type": "signals",
+      "reason": "cadence : « signals » publié il y a 8.3 h, minimum 12 h",
+      "chain": null,
+      "plans": [],
+      "artifacts": [],
+      "vars": {},
+      "variant": null,
+      "llm": null,
+      "blocker": null,
+      "trigger": null,
+      "cadence_h": 12,
       "distribution": null
     },
     {
@@ -117,6 +121,7 @@
       "variant": null,
       "llm": null,
       "blocker": null,
+      "trigger": null,
       "cadence_h": null,
       "distribution": null
     },
@@ -130,12 +135,13 @@
       "variant": null,
       "llm": null,
       "blocker": null,
+      "trigger": null,
       "cadence_h": null,
       "distribution": null
     },
     {
-      "type": "earnings",
-      "reason": "densité insuffisante : 0 publication(s) > 10 Md$ à J±3, seuil 8",
+      "type": "retro",
+      "reason": "cadence : « retro » publié il y a 8.3 h, minimum 144 h",
       "chain": null,
       "plans": [],
       "artifacts": [],
@@ -143,20 +149,8 @@
       "variant": null,
       "llm": null,
       "blocker": null,
-      "cadence_h": 20,
-      "distribution": null
-    },
-    {
-      "type": "macro",
-      "reason": "aucun événement de tier 1 le 2026-08-12",
-      "chain": null,
-      "plans": [],
-      "artifacts": [],
-      "vars": {},
-      "variant": null,
-      "llm": null,
-      "blocker": null,
-      "cadence_h": 0,
+      "trigger": null,
+      "cadence_h": 144,
       "distribution": null
     },
     {
@@ -169,7 +163,8 @@
       "variant": null,
       "llm": null,
       "blocker": null,
-      "cadence_h": 0,
+      "trigger": null,
+      "cadence_h": 168,
       "distribution": null
     }
   ],
@@ -197,20 +192,15 @@
       "reason": "règle No Auto Video — jamais sans demande explicite dans la session courante"
     }
   ],
-  "config_gaps": [
-    "« macro » absent de CADENCE_H dans publication-gate.js — aucune barrière de cadence, seul le déclencheur événementiel de desk-plan le retient",
-    "« squeeze » absent de CADENCE_H dans publication-gate.js — aucune barrière de cadence, seul le déclencheur événementiel de desk-plan le retient",
-    "« insiders » a une cadence de 20 h dans publication-gate.js mais AUCUN producteur n'existe (ni commande, ni skill, ni plan). Une cadence qui pointe vers rien est un mensonge dans la config : écrire le producteur (la donnée insiders_7d est déjà dans le socle, coût marginal nul) ou supprimer la clé."
-  ],
+  "config_gaps": [],
   "email_policy": {
     "default": "send_email=false",
     "rule": "aucun email n'est autorisé par ce plan. Autorisation séparée, après le panel, sous verrou : bash tools/desk-run.sh --authorize-email <type> --materiality N",
     "quota": "1 email / 24 h, TOUS types confondus (publication-gate.js)"
   },
   "collected": [
-    "signals",
-    "retro"
+    "macro"
   ],
   "rejected": [],
-  "collected_at": "2026-08-11T12:38:05.802Z"
+  "collected_at": "2026-08-11T21:54:31.802Z"
 }

@@ -2841,9 +2841,12 @@ document.addEventListener('DOMContentLoaded',function(){
   var VALID_MODES=${JSON.stringify(Object.keys(modes))};
   var activeMode=${JSON.stringify(Object.keys(modes)[0] || '')};
   var MODE_CATALOG=${modeCatalog};
-  var DEFAULT_FAVS=${JSON.stringify(Object.keys(modes).slice(0, 6))};
+  // Les 5 modes du catalogue, tous affichés au premier passage. Depuis le
+  // 2026-08-12 le catalogue EST la sélection par défaut — il n'y a plus de
+  // longue traîne à masquer.
+  var DEFAULT_FAVS=${JSON.stringify(Object.keys(modes))};
   var MAX_FAVS=VALID_MODES.length; // pas de limite artificielle — l'utilisateur peut sélectionner tous les modes
-  function getFavs(){try{var s=localStorage.getItem('dt-fav-modes');if(s){var a=JSON.parse(s);if(Array.isArray(a)&&a.length)return a.filter(function(m){return VALID_MODES.includes(m)}).slice(0,MAX_FAVS)}}catch(_){}return DEFAULT_FAVS.filter(function(m){return VALID_MODES.includes(m)})}
+  function getFavs(){try{var s=localStorage.getItem('dt-fav-modes');if(s){var a=JSON.parse(s);if(Array.isArray(a)&&a.length){var k=a.filter(function(m){return VALID_MODES.includes(m)}).slice(0,MAX_FAVS);if(k.length)return k}}}catch(_){}return DEFAULT_FAVS.filter(function(m){return VALID_MODES.includes(m)})}
   function setFavs(a){try{localStorage.setItem('dt-fav-modes',JSON.stringify(a))}catch(_){}}
   function applyFavs(favs){
     document.querySelectorAll('.mode-tab[data-mode]').forEach(function(t){t.classList.toggle('fav',favs.includes(t.dataset.mode))});
