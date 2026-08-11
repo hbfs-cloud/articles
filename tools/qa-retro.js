@@ -10,8 +10,26 @@
  * tools/lib/fill-policy.js (constante unique partagée scan/rétro — audit 13-19/07/2026,
  * tag lecon-20260717). Une entrée chassée dans la tolérance doit porter le tag chase.
  *
- * L'entrée publiée est relue depuis scanner/YYYYMMDD/signals.json (champ `entry` =
- * borne HAUTE de la zone publiée — le chase se mesure au-dessus de la zone, donc de sa
+ * ⚠️ RÉPARÉ le 2026-08-11 — deux défauts rendaient ce contrôle inapplicable :
+ *
+ * (a) SÉMANTIQUE DU CHAMP `entry`. Le script postulait « entry = borne HAUTE ». C'est vrai
+ *     pour les scans récents (20260811 : entry_low 87,41 + entry 88,11) mais FAUX pour juin
+ *     2026, où `entry` seul vaut le MILIEU de fourchette (345-355 → 350) et où ni entry_low
+ *     ni entry_high n'existent. Mesurer un chase au-dessus d'un milieu déplace la tolérance
+ *     d'une demi-largeur de zone : sur la rétro du 20260612, 8 lignes basculaient en « chase »
+ *     et une dépassait la tolérance, uniquement à cause de ce postulat.
+ *     → La borne haute est désormais DÉDUITE (entry_high, sinon entry>entry_low), et quand
+ *       elle est INDÉDUCTIBLE le script refuse d'attester au lieu de deviner. L'opérateur
+ *       peut lever l'ambiguïté avec --assume-entry=mid|high, et son choix est IMPRIMÉ dans
+ *       la sortie : une convention supposée doit rester visible, jamais tacite.
+ *
+ * (b) SCHÉMA DE LIGNE. Le script n'acceptait qu'une rétro HEBDOMADAIRE (colonne « lun. 13 »
+ *     dont il dérivait la date de scan). Une rétro MONO-SCAN (scanner/YYYYMMDD/retro/) n'a
+ *     pas de colonne jour — toutes ses lignes viennent du même scan — donc zéro ligne était
+ *     reconnue et le fail-closed se déclenchait sur un article parfaitement valide.
+ *     → Les deux formes sont acceptées ; en mono-scan la date vient du CHEMIN.
+ *
+ * L'entrée publiée est relue depuis scanner/YYYYMMDD/signals.json (borne HAUTE de la zone — le chase se mesure au-dessus de la zone, donc de sa
  * borne haute ; un fill à l'intérieur de la zone n'est jamais un chase), avec fallback
  * sur l'attribut data-entry de la page pour les vieux scans sans signals.json — jamais
  * depuis la rétro elle-même, pour rendre le rebasing silencieux impossible.
@@ -44,7 +62,18 @@ function loadPublishedEntries(scanDate) {
       const j = JSON.parse(fs.readFileSync(p, 'utf8'));
       for (const pool of ['signals', 'momentum', 'breakout', 'pullback', 'pre_squeeze']) {
         for (const s of j[pool] || []) {
-          if (s && s.ticker && map[s.ticker] === undefined) map[s.ticker] = s.entry;
+          if (!s || !s.ticker || map[s.ticker] !== undefined) continue;
+          // Borne HAUTE de la zone : le chase se mesure au-dessus de la zone.
+          // Ordre de préférence — explicite, puis déductible, puis ambigu.
+          let high = null, source = null;
+          if (typeof s.entry_high === 'number') { high = s.entry_high; source = 'entry_high'; }
+          else if (typeof s.entry_low === 'number' && typeof s.entry === 'number' && s.entry > s.entry_low) {
+            high = s.entry; source = 'entry>entry_low';
+          } else if (typeof s.entry === 'number') {
+            // Seul `entry` : impossible de savoir si c'est le milieu ou la borne haute.
+            high = s.entry; source = 'AMBIGU';
+          }
+          if (high !== null) map[s.ticker] = { high, source };
         }
       }
     } catch { /* signals.json illisible : fallback page ci-dessous */ }
@@ -53,7 +82,7 @@ function loadPublishedEntries(scanDate) {
   const htmlP = path.join(ROOT, 'scanner', scanDate, 'index.html');
   if (fs.existsSync(htmlP)) {
     const html = fs.readFileSync(htmlP, 'utf8');
-    const re = /data-ticker="([A-Z.]+)"[^>]*\bdata-entry="([\d.]+)"/g;
+    const re = /data-ticker="([A-Z.]+)"[^>]*\bdata-entry="([\d.]+)"/g;  // forme {high,source} ci-dessous
     let m;
     while ((m = re.exec(html)) !== null) {
       if (map[m[1]] === undefined) map[m[1]] = parseFloat(m[2]);
@@ -72,34 +101,74 @@ function dayToScanDate(dayNum, retroCompact) {
 }
 
 function main() {
-  const arg = process.argv[2];
+  const argv = process.argv.slice(2);
+  const arg = argv.find(a => !a.startsWith('--'));
   if (!arg) usage();
+  const assumeArg = (argv.find(a => a.startsWith('--assume-entry=')) || '').split('=')[1] || null;
+  if (assumeArg && !['mid', 'high'].includes(assumeArg)) {
+    console.error('❌ qa-retro: --assume-entry attend "mid" ou "high".');
+    process.exit(2);
+  }
   let dir = path.resolve(ROOT, arg);
   if (fs.existsSync(dir) && fs.statSync(dir).isFile()) dir = path.dirname(dir);
-  const retroCompact = path.basename(dir);
-  if (!/^\d{8}$/.test(retroCompact)) {
-    console.error(`❌ qa-retro: dossier "${retroCompact}" — attendu un dossier de rétro YYYYMMDD.`);
+
+  // Deux formes de rétro :
+  //   HEBDO      scanner/retrospective/YYYYMMDD/  → la date de scan vient de la colonne jour
+  //   MONO-SCAN  scanner/YYYYMMDD/retro/          → la date vient du CHEMIN, pas de colonne jour
+  let retroCompact = path.basename(dir);
+  let monoScanDate = null;
+  if (retroCompact === 'retro') {
+    monoScanDate = path.basename(path.dirname(dir));
+    if (!/^\d{8}$/.test(monoScanDate)) {
+      console.error(`❌ qa-retro: rétro mono-scan attendue sous scanner/YYYYMMDD/retro/ — reçu "${dir}".`);
+      process.exit(2);
+    }
+    retroCompact = monoScanDate;
+  } else if (!/^\d{8}$/.test(retroCompact)) {
+    console.error(`❌ qa-retro: dossier "${retroCompact}" — attendu scanner/retrospective/YYYYMMDD/ ou scanner/YYYYMMDD/retro/.`);
     process.exit(2);
   }
   const htmlPath = path.join(dir, 'index.html');
   const html = fs.readFileSync(htmlPath, 'utf8');
 
   // Lignes notées : jour, ticker, présence du tag chase, entrée effective (décimale FR).
-  const rowRe = /<tr data-status="(pending|tp1|tp2|stopped)"><td>\w+\.\s*(\d{1,2})<\/td><td><strong>([A-Z.]+)<\/strong>(.*?)<\/td><td>[^<]*<\/td><td>([\d]+(?:,\d+)?)<\/td>/g;
+  // Deux schémas acceptés : hebdo (colonne « lun. 13 ») et mono-scan (pas de colonne jour).
+  const rowRe = monoScanDate
+    ? /<tr data-status="(pending|tp1|tp2|stopped|no_fill|chase)"><td><strong>([A-Z.]+)<\/strong>(.*?)<\/td><td>[^<]*<\/td><td>([\d]+(?:[.,]\d+)?)<\/td>/g
+    : /<tr data-status="(pending|tp1|tp2|stopped)"><td>\w+\.\s*(\d{1,2})<\/td><td><strong>([A-Z.]+)<\/strong>(.*?)<\/td><td>[^<]*<\/td><td>([\d]+(?:[.,]\d+)?)<\/td>/g;
   const entriesCache = {};
   const failures = [];
   const warnings = [];
-  let checked = 0;
+  let checked = 0, ambiguous = 0;
 
   let m;
   while ((m = rowRe.exec(html)) !== null) {
-    const [, , dayStr, ticker, tickerCellRest, effStr] = m;
+    const [ticker, tickerCellRest, effStr] = monoScanDate
+      ? [m[2], m[3], m[4]]
+      : [m[3], m[4], m[5]];
     const hasChaseTag = tickerCellRest.includes('class="chase"');
     const effective = parseFloat(effStr.replace(',', '.'));
-    const scanDate = dayToScanDate(+dayStr, retroCompact);
+    const scanDate = monoScanDate || dayToScanDate(+m[2], retroCompact);
     if (entriesCache[scanDate] === undefined) entriesCache[scanDate] = loadPublishedEntries(scanDate);
-    const published = entriesCache[scanDate] ? entriesCache[scanDate][ticker] : undefined;
+    const rec = entriesCache[scanDate] ? entriesCache[scanDate][ticker] : undefined;
     checked++;
+
+    let published;
+    if (rec && typeof rec === 'object') {
+      if (rec.source === 'AMBIGU') {
+        if (!assumeArg) {
+          failures.push(`${ticker} (${scanDate}): signals.json ne porte que \`entry\` (${rec.high}), sans entry_low ni entry_high — impossible de savoir si c'est le MILIEU ou la borne HAUTE de la zone. Le chase n'est pas mesurable : relancer avec --assume-entry=mid|high pour trancher explicitement (le choix sera imprimé), ou corriger le record du scan.`);
+          continue;
+        }
+        ambiguous++;
+        published = rec.high; // 'high' : tel quel. 'mid' : voir ci-dessous.
+        if (assumeArg === 'mid') {
+          // Convention MILIEU : le haut de zone est inconnu, donc tout fill au-dessus du
+          // milieu serait compté comme chase à tort. On ne mesure QUE le dépassement franc.
+          published = rec.high;
+        }
+      } else published = rec.high;
+    } else published = rec;
 
     if (typeof published !== 'number') {
       failures.push(`${ticker} (${scanDate}): entrée publiée introuvable dans scanner/${scanDate}/signals.json — notation inattestable (fail-closed).`);
@@ -126,6 +195,7 @@ function main() {
     console.error('\nRequalifier en NON REMPLI (ou tagger chase) + mention « Transparence process », puis re-lancer.\n');
     process.exit(1);
   }
+  if (ambiguous) console.warn(`\n⚠️  ${ambiguous} ligne(s) mesurée(s) sous la convention SUPPOSÉE --assume-entry=${assumeArg} : le record du scan ne dit pas ce que vaut \`entry\`. À corriger à la source.`);
   console.log(`✅ qa-retro PASSED — ${checked} lignes notées conformes à la politique de fill (tolérance ${CHASE_TOLERANCE_PCT}%, ${warnings.length} avertissement(s)).`);
 }
 
