@@ -679,6 +679,107 @@ function fetchBinanceOHLCV(ticker) {
   });
 }
 
+
+// ── Préchargement OHLCV EN MASSE via le MCP ──────────────────────────────────
+// Le sweep récupérait les barres ticker par ticker chez Yahoo, avec une pause de
+// 120 ms entre chacun : sur quelques centaines de titres, >10 min mesurés le
+// 2026-08-10 — le poste n°1 de /scanner, sans rapport avec le MCP.
+//
+// Or QueryData accepte un CSV de symboles et sert depuis un cache chaud. Depuis
+// les jetons read-only, un subprocess peut l'appeler. On préremplit donc
+// priceCache en quelques appels groupés ; les boucles fetchOHLCV existantes
+// deviennent des no-op (elles retournent tout de suite si le ticker est en cache).
+//
+// Sans jeton, la fonction ne fait rien et le chemin Yahoo historique s'applique
+// à l'identique : aucune régression, seulement l'ancienne lenteur.
+const BULK_SIZE = Number(process.env.SWEEP_BULK_SIZE || 20);
+async function prefetchBulkMCP(tickers, label) {
+  let mcp;
+  try { mcp = require('./lib/mcp-client'); } catch { return 0; }
+  if (!mcp.canCallDirectly('marketdata')) {
+    console.log('  [bulk] pas de jeton MCP — repli sur la récupération unitaire (lente)');
+    return 0;
+  }
+  const todo = [...new Set(tickers)].filter(t => t && !priceCache[t] && !isCryptoTicker(t));
+  if (!todo.length) return 0;
+  const batches = [];
+  for (let i = 0; i < todo.length; i += BULK_SIZE) batches.push(todo.slice(i, i + BULK_SIZE));
+  console.log(`  [bulk] ${todo.length} tickers en ${batches.length} appel(s) group\u00e9(s)${label ? ' — ' + label : ''}...`);
+  const t0 = Date.now();
+  const calls = batches.map(b => ({
+    server: 'marketdata', tool: 'QueryData', as: b[0],
+    args: { types: 'bars_daily', symbols: b.join(','), limit: 140 },
+  }));
+  let filled = 0, dropped = 0;
+  try {
+    const results = await mcp.callMany(calls, { concurrency: 4 });
+    for (let bi = 0; bi < results.length; bi++) {
+      const r = results[bi];
+      if (!r || !r.ok) continue;
+      const res = (r.value && r.value.results && r.value.results[0]) || null;
+      if (!res) continue;
+      const syms = res.symbols || batches[bi];
+      const data = res.data || [];
+      // ⛔ APPARIEMENT FAIL-CLOSED — vérifié le 2026-08-11.
+      // Le serveur renvoie `symbols` = la liste DEMANDÉE, mais `data` = seulement
+      // les symboles TROUVÉS. Sur AAPL,ZZZZFAKE,MSFT,QQQFAKE2,SPY il renvoie
+      // 5 symboles et 3 séries. Apparier par index écrirait l'historique de MSFT
+      // sous ZZZZFAKE et celui de SPY sous MSFT — une corruption SILENCIEUSE des
+      // prix, donc des trades simulés faux, sans aucune erreur levée.
+      // Les entrées de `data` ne portent pas de champ `symbol` : on ne peut pas
+      // réapparier. Donc si les longueurs diffèrent, on JETTE le lot entier et on
+      // laisse le chemin unitaire le traiter. Lent, mais juste.
+      if (data.length !== syms.length) {
+        dropped += syms.length;
+        continue;
+      }
+      for (let i = 0; i < data.length; i++) {
+        const sym = syms[i];
+        const bars = (data[i] && data[i].bars) || (Array.isArray(data[i]) ? data[i] : null);
+        if (!sym || !Array.isArray(bars) || !bars.length) continue;
+        const hist = {};
+        for (const b of bars) {
+          // forme tableau [date,o,h,l,c,v] ou objet {date,open,...}
+          if (Array.isArray(b) && b.length >= 6) hist[b[0]] = { open: b[1], high: b[2], low: b[3], close: b[4], volume: b[5] };
+          else if (b && b.date) hist[b.date] = { open: b.open, high: b.high, low: b.low, close: b.close, volume: b.volume };
+        }
+        if (!Object.keys(hist).length) continue;
+        priceCache[sym] = hist;
+        try { saveCachedPrice(sym, hist); } catch { /* le cache disque n'est pas critique */ }
+        filled++;
+      }
+    }
+  } catch (e) {
+    console.log(`  [bulk] \u00e9chec (${String(e.message).slice(0, 90)}) — repli unitaire`);
+    return 0;
+  }
+  console.log(`  [bulk] ${filled}/${todo.length} servis en ${((Date.now() - t0) / 1000).toFixed(1)}s` +
+    (dropped ? ` — ${dropped} écartés (lot incomplet : appariement impossible, repli unitaire)` : ''));
+  return filled;
+}
+
+
+// Repli parallèle borné pour ce que le MCP ne couvre pas (délistés, EU, exotiques).
+// ~60% des tickers d'historique ne sont pas servis en masse ; les récupérer un par
+// un avec 120 ms de pause était le reliquat des 10 minutes.
+const FETCH_CONCURRENCY = Number(process.env.SWEEP_FETCH_CONCURRENCY || 8);
+async function fetchOHLCVMany(tickers, label) {
+  const list = [...new Set(tickers)].filter(t => t && !priceCache[t]);
+  if (!list.length) return;
+  console.log(`  [repli] ${list.length} tickers${label ? ' — ' + label : ''}, ${FETCH_CONCURRENCY} en parallèle...`);
+  const t0 = Date.now(); let done = 0, cursor = 0;
+  async function worker() {
+    for (;;) {
+      const i = cursor++; if (i >= list.length) return;
+      try { await fetchOHLCV(list[i]); } catch { /* un ticker manquant ne casse pas le sweep */ }
+      done++; if (done % 25 === 0) process.stdout.write(`  ${done}/${list.length}\r`);
+      await sleep(30);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(FETCH_CONCURRENCY, list.length) }, worker));
+  console.log(`  [repli] ${done}/${list.length} en ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+}
+
 async function fetchOHLCV(ticker) {
   if (priceCache[ticker]) return priceCache[ticker];
   // Try file cache first
@@ -1891,15 +1992,9 @@ async function backfillExcursions() {
       if (t.ticker) neededTickers.add(t.ticker);
     }
   }
+  await prefetchBulkMCP([...neededTickers], 'backfill');
   console.log(`Fetching price history for ${neededTickers.size} tickers needed for backfill...`);
-  let fc = 0;
-  for (const ticker of neededTickers) {
-    await fetchOHLCV(ticker);
-    fc++;
-    if (fc % 5 === 0) process.stdout.write(`  ${fc}/${neededTickers.size}\r`);
-    await sleep(120);
-  }
-  console.log('');
+  await fetchOHLCVMany([...neededTickers], 'backfill');
 
   let totalClosed = 0, backfilled = 0, skippedNoHistory = 0, alreadyDone = 0;
   for (const modeId of Object.keys(trades)) {
@@ -1980,13 +2075,8 @@ async function main() {
   // 2. Fetch all ticker histories
   const tickers = [...new Set(allSetups.map(t => t.ticker))];
   console.log(`\nFetching price history for ${tickers.length} tickers...`);
-  let fetched = 0;
-  for (const ticker of tickers) {
-    await fetchOHLCV(ticker);
-    fetched++;
-    if (fetched % 5 === 0) process.stdout.write(`  ${fetched}/${tickers.length}\r`);
-    await sleep(120);
-  }
+  await prefetchBulkMCP(tickers, 'setups');
+  await fetchOHLCVMany(tickers, 'setups');
   const fetchedOK = Object.keys(priceCache).filter(k => priceCache[k]).length;
   console.log(`Fetched prices for ${fetchedOK}/${tickers.length} tickers\n`);
 
@@ -2548,6 +2638,9 @@ async function main() {
         // Force-refresh ALL live position tickers — bypass 12h TTL cache.
         // Stale cache caused TSM MtM to lag by a full trading day (2026-06-19 incident).
         console.log(`  Force-refreshing ${liveTickers.length} live tickers (bypass cache TTL)...`);
+        const liveRefetch = [];
+        for (const t of liveTickers) delete priceCache[t];
+        await prefetchBulkMCP(liveTickers, 'live positions');
         for (const t of liveTickers) {
           delete priceCache[t];
           // Purge BOTH the dated snapshot (TTL would otherwise serve a <12h file) and the
@@ -2558,9 +2651,9 @@ async function main() {
           } catch { /* ignore */ }
           const fp = path.join(PRICE_CACHE_DIR, `${t}.json`);
           if (fs.existsSync(fp)) fs.unlinkSync(fp);
-          await fetchOHLCV(t);
-          await sleep(120);
+          liveRefetch.push(t);
         }
+        await fetchOHLCVMany(liveRefetch, 'live positions');
         // Seed priceCache from scanner-positions.json current_price for dates
         // where Yahoo hasn't delivered a bar yet (entry day = nextBizDay of scan,
         // which may be today or tomorrow depending on timing).
