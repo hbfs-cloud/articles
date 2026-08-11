@@ -1406,6 +1406,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "",
+    "exchange": "",
+    "name": "Cohorte A+ — personne ne passe la grille (11 août 2026)",
+    "title": "Cohorte A+ — personne ne passe la grille (11 août 2026)",
+    "desc": "Quatre éliminatoires, un score de confluence sur 100, appliqués sans exception au marché américain à la clôture du 10 août. Sur 180 candidats screenés, aucun n'atteint 92/100. Royal Caribbean arrive en tête à 85 et bascule 0,19 % plus bas. Le détail de chaque rejet.",
+    "tags": "us,consumer,industrials,financials,technique,trade-idea",
+    "grade": "",
+    "href": "/analyses/aplus-20260811/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ITRG",
     "exchange": "NYSE American • Basic Materials • Gold Mining",
     "name": "ITRG — Ahead of Aug 11 earnings: why the $3,850-3,950/oz AISC estimate is the bear case, not t...",
