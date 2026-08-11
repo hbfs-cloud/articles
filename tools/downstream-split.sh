@@ -37,21 +37,57 @@ T0=$(date +%s); log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
 # Verrou : /desk et /scanner écrivent les MÊMES fichiers (data/, scanner/status/,
 # portfolio/v1/). Deux gen-status-page simultanés produisent un fichier corrompu
 # SANS erreur. Le second attend au lieu d'écrire par-dessus.
-LOCK=/tmp/dailytickers-downstream.lock
+LOCK="${DOWNSTREAM_LOCK:-/tmp/dailytickers-downstream.lock}"
+# 180 x 5 s = 900 s = 15 min. Paramétrable UNIQUEMENT pour que le test du verrou
+# fantôme soit exécutable en secondes ; la valeur par défaut est le contrat.
+LOCK_MAX_TRIES="${DOWNSTREAM_LOCK_MAX_TRIES:-180}"
+LOCK_POLL_S="${DOWNSTREAM_LOCK_POLL_S:-5}"
+# Rendre le verrou AVANT d'avoir arrêté les tâches de fond serait pire que pas de
+# verrou du tout : gen-api/gen-mode-cards/daily-synthesis sont lancés en `&` et
+# NE meurent PAS avec le shell (un SIGTERM ne vise que le shell). Mesuré le 11/08 :
+# verrou rendu à +1,5 s, gen-api écrivait encore data/ et portfolio/v1 à +12 s —
+# 10 s pendant lesquelles un autre run détient le verrou et écrit les mêmes
+# fichiers. Exactement la corruption que ce verrou existe pour empêcher.
+# Un kill sur le seul subshell ne suffit pas : il laisse le `node` qu'il a lancé
+# orphelin et toujours écrivant. On descend donc d'un niveau via ps.
+release(){
+  # idempotent : les gestionnaires INT/TERM sortent, ce qui déclenche AUSSI le
+  # trap EXIT — sans ce garde, release tournerait deux fois.
+  [ -n "${_released:-}" ] && return 0
+  _released=1
+  local p g
+  for p in $(jobs -p 2>/dev/null); do
+    for g in $(ps -Ao pid=,ppid= | awk -v pp="$p" '$2==pp{print $1}'); do kill "$g" 2>/dev/null; done
+    kill "$p" 2>/dev/null
+  done
+  wait 2>/dev/null
+  rmdir "$LOCK" 2>/dev/null
+}
 acquire(){
   local n=0
   until mkdir "$LOCK" 2>/dev/null; do
     n=$((n+1)); [ $n -eq 1 ] && log "artefacts partagés verrouillés par un autre run — attente"
-    [ $n -gt 180 ] && { echo "Verrou tenu >15 min, abandon (verrou fantôme ? rm -rf $LOCK)" >&2; exit 1; }
-    sleep 5
+    # Durée calculée, pas écrite en dur : un message qui annonce 15 min après en
+    # avoir attendu 6 s est un mensonge dans les logs le jour où on cherche pourquoi.
+    [ $n -gt "$LOCK_MAX_TRIES" ] && { echo "Verrou tenu >$(( LOCK_MAX_TRIES * LOCK_POLL_S ))s, abandon (verrou fantôme ? rm -rf $LOCK)" >&2; exit 1; }
+    sleep "$LOCK_POLL_S"
   done
-  trap 'rmdir "$LOCK" 2>/dev/null' EXIT
+  # Un trap de signal ne sort PAS tout seul : sans le `exit`, le script libérerait
+  # le verrou puis CONTINUERAIT d'écrire sans verrou — pire que pas de verrou.
+  # Vertu supplémentaire : bash diffère un trap jusqu'à la fin de la commande au
+  # premier plan, donc le node en cours finit d'écrire AVANT qu'on rende le verrou,
+  # au lieu d'être orphelin par la mort brutale du shell.
+  trap 'release' EXIT
+  trap 'release; exit 130' INT
+  trap 'release; exit 143' TERM
 }
 
 case "$MODE" in
   compute)
-    acquire
+    # Valider AVANT de prendre le verrou : un appel malformé n'a aucune raison de
+    # faire patienter un run légitime.
     [ -n "$ASOF" ] || { echo "ASOF requis pour compute" >&2; exit 2; }
+    acquire
     # ingestion dtx : --decide ET --replay obligatoires. Sans replay, metrics/equity
     # vides et le dashboard retombe sur un placeholder figé (incident du 23/07).
     if [ -d "$DIR/_dtx11" ] || [ -d "$DIR/_dtx" ]; then
