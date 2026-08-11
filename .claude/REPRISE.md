@@ -23,6 +23,36 @@ d'autorisation — c'est voulu. Vérifier qu'aucune ligne `email` n'a été écr
 grep -c '"email"' data/publication-ledger.ndjson 2>/dev/null || echo 0
 ```
 
+
+### 3. Les trois Substack ne sont PAS publiés — état incertain
+
+Le workflow a rapporté trois brouillons anglais créés puis laissés tels quels :
+
+| Produit | draft_id | Titre |
+|---|---|---|
+| signals | 210752979 | Three signals into tomorrow's CPI — and two of them are the same oil bet |
+| aplus | 210753064 | 180 US names, zero A+ setups — and the best one missed by 58 cents |
+| retro | 210753157 | The same ten trades score +2.13R or −2.02R depending on where you say you got filled |
+
+⚠️ **Je n'ai pas pu confirmer qu'ils existent.** `list_drafts` renvoie une liste VIDE, même
+après reconnexion du MCP substack. Les URL renvoient un 302 générique — une URL inventée
+renvoie le même. L'archive publique ne contient aucun des trois titres.
+
+Trois hypothèses, non départagées : brouillons supprimés · `list_drafts` filtré ou en échec
+silencieux · brouillons créés sous un autre compte/publication.
+
+**À faire :** tenter `update_draft(draft_id)` sur un des trois pour trancher (une erreur
+« not found » conclut). S'ils n'existent pas, les recréer depuis les articles publiés sur
+articles.dailytickers.com, puis publier avec **`send_email=false`**.
+
+⛔ **AUCUN EMAIL.** Rien dans ce qui a été produit le 11/08 ne justifie d'interrompre la
+liste, et aucun jeton d'autorisation n'a été demandé.
+
+**Écart de conception à noter** : `/desk` prévoit que Substack PUBLIE avec
+`send_email=false` (page en ligne, personne réveillé). Le workflow s'est arrêté au
+brouillon — plus prudent que la spec, mais trois articles validés par le panel n'ont
+aucune page anglaise en ligne.
+
 ## ÉTAT DU WORKFLOW EN COURS
 
 `desk-produire-20260811` — signals + retro + aplus, panel puis distribution web/Telegram.
