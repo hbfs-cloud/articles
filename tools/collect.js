@@ -48,6 +48,36 @@ const fs = require('fs');
 const path = require('path');
 const { callTool, callMany, awaitJob, canCallDirectly, McpAuthError } = require('./lib/mcp-client');
 
+/**
+ * Date la plus récente RÉELLEMENT PRÉSENTE dans une charge utile, bornée à aujourd'hui.
+ *
+ * Balaie les dates ISO du JSON sérialisé et rend la plus grande qui ne soit pas dans le futur.
+ * Le bornage est essentiel : un calendrier économique ou un calendrier de résultats porte des
+ * dates À VENIR, et sans borne c'est l'une d'elles qui sortirait — la garde certifierait alors
+ * une fraîcheur puisée dans le futur.
+ *
+ * Volontairement générique et sans schéma : les charges utiles n'ont pas de forme commune, et une
+ * extraction par chemin (`results[].data[].bars`) casserait au premier outil qui change de forme —
+ * en rendant `null`, donc en désarmant la garde, ce qui est le pire mode de panne possible.
+ * `null` signifie « aucune date lisible », jamais « à jour ».
+ */
+function maxObservedDate(value) {
+  let s;
+  try { s = JSON.stringify(value); } catch (_) { return null; }
+  if (!s) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  let best = null;
+  const re = /\d{4}-\d{2}-\d{2}/g;
+  let m;
+  while ((m = re.exec(s)) !== null) {
+    const d = m[0];
+    if (d > today) continue;          // borne : jamais une date future
+    if (d < '2000-01-01') continue;   // garde-fou anti-faux positif
+    if (best === null || d > best) best = d;
+  }
+  return best;
+}
+
 function arg(name, def) {
   const i = process.argv.indexOf(name);
   return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : def;
@@ -334,6 +364,31 @@ function socleRead(c) {
       r.ms += r.waitMs;
     }));
 
+    // ── COUPE-CIRCUIT DE PANNE D'ORIGINE ────────────────────────────────────────────────
+    // Le 2026-08-12, le service marketdata est tombé (429 sur la résolution des jobs, puis 502
+    // Cloudflare jusque sur GetStatus). La collecte a mis 2 694 s — 45 minutes — à mourir, en
+    // continuant à frapper une origine déjà à terre, pour finir par un échec de toute façon.
+    // Deux dégâts : 45 minutes perdues, et de la charge ajoutée à un serveur en détresse.
+    //
+    // Une panne d'origine n'est pas un échec d'appel : elle ne se réessaie pas utilement dans la
+    // même salve. Dès que plusieurs appels de la vague remontent un code d'infrastructure, on
+    // arrête tout et on le NOMME — « service indisponible » se diagnostique en une seconde, là où
+    // « job async : HTTP 429 » a fait accuser un quota qui n'était pas en cause.
+    const OUTAGE_RE = /\b(429|502|503|504)\b|bad gateway|service unavailable|origin/i;
+    const outage = results.filter(r => !r.ok && OUTAGE_RE.test(String(r.error || '')));
+    if (outage.length >= 2 && !estDetachee) {
+      const codes = [...new Set(outage.map(r => (String(r.error).match(/\b(429|502|503|504)\b/) || [])[1]).filter(Boolean))];
+      console.error(`[collect] ⛔ PANNE D'ORIGINE — ${outage.length} appel(s) de la vague « ${wave.name} » rejetés par l'infrastructure${codes.length ? ` (${codes.join(', ')})` : ''}.`);
+      for (const r of outage.slice(0, 4)) console.error(`           ✗ ${r.as} — ${r.error}`);
+      console.error(`           Ce n'est ni un quota ni une donnée manquante : le service ne répond pas.`);
+      console.error(`           Collecte interrompue — insister ajouterait de la charge à une origine déjà en échec.`);
+      journal.outage = { wave: wave.name, count: outage.length, codes, at: new Date().toISOString() };
+      journal.finished_at = new Date().toISOString();
+      journal.failures = failures + outage.length;
+      fs.writeFileSync(path.join(outDir, '_collect.json'), JSON.stringify(journal, null, 2));
+      process.exit(4);
+    }
+
     const waveLog = { name: wave.name, ms: Date.now() - t0, calls: [] };
     for (let i = 0; i < results.length; i++) {
       const r = results[i], c = calls[i];
@@ -348,8 +403,22 @@ function socleRead(c) {
         sources.push({
           name: r.as,
           as_of: r.asOf || new Date().toISOString(),
+          // SÉANCE RÉELLEMENT DÉCRITE par la charge utile — distincte de l'heure de collecte.
+          //
+          // POURQUOI (incident du 2026-08-12) : la collecte est partie 9 minutes après la clôture
+          // US, juste avant l'ingestion des barres du jour. check-freshness a certifié
+          // « 10 sources vérifiées, 0 bloquante(s) », toutes à « 0,0 h », alors que les DIX
+          // décrivaient la séance de la VEILLE. Un briefing publié dessus aurait raconté hier en
+          // se présentant comme celui du jour, et rien dans le harnais ne l'aurait dit : l'âge de
+          // la collecte et la date du contenu sont deux grandeurs différentes, et seule la
+          // première était mesurée.
+          data_through: maxObservedDate(r.value),
           max_age_h: c.freshness.max_age_h,
           required: c.freshness.required !== false,
+          // Opt-in : cette source DOIT atteindre la clôture de référence. Réservé aux séries de
+          // marché — un calendrier économique porte des dates futures, un screener une date
+          // d'exécution : leur imposer la clôture produirait de faux blocages.
+          ...(c.freshness.expects_close ? { expects_close: true, reference_close: refdate || null } : {}),
           // Un socle partagé ne doit PAS devenir un harnais partagé : chaque produit
           // garde SON harness.json, où la source héritée est nommée comme telle.
           // Sinon on ne sait plus, six mois après, quel article s'appuyait sur quoi.

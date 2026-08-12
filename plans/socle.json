@@ -25,75 +25,240 @@
     "plans/socle-overview.json parce qu'il ne porte AUCUN chiffre publié."
   ],
   "waves": [
-    { "name": "socle", "calls": [
-      { "as": "status", "server": "marketdata", "tool": "GetStatus", "args": {},
-        "covers": ["status", "service_health"],
-        "freshness": { "max_age_h": 6, "required": true } },
-
-      { "as": "dtx_health", "server": "systematic", "tool": "GetHealth", "args": {},
-        "covers": ["dtx_health"],
-        "freshness": { "max_age_h": 6, "required": true } },
-
-      { "as": "regime", "server": "marketdata", "tool": "GetMarketContext",
-        "args": { "facets": "regime,prediction_markets", "model": "ensemble", "horizon_days": 5 },
-        "covers": ["regime", "regime_marketdata"],
-        "freshness": { "max_age_h": 6, "required": true } },
-
-      { "as": "regime_systematic", "server": "systematic", "tool": "DtxRegime",
-        "args": { "asof": "$refdate", "expected_data_date": "$refdate" },
-        "covers": ["regime_systematic"],
-        "freshness": { "max_age_h": 48, "required": true } },
-
-      { "as": "dtx_configs", "server": "systematic", "tool": "DtxListConfigs", "args": {},
-        "covers": ["dtx_configs"],
-        "freshness": { "max_age_h": 168, "required": true } },
-
-      { "as": "bars_indices", "server": "marketdata", "tool": "QueryData",
-        "args": { "types": "bars_daily", "symbols": "SPY,QQQ,IWM,DIA,GLD,SLV,TLT,USO", "end_date": "$refdate", "limit": 130 },
-        "covers": ["bars_indices", "bars_bench", "bench"],
-        "freshness": { "max_age_h": 24, "required": true } },
-
-      { "as": "bars_sectors", "server": "marketdata", "tool": "QueryData",
-        "args": { "types": "bars_daily", "symbols": "XLK,XLF,XLE,XLV,XLI,XLY,XLP,XLU,XLC,XLRE,XLB", "end_date": "$refdate", "limit": 130 },
-        "covers": ["bars_sectors"],
-        "freshness": { "max_age_h": 24, "required": true } },
-
-      { "as": "bars_crypto", "server": "marketdata", "tool": "QueryData",
-        "args": { "types": "bars_daily", "symbols": "BTC-USD,ETH-USD,SOL-USD,XRP-USD", "end_date": "$refdate", "limit": 130 },
-        "covers": ["bars_crypto"],
-        "freshness": { "max_age_h": 24, "required": true } },
-
-      { "as": "economic_events", "server": "marketdata", "tool": "QueryData",
-        "args": { "types": "economic_events", "days": 7 },
-        "covers": ["economic_events"],
-        "freshness": { "max_age_h": 24, "required": true,
-          "note": "date macro à VÉRIFIER avant publication — le calendrier donne le jour, pas le consensus" } },
-
-      { "as": "earnings_all_7d", "server": "marketdata", "tool": "GetEarningsCalendarFiltered",
-        "args": { "days_ahead": 7 },
-        "covers": ["earnings_3d"],
-        "freshness": { "max_age_h": 24, "required": true,
-          "note": "aucun filtre : sert aussi de compteur de densité de saison pour le déclencheur earnings" } },
-
-      { "as": "options_sentiment", "server": "marketdata", "tool": "OptionsAnalytics",
-        "args": { "action": "sentiment" },
-        "covers": ["options_sentiment"],
-        "freshness": { "max_age_h": 24, "required": false } },
-
-      { "as": "correlations", "server": "marketdata", "tool": "PortfolioRisk",
-        "args": { "action": "correlation", "symbols": "SPY,QQQ,IWM,GLD,SLV,TLT,USO", "lookback_days": 60, "method": "pearson" },
-        "covers": ["correlations"],
-        "freshness": { "max_age_h": 48, "required": true } },
-
-      { "as": "insiders_7d", "server": "marketdata", "tool": "GetInsiderActivity",
-        "args": { "days": 7, "limit": 25 },
-        "covers": ["insiders_7d"],
-        "freshness": { "max_age_h": 96, "required": false } },
-
-      { "as": "sectors_ref", "server": "marketdata", "tool": "GetReferentialData",
-        "args": { "category": "sector" },
-        "covers": ["sectors_ref"],
-        "freshness": { "max_age_h": 168, "required": false } }
-    ] }
+    {
+      "name": "socle",
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "covers": [
+            "status",
+            "service_health"
+          ],
+          "freshness": {
+            "max_age_h": 6,
+            "required": true
+          }
+        },
+        {
+          "as": "dtx_health",
+          "server": "systematic",
+          "tool": "GetHealth",
+          "args": {},
+          "covers": [
+            "dtx_health"
+          ],
+          "freshness": {
+            "max_age_h": 6,
+            "required": true
+          }
+        },
+        {
+          "as": "regime",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "args": {
+            "facets": "regime,prediction_markets",
+            "model": "ensemble",
+            "horizon_days": 5
+          },
+          "covers": [
+            "regime",
+            "regime_marketdata"
+          ],
+          "freshness": {
+            "max_age_h": 6,
+            "required": true
+          }
+        },
+        {
+          "as": "regime_systematic",
+          "server": "systematic",
+          "tool": "DtxRegime",
+          "args": {
+            "asof": "$refdate",
+            "expected_data_date": "$refdate"
+          },
+          "covers": [
+            "regime_systematic"
+          ],
+          "freshness": {
+            "max_age_h": 48,
+            "required": true
+          }
+        },
+        {
+          "as": "dtx_configs",
+          "server": "systematic",
+          "tool": "DtxListConfigs",
+          "args": {},
+          "covers": [
+            "dtx_configs"
+          ],
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "bars_indices",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "SPY,QQQ,IWM,DIA,GLD,SLV,TLT,USO",
+            "end_date": "$refdate",
+            "limit": 130
+          },
+          "covers": [
+            "bars_indices",
+            "bars_bench",
+            "bench"
+          ],
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        },
+        {
+          "as": "bars_sectors",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "XLK,XLF,XLE,XLV,XLI,XLY,XLP,XLU,XLC,XLRE,XLB",
+            "end_date": "$refdate",
+            "limit": 130
+          },
+          "covers": [
+            "bars_sectors"
+          ],
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        },
+        {
+          "as": "bars_crypto",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "BTC-USD,ETH-USD,SOL-USD,XRP-USD",
+            "end_date": "$refdate",
+            "limit": 130
+          },
+          "covers": [
+            "bars_crypto"
+          ],
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        },
+        {
+          "as": "economic_events",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "economic_events",
+            "days": 7
+          },
+          "covers": [
+            "economic_events"
+          ],
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "note": "date macro à VÉRIFIER avant publication — le calendrier donne le jour, pas le consensus"
+          }
+        },
+        {
+          "as": "earnings_all_7d",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "args": {
+            "days_ahead": 7
+          },
+          "covers": [
+            "earnings_3d"
+          ],
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "note": "aucun filtre : sert aussi de compteur de densité de saison pour le déclencheur earnings"
+          }
+        },
+        {
+          "as": "options_sentiment",
+          "server": "marketdata",
+          "tool": "OptionsAnalytics",
+          "args": {
+            "action": "sentiment"
+          },
+          "covers": [
+            "options_sentiment"
+          ],
+          "freshness": {
+            "max_age_h": 24,
+            "required": false
+          }
+        },
+        {
+          "as": "correlations",
+          "server": "marketdata",
+          "tool": "PortfolioRisk",
+          "args": {
+            "action": "correlation",
+            "symbols": "SPY,QQQ,IWM,GLD,SLV,TLT,USO",
+            "lookback_days": 60,
+            "method": "pearson"
+          },
+          "covers": [
+            "correlations"
+          ],
+          "freshness": {
+            "max_age_h": 48,
+            "required": true
+          }
+        },
+        {
+          "as": "insiders_7d",
+          "server": "marketdata",
+          "tool": "GetInsiderActivity",
+          "args": {
+            "days": 7,
+            "limit": 25
+          },
+          "covers": [
+            "insiders_7d"
+          ],
+          "freshness": {
+            "max_age_h": 96,
+            "required": false
+          }
+        },
+        {
+          "as": "sectors_ref",
+          "server": "marketdata",
+          "tool": "GetReferentialData",
+          "args": {
+            "category": "sector"
+          },
+          "covers": [
+            "sectors_ref"
+          ],
+          "freshness": {
+            "max_age_h": 168,
+            "required": false
+          }
+        }
+      ]
+    }
   ]
 }

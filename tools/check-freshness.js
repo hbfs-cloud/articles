@@ -70,9 +70,42 @@ function main() {
     if (ageH > maxH) {
       if (s.required === false) { console.log(`⚠️  ${name}: stale ${ageH.toFixed(1)}h > ${maxH}h (optionnel)`); }
       else { errors++; console.error(`❌ ${name}: STALE — ${ageH.toFixed(1)}h > max ${maxH}h (as_of ${s.as_of})`); }
-    } else {
-      console.log(`✅ ${name}: ${ageH.toFixed(1)}h (max ${maxH}h)`);
+      continue;
     }
+
+    // ── Contrôle de SÉANCE DÉCRITE, en plus du contrôle d'âge ────────────────────────────
+    // L'âge de la collecte et la date du contenu sont deux grandeurs différentes. Le 2026-08-12,
+    // la collecte est partie 9 minutes après la clôture US, avant l'ingestion des barres du jour :
+    // ce gate a certifié « 10 sources vérifiées, 0 bloquante(s) », toutes à 0,0 h, alors que les
+    // DIX décrivaient la veille. Un briefing publié dessus aurait raconté hier en se présentant
+    // comme celui du jour — et le gate censé rendre cela impossible l'aurait laissé passer, parce
+    // qu'il ne regardait que l'horodatage de l'appel.
+    //
+    // `data_through` est la date la plus récente réellement présente dans la charge utile (bornée
+    // à aujourd'hui, cf. collect.js). La comparaison n'est BLOQUANTE que pour les sources qui
+    // déclarent `expects_close` : une source de marché doit atteindre la clôture de référence ;
+    // un calendrier ou un screener, non.
+    if (s.expects_close) {
+      const ref = s.reference_close || m.reference_close || null;
+      if (!ref) {
+        errors++;
+        console.error(`❌ ${name}: expects_close déclaré mais aucune clôture de référence — contrat de date incomplet`);
+        continue;
+      }
+      if (!s.data_through) {
+        errors++;
+        console.error(`❌ ${name}: aucune date lisible dans la charge utile — impossible d'attester la séance décrite (clôture attendue ${ref})`);
+        continue;
+      }
+      if (s.data_through < ref) {
+        errors++;
+        console.error(`❌ ${name}: SÉANCE EN RETARD — la donnée s'arrête au ${s.data_through}, la clôture de référence est le ${ref}. Collectée « fraîche » (${ageH.toFixed(1)}h) mais elle décrit la séance précédente.`);
+        continue;
+      }
+      console.log(`✅ ${name}: ${ageH.toFixed(1)}h (max ${maxH}h) · séance ${s.data_through} = clôture de référence`);
+      continue;
+    }
+    console.log(`✅ ${name}: ${ageH.toFixed(1)}h (max ${maxH}h)${s.data_through ? ` · données jusqu'au ${s.data_through}` : ''}`);
   }
   // ── Contrôle de RÉALISATION, en plus du contrôle d'âge ────────────────────────────────
   // Le contrôle d'âge seul est FAIL-OPEN : le 2026-08-08, ce gate a certifié « 4 sources
