@@ -190,6 +190,16 @@ function extractReplayMetrics(rep, from, to) {
   // book_honest's 81% highvol sleeve instead of the 58% blend). Stamp the TRUE combined metrics
   // and build the book curve = element-wise sum of the sleeve equity, rebased to 100k start and
   // rescaled so the endpoint honours combined.final_equity / Σ(sleeve initial_capital).
+  // ⚠️ `rep.combined` N'EST PAS LE LIVRE. Il additionne des poches rejouées à
+  // CAPITAL FIXE (best v2 : 70k/45k/25k/15k), alors que le livre réel rééquilibre
+  // dynamiquement entre elles — le capital suit les gagnants. Mesuré le 12/08 sur
+  // best : combined rendait 39,59 % de CAGR et 20,2 % de drawdown quand les
+  // statistiques servies du livre donnent 70,9 % et 27,2 %, avec une queue à
+  // 38,3 %. Publier combined MINORAIT LE RISQUE sur un tableau public, ce qui est
+  // la pire direction. Le nombre de trades est également faux : 4 577 en sommant
+  // les poches contre 3 638 réels, puisque le rééquilibrage en empêche certains.
+  // Pour un livre à allocation dynamique, prendre les statistiques servies et
+  // marquer metricsSource — ne jamais reconstruire depuis combined.
   if (rows.length > 1 && rep.combined) {
     const c = rep.combined;
     const dates = r.equity_dates || [];
@@ -322,6 +332,22 @@ function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity
 /** Write the staging object (pretty JSON, mkdir -p). */
 function writeStaging(out, outPath) {
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  // Des métriques SERVIES par le livre priment sur toute reconstruction. Un livre
+  // à allocation dynamique ne se reconstitue pas en additionnant des poches
+  // rejouées à capital fixe : sur best v2, la reconstruction rendait 39,6 % de
+  // CAGR et 20,2 % de drawdown quand le livre sert 70,9 % et 27,2 %. La réingestion
+  // nocturne écrasait la correction sans rien signaler, et c'est le RISQUE qu'elle
+  // minorait. Un chiffre servi ne se laisse plus écraser par un chiffre dérivé.
+  try {
+    if (fs.existsSync(outPath)) {
+      const prev = JSON.parse(fs.readFileSync(outPath, 'utf8'));
+      if (prev && prev.metricsSource === 'book_served_stats' && prev.metrics) {
+        out.metrics = prev.metrics;
+        out.metricsSource = prev.metricsSource;
+        if (prev.equity) out.equity = prev.equity;
+      }
+    }
+  } catch (_) { /* staging illisible : on écrit la version fraîche */ }
   fs.writeFileSync(outPath, JSON.stringify(out, null, 2), 'utf8');
 }
 
