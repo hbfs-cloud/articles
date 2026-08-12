@@ -290,11 +290,21 @@ function assertReplaySanity(portfolioId, metrics) {
   if (wr != null && (wr < U.win_rate_min || wr > U.win_rate_max)) warns.push(`win_rate=${wr} (hors [${U.win_rate_min},${U.win_rate_max}])`);
   if (cg != null && cg < U.min_cagr) warns.push(`cagr_pct=${cg} (<${U.min_cagr}% sur fenêtre complète ⇒ suspect)`);
   // Per-mode baseline deviation (trade-count blowup is THE signature of the ingest corruption).
-  const mb = base && base.modes && base.modes[portfolioId];
-  if (mb && tr != null && num(mb.total_trades)) {
-    const ratio = tr / mb.total_trades;
-    if (ratio > U.trades_ratio_high) warns.push(`total_trades=${tr} = ${ratio.toFixed(1)}× baseline ${mb.total_trades} (>${U.trades_ratio_high}× ⇒ double-comptage/concaténation)`);
-    else if (ratio < U.trades_ratio_low) warns.push(`total_trades=${tr} = ${ratio.toFixed(2)}× baseline ${mb.total_trades} (<${U.trades_ratio_low}× ⇒ replay tronqué)`);
+  // Les portefeuilles RETIRÉS du catalogue gardent leur staging dans data/dtx/ (règle "No Delete SSD" :
+  // rien ne se supprime sans validation par item). Ne lire que `modes` laissait donc 6 stagings
+  // (book_honest, us_highvol, hvep, stockbox_pit, etf_us, ep) ré-ingérables SANS ratio de trades —
+  // la garde la plus discriminante s'éteignait exactement sur les fichiers que personne ne surveille
+  // plus. On retombe sur `_retired.modes` : les bornes de 2026-07-13 sont datées, mais un ratio daté
+  // couvre infiniment mieux qu'aucun ratio. Le warning le DIT, pour qu'un retour au catalogue passe
+  // par un replay de contrôle et une remontée dans `modes`, jamais par ces chiffres en silence.
+  const mb = (base && base.modes && base.modes[portfolioId]) || null;
+  const rb = !mb && base && base._retired && base._retired.modes ? base._retired.modes[portfolioId] : null;
+  const bl = mb || rb;
+  if (bl && tr != null && num(bl.total_trades)) {
+    const src = rb ? ` [baseline RETIRÉE du ${base._retired.retired_on || '?'}]` : '';
+    const ratio = tr / bl.total_trades;
+    if (ratio > U.trades_ratio_high) warns.push(`total_trades=${tr} = ${ratio.toFixed(1)}× baseline ${bl.total_trades}${src} (>${U.trades_ratio_high}× ⇒ double-comptage/concaténation)`);
+    else if (ratio < U.trades_ratio_low) warns.push(`total_trades=${tr} = ${ratio.toFixed(2)}× baseline ${bl.total_trades}${src} (<${U.trades_ratio_low}× ⇒ replay tronqué)`);
   }
   return warns;
 }

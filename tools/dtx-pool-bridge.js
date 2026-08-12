@@ -17,10 +17,10 @@
  *
  * FIDÉLITÉ (honnêteté, pas de fabrication) :
  *   - entry/stop = ceux du moteur (order.entry|limitPrice / order.stopLoss), JAMAIS inventés.
- *   - tp1 : le moteur dtx n'émet pas de take-profit (exits = trailing/rotation côté engine).
- *     Le schéma setup du sweep EXIGE un tp1 (>entry) : on dérive tp1 = entry + 2R (R = entry-stop),
- *     approximation DOCUMENTÉE du tracker — le mode gère ses vraies sorties via sa config
- *     (trailing/horizon/partialTP), comme pour tous les autres modes trackés en JS.
+ *   - tp1 : celui du moteur s'il en émet un, `null` sinon — JAMAIS dérivé. Le moteur dtx ne prend
+ *     pas de profit sur sa poche porteuse (exits = rotation + stop). Le schéma setup du sweep
+ *     accepte un candidat sans cible pour la source `dtx_pool` (depuis le 2026-08-12) : le tracker
+ *     gère la sortie via la config du mode, il n'a jamais eu besoin d'un TP pour ça.
  *   - Un ordre sans stop exploitable (stop >= entry, ou manquant) est SKIPPÉ et loggé — jamais
  *     complété avec des niveaux inventés.
  *
@@ -72,11 +72,16 @@ function orderToSignal(o, modeId, rank) {
   let stop = o.stopLoss != null ? Number(o.stopLoss) : null;
   if (stop == null && entry > 0) stop = +(entry * (1 - DISASTER_STOP_PCT / 100)).toFixed(4);
   if (!ticker || !entry || !stop || !(entry > 0) || !(stop > 0) || stop >= entry) return null;
-  // tp1 : approximation tracker 2R (le moteur n'émet pas de TP — voir en-tête). tp du moteur
-  // s'il existe (takeProfit non-null) prime toujours.
-  const tp1 = o.takeProfit != null && Number(o.takeProfit) > entry
-    ? Number(o.takeProfit)
-    : +(entry + 2 * (entry - stop)).toFixed(4);
+  // TP1 — CELUI DU MOTEUR, ou RIEN (2026-08-12). L'ancien défaut `entry + 2R` était une cible que
+  // personne n'avait décidée : le moteur n'émet aucun take-profit sur sa poche porteuse (18/18
+  // ordres à `takeProfit: null` le 12/08), ses sorties SONT la rotation et le stop, et le CAGR
+  // servi vient précisément des gagnants qu'il ne coupe pas. Ce chiffre n'était pas décoratif —
+  // il conditionnait l'admission au simulateur (`sweep.js` rejetait tout setup sans tp1 > entry)
+  // et rendait le R/R de 100 % des lignes rigoureusement égal à 2, une constante fabriquée qui se
+  // serait scellée dans la chaîne SHA-256 au premier trade clos. Le schéma du sweep accepte
+  // désormais un setup sans cible pour cette source : `null` traverse la simulation, aucune sortie
+  // TP ne s'arme, et le tracker gère la sortie avec les règles du mode.
+  const tp1 = o.takeProfit != null && Number(o.takeProfit) > entry ? Number(o.takeProfit) : null;
   // SCORE — jamais fabriqué (2026-08-12). L'ancien forfait `score = 80` pour les ordres non
   // scorés inversait la sélection : sur les 18 ordres du 2026-08-12, il faisait passer les 7
   // ROTATION_IN (que le moteur ne score PAS) au-dessus de RNW 70 et NIQ 62, pendant que le
@@ -120,7 +125,9 @@ function orderToSignal(o, modeId, rank) {
     stop: +stop.toFixed(4),
     tp1,
     tp2: null,
-    rr: +((tp1 - entry) / (entry - stop)).toFixed(2),
+    // Pas de cible ⇒ pas de R/R. `null` plutôt qu'un nombre : un R/R affiché est une promesse de
+    // gain rapporté au risque, elle n'existe pas quand la sortie est une rotation.
+    rr: tp1 != null ? +((tp1 - entry) / (entry - stop)).toFixed(2) : null,
     universe: modeId, // partition par mode (universeFilter === modeId)
     // SLEEVE (poche du livre : mx / etf_us / uhv_tp999 / ep) — PASS-THROUGH STRICT, jamais dérivé.
     // Le signals.json commité du 2026-08-12 portait ce champ sur les 18 entrées ; le staging

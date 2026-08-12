@@ -1,0 +1,49 @@
+{
+  "_doc": "LISTE BLANCHE D'EXÉCUTION COURTIER — versionnée dans git, à la différence de tools/trading-executor/config.json qui est gitignoré. Un rempart non suivi par git ne se relit pas : `git status`/`git diff` rendent vide sur ce chemin qu'on l'ait modifié ou non, donc toute affirmation « fichier intact » à son sujet est invérifiable. Celui-ci se relit, se diffe et se révise en revue. Il est lu par les TROIS entrées de l'exécuteur (run-session.js, daemon.js, index.js) via tools/trading-executor/allowlist.js — daemon.js prenait son mode dans process.env.MODE sans jamais consulter la moindre autorisation.",
+  "_updated": "2026-08-12",
+  "version": 1,
+  "policy": {
+    "default": "deny",
+    "_note": "Tout mode absent de `modes` est REFUSÉ. Toute paire mode/courtier absente de `brokers` est REFUSÉE. Un refus arrête le processus (exit 1) — il n'existe aucun mode dégradé où l'exécution continuerait « au cas où »."
+  },
+  "modes": {
+    "turbo": {
+      "allow": true,
+      "brokers": ["paper"],
+      "maxNotionalUsd": 10000,
+      "maxPositions": 8,
+      "reason": "Mode scanner live. Seul le courtier simulé est autorisé : aucun identifiant de courtier réel n'existe dans cet environnement."
+    },
+    "dynamic": {
+      "allow": true,
+      "brokers": ["paper"],
+      "maxNotionalUsd": 10000,
+      "maxPositions": 8,
+      "reason": "Mode scanner live, paper uniquement."
+    },
+    "balanced": {
+      "allow": true,
+      "brokers": ["paper"],
+      "maxNotionalUsd": 10000,
+      "maxPositions": 10,
+      "reason": "Mode scanner live, paper uniquement."
+    },
+    "fortress": {
+      "allow": true,
+      "brokers": ["paper"],
+      "maxNotionalUsd": 10000,
+      "maxPositions": 10,
+      "reason": "Mode scanner live (A+ halal), paper uniquement."
+    },
+    "best": {
+      "allow": false,
+      "brokers": [],
+      "reason": "REFUSÉ tant que la chaîne moteur→courtier n'est pas tranchée. Mesuré le 2026-08-12 : gen-trading-plan rendait 18 ordres pour 23 197 $ de notionnel avec un plan déclarant max_positions: 15, sur un compte à 10 000 $. Les quantités viennent du moteur et ne sont pas redimensionnables côté exécution ; tant que le dimensionnement du compte n'est pas aligné sur le livre du moteur, ce mode ne va pas chez un courtier — pas même en paper, pour que le plan reste lisible tel quel."
+    }
+  },
+  "_retiredModes": {
+    "_note": "Modes présents dans l'ancienne liste blanche (tools/trading-executor/config.json) alors qu'ils étaient DÉJÀ supprimés du catalogue. Un rempart qui cite des modes morts est un rempart que personne n'a relu — conservés ici uniquement comme trace de la révision du 2026-08-12.",
+    "secured": "supprimé du catalogue avant le 2026-08-12",
+    "tkl": "supprimé du catalogue avant le 2026-08-12"
+  }
+}

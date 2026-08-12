@@ -65,7 +65,8 @@
         }
       },
       "_scoreGateReason": "2026-08-12 : minScore 50 -> 0. Le 50 etait herite de book_honest et ne s appliquait a rien de comparable. Le score de best vient du moteur dtx, sur une echelle qui n est ni celle du scanner (65-95, turbo/dynamic a 90) ni homogene : sur les 64 ordres BUY du registre data/dtx-engine-history.json, 41 (64%) n ont AUCUN score car les strategies de rotation classent par force relative et n en produisent pas ; les 23 scores observes s etalent de 16 a 95. PREUVE du seuil a l envers (18 ordres du 2026-08-12, mesure avant correction) : 7 des 10 retenus l etaient par le forfait 80 fabrique par le pont, pendant que 8 decisions REELLES du moteur (BTG 24, DV 16, IAUX 31, OTF 16, OWL 20, STGW 19, TGB 16, TIC 23) etaient jetees. Aucun seuil positif n est calibrable : data/backtest-trades.json contient 0 trade scelle issu de dtx_pool, tous modes confondus, donc aucune base pour relier un score moteur a un P&L. Poser un chiffre ici serait l inventer. Le selecteur de best est le moteur lui-meme (DtxDecide n emet un CREATE qu apres SA propre selection) ; le tracker garde tous ses garde-fous de risque (maxPositions par regime, sectorCapMax, correlationCap, ddBreakerPct, circuitBreaker, vixKill). Le classement des candidats ne se fait plus au score mais au capital que le moteur a alloue (qty x entry, present sur 64/64 ordres) : l ordre d emission du moteur est strictement alphabetique et son champ priority est null 64/64, donc aucun des deux ne porte d information. PREUVE COMPLEMENTAIRE que le seuil ne filtrait pas la qualite : sur les 18 ordres du 2026-08-12, le Score= se partitionne exactement selon le nombre de features que le moteur n a pas pu calculer (0 manquante -> 95 ; 1 -> 62 et 70 ; 3 -> 16 a 31). Le seuil 50 rejetait 8 ordres sur 8 a features incompletes et zero ordre a features completes : c etait un filtre de completude de donnees, pas de qualite. Cote moteur le seuil existe deja et il est PAR POCHE (uhv 50, ep 40 puis 50, mx 0, etf_us aucun), applique avant emission — un minScore unique en aval ne peut pas en etre le miroir. Ecart declare dans tools/parity-check.js (GAP).",
-      "_changeReason": "2026-08-07 : le tracker honore desormais le stop DU MOTEUR. atrStopMult 2.5->0 et maxStopPct 25->0 (0 = ne pas modifier le stop porte par le signal, que dtx-pool-bridge remplit avec o.stopLoss du moteur). regimeParams.maxLoss retire : il replafonnait a 15-35% selon le regime et recreait la meme preemption ; maxPositions est conserve, la capacite de portefeuille releve bien du tracker. PREUVE (DtxDecide asof 2026-07-20, stockbox_pit) : stops moteur ALAB -42,8%, SNDK -47,5%, ARM -31,1%, STX -30,6%, INTC -29,0%, MU -28,5%, AMD -25,6% (mediane -28,8%). Le tracker plafonnait TOUT a -15,00% -> 12 des 18 trades scelles sortis a exactement -15,00%, avec exitPrice/entree = 0,850000 pile. Ce n'etaient pas des pertes de marche mais des liquidations de positions que le moteur tenait encore."
+      "_changeReason": "2026-08-07 : le tracker honore desormais le stop DU MOTEUR. atrStopMult 2.5->0 et maxStopPct 25->0 (0 = ne pas modifier le stop porte par le signal, que dtx-pool-bridge remplit avec o.stopLoss du moteur). regimeParams.maxLoss retire : il replafonnait a 15-35% selon le regime et recreait la meme preemption ; maxPositions est conserve, la capacite de portefeuille releve bien du tracker. PREUVE (DtxDecide asof 2026-07-20, stockbox_pit) : stops moteur ALAB -42,8%, SNDK -47,5%, ARM -31,1%, STX -30,6%, INTC -29,0%, MU -28,5%, AMD -25,6% (mediane -28,8%). Le tracker plafonnait TOUT a -15,00% -> 12 des 18 trades scelles sortis a exactement -15,00%, avec exitPrice/entree = 0,850000 pile. Ce n'etaient pas des pertes de marche mais des liquidations de positions que le moteur tenait encore.",
+      "signalOrigin": "engine"
     },
     "turbo": {
       "status": "live",
@@ -117,7 +118,8 @@
         "recovery": "mom_bo"
       },
       "tklPoolEnabled": false,
-      "_changeReason": "horizon 8->3 le 2026-08-07. Le mode etait une strategie a 2 jours (H=2, rotation agressive) jusqu'au 15/05 ; l'horizon est passe a 5 puis 8 entre le 04/06 et le 20/06 sans re-calibrer la selection. Les entrees produisent un mouvement d'environ 2% en environ 2 jours (excursion favorable mediane +1,97%) : tenu 8 jours, il est rendu avant la sortie. La performance suit les generations de config -- v1 +2,31%/trade, v2 +0,56%, v7-20260604 -1,91% exactement quand H passe de 2 a 5-8. Valide par validate-config-change.js : GO (pleine periode -6,54% -> -0,33%, DD -11,07% -> -9,96%, WR 10% -> 23,5%, PF 0,50 -> 1,01 ; OOS non degrade). H=2 et H=4 testes et ecartes : H=2 degrade le DD a -13,03%, H=4 est inferieur sur tous les axes."
+      "_changeReason": "horizon 8->3 le 2026-08-07. Le mode etait une strategie a 2 jours (H=2, rotation agressive) jusqu'au 15/05 ; l'horizon est passe a 5 puis 8 entre le 04/06 et le 20/06 sans re-calibrer la selection. Les entrees produisent un mouvement d'environ 2% en environ 2 jours (excursion favorable mediane +1,97%) : tenu 8 jours, il est rendu avant la sortie. La performance suit les generations de config -- v1 +2,31%/trade, v2 +0,56%, v7-20260604 -1,91% exactement quand H passe de 2 a 5-8. Valide par validate-config-change.js : GO (pleine periode -6,54% -> -0,33%, DD -11,07% -> -9,96%, WR 10% -> 23,5%, PF 0,50 -> 1,01 ; OOS non degrade). H=2 et H=4 testes et ecartes : H=2 degrade le DD a -13,03%, H=4 est inferieur sur tous les axes.",
+      "signalOrigin": "llm"
     },
     "dynamic": {
       "status": "live",
@@ -169,7 +171,8 @@
         "recovery": "mom_bo"
       },
       "tklPoolEnabled": false,
-      "_changeReason": "breakevenPct 0,5→0 le 2026-08-07 : avec beGraceDays=0 le verrou s'armait sur la barre d'entree (daysHeld++ sweep.js:989 avant la garde :1122), posant le stop pile a l'entree des J0 ; depuis le retablissement du remplissage sur gap le 01/07 (7bf9d8fa2) toute ouverture en baisse le traverse. beGraceDays=1 a ete teste et REFUSE par le gate (full ret -9,89% vs -0,08%, DD -10,77% > 8%). Variante retenue = cliquet desactive, alignee sur balanced et secured. Validee par validate-config-change.js : GO (30j +9,83% PF 3,37 n=2 vs actuel inactif ; OOS et full periode battus ; DD <= 8%)."
+      "_changeReason": "breakevenPct 0,5→0 le 2026-08-07 : avec beGraceDays=0 le verrou s'armait sur la barre d'entree (daysHeld++ sweep.js:989 avant la garde :1122), posant le stop pile a l'entree des J0 ; depuis le retablissement du remplissage sur gap le 01/07 (7bf9d8fa2) toute ouverture en baisse le traverse. beGraceDays=1 a ete teste et REFUSE par le gate (full ret -9,89% vs -0,08%, DD -10,77% > 8%). Variante retenue = cliquet desactive, alignee sur balanced et secured. Validee par validate-config-change.js : GO (30j +9,83% PF 3,37 n=2 vs actuel inactif ; OOS et full periode battus ; DD <= 8%).",
+      "signalOrigin": "llm"
     },
     "balanced": {
       "status": "live",
@@ -218,7 +221,8 @@
       "statusReason": "Balanced P4 (GO): stop non-capé + FIXED sizing = root cause du sous-perf. atrStopMult 0→1.8, maxStopPct 5→7, +trailing 2R/grace3, sizingMethod inverse_atr, targetRiskPct 1. Valid: full +18.35% vs -13.95%, MaxDD -4.16%, PF 2.09, OOS +6.7%, tous régimes améliorés.",
       "circuitBreakerStops": 3,
       "circuitBreakerWindow": 5,
-      "circuitBreakerPause": 3
+      "circuitBreakerPause": 3,
+      "signalOrigin": "llm"
     },
     "fortress": {
       "status": "live",
@@ -266,7 +270,8 @@
       "correlationCap": 0,
       "circuitBreakerStops": 3,
       "circuitBreakerWindow": 5,
-      "circuitBreakerPause": 3
+      "circuitBreakerPause": 3,
+      "signalOrigin": "llm"
     }
   }
 }

@@ -12,6 +12,7 @@ const path = require('path');
 const { Engine } = require('./engine');
 const { Notifier } = require('./notifier');
 const { MarketDataEngine } = require('./market-data/engine');
+const { checkMode, applyCaps } = require('./allowlist');
 
 const ROOT = path.resolve(__dirname, '../..');
 const args = process.argv.slice(2);
@@ -102,6 +103,16 @@ function generatePlan(mode, broker) {
 
       console.log(`\n── ${mode} / ${account.broker} ──`);
 
+      // AUTORISATION — la liste blanche VERSIONNÉE fait foi, pas config.json (gitignoré, donc
+      // invérifiable en revue). Ici le refus n'arrête pas le lot entier : les autres paires du
+      // même run restent légitimes. Il est bruyant et compté dans le résumé.
+      const verdict = checkMode(mode, account.broker);
+      if (!verdict.allowed) {
+        console.log(`   ⛔ REFUSÉ par data/executor-allowlist.json — ${verdict.reason}`);
+        results.push({ broker: account.broker, mode, status: 'DENIED', reason: verdict.reason });
+        continue;
+      }
+
       // Always generate plan (plan = data, independent of credentials)
       const planPath = generatePlan(mode, account.broker);
       if (!planPath) { results.push({ broker: account.broker, mode, status: 'FAILED', reason: 'plan generation' }); continue; }
@@ -110,8 +121,12 @@ function generatePlan(mode, broker) {
       const orderCount = plan.orders?.length || 0;
       const closeCount = plan.close_now?.length || 0;
 
-      // Override capital from config
-      if (account.capital_usd) plan.account.nominal_usd = account.capital_usd;
+      // Override capital from config — sauf sur un plan moteur, dont le `nominal_usd: null` est
+      // délibéré (quantités imposées par le moteur, pas redimensionnables ici).
+      const isEnginePlan = plan.account.nominal_usd === null
+        || (plan.orders || []).some(o => o && o.source === 'engine');
+      if (account.capital_usd && !isEnginePlan) plan.account.nominal_usd = account.capital_usd;
+      applyCaps(plan, verdict);
 
       if (DRY_RUN) {
         console.log(`   📋 Plan: ${orderCount} orders, ${closeCount} close-now (dry-run — not executing)`);
@@ -154,7 +169,7 @@ function generatePlan(mode, broker) {
   console.log('\n═══════════════════════════════════════');
   console.log('📊 Session Results:');
   for (const r of results) {
-    const icon = r.status === 'OK' ? '✅' : r.status === 'DRY_RUN' ? '📋' : r.status === 'SKIPPED' ? '⏭️' : '❌';
+    const icon = r.status === 'OK' ? '✅' : r.status === 'DRY_RUN' ? '📋' : r.status === 'SKIPPED' ? '⏭️' : r.status === 'DENIED' ? '⛔' : '❌';
     console.log(`   ${icon} ${r.mode || '-'}/${r.broker}: ${r.status}${r.filled ? ` (${r.filled} filled)` : ''}${r.reason ? ` — ${r.reason}` : ''}`);
   }
 })();

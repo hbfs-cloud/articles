@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { Engine } = require('./engine');
 const { Notifier } = require('./notifier');
+const { assertAllowed, applyCaps } = require('./allowlist');
 
 const args = process.argv.slice(2);
 function flag(name) { const i = args.indexOf('--' + name); return i >= 0 ? (args[i + 1] || true) : null; }
@@ -25,6 +26,13 @@ if (!PLAN_PATH) {
 const plan = JSON.parse(fs.readFileSync(PLAN_PATH, 'utf8'));
 
 if (PAPER) plan.broker.name = 'paper';
+
+// AUTORISATION — troisième porte d'entrée. Un plan déjà écrit sur disque n'est pas une
+// autorisation : il suffisait de le générer une fois pour l'exécuter ensuite sans qu'aucun rempart
+// ne soit consulté. La vérification porte sur la paire (mode du plan, courtier effectif) — donc
+// APRÈS la bascule --paper, qui change le courtier réellement visé.
+const ALLOW = assertAllowed(plan.mode && plan.mode.name, plan.broker && plan.broker.name, 'index');
+applyCaps(plan, ALLOW);
 
 // Resolve broker adapter
 function loadAdapter(brokerName) {

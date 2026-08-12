@@ -39,6 +39,100 @@ class Engine extends EventEmitter {
     this.marketData = opts.marketData || null;
     this._entryPhaseLog = new Map();
     this._lastBars = new Map();
+    // Capacité — état du garde (R5). `_accountSnapshot` est rempli en INIT ; `_committedNotional`
+    // suit le notionnel ENGAGÉ (positions reprises au courtier + entrées soumises), parce que
+    // « déjà soumis » consomme du buying power aussi sûrement que « déjà rempli ».
+    this._accountSnapshot = null;
+    this._committedNotional = 0;
+    this._capacitySkips = [];
+  }
+
+  /**
+   * GARDE DE CAPACITÉ — refuse une entrée qui dépasserait le compte (R5, 2026-08-12).
+   *
+   * Mesuré avant correction : `gen-trading-plan --mode best` rendait 18 ordres pour 23 197 $ de
+   * notionnel sur un compte à 10 000 $, dans un plan déclarant lui-même `max_positions: 15` — donc
+   * incohérent avec ses propres ordres. Rien ici ne le voyait : aucun contrôle de buying power,
+   * aucun plafond de notionnel, aucune application de max_positions à la soumission. Les ordres
+   * partaient tous, et c'est le courtier qui tranchait (ou pas).
+   *
+   * Trois plafonds, tous appliqués, le plus contraignant gagne :
+   *   · max_notional_usd — plafond de la liste blanche versionnée, reporté sur le plan ;
+   *   · nominal_usd      — capital déclaré du plan ;
+   *   · buying_power     — ce que le courtier dit réellement disponible.
+   * Plus max_positions, compté sur positions ouvertes + entrées soumises.
+   *
+   * Un plafond ABSENT n'est pas un plafond infini par accident : `null`/`undefined` est traité comme
+   * « non déclaré » et ignoré explicitement, et le journal dit lequel a mordu. Un plan moteur porte
+   * `nominal_usd: null` volontairement — c'est alors le buying power du courtier qui borne.
+   *
+   * @returns {{ok: boolean, reason: string|null}}
+   */
+  _checkCapacity(order, refPrice) {
+    const acct = this.plan.account || {};
+    const shares = Number(order.entry?.size?.shares);
+    // Prix de référence : le prix réellement visé au moment de la soumission (voie VWAP), sinon
+    // celui du plan, sinon reconstitué depuis le notionnel. Un ordre MARKET sans aucun de ces trois
+    // n'est pas mesurable — et il est refusé plus bas, pas laissé passer.
+    const price = Number(refPrice) || Number(order.entry?.price) || Number(order.entry?.size?.nominal_usd) / (shares || 1);
+    const notional = Number.isFinite(shares) && Number.isFinite(price) && shares > 0 && price > 0
+      ? shares * price
+      : null;
+
+    // Compte des positions : ouvertes chez le courtier + entrées déjà soumises non annulées.
+    const submitted = [...this.orderState.values()].filter(os =>
+      os.state === ORDER_STATES.SUBMITTED || os.state === ORDER_STATES.PARTIAL || os.state === ORDER_STATES.FILLED).length;
+    const openPositions = this.positionState.size;
+    const maxPositions = Number(acct.max_positions);
+    if (Number.isFinite(maxPositions) && maxPositions > 0 && (openPositions + submitted) >= maxPositions) {
+      return { ok: false, reason: `plafond de positions atteint (${openPositions} ouvertes + ${submitted} soumises ≥ max_positions ${maxPositions})` };
+    }
+
+    if (notional == null) {
+      // Sans quantité ni prix exploitables on ne peut RIEN affirmer sur la capacité. On refuse :
+      // laisser passer un ordre dont on ne sait pas mesurer le coût vide le garde de son sens.
+      return { ok: false, reason: `notionnel non mesurable (shares=${order.entry?.size?.shares}, price=${order.entry?.price}) — refus par prudence` };
+    }
+
+    // `Number(null)` vaut 0 et passe isFinite : sans ce filtre, un champ NON DÉCLARÉ devenait un
+    // plafond de 0 $ et refusait tout. C'est exactement le cas d'un plan moteur, qui porte
+    // `nominal_usd: null` à dessein — le garde l'aurait vidé de ses 18 ordres pour la mauvaise
+    // raison, en affichant « dépasse nominal_usd ». Non déclaré = pas de plafond de cette source.
+    const declared = (v) => (v === null || v === undefined || v === '' || !Number.isFinite(Number(v)) ? null : Number(v));
+    const ceilings = [];
+    const capWl = declared(acct.max_notional_usd);
+    if (capWl != null) ceilings.push(['max_notional_usd (liste blanche)', capWl]);
+    const capPlan = declared(acct.nominal_usd);
+    if (capPlan != null) ceilings.push(['nominal_usd (plan)', capPlan]);
+    const bp = declared(this._accountSnapshot && this._accountSnapshot.buying_power);
+    if (bp != null) ceilings.push(['buying_power (courtier)', bp]);
+
+    if (!ceilings.length) {
+      return { ok: false, reason: 'aucun plafond de capacité connu (ni liste blanche, ni plan, ni courtier) — refus par prudence' };
+    }
+
+    for (const [label, cap] of ceilings) {
+      if (this._committedNotional + notional > cap) {
+        return {
+          ok: false,
+          reason: `dépasse ${label} — engagé ${this._committedNotional.toFixed(0)} $ + ${notional.toFixed(0)} $ > ${cap.toFixed(0)} $`,
+        };
+      }
+    }
+    return { ok: true, reason: null, notional };
+  }
+
+  /** Applique le garde ; journalise et marque l'ordre SKIPPED si refusé. `true` = on peut soumettre. */
+  _admitEntry(order, os, refPrice) {
+    const v = this._checkCapacity(order, refPrice);
+    if (!v.ok) {
+      this._log('WARN', `${order.ticker}: entrée refusée par le garde de capacité — ${v.reason}`);
+      this._capacitySkips.push({ order: order.id, ticker: order.ticker, reason: v.reason });
+      os.state = ORDER_STATES.SKIPPED;
+      return false;
+    }
+    this._committedNotional += v.notional;
+    return true;
   }
 
   _log(level, msg, data) {
@@ -76,6 +170,7 @@ class Engine extends EventEmitter {
 
     await this.adapter.connect();
     const account = await this.adapter.getAccount();
+    this._accountSnapshot = account; // buying power réel — un des trois plafonds du garde de capacité
     this._log('INFO', 'Account connected', {
       balance: account.balance,
       buying_power: account.buying_power,
@@ -94,6 +189,13 @@ class Engine extends EventEmitter {
         side: bp.side,
         brokerManaged: true,
       });
+      // Le capital déjà immobilisé compte dans le plafond : une session qui repart sur un compte
+      // chargé n'a pas la capacité d'un compte vide.
+      const held = Number(bp.qty) * Number(bp.avg_price);
+      if (Number.isFinite(held) && held > 0) this._committedNotional += held;
+    }
+    if (this._committedNotional > 0) {
+      this._log('INFO', `Capacité : ${this._committedNotional.toFixed(0)} $ déjà engagés en positions reprises`);
     }
 
     // Init order states
@@ -395,6 +497,9 @@ class Engine extends EventEmitter {
       } catch (_) { /* fallback to fixed size */ }
     }
 
+    // Garde de capacité — APRÈS le sizing (ATR peut changer la quantité), juste avant la soumission.
+    if (!this._admitEntry(order, os)) return;
+
     // Submit order
     this._log('INFO', `Placing ${order.action} ${order.ticker} @ ${order.entry.price} x${order.entry.size.shares}`);
     const brokerOrder = await this.adapter.placeOrder({
@@ -618,6 +723,9 @@ class Engine extends EventEmitter {
             }
           } catch (_) {}
         }
+
+        // Garde de capacité — même point qu'en voie non-VWAP : après sizing, avant soumission.
+        if (!this._admitEntry(order, os, orderType === 'LIMIT' ? limitPrice : undefined)) return;
 
         this._log('INFO', `Placing ${order.action} ${order.ticker} @ ${orderType === 'MARKET' ? 'MARKET' : limitPrice} x${order.entry.size.shares}`);
         const brokerOrder = await this.adapter.placeOrder({
@@ -977,6 +1085,16 @@ class Engine extends EventEmitter {
       orders: Object.fromEntries(this.orderState),
       trades: this.trades,
       errors: this.errors,
+      // Capacité : ce que le garde a refusé, et sous quel plafond. Un ordre écarté silencieusement
+      // se lit comme un ordre qui n'a jamais existé — ici il laisse une trace nommée.
+      capacity: {
+        committed_notional_usd: +this._committedNotional.toFixed(2),
+        max_notional_usd: this.plan.account?.max_notional_usd ?? null,
+        nominal_usd: this.plan.account?.nominal_usd ?? null,
+        buying_power: this._accountSnapshot?.buying_power ?? null,
+        max_positions: this.plan.account?.max_positions ?? null,
+        skipped: this._capacitySkips,
+      },
       log: this.log,
     };
     fs.writeFileSync(logPath, JSON.stringify(summary, null, 2));
@@ -989,6 +1107,10 @@ class Engine extends EventEmitter {
     console.log(`\n📊 Session Summary — ${this.plan.mode.name} / ${this.plan.broker.name}`);
     console.log(`   Filled: ${filled} | Skipped: ${skipped} | Rejected: ${rejected} | Errors: ${this.errors.length}`);
     console.log(`   Trades: ${this.trades.length} | Log: ${logPath}`);
+    if (this._capacitySkips.length) {
+      console.log(`   ⛔ Capacité — ${this._capacitySkips.length} entrée(s) refusée(s) (engagé ${this._committedNotional.toFixed(0)} $) :`);
+      for (const s of this._capacitySkips) console.log(`      - ${s.ticker}: ${s.reason}`);
+    }
   }
 
   _minutesSinceOpen() {

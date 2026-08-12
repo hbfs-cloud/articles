@@ -186,7 +186,24 @@ const STRAT_PATTERNS = {
   candlestick: /candlestick/i,
 };
 
-function detectStrategy(text) {
+// Tags de stratégie propres au moteur dtx. Ils n'apparaissent dans AUCUN STRATEGY_FILTERS_MAP
+// permissif de plus que ne le faisait 'momentum' (voir la note d'exclusion dans cette map) et,
+// surtout, ils sont hors de RR_GATE_STRATEGIES : un ordre moteur n'a pas de cible, lui appliquer
+// un plancher R/R n'a aucun sens.
+const DTX_STRATEGIES = new Set(['dtx_engine', 'dtx_rotation']);
+
+function detectStrategy(text, opts) {
+  // dtx_pool — le champ `reason` du moteur est une LIGNE DE LOG, pas un nom de stratégie :
+  //   "BUY BTG @ $5.20 | Score=24 | … || features=partial: dist_ma20,vol_ratio,momentum || Stop=…"
+  // Le passer aux regex ci-dessous produit des étiquettes FAUSSES par accident : /momentum/i
+  // matche le mot « momentum » de la LISTE DE FEATURES MANQUANTES, et les lignes ROTATION_IN, qui
+  // ne matchent rien, tombaient sur le défaut `return 'momentum'`. Résultat mesuré le 2026-08-12 :
+  // 18/18 ordres étiquetés « momentum », donc 18/18 soumis au gate R/R des stratégies éditoriales.
+  // Le moteur publie son propre verbe en tête de `reason` (BUY … / ROTATION_IN …) : on le LIT,
+  // on ne le devine pas, et on n'emprunte pas le vocabulaire du scanner pour le décrire.
+  if (opts && opts.source === 'dtx_pool') {
+    return /^\s*ROTATION_IN\b/i.test(String(text || '')) ? 'dtx_rotation' : 'dtx_engine';
+  }
   for (const [k, re] of Object.entries(STRAT_PATTERNS)) {
     if (re.test(text)) return k;
   }
@@ -204,10 +221,22 @@ function parseScan(dir) {
   const buildSetups = (arr, source) => {
     const out = [];
     for (const s of arr || []) {
-      const { entry, stop, tp1, tp2 } = s;
-      if (!entry || !stop || !tp1 || entry <= 0 || stop <= 0) continue;
+      const { entry, stop, tp2 } = s;
+      if (!entry || !stop || entry <= 0 || stop <= 0) continue;
       if (stop >= entry) continue;
-      if (tp1 <= entry) continue;
+      // CIBLE ABSENTE — cas légitime, plus un motif de rejet (2026-08-12). Le moteur dtx n'émet
+      // AUCUN take-profit sur sa poche porteuse : ses sorties sont la rotation et le stop, et le
+      // CAGR servi vient de la queue des gagnants qu'il ne coupe jamais. Exiger un tp1 ici forçait
+      // dtx-pool-bridge.js à en FABRIQUER un (entry + 2R) juste pour franchir ce `continue` — un
+      // chiffre que personne n'a décidé, qui conditionnait pourtant l'admission au simulateur et
+      // qui rendait le R/R de 100 % des lignes rigoureusement égal à 2. Un setup sans cible est
+      // désormais admis pour cette source et le reste : le tracker gère la sortie avec les règles
+      // du mode (stop moteur, trailing, horizon), il n'a jamais eu besoin d'un TP pour ça.
+      // Strictement borné à dtx_pool : toutes les autres sources publient des tp1 réels et gardent
+      // le rejet, sinon un scanner cassé rendant `tp1: null` entrerait en silence.
+      const engineNoTarget = source === 'dtx_pool' && (s.tp1 == null);
+      if (!engineNoTarget && (!s.tp1 || s.tp1 <= entry)) continue;
+      const tp1 = engineNoTarget ? null : s.tp1;
       // Score derivation: tkl_pool entries from screeners commonly arrive at a fixed
       // ceiling (e.g. 99) — useless for sorting. Replace with a composite derived
       // from setup geometry (R/R) + strategy bias so tkl candidates rank within
@@ -253,7 +282,7 @@ function parseScan(dir) {
       }
       out.push({
         ticker: s.ticker,
-        strategy: detectStrategy(s.strategy || ''),
+        strategy: detectStrategy(s.strategy || '', { source }),
         score,
         entry, stop, tp1, tp2,
         sharia: s.sharia,
@@ -555,6 +584,20 @@ const STRATEGY_FILTERS_MAP = {
   // are the second/third isolation layers. Same shape as index_rotation.
   'factor_rotation': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'hybrid_af', 'pullback', 'candlestick']),
 };
+
+// ISO-COMPORTEMENT après le renommage des tags moteur (2026-08-12). Ces ensembles sont des listes
+// d'EXCLUSION : un tag absent est ADMIS. Jusqu'ici les signaux dtx portaient l'étiquette 'momentum'
+// par accident, donc tout filtre excluant 'momentum' les excluait — et les autres les laissaient
+// passer (la fuite moteur→scanner, ouverte et assumée). Les rebaptiser en 'dtx_engine'/'dtx_rotation'
+// les aurait rendus ADMISSIBLES chez fortress_pm, candlestick_only, adaptive_fractal, hybrid_af,
+// index_rotation… — un élargissement d'éligibilité que personne n'a demandé et qu'aucun backtest
+// n'a validé, obtenu en changeant un simple nom. On propage donc l'exclusion à l'identique : tout
+// filtre qui excluait 'momentum' exclut aussi les tags moteur, et les filtres permissifs restent
+// permissifs. Dérivé de la map plutôt qu'écrit à la main dans 12 littéraux, pour que la propriété
+// reste vraie si un filtre est ajouté ou modifié.
+for (const set of Object.values(STRATEGY_FILTERS_MAP)) {
+  if (set.has('momentum')) { set.add('dtx_engine'); set.add('dtx_rotation'); }
+}
 // Rotation tags are dedicated: exclude each from EVERY other mode so a rotation basket can never
 // leak into a tactical/quality portfolio (belt-and-suspenders with universeFilter + assetClass).
 // 'IndexRotation' = stockbox tag; 'factor_composite' = factor-scanner tag (detectStrategy output).
@@ -1067,7 +1110,12 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 
   const actualStop = entryPrice - riskPerUnit;
   // TP levels preserve original signal dollar distance (not affected by ATR widening)
-  const actualTp1 = entryPrice + (setup.tp1 - setup.entry);
+  // tp1 peut être ABSENT (ordres du moteur dtx : rotation + stop, pas de cible — cf. buildSetups).
+  // `null` traverse alors toute la simulation : aucune sortie TP ne s'arme, ce qui est exactement
+  // la stratégie suivie. NE PAS remplacer par un défaut : `entryPrice + (null - x)` vaut NaN, et
+  // un NaN comparé à `bar.high` est toujours faux — le bug serait silencieux et le trade sortirait
+  // à l'horizon en donnant l'illusion d'avoir été géré.
+  const actualTp1 = setup.tp1 != null ? entryPrice + (setup.tp1 - setup.entry) : null;
   const actualTp2 = setup.tp2 ? entryPrice + (setup.tp2 - setup.entry) : null;
 
   // R:R gate uses ORIGINAL signal risk (not ATR-widened) to avoid silent rejection.
@@ -1082,12 +1130,18 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   // Normaliser tirets/espaces AVANT le nettoyage : « Pre-Squeeze » donnait « presqueeze »,
   // absent du set, donc toute ligne Pre-Squeeze CONTOURNAIT silencieusement le plancher R/R.
   const rrStratKey = (setup.strategy || '').toLowerCase().replace(/[\s-]+/g, '_').replace(/[^a-z_]/g, '');
-  const rrRatio = (setup.tp1 - setup.entry) / originalRisk;
-  if ((!rrStratKey || RR_GATE_STRATEGIES.has(rrStratKey)) && rrRatio < 1.5) return null;
+  // Sans cible, il n'y a pas de R/R à comparer à un plancher — le gate ne s'applique pas plutôt
+  // que de s'appliquer à un chiffre fabriqué. `dtx_engine`/`dtx_rotation` sont de toute façon hors
+  // de RR_GATE_STRATEGIES ; ce garde-fou explicite évite qu'un futur tag rentre dans le set et
+  // remette un plancher R/R sur des ordres qui n'ont pas de TP.
+  if (setup.tp1 != null) {
+    const rrRatio = (setup.tp1 - setup.entry) / originalRisk;
+    if ((!rrStratKey || RR_GATE_STRATEGIES.has(rrStratKey)) && rrRatio < 1.5) return null;
+  }
 
   // v8.3 post-widening R:R gate — reject trades where ATR widening collapses actual R:R
   // This prevents the Orbit R:R inversion problem (signal R:R=2.0 but actual R:R=0.8)
-  if (postWideningRRMin > 0 && riskPerUnit > 0) {
+  if (actualTp1 != null && postWideningRRMin > 0 && riskPerUnit > 0) {
     const actualRR = (actualTp1 - entryPrice) / riskPerUnit;
     if (actualRR < postWideningRRMin) return null;
   }
@@ -1125,7 +1179,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     // Check SL first — distinguish initial stop vs breakeven vs trailing
     if (bar.low <= currentStop) {
       // Ambiguous-bar: same bar hit SL AND TP → first-touch policy picks SL (conservative for loss, but tag it)
-      const ambiguous = (bar.high >= actualTp1) || (actualTp2 && bar.high >= actualTp2);
+      const ambiguous = (actualTp1 != null && bar.high >= actualTp1) || (actualTp2 && bar.high >= actualTp2);
       if (partialRealized > 0) status = 'tp1_partial';
       else if (currentStop > entryPrice) status = 'trail';       // stop moved above entry → positive exit
       else if (currentStop >= entryPrice) status = 'breakeven';  // stop moved to entry → 0 exit
@@ -1206,7 +1260,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     }
 
     // Check TP1 (original logic — only fires when no gain-based partial TP is configured)
-    if (partialTPGain <= 0 && bar.high >= actualTp1 && partialRealized === 0) {
+    if (partialTPGain <= 0 && actualTp1 != null && bar.high >= actualTp1 && partialRealized === 0) {
       if (partialTP) {
         const tpFrac = partialTPPct * 100;
         partialRealized = ((actualTp1 - entryPrice) / entryPrice) * tpFrac;

@@ -2064,13 +2064,25 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
   // fortress/aplus) qui ne nommait pas `best` — le mode moteur tombait donc par défaut dans
   // « Scripted », un libellé faux (aucun scanner JS local ne le produit). Le tri se fait
   // désormais sur cfg.assetClass, donc un futur mode moteur est classé sans édition de liste.
+  // ORIGINE DES SIGNAUX — DÉCLARÉE, plus devinée. L'inférence par `filterName` était une liste
+  // fermée de 7 noms : tout mode non listé et non-dtx tombait dans « LLM ». Les deux défauts
+  // possibles (fermer sur *scripted* ou sur *llm*) sont également faux — un mode scripté avec un
+  // filterName neuf serait étiqueté LLM, et un mode LLM ne se reconnaît à aucun champ existant.
+  // La classe d'origine est une PROPRIÉTÉ DU MODE : elle se déclare dans modes-config.json
+  // (`signalOrigin`: 'llm' | 'scripted' | 'engine'), elle ne se dérive pas d'un nom de filtre.
+  // L'inférence reste UNIQUEMENT comme filet pour un mode non encore déclaré, et elle CRIE.
+  const SIGNAL_ORIGINS = new Set(['llm', 'engine', 'scripted']);
   const SCRIPTED_FILTER_NAMES = new Set(['candlestick_only', 'momentum_rotation', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'adaptive_fractal', 'hybrid_af']);
   const assetBuckets = { llm: [], engine: [], scripted: [] };
   for (const [id, m] of Object.entries(modes)) {
     const cfg = m.cfg || {};
-    const t = cfg.assetClass === 'dtx' ? 'engine'
-      : SCRIPTED_FILTER_NAMES.has(cfg.filterName) ? 'scripted'
-      : 'llm';
+    let t = cfg.signalOrigin;
+    if (!SIGNAL_ORIGINS.has(t)) {
+      t = cfg.assetClass === 'dtx' ? 'engine'
+        : SCRIPTED_FILTER_NAMES.has(cfg.filterName) ? 'scripted'
+        : 'llm';
+      console.warn(`⚠️  mode "${id}" n'a pas de signalOrigin déclaré dans data/modes-config.json — classé « ${t} » par inférence (filterName:${cfg.filterName || '—'}). Déclarer le champ : node tools/set-signal-origin.js --mode ${id} --to <llm|scripted|engine>`);
+    }
     assetBuckets[t].push([id, m]);
   }
   // Only show class labels/dividers when >1 class is populated, so the

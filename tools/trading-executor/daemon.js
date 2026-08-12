@@ -14,6 +14,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 const { Engine } = require('./engine');
 const { Notifier } = require('./notifier');
+const { assertAllowed, applyCaps } = require('./allowlist');
 
 const ROOT = path.resolve(__dirname, '../..');
 const MODE = process.env.MODE;
@@ -23,9 +24,15 @@ const VERBOSE = process.env.VERBOSE === 'true' || process.env.VERBOSE === '1';
 const LOG_DIR = process.env.LOG_DIR || path.join(ROOT, 'data/execution-logs');
 
 if (!MODE) {
-  console.error('❌ MODE env var required (turbo|dynamic|balanced|secured|fortress|tkl)');
+  console.error('❌ MODE env var required — voir data/executor-allowlist.json pour les modes autorisés');
   process.exit(1);
 }
+
+// AUTORISATION — avant tout le reste. Ce démon prenait son mode dans process.env.MODE et ne
+// consultait aucune liste blanche : `MODE=best BROKER=alpaca node daemon.js` générait le plan et
+// l'exécutait chez le courtier. La vérification se fait ici, au démarrage, pas à la première
+// session : un service qui tourne des heures avant de refuser est un service qu'on croit protégé.
+const ALLOW = assertAllowed(MODE, BROKER, 'daemon');
 
 function log(msg) {
   console.log(`[${new Date().toISOString().slice(11, 19)}] [${MODE}/${BROKER}] ${msg}`);
@@ -123,7 +130,16 @@ async function runSession() {
   const plan = generatePlan();
   if (!plan) { sessionRunning = false; return; }
 
-  plan.account.nominal_usd = CAPITAL;
+  // CAPITAL écrasait INCONDITIONNELLEMENT le nominal du plan — y compris le `null` que la voie
+  // moteur y met VOLONTAIREMENT : les quantités viennent du moteur et ne se redimensionnent pas
+  // ici, donc y réinjecter un capital maison redonne au plan une apparence de dimensionnement
+  // maîtrisé qu'il n'a pas. Un plan moteur garde son `null` ; les plans scanner gardent le
+  // comportement d'avant (CAPITAL_USD fait foi). Puis les plafonds de la liste blanche s'appliquent
+  // par le bas, jamais par le haut.
+  const isEnginePlan = plan.account.nominal_usd === null
+    || (plan.orders || []).some(o => o && o.source === 'engine');
+  if (!isEnginePlan) plan.account.nominal_usd = CAPITAL;
+  applyCaps(plan, ALLOW);
   const adapter = loadAdapter();
   const engine = new Engine(plan, adapter, { verbose: VERBOSE, logDir: LOG_DIR });
   currentEngine = engine;
