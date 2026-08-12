@@ -35,7 +35,7 @@ const scan = require('./dtx-scan');
 
 const REPO = path.resolve(__dirname, '..');
 const RAW_DIR = '/tmp/mcp-raw';
-const DTX_MODES = ['book_honest', 'us_highvol', 'hvep', 'stockbox_pit', 'etf_us', 'ep'];
+const DTX_MODES = ['best'];
 const PRE_SCORED = ['highvol', 'momentum', 'factor', 'etf', 'etf-eu', 'forex', 'trendline-forex', 'trendline-indices'];
 
 function readJson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (_) { return null; } }

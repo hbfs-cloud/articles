@@ -149,14 +149,13 @@ const OUT = path.join(ROOT, 'scanner/status/index.html');
 // absent by design — LLM/MCP-driven, never dtx.
 // dtx MCP v15 cut-over (2026-07-13): dashboard reduced to the 6 cost-honest viable strategies.
 // Legacy scanner scriptings are status=stopped (hidden). Each live mode id maps to its v15 staging.
-const DTX_STAGING_MAP = {
-  book_honest: 'book_honest',
-  us_highvol: 'us_highvol',
-  hvep: 'hvep',
-  stockbox_pit: 'stockbox_pit',
-  etf_us: 'etf_us',
-  ep: 'ep',
-};
+// Un seul portefeuille depuis le 2026-08-12 : « best », panier multi-poches qui
+// remplace et agrège les six précédents. Cette table était restée sur les six
+// supprimés — loadDtxStaging('best') rendait null et le panneau du mode
+// s'affichait VIDE sur la page publiée, alors que le staging portait 4 577
+// trades et sa courbe d'equity. Une table figée qui survit à son référentiel
+// ne lève aucune erreur : elle rend juste du néant.
+const DTX_STAGING_MAP = { best: 'best' };
 const _dtxStagingCache = {};
 function loadDtxStaging(id) {
   const f = DTX_STAGING_MAP[id];

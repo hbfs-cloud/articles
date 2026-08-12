@@ -28,7 +28,7 @@ const T = require('./lib/dtx-live-track');
 
 const ROOT = path.join(__dirname, '..');
 const HISTORY_DIR = path.join(ROOT, 'scanner', 'status', 'history');
-const DTX_MODES = ['book_honest', 'us_highvol', 'hvep', 'stockbox_pit', 'etf_us', 'ep'];
+const DTX_MODES = ['best'];
 
 function goLiveOf(modeId) {
   try {

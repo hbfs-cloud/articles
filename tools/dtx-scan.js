@@ -63,12 +63,15 @@ const DEFAULT_FROM = '2021-01-01';
 const MODES_CFG = path.join(REPO_ROOT, 'data', 'modes-config.json');
 // dtx MCP v15 cut-over (2026-07-13): the 6 cost-honest strategies. Fresh ids => identity map
 // (dashboard mode id == dtx portfolio id == staging file). Legacy scripted modes are stopped.
-const PORTFOLIO_TO_MODE = {
-  book_honest: 'book_honest', us_highvol: 'us_highvol', hvep: 'hvep',
-  stockbox_pit: 'stockbox_pit', etf_us: 'etf_us', ep: 'ep',
-};
-// Multi-allocation BOOKS: their portfolio == the `combined` block, not results[0] (first sleeve).
-const MULTI_ALLOC_BOOKS = new Set(['book_honest', 'hvep']);
+// Un seul portefeuille depuis le 2026-08-12 : « best », panier multi-poches qui
+// remplace et agrège les six précédents. Cette table était restée sur les six
+// supprimés — conséquence : le moteur rendait ses 18 ordres et rien ne les
+// routait vers le mode, dont le panneau restait vide sur la page publiée.
+const PORTFOLIO_TO_MODE = { best: 'best' };
+// Livres multi-poches : leur portefeuille EST le bloc `combined`, pas results[0]
+// qui ne serait que la première poche. « best » en est un — porteur haute
+// volatilité, poche défensive, ETF, explosion de momentum.
+const MULTI_ALLOC_BOOKS = new Set(['best']);
 let _modesCfgCache;
 function loadModesCfg() {
   if (_modesCfgCache !== undefined) return _modesCfgCache;

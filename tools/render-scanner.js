@@ -151,7 +151,7 @@ const minRR = (() => {
     .map(s => (typeof s.entry_high === 'number' && typeof s.stop === 'number' && typeof s.tp1 === 'number' && s.entry_high > s.stop)
       ? (s.tp1 - s.entry_high) / (s.entry_high - s.stop) : null)
     .filter(x => x != null && Number.isFinite(x));
-  return rs.length ? Math.min(...rs).toFixed(2) : '1.5';
+  return (rs.length ? Math.min(...rs).toFixed(2) : '1.50').replace('.', ',');
 })();
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -623,7 +623,8 @@ function sectorRotationTable(rows) {
 
 /** Strip leading "1:" from an R/R string for compact display ("1:1.9" → "1.9") */
 function rrDisplay(rr) {
-  return String(rr ?? '').replace(/^\s*1:\s*/, '').trim() || '—';
+  const v = String(rr ?? '').replace(/^\s*1:\s*/, '').trim();
+  return v ? v.replace('.', ',') : '—';
 }
 
 /** One number → compact price string (no trailing zeros beyond 2 decimals) */
@@ -899,7 +900,8 @@ ${sectorRotationTable(d.sector_rotation)}
 ${strategyTablesHtml}
     <div class="pedagogy-box">
       <h4><i class="fas fa-info-circle"></i> Comment utiliser ces niveaux</h4>
-      <p>Entrée = zone d'exécution à l'ouverture (9h30–9h45 ET) si le prix s'y trouve. Le stop est un ordre dur, pas mental. TP = objectif principal : prendre 50% à l'objectif, remonter le stop au point mort, laisser courir le reste. Le R/R publié suppose une entrée au HAUT de la zone, c'est-à-dire au pire remplissage possible. R/R minimum retenu sur ce scan : 1:${minRR}.</p>
+      <p>Entrée = zone d'exécution à l'ouverture (9h30–9h45 ET) si le prix s'y trouve. Le stop est un ordre dur, pas mental. TP = objectif principal : prendre 50% à l'objectif, remonter le stop au point mort, laisser courir le reste. Le R/R du tableau est mesuré au MILIEU de la zone d'entrée. Rempli au haut de la zone — le pire cas —, il est plus faible : le plus bas du scan tombe alors à 1:${minRR}.</p>
+      <p style="font-size:0.85rem;color:#64748b;margin-top:0.5rem;">Badges : <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span> ligne conforme aux critères de finance islamique retenus ici (secteur d'activité et endettement) — <span class="badge" style="background:#e2e8f0;color:#334155;border:1px solid #94a3b8;font-size:.68rem">CONV</span> ligne conventionnelle, non conforme.</p>
     </div>
   </div>
 </section>
@@ -926,12 +928,12 @@ ${strategyTablesHtml}
     </div>
     <div class="pedagogy-box">
       <h4>5. Anti-dilution &amp; ranking</h4>
-      <p>Vérification SEC (pas de S-3 récent, ATM, PIPE, underwriter agressif). Diversification secteur/géographie. R/R minimum 1:${minRR}, mesuré au haut de la zone d'entrée. Conformité Sharia taggée sur chaque ligne.</p>
+      <p>Pour les émetteurs relevant du régulateur américain : registre de dépôts interrogé par type de formulaire (prospectus de placement, enregistrement en étagère, avis d'effet) sur dix ans, fenêtre de contrôle de 90 jours. Hors de ce périmètre — émetteurs étrangers, fonds indiciels — il n'y a pas de registre à interroger : le champ reste vide et la réserve est écrite sur la ligne, jamais remplacée par un feu vert. Diversification secteur/géographie. R/R minimum au pire remplissage (haut de zone) sur ce scan : 1:${minRR}. Conformité Sharia taggée sur chaque ligne.</p>
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:1rem;">
       <h4 style="margin:0 0 0.5rem;">Sources de données</h4>
       <ul style="margin:0;font-size:0.85rem;color:#64748b;">
-        <li>Prix &amp; niveaux : données de marché temps réel</li>
+        <li>Prix &amp; niveaux : flux d'indicateurs du fournisseur de données de marché, arrêté à la clôture de référence du scan</li>
         <li>Régime : modèle 6 composantes (crédit, VIX, dollar, liquidité, actions, taux)</li>
         <li>Screening : filtres techniques multi-stratégies (momentum, breakout, pullback)</li>
         <li>Généré : ${d.session_label || d.date}</li>
@@ -969,7 +971,7 @@ ${strategyTablesHtml}
 </div>
 
 <footer class="article-footer">
-  © 2026 DailyTickers. Données de marché temps réel.
+  © 2026 DailyTickers.
   Ceci n'est pas un conseil financier.
   <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
 </footer>

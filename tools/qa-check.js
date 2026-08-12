@@ -876,7 +876,7 @@ check('scanner (dernier scan): engine_meta.risk_gating non vide (corrélation + 
 // reproduire. La série data/dtx-live-track.json doit exister et porter, pour chacun des 6
 // modes, un dernier point de moins de 72h (tolérance week-end).
 warn('dtx-live-track.json: série live des modes scriptés fraîche (<72h)', () => {
-  const DTX = ['book_honest', 'us_highvol', 'hvep', 'stockbox_pit', 'etf_us', 'ep'];
+  const DTX = ['best'];
   let track;
   try { track = readJSON('data/dtx-live-track.json'); } catch { return 'fichier absent — lancer dtx-live-track.js --backfill puis gen-status-page'; }
   const stale = [];
