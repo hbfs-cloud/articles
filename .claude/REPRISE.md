@@ -44,10 +44,19 @@ point-in-time. Un compteur `sleeveCoverage` dans le staging dit combien d'ordres
 rattachés : si le moteur cessait de renvoyer `state`, le tracker retomberait sur les sorties du mode
 et cela se verrait au lieu de passer inaperçu.
 
-⚠️ `portfolio/v1/best/orders.json` publie encore `sleeve: null` sur les 18 ordres du 12/08 : cette
-séance était **déjà enregistrée** dans `data/dtx-engine-history.json`, qui est immuable par
-(mode, date). Le registre n'a pas été réécrit — forcer un backfill pour compléter un champ
-violerait précisément l'invariant qui fait sa valeur. La poche y sera dès la prochaine ingestion.
+La séance du 12/08 était déjà enregistrée dans `data/dtx-engine-history.json`, immuable par
+(mode, date). Plutôt que `--force` — qui réécrit l'entrée entière, `recordedAt`, prix et quantités
+compris, donc perd l'invariant pour compléter un champ — `tools/dtx-history-enrich-sleeve.js`
+n'écrit **que** `sleeve`, et seulement depuis le payload MCP archivé de la **même** (mode, date)
+(`scanner/20260812/_dtx/decide_best.json`), c'est-à-dire la source dont l'entrée est elle-même
+issue. Il compare `symbol`/`qty`/`entry`/`stopLoss` ordre par ordre et **refuse** d'écrire à la
+moindre divergence (vérifié en altérant volontairement une quantité : refus sur GBUG). L'ajout est
+horodaté dans l'entrée (`_sleeveEnrichedAt`, `_sleeveSource`).
+
+```
+ordres identiques hors sleeve : true   |  recordedAt inchangé : true   |  autres champs modifiés : []
+portfolio/v1/best/orders.json → {"mx":8,"etf_us":7,"ep":2,"uhv_tp999":1}
+```
 
 R2 en découlait. Le DRIFT n'était pas « un chiffre diffère » mais **le tracker portait UN jeu de
 sorties là où le livre en a QUATRE** :
@@ -96,8 +105,44 @@ dtx     :  2 240 simulations comparées, 0 différence
 ```
 
 Le zéro côté dtx est attendu et vérifié : le seul scan portant un tag de poche est celui du 12/08,
-qui n'a **aucune barre postérieure** (la séance n'a pas encore eu lieu). Les sorties par poche
-mordront à la prochaine séance ; le tableau synthétique ci-dessus en est la preuve fonctionnelle.
+qui n'a **aucune barre postérieure** (la séance n'a pas encore eu lieu).
+
+### Validation sur barres RÉELLES
+
+Les portefeuilles autonomes `ep` et `etf_us` de juillet portaient **exactement** les mêmes règles de
+sortie que les poches homonymes d'aujourd'hui (`portfolio_ep.yaml` : tp 20 / timeout 20 ;
+`portfolio_etf_us.yaml` : ni l'un ni l'autre). Leurs entrées historiques sont donc de vraies
+décisions du moteur, sur de vraies barres, sous les mêmes règles.
+
+**1. Aucun effet rétroactif mesurable.** 103 trades rejoués (98 `etf_us`, 5 `ep`) : 0 issue
+différente, P&L moyen identique à la décimale. Aucun n'a franchi de seuil de prise de profit, et
+l'override d'horizon s'applique bien (`horizonAppliqué=20` sur les `ep`).
+
+**2. Fréquence des seuils** — sur 302 entrées moteur réelles disposant de barres :
+
+```
++20 % (poche ep) atteint par  22 (7,3 %)
++25 % (poche mx) atteint par   7 (2,3 %)
++30 % (ancien réglage unique)  4 (1,3 %)
+```
+
+La règle par poche se déclenche donc 2 à 6 fois plus souvent que l'ancien seuil unique — et en
+sortie **totale** au lieu d'une vente de 50 %, ce qui est l'écart de fond.
+
+**3. Exécution correcte au seuil, sur les cas réels qui l'ont franchi** — 17 cas, **17 cohérents** :
+
+```
+20260717 SEPN  MFE=31,1%  | uhv(aucun TP): expired 27,6%  | mx(+25%): tp1 25%    J13 | ep(+20%): tp1 20%    J13
+20260729 ALAB  MFE=41,4%  | uhv(aucun TP): pending 21,9%  | mx(+25%): tp1 26,16% J3  | ep(+20%): tp1 26,16% J3
+20260805 VOYG  MFE=33,9%  | uhv(aucun TP): pending 32,15% | mx(+25%): tp1 25%    J3  | ep(+20%): tp1 20%    J3
+```
+
+SEPN montre le comportement voulu : la poche porteuse **ne coupe pas** et finit à +27,6 % là où `mx`
+sort à +25 %. ALAB sort à 26,16 % — remplissage sur gap au-dessus du niveau, prix réellement traité.
+
+⚠️ Ce que cela ne prouve pas : que le P&L du livre `best` s'améliore. Il n'existe **aucun trade
+dtx_pool scellé**, tous modes confondus — c'est une correction de parité vérifiée, pas une
+optimisation validée par backtest.
 
 ---
 
