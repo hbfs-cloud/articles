@@ -397,5 +397,19 @@ function socleRead(c) {
 
   const wall = Date.parse(journal.finished_at) - Date.parse(startedAt);
   log(`[collect] ${totalCalls - failures}/${totalCalls} appel(s) en ${wall}ms — ${failures} échec(s)`);
+  // --quiet supprime la PROGRESSION, jamais la RAISON D'UN ÉCHEC. Sans cette
+  // sortie, un appelant qui redirige vers un fichier récupérait un log VIDE avec
+  // un code retour 1 : impossible de savoir quel appel a lâché ni pourquoi.
+  // Mesuré le 12/08 — trois échecs de scan-parallel sous concurrence, trois logs
+  // vides, diagnostic aveugle. Un mode silencieux qui tait aussi les pannes ne
+  // rend pas le run discret, il le rend indébogable.
+  if (failures) {
+    console.error(`[collect] ÉCHEC — ${failures}/${totalCalls} appel(s), plan ${planPath}`);
+    for (const w of journal.waves) {
+      for (const c of w.calls) {
+        if (!c.ok) console.error(`  ✗ ${c.as} (${c.tool}@${c.server}, vague « ${w.name} ») — ${c.error || 'sans message'}`);
+      }
+    }
+  }
   process.exit(failures ? 1 : 0);
 })().catch(e => { console.error('[collect]', e.stack || e.message); process.exit(1); });

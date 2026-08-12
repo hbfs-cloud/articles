@@ -22,7 +22,7 @@ log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
 # ── A : vivier puis enrichissement (seule vraie dépendance) ──────────────────
 (
   node tools/collect.js --plan plans/scanner-wave1.json --out "$DIR/_data" --quiet \
-    --var refdate="$REF" > /tmp/A1.log 2>&1 || { echo "A1 ÉCHEC" > /tmp/A.status; exit 1; }
+    --var refdate="$REF" > /tmp/A1.log 2>&1 || { { echo "A1 ÉCHEC — vivier"; grep -E "✗|ÉCHEC" /tmp/A1.log; } > /tmp/A.status; exit 1; }
   node tools/extract-universe.js --in "$DIR/_data" --out "$DIR/_data/vars.json" --limit 60 \
     >> /tmp/A1.log 2>&1 || { echo "A2 ÉCHEC — vivier vide" > /tmp/A.status; exit 1; }
   # Le code retour de l'enrichissement DOIT être testé. Sans ce garde, un
@@ -31,7 +31,7 @@ log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
   # devenaient un scan réputé complet, sur lequel on publiait.
   node tools/collect.js --plan plans/scanner-wave2.json --out "$DIR/_data2" --quiet \
     --vars-file "$DIR/_data/vars.json" --var refdate="$REF" >> /tmp/A1.log 2>&1 \
-    || { echo "A3 ÉCHEC — enrichissement incomplet (voir /tmp/A1.log)" > /tmp/A.status; exit 1; }
+    || { { echo "A3 ÉCHEC — enrichissement incomplet"; grep -E "✗|ÉCHEC" /tmp/A1.log; } > /tmp/A.status; exit 1; }
   echo "A OK" > /tmp/A.status
 ) & PA=$!
 
