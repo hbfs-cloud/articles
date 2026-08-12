@@ -1346,7 +1346,11 @@ async function main() {
     const SCRIPTED_IDS = new Set(['bull', 'momentum', 'highvol', 'trendline', 'etf', 'etf_eu', 'hybrid', 'forex', 'casablanca', 'eu_smallcap', 'pead', 'filings', 'gap']);
     // fortress + aplus = modes LLM (pilotés par le skill fortress-pm, signaux = CANDIDATS A+),
     // PAS scriptés — ils gardent Today's Signals + Orders + fallback comme les autres modes LLM.
-    const isScripted = (SCRIPTED_FILTERS.has(cfg.filterName) || SCRIPTED_IDS.has(id)) && id !== 'fortress' && id !== 'aplus';
+    // assetClass 'dtx' : les signaux SONT les ordres du moteur — proposer un « fallback
+    // candidate » reviendrait à suggérer un titre que le moteur n'a jamais ordonné. La
+    // détection par NOM (SCRIPTED_IDS) ne pouvait pas l'attraper : elle ne nomme que des
+    // modes supprimés. Détection par assetClass = future-proof (ajout 2026-08-12).
+    const isScripted = (cfg.assetClass === 'dtx' || SCRIPTED_FILTERS.has(cfg.filterName) || SCRIPTED_IDS.has(id)) && id !== 'fortress' && id !== 'aplus';
     const _sf = SF[cfg.filterName] || (() => true);
     const _uf = cfg.universeFilter || null;
     const fallback = isScripted ? [] : signals.filter(s => _sf(s.strategy || '')).filter(s => !_uf || (s.universe || '') === _uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || (s.sharia === true && !isHaramForHalalMode(s)))
@@ -1915,7 +1919,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
           return `<tr${rowStyle}><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}','${p.universe||''}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">${price(p.entry || 0)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">${price(p.current_price || 0)}</td><td class="${rc}" data-format="pct"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">${price(p.stop || 0)}</td><td class="pos hide-m">${p.tp2 ? price(p.tp2) : (p.tp1 ? price(p.tp1) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
         }).join('')}</tbody>
   </table>` : `<p class="empty"><i class="fas fa-inbox"></i>
-    <span><b>No active positions</b><br><span style="font-size:.72rem;color:var(--muted)">${cfg.portfolioSize === 1 ? 'Single-slot mode — entries open only when a signal passes minScore (' + (cfg.minScore || 85) + ') and entry-gate (VWAP/ATR).' : 'All ' + cfg.portfolioSize + ' slots empty — either no signal cleared minScore (' + (cfg.minScore || 85) + ') today or stale exits closed prior holds.'}</span></span>
+    <span><b>No active positions</b><br><span style="font-size:.72rem;color:var(--muted)">${cfg.portfolioSize === 1 ? 'Single-slot mode — entries open only when a signal passes minScore (' + (cfg.minScore ?? 85) + ') and entry-gate (VWAP/ATR).' : 'All ' + cfg.portfolioSize + ' slots empty — either no signal cleared minScore (' + (cfg.minScore ?? 85) + ') today or stale exits closed prior holds.'}</span></span>
   </p>`}
 </div>
 
@@ -2053,13 +2057,20 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
   // and the binder — which target by id, not container — are untouched.
   // Regroupement par TYPE de mode (demande user): modes LLM/quality (pilotés RunScreener+quality/
   // fortress-pm) vs modes scriptés (pilotés par des scanners JS locaux). PAS par classe d'actif.
-  const ASSET_CLASS_ORDER = ['llm', 'scripted'];
-  const ASSET_CLASS_LABEL = { llm: 'LLM', scripted: 'Scripted' };
-  const ASSET_CLASS_ICON = { llm: 'brain', scripted: 'code' };
-  const LLM_MODES = new Set(['turbo', 'dynamic', 'balanced', 'secured', 'fortress', 'aplus']);
-  const assetBuckets = { llm: [], scripted: [] };
+  const ASSET_CLASS_ORDER = ['llm', 'engine', 'scripted'];
+  const ASSET_CLASS_LABEL = { llm: 'LLM', engine: 'Engine', scripted: 'Scripted' };
+  const ASSET_CLASS_ICON = { llm: 'brain', engine: 'gears', scripted: 'code' };
+  // 2026-08-12 : le tri se faisait sur une LISTE DE NOMS (turbo/dynamic/balanced/secured/
+  // fortress/aplus) qui ne nommait pas `best` — le mode moteur tombait donc par défaut dans
+  // « Scripted », un libellé faux (aucun scanner JS local ne le produit). Le tri se fait
+  // désormais sur cfg.assetClass, donc un futur mode moteur est classé sans édition de liste.
+  const SCRIPTED_FILTER_NAMES = new Set(['candlestick_only', 'momentum_rotation', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'adaptive_fractal', 'hybrid_af']);
+  const assetBuckets = { llm: [], engine: [], scripted: [] };
   for (const [id, m] of Object.entries(modes)) {
-    const t = LLM_MODES.has(id) ? 'llm' : 'scripted';
+    const cfg = m.cfg || {};
+    const t = cfg.assetClass === 'dtx' ? 'engine'
+      : SCRIPTED_FILTER_NAMES.has(cfg.filterName) ? 'scripted'
+      : 'llm';
     assetBuckets[t].push([id, m]);
   }
   // Only show class labels/dividers when >1 class is populated, so the
@@ -2265,10 +2276,13 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);margin
 .th-scroll table{margin-top:0!important}
 .th-scroll thead th{position:sticky;top:0;background:var(--surface-2);z-index:1}
 .hide-section{display:none!important}
-/* Labels de groupe du tab rail (LLM | Scripted) */
+/* Labels de groupe du tab rail (LLM | Scripted | Engine) */
 .mode-class-label{display:inline-flex;align-items:center;padding:.3rem .6rem;margin:0 .15rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:var(--surface-2);border-radius:999px;white-space:nowrap;flex-shrink:0;align-self:center}
 .mode-class-label[data-class="llm"]{color:oklch(45% 0.13 275)}
 .mode-class-label[data-class="scripted"]{color:oklch(45% 0.11 155)}
+/* Le rail a gagne un 3e groupe (Engine = modes assetClass dtx) sans sa couleur : le libelle
+   heritait du gris var(--muted) et se lisait comme un groupe desactive. */
+.mode-class-label[data-class="engine"]{color:oklch(48% 0.12 55)}
 .sc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem}
 .sc-head h3{font-size:1rem;font-weight:700;color:var(--ink);margin:0;display:flex;align-items:center;gap:.45rem;letter-spacing:-.01em}
 .sc-head h3 i{font-size:.78rem;color:var(--muted)}
@@ -4085,10 +4099,20 @@ document.addEventListener('DOMContentLoaded',function(){
     const frozenEC = modes[id].m.equityCurve;
     let ec;
     if (frozenEC && frozenEC.filter(p => p.date).length > 0) {
+      // ── FIX (2026-08-12) — clé de dédup DATÉE pour les modes moteur (dtx) ──────────────
+      // Le chemin PAGE (cf. L~1021) reconstruit déjà la courbe dtx sur des dates ISO COMPLÈTES
+      // parce que la courbe splicée couvre 5+ années civiles : une clé MM/DD écrase 2021..2026
+      // sur un seul calendrier de 12 mois, ne garde que la DERNIÈRE valeur de chaque MM/DD et
+      // fabrique une courbe en dents de scie dont le drawdown recalculé n'a plus aucun sens
+      // (best : -83,0 % recalculé contre 27,2 % servi par le moteur). Le chemin SNAPSHOT — celui
+      // que consomme gen-api.js pour portfolio/v1/<mode>/equity.json — n'avait jamais reçu ce
+      // correctif. Les modes non-dtx gardent MM/DD : leur courbe tient dans l'année et la queue
+      // forward (pit-forward) splicée juste en dessous est étiquetée en MM/DD.
+      const _isoKeys = mM.dtxEngine === true;
       const _dedup = new Map();
       for (const p of frozenEC) {
         if (!p.date) continue;
-        _dedup.set(p.date.slice(5, 7) + '/' + p.date.slice(8, 10), p.value);
+        _dedup.set(_isoKeys ? p.date.slice(0, 10) : p.date.slice(5, 7) + '/' + p.date.slice(8, 10), p.value);
       }
       ec = { d: [..._dedup.keys()], v: [..._dedup.values()] };
     } else {
@@ -4105,7 +4129,10 @@ document.addEventListener('DOMContentLoaded',function(){
     // == frozen dernier point), donc continuité parfaite, pas de discontinuité ni de bug 212-vs-100
     // (baseline=anchorValue). Hero (stats.ret) INCHANGÉ = frozen. On n'ajoute QUE les points datés
     // APRÈS le dernier point frozen → zéro double-comptage. Requiert pit-forward.js frais en amont.
-    const _fwdSnap = pitForwardModes[id] ? forwardViewFor(pitForwardModes[id]) : null;
+    // Modes moteur (dtx) exclus : leur courbe est étiquetée en ISO et leur queue live vient du
+    // tracker dtx, pas de pit-forward (le chemin page neutralise déjà m.forward). Splicer ici
+    // injecterait des étiquettes MM/DD au milieu d'une série ISO.
+    const _fwdSnap = (!mM.dtxEngine && pitForwardModes[id]) ? forwardViewFor(pitForwardModes[id]) : null;
     if (_fwdSnap && _fwdSnap.hasPostAnchor && _fwdSnap.ec && _fwdSnap.ec.d.length && ec.d.length) {
       const _fd = _fwdSnap.ec.d, _fv = _fwdSnap.ec.v;
       const _si = _fd.lastIndexOf(ec.d[ec.d.length - 1]);
@@ -4166,7 +4193,7 @@ document.addEventListener('DOMContentLoaded',function(){
       closeNow: timedOutSnap.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       expiresTomorrow: pos.filter(p => { if (p._terminal) return false; const left = Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)); return left === 1; }).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       closedTrades: mTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, exitDate: t.exitDate || null, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
-      config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1, ddBreakerPct: cfg.ddBreakerPct || 0, sectorCapMax: cfg.sectorCapMax || 0, sizingMethod: cfg.sizingMethod || null, targetRiskPct: cfg.targetRiskPct || 0, vixKillThreshold: cfg.vixKillThreshold || 0, correlationCap: cfg.correlationCap || 0, crossModeDedup: cfg.crossModeDedup || false, label: cfg.label || id },
+      config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore ?? 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1, ddBreakerPct: cfg.ddBreakerPct || 0, sectorCapMax: cfg.sectorCapMax || 0, sizingMethod: cfg.sizingMethod || null, targetRiskPct: cfg.targetRiskPct || 0, vixKillThreshold: cfg.vixKillThreshold || 0, correlationCap: cfg.correlationCap || 0, crossModeDedup: cfg.crossModeDedup || false, label: cfg.label || id },
       risk: getRiskFor(id),
       // Decision du MOTEUR systematic pour cette seance — ADDITIF, prefixe engine_, jamais
       // en remplacement des champs sim ci-dessus. Lu depuis le registre append-only
@@ -4393,7 +4420,7 @@ function backfillHistory() {
         expiresTomorrow: activePos.filter(p => p.days_remaining === 1).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysBetweenBF(p.scan_date, dateISO), horizon: cfg.horizon })),
         signals: filteredSignals,
         closedTrades: modeTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, exitDate: t.exitDate || null, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
-        config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1 },
+        config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore ?? 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1 },
       };
     }
 

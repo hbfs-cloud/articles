@@ -90,7 +90,14 @@ function readAdvisorRecommendations() {
   if (!fs.existsSync(p)) return null;
   const r = loadJson(p);
   const out = {};
-  for (const mode of ['turbo', 'dynamic', 'balanced', 'secured', 'fortress', 'tkl']) {
+  // Modes lus depuis data/modes-config.json (source de vérité), pas depuis une liste figée :
+  // celle-ci nommait encore secured/tkl (supprimés) et ignorait `best`, dont les recommandations
+  // d'advisor n'étaient donc JAMAIS lues — le mode était invisible pour la recalibration.
+  let modeIds;
+  try {
+    modeIds = Object.keys(JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8')).modes || {});
+  } catch { modeIds = []; }
+  for (const mode of modeIds) {
     out[mode] = r['advisor_' + mode] || r['advisor_' + mode + '_relaxed'] || null;
   }
   return out;

@@ -1,9 +1,11 @@
 {
   "_meta": {
     "purpose": "Deterministic sanity bounds for DtxReplay metrics ingested into data/dtx/<id>.json. Guards against the routine capturing a corrupt/param-drifted replay result (trade-count blowup, DD explosion) and publishing it to the status page. Consumed by assertReplaySanity() in tools/dtx-scan.js.",
-    "source": "dtx MCP v15 cost-honest run 2026-07-13 (DtxReplay from=2021-01-01). Books (book_honest, hvep) use the COMBINED block (extractReplayMetrics blends sleeves for multi-allocation portfolios).",
+    "source": "dtx MCP v15 cost-honest run 2026-07-13 (DtxReplay from=2021-01-01). Books use the COMBINED block (extractReplayMetrics blends sleeves for multi-allocation portfolios).",
     "incident": "2026-07-09 nightly routine published us_highvol 1169tr/DD-63%, etf_eu 3404tr/DD-89.6%, stockbox 1470tr/DD-41% — NOT reproducible on the server. Bug was upstream param drift; this guard catches the signature (2-8x trade blowup + DD>50%) so it never reaches publish again.",
-    "note": "total_trades grows ~monotonically as the window extends. ratio bounds are generous to avoid false positives on legitimate window extension; the DD/sharpe/win_rate/cagr bounds are the primary tripwires. For books the trade count is the sum across sleeves."
+    "note": "total_trades grows ~monotonically as the window extends. ratio bounds are generous to avoid false positives on legitimate window extension; the DD/sharpe/win_rate/cagr bounds are the primary tripwires. For books the trade count is the sum across sleeves.",
+    "coverage_2026_08_12": "Catalogue réduit à 5 modes le 2026-08-12. « best » est le SEUL mode assetClass:\"dtx\" restant — donc le seul dont la staging passe par assertReplaySanity. Les six portefeuilles listés dans _retired ont été supprimés du moteur ET du catalogue ; leurs bases restaient les seules présentes, ce qui laissait le ratio de trades — la signature même de l'incident du 09/07 — INACTIF sur le seul mode encore vivant. La base « best » ci-dessous rétablit ce garde.",
+    "sign_convention": "max_dd_pct est stocké tel que la source le sert. Les bases retirées portaient le drawdown en négatif (convention DtxReplay) ; les statistiques servies du livre best le portent en positif. Sans effet sur le garde : le contrôle de drawdown passe par Math.abs(), et seul total_trades est comparé à la base par ratio."
   },
   "_universal": {
     "max_dd_abs_ceiling": 50,
@@ -15,11 +17,27 @@
     "trades_ratio_low": 0.4
   },
   "modes": {
-    "book_honest":  { "total_trades": 3843, "max_dd_pct": -21.22, "sharpe": 1.41, "cagr_pct": 57.70, "win_rate": 49.05 },
-    "us_highvol":   { "total_trades": 635,  "max_dd_pct": -28.57, "sharpe": 1.77, "cagr_pct": 81.32, "win_rate": 52.91 },
-    "hvep":         { "total_trades": 1446, "max_dd_pct": -28.17, "sharpe": 1.83, "cagr_pct": 75.86, "win_rate": 52.35 },
-    "stockbox_pit": { "total_trades": 179,  "max_dd_pct": -21.75, "sharpe": 1.37, "cagr_pct": 39.95, "win_rate": 55.87 },
-    "etf_us":       { "total_trades": 2493, "max_dd_pct": -20.16, "sharpe": 1.43, "cagr_pct": 37.09, "win_rate": 49.30 },
-    "ep":           { "total_trades": 533,  "max_dd_pct": -25.19, "sharpe": 1.08, "cagr_pct": 26.64, "win_rate": 42.03 }
+    "best": {
+      "total_trades": 3638,
+      "max_dd_pct": 27.2,
+      "sharpe": 1.56,
+      "cagr_pct": 70.9,
+      "win_rate": 49.2,
+      "_source": "data/dtx/best.json, metricsSource:\"book_served_stats\" — statistiques SERVIES du livre (rééquilibrage réel, coûts inclus, univers figé, 2021-01-01 → 2026-08-12). Recopiées à l'identique, aucune reconstruction.",
+      "_why_served": "Le livre best est à allocation dynamique : le reconstruire en additionnant des poches rejouées à capital fixe rend 39,6 % de CAGR et 20,2 % de drawdown quand le livre sert 70,9 % et 27,2 % — cf. le commentaire de writeStaging() dans tools/dtx-scan.js. La base de référence suit donc le chiffre servi, pas le chiffre dérivé.",
+      "_guard_window": "trades_ratio_low 0.4 / high 2.2 ⇒ le garde se déclenche sous 1 456 trades (replay tronqué) ou au-delà de 8 004 (double-comptage/concaténation)."
+    }
+  },
+  "_retired": {
+    "_note": "Portefeuilles supprimés du moteur et du catalogue le 2026-08-12. Conservés en lecture seule pour garder la trace des bornes de l'époque — assertReplaySanity ne lit QUE le bloc `modes`, donc ces entrées ne couvrent plus rien. Si l'un de ces portefeuilles revenait, il faudrait le remonter dans `modes` après un replay de contrôle, pas le réactiver sur ces chiffres de 2026-07-13.",
+    "retired_on": "2026-08-12",
+    "modes": {
+      "book_honest":  { "total_trades": 3843, "max_dd_pct": -21.22, "sharpe": 1.41, "cagr_pct": 57.70, "win_rate": 49.05 },
+      "us_highvol":   { "total_trades": 635,  "max_dd_pct": -28.57, "sharpe": 1.77, "cagr_pct": 81.32, "win_rate": 52.91 },
+      "hvep":         { "total_trades": 1446, "max_dd_pct": -28.17, "sharpe": 1.83, "cagr_pct": 75.86, "win_rate": 52.35 },
+      "stockbox_pit": { "total_trades": 179,  "max_dd_pct": -21.75, "sharpe": 1.37, "cagr_pct": 39.95, "win_rate": 55.87 },
+      "etf_us":       { "total_trades": 2493, "max_dd_pct": -20.16, "sharpe": 1.43, "cagr_pct": 37.09, "win_rate": 49.30 },
+      "ep":           { "total_trades": 533,  "max_dd_pct": -25.19, "sharpe": 1.08, "cagr_pct": 26.64, "win_rate": 42.03 }
+    }
   }
 }

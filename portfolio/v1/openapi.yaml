@@ -1,12 +1,20 @@
 openapi: "3.0.3"
 info:
   title: DailyTickers Portfolio API
-  version: "1.3.1"
+  version: "1.4.0"
   description: >
-    Free JSON endpoints to replicate the DailyTickers specialized scanner portfolios (21 modes:
-    Turbo, Dynamic, Balanced, Secured, Fortress, TKL, Alpha, A+, HighVol, Hybrid, Forex, ETF,
-    ETF-EU, ETF-US, Stockbox, Stockbox-PIT, Factor, Book-Honest, US-HighVol, HVEP, EP).
+    Free JSON endpoints to replicate the DailyTickers portfolios (5 modes: Best, Turbo, Dynamic,
+    Balanced, Fortress). Best is engine-backed (systematic-tss): its signals come from the engine
+    pool, not from the scanner, and its equity.json carries an extra `engineBacktest` block.
+    The four others are scanner modes.
     Updated every trading session (~23:00 UTC weekdays). No authentication required.
+    Changelog 1.4.0 (2026-08-12): catalogue cut from 21 to 5 modes. The 17 removed ids
+    (secured, tkl, alpha, aplus, highvol, hybrid, forex, etf, etf_eu, etf_us, stockbox,
+    stockbox_pit, factor, book_honest, us_highvol, hvep, ep) were still advertised in the mode
+    enum and all returned 404; `best`, the only newly published directory, was missing from it.
+    Also documented: /risk.json, /modes.json, /regime.json, /config-history.json,
+    /instruments.json, and the response fields (status, reliability, engineBacktest, risk,
+    scanDate) that the generator has been emitting.
   contact:
     url: https://articles.dailytickers.com/integrations/portfolio/
 servers:
@@ -16,28 +24,14 @@ servers:
       mode:
         default: "balanced"
         enum:
+          - "best"
           - "turbo"
           - "dynamic"
           - "balanced"
-          - "secured"
           - "fortress"
-          - "tkl"
-          - "alpha"
-          - "aplus"
-          - "highvol"
-          - "hybrid"
-          - "forex"
-          - "etf"
-          - "etf_eu"
-          - "etf_us"
-          - "stockbox"
-          - "stockbox_pit"
-          - "factor"
-          - "book_honest"
-          - "us_highvol"
-          - "hvep"
-          - "ep"
-        description: Portfolio mode (one of the 21 generated modes)
+        description: >
+          Portfolio mode. Exactly the 5 directories published under /portfolio/v1/.
+          Discover them at runtime via /portfolio/v1/modes.json rather than hardcoding this list.
   - url: https://articles.dailytickers.com/portfolio/v1
     description: Root endpoints (no mode prefix) — modes overview, regime, status, config-history, instruments
 
@@ -115,10 +109,16 @@ paths:
                 properties:
                   updatedAt: { type: string, format: date-time }
                   mode: { type: string, example: "balanced" }
+                  status:
+                    $ref: "#/components/schemas/ModeStatus"
                   config:
                     $ref: "#/components/schemas/Config"
                   stats:
                     $ref: "#/components/schemas/Stats"
+                  reliability:
+                    $ref: "#/components/schemas/Reliability"
+                  engineBacktest:
+                    $ref: "#/components/schemas/EngineBacktest"
                   equityCurve:
                     $ref: "#/components/schemas/EquityCurve"
 
@@ -193,6 +193,65 @@ paths:
                   totalTrades: { type: integer, example: 77 }
                   winRate: { type: number, description: "Percentage, 0-100", example: 55.8 }
 
+  /risk.json:
+    get:
+      summary: Risk snapshot for the selected mode
+      description: >
+        VaR / expected-shortfall, stress scenarios, correlation stats and the current regime
+        probability distribution for the mode, plus its benchmark (SPY) comparison.
+        Numeric risk fields are null when the mode holds no position or when the upstream
+        risk service is unavailable — read `risk.status` and `notes` before using them.
+      responses:
+        "200":
+          description: Risk snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedAt: { type: string, format: date-time }
+                  mode: { type: string, example: "balanced" }
+                  status: { $ref: "#/components/schemas/ModeStatus" }
+                  configVersion: { type: string, nullable: true, example: "v10.9" }
+                  regime: { type: string, nullable: true, example: "EARLY RISK-OFF" }
+                  notes:
+                    type: array
+                    description: Degradation notices (e.g. correlation matrix unavailable).
+                    items: { type: string }
+                  bench:
+                    type: object
+                    description: Benchmark comparison over the mode's live period.
+                    properties:
+                      spy:
+                        type: object
+                        properties:
+                          returnTotal: { type: number, example: 0.094032 }
+                          sharpe: { type: number, example: 1.2693 }
+                          period:
+                            type: object
+                            properties:
+                              start: { type: string, format: date }
+                              end: { type: string, format: date }
+                          updated_at: { type: string, format: date-time }
+                      alpha: { type: number, description: "Mode return minus SPY return, in percentage points", example: 35.3268 }
+                  risk:
+                    type: object
+                    properties:
+                      status: { type: string, enum: [ok, no_positions, unavailable], example: "ok" }
+                      asOf: { type: string, format: date-time }
+                      var95_5d: { type: number, nullable: true, description: "5-day 95% Value at Risk" }
+                      var99_5d: { type: number, nullable: true, description: "5-day 99% Value at Risk" }
+                      expectedShortfall95_5d: { type: number, nullable: true }
+                      portfolioValueUsd: { type: number, nullable: true }
+                      maxPairwiseCorrelation: { type: number, nullable: true }
+                      avgCorrelation: { type: number, nullable: true }
+                      method: { type: string, nullable: true }
+                      stressScenarios:
+                        type: array
+                        items: { type: object, additionalProperties: true }
+                      regimeProbability:
+                        $ref: "#/components/schemas/RegimeProbability"
+
   /all.json:
     get:
       summary: Full portfolio state (all data in one call)
@@ -209,7 +268,9 @@ paths:
                 properties:
                   updatedAt: { type: string, format: date-time }
                   date: { type: string, format: date }
+                  scanDate: { type: string, format: date, description: "Scan session the signals/orders come from" }
                   mode: { type: string, example: "balanced" }
+                  status: { $ref: "#/components/schemas/ModeStatus" }
                   config: { $ref: "#/components/schemas/Config" }
                   stats: { $ref: "#/components/schemas/Stats" }
                   equityCurve: { $ref: "#/components/schemas/EquityCurve" }
@@ -219,6 +280,7 @@ paths:
                   closeNow: { type: array, items: { $ref: "#/components/schemas/CloseAction" } }
                   expiresTomorrow: { type: array, items: { $ref: "#/components/schemas/ExpiresAction" } }
                   closedTrades: { type: array, items: { $ref: "#/components/schemas/Trade" } }
+                  risk: { type: object, description: "Same payload as the mode's /risk.json `risk` object.", additionalProperties: true }
 
   /status.json:
     servers:
@@ -249,6 +311,136 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/ModeStatusTransition"
+
+  /modes.json:
+    servers:
+      - url: https://articles.dailytickers.com/portfolio/v1
+        description: Root endpoint (no mode prefix)
+    get:
+      summary: Modes overview (mode discovery)
+      description: >
+        One entry per published mode with its label, colour, lifecycle status, headline stats
+        and current position/order counts. This is the authoritative list of modes — clients
+        should read it instead of hardcoding mode ids.
+      responses:
+        "200":
+          description: Overview of every published mode
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedAt: { type: string, format: date-time }
+                  date: { type: string, format: date }
+                  configVersion: { type: string, nullable: true, example: "v10.9" }
+                  regime: { type: string, nullable: true, example: "EARLY RISK-OFF" }
+                  modes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, example: "best" }
+                        label: { type: string, example: "Best" }
+                        color: { type: string, example: "#2563eb" }
+                        status: { $ref: "#/components/schemas/ModeStatus" }
+                        stats: { $ref: "#/components/schemas/Stats" }
+                        positionCount: { type: integer, example: 0 }
+                        orderCount: { type: integer, example: 18 }
+                        portfolioSize: { type: integer, example: 15 }
+
+  /regime.json:
+    servers:
+      - url: https://articles.dailytickers.com/portfolio/v1
+        description: Root endpoint (no mode prefix)
+    get:
+      summary: Current market regime
+      description: Regime label driving every mode's gating, plus the probability distribution behind it.
+      responses:
+        "200":
+          description: Regime snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedAt: { type: string, format: date-time }
+                  configVersion: { type: string, nullable: true, example: "v10.9" }
+                  regimeLabel: { type: string, example: "EARLY RISK-OFF" }
+                  regimeProbability: { $ref: "#/components/schemas/RegimeProbability" }
+
+  /config-history.json:
+    servers:
+      - url: https://articles.dailytickers.com/portfolio/v1
+        description: Root endpoint (no mode prefix)
+    get:
+      summary: Config version history
+      description: >
+        Append-only history of config versions. Each entry carries the per-mode config that was
+        active from that version on — the reference for reproducing a trade's `configVersion`.
+      responses:
+        "200":
+          description: Config versions, oldest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedAt: { type: string, format: date-time }
+                  versions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, example: "v1-20260215" }
+                        timestamp: { type: string, format: date-time }
+                        regime: { type: string, example: "MIXED" }
+                        config:
+                          type: object
+                          description: Per-mode config keyed by mode id, as of this version.
+                          additionalProperties: { $ref: "#/components/schemas/Config" }
+
+  /instruments.json:
+    servers:
+      - url: https://articles.dailytickers.com/portfolio/v1
+        description: Root endpoint (no mode prefix)
+    get:
+      summary: Broker instrument coverage
+      description: >
+        Per-symbol tradability across the supported brokers (exchange, tradable/marginable/
+        shortable flags, min order size, price increment). Large payload — cache it.
+      responses:
+        "200":
+          description: Instrument coverage map
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  generated_at: { type: string, format: date-time }
+                  source: { type: string, example: "tools/trading-executor/instruments/" }
+                  brokers:
+                    type: array
+                    items: { type: string, example: "alpaca" }
+                  symbol_count: { type: integer, example: 68251 }
+                  symbols:
+                    type: object
+                    description: Keyed by symbol.
+                    additionalProperties:
+                      type: object
+                      properties:
+                        name: { type: string }
+                        brokers:
+                          type: object
+                          additionalProperties:
+                            type: object
+                            properties:
+                              symbol: { type: string }
+                              exchange: { type: string }
+                              tradable: { type: boolean }
+                              marginable: { type: boolean }
+                              shortable: { type: boolean }
+                              min_order_size: { type: number }
+                              price_increment: { type: number }
 
 components:
   schemas:
@@ -332,25 +524,33 @@ components:
 
     Config:
       type: object
+      description: >
+        Live config of the mode as served in equity.json / all.json. The active config version id
+        and the regime are NOT inside this object — read them from the root /regime.json and
+        /config-history.json, or from a trade's `configVersion`.
       properties:
         label: { type: string, example: "Balanced" }
         color: { type: string, example: "#059669" }
-        goal: { type: string, example: "Risk-Adjusted Growth" }
-        riskProfile: { type: string, enum: [Ultra-Low, Low, Medium, High, Extreme] }
-        portfolioSize: { type: integer, example: 2 }
+        portfolioSize: { type: integer, example: 3 }
         topN: { type: integer, example: 1 }
         minScore: { type: integer, example: 85 }
-        horizon: { type: integer, example: 5 }
-        filterName: { type: string, example: "momentum_only" }
-        rotation: { type: string, example: "aggressive" }
+        horizon: { type: integer, example: 6 }
+        filterName: { type: string, description: "Strategy filter applied to candidates; `dtx_engine` for the engine-backed mode.", example: "mom_bo" }
+        rotation: { type: string, example: "daily_max1" }
         partialTP: { type: boolean }
         trailingStop: { type: boolean }
-        maxStopPct: { type: number }
-        atrStopMult: { type: number }
+        maxStopPct: { type: number, description: "Hard stop cap in %, 0 = keep the stop carried by the signal (engine-backed modes).", example: 7 }
+        atrStopMult: { type: number, description: "ATR stop multiple, 0 = keep the stop carried by the signal.", example: 1.8 }
         dailyTrailPct: { type: number }
         breakevenPct: { type: number }
-        configVersion: { type: string, description: "Active config version ID", example: "v2-20260418" }
-        regime: { type: string, description: "Market regime the config was optimized for", example: "RISK-ON" }
+        positionSizePct: { type: number, example: 1 }
+        ddBreakerPct: { type: number, description: "Drawdown circuit breaker threshold in %", example: 8 }
+        sectorCapMax: { type: integer, description: "Max simultaneous positions per sector, 0 = no cap", example: 0 }
+        sizingMethod: { type: string, nullable: true, example: "inverse_atr" }
+        targetRiskPct: { type: number, example: 1 }
+        vixKillThreshold: { type: number, example: 30 }
+        correlationCap: { type: number, description: "Max pairwise correlation allowed between open positions, 0 = no cap", example: 0 }
+        crossModeDedup: { type: boolean }
 
     Stats:
       type: object
@@ -373,10 +573,80 @@ components:
         sharpe: { type: number, description: "Sharpe ratio of the equity curve", example: 2.1 }
         r2: { type: number, description: "Linearity of the equity curve (0-1, higher = smoother/more reliable)", example: 0.94 }
         oosWarn:
-          type: string
+          type: object
           nullable: true
-          description: "Out-of-sample warning flag; null when no warning, otherwise a short reason string."
-          example: null
+          description: >
+            Out-of-sample degradation flag; null when no warning. When present, compares
+            in-sample to out-of-sample performance — treat the in-sample stats as overfit-prone.
+          properties:
+            isWR: { type: number, description: "In-sample win rate %", example: 53.5 }
+            oosWR: { type: number, description: "Out-of-sample win rate %", example: 23.5 }
+            isPF: { type: number, example: 3.46 }
+            oosPF: { type: number, example: 0.26 }
+            oosTrades: { type: integer, example: 17 }
+            wrDelta: { type: number, description: "isWR - oosWR, in points", example: 30 }
+
+    Reliability:
+      type: object
+      description: Sample-size and out-of-sample disclosures attached to the mode's stats.
+      properties:
+        sample_period_days: { type: integer, nullable: true, example: 158 }
+        sample_period_start: { type: string, nullable: true, description: "First equity-curve label (MM/DD for scanner modes, YYYY-MM-DD for the engine-backed mode)" }
+        sample_period_end: { type: string, nullable: true }
+        closed_trades: { type: integer, example: 79 }
+        statistically_reliable: { type: boolean, description: "True at n>=30 closed trades" }
+        pf_reliable: { type: boolean, description: "True at n>=50 closed trades" }
+        pf_low: { type: number, nullable: true, description: "Bootstrapped 90% CI lower bound for profit factor" }
+        pf_high: { type: number, nullable: true }
+        out_of_sample_warning:
+          type: object
+          nullable: true
+          description: Same payload as Stats.oosWarn.
+        warnings:
+          type: array
+          items: { type: string }
+
+    EngineBacktest:
+      type: object
+      description: >
+        Engine-backed modes only (assetClass `dtx`). Replay metrics read as-is from the engine —
+        never recomputed here. The equity curve of these modes is sampled at rebalance dates,
+        so a drawdown recomputed from `equityCurve` UNDERSTATES the real one: use `max_dd_pct`.
+      properties:
+        source: { type: string, example: "systematic-tss engine (dtx) — replay metrics, authoritative" }
+        as_of: { type: string, format: date, nullable: true }
+        from: { type: string, format: date, nullable: true }
+        to: { type: string, format: date, nullable: true }
+        return_pct: { type: number, nullable: true }
+        cagr_pct: { type: number, nullable: true }
+        max_dd_pct: { type: number, nullable: true }
+        sharpe: { type: number, nullable: true }
+        r2: { type: number, nullable: true }
+        win_rate: { type: number, nullable: true }
+        total_trades: { type: integer, nullable: true }
+        curve_resolution: { type: string, example: "rebalance dates (~13 calendar days), NOT daily" }
+        curve_warning: { type: string }
+
+    RegimeProbability:
+      type: object
+      description: Regime state probabilities, refreshed with the nightly market context.
+      properties:
+        status: { type: string, nullable: true, example: "ok" }
+        asOf: { type: string, format: date-time }
+        source: { type: string, example: "mcp_connected:GetMarketContext(facets=regime)" }
+        currentState: { type: string, example: "risk_on" }
+        currentStateConfidence: { type: number, example: 0.531 }
+        regimeScore: { type: number, example: 1.3 }
+        probabilities:
+          type: object
+          additionalProperties: { type: number }
+        transition5d:
+          type: object
+          description: Probability of being in each state 5 sessions from now.
+          additionalProperties: { type: number }
+        expectedReturnSpyPct: { type: number, example: 0.283 }
+        expectedDrawdownPct: { type: number, example: 1.969 }
+        model: { type: string }
 
     EquityCurve:
       type: object
@@ -410,6 +680,9 @@ components:
         exitsOnly:
           type: boolean
           description: True for `pausing` — open positions must be wound down, no new entries.
+        forceLiquidate:
+          type: boolean
+          description: True for `liquidated` — close every position at next open, ignoring SL/TP/horizon.
         publiclyVisible:
           type: boolean
           description: False for `draft` and `stopped` — hide from default UI listings.
@@ -432,7 +705,7 @@ components:
     ModeStatusTransition:
       type: object
       properties:
-        mode: { type: string, example: "secured" }
+        mode: { type: string, example: "best" }
         from:
           type: string
           enum: [draft, test, deploying, live, pausing, liquidated, paused, stopped]

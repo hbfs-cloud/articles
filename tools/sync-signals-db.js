@@ -154,7 +154,12 @@ async function syncMode(client, scanDate, modeName, modeData) {
   if (equity?.d?.length && equity?.v?.length) {
     const lastDate  = equity.d[equity.d.length - 1];
     const lastValue = equity.v[equity.v.length - 1];
-    const ts = new Date(`2026-${lastDate.split('/').join('-')}T16:00:00Z`);
+    // Deux étiquetages : "MM/DD" (modes scanner) et "YYYY-MM-DD" (modes moteur/dtx, courbe
+    // multi-années). Préfixer une étiquette déjà ISO produisait "2026-2026-08-12" → Invalid Date.
+    const _iso = (String(lastDate).length === 10 && lastDate.includes('-'))
+      ? lastDate
+      : `2026-${String(lastDate).split('/').join('-')}`;
+    const ts = new Date(`${_iso}T16:00:00Z`);
     if (!DRY_RUN) {
       await client.query(`
         INSERT INTO mart.fact_strategy_equity (strategy_id, ts, equity, num_positions)

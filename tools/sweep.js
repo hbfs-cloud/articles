@@ -213,7 +213,23 @@ function parseScan(dir) {
       // from setup geometry (R/R) + strategy bias so tkl candidates rank within
       // [85, 95] and remain ELIGIBLE for high-minScore modes (turbo/dynamic = 90).
       // Main "signals" keep their published Claude-curated score as-is.
-      let score = s.score || 80;
+      // dtx_pool : le score vient du MOTEUR ou N'EXISTE PAS. Le défaut `|| 80` fabriquait ici
+      // un second forfait (le premier était dans dtx-pool-bridge.js) : 41 des 64 ordres BUY du
+      // registre moteur (64 %) n'ont aucun score — les stratégies de ROTATION classent par force
+      // relative et n'en produisent pas. Les admettre à 80 les plaçait au 83e centile de la
+      // distribution réelle observée (16..95), au-dessus des vraies convictions moteur à 62 et 70.
+      // On préserve donc `null`, traité EXPLICITEMENT par passesScoreGate/compareCandidates.
+      // ⚠️ La correction ci-dessus ne vaut QUE pour dtx_pool. Étendue aux autres sources, elle
+      // change leur comportement : `scanner/20260310` est parsé depuis index.html (aucun score
+      // publié) et loadSignals rend `0` NUMÉRIQUE — `s.score != null` le préserverait à 0 là où
+      // HEAD le portait à 80. Mesuré : 14 setups (AMD, ASML, PLTR, NVDA…) basculent 80 → 0, soit
+      // le seul écart sur 1 287 comparaisons (117 scans × 11 pools non-dtx). Sans effet P&L
+      // aujourd'hui (80 comme 0 sont sous les minScore 85/88/90), mais tout mode descendant à
+      // ≤ 80 verrait 14 setups changer d'éligibilité sans qu'une ligne de config ait bougé.
+      // On borne donc STRICTEMENT le changement à la source qui le motive.
+      let score = source === 'dtx_pool'
+        ? (s.score != null ? s.score : null)
+        : (s.score || 80);
       if (source === 'tkl_pool') {
         const rr = (tp1 - entry) / Math.max(1e-6, entry - stop);
         const strat = detectStrategy(s.strategy || '');
@@ -244,6 +260,16 @@ function parseScan(dir) {
         source: source || s.source || 'signals',
         pattern: s.pattern || null,
         universe: s.universe || null, // for universeFilter modes (casablanca/highvol/etf)
+        // dtx: provenance du score + rang d'émission du moteur (SON classement). Doivent survivre
+        // jusqu'aux objets trade (même leçon que `universe`, forensics 2026-07-02) car le gate et
+        // le tri tournent sur les trades, pas sur les setups bruts.
+        // Métadonnées moteur — attachées UNIQUEMENT aux candidats dtx : les ajouter partout
+        // changerait la forme des objets setup/trade de tous les autres modes.
+        ...(source === 'dtx_pool' ? {
+          scoreSource: s.scoreSource || (score == null ? 'none' : 'engine'),
+          engineNotional: s.engineNotional ?? null,
+          engineRank: s.engineRank ?? null,
+        } : {}),
       });
     }
     return out;
@@ -285,9 +311,8 @@ function parseScan(dir) {
   // son candidat. L'isolation inter-modes est déjà garantie par universeFilter === modeId.
   const dtxPool = (() => {
     const seen = new Set();
-    return buildSetups(loaded.dtxPool, 'dtx_pool')
-      .filter(s => { const k = `${s.ticker}|${s.universe || ''}`; if (seen.has(k)) return false; seen.add(k); return true; })
-      .sort((a, b) => b.score - a.score);
+    return sortCandidates(buildSetups(loaded.dtxPool, 'dtx_pool')
+      .filter(s => { const k = `${s.ticker}|${s.universe || ''}`; if (seen.has(k)) return false; seen.add(k); return true; }));
   })();
 
   return {
@@ -1317,6 +1342,12 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     ticker: setup.ticker,
     strategy: setup.strategy,
     score: setup.score,
+    // Le gate de score et le tri des candidats tournent sur CES objets trade (pas sur les setups
+    // bruts) : sans propagation, un score absent redeviendrait indiscernable d'un score nul et le
+    // classement moteur serait perdu. Même leçon que `universe` plus bas (forensics 2026-07-02).
+    ...(setup.scoreSource ? { scoreSource: setup.scoreSource } : {}),
+    ...(setup.engineNotional != null ? { engineNotional: setup.engineNotional } : {}),
+    ...(setup.engineRank != null ? { engineRank: setup.engineRank } : {}),
     scanDate,
     entryDate,
     actualEntry: entryPrice,
@@ -1378,6 +1409,59 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
   );
 }
 
+// ─── Gate de score & classement des candidats ────────────────────────────────
+// Un candidat peut arriver SANS score : les stratégies de rotation du moteur dtx
+// (ROTATION_IN / ROTATION_BUY top-N force relative) n'en produisent aucun — 41 des 64 ordres
+// BUY du registre data/dtx-engine-history.json, soit 64 %. Avant 2026-08-12, ce trou était
+// bouché par un forfait 80 (dtx-pool-bridge.js ET buildSetups), ce qui inversait la sélection :
+// sur les 18 ordres du 2026-08-12, 7 non-évalués passaient le seuil et 8 décisions réelles du
+// moteur (16..31) étaient jetées. Les deux forfaits sont supprimés ; l'absence de score est
+// désormais traitée ICI, explicitement, dans les deux sens.
+
+/** Seuil de score. `null` = jamais évalué : admis UNIQUEMENT si le mode déclare ne pas trier
+ *  au score (minScore <= 0), refusé sinon. Jamais admis par un nombre inventé. */
+function passesScoreGate(s, cfg) {
+  const min = cfg.minScore ?? 0;
+  if (s && s.score == null) return min <= 0;
+  return (s ? s.score : 0) >= min;
+}
+
+/** Classement. Les candidats du moteur (dtx) NE se trient PAS au score : il n'existe que sur
+ *  23 des 64 ordres du registre (36 %) et n'est pas comparable d'une sous-stratégie à l'autre.
+ *  Ils se trient par `engineNotional` = qty × entry, le capital que le MOTEUR a décidé d'allouer
+ *  (présent sur 64/64). Quand les places manquent (topN, maxPositions par régime), servir d'abord
+ *  les plus grosses allocations du moteur est ce qui rapproche le plus le livre suivi du livre
+ *  décidé — et c'est un chiffre lu, pas construit. Départage stable par engineRank (ordre
+ *  d'émission, alphabétique donc non informatif : il ne sert qu'à rendre le tri déterministe).
+ *  Tout le reste garde le tri au score décroissant, inchangé. */
+// ⚠️ AUCUN comparateur de PAIRE ne peut arbitrer à la fois « dtx↔dtx par notionnel moteur » et
+// « tout le reste par score » : le mélange des deux clés est un ordre CYCLIQUE. Contre-exemple
+// mesuré — A(dtx, score 95, notionnel 700), B(dtx, score 86, notionnel 5000), C(scanner, score 90) :
+// B<A (notionnel), A<C (score), C<B (score). `Array.sort` rend alors une sortie qui dépend de
+// l'ordre d'ENTRÉE (3 résultats distincts pour le même ensemble), donc un `slice(0, topN)` non
+// déterministe. Or les 4 modes scanner n'ont aucun `excludeSources` et les ordres du moteur
+// (universe="best") entrent bel et bien dans leur vivier : 1 candidat dtx éligible chez
+// turbo/dynamic/balanced au 2026-08-12. La faute ne mord pas tant qu'un SEUL candidat dtx passe
+// les seuils (aucune paire dtx↔dtx n'est comparée) — elle mord dès le deuxième.
+//
+// La clé de tri est donc une propriété du VIVIER, pas de la paire : un vivier homogène dtx
+// (pool du moteur, mode avec universeFilter) se classe au notionnel ; tout vivier mixte ou
+// scanner se classe au score. Les deux comparateurs sont totaux pris séparément.
+function compareEngineCandidates(a, b) {
+  const an = (a && a.engineNotional) ?? -Infinity, bn = (b && b.engineNotional) ?? -Infinity;
+  if (bn !== an) return bn - an;
+  return ((a && a.engineRank) ?? 0) - ((b && b.engineRank) ?? 0);
+}
+function compareCandidates(a, b) {
+  return ((b && b.score) ?? 0) - ((a && a.score) ?? 0);
+}
+// Tri stable + comparateur total ⇒ résultat déterministe pour un vivier donné.
+function sortCandidates(list) {
+  const arr = Array.isArray(list) ? list : [];
+  const homogeneousEngine = arr.length > 0 && arr.every(x => x && x.source === 'dtx_pool');
+  return arr.sort(homogeneousEngine ? compareEngineCandidates : compareCandidates);
+}
+
 // ─── Portfolio simulation (proper daily MtM) ─────────────────────────────────
 
 function simulatePortfolio(allTrades, scans, config) {
@@ -1405,7 +1489,7 @@ function simulatePortfolio(allTrades, scans, config) {
   const regimeByDate = {};
   const regimeScoreByDate = {};
   for (const t of allTrades) {
-    if (t.score < minScore) continue;
+    if (!passesScoreGate(t, config)) continue;
     if (excludeSet && excludeSet.has(t.source || 'signals')) continue;
     if (!byDate[t.scanDate]) byDate[t.scanDate] = [];
     byDate[t.scanDate].push(t);
@@ -1571,7 +1655,7 @@ function simulatePortfolio(allTrades, scans, config) {
       // Candlestick vol ratio trading filter: scanner detects at 1.0×,
       // but only 8× volume spikes enter the portfolio (matches Go AB portfolio config)
       const candleVolMin = scannerFilters?.candlestick?.min_vol_ratio_trading ?? 8.0;
-      const filtered = (byDate[day] || [])
+      const filtered = sortCandidates((byDate[day] || [])
         .filter(t => !activeFilter.has(t.strategy))
         .filter(t => t.strategy !== 'candlestick' || (t.pattern && t.pattern.volRatio >= candleVolMin))
         // Per-mode Sharia mandate (e.g. Fortress = PM Halal): exclude non-compliant tickers via
@@ -1581,8 +1665,7 @@ function simulatePortfolio(allTrades, scans, config) {
         // Per-mode universe restriction (casablanca=BVC, highvol=americanbull, etf=etf): only trade
         // signals tagged with the mode's universe. Without this, casablanca (empty BVC pool) leaked
         // US adaptive_fractal stocks (SAH/SNA) into a Bourse-de-Casablanca mode.
-        .filter(t => !config.universeFilter || (t.universe || '') === config.universeFilter)
-        .sort((a, b) => b.score - a.score);
+        .filter(t => !config.universeFilter || (t.universe || '') === config.universeFilter));
       // Defer topN slicing until after cooldown/dedup checks — ensures the best
       // ELIGIBLE candidates are picked, not just the top N before filtering.
       let slotsAvailable = _pfSize - openPositions.length;
@@ -1715,9 +1798,13 @@ function simulatePortfolio(allTrades, scans, config) {
           if (hist) {
             const lookbackDays = Object.keys(hist).filter(d => d <= day).sort().slice(-252);
             const yearHigh = Math.max(...lookbackDays.map(d => hist[d]?.high || 0));
-            if (yearHigh > 0 && cand.actualEntry >= yearHigh * 0.98) {
-              cand.score = (cand.score || 0) - 5;
-              if (cand.score < (config.minScore || 85)) continue;
+            // Pénalité applicable UNIQUEMENT à un candidat scoré : `(cand.score || 0) - 5`
+            // transformait un score absent (null) en -5, soit un chiffre inventé, puis le
+            // comparait à `config.minScore || 85` — où un minScore de 0, pourtant légitime
+            // (mode piloté par le moteur), retombait sur 85 par falsiness et rejetait TOUT.
+            if (yearHigh > 0 && cand.actualEntry >= yearHigh * 0.98 && cand.score != null) {
+              cand.score = cand.score - 5;
+              if (!passesScoreGate(cand, { minScore: config.minScore ?? 85 })) continue;
             }
           }
         }
@@ -2687,10 +2774,13 @@ async function main() {
 
     const modesConfig = JSON.parse(fs.readFileSync(MODES_CFG_PATH));
     // Shared scoreboard — modes with crossModeDedup=true skip tickers already picked.
-    // Priority order (most conservative first): fortress → secured → balanced → dynamic → turbo.
+    // Priority order (most conservative first): fortress → balanced → dynamic → turbo.
     // Conservative modes need diversification most, so they consume the candidate pool first.
+    // `best` n'est PAS dans la liste et passe donc en dernier : c'est l'ordre voulu. Ses candidats
+    // viennent du pool du moteur (partition universeFilter), il ne se sert pas dans le vivier du
+    // scanner, et le faire passer en premier ne ferait qu'affamer les modes qui, eux, en dépendent.
     const crossModePicked = new Set();
-    const DEDUP_PRIORITY = ['fortress', 'secured', 'balanced', 'dynamic', 'turbo'];
+    const DEDUP_PRIORITY = ['fortress', 'balanced', 'dynamic', 'turbo'];
     const orderedModeIds = [
       ...DEDUP_PRIORITY.filter(id => modesConfig.modes[id] && modesConfig.modes[id].status !== 'stopped'),
       ...Object.keys(modesConfig.modes).filter(id => !DEDUP_PRIORITY.includes(id) && modesConfig.modes[id].status !== 'stopped'),
@@ -2947,16 +3037,15 @@ async function main() {
             if (cfg.tklPoolEnabled !== false) pool.push(...(scan.tklPool || []));
             // Asset-class pools (incl. event-driven pead/filings/gap); each mode keeps only its own via exclSources.
             pool.push(...(scan.cryptoPool || []), ...(scan.metalsPool || []), ...(scan.forexPool || []), ...(scan.casablancaPool || []), ...(scan.euSmallcapPool || []), ...(scan.factorPool || []), ...(scan.peadPool || []), ...(scan.filingsPool || []), ...(scan.gapPool || []), ...(scan.dtxPool || []));
-            const filtered = pool
+            const filtered = sortCandidates(pool
               .filter(s => exclSources.size === 0 || !exclSources.has(s.source || 'signals'))
               .filter(s => !activeFilter.has(s.strategy))
-              .filter(s => cfg.minScore <= 0 || (s.score || 0) >= cfg.minScore)
+              .filter(s => passesScoreGate(s, cfg))
               // Per-mode Sharia mandate also gates live-position injection (Fortress = PM Halal):
               // a non-compliant live position (e.g. ING bank, NNI/Nelnet finance) must NOT be injected.
               .filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s))
               // Universe restriction also gates injection (casablanca must not hold US stocks).
-              .filter(s => !cfg.universeFilter || (s.universe || '') === cfg.universeFilter)
-              .sort((a, b) => (b.score || 0) - (a.score || 0))
+              .filter(s => !cfg.universeFilter || (s.universe || '') === cfg.universeFilter))
               .slice(0, cfg.topN);
             for (const s of filtered) {
               const key = `${s.ticker}_${scan.scanDate}`;
@@ -3221,6 +3310,7 @@ async function main() {
 
 module.exports = {
   parseScan, simulateTrade, simulatePortfolio, computeStatsFromTrades,
+  passesScoreGate, compareCandidates, compareEngineCandidates, sortCandidates,
   getWeight,
   fetchOHLCV, priceCache, getSector, normalizeRegime,
   STRATEGY_FILTERS_MAP,

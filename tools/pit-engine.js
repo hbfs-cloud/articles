@@ -695,7 +695,9 @@ async function run() {
       // Iterate modes in priority order (matches sweep DEDUP_PRIORITY).
       // Conservative modes first so they consume the candidate pool before
       // aggressive modes when crossModeDedup is active.
-      const DEDUP_PRIORITY = ['fortress', 'secured', 'balanced', 'dynamic', 'turbo', 'tkl'];
+      // Même ordre que sweep.js (modes supprimés retirés le 2026-08-12) ; `best`, absent de la
+      // liste, passe en dernier — voir le commentaire de sweep.js.
+      const DEDUP_PRIORITY = ['fortress', 'balanced', 'dynamic', 'turbo'];
       const modeOrder = [
         ...DEDUP_PRIORITY.filter(id => state.modes[id]),
         ...Object.keys(state.modes).filter(id => !DEDUP_PRIORITY.includes(id)),

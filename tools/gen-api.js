@@ -160,6 +160,55 @@ const ordersStale = scanDir !== todayKey && scanDir !== nextBizDay;
 
 console.log(`  Source: ${path.relative(ROOT, latestFile)} (${snap.date})${ordersStale ? ` [orders stale: scanDir=${scanDir} != today=${todayKey}]` : ''}`);
 
+// ─── Chemin MOTEUR (assetClass:"dtx") ────────────────────────────────────────
+// Un mode dtx ne tire pas ses ordres du scanner : ses signaux viennent du pool du moteur
+// systematic-tss, historisé point-in-time dans snapshot.modes[id].engine_decision (registre
+// data/dtx-engine-history.json). gen-api ne connaissait que le chemin scanner (mode.orders),
+// donc « best » publiait orders:[] / orderCount:0 alors que le moteur avait décidé 18 ordres.
+// On normalise la forme moteur vers la forme canonique des 4 autres modes, sans rien inventer :
+// les champs que le moteur ne produit pas (score éditorial, tp2, R/R, filtre Sharia) restent null
+// plutôt que d'être fabriqués, et les champs propres au moteur (qty, orderType, limitPrice)
+// sont exposés tels quels. Un registre marqué stale ne publie rien.
+function engineOrdersFrom(mode) {
+  const ed = mode && mode.engine_decision;
+  if (!ed || ed.stale === true) return null;
+  const raw = Array.isArray(ed.orders) ? ed.orders : [];
+  if (!raw.length) return [];
+  return raw.map(o => ({
+    ticker: o.symbol,
+    action: o.side || 'BUY',
+    score: null,
+    strategy: 'Engine',
+    entry: o.limitPrice != null ? +o.limitPrice : (o.entry != null ? +o.entry : null),
+    stop: o.stopLoss != null ? +o.stopLoss : null,
+    tp1: o.takeProfit != null ? +o.takeProfit : null,
+    tp2: null,
+    rr: null,
+    sharia: null,
+    replaces: null,
+    scoreDelta: null,
+    thesis: o.reason || '',
+    qty: o.qty != null ? +o.qty : null,
+    orderType: o.orderType || null,
+    source: 'engine',
+    engineAsOf: ed.asof || null,
+    engineMode: ed.engineMode || null,
+    broker_symbols: getBrokerSymbols(o.symbol),
+  }));
+}
+// Liste d'ordres retenue pour un mode : chemin moteur s'il existe, sinon chemin scanner.
+// ⚠️ `engineOrdersFrom` rend `[]` (pas `null`) quand un mode porte un `engine_decision` sans ordre.
+// Le repli `eng !== null ? eng : mode.orders` ne se déclenchait alors PAS, et un mode NON-moteur à
+// qui l'on attacherait un `engine_decision` vide verrait ses ordres SCANNER effacés en silence.
+// Piège latent aujourd'hui (seul `best`, qui est bien dtx, porte un engine_decision), mais il ne
+// tient qu'à une convention non vérifiée. On tranche sur la config, qui fait autorité : le chemin
+// moteur n'est emprunté que par un mode réellement déclaré assetClass:"dtx".
+function rawOrdersFor(mode, modeId) {
+  const isEngineMode = (((modesConfigFull && modesConfigFull.modes) || {})[modeId] || {}).assetClass === 'dtx';
+  const eng = isEngineMode ? engineOrdersFrom(mode) : null;
+  return eng !== null ? eng : (mode.orders || []);
+}
+
 // ─── T2: coherence guard (equity.json ⇄ frozen source of truth) ──────────────
 // gen-api copies mode.stats / mode.equity from the daily snapshot, which already
 // carries the SEALED (frozen) curve — so the API is coherent with the dashboard by
@@ -176,7 +225,7 @@ let _frozenResults = null;
 try {
   _frozenResults = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-results.json'), 'utf8'));
 } catch (_) { _frozenResults = null; }
-const coherenceReport = { checked: 0, ok: 0, warnings: 0, skipped: 0, details: [] };
+const coherenceReport = { checked: 0, ok: 0, warnings: 0, skipped: 0, uncovered: [], details: [] };
 const COH_TOL = 0.01;
 
 function verifyEquityCoherence(modeId, stats, equity) {
@@ -188,7 +237,12 @@ function verifyEquityCoherence(modeId, stats, equity) {
   const frozen = _frozenResults[`frozen_${modeId}`];
   if (!frozen) {
     // Fresh mode (frozenMeaningful=false) — nothing sealed to check against.
+    // NOT the same thing as "verified": this mode's equity.json is published WITHOUT any
+    // cross-check. It used to be folded into `skipped` and summarised as "fresh mode / lib
+    // absent", which reads as benign. Counted and NAMED separately so the summary states the
+    // uncovered perimeter out loud instead of implying the whole catalogue was checked.
     coherenceReport.skipped++;
+    coherenceReport.uncovered.push(modeId);
     coherenceReport.details.push({ mode: modeId, status: 'no-frozen' });
     return;
   }
@@ -331,14 +385,33 @@ function writeMode(mode, prefix) {
     samplePeriodStart = ec.d[0];
     samplePeriodEnd = ec.d[ec.d.length - 1];
     try {
-      // Dates are like "MM/DD" — parse with current year
-      const yr = new Date().getFullYear();
-      const ds = new Date(`${yr}-${samplePeriodStart}T00:00:00Z`);
-      const de = new Date(`${yr}-${samplePeriodEnd}T00:00:00Z`);
-      samplePeriodDays = Math.round((de - ds) / 86400000);
+      // Deux étiquetages coexistent : "MM/DD" (modes scanner, courbe intra-annuelle) et
+      // "YYYY-MM-DD" (modes moteur/dtx, courbe splicée multi-années). Parser MM/DD avec l'année
+      // courante sur une série ISO donnait une date invalide → sample_period_days NaN.
+      const _toISO = lbl => (String(lbl).length === 10 && lbl.includes('-'))
+        ? lbl
+        : `${new Date().getFullYear()}-${String(lbl).replace('/', '-')}`;
+      const ds = new Date(`${_toISO(samplePeriodStart)}T00:00:00Z`);
+      const de = new Date(`${_toISO(samplePeriodEnd)}T00:00:00Z`);
+      const _d = Math.round((de - ds) / 86400000);
+      samplePeriodDays = Number.isFinite(_d) ? _d : null;
     } catch {}
   }
   const tradesN = ((mode.stats || {}).trades) || 0;
+  // ⚠️ `reliability` décrit l'ÉCHANTILLON SUIVI du mode (ses trades clôturés), pas la fenêtre de
+  // backtest. Pour un mode moteur (assetClass:"dtx") la courbe publiée EST la courbe de replay du
+  // moteur (2020-12-31 → 2026-08-12) : en tirer le sample period affichait 2 050 jours d'échantillon
+  // à côté de `closed_trades: 0` et d'un avertissement disant « inception was 2026-02-26 ».
+  // Un consommateur y lisait 5,6 ans de track record pour un mode né le jour même. La fenêtre de
+  // suivi est bornée par le passage en live (statusSince), et elle vaut 0 jour tant qu'aucun trade
+  // n'est clôturé. Les 4 modes scanner ne sont pas touchés (leur courbe EST leur suivi).
+  if (_modeCfgFull.assetClass === 'dtx') {
+    samplePeriodStart = _sinceISO || null;
+    samplePeriodEnd = _sinceISO ? (snap.date || null) : null;
+    samplePeriodDays = (samplePeriodStart && samplePeriodEnd)
+      ? Math.max(0, Math.round((new Date(`${samplePeriodEnd}T00:00:00Z`) - new Date(`${samplePeriodStart}T00:00:00Z`)) / 86400000))
+      : null;
+  }
   const oosWarn = (mode.stats || {}).oosWarn || null;
   const reliability = {
     sample_period_days: samplePeriodDays,
@@ -358,11 +431,56 @@ function writeMode(mode, prefix) {
       'No bear-market test (2022 / 2020 type) included — system inception was 2026-02-26.',
     ],
   };
+  // Modes moteur (dtx) : la courbe publiée est la courbe de REPLAY du moteur, échantillonnée aux
+  // dates de rééquilibrage (~1 point / 13 séances), pas une série quotidienne. Un consommateur qui
+  // recalcule un max drawdown dessus SOUS-ESTIME (les creux intra-période ne sont pas dans la
+  // série). On publie donc, en clair et lues telles quelles dans le registre du moteur, les
+  // métriques FAISANT FOI + la résolution réelle de la courbe. Rien n'est recalculé ici.
+  // ⛔ LES STATISTIQUES SERVIES DU LIVRE PRIMENT. Le registre point-in-time archive les métriques
+  // renvoyées par le replay, qui sont celles de la POCHE PORTEUSE (`strategy:"highvol-breakout-corr"`,
+  // CAGR 39,59 / DD 20,2 / 4 577 trades), pas celles du LIVRE (`book_served_stats` : CAGR 70,9 /
+  // DD 27,2 / Sharpe 1,56 / 3 638 trades, staging data/dtx/<mode>.json). Les publier sous le label
+  // « authoritative » affichait un rendement minoré de 31 points de CAGR et un risque minoré de
+  // 7 points de DD, en contradiction frontale avec la source qui fait foi — et un consommateur
+  // n'avait aucun moyen de voir laquelle des deux il lisait. On lit désormais le staging, et le
+  // label NOMME la provenance au lieu de proclamer une autorité.
+  const _staged = (() => {
+    try {
+      const f = path.join(ROOT, 'data', 'dtx', `${modeId}.json`);
+      return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null;
+    } catch { return null; }
+  })();
+  const _served = _staged && _staged.metricsSource === 'book_served_stats' && _staged.metrics
+    ? _staged.metrics : null;
+  const _engMetrics = _served || ((mode.engine_decision || {}).metrics) || null;
+  const _engineBacktest = _engMetrics ? {
+    source: _served
+      ? 'systematic-tss (dtx) — statistiques SERVIES du livre (data/dtx staging, metricsSource=book_served_stats)'
+      : `systematic-tss (dtx) — métriques de replay de la poche « ${_engMetrics.strategy || 'n/a'} », PAS les statistiques servies du livre`,
+    metrics_source: _served ? 'book_served_stats' : 'replay_sleeve',
+    book_strategy: _engMetrics.strategy ?? null,
+    as_of: (mode.engine_decision || {}).asof || null,
+    from: _engMetrics.from ?? null, to: _engMetrics.to ?? null,
+    return_pct: _engMetrics.return_pct ?? null,
+    cagr_pct: _engMetrics.cagr_pct ?? null,
+    max_dd_pct: _engMetrics.max_dd_pct ?? null,
+    dd_p95_bootstrap21_pct: _engMetrics.dd_p95_bootstrap21_pct ?? null,
+    sharpe: _engMetrics.sharpe ?? null,
+    r2: _engMetrics.r2 ?? null,
+    win_rate: _engMetrics.win_rate ?? null,
+    total_trades: _engMetrics.total_trades ?? null,
+    curve_resolution: 'rebalance dates (~13 calendar days), NOT daily',
+    // La courbe publiée reste celle du replay de la poche : un DD recalculé dessus rend 17,49 %
+    // quand la statistique qui fait foi dit 27,2 %. Tant que le moteur ne sert pas la courbe du
+    // livre, l'écart est DIT ici plutôt que masqué (cf. .claude/REPRISE.md).
+    curve_warning: 'Do NOT recompute max drawdown from equityCurve — it is the sub-sampled replay curve of the carrying sleeve, not the served book. Recomputing yields ~17.5% vs the authoritative 27.2%. Use max_dd_pct above.',
+  } : null;
   write(`${p}equity.json`, {
     updatedAt: now, mode: prefix || 'balanced',
     status,
     config: mode.config || {}, stats: mode.stats || {},
     reliability,
+    ...(_engineBacktest ? { engineBacktest: _engineBacktest } : {}),
     equityCurve: equity || {},
   });
 
@@ -374,7 +492,9 @@ function writeMode(mode, prefix) {
   // 5. orders.json — orders only valid on scan date
   // Modes that do not accept new entries (paused, stopped, pausing, liquidated, draft) emit empty orders.
   const ordersAllowed = status.acceptsNewEntries;
-  const modeOrders = (!ordersAllowed || ordersStale) ? [] : (mode.orders || []).map(o => ({
+  const modeOrders = (!ordersAllowed || ordersStale) ? [] : rawOrdersFor(mode, modeId).map(o => o.source === 'engine' ? ({
+    ...o, allocPct,
+  }) : ({
     ticker: o.ticker, action: o.action || 'BUY', score: o.score, strategy: o.strategy,
     entry: parsePrice(o.entry), stop: parsePrice(o.stop), tp1: parsePrice(o.tp1), tp2: parsePrice(o.tp2), rr: o.rr,
     sharia: o.sharia != null ? o.sharia : null,
@@ -706,7 +826,7 @@ write('modes.json', {
       status: getStatusFor(id),
       stats: m.stats || {},
       positionCount: (m.positions || []).length,
-      orderCount: (m.orders || []).length,
+      orderCount: rawOrdersFor(m, id).length,
       portfolioSize: m.config?.portfolioSize || 1,
       maxStopPct: m.config?.maxStopPct || 0,
       atrStopMult: m.config?.atrStopMult || 0,
@@ -716,7 +836,7 @@ write('modes.json', {
       trailingStop: m.config?.trailingStop || false,
       rotation: m.config?.rotation || 'none',
       vwapGate: m.config?.vwapGate || false,
-      minScore: m.config?.minScore || 85,
+      minScore: m.config?.minScore ?? 85,
       horizon: m.config?.horizon || 10,
       slotsAvailable: (m.config?.portfolioSize || 1) - (m.positions || []).length,
       // Risk-layer-v1 fields propagated from modes-config
@@ -791,8 +911,12 @@ if (brokerMap) {
 }
 
 // ─── T2 coherence summary — equity.json ⇄ frozen source of truth ─────────────
-if (coherenceReport.checked > 0 || coherenceReport.warnings > 0) {
+if (coherenceReport.checked > 0 || coherenceReport.warnings > 0 || coherenceReport.uncovered.length > 0) {
   console.log(`\n[coherence] equity.json ⇄ frozen: ${coherenceReport.ok}/${coherenceReport.checked} OK, ${coherenceReport.warnings} divergence(s), ${coherenceReport.skipped} skipped (fresh mode / lib absent).`);
+  if (coherenceReport.uncovered.length > 0) {
+    // Ne pas laisser un périmètre non couvert se lire comme un périmètre vert.
+    console.log(`[coherence] NON COUVERT — aucun frozen_<mode>, equity.json publié sans contre-vérification : ${coherenceReport.uncovered.join(', ')}. Le sceau vient du sweep, il ne se fabrique pas ; tant qu'il manque, ces modes sont hors garde (qa-check 27e les borne à 0).`);
+  }
   if (coherenceReport.warnings > 0) {
     console.warn(`  [warn] [coherence] ${coherenceReport.warnings} mode(s) drift from the sealed curve — inspect the warnings above (non-fatal).`);
   }

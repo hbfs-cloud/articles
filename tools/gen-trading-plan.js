@@ -104,6 +104,33 @@ try {
   ordersScanDate = ordersData.scanDate || '';
 } catch (_) {}
 
+// ── CHEMIN MOTEUR (assetClass:"dtx") ─────────────────────────────────────────
+// Le reste de ce générateur est écrit pour le chemin SCANNER : il REFAIT le sizing depuis
+// portfolioSize, fabrique un TP1 partiel depuis signal.tp1 et arme un trailing stop depuis la
+// config du mode. Les ordres du moteur systematic-tss ne se traduisent pas comme ça : ils
+// portent LEUR propre quantité, n'ont PAS de take-profit (la sortie est pilotée par le moteur)
+// et leur stop ne doit pas être retouché. La traduction naïve produisait un plan FAUX —
+// mesuré sur best/20260812 : BTG à 128 titres / 667 $ au lieu des 332 titres / 2 000 $ décidés
+// par le moteur, et un take_profit_1 en LIMIT au prix 0 sur les 18 ordres.
+// Un ordre moteur est donc traduit à l'identique (qty/orderType/limitPrice/stop), sans TP ni
+// horizon fabriqués. Voir makeOrder() ci-dessous.
+const IS_DTX = modeCfg.assetClass === 'dtx';
+const engineOrders = currentOrders.filter(o => o && o.source === 'engine');
+if (engineOrders.length && !IS_DTX) {
+  // Filet : des ordres moteur dans un mode qui ne se déclare pas moteur = configuration
+  // incohérente. Refuser plutôt que fabriquer un plan faux.
+  console.error(`❌ ${MODE}: ${engineOrders.length} ordre(s) source:"engine" mais assetClass="${modeCfg.assetClass || 'scanner'}".`);
+  console.error('   Le chemin moteur ne s\'arme que sur assetClass:"dtx". Aucun plan écrit.');
+  process.exit(1);
+}
+if (IS_DTX) {
+  const foreign = currentOrders.filter(o => o && o.source !== 'engine');
+  if (foreign.length) {
+    console.error(`❌ ${MODE} (dtx): ${foreign.length} ordre(s) sans source:"engine" dans un livre moteur — provenance incohérente. Aucun plan écrit.`);
+    process.exit(1);
+  }
+}
+
 if (!DATE) DATE = ordersScanDate || new Date().toISOString().slice(0, 10).replace(/-/g, '');
 
 // Load raw scanner signals as fallback pool (mode signals.json is topN-filtered)
@@ -218,6 +245,10 @@ function makeOrder(signal, action, rotation) {
   }
 
   const increment = restrictions?.price_increment || 0.01;
+
+  // ── Chemin moteur : traduction 1:1, aucune donnée fabriquée ────────────────
+  if (IS_DTX) return makeEngineOrder(signal, action, rotation, { sym, restrictions, increment });
+
   const entryPrice = roundToIncrement(signal.entry, increment);
   const stopPrice = roundToIncrement(signal.stop, increment);
   const tp1Price = roundToIncrement(signal.tp1, increment);
@@ -327,20 +358,126 @@ function makeOrder(signal, action, rotation) {
   };
 }
 
+/** Traduit un ordre du moteur systematic-tss en ordre de plan, À L'IDENTIQUE.
+ *  Règles, dans l'ordre d'importance :
+ *   1. la quantité est celle du moteur — jamais recalculée depuis portfolioSize/positionNominal ;
+ *   2. aucun take-profit n'est fabriqué : le moteur ne publie pas de TP, la sortie lui appartient ;
+ *   3. le stop est celui porté par l'ordre, non trailé et non replafonné ici (cf. modes-config
+ *      best._changeReason : atrStopMult/maxStopPct sont à 0 précisément pour ça) ;
+ *   4. pas d'horizon fabriqué : un ordre moteur ne se ferme pas au bout de modeCfg.horizon jours ;
+ *   5. une donnée manquante ou inutilisable ⇒ SKIP explicite, jamais une valeur inventée. */
+function makeEngineOrder(signal, action, rotation, { sym, restrictions, increment }) {
+  const id = `ORD-${String(orderSeq).padStart(3, '0')}`;
+  const skip = (reason) => ({ id, action: 'SKIP', ticker: signal.ticker, broker_symbol: sym, reason });
+
+  const orderType = String(signal.orderType || '').toUpperCase();
+  if (orderType !== 'LIMIT' && orderType !== 'MARKET') {
+    return skip(`Type d'ordre moteur non traduisible: ${JSON.stringify(signal.orderType)}`);
+  }
+
+  const qty = signal.qty;
+  if (!Number.isFinite(qty) || qty <= 0 || !Number.isInteger(qty)) {
+    return skip(`Quantité moteur absente ou invalide (qty=${JSON.stringify(qty)}) — pas de sizing de substitution`);
+  }
+  const minSize = restrictions?.min_order_size || 1;
+  if (qty < minSize) {
+    return skip(`Quantité moteur ${qty} < taille minimale ${BROKER} (${minSize}) — l'arrondir fausserait le sizing du moteur`);
+  }
+
+  const rawEntry = signal.limitPrice != null ? signal.limitPrice : signal.entry;
+  let entryPrice = null;
+  if (orderType === 'LIMIT') {
+    if (!Number.isFinite(rawEntry) || rawEntry <= 0) return skip(`Prix limite moteur absent ou invalide (${JSON.stringify(rawEntry)})`);
+    entryPrice = roundToIncrement(rawEntry, increment);
+    if (!(entryPrice > 0)) return skip(`Prix limite ${rawEntry} arrondi à 0 au pas de cotation ${increment}`);
+  }
+
+  const rawStop = signal.stopLoss != null ? signal.stopLoss : signal.stop;
+  let stopPrice = null;
+  if (Number.isFinite(rawStop) && rawStop > 0) {
+    stopPrice = roundToIncrement(rawStop, increment);
+    if (!(stopPrice > 0)) stopPrice = null;
+  }
+
+  const notional = entryPrice != null ? +(qty * entryPrice).toFixed(2) : null;
+
+  return {
+    id,
+    action,
+    ticker: signal.ticker,
+    broker_symbol: sym,
+    broker: brokerInfo(signal.ticker),
+    source: 'engine',
+    engine: {
+      as_of: signal.engineAsOf || null,
+      engine_mode: signal.engineMode || null,
+      note: 'Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas.',
+    },
+    entry: {
+      type: orderType,
+      price: entryPrice,
+      // Pas de vwap_gate : le moteur a décidé un prix limite, un second filtre d'entrée
+      // maison écarterait des ordres qu'il a validés.
+      size: {
+        method: 'ENGINE_QTY',
+        shares: qty,
+        nominal_usd: notional,
+        pct_of_portfolio: null,
+        description: 'Quantité imposée par le moteur — ne pas redimensionner côté exécution.',
+      },
+      valid_from: `${targetISO}T09:30:00-04:00`,
+      valid_until: `${targetISO}T16:00:00-04:00`,
+      time_in_force: 'DAY',
+    },
+    exit: {
+      managed_by: 'engine',
+      stop_loss: stopPrice != null ? {
+        type: 'STOP',
+        price: stopPrice,
+        trailing: false,
+        description: 'Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution.',
+      } : null,
+      take_profit_1: null,
+      take_profit_2: null,
+      time_exit: null,
+      description: 'Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n\'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant.',
+    },
+    conditions: [
+      { phase: 'PRE_ENTRY', check: 'HALTED', if_true: 'SKIP_ORDER', description: 'If symbol is halted at market open, skip entirely.' },
+      { phase: 'PRE_ENTRY', check: 'SPREAD', max_spread_pct: 0.5, if_true: 'DELAY_30S', description: 'If bid-ask spread > 0.5%, wait 30s for spread to tighten.' },
+      { phase: 'POST_FILL', check: 'SLIPPAGE', max_slippage_pct: 1.0, if_exceeded: 'LOG_WARNING', description: 'Log warning if fill price > 1% worse than limit.' },
+    ],
+    rotation: rotation ? {
+      close_ticker: rotation.close,
+      close_broker_symbol: brokerSymbol(rotation.close),
+      reason: rotation.reason || 'Rotation décidée par le moteur',
+    } : undefined,
+    metadata: {
+      score: signal.score ?? null,
+      strategy: signal.strategy || 'Engine',
+      rr: signal.rr ?? null,
+      sharia: signal.sharia ?? null,
+      thesis: signal.thesis,
+    },
+  };
+}
+
 // Build orders — scanner picks first (priority 1), then remaining signals as fallbacks
 const MAX_ORDERS = 5;
 const orders = [];
 const usedTickers = new Set();
 
 for (const o of buyOrders) {
-  const sig = signals.signals.find(s => s.ticker === o.ticker) || o;
+  // Chemin moteur : l'ordre lui-même fait foi (il porte qty/orderType/stop du moteur).
+  // signals.json est une vue topN enrichie côté scanner, sans ces champs.
+  const sig = IS_DTX ? o : (signals.signals.find(s => s.ticker === o.ticker) || o);
   const order = makeOrder(sig, 'BUY', null);
   order.priority = orders.filter(x => x.action !== 'SKIP').length + 1;
   orders.push(order);
   usedTickers.add(o.ticker);
 }
 for (const o of rotateOrders) {
-  const sig = signals.signals.find(s => s.ticker === o.ticker) || o;
+  const sig = IS_DTX ? o : (signals.signals.find(s => s.ticker === o.ticker) || o);
   const order = makeOrder(sig, 'ROTATE', { close: o.rotate_out || o.close, reason: o.reason });
   order.priority = orders.filter(x => x.action !== 'SKIP').length + 1;
   orders.push(order);
@@ -349,7 +486,10 @@ for (const o of rotateOrders) {
 
 // Fallback: raw scanner signals (not topN-filtered), sorted by score.
 // Suppressed whenever the mode is not accepting new entries.
-const fallbackSignals = !STATUS_ACCEPTS_ENTRIES
+// Chemin moteur : AUCUN repêchage. Le pool du moteur est fermé — y verser des signaux
+// du scanner (scanner/<date>/signals.json est commun à tous les modes) enverrait au courtier
+// des positions que le moteur n'a jamais décidées, sans quantité ni stop de sa main.
+const fallbackSignals = (!STATUS_ACCEPTS_ENTRIES || IS_DTX)
   ? []
   : (rawSignals.length > 0 ? rawSignals : signals.signals)
       .filter(s => !usedTickers.has(s.ticker) && s.entry && s.stop && s.tp1)
@@ -389,6 +529,10 @@ for (const p of modePositions) {
     });
     continue;
   }
+  // Chemin moteur : pas de fermeture sur horizon. Le moteur tient ses positions au-delà de
+  // modeCfg.horizon et publie lui-même la sortie ; couper à 14 jours liquiderait des positions
+  // qu'il tient encore (même faute que le plafonnement de stop à -15% corrigé le 2026-08-07).
+  if (IS_DTX) continue;
   if (held >= modeCfg.horizon) {
     const sym = brokerSymbol(p.ticker);
     closeNow.push({
@@ -438,14 +582,53 @@ const plan = {
     },
   },
 
-  account: {
+  account: IS_DTX ? {
+    // Le moteur a dimensionné sur SON capital ; republier un nominal maison et un % par ligne
+    // laisserait croire que l'exécutant peut recalculer les quantités. Il ne le peut pas.
+    nominal_usd: null,
+    currency: 'USD',
+    position_size_pct: null,
+    max_positions: modeCfg.portfolioSize,
+    sizing_source: 'engine',
+  } : {
     nominal_usd: nominalUsd,
     currency: 'USD',
     position_size_pct: positionPct,
     max_positions: modeCfg.portfolioSize,
   },
 
-  mode: {
+  // Bloc mode : ces paramètres pilotent l'exécutant. Sur un livre moteur, la plupart
+  // décrivent une gestion que le moteur assure lui-même — les publier reviendrait à demander
+  // au courtier de trailer, de sortir en TP partiel et de couper à l'horizon par-dessus lui.
+  mode: IS_DTX ? {
+    name: MODE,
+    asset_class: 'dtx',
+    exits_managed_by: 'engine',
+    engine: 'systematic-tss',
+    horizon_days: null,
+    filter: modeCfg.filterName,
+    min_score: null,
+    rotation: 'engine',
+    breakeven_pct: 0,
+    be_grace_days: 0,
+    vix_kill: modeCfg.vixKillThreshold,
+    trailing_stop: false,
+    daily_trail_pct: 0,
+    max_stop_pct: 0,
+    atr_stop_mult: 0,
+    stale_days: 0,
+    entry_gate_pct: 0,
+    partial_tp: false,
+    partial_tp_pct: 0,
+    sector_cap_max: modeCfg.sectorCapMax || 0,
+    sizing_method: 'engine_qty',
+    target_risk_pct: null,
+    correlation_cap: modeCfg.correlationCap || 0,
+    cross_mode_dedup: modeCfg.crossModeDedup || false,
+    regime_filters: {},
+    dd_breaker_pct: modeCfg.ddBreakerPct || 5,
+    note: 'Sizing, stops et sorties viennent du moteur. L\'exécutant place les ordres tels quels et ne gère aucun TP, trailing ni horizon.',
+  } : {
     name: MODE,
     horizon_days: modeCfg.horizon,
     filter: modeCfg.filterName,
@@ -548,7 +731,11 @@ const plan = {
       { step: 'CHECK_VIX', threshold: modeCfg.vixKillThreshold, action: 'HALT_IF_ABOVE', description: `If VIX > ${modeCfg.vixKillThreshold}, halt all new orders` },
       { step: 'LOG_STATE', description: 'Log initial account state for audit trail' },
     ],
-    on_fill: [
+    on_fill: IS_DTX ? [
+      { step: 'PLACE_STOP', description: 'Place the engine stop only. No TP, no bracket — the engine owns the exit.' },
+      { step: 'LOG_FILL', description: 'Record fill price, time, slippage, fees' },
+      { step: 'NOTIFY', channel: 'telegram', description: 'Send fill notification to Telegram' },
+    ] : [
       { step: 'PLACE_EXITS', description: 'Immediately place SL and TP1/TP2 bracket orders' },
       { step: 'LOG_FILL', description: 'Record fill price, time, slippage, fees' },
       { step: 'CHECK_BREAKEVEN', description: 'Start monitoring for breakeven trigger' },

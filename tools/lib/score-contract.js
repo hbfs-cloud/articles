@@ -151,6 +151,19 @@ const FAMILY_LIST = [
     // (highvol_breakout, candlestick_pattern, adaptive_fractal) : bounded:false + plafond large.
     unit: 'composite additif du moteur — SANS BORNE déclarée par le producteur',
     min: 0, max: 200, bounded: false,
+    // ABSENCE DE SCORE DÉCLARÉE (2026-08-12). Le moteur ne score QUE ses stratégies
+    // breakout/momentum. Ses stratégies de ROTATION (« ROTATION_IN », « ROTATION_BUY: top-10
+    // relative strength ») sélectionnent par classement de force relative et n'émettent aucun
+    // score : 41 des 64 ordres BUY de data/dtx-engine-history.json (64 %) n'en ont pas.
+    // Ce n'est pas un producteur cassé, c'est la forme réelle de la donnée. Jusqu'ici le trou
+    // était bouché par un forfait 80 côté pont, qui plaçait des ordres JAMAIS évalués au 83e
+    // centile de la distribution réelle (16..95) et inversait la sélection.
+    // `unscorable` autorise `score: null` À CONDITION que le signal déclare `scoreSource:'none'`.
+    // Un tel signal ne peut être ni seuillé ni classé au score — c'est justement le point :
+    // il est admis uniquement par un mode qui ne trie pas au score (minScore <= 0) et classé
+    // par le capital que le moteur lui a alloué (engineNotional). Un score null SANS
+    // `scoreSource:'none'` reste une violation : on ne devine pas une absence.
+    unscorable: true,
     pools: ['dtx_pool'],
     strategies: [],
     observed: { min: 30, max: 114, n: 510 },
@@ -409,6 +422,12 @@ function checkSignal(signal, context) {
 
   const f = SCORE_FAMILIES[family];
   const score = signal.score;
+  // Absence DÉCLARÉE (famille unscorable + scoreSource:'none') : donnée fidèle, pas producteur
+  // cassé. On la laisse passer en la marquant `unscored` pour que les consommateurs la traitent
+  // explicitement — jamais en lui inventant une valeur.
+  if (score == null && f.unscorable && signal.scoreSource === 'none') {
+    return { ok: true, family, unscored: true, violations };
+  }
   if (typeof score !== 'number' || !Number.isFinite(score)) {
     violations.push({
       code: 'score_not_finite', context: ctx, ticker, family, score,
@@ -442,6 +461,17 @@ function checkComparable(signals, context) {
     const fam = familyOf(s);
     if (!fam) { unknown++; continue; }
     counts.set(fam, (counts.get(fam) || 0) + 1);
+  }
+  // Une liste où cohabitent des signaux scorés et des signaux SANS score ne peut pas être
+  // seuillée ni triée au score : c'est exactement le bug que le forfait 80 masquait.
+  const nUnscored = list.filter(s => s && s.score == null && s.scoreSource === 'none').length;
+  if (nUnscored > 0 && nUnscored < list.length) {
+    violations.push({
+      code: 'unscored_mixed_in_comparison', context: ctx, count: nUnscored, total: list.length,
+      message: `${ctx}: ${nUnscored}/${list.length} signaux sans score (absence déclarée) dans une liste `
+        + `seuillée/classée par score — un seuil les rejette tous ou les laisse tous passer selon `
+        + `qu'on lise null comme 0 ou comme l'infini. Classer sur une clé présente partout.`,
+    });
   }
   const families = [...counts.keys()].sort();
   if (unknown > 0) {

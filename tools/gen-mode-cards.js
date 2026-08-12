@@ -63,22 +63,39 @@ function readStatusMetrics(modeKey) {
   const perfBlock = html.match(/class="perf-stats"[\s\S]{0,4000}?<\/div>\s*<\/div>/);
   const perfHtml  = perfBlock ? perfBlock[0] : '';
 
-  const allPsV = perfHtml.match(/class="ps-v"[^>]*>([+\-]?[\d.]+[%x]?)/g) || [];
-  const extract = s => { const m = s.match(/>([+\-]?[\d.]+)/); return m ? parseFloat(m[1]) : NaN; };
-  const vals = allPsV.map(extract).filter(n => !isNaN(n));
+  // ⛔ CHIFFRE PUBLIÉ FABRIQUÉ (défaut PRÉ-EXISTANT, identique sur l'index.html de HEAD).
+  // Les valeurs étaient lues POSITIONNELLEMENT (vals[0]=ret, vals[1]=dd, …) sur un motif exigeant
+  // `class="ps-v"` EXACTEMENT. Trois cellules sur neuf échappent à ce motif :
+  //   · Total Return  → `class="ps-v pos"`  (classe de couleur)
+  //   · Max Drawdown  → `class="ps-v neg"`  (classe de couleur)
+  //   · Profit Factor → `<span class="ps-v"><span class="ps-num">1.8x</span></span>` (valeur imbriquée)
+  // Les trois étaient donc silencieusement sautées et tout l'index glissait : la carte fortress
+  // publiait « +39,40 % TOTAL RETURN » (= le win rate) et « -109,00 % MAX DRAWDOWN » (= le nombre
+  // de trades) au lieu de +19,87 % et -4,43 % — un rendement doublé et un drawdown 25× pire que la
+  // réalité, sur une image poussée en Telegram/Discord et servie en Open Graph.
+  // On n'indexe plus par POSITION mais par LIBELLÉ : un ajout, un retrait ou un réordonnancement
+  // de cellule dans gen-status-page.js ne peut plus décaler silencieusement les chiffres — au pire
+  // un libellé inconnu rend 0, ce qui se voit, au lieu de rendre la valeur du voisin, qui ne se voit pas.
+  const byLabel = {};
+  const cellRe = /<span class="ps-v[^"]*"[^>]*>([\s\S]*?)<\/span>\s*<span class="ps-l"[^>]*>([\s\S]*?)<\/span>/g;
+  for (let m; (m = cellRe.exec(perfHtml));) {
+    const num = String(m[1]).replace(/<[^>]*>/g, '').trim();
+    const lab = String(m[2]).replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').trim().toLowerCase();
+    const v = parseFloat(String(num).replace(/[^0-9.+-]/g, ''));
+    if (!isNaN(v)) byLabel[lab.split('(')[0].trim()] = v;
+  }
+  const L = (...names) => { for (const n of names) if (byLabel[n] != null) return byLabel[n]; return 0; };
 
   const worstM = html.match(/Worst:\s*([+\-]?[\d.]+)%/);
   const nowM   = html.match(/Now:\s*([+\-]?[\d.]+)%/);
   const bestM  = html.match(/Best:\s*([+\-]?[\d.]+)%/);
 
-  const tradesM = html.match(/(\d+)\s*(?:trades?|Trades?)/);
-
   return {
-    ret:    vals[0] || 0,
-    dd:     vals[1] || 0,
-    wr:     vals[2] || 0,
-    pf:     vals[3] || 0,
-    trades: tradesM ? parseInt(tradesM[1]) : (vals[4] || 0),
+    ret:    L('total return'),
+    dd:     L('max drawdown'),
+    wr:     L('win rate'),
+    pf:     L('profit factor'),
+    trades: L('closed trades', 'trades'),
     worst:  worstM ? parseFloat(worstM[1]) : 0,
     now:    nowM   ? parseFloat(nowM[1])   : 0,
     best:   bestM  ? parseFloat(bestM[1])  : 0,

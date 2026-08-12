@@ -57,7 +57,8 @@ const MODE_IDS = (() => {
     const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8'));
     return Object.keys(cfg.modes || {});
   } catch {
-    return ['turbo', 'dynamic', 'balanced', 'secured', 'fortress', 'tkl'];
+    // Repli SEULEMENT si modes-config.json est illisible — tenu à jour avec le catalogue.
+    return ['best', 'turbo', 'dynamic', 'balanced', 'fortress'];
   }
 })();
 

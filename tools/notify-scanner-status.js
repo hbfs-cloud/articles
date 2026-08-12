@@ -53,24 +53,30 @@ const STATUS_URL = 'https://articles.dailytickers.com/scanner/status/';
 //   • MODE_EMOJI      — display emoji (config has label/color but no emoji)
 //   • MODE_TOPIC_ENV  — name of the env var holding the Telegram thread id
 //   • MODE_TOPIC_FALLBACK — last-resort thread id if that env var is unset
-// A mode present in the config but ABSENT from the topic tables (e.g. a freshly
-// added highvol/hybrid/forex) has NO Telegram destination: we NEVER fabricate a
-// topic/thread. Such a mode is skipped for Telegram with an explicit log — the
-// 7 already-wired modes keep their exact current routing.
+// A mode present in the config but ABSENT from the topic tables has NO Telegram
+// destination: we NEVER fabricate a topic/thread. Such a mode is skipped for Telegram
+// with an explicit log.
+//
+// 2026-08-12 — catalogue réduit à 5 modes (best, turbo, dynamic, balanced, fortress) :
+//   • les entrées des modes supprimés (secured, tkl, alpha, aplus, bull) ont été retirées.
+//     Elles étaient inertes (la boucle dérive ses clés de modes-config) mais un id ressuscité
+//     aurait été routé en silence vers l'ancien thread.
+//   • `best` (seul mode moteur, assetClass 'dtx') n'était dans AUCUNE des trois tables : il
+//     tombait donc dans la branche « pas de topic configuré » et n'était jamais notifié.
+//     Il est câblé par VARIABLE D'ENV uniquement (TELEGRAM_TOPIC_BEST) et volontairement SANS
+//     fallback : inventer un id de thread enverrait les signaux du moteur dans le fil d'un
+//     autre mode. Tant que l'env n'est pas posée, le skip reste explicite dans les logs.
 const MODE_EMOJI = {
-  turbo: '🚀', dynamic: '🔥', balanced: '⚖️', secured: '🪐',
-  fortress: '🏰', tkl: '🎯', alpha: '🎯', aplus: '💎', bull: '🐂',
+  best: '🏆', turbo: '🚀', dynamic: '🔥', balanced: '⚖️', fortress: '🏰',
 };
 const DEFAULT_EMOJI = '📊';
 const MODE_TOPIC_ENV = {
+  best: 'TELEGRAM_TOPIC_BEST',
   turbo: 'TELEGRAM_TOPIC_TURBO', dynamic: 'TELEGRAM_TOPIC_DYNAMIC',
-  balanced: 'TELEGRAM_TOPIC_BALANCED', secured: 'TELEGRAM_TOPIC_SECURED',
-  fortress: 'TELEGRAM_TOPIC_FORTRESS', tkl: 'TELEGRAM_TOPIC_TKL',
-  alpha: 'TELEGRAM_TOPIC_ALPHA', bull: 'TELEGRAM_TOPIC_BULL', aplus: 'TELEGRAM_TOPIC_APLUS',
+  balanced: 'TELEGRAM_TOPIC_BALANCED', fortress: 'TELEGRAM_TOPIC_FORTRESS',
 };
 const MODE_TOPIC_FALLBACK = {
-  turbo: '89', dynamic: '89', balanced: '90', secured: '91',
-  fortress: '91', tkl: '1064', alpha: '1064', bull: '89', aplus: '89',
+  turbo: '89', dynamic: '89', balanced: '90', fortress: '91',
 };
 // Draft modes = config created, never run — not notified until they go live
 // (mirrors gen-api.js NON_PUBLIC_API_STATUSES).
@@ -811,8 +817,8 @@ async function main() {
   console.log(dcMsg);
 
   // Modes to notify — derived DYNAMICALLY from data/modes-config.json (source of
-  // truth). Previously a hardcoded 9-entry list that silently omitted any new mode
-  // (highvol/hybrid/forex). Now every non-draft mode in the config is iterated, so a
+  // truth). Previously a hardcoded 9-entry list that silently omitted any new mode.
+  // Now every non-draft mode in the config is iterated, so a
   // mode is picked up automatically the moment it flips out of draft. ONLY_MODE still
   // narrows the run to an explicit subset (used for manual per-mode testing); when set
   // it bypasses the draft filter so a specific mode can be forced.
@@ -858,9 +864,8 @@ async function main() {
 
   for (const { key, topicEnv } of modeTopics) {
     // Resolve the Telegram thread: env var first, then the known fallback id.
-    // A mode with NEITHER (e.g. a freshly added highvol/hybrid/forex not yet wired
-    // to a Telegram topic) is skipped — we never invent a topic and never risk a
-    // send to the wrong thread. The 7 wired modes keep their exact routing.
+    // A mode with NEITHER (aujourd'hui `best`, câblé par env sans fallback) is skipped —
+    // we never invent a topic and never risk a send to the wrong thread.
     const topicId = (topicEnv && process.env[topicEnv]) || MODE_TOPIC_FALLBACK[key];
     if (!topicId) {
       console.warn(`[topics] mode "${key}" has no Telegram topic configured (env ${topicEnv || '<none>'} unset, no fallback) — skipping Telegram/audio/video for this mode. Wire ${MODE_TOPIC_ENV[key] || 'a MODE_TOPIC_ENV/MODE_TOPIC_FALLBACK entry'} to enable.`);

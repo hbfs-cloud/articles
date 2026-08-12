@@ -1011,7 +1011,7 @@ async function evaluate(tickerFilter) {
       const eligible = signals
         .filter(s => {
           if (openTickers.has(s.ticker)) return false;
-          if (s.score < (cfg.minScore || 85)) return false;
+          if (s.score < (cfg.minScore ?? 85)) return false;
           // R:R gate: reject signals with reward/risk below 1.5
           const risk = s.entry - s.stop;
           if (risk > 0 && s.tp1 > s.entry) {

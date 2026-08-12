@@ -11,13 +11,21 @@
   var _v = Date.now();
   var lastToastTs = {};
   var toastContainer = null;
+  // Couleur de mode — la SOURCE est data/modes-config.json (cfg.color), chargée au boot dans
+  // window._leModesCfg. Cette table n'est qu'un secours si la config n'est pas encore là.
+  // 2026-08-12 : elle listait secured/tkl (modes supprimés) et ignorait `best`, qui héritait donc
+  // du gris #94a3b8 au lieu de sa couleur — un mode « éteint » visuellement dans le dashboard.
   var MODE_COLORS = {
-    turbo: '#f59e0b', dynamic: '#dc2626', balanced: '#059669',
-    secured: '#2563eb', fortress: '#6d28d9', tkl: '#e11d48'
+    best: '#2563eb', turbo: '#f59e0b', dynamic: '#dc2626',
+    balanced: '#059669', fortress: '#6d28d9'
   };
+  function modeColor(modeId) {
+    var cfg = window._leModesCfg && window._leModesCfg[modeId];
+    return (cfg && cfg.color) || MODE_COLORS[modeId] || '#94a3b8';
+  }
   // Nominal capital per mode — used to translate % return into a $ figure users can relate to.
-  // 10k default; fortress half-sized so effectively 5k of exposure per slot.
-  var NOMINAL_CAPITAL = { turbo: 10000, dynamic: 10000, balanced: 10000, secured: 10000, fortress: 10000, tkl: 10000 };
+  // 10k pour tous les modes du catalogue (= la valeur par défaut) ; un mode absent retombe dessus.
+  var NOMINAL_CAPITAL = { best: 10000, turbo: 10000, dynamic: 10000, balanced: 10000, fortress: 10000 };
 
   // Load JetBrains Mono via <link> to avoid FOUC
   var fontLink = document.createElement('link');
@@ -602,7 +610,7 @@
 
     var grid = document.createElement('div');
     grid.className = 'lp-grid';
-    var mc = MODE_COLORS[modeId] || '#94a3b8';
+    var mc = modeColor(modeId);
     grid.style.setProperty('--mc', mc);
 
     // Collect all children, tag them, move into grid wrapper
@@ -681,7 +689,7 @@
   function createCard(modeId) {
     var panel = document.getElementById('p-' + modeId);
     if (!panel) return null;
-    var color = MODE_COLORS[modeId] || '#94a3b8';
+    var color = modeColor(modeId);
 
     var card = el('div', 'lp-card lp-init');
     card.id = 'lp-' + modeId;
@@ -1203,14 +1211,14 @@
         });
     }).catch(function (e) {
       console.warn('[LiveEngineUI] Boot failed:', e);
-      ['turbo', 'dynamic', 'balanced', 'secured', 'fortress', 'tkl'].forEach(function (modeId) {
-        var panel = document.getElementById('p-' + modeId);
-        if (panel) {
-          var msg = el('div', 'lp-empty', '<i class="fas fa-exclamation-triangle"></i>Live data unavailable');
-          msg.style.margin = '.5rem 0';
-          var first = panel.querySelector('.section-card, .perf-hero');
-          if (first) panel.insertBefore(msg, first); else panel.appendChild(msg);
-        }
+      // Boot KO : la config n'a pas pu être lue, donc on ne connaît pas la liste des modes.
+      // On la lit dans le DOM (les panneaux sont générés depuis la config) plutôt que de la
+      // coder en dur — une liste figée privait `best` du message d'indisponibilité.
+      Array.prototype.forEach.call(document.querySelectorAll('.mode-panel'), function (panel) {
+        var msg = el('div', 'lp-empty', '<i class="fas fa-exclamation-triangle"></i>Live data unavailable');
+        msg.style.margin = '.5rem 0';
+        var first = panel.querySelector('.section-card, .perf-hero');
+        if (first) panel.insertBefore(msg, first); else panel.appendChild(msg);
       });
     });
   }

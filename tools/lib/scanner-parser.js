@@ -84,7 +84,19 @@ function loadSignalsRaw(dir) {
         if (s.thesis) thesis[s.ticker] = s.thesis;
         return {
           ticker: s.ticker,
-          score: s.score || 0,
+          // `s.score || 0` écrasait en 0 une ABSENCE de score déclarée (moteur dtx : les
+          // stratégies de rotation n'en produisent pas, 41 ordres sur 64). Un 0 est un score —
+          // il se compare, il se trie, il se seuille — alors que l'absence ne doit rien de tout
+          // cela : elle doit rester visible jusqu'au consommateur, qui la traite explicitement
+          // (cf. passesScoreGate/compareCandidates dans sweep.js). Le 0 de repli est conservé
+          // pour tous les autres producteurs, dont aucun signal historique n'en dépend
+          // (mesuré : 0 signal sur 1868 avec score absent ou nul hors dtx).
+          score: s.score != null ? s.score : (s.scoreSource === 'none' ? null : 0),
+          // Métadonnées du moteur dtx — même leçon que `universe` : un champ absent de cette
+          // liste blanche est SILENCIEUSEMENT perdu, et le consommateur retombe sur un défaut.
+          ...(s.scoreSource ? { scoreSource: s.scoreSource } : {}),
+          ...(s.engineNotional != null ? { engineNotional: s.engineNotional } : {}),
+          ...(s.engineRank != null ? { engineRank: s.engineRank } : {}),
           strategy: s.strategy || '',
           entry: parsePrice(s.entry),
           stop: parsePrice(s.stop),

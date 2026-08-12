@@ -1130,6 +1130,85 @@ check('portfolio/v1: equity.json == dashboard hero == frozen (SEALED-PRIMARY)', 
   if (issues.length) return issues.join(' | ');
 });
 
+// ─── Check 27e: COUVERTURE SEALED-PRIMARY — « non couvert » ne doit pas passer pour « vert » ──
+// 27b/27c/27d se déclarent explicitement « périmètre : modes scellés uniquement » : sans entrée
+// frozen_<mode> dans data/backtest-results.json, ils font `continue` et le mode sort VERT du QA
+// sans avoir été regardé. gen-api.js fait pareil de son côté (statut 'no-frozen', compté dans
+// `skipped`). Un mode peut donc publier une courbe et un hero que RIEN ne confronte à un sceau.
+//
+// Le geste juste n'est pas de fabriquer un frozen_<mode> : un sceau se gagne avec des trades
+// clôturés, il ne s'invente pas. C'est de rendre le trou VISIBLE et de le borner. Ce contrôle
+// classe donc chaque mode publiquement visible en trois cas :
+//   • scellé            → couvert par 27b/27c/27d, rien à faire ici ;
+//   • non couvert LÉGITIME (aucun trade clôturé) → déclaré en avertissement, ET tenu à zéro :
+//     un mode sans rien de scellé n'a pas le droit d'afficher une performance. C'est ce
+//     verrou-là qui aurait rougi sur une courbe publiée sans sceau ;
+//   • non couvert ANORMAL (trades clôturés publiés, aucun frozen) → ERREUR bloquante : un track
+//     record est publié et aucun sceau ne le contredit.
+check('scanner/status: couverture SEALED-PRIMARY (tout mode live est scellé ou déclaré non couvert)', () => {
+  const html = readFile('scanner/status/index.html');
+  const br = readJSON('data/backtest-results.json');
+  const mc = readJSON('data/modes-config.json');
+  const modes = mc.modes ? mc.modes : mc;
+  const NON_PUBLIC = new Set(['draft', 'stopped']);
+  const ZERO_TOL = 0.01; // « rien de scellé » ⇒ le hero doit être 0, pas « petit »
+  const issues = [];
+  const uncovered = [];
+
+  for (const [id, cfg] of Object.entries(modes)) {
+    if (NON_PUBLIC.has(cfg.status)) continue;
+    const frozen = br[`frozen_${id}`];
+    const frozenRet = frozen && typeof frozen.returnTotal === 'number' ? frozen.returnTotal : null;
+    const frozenTrades = frozen && typeof frozen.trades === 'number' ? frozen.trades : 0;
+    const frozenMeaningful = frozenRet !== null && (frozenTrades >= 10 || Math.abs(frozenRet) >= 5);
+    if (frozenMeaningful) continue;           // périmètre 27b/27c/27d
+    if (frozenRet !== null) continue;         // frozen présent mais fin — 27b le valide déjà
+
+    // Ce que le mode PUBLIE : nombre de trades clôturés et rendement affiché par l'API.
+    let apiTrades = null, apiRet = null, apiErr = null;
+    try {
+      const eq = readJSON(`portfolio/v1/${id}/equity.json`);
+      apiTrades = eq.stats && typeof eq.stats.trades === 'number' ? eq.stats.trades : null;
+      apiRet = eq.stats && typeof eq.stats.ret === 'number' ? eq.stats.ret : null;
+    } catch (e) { apiErr = e.message; }
+
+    // Ce que le tableau de bord AFFICHE (même extraction que 27b/27d).
+    let heroRet = null;
+    const anchor = `id="p-${id}"`;
+    const start = html.indexOf(anchor);
+    if (start !== -1) {
+      const nextIdx = html.indexOf('id="p-', start + anchor.length);
+      const panel = html.slice(start, nextIdx === -1 ? html.length : nextIdx);
+      const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">(?:Total Return|Live Return)/);
+      if (heroM) heroRet = parseFloat(heroM[1]);
+    }
+
+    if (apiErr) {
+      issues.push(`${id}: aucun frozen_${id} ET equity.json illisible (${apiErr}) — mode publié, zéro couverture`);
+      continue;
+    }
+    if (apiTrades) {
+      issues.push(`${id}: ${apiTrades} trade(s) clôturé(s) publié(s) mais AUCUN frozen_${id} — track record hors périmètre 27b/27c/27d, donc jamais confronté à un sceau. Relancer le sweep (il scelle les stats du mode) avant publication.`);
+      continue;
+    }
+
+    // Non couvert LÉGITIME : rien n'est scellé parce que rien n'est clos. Le mode doit alors
+    // afficher zéro — toute performance non nulle sortie de nulle part est une régression.
+    uncovered.push(`${id} (0 trade clôturé)`);
+    if (heroRet !== null && Math.abs(heroRet) > ZERO_TOL) {
+      issues.push(`${id}: hero ${heroRet}% affiché sans aucun trade clôturé ni frozen_${id} — performance publiée que rien ne scelle`);
+    }
+    if (apiRet !== null && Math.abs(apiRet) > ZERO_TOL) {
+      issues.push(`${id}: equity.json ret ${apiRet}% sans aucun trade clôturé ni frozen_${id} — performance publiée que rien ne scelle`);
+    }
+  }
+
+  if (issues.length) return issues.join(' | ');
+  if (uncovered.length) {
+    warnings.push(`⚠️  SEALED-PRIMARY non couvert (hors périmètre 27b/27c/27d, hero vérifié à 0) : ${uncovered.join(', ')}`);
+  }
+});
+
 // ─── Check 28: TZ ET coherence — dernier snapshot history < 24h ──────────────
 warn('scanner/status/history: snapshot le plus récent < 24h (ET)', () => {
   const histDir = path.join(ROOT, 'scanner', 'status', 'history');
@@ -1298,9 +1377,10 @@ check('signals.json (last 5 scans): regime field present in ≥50%', () => {
 });
 
 // ─── Check 31: Parity Go↔articles (systematic-tss) — soft gate, drift = warning ──
-// Shells out to tools/parity-check.js --warn-only, qui compare les modes scriptés (highvol,
-// etf, etf_eu, casablanca, trendline, bull) aux configs Go backtestées 5y de systematic-tss
-// (alignement v10.2, cf .claude/memory/project_parity_v10_2.md). N'échoue JAMAIS ce check
+// Shells out to tools/parity-check.js --warn-only, qui compare les modes adossés au moteur
+// (aujourd'hui: best, seul assetClass 'dtx') aux configs Go de systematic-tss, plus une ligne
+// de couverture par mode du catalogue. Les blocs highvol/etf/etf_eu/bull ont été retirés le
+// 2026-08-12 avec les modes eux-mêmes (cf en-tête de parity-check.js). N'échoue JAMAIS ce check
 // (--warn-only) — un vrai DRIFT devient un warning, jamais une erreur bloquante. Skip silencieux
 // si ../systematic-tss est absent (routines cloud/CI n'ont pas accès à ce repo).
 try {
@@ -1321,6 +1401,26 @@ try {
   }
 } catch (e) {
   warnings.push(`⚠️  parity Go↔articles (systematic-tss): erreur exécution parity-check.js — ${e.message.split('\n')[0]}`);
+}
+
+// ─── Check 31b: openapi.yaml ↔ fichiers réellement publiés — soft gate ──────
+// portfolio/v1/openapi.yaml est écrit À LA MAIN : rien ne le rattache au catalogue de modes.
+// Le 2026-08-12 il annonçait encore 21 modes dont 17 supprimés (→ 404) et omettait `best`.
+// Warn-only : un contrat périmé ne doit pas bloquer un scan, mais ne doit plus passer inaperçu.
+try {
+  const { execSync } = require('child_process');
+  const apiOut = execSync(`node ${JSON.stringify(path.join(ROOT, 'tools/check-openapi-reality.js'))} --warn-only`, {
+    cwd: ROOT,
+    encoding: 'utf8',
+  });
+  const apiBad = apiOut.split('\n').filter(l => l.startsWith('❌'));
+  if (apiBad.length > 0) {
+    warnings.push(`⚠️  openapi.yaml ↔ API publiée: ${apiBad.length} anomalie(s) — ${apiBad.slice(0, 5).map(l => l.replace('❌ ', '')).join(' | ')}${apiBad.length > 5 ? ' | …' : ''}`);
+  } else {
+    ok.push('✅ openapi.yaml ↔ API publiée: contrat en accord avec les fichiers servis');
+  }
+} catch (e) {
+  warnings.push(`⚠️  openapi.yaml ↔ API publiée: erreur exécution check-openapi-reality.js — ${e.message.split('\n')[0]}`);
 }
 
 // ─── Check 30: Status page headless smoke — zéro erreur JS au boot ───────────

@@ -66,7 +66,7 @@ function scriptedModes() {
 const DISASTER_STOP_PCT = 25;
 
 /** Un ordre CREATE BUY du staging → un signal pool (shape scanner-parser mapSignal). */
-function orderToSignal(o, modeId) {
+function orderToSignal(o, modeId, rank) {
   const ticker = String(o.symbol || '').replace(/=X$/, '');
   const entry = o.entry != null ? Number(o.entry) : (o.limitPrice != null ? Number(o.limitPrice) : null);
   let stop = o.stopLoss != null ? Number(o.stopLoss) : null;
@@ -77,10 +77,20 @@ function orderToSignal(o, modeId) {
   const tp1 = o.takeProfit != null && Number(o.takeProfit) > entry
     ? Number(o.takeProfit)
     : +(entry + 2 * (entry - stop)).toFixed(4);
+  // SCORE — jamais fabriqué (2026-08-12). L'ancien forfait `score = 80` pour les ordres non
+  // scorés inversait la sélection : sur les 18 ordres du 2026-08-12, il faisait passer les 7
+  // ROTATION_IN (que le moteur ne score PAS) au-dessus de RNW 70 et NIQ 62, pendant que le
+  // minScore=50 hérité de book_honest jetait 8 décisions RÉELLES du moteur (BTG 24, DV 16,
+  // IAUX 31, OTF 16, OWL 20, STGW 19, TGB 16, TIC 23). Le score du moteur n'existe que pour
+  // les stratégies breakout/momentum ; les stratégies de ROTATION n'en produisent aucun (la
+  // sélection EST le classement top-N de force relative). Sur les 64 ordres BUY du registre
+  // data/dtx-engine-history.json, 41 (64 %) n'ont aucun score. Un ordre sans score porte
+  // désormais `score:null` + `scoreSource:'none'` : le gate du sweep le traite explicitement
+  // (jamais admis par un nombre inventé).
   let score = o.score != null && !isNaN(o.score) ? Number(o.score) : null;
   if (score == null) {
     const m = /Score=(-?\d+(?:\.\d+)?)/.exec(o.reason || '');
-    score = m ? Number(m[1]) : 80;
+    score = m ? Number(m[1]) : null;
   }
   return {
     ticker,
@@ -88,12 +98,39 @@ function orderToSignal(o, modeId) {
     // (highvol-breakout → highvol_breakout, etc.) ; le filtre 'dtx_engine' n'exclut rien.
     strategy: String(o.reason || 'dtx-engine'),
     score,
+    // Provenance du score : 'engine' = chiffre du moteur, 'none' = le moteur n'en produit pas
+    // pour cette stratégie.
+    scoreSource: score == null ? 'none' : 'engine',
+    // CLASSEMENT DES CANDIDATS. Quand le tracker a moins de places que d'ordres (topN, et surtout
+    // regimeParams.maxPositions : 3 en neutral, 15 en risk_on), il doit trancher. Inventaire de ce
+    // que le moteur fournit réellement, sur les 64 ordres BUY du registre :
+    //   · score            → 23/64 (36 %), et incomparable entre sous-stratégies (breakout 16..95
+    //                        vs rotation non scorée) ;
+    //   · priority         → null sur 64/64, aucune information ;
+    //   · ordre d'émission → strictement alphabétique (BTG BWET DV GBUG…), donc aucune information :
+    //                        s'en servir ferait entrer les positions par ordre de nom ;
+    //   · qty × entry      → 64/64 (100 %), 16 valeurs distinctes sur les 18 ordres du 2026-08-12.
+    // C'est le CAPITAL QUE LE MOTEUR A DÉCIDÉ D'ALLOUER — un chiffre qu'il produit lui-même, lu tel
+    // quel. Quand les places manquent, servir d'abord les plus grosses allocations du moteur est ce
+    // qui rapproche le plus le livre suivi du livre décidé. Ce montant sert UNIQUEMENT au classement :
+    // le sizing des positions reste celui du mode (inverse_atr / targetRiskPct).
+    engineNotional: o.qty != null && Number(o.qty) > 0 ? +(Number(o.qty) * entry).toFixed(2) : null,
+    engineRank: rank, // ordre d'émission — conservé comme départage STABLE uniquement (non informatif)
     entry: +entry.toFixed(4),
     stop: +stop.toFixed(4),
     tp1,
     tp2: null,
     rr: +((tp1 - entry) / (entry - stop)).toFixed(2),
     universe: modeId, // partition par mode (universeFilter === modeId)
+    // SLEEVE (poche du livre : mx / etf_us / uhv_tp999 / ep) — PASS-THROUGH STRICT, jamais dérivé.
+    // Le signals.json commité du 2026-08-12 portait ce champ sur les 18 entrées ; le staging
+    // `data/dtx/best.json` ne le porte PAS (aucune des 15 clés d'un ordre CREATE ne le contient),
+    // donc aucun outil de la chaîne ne peut le reproduire — il venait d'une saisie agent en amont.
+    // On le fait TRANSITER dès que le staging le fournira, et on refuse de le deviner d'ici là :
+    // « GDX est un ETF donc etf_us » est une inférence, pas une donnée. Conséquence assumée et
+    // déclarée dans .claude/REPRISE.md : le DRIFT uhv_tp999 ↔ partialTPGain n'est pas
+    // diagnosticable à la granularité de la poche tant que l'ingest ne porte pas ce tag.
+    ...(o.sleeve ? { sleeve: String(o.sleeve) } : {}),
     source: 'dtx_pool',
   };
 }
@@ -130,8 +167,9 @@ function main() {
     if (stg.metricsSuspect === true) { skipped.push(`${id} (metricsSuspect — sanity gate)`); continue; }
     const buys = (stg.orders || []).filter((o) => String(o.side || '').toUpperCase() === 'BUY');
     let kept = 0, dropped = 0;
-    for (const o of buys) {
-      const s = orderToSignal(o, id);
+    for (let i = 0; i < buys.length; i++) {
+      const o = buys[i];
+      const s = orderToSignal(o, id, i);
       if (s) { pool.push(s); kept++; }
       else { dropped++; console.log(`  ⚠️  [${id}] ordre skippé (niveaux inexploitables): ${o.symbol} entry:${o.entry ?? o.limitPrice ?? '—'} stop:${o.stopLoss ?? '—'}`); }
     }

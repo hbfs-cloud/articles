@@ -2,31 +2,39 @@
 'use strict';
 
 /**
- * parity-check.js — Go (systematic-tss) ↔ articles scanner-mode parity drift detector
+ * parity-check.js — Go (systematic-tss) ↔ articles mode parity drift detector
  *
- * Every scripted scanner mode (highvol, etf, etf_eu, bull) claims to mirror
- * a backtested Go strategy in systematic-tss (5y CAGR figures live in the yaml comments).
- * NOTE (2026-07-22): casablanca & trendline modes were REMOVED (plus dans modes-config) — leurs
- * blocs de parité ont été retirés. Les outils casablanca-scanner.js / trendline-scanner.js peuvent
- * subsister (trendline-scanner est réutilisé génériquement pour forex/indices), mais ne sont plus
- * des modes.
- * v10.2 (2026-07-02, see .claude/memory/project_parity_v10_2.md and
- * data/modes-config-history.json entry "v10.2-20260702") realigned the scripted configs onto
- * the Go configs. This script re-derives that comparison mechanically so future edits to either
- * side (a Go config sweep, or a scripted mode tweak) get caught instead of silently drifting
- * for months, like the pre-v10.2 state did.
+ * Un mode articles adossé au moteur revendique de refléter une stratégie Go backtestée de
+ * systematic-tss. Ce script re-dérive la comparaison mécaniquement pour qu'une édition d'un
+ * côté ou de l'autre (sweep de config Go, retouche du mode) soit attrapée au lieu de dériver
+ * en silence pendant des mois, comme l'état pré-v10.2.
  *
- * Scope / exceptions (deliberate, NOT bugs — do not "fix" the map to make these compare):
- *   - bull: ONLY min_vol_ratio is compared. bull is a documented DELIBERATE high-conviction
- *     variant (score 88 / P3 / H8) vs the Go yaml's min_score 70 / P5 / H10 — see
- *     .claude/memory/feedback_bull_8x_parity.md ("Bull 8× Parity"). Comparing those other
- *     params would be comparing apples to oranges on purpose.
- *   - momentum (US): no Go 5y backtest exists for momentum-rotation on the US universe
- *     (only MA/EU/global) — open flag, not in this map at all.
- *   - etf_eu maxStopPct: NOT compared. Go's dynamic_max_loss is flat 0.17 (→17%) for etf_eu
- *     too, but articles etf_eu.maxStopPct is 0 (ATR-only stop) — a known, accepted gap, not
- *     part of the v10.2 alignment (see modes-config-history.json v10.2 comment: etf_eu list
- *     does not mention maxStopPct).
+ * ⚠️ REFACTOR 2026-08-12 — catalogue réduit de 25 à 5 modes (best, turbo, dynamic, balanced,
+ * fortress). Les blocs de parité highvol / etf / etf_eu / bull ont été SUPPRIMÉS : ces modes
+ * n'existent plus dans data/modes-config.json, donc chacune de leurs lignes lisait `undefined`
+ * côté articles et sortait en DRIFT « extraction échouée » — 23 fausses dérives par nuit qui
+ * masquaient les vraies. Ne pas les réintroduire sans mode correspondant dans modes-config.
+ *
+ * Périmètre actuel :
+ *   - best : SEUL mode assetClass 'dtx'. Ses signaux viennent du pool du moteur
+ *     (data/dtx/best.json → dtx-pool-bridge → sweep), et sa contrepartie Go est
+ *     config/dtx/portfolio_best.yaml. La poche PORTEUSE (uhv_tp999, 70%) porte les paramètres
+ *     que le tracker articles ré-implémente (capacité, horizon, trailing, markup) → c'est elle
+ *     qu'on compare. Les poches ep / etf_us / mx ont leurs propres réglages internes au moteur,
+ *     que le tracker n'a aucun moyen d'appliquer par position : hors périmètre.
+ *   - best, câblage : la vraie régression du refactor n'était pas un paramètre mais un CÂBLAGE
+ *     (universeFilter resté à "book_honest" → sweep rejetait 18/18 signaux par égalité stricte,
+ *     sans log). Des lignes de cohérence câblage vérifient donc aussi id yaml ↔ portfolioId du
+ *     staging ↔ universeFilter ↔ id du mode.
+ *   - turbo / dynamic / balanced / fortress : modes scannés maison, aucune contrepartie Go —
+ *     GAP documenté, pas une dérive. La ligne de couverture les liste explicitement pour qu'un
+ *     futur mode 'dtx' non couvert sorte en DRIFT au lieu de passer inaperçu.
+ *
+ * Exceptions délibérées (NE PAS « corriger » la map pour les faire comparer) :
+ *   - best atrStopMult / maxStopPct = 0 face à base_stop_atr 2.5 / dynamic_max_loss : voulu
+ *     depuis le 2026-08-07 — 0 signifie « ne pas toucher au stop porté par le signal », que
+ *     dtx-pool-bridge remplit avec le stopLoss DU MOTEUR. Le plafond du tracker préemptait le
+ *     moteur (12 trades sur 18 sortis à exactement -15,00%). Comparer = régression.
  *
  * Usage:
  *   node tools/parity-check.js               # exit 1 if any real DRIFT found
@@ -114,18 +122,6 @@ function getBlockNumericValues(text, key) {
   return values.length ? values : null;
 }
 
-// "- item" lines inside a block (YAML list), e.g. scanner_filters.params.blacklist
-function getListItems(text, key) {
-  const b = findBlock(text, key);
-  if (!b) return null;
-  const items = [];
-  for (const l of b.blockLines) {
-    const m = stripComment(l).match(/^[ \t]*-[ \t]*(.+?)[ \t]*$/);
-    if (m && m[1]) items.push(m[1].trim());
-  }
-  return items;
-}
-
 // Go's dynamic_max_loss / max_loss_pct are fractions (0.15 = 15%); articles' maxStopPct is a
 // plain percent number (15). The v10.2 alignment used the TIGHTEST (min) regime value as the
 // static hard-cap, since maxStopPct can't be regime-adaptive the way Go's dynamic dict is.
@@ -142,36 +138,51 @@ function maxLossPctFromGo(text) {
   return null;
 }
 
-function jsConstNumber(text, name) {
-  const m = text.match(new RegExp(`const\\s+${name}\\s*=\\s*([\\d.]+)`));
-  return m ? parseFloat(m[1]) : null;
-}
-
-// Extract the DEFAULT (3rd arg) of paramF(PARAMS, 'key', DEFAULT). etf-scanner.js lit ses seuils
-// DYNAMIQUEMENT depuis PARAMS (= scanner_filters.params du MÊME yaml Go) avec ces littéraux comme
-// fallback aligné → la valeur effective articles == Go par construction. DEFAULT peut être un
-// nombre ou un ternaire `COND ? euVal : usVal` (on retourne la branche US/else).
-function jsParamFDefault(text, key) {
-  const m = text.match(new RegExp(`paramF\\(\\s*\\w+\\s*,\\s*['"]${key}['"]\\s*,\\s*([^)]+)\\)`));
-  if (!m) return null;
-  const def = m[1].trim();
-  if (/^[\d.]+$/.test(def)) return parseFloat(def);
-  const tern = def.match(/\?\s*([\d.]+)\s*:\s*([\d.]+)/);
-  if (tern) return parseFloat(tern[2]);
+// Découpe l'allocation (poche) `- name: <name>` d'un book multi-poches. Sans ça, findBlock()
+// remonte la PREMIÈRE occurrence de la clé dans tout le fichier : sur portfolio_best.yaml
+// (4 poches qui déclarent toutes base_stop_atr, timeout_days, trail_atr_mult…), on comparerait
+// silencieusement la mauvaise poche.
+function allocationBlock(text, name) {
+  const lines = text.split('\n');
+  const startRe = new RegExp(`^([ \\t]*)-[ \\t]*name:[ \\t]*["']?${escapeRe(name)}["']?[ \\t]*$`);
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(startRe);
+    if (!m) continue;
+    const indent = m[1].length;
+    const out = [lines[i]];
+    for (let j = i + 1; j < lines.length; j++) {
+      const l = lines[j];
+      if (l.trim() === '') { out.push(l); continue; }
+      if (indentOf(l) < indent) break;                                   // dédent → fin des allocations
+      if (indentOf(l) === indent && /^[ \t]*-[ \t]*name:/.test(l)) break; // poche suivante
+      out.push(l);
+    }
+    return out.join('\n');
+  }
   return null;
 }
-// Taille du tableau blacklist:[...] dans un littéral `const NAME = { ... blacklist: [...] }`.
-function jsObjBlacklistSize(text, varName) {
-  const m = text.match(new RegExp(`${varName}\\s*=\\s*\\{[\\s\\S]*?blacklist:\\s*\\[([\\s\\S]*?)\\]`));
-  if (!m) return null;
-  return m[1].split(',').map(s => s.trim()).filter(Boolean).length;
+
+// Go stocke les seuils en fraction (0.12) ; articles en pourcent nu (12).
+function pctFromFraction(v) {
+  return v === null || v === undefined ? null : +(parseFloat(v) * 100).toFixed(6);
 }
 
-function jsSetSize(text, varName) {
-  const m = text.match(new RegExp(`${varName}\\s*=\\s*new Set\\(\\[([\\s\\S]*?)\\]\\)`));
-  if (!m) return null;
-  const items = m[1].match(/'[^']*'|"[^"]*"/g) || [];
-  return items.length;
+// Sérialise un dict par régime pour le comparer d'un bloc (Go: minuscules, articles: mêmes clés).
+function regimeDictFromGo(text, key) {
+  const b = findBlock(text, key);
+  if (!b) return null;
+  const pairs = [];
+  for (const l of b.blockLines) {
+    const m = stripComment(l).match(/^[ \t]*([\w.]+):[ \t]*([\d.]+)[ \t]*$/);
+    if (m) pairs.push(`${m[1].toLowerCase()}=${parseFloat(m[2])}`);
+  }
+  return pairs.length ? pairs.sort().join(',') : null;
+}
+
+function regimeDictFromArticles(dict) {
+  if (!dict || typeof dict !== 'object') return null;
+  const pairs = Object.entries(dict).map(([k, v]) => `${String(k).toLowerCase()}=${Number(v)}`);
+  return pairs.length ? pairs.sort().join(',') : null;
 }
 
 function approxEqual(a, b, eps = 1e-6) {
@@ -186,13 +197,6 @@ function approxEqual(a, b, eps = 1e-6) {
 function readGoFile(relPath) {
   const full = path.join(GO_ROOT, relPath);
   return fs.existsSync(full) ? fs.readFileSync(full, 'utf8') : null;
-}
-function readGoFileWithFallback(relPaths) {
-  for (const p of relPaths) {
-    const text = readGoFile(p);
-    if (text !== null) return { text, usedPath: p };
-  }
-  return { text: null, usedPath: relPaths[relPaths.length - 1] };
 }
 function readArticlesFile(relPath) {
   const full = path.join(ROOT, relPath);
@@ -222,7 +226,7 @@ function row(mode, label, goVal, artVal, opts = {}) {
   return { mode, label, goVal, artVal, status, note: finalNote, goSource, artSource };
 }
 
-// ─── PARITY_MAP — declarative mode → Go file → param pairs (v10.2 alignment) ──
+// ─── PARITY_MAP — declarative mode → Go file → param pairs ──────────────────
 // Each entry's `run(ctx)` returns the comparison rows for that mode. The extraction logic is
 // intentionally explicit per param rather than hidden behind a generic engine — these Go yaml
 // files are hand-tuned artifacts, not a uniform schema, and being explicit here means a broken
@@ -233,121 +237,133 @@ const modes = (modesConfig && modesConfig.modes) || {};
 
 const PARITY_MAP = [
   {
-    id: 'highvol',
-    goFile: 'config/portfolio_us_highvol.yaml',
+    id: 'best',
+    goFile: 'config/dtx/portfolio_best.yaml',
     run(ctx) {
-      const { text } = ctx.go('config/portfolio_us_highvol.yaml');
-      const art = modes.highvol || {};
-      if (!text) return [row('highvol', 'file', null, null, { note: 'Go yaml introuvable' })];
-      return [
-        row('highvol', 'positions (risk_on) ↔ portfolioSize',
-          getNestedScalar(text, 'dynamic_max_positions', 'risk_on'), art.portfolioSize),
-        row('highvol', 'timeout_days ↔ horizon',
-          getScalar(text, 'timeout_days'), art.horizon),
-        row('highvol', 'base_stop_atr ↔ atrStopMult',
-          getScalar(text, 'base_stop_atr'), art.atrStopMult),
-        row('highvol', 'take_profit_pct ↔ partialTPGain (%)',
-          getScalar(text, 'take_profit_pct'), art.partialTPGain),
-        row('highvol', 'max_correlation ↔ correlationCap',
-          getScalar(text, 'max_correlation'), art.correlationCap),
-        row('highvol', 'max_loss (min dynamic_max_loss, ×100) ↔ maxStopPct',
-          maxLossPctFromGo(text), art.maxStopPct),
-        // v10.4: trailTriggerPct port (PositionManager exit-logic parity, see
-        // data/modes-config-history.json v10.4 entry). Go stores this as a fraction (0.12);
-        // articles' trailTriggerPct is a plain percent number (12) — ×100 to compare.
-        row('highvol', 'trail_trigger_pct (×100) ↔ trailTriggerPct',
-          (() => { const v = getScalar(text, 'trail_trigger_pct'); return v !== null ? parseFloat(v) * 100 : null; })(),
-          art.trailTriggerPct),
-      ];
-    },
-  },
-  {
-    id: 'etf',
-    goFile: 'config/pre-live/portfolio_etf_us.yaml',
-    run(ctx) {
-      const { text } = ctx.go('config/pre-live/portfolio_etf_us.yaml');
-      const scannerText = ctx.articles('tools/etf-scanner.js');
-      const art = modes.etf || {};
-      if (!text) return [row('etf', 'file', null, null, { note: 'Go yaml introuvable' })];
-      return [
-        row('etf', 'positions ↔ portfolioSize',
-          getScalar(text, 'max_open_positions'), art.portfolioSize),
-        row('etf', 'base_stop_atr ↔ atrStopMult',
-          getScalar(text, 'base_stop_atr'), art.atrStopMult),
-        row('etf', 'max_loss (min dynamic_max_loss, ×100) ↔ maxStopPct',
-          maxLossPctFromGo(text), art.maxStopPct),
-        row('etf', 'scanner_filters.min_price ↔ etf-scanner.js paramF min_price default',
-          getScalar(text, 'min_price'), scannerText ? jsParamFDefault(scannerText, 'min_price') : null),
-        row('etf', 'scanner_filters.max_atr_ratio ↔ etf-scanner.js paramF max_atr_ratio default',
-          getScalar(text, 'max_atr_ratio'), scannerText ? jsParamFDefault(scannerText, 'max_atr_ratio') : null),
-        // v10.4: earlyExit + circuitBreaker port (PositionManager exit-logic parity, see
-        // data/modes-config-history.json v10.4 entry).
-        row('etf', 'early_exit.max_days ↔ earlyExitDays',
-          getNestedScalar(text, 'early_exit', 'max_days'), art.earlyExitDays),
-        row('etf', 'early_exit.max_loss_pct (×100) ↔ earlyExitLossPct',
-          (() => { const v = getNestedScalar(text, 'early_exit', 'max_loss_pct'); return v !== null ? parseFloat(v) * 100 : null; })(),
-          art.earlyExitLossPct),
-        row('etf', 'circuit_breaker.max_stops_before_pause ↔ circuitBreakerStops',
-          getNestedScalar(text, 'circuit_breaker', 'max_stops_before_pause'), art.circuitBreakerStops),
-        row('etf', 'circuit_breaker.stop_period_days ↔ circuitBreakerWindow',
-          getNestedScalar(text, 'circuit_breaker', 'stop_period_days'), art.circuitBreakerWindow),
-        row('etf', 'circuit_breaker.base_pause_days ↔ circuitBreakerPause',
-          getNestedScalar(text, 'circuit_breaker', 'base_pause_days'), art.circuitBreakerPause),
-      ];
-    },
-  },
-  {
-    id: 'etf_eu',
-    goFile: 'config/later/portfolio_etf_eu.yaml',
-    run(ctx) {
-      const { text } = ctx.go('config/later/portfolio_etf_eu.yaml');
-      const scannerText = ctx.articles('tools/etf-scanner.js');
-      const art = modes.etf_eu || {};
-      if (!text) return [row('etf_eu', 'file', null, null, { note: 'Go yaml introuvable' })];
-      return [
-        row('etf_eu', 'positions ↔ portfolioSize',
-          getScalar(text, 'max_open_positions'), art.portfolioSize),
-        row('etf_eu', 'min_score ↔ minScore',
-          getScalar(text, 'min_score'), art.minScore),
-        row('etf_eu', 'base_stop_atr ↔ atrStopMult',
-          getScalar(text, 'base_stop_atr'), art.atrStopMult),
-        row('etf_eu', 'blacklist size ↔ DEFAULT_PARAMS_EU.blacklist (etf-scanner.js)',
-          (() => { const items = getListItems(text, 'blacklist'); return items ? items.length : null; })(),
-          scannerText ? jsObjBlacklistSize(scannerText, 'DEFAULT_PARAMS_EU') : null),
-        // v10.4: earlyExit + circuitBreaker port (PositionManager exit-logic parity, see
-        // data/modes-config-history.json v10.4 entry).
-        row('etf_eu', 'early_exit.max_days ↔ earlyExitDays',
-          getNestedScalar(text, 'early_exit', 'max_days'), art.earlyExitDays),
-        row('etf_eu', 'early_exit.max_loss_pct (×100) ↔ earlyExitLossPct',
-          (() => { const v = getNestedScalar(text, 'early_exit', 'max_loss_pct'); return v !== null ? parseFloat(v) * 100 : null; })(),
-          art.earlyExitLossPct),
-        row('etf_eu', 'circuit_breaker.max_stops_before_pause ↔ circuitBreakerStops',
-          getNestedScalar(text, 'circuit_breaker', 'max_stops_before_pause'), art.circuitBreakerStops),
-        row('etf_eu', 'circuit_breaker.stop_period_days ↔ circuitBreakerWindow',
-          getNestedScalar(text, 'circuit_breaker', 'stop_period_days'), art.circuitBreakerWindow),
-        row('etf_eu', 'circuit_breaker.base_pause_days ↔ circuitBreakerPause',
-          getNestedScalar(text, 'circuit_breaker', 'base_pause_days'), art.circuitBreakerPause),
-      ];
-    },
-  },
-  {
-    id: 'bull',
-    goFile: 'config/portfolio_us_americanbulls.yaml',
-    run(ctx) {
-      const { text } = ctx.go('config/portfolio_us_americanbulls.yaml');
-      const filters = readArticlesJSON('data/scanner-filters.json');
-      if (!text) return [row('bull', 'file', null, null, { gap: true, note: 'yaml Go bull (portfolio_us_americanbulls) non présent localement — comparaison impossible (repo systematic-tss partiel)' })];
-      // ONLY min_vol_ratio is compared — bull is a DELIBERATE high-conviction variant
-      // (score 88 / P3 / H8) vs Go's min_score 70 / P5 / H10 (see feedback_bull_8x_parity.md).
-      // Comparing minScore/portfolioSize/horizon here would be a false-positive DRIFT by design.
-      return [
-        row('bull', 'min_vol_ratio ↔ scanner-filters.json candlestick.min_vol_ratio_trading',
-          getNestedScalar(text, 'scanner_filters', 'min_vol_ratio'),
-          filters && filters.candlestick ? filters.candlestick.min_vol_ratio_trading : null),
-      ];
+      const { text } = ctx.go('config/dtx/portfolio_best.yaml');
+      const art = modes.best || {};
+      if (!text) {
+        return [row('best', 'file', null, null, {
+          gap: true,
+          note: 'config/dtx/portfolio_best.yaml absent localement (clone systematic-tss partiel) — comparaison impossible',
+        })];
+      }
+      const carrier = allocationBlock(text, 'uhv_tp999');
+      const rows = [];
+
+      // ── Câblage : c'est ici qu'a cassé le refactor du 2026-08-12 ─────────────
+      rows.push(row('best', 'yaml portfolios[].id ↔ mode id (modes-config)',
+        getScalar(text, 'id'), 'best'));
+      const staging = readArticlesJSON('data/dtx/best.json');
+      rows.push(row('best', 'staging data/dtx/best.json portfolioId ↔ yaml id',
+        getScalar(text, 'id'), staging ? staging.portfolioId : null,
+        { note: staging ? '' : 'staging data/dtx/best.json absent (gitignore ? ingestion non jouée ?)' }));
+      // universeFilter est comparé par ÉGALITÉ STRICTE dans sweep.js (t.universe === config.universeFilter)
+      // et dtx-pool-bridge tague universe = id du mode : toute autre valeur = 0 trade, sans log.
+      rows.push(row('best', 'universeFilter ↔ id du mode (partition dtx-pool-bridge)',
+        'best', art.universeFilter,
+        { note: 'égalité stricte dans sweep.js — une valeur périmée rejette 100% des signaux en silence' }));
+      rows.push(row('best', 'assetClass ↔ pool moteur', 'dtx', art.assetClass));
+      rows.push(row('best', 'filterName ↔ STRATEGY_FILTERS_MAP sweep.js',
+        (() => {
+          const sweep = ctx.articles('tools/sweep.js');
+          return sweep && /STRATEGY_FILTERS_MAP\['dtx_engine'\]/.test(sweep) ? 'dtx_engine' : null;
+        })(),
+        art.filterName,
+        { note: 'filtre stratégie déclaré côté sweep — absent = tous les signaux du moteur filtrés' }));
+
+      if (!carrier) {
+        rows.push(row('best', 'allocation uhv_tp999', null, null,
+          { note: 'poche porteuse uhv_tp999 introuvable dans le yaml — la structure du book a changé' }));
+        return rows;
+      }
+
+      // ── Paramètres de la poche PORTEUSE (70%) que le tracker ré-implémente ───
+      rows.push(row('best', 'uhv.dynamic_max_positions.risk_on ↔ portfolioSize',
+        getNestedScalar(carrier, 'dynamic_max_positions', 'risk_on'), art.portfolioSize));
+      rows.push(row('best', 'uhv.dynamic_max_positions ↔ regimeParams.maxPositions',
+        regimeDictFromGo(carrier, 'dynamic_max_positions'),
+        regimeDictFromArticles(art.regimeParams && art.regimeParams.maxPositions)));
+      rows.push(row('best', 'uhv.timeout_days ↔ horizon',
+        getScalar(carrier, 'timeout_days'), art.horizon));
+      rows.push(row('best', 'uhv.max_correlation ↔ correlationCap',
+        getScalar(carrier, 'max_correlation'), art.correlationCap));
+      rows.push(row('best', 'uhv.trail_trigger_pct (×100) ↔ trailTriggerPct',
+        pctFromFraction(getScalar(carrier, 'trail_trigger_pct')), art.trailTriggerPct));
+      rows.push(row('best', 'uhv.trail_atr_mult ↔ trailMultR',
+        getScalar(carrier, 'trail_atr_mult'), art.trailMultR));
+      rows.push(row('best', 'uhv.limit_price_markup ((x-1)×100) ↔ limitMarkupPct',
+        (() => { const v = getScalar(carrier, 'limit_price_markup'); return v !== null ? +((parseFloat(v) - 1) * 100).toFixed(6) : null; })(),
+        art.limitMarkupPct));
+      // ÉCART VOULU (2026-08-12). `scanner_filters.min_score` est le filtre INTERNE du moteur,
+      // appliqué à SON scan de candidats AVANT qu'il n'émette le moindre ordre — et il est
+      // déclaré PAR POCHE : uhv_tp999=50, ep=40 puis 50, mx=0, etf_us aucun. Un `minScore`
+      // unique côté tracker ne peut pas en être le miroir : best agrège les quatre poches.
+      // Surtout, le re-seuiller en aval ne filtre PAS la même grandeur. Mesure sur les 18 ordres
+      // du 2026-08-12 (data/dtx/best.json) : le `Score=` écrit dans le motif se partitionne
+      // EXACTEMENT selon le nombre de features que le moteur n'a pas pu calculer —
+      //   0 feature manquante  → 95        (NN)
+      //   1 feature manquante  → 62, 70    (NIQ, RNW)
+      //   3 features manquantes→ 16..31    (IAUX BTG TIC OWL STGW DV OTF TGB)
+      // Un seuil à 50 rejetait 8 ordres sur 8 à features incomplètes et ZÉRO ordre à features
+      // complètes : ce n'était pas un filtre de qualité mais un filtre de complétude de données,
+      // qui jetait des décisions que le moteur avait déjà prises et validées avec SON seuil.
+      // Le tracker ne re-seuille donc pas (minScore 0) ; il classe par engineNotional et garde
+      // tous ses garde-fous de risque. Voir data/modes-config.json → best._scoreGateReason.
+      rows.push(row('best', 'uhv.scanner_filters.min_score ↔ minScore',
+        getNestedScalar(carrier, 'scanner_filters', 'min_score'), art.minScore,
+        { gap: true, note: 'seuil INTERNE au moteur, par poche (uhv 50 / ep 40-50 / mx 0 / etf aucun), '
+          + 'appliqué avant émission ; le Score= des ordres mesure la complétude des features, pas la qualité' }));
+      // La poche porteuse s'appelle tp999 parce qu'elle NE prend PAS de profit : c'est la queue
+      // (p95 38,3) qui porte le CAGR servi. Un TP partiel côté tracker tronque cette queue.
+      rows.push(row('best', 'uhv.take_profit_pct ↔ partialTPGain (%)',
+        getScalar(carrier, 'take_profit_pct'), art.partialTPGain,
+        { note: 'poche « tp999 » = aucune prise de profit côté moteur' }));
+
+      // ── Écarts VOULUS (voir en-tête) ────────────────────────────────────────
+      rows.push(row('best', 'uhv.base_stop_atr ↔ atrStopMult',
+        getScalar(carrier, 'base_stop_atr'), art.atrStopMult,
+        { gap: true, note: '0 = le tracker honore le stop DU MOTEUR (décision 2026-08-07)' }));
+      rows.push(row('best', 'uhv.dynamic_max_loss (min ×100) ↔ maxStopPct',
+        maxLossPctFromGo(carrier), art.maxStopPct,
+        { gap: true, note: '0 = pas de replafonnement du stop moteur (décision 2026-08-07)' }));
+
+      return rows;
     },
   },
 ];
+
+// ─── Couverture — aucun mode ne doit sortir du radar en silence ──────────────
+// Un mode assetClass 'dtx' SANS bloc de parité = DRIFT : par construction il rejoue une
+// stratégie Go et doit être comparé. Un mode scanné maison (turbo/dynamic/balanced/fortress)
+// n'a pas de contrepartie Go → GAP documenté.
+const SCRIPTED_NO_GO_COUNTERPART = new Set(['turbo', 'dynamic', 'balanced', 'fortress']);
+
+function coverageRows() {
+  const covered = new Set(PARITY_MAP.map(m => m.id));
+  const out = [];
+  for (const [id, cfg] of Object.entries(modes)) {
+    if (covered.has(id)) continue;
+    const isDtx = cfg && cfg.assetClass === 'dtx';
+    out.push(row('(couverture)', `mode « ${id} » sans bloc de parité`,
+      isDtx ? 'bloc attendu' : '—', isDtx ? null : '—',
+      {
+        gap: !isDtx,
+        note: isDtx
+          ? "mode assetClass 'dtx' non couvert — ajouter son bloc dans PARITY_MAP"
+          : (SCRIPTED_NO_GO_COUNTERPART.has(id)
+            ? 'mode scanné maison, aucune contrepartie Go — hors périmètre par nature'
+            : 'mode non-dtx inconnu de la liste documentée — vérifier s\'il doit être couvert'),
+      }));
+  }
+  for (const m of PARITY_MAP) {
+    if (!modes[m.id]) {
+      out.push(row('(couverture)', `bloc de parité « ${m.id} » orphelin`, 'mode attendu', null,
+        { note: 'bloc de parité sans mode correspondant dans modes-config.json — supprimer le bloc' }));
+    }
+  }
+  return out;
+}
 
 // ─── Run ─────────────────────────────────────────────────────────────────────
 
@@ -357,11 +373,6 @@ const ctx = {
   go(relPath) {
     if (!goCache.has(relPath)) goCache.set(relPath, { text: readGoFile(relPath), usedPath: relPath });
     return goCache.get(relPath);
-  },
-  goFallback(relPaths) {
-    const key = relPaths.join('|');
-    if (!goCache.has(key)) goCache.set(key, readGoFileWithFallback(relPaths));
-    return goCache.get(key);
   },
   articles(relPath) {
     if (!articlesCache.has(relPath)) articlesCache.set(relPath, readArticlesFile(relPath));
@@ -377,6 +388,7 @@ for (const mode of PARITY_MAP) {
     allRows.push(row(mode.id, 'run() threw', null, null, { note: e.message }));
   }
 }
+allRows.push(...coverageRows());
 
 // ─── Print table ─────────────────────────────────────────────────────────────
 
@@ -393,7 +405,7 @@ const artW = Math.max(9, ...allRows.map(r => fmt(r.artVal).length));
 function pad(s, w) { return String(s).padEnd(w); }
 
 console.log('');
-console.log('Parity check — systematic-tss (Go) ↔ articles (scripted modes) — v10.2 alignment');
+console.log('Parity check — systematic-tss (Go) ↔ articles (modes du catalogue)');
 console.log('='.repeat(80));
 console.log(pad('MODE', modeW) + '  ' + pad('PARAM', labelW) + '  ' + pad('GO', goW) + '  ' + pad('ARTICLES', artW) + '  STATUS');
 console.log('-'.repeat(modeW) + '  ' + '-'.repeat(labelW) + '  ' + '-'.repeat(goW) + '  ' + '-'.repeat(artW) + '  ------');
