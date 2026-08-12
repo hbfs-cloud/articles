@@ -1,3 +1,17 @@
+> ## ✅ RÉSOLU — systematic-tss v1.34.1 (2026-08-12)
+>
+> L'owner a livré `DtxBookEquity(portfolio)` : courbe quotidienne du livre, embarquée au build avec
+> les stats qu'elle produit. Vérifié côté articles par `tools/dtx-book-equity-ingest.js`, qui refuse
+> d'écrire si le recalcul ne reproduit pas les chiffres servis : **CAGR 72,0334 vs 72,03 servi et
+> MaxDD 27,1834 vs 27,18 — écart 0,0034 pt sur les deux**. Le critère d'acceptation ci-dessous est
+> satisfait. Document conservé comme trace de la demande et de son argumentaire.
+>
+> Une précision découverte à l'ingestion : l'annualisation est en **séances** (années = points/252),
+> pas en jours calendaires — recalculer en 365,25 j donne 71,69 et non 72,03. C'est publié dans
+> `trading_days_per_year`, avec `committed_capital` (155 000, pas 100 000).
+
+---
+
 # Demande à l'owner de systematic-tss — servir la courbe d'equity du LIVRE `best`
 
 *(prompt autoportant : à copier tel quel, il ne suppose aucun contexte de la conversation d'origine)*

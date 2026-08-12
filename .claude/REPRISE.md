@@ -1,10 +1,11 @@
 # REPRISE — mode « best » (moteur dtx) : chantier clos au 12/08
 
-Les dix défauts relevés en revue (R1–R10) sont **traités**. Il reste **un** point ouvert, R6, et il
-l'est par construction : le moteur ne sert pas la donnée qui le fermerait.
+Les dix défauts relevés en revue (R1–R10) sont **tous fermés**, R6 compris depuis que
+systematic-tss v1.34.1 sert la courbe du livre (`DtxBookEquity`).
 
-Ce fichier dit ce qui est fermé, ce qui reste, et surtout **une conclusion de la revue précédente qui
-était fausse** — la « fuite moteur→scanner » n'existe pas et n'a jamais existé.
+Ce fichier dit ce qui a changé, ce qui a été vérifié, et surtout **deux conclusions de la revue
+précédente qui étaient fausses** : la « fuite moteur→scanner » n'existe pas, et la poche du livre
+était lisible depuis le début.
 
 ---
 
@@ -20,6 +21,7 @@ Ce fichier dit ce qui est fermé, ce qui reste, et surtout **une conclusion de l
 | R7 | La poche du livre était perdue | **Lue** dans `DtxDecide.state`, 18/18 taguées |
 | R8 | Cartes PNG à chiffres faux | Rastérisées ; fortress publiait son win rate comme rendement |
 | R9 | Classe LLM/Scripted devinée | `signalOrigin` déclaré dans `modes-config` |
+| R6 | Courbe publiée ≠ courbe du livre | `DtxBookEquity`, **vérifiée** à l'ingestion (±0,05 pt) |
 | R10 | Garde de sanity éteinte sur 6 stagings | Retombe sur `_retired`, warning explicite |
 
 ### R7 puis R2 — le déblocage
@@ -198,28 +200,57 @@ capacité borne alors sur le buying power réel du courtier, seule limite vraie 
 
 ---
 
-## Reste ouvert — R6 : la courbe publiée n'est pas celle du livre
+## ✅ R6 fermé — le moteur sert la courbe du livre
 
-`portfolio/v1/best/equity.json.engineBacktest` publie les statistiques **servies** du livre
-(CAGR 70,9 · MaxDD 27,2 · Sharpe 1,56 · 3 638 trades), mais `equityCurve` reste la courbe de replay
-de la poche porteuse : un drawdown recalculé dessus rend 17,49 %.
+`portfolio/v1/best/equity.json` publiait les statistiques **servies** du livre à côté d'une courbe
+qui n'était pas la sienne (replay de la poche porteuse, sous-échantillonné) : un drawdown recalculé
+dessus rendait 17,49 % contre 27,2 %. L'écart était *déclaré* dans un `curve_warning` — un
+pansement, pas un correctif : un fichier qui publie une courbe ET des chiffres qui ne s'en déduisent
+pas invite à l'erreur, quel que soit l'avertissement.
 
-Vérifié : la surface MCP ne sert pas la courbe du livre. `DtxReplay(best)` rend quatre replays **à
-capital fixe** (`uhv_tp999`, `ep`, `etf_us`, `mx`) plus un `combined` que le staging interdit
-explicitement d'utiliser (`note: "NE PAS reconstruire depuis DtxReplay.combined — il additionne des
-poches à capital fixe et minore rendement comme risque"`). Un livre à allocation dynamique ne se
-reconstitue pas en additionnant des poches rejouées à capital fixe.
+systematic-tss v1.34.1 sert désormais `DtxBookEquity` : la courbe quotidienne du walk qui produit
+les stats servies, embarquée au build **avec** elles pour qu'elles ne puissent plus diverger.
 
-L'écart est **dit**, avec le chiffre exact qu'un consommateur obtiendrait :
+**Vérifié, pas cru.** `tools/dtx-book-equity-ingest.js` recalcule CAGR et max drawdown depuis
+`equity_values` AVANT d'écrire, et refuse au-delà de ±0,05 pt. Le refus n'est pas théorique : au
+premier essai il a bloqué, parce que j'annualisais en jours calendaires (71,69 contre 72,03 servi).
+La convention du moteur a été identifiée par départage, pas devinée :
 
-> `curve_warning`: « Do NOT recompute max drawdown from equityCurve — it is the sub-sampled replay
-> curve of the carrying sleeve, not the served book. Recomputing yields ~17.5 % vs the authoritative
-> 27.2 %. Use max_dd_pct above. »
+```
+n/252        → 72,0334   écart 0,0034 pt   ← retenu (et figé dans le script)
+(n-1)/252    → 72,0999   écart 0,0699
+jours/365,25 → 71,6873   écart 0,3427
+jours/365    → 71,6238   écart 0,4062
+```
 
-Ce point se ferme le jour où le moteur sert la courbe du livre. C'est une demande à porter côté
-systematic-tss, pas un correctif côté articles.
+Le candidat retenu est 20× plus proche que le suivant. Un contrôle qui s'ajuste à son résultat ne
+contrôle plus rien : la tolérance n'a pas bougé, c'est la convention qui a été trouvée.
 
----
+```
+max drawdown : servi 27,18 | recalculé 27,1834 | écart 0,0034 pt
+CAGR         : servi 72,03 | recalculé 72,0334 | écart 0,0034 pt
+→ DD recalculé sur la courbe PUBLIÉE : 27,18 % = la statistique servie
+```
+
+`curve_warning` a disparu — il disait qu'on publiait une courbe qui n'était pas celle des chiffres,
+ce qui est faux désormais. À la place, de quoi recalculer JUSTE : `curve_is_book`, `committed_capital`
+(155 000 — les pourcentages des poches somment à 155, pas 100), `trading_days_per_year`,
+`curve_rebased_to`, et une note qui reproduit les chiffres **à la lettre**.
+
+**Deux défauts introduits par ce changement, trouvés et corrigés avant publication :**
+
+1. *La courbe démarrait à 155 au lieu de 100.* Le rebasage utilisait `initial_capital` (100 000)
+   alors que la courbe du livre démarre au capital **engagé** (155 000) : le livre semblait valoir
+   +55 % à l'instant zéro. La base est maintenant `committed_capital`.
+2. *Ma note publiée était fausse.* Appliquée à la courbe entière elle donnait 71,97 et non 72,03 :
+   `equityCurve` porte le segment de backtest **puis** un point d'ancrage au go-live. La note dit
+   désormais de s'arrêter à `to`. Vérifié en la suivant littéralement : écarts 0,0034 et 0,0016 pt.
+
+**Millésime.** La re-mesure sur le binaire courant donne CAGR 72,03 (contre 70,87 au 11/08) et
+MaxDD 27,18 (contre 27,2) — MaxDD identique à 0,02 près, +1,16 pt de CAGR dû à l'évolution du
+binaire entre les deux mesures. L'owner conserve l'ancienne valeur dans `_meta._prev` et date le
+millésime ; côté articles, courbe et chiffres viennent maintenant du **même run**, ce qui est le
+point.
 
 ## Écarts VOULUS, non des dérives
 

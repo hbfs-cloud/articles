@@ -927,7 +927,13 @@ async function main() {
     const _dtx = loadDtxStaging(id);
     if (!frozen && _dtx && _dtx.metrics && _dtx.equity && (_dtx.equity.dates || []).length >= 2) {
       const met = _dtx.metrics, eq = _dtx.equity;
-      const base = met.initial_capital || eq.values[0] || 100000;
+      // BASE DE REBASAGE = la valeur de DÉPART DE LA COURBE, pas le capital initial nominal.
+      // La courbe du livre (DtxBookEquity) démarre au capital ENGAGÉ (155 000 sur best : les
+      // pourcentages des poches somment à 155), tandis que `initial_capital` vaut 100 000. Rebaser
+      // sur 100 000 faisait donc démarrer la courbe à 155 — un livre qui semble valoir +55 % à
+      // l'instant zéro. `committed_capital` nomme la bonne référence ; `eq.values[0]` reste le
+      // filet, et `initial_capital` ne sert plus que pour les stagings d'avant la courbe du livre.
+      const base = met.committed_capital || eq.values[0] || met.initial_capital || 100000;
       const goLiveISO = cfg.statusSince ? cfg.statusSince.slice(0, 10) : String(eq.dates[eq.dates.length - 1]).slice(0, 10);
       const goLiveLbl = goLiveISO.slice(5, 7) + '/' + goLiveISO.slice(8, 10);
 

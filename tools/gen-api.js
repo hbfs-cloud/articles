@@ -474,11 +474,35 @@ function writeMode(mode, prefix) {
     r2: _engMetrics.r2 ?? null,
     win_rate: _engMetrics.win_rate ?? null,
     total_trades: _engMetrics.total_trades ?? null,
-    curve_resolution: 'rebalance dates (~13 calendar days), NOT daily',
-    // La courbe publiée reste celle du replay de la poche : un DD recalculé dessus rend 17,49 %
-    // quand la statistique qui fait foi dit 27,2 %. Tant que le moteur ne sert pas la courbe du
-    // livre, l'écart est DIT ici plutôt que masqué (cf. .claude/REPRISE.md).
-    curve_warning: 'Do NOT recompute max drawdown from equityCurve — it is the sub-sampled replay curve of the carrying sleeve, not the served book. Recomputing yields ~17.5% vs the authoritative 27.2%. Use max_dd_pct above.',
+    // COURBE DU LIVRE (R6, fermé le 2026-08-12). Le moteur sert désormais la vraie courbe
+    // (`DtxBookEquity`), ingérée par tools/dtx-book-equity-ingest.js qui REFUSE de l'écrire si
+    // recalculer CAGR/MaxDD depuis ses valeurs ne reproduit pas les statistiques servies (±0,05 pt ;
+    // mesuré : 0,0034 sur les deux). Courbe et chiffres viennent du même run, donc l'avertissement
+    // « ne recalculez pas le drawdown » n'a plus lieu d'être — il disait qu'on publiait une courbe
+    // qui n'était pas celle des chiffres, ce qui n'est plus vrai. On publie à la place ce qu'il faut
+    // savoir pour recalculer JUSTE : le dénominateur du CAGR n'est pas le capital initial mais le
+    // capital ENGAGÉ (les pourcentages des poches somment à 155), et l'annualisation est en séances.
+    curve_resolution: _staged && _staged.equityResolution === 'daily' ? 'daily' : 'rebalance dates (~13 calendar days), NOT daily',
+    ..._served && _staged && _staged.equityResolution === 'daily' ? {
+      curve_is_book: true,
+      curve_source: 'DtxBookEquity (systematic-tss) — même run que les statistiques ci-dessus',
+      // Lisibles par un programme, pas seulement dans la phrase ci-dessous : ce sont les deux
+      // paramètres sans lesquels un recalcul honnête tombe à côté (71,69 au lieu de 72,03).
+      committed_capital: _engMetrics.committed_capital ?? null,
+      trading_days_per_year: _engMetrics.trading_days_per_year ?? null,
+      curve_rebased_to: 100,
+      curve_verified_at: _staged.equityVerifiedAt || null,
+      // ⚠️ La note doit être VRAIE sur la courbe telle qu'elle est publiée. `equityCurve` porte le
+      // segment de backtest PUIS un point d'ancrage au go-live (marqueur « le live commence ici »,
+      // pas du P&L). Recalculer sur la série entière donne 71,97 au lieu de 72,03 : l'instruction
+      // doit donc dire de s'arrêter à `to`, sinon elle reproduit le défaut qu'elle prétend éviter.
+      recompute_note: `Recomputing from equityCurve reproduces the stats above EXACTLY when restricted to points with date <= "${_engMetrics.to}" (the curve additionally carries a go-live anchor point, which marks where live tracking starts and is not part of the backtest). On that segment: CAGR = (last/${100})^(252/n) - 1 where n = number of points (the curve is rebased to 100 from committed_capital=${_engMetrics.committed_capital ?? 'n/a'}, sleeve percents summing to 155, not 100), annualised over ${_engMetrics.trading_days_per_year ?? 252} trading days. Max drawdown is peak-to-trough on that same segment. Verified at ingestion: both reproduce within 0.01 pt.`,
+    } : {
+      // Filet : si l'ingestion de la courbe du livre n'a pas tourné, on retombe sur la courbe de
+      // poche — et on le DIT, avec le chiffre exact qu'un consommateur obtiendrait.
+      curve_is_book: false,
+      curve_warning: 'Do NOT recompute max drawdown from equityCurve — it is the sub-sampled replay curve of the carrying sleeve, not the served book. Recomputing yields ~17.5% vs the authoritative 27.2%. Use max_dd_pct above.',
+    },
   } : null;
   write(`${p}equity.json`, {
     updatedAt: now, mode: prefix || 'balanced',
