@@ -1,0 +1,726 @@
+{
+  "version": "1.0",
+  "dsl": "dailytickers-trading-plan",
+  "generated_at": "2026-08-12T11:06:01.699Z",
+  "valid_for": "2026-08-12",
+  "mode_status": {
+    "state": "live",
+    "since": "2026-02-26T00:00:00Z",
+    "reason": null,
+    "acceptsNewEntries": true,
+    "exitsOnly": false,
+    "forceLiquidate": false,
+    "publiclyVisible": true,
+    "tradingMode": "real",
+    "nextReviewAt": null
+  },
+  "broker": {
+    "name": "paper",
+    "type": "simulation",
+    "credentials": {
+      "api_key": "${BROKER_API_KEY}",
+      "api_secret": "${BROKER_API_SECRET}",
+      "base_url": "http://localhost:9999",
+      "note": "Replace ${BROKER_API_KEY} and ${BROKER_API_SECRET} with actual credentials. For paper trading, use sandbox URLs."
+    }
+  },
+  "account": {
+    "nominal_usd": 10000,
+    "currency": "USD",
+    "position_size_pct": 100,
+    "max_positions": 1
+  },
+  "mode": {
+    "name": "dynamic",
+    "horizon_days": 10,
+    "filter": "mom_bo",
+    "min_score": 88,
+    "rotation": "none",
+    "breakeven_pct": 0,
+    "be_grace_days": 0,
+    "vix_kill": 30,
+    "trailing_stop": true,
+    "daily_trail_pct": 0,
+    "max_stop_pct": 7,
+    "atr_stop_mult": 2,
+    "stale_days": 0,
+    "entry_gate_pct": 0,
+    "partial_tp": true,
+    "partial_tp_pct": 0.3,
+    "sector_cap_max": 1,
+    "sizing_method": "inverse_atr",
+    "target_risk_pct": 1,
+    "correlation_cap": 0,
+    "cross_mode_dedup": false,
+    "regime_filters": {
+      "risk_on": "mom_bo",
+      "early_risk_off": "breakout_only",
+      "risk_off": "breakout_only",
+      "neutral": "mom_bo",
+      "recovery": "mom_bo"
+    },
+    "dd_breaker_pct": 8
+  },
+  "session": {
+    "market": "US_EQUITY",
+    "timezone": "America/New_York",
+    "pre_market": "04:00",
+    "market_open": "09:30",
+    "market_close": "16:00",
+    "post_market": "20:00",
+    "extended_hours": false
+  },
+  "risk": {
+    "max_portfolio_heat_pct": "1.0",
+    "max_single_loss_pct": 3,
+    "max_slippage_pct": 1,
+    "max_spread_pct": 0.5,
+    "circuit_breaker": {
+      "daily_loss_pct": 8,
+      "action": "HALT_ALL_ORDERS",
+      "description": "If portfolio drops 8% intraday, cancel all pending orders and alert."
+    },
+    "correlation_limit": 0.85,
+    "max_sector_concentration": 1
+  },
+  "close_now": [
+    {
+      "action": "CLOSE",
+      "ticker": "GE",
+      "broker_symbol": "GE",
+      "broker": {
+        "symbol": "GE"
+      },
+      "reason": "HORIZON_EXPIRED",
+      "held_days": 40,
+      "horizon": 10,
+      "current_pnl_pct": null,
+      "execution": {
+        "type": "MARKET",
+        "timing": "AT_OPEN",
+        "description": "Close at market open — horizon expired, exit regardless of P&L"
+      }
+    }
+  ],
+  "orders": [
+    {
+      "id": "ORD-001",
+      "action": "BUY",
+      "ticker": "FRSH",
+      "broker_symbol": "FRSH",
+      "broker": {
+        "symbol": "FRSH"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 12.07,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 10000,
+          "shares": 828,
+          "pct_of_portfolio": 100
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 11.120000000000001,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 7,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 12.91,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 13.530000000000001,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 10,
+          "expiry_date": "2026-08-26",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 10 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 98,
+        "strategy": "Momentum",
+        "rr": "1:0.99",
+        "sharia": true,
+        "thesis": "Douzième séance consécutive au-dessus de sa moyenne 50 jours pour Freshworks, à 13,98 % au-dessus d'elle, clôture à 11,97 dollars. RSI 14 à 63,5, MACD à 0,481 contre une ligne de signal à 0,434 : l'écart continue de se creuser. Le titre reste 14,9 % sous son plus-haut de douze mois, à 14,06, ce qui laisse du terrain avant la zone où les vendeurs de long terme reviennent. Le registre de dépôts est complet et vide de tout placement : 66 documents, soit la totalité depuis l'introduction en Bourse, aucun prospectus 424B5, aucun S-3 ; le seul S-1 et son avis d'effet datent de septembre 2021, il y a 1 785 jours. Résultats du deuxième trimestre déposés le 4 août, prochain rendez-vous dans un trimestre. 128 millions de dollars échangés par séance sur vingt séances. Le prix à payer est l'amplitude : 0,56 dollar par séance, 4,70 % du cours, d'où un stop qui coûte 7,49 %."
+      },
+      "priority": 1
+    },
+    {
+      "id": "ORD-002",
+      "action": "BUY",
+      "ticker": "LYFT",
+      "broker_symbol": "LYFT",
+      "broker": {
+        "symbol": "LYFT"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 17.68,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 10000,
+          "shares": 565,
+          "pct_of_portfolio": 100
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 16.52,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 7,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 18.7,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 19.45,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 10,
+          "expiry_date": "2026-08-26",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 10 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 98,
+        "strategy": "Momentum",
+        "rr": "1:1.00",
+        "sharia": true,
+        "thesis": "Lyft clôture à 17,54 dollars sur le plus haut de sa séance, 17,7549, en hausse de 1,62 %, et signe une douzième séance consécutive au-dessus de sa moyenne 50 jours — 14,42 % au-dessus. RSI 68,2 : le plus tendu des cinq américains du panier, encore sous le plafond de 72. Le registre de dépôts a été réinterrogé par type de formulaire sur dix ans et ressort vide : ni prospectus de placement 424B5, ni enregistrement en étagère, ni avis d'effet. Sur un vivier où trois candidats autrement recevables en portent un de moins de quarante jours, ça se remarque. Le titre reste 31,3 % sous son plus-haut de douze mois, à 25,54, et se paie 8,3 fois les bénéfices attendus. Résultats du 6 août publiés. 202 millions de dollars par séance."
+      },
+      "priority": 2
+    },
+    {
+      "id": "ORD-003",
+      "action": "BUY",
+      "ticker": "COMP",
+      "broker_symbol": "COMP",
+      "broker": {
+        "symbol": "COMP"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 12.790000000000001,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 10000,
+          "shares": 781,
+          "pct_of_portfolio": 100
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 11.77,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 7,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 13.76,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 14.47,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 10,
+          "expiry_date": "2026-08-26",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 10 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 96,
+        "strategy": "Momentum",
+        "rr": "1:1.05",
+        "sharia": true,
+        "thesis": "Compass gagne 2,34 % à 12,69 dollars et se retrouve 14,79 % au-dessus de sa moyenne 50 jours, 33,3 % au-dessus de sa moyenne 200 jours. RSI 61,8, MACD 0,422 au-dessus de son signal à 0,383. Le titre est à 9,06 % de son plus-haut de douze mois, à 13,955 : la deuxième distance la plus courte du panier, derrière le seul fonds de dividende. C'est aussi le deuxième dossier le plus nerveux après Cleveland-Cliffs, avec une amplitude quotidienne de 0,65 dollar, soit 5,09 % du cours. Le stop de 1,6 fois l'amplitude sortait au-delà de 8 % de perte : il a été ramené au plafond de la méthode, à 1,50 fois. Côté registre, un avis d'effet du 2 décembre 2025, 252 jours, et rien d'autre depuis l'introduction en Bourse de mars 2021 — la fenêtre de contrôle de 90 jours est vide. Résultats du 4 août derrière. 143 millions de dollars par séance."
+      },
+      "priority": 3
+    },
+    {
+      "id": "ORD-004",
+      "action": "BUY",
+      "ticker": "AMP.MI",
+      "broker_symbol": "AMP.MI",
+      "broker": {
+        "symbol": "AMP.MI"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 12.4,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 10000,
+          "shares": 806,
+          "pct_of_portfolio": 100
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 11.68,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 7,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 13.030000000000001,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 13.49,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 10,
+          "expiry_date": "2026-08-26",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 10 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 92,
+        "strategy": "Momentum",
+        "rr": "1:1.01",
+        "sharia": true,
+        "thesis": "Amplifon revient au panier. Clôture à 12,30 euros, +1,57 %, vingt-deuxième séance au-dessus de sa moyenne 50 jours à 10,93 — 12,51 % au-dessus — et, surtout, au-dessus de sa moyenne 200 jours à 12,18, franchie récemment. RSI 68,3, le plus élevé des actions retenues. Le dossier est calme : 0,42 euro d'amplitude quotidienne sur un cours de 12,30, soit 3,40 %, ce qui ramène le stop à 5,43 %, la troisième distance la plus courte parmi les actions du panier, derrière Campari et Infosys — les deux fonds indiciels sont plus courts encore. Le titre reste 23,3 % sous son plus-haut de douze mois, à 16,045, et se paie 14,1 fois les bénéfices attendus pour un rendement de 2,39 %. Deux réserves. Le volume est le plus mince du panier : 26,5 millions de dollars par séance, 23 millions d'euros. Et Milan clôture six heures avant New York, si bien qu'un décrochage américain de l'après-midi ne se paie qu'à l'ouverture du lendemain."
+      },
+      "priority": 4
+    },
+    {
+      "id": "ORD-005",
+      "action": "BUY",
+      "ticker": "CLF",
+      "broker_symbol": "CLF",
+      "broker": {
+        "symbol": "CLF"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 12.51,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 10000,
+          "shares": 799,
+          "pct_of_portfolio": 100
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 11.51,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 7,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 13.49,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 14.21,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 10,
+          "expiry_date": "2026-08-26",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 10 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 91,
+        "strategy": "Momentum",
+        "rr": "1:1.08",
+        "sharia": true,
+        "thesis": "Cleveland-Cliffs revient au panier après en être sorti. Clôture à 12,41 dollars, en repli de 0,64 % sur une séance montée jusqu'à 12,84 : la mèche haute est le vrai renseignement, il y a de l'offre au-dessus de 12,80. RSI 61,1, moyenne 50 jours à 11,18 (+10,97 %), moyenne 200 jours à 11,01 repassée à la hausse. Deux prospectus de placement 424B5 figurent au registre, déposés les 29 et 30 octobre 2025, soit 286 et 285 jours. La fenêtre de contrôle est de 90 jours : ils sont largement en dehors et ne disqualifient pas la ligne. Mais un émetteur qui a ouvert un guichet de placement il y a moins d'un an garde l'outil à portée de main, et qui prend la ligne doit le savoir. Pour le reste : 290 millions de dollars par séance, le quatrième volume du panier derrière les deux fonds indiciels et Infosys, et une amplitude de 5,26 % du cours, la plus forte. Le stop bute sur le plafond de perte de 8 % à 1,45 fois l'amplitude au lieu de 1,6 : c'est aussi sous le plancher de 1,5 fois que la méthode retient par ailleurs, et c'est la contrainte de perte qui l'emporte. Résultats du 23 juillet publiés."
+      },
+      "priority": 5
+    }
+  ],
+  "error_handlers": {
+    "INSUFFICIENT_MARGIN": {
+      "action": "REDUCE_SIZE",
+      "reduce_pct": 50,
+      "retry": true,
+      "max_retries": 1
+    },
+    "SYMBOL_NOT_FOUND": {
+      "action": "SKIP",
+      "log_level": "ERROR"
+    },
+    "CONNECTION_LOST": {
+      "action": "RECONNECT",
+      "max_retries": 10,
+      "backoff_ms": [
+        1000,
+        2000,
+        5000,
+        10000,
+        30000
+      ],
+      "on_failure": "CANCEL_PENDING_AND_ALERT"
+    },
+    "PARTIAL_FILL": {
+      "action": "KEEP_PARTIAL",
+      "adjust_exits": true,
+      "description": "Keep partial fill. Adjust TP/SL quantities proportionally."
+    },
+    "ORDER_REJECTED": {
+      "action": "LOG_AND_SKIP",
+      "log_level": "WARN"
+    },
+    "MARKET_HALTED": {
+      "action": "WAIT_RESUME",
+      "timeout_min": 60,
+      "on_timeout": "CANCEL_ORDER"
+    },
+    "RATE_LIMITED": {
+      "action": "BACKOFF",
+      "delay_ms": 5000,
+      "max_retries": 3
+    },
+    "DUPLICATE_ORDER": {
+      "action": "SKIP",
+      "description": "Order for this symbol already exists. Idempotent — skip."
+    }
+  },
+  "lifecycle": {
+    "on_start": [
+      {
+        "step": "CHECK_MARKET_STATUS",
+        "description": "Verify market is open or will open today"
+      },
+      {
+        "step": "SYNC_ACCOUNT",
+        "description": "Fetch current account balance, buying power, positions"
+      },
+      {
+        "step": "RECONCILE_POSITIONS",
+        "description": "Compare broker positions with expected positions. Alert on discrepancy."
+      },
+      {
+        "step": "CHECK_VIX",
+        "threshold": 30,
+        "action": "HALT_IF_ABOVE",
+        "description": "If VIX > 30, halt all new orders"
+      },
+      {
+        "step": "LOG_STATE",
+        "description": "Log initial account state for audit trail"
+      }
+    ],
+    "on_fill": [
+      {
+        "step": "PLACE_EXITS",
+        "description": "Immediately place SL and TP1/TP2 bracket orders"
+      },
+      {
+        "step": "LOG_FILL",
+        "description": "Record fill price, time, slippage, fees"
+      },
+      {
+        "step": "CHECK_BREAKEVEN",
+        "description": "Start monitoring for breakeven trigger"
+      },
+      {
+        "step": "NOTIFY",
+        "channel": "telegram",
+        "description": "Send fill notification to Telegram"
+      }
+    ],
+    "on_exit": [
+      {
+        "step": "CANCEL_REMAINING_EXITS",
+        "description": "Cancel the other side (SL if TP hit, TP if SL hit)"
+      },
+      {
+        "step": "LOG_EXIT",
+        "description": "Record exit price, P&L, hold time"
+      },
+      {
+        "step": "CHECK_ROTATION",
+        "description": "If slot freed, check for pending rotation candidates"
+      },
+      {
+        "step": "UPDATE_PORTFOLIO",
+        "description": "Update local portfolio state file"
+      }
+    ],
+    "on_breakeven": [
+      {
+        "step": "MODIFY_STOP",
+        "description": "Move stop loss to entry price (+ spread buffer)"
+      },
+      {
+        "step": "LOG_BREAKEVEN",
+        "description": "Record breakeven activation"
+      }
+    ],
+    "on_horizon_expiry": [
+      {
+        "step": "CLOSE_AT_MARKET",
+        "description": "Submit market close order at next open"
+      },
+      {
+        "step": "CANCEL_EXITS",
+        "description": "Cancel any pending TP/SL orders for this position"
+      }
+    ],
+    "on_error": [
+      {
+        "step": "LOG_ERROR",
+        "description": "Record error with full context"
+      },
+      {
+        "step": "LOOKUP_HANDLER",
+        "description": "Find matching error_handler and execute action"
+      },
+      {
+        "step": "NOTIFY_IF_CRITICAL",
+        "description": "Alert on CONNECTION_LOST, CIRCUIT_BREAKER, or unknown errors"
+      }
+    ],
+    "on_end": [
+      {
+        "step": "CANCEL_UNFILLED",
+        "description": "Cancel any GTC orders that were not filled today"
+      },
+      {
+        "step": "EXPORT_TRADES",
+        "description": "Write execution log to trades-YYYYMMDD.json"
+      },
+      {
+        "step": "SUMMARY",
+        "description": "Print session summary: fills, skips, errors, P&L"
+      }
+    ]
+  },
+  "broker_notes": {}
+}
