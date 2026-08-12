@@ -76,3 +76,67 @@ hérités. Le plafond arithmétique du système reste ~1,33.
   opposition en thèse centrale, auto-citation fabriquée, rapport emploi du 7/08
   omis. Fichier `analyses/cpi-20260812/` non commité, non indexé. Ne pas la
   publier telle quelle.
+
+
+---
+
+# MISE À JOUR — le scan du 12 est RÉDIGÉ mais BLOQUÉ par le panel
+
+Le workflow a produit `data.json`, `signals.json` et la page, passé les gates, puis
+le panel a rendu **BLOCK**. L'agent chargé d'appliquer les corrections est mort
+d'une erreur réseau : rien n'a été corrigé, **rien n'a été publié ni poussé**
+(page en 404, registre inchangé). Le verdict complet, 69 Ko, est dans
+`scanner/20260812/_panel-verdict.txt`.
+
+## Les défauts que j'ai revérifiés MOI-MÊME et qui sont réels
+
+1. **Le plafond de perte de 8 % saute.** Il est calculé au milieu de zone, mais la
+   zone haute est publiée donc atteignable : COMP coûte alors **8,37 %** et CLF
+   **8,39 %**. Un plafond qui cède sur un remplissage haut n'est pas un plafond.
+   Caler le calcul sur le HAUT de zone (COMP stop 11,77 · CLF 11,51).
+2. **`dilution_clear: true` sur cinq lignes hors périmètre SEC** — AMP.MI, PGE.WA,
+   INFY, SCHD, FXI. Un drapeau vert sur zéro observation, exactement la leçon
+   INDO à l'envers. INFY, lui, l'assume dans sa thèse. Passer les autres à `null`
+   avec la même mention.
+3. **Les scores publiés ne sont pas ceux de la sélection figée** : FRSH 100 → 98,
+   LYFT 99 → 97. Trancher et tracer.
+
+## Le défaut qui touche MA sélection, pas la rédaction
+
+**`adv_m` mélange les devises.** Mon crible de liquidité a comparé 37 (zlotys), 23
+(euros) et 290 (dollars) comme des grandeurs homogènes. PGE.WA à 37 M PLN vaut
+~10 M$ : c'est la ligne la plus MINCE du panier et elle frôle mon plancher, alors
+que le texte désigne AMP.MI (23 M€ ≈ 26 M$). Même erreur sur
+`market_cap_usd` de PGE.WA : 25 milliards de ZLOTYS, pas de dollars.
+**Convertir avant tout classement, puis revérifier que PGE.WA passe le plancher.**
+
+## Le bug d'archive nous a rattrapés
+
+8 séries de barres sur 10 s'arrêtent au 10/08 alors que la clôture de référence
+est le 11, et la barre du 10 est TRONQUÉE (FRSH 16 % de son volume médian, COMP
+22 %, CLF 28 %). Le contrôle de fraîcheur a validé quand même. Conséquences : les
+volumes moyens sont biaisés (FXI 696 publié contre 756 réel) et aucun relecteur ne
+peut reproduire les indicateurs depuis les barres. Les indicateurs eux-mêmes sont
+justes — ils viennent du service technique, qui a bien le 11/08. C'est la piste
+d'audit qui est cassée. Voir `.claude/mcp-marketdata-bug-archive-profonde.md`.
+
+## Erreurs de prose à corriger avec
+
+SNAP « huit séances haussières sur dix » → cinq. SNAP « moyenne 200 j à 6,05
+au-dessus de la cible 2 (6,22) » → elle est dessous, la phrase dit le contraire de
+ses chiffres. INFY invalidation cite 13,49 → c'est la cible 2 d'AMP.MI, la sienne
+vaut 13,80. AMP.MI « treizième séance au-dessus de sa moyenne 50 j » → vingt-deuxième.
+CLF « deuxième volume du panier » → quatrième. PGE.WA deux plus-hauts 12 mois
+différents dans le même document.
+
+## Ce qu'il faut faire, dans l'ordre
+
+1. Corriger `adv_m` et `market_cap` en devise commune, PUIS revalider la sélection.
+2. Recaler le plafond de stop sur le haut de zone.
+3. Passer les `dilution_clear` hors périmètre SEC à `null` avec la mention.
+4. Aligner les scores.
+5. Corriger les six erreurs de prose.
+6. Repasser les gates, puis un panel de contrôle, puis publier.
+
+La séance ouvre à 15h30. Ne pas publier avant que les points 1 à 3 soient traités :
+ce sont des défauts de fond, pas de style.
