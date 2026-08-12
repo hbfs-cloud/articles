@@ -40,7 +40,39 @@ avant (nous coupons à 90 s sur certains appels). Si l'annulation du client ne p
 **Ce que je demande** : vérifier la fuite (un `/debug/pprof/goroutine?debug=1` sur l'origine dira en
 deux minutes où elles s'empilent) et, si elle est confirmée, propager l'annulation.
 
-### 2. Le 429 sur le POLLING des jobs est trompeur
+### 2. Le 429 sur le POLLING des jobs — CONFIRMÉ, et c'est le point bloquant
+
+> **Mise à jour du 2026-08-13 00:20, après le redémarrage.** Le service est sain
+> (`goroutines: 541`, `status: healthy`, barres au 12/08) et le quota du jeton a été relevé à
+> **5 000/h**. Le 429 revient malgré tout, à l'identique :
+>
+> ```
+> ✗ autoscreen        (RunAutoScreener) — job async : HTTP 429
+> ✗ screen_eu         (RunScreener)     — job async : HTTP 429
+> ✗ screen_swing      (RunScreener)     — job async : HTTP 429
+> ✗ screen_squeeze_us (RunScreener)     — job async : HTTP 429
+> ```
+>
+> **~6 appels de screener au total**, sur un quota de 5 000/h, jeton fraîchement émis. Ce n'est
+> donc **ni la charge, ni le quota d'outil, ni l'état du serveur**.
+>
+> Fait décisif : un poll **isolé** de `Jobs(job_id=…)`, lancé à la main au même moment, **répond
+> normalement** et rend le résultat complet. L'échec n'apparaît que lorsque la collecte poll
+> **plusieurs jobs simultanément** (le vivier scanner en soumet 13, chacun sondé toutes les 6 s,
+> soit ~2 requêtes/seconde au total).
+>
+> **Conclusion** : la limite ne porte pas sur les outils lourds mais sur l'endpoint de **sondage**,
+> et elle est atteinte par un usage tout à fait normal. Aujourd'hui, toute soumission de plus de
+> deux jobs concurrents est donc irrécupérable — c'est ce qui empêche la production du scan, des
+> signaux et du radar squeeze, alors que le service est par ailleurs en parfaite santé.
+>
+> **Ce que je demande précisément** : soit relever la limite du polling au niveau de celle des
+> outils (5 000/h), soit documenter le débit admis pour que nous espaçions nos sondages en
+> conséquence — nous suivons aujourd'hui la consigne « poll every 5-10s » de la description de
+> `Jobs`, qui ne mentionne aucune contrainte de concurrence. Dans les deux cas, le 429 doit porter
+> un `retry_after`.
+
+### 2 bis. Le 429 était trompeur (constat initial)
 
 L'erreur nous est parvenue sous la forme `job async : HTTP 429` **pendant la résolution** du job
 (appels `Jobs`/`CheckJobStatus`), pas à la soumission. Deux lectures possibles, et rien ne permet de
