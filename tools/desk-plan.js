@@ -492,8 +492,16 @@ function evalSqueeze() {
   if (!g.publish_web) return R({ due: false, reason: webReason(g) });
   return R({
     due: true, reason: `données FINRA du ${w.settlement} publiées le ${w.published}`,
-    chain: 'S', plans: ['squeeze'], vars: w, trigger,
-    blocker: 'plans/squeeze.json exige $symbols et aucune charnière ne le produit — vivier à fournir avant lancement',
+    chain: 'S', plans: ['squeeze-universe', 'squeeze'], vars: w, trigger,
+    // Le bloquant « aucune charnière ne produit $symbols » est LEVÉ depuis le 2026-08-12 :
+    // plans/squeeze-universe.json découvre le vivier par le screener (chemin switcher, seule voie
+    // où le short interest RÉEL existe) et extract-universe.js --strategy short_squeeze en tire
+    // $symbols. Le bloquant reste déclaré tant que l'une des deux pièces manque — un chemin annoncé
+    // mais absent est pire qu'un chemin annoncé manquant.
+    // Chemins relatifs au dépôt : le process a fait chdir() à la racine au démarrage (l. 49).
+    ...(fs.existsSync('plans/squeeze-universe.json') && fs.existsSync('tools/extract-universe.js')
+      ? {}
+      : { blocker: 'plans/squeeze-universe.json ou tools/extract-universe.js manquant — $symbols ne peut pas être produit' }),
   });
 }
 

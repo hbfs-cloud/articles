@@ -16,6 +16,12 @@ const arg = (n, d) => { const i = process.argv.indexOf(n); return i > -1 && proc
 const inDir = arg('--in'), outFile = arg('--out');
 const limit = Number(arg('--limit', 60));
 const exclude = new Set((arg('--exclude', '') || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean));
+// `--strategy` : ne retenir que les candidats portant CETTE stratégie.
+// Le chemin « switcher » de RunScreener (pass_expr vide) rend les 7 stratégies coeur en une passe ;
+// chaque candidat déclare la sienne. Un radar squeeze veut les lignes `short_squeeze` — celles
+// adossées au short interest RÉEL — et non l'union, qui ramènerait du momentum sans rapport.
+// Filtrer ici plutôt que de multiplier les appels : une passe, un tri local.
+const strategy = (arg('--strategy', '') || '').trim().toLowerCase();
 if (!inDir || !outFile) { console.error('Usage: --in <dir> --out <vars.json> [--limit N] [--exclude A,B]'); process.exit(2); }
 
 const seen = new Map(); // symbole -> meilleur score vu
@@ -25,6 +31,12 @@ for (const f of fs.readdirSync(inDir).filter(f => f.endsWith('.json') && !f.star
   for (const it of items) for (const c of (it.candidates || [])) {
     const sym = (c.symbol || c.ticker || '').toUpperCase();
     if (!sym || exclude.has(sym)) continue;
+    if (strategy) {
+      const cs = String(c.strategy || c.strategy_name || '').toLowerCase();
+      // Pas de stratégie déclarée ⇒ on ne devine pas : le candidat est écarté. Le retenir
+      // reviendrait à supposer qu'il porte celle qu'on cherche, ce qui vide le filtre de son sens.
+      if (!cs || !cs.includes(strategy)) continue;
+    }
     const sc = typeof c.score === 'number' ? c.score : 0;
     if (!seen.has(sym) || seen.get(sym) < sc) seen.set(sym, sc);
   }

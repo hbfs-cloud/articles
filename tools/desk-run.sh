@@ -172,6 +172,28 @@ MSG
 [ -n "${MCP_TOKEN_MARKETDATA:-}${MCP_ACCESS_TOKEN:-}" ] || exit 3
 [ -n "${MCP_TOKEN_SYSTEMATIC:-}${MCP_ACCESS_TOKEN:-}" ] || log "⚠ pas de jeton systematic : régime dtx et décisions du moteur seront absents du socle."
 
+# ── Garde de fraîcheur DU MOTEUR, avant toute sollicitation ─────────────────
+# Le 2026-08-12, GetHealth s'est déclaré frais (`freshness_ok: true`) en étant en retard d'une
+# séance : `sessions_behind` se calcule contre `last_data_date`, donc contre lui-même. Et son
+# drapeau `prefetch.running` était resté armé depuis 25 h, ce qui rendait `DtxRefreshBars`
+# définitivement inopérant — le remède contre les données périmées était neutralisé, en silence.
+#
+# On juge donc ICI, contre la clôture que CE run vise. Non bloquant pour le desk entier : les
+# produits qui ne dépendent pas du moteur restent légitimes. Ce qui compte est que le retard soit
+# DIT, et que `best` ne soit pas servi sur la séance précédente sans que personne ne le sache.
+DTX_OK=1
+if [ -n "${MCP_TOKEN_SYSTEMATIC:-}" ]; then
+  if DTX_RO_TOKEN="$MCP_TOKEN_SYSTEMATIC" node tools/dtx-health-assert.js --expect-close "$REF" > "$DESK/dtx-health.log" 2>&1; then
+    log "moteur dtx : à jour pour la clôture $REF"
+  else
+    DTX_OK=0
+    log "⚠ MOTEUR EN RETARD ou BLOQUÉ — voir $DESK/dtx-health.log"
+    sed 's/^/       /' "$DESK/dtx-health.log" >&2
+    log "  → les modes adossés au moteur (best) n'auront pas de candidats ce soir. Les autres produits continuent."
+  fi
+fi
+export DTX_OK
+
 SOCLE="$DESK/_socle"
 SOCLE_OV="$DESK/_socle_overview"
 mkdir -p "$SOCLE" "$SOCLE_OV"
@@ -242,6 +264,23 @@ if is_due earnings; then
   # remplacer par une recopie du modèle, qui est le transport de données que la
   # doctrine interdit. Le produit sort du plan en le disant.
   log "⚠ earnings écartée : aucune charnière n'extrait les symboles publiants du socle (voir plan.json → due[].blocker)"
+fi
+if is_due squeeze; then
+  # Le radar squeeze a besoin de $symbols. La charnière manquait : le produit sortait dû à chaque
+  # run puis écarté (« vivier à fournir »). Elle existe maintenant — découverte par le screener
+  # (chemin switcher, seule voie où le short interest RÉEL est disponible), puis extraction des
+  # seuls candidats déclarant la stratégie short_squeeze. Aucune liste figée, aucune recopie.
+  SQZ="$DESK/squeeze"; mkdir -p "$SQZ/_univers"
+  if node tools/collect.js --plan plans/squeeze-universe.json --out "$SQZ/_univers" --quiet \
+       --var refdate="$REF" > "$DESK/squeeze-univers.log" 2>&1 \
+     && node tools/extract-universe.js --in "$SQZ/_univers" --out "$SQZ/vars.json" \
+       --strategy short_squeeze --limit 36 >> "$DESK/squeeze-univers.log" 2>&1; then
+    launch squeeze squeeze "$SQZ" --vars-file "$SQZ/vars.json"
+  else
+    # Un vivier vide n'est pas un échec technique : il peut signifier qu'aucun titre ne présente
+    # de tension short exploitable. Dans les deux cas on ne publie pas de radar — on le dit.
+    log "⚠ squeeze écartée : aucun candidat short_squeeze (voir $DESK/squeeze-univers.log)"
+  fi
 fi
 if is_due weekly; then
   MON=$(pj 'const w=p.due.find(d=>d.type==="weekly");process.stdout.write(w&&w.vars.monday?w.vars.monday.replace(/-/g,""):"")')
