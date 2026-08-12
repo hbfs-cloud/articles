@@ -314,11 +314,54 @@ const PARITY_MAP = [
         getNestedScalar(carrier, 'scanner_filters', 'min_score'), art.minScore,
         { gap: true, note: 'seuil INTERNE au moteur, par poche (uhv 50 / ep 40-50 / mx 0 / etf aucun), '
           + 'appliqué avant émission ; le Score= des ordres mesure la complétude des features, pas la qualité' }));
-      // La poche porteuse s'appelle tp999 parce qu'elle NE prend PAS de profit : c'est la queue
-      // (p95 38,3) qui porte le CAGR servi. Un TP partiel côté tracker tronque cette queue.
-      rows.push(row('best', 'uhv.take_profit_pct ↔ partialTPGain (%)',
-        getScalar(carrier, 'take_profit_pct'), art.partialTPGain,
-        { note: 'poche « tp999 » = aucune prise de profit côté moteur' }));
+      // ── SORTIES PAR POCHE (R2, fermé le 2026-08-12) ─────────────────────────
+      // Avant : une seule ligne comparait la poche porteuse au `partialTPGain` du mode, et sortait
+      // en DRIFT perpétuel. C'était la bonne alarme pour la mauvaise raison — le vrai défaut n'est
+      // pas qu'un chiffre diffère, c'est que le tracker portait UN jeu de sorties là où le livre en
+      // a QUATRE (uhv aucun · ep 20 · etf_us aucun · mx 25, sortie TOTALE dans les quatre cas, pas
+      // partielle). Le tracker applique désormais la règle de chaque poche par position, depuis
+      // data/dtx-sleeve-exits.json. Cette table étant une TRANSCRIPTION du yaml, c'est elle qu'on
+      // compare, poche par poche : si le moteur change un take-profit et que la transcription ne
+      // suit pas, la ligne concernée sort en DRIFT au lieu de passer inaperçue.
+      const sleeveExits = readArticlesJSON('data/dtx-sleeve-exits.json');
+      const sxs = (sleeveExits && sleeveExits.sleeves) || {};
+      // `take_profit_pct: 999` = seuil injoignable, transcrit en `null` (« aucune prise de profit »).
+      const goTP = (blk) => {
+        const v = getScalar(blk, 'take_profit_pct');
+        if (v == null) return null;              // clé absente = poche sans take-profit
+        const n = Number(v);
+        return Number.isFinite(n) && n >= 999 ? null : n;
+      };
+      const goInt = (blk, key) => {
+        const v = getScalar(blk, key);
+        const n = v == null ? null : Number(v);
+        return Number.isFinite(n) ? n : null;
+      };
+      const fmt = (v) => (v == null ? 'aucun' : String(v));
+      for (const name of ['uhv_tp999', 'ep', 'etf_us', 'mx']) {
+        const blk = allocationBlock(text, name);
+        const art2 = sxs[name] || null;
+        if (!blk) {
+          rows.push(row('best', `poche ${name} — introuvable dans le yaml`, null, null,
+            { note: 'la structure du book a changé — la table des sorties ne couvre plus cette poche' }));
+          continue;
+        }
+        if (!art2) {
+          rows.push(row('best', `poche ${name} — absente de dtx-sleeve-exits.json`, 'présente au yaml', null,
+            { note: 'poche du livre sans transcription : ses positions retomberaient sur les sorties du MODE' }));
+          continue;
+        }
+        rows.push(row('best', `${name}.take_profit_pct ↔ sleeve takeProfitPct`,
+          fmt(goTP(blk)), fmt(art2.takeProfitPct != null ? art2.takeProfitPct : null),
+          { note: 'sortie TOTALE (pm_base.go exitReason=TAKE_PROFIT), appliquée par position' }));
+        rows.push(row('best', `${name}.timeout_days ↔ sleeve timeoutDays`,
+          fmt(goInt(blk, 'timeout_days')), fmt(art2.timeoutDays != null ? art2.timeoutDays : null),
+          { note: 'aucun ⇒ le tracker retombe sur horizon du mode, déclaré comme SON garde-fou' }));
+      }
+      // Le mode ne doit plus porter de prise PARTIELLE : aucune des 4 poches n'en fait.
+      rows.push(row('best', 'aucune poche ne prend de profit partiel ↔ partialTPGain',
+        0, art.partialTPGain,
+        { note: 'les take-profit du livre sont des sorties totales, par poche — pas un seuil de mode' }));
 
       // ── Écarts VOULUS (voir en-tête) ────────────────────────────────────────
       rows.push(row('best', 'uhv.base_stop_atr ↔ atrStopMult',

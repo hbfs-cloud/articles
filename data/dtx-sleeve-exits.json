@@ -1,0 +1,45 @@
+{
+  "_doc": "SORTIES PAR POCHE du livre « best » — transcription des règles du moteur, pas un réglage maison. Le tracker du scanner porte UN seul jeu de sorties par mode ; le livre en a QUATRE, différents. Un réglage unique ne peut donc pas être juste : il l'est pour au plus une poche et faux pour les trois autres. Cette table les rétablit par position, une fois la poche connue (le tag vient de DtxDecide.state, cf. tools/dtx-scan.js sleeveIndex).",
+  "_updated": "2026-08-12",
+  "version": 1,
+  "_source": {
+    "file": "systematic-tss:config/dtx/portfolio_best.yaml",
+    "read_on": "2026-08-12",
+    "note": "Valeurs RECOPIÉES du yaml du moteur, jamais calibrées ici. Toute divergence doit se corriger EN AMONT (le yaml fait foi) puis se recopier — tools/parity-check.js compare les deux et sort en DRIFT sinon."
+  },
+  "_semantics": {
+    "takeProfitPct": "Sortie TOTALE au gain indiqué (internal/engine/pm_base.go : `exitReason = TAKE_PROFIT` ferme la position). Ce n'est PAS une prise partielle — le `partialTPGain` du tracker vendait 50 % et laissait courir, ce qui ne correspond à aucune règle du moteur. `null` = la poche n'a pas de take-profit (sa sortie est la rotation).",
+    "timeoutDays": "`timeout_days` du moteur. `null` = la poche n'a pas de sortie au temps ; le tracker retombe alors sur l'horizon du mode, qui est SON garde-fou, pas une règle du moteur — déclaré comme tel.",
+    "partial": "AUCUNE poche du livre ne prend de profit partiel. C'est vrai des quatre, donc `partialTP` est désarmé au niveau du mode aussi."
+  },
+  "sleeves": {
+    "uhv_tp999": {
+      "strategy": "highvol-breakout-corr",
+      "percent": 70,
+      "takeProfitPct": null,
+      "timeoutDays": 14,
+      "_note": "Le yaml porte take_profit_pct: 999 — un seuil injoignable, c'est le sens du nom « tp999 ». Transcrit en `null` (aucune prise de profit) plutôt qu'en 999 : garder 999 ferait porter au tracker un nombre qui n'est pas un objectif, juste une façon d'écrire « jamais ». C'est la poche PORTEUSE (70 %) : son rendement vient de la queue des gagnants qu'elle ne coupe pas."
+    },
+    "ep": {
+      "strategy": "episodic-pivot",
+      "percent": 45,
+      "takeProfitPct": 20,
+      "timeoutDays": 20,
+      "_note": "Sortie totale à +20 %, horizon 20 séances."
+    },
+    "etf_us": {
+      "strategy": "etf-momentum",
+      "percent": 25,
+      "takeProfitPct": null,
+      "timeoutDays": null,
+      "_note": "Ni take-profit ni timeout dans le yaml : la ROTATION est l'exit de cette poche. Le tracker n'a pas de rotation par poche — il retombe sur l'horizon du mode, garde-fou déclaré et non une règle du moteur."
+    },
+    "mx": {
+      "strategy": "momentum-explosion",
+      "percent": 15,
+      "takeProfitPct": 25,
+      "timeoutDays": 14,
+      "_note": "Sortie totale à +25 %, horizon 14 séances. Poche entrée le 2026-08-11 en remplacement de stockbox_pit."
+    }
+  }
+}

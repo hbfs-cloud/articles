@@ -71,6 +71,11 @@ function normalizeOrder(o) {
     takeProfit: o.takeProfit != null ? Number(o.takeProfit) : null,
     reason: o.reason || null,
     orderId: o.orderId || null,
+    // POCHE du livre (lue dans DtxDecide.state par dtx-scan.js). Elle porte les SORTIES de la
+    // ligne — take-profit et horizon diffèrent d'une poche à l'autre — donc un registre
+    // point-in-time qui l'omet ne permet plus de dire, après coup, sous quelle règle un ordre
+    // devait sortir. Ce mappeur est une liste blanche : un champ non listé est perdu en silence.
+    sleeve: o.sleeve || null,
   };
 }
 

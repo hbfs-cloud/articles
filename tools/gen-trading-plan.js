@@ -463,11 +463,35 @@ function makeEngineOrder(signal, action, rotation, { sym, restrictions, incremen
 }
 
 // Build orders — scanner picks first (priority 1), then remaining signals as fallbacks
-const MAX_ORDERS = 5;
+//
+// CAPACITÉ DU MODE (2026-08-12). `MAX_ORDERS` était la constante 5, sans rapport avec le nombre de
+// places du compte. Conséquence mesurée sur les 4 modes scanner, tous à 10 000 $ de nominal :
+//   turbo    portfolioSize 1  → 5 ordres à 10 000 $ = 50 000 $ pour UNE place (max_positions: 1)
+//   dynamic  portfolioSize 1  → 5 ordres à 10 000 $ = 50 000 $ pour UNE place
+//   balanced portfolioSize 3  → 5 ordres à 3 333 $  = 16 665 $ pour TROIS places
+//   fortress portfolioSize 10 → 5 ordres à   50 $   = cohérent (5 < 10)
+// Le plan se contredisait donc lui-même : il déclarait `max_positions` puis proposait davantage de
+// positions, chacune dimensionnée comme si elle était seule. Rien ne l'appliquait — ni le plan, ni
+// l'exécuteur, qui soumet TOUS les ordres `action: 'BUY'`.
+//
+// La capacité n'est pas un chiffre à inventer : le mode la déclare déjà (`portfolioSize`, qui sert
+// aussi à calculer la taille de chaque position). On la lit.
+//
+// ⚠️ Les ordres de repêchage n'étaient PAS des remplaçants : ils sortaient en `action: 'BUY'`, donc
+// indiscernables du pick principal pour l'exécuteur, qui les aurait tous envoyés. Si l'on veut de
+// vrais remplaçants (« si le premier ne se remplit pas à l'ouverture, prendre le suivant »), cela
+// demande une action distincte que l'exécuteur sait interpréter — comme la cascade `alternates` de
+// la voie moteur — pas des ordres d'achat supplémentaires.
+const MAX_ORDERS = Math.max(1, Math.min(5, Number(modeCfg.portfolioSize) || 5));
 const orders = [];
 const usedTickers = new Set();
 
 for (const o of buyOrders) {
+  // Le plafond de capacité vaut AUSSI pour les picks principaux : un topN mal réglé ne doit pas
+  // pouvoir dépasser les places du compte par une autre porte. La voie moteur en est exemptée —
+  // ses ordres portent les quantités décidées par le moteur et son livre a sa propre capacité,
+  // que le plafond du scanner n'a pas à réinterpréter (il est gardé en aval par engine.js).
+  if (!IS_DTX && orders.filter(x => x.action !== 'SKIP').length >= MAX_ORDERS) break;
   // Chemin moteur : l'ordre lui-même fait foi (il porte qty/orderType/stop du moteur).
   // signals.json est une vue topN enrichie côté scanner, sans ces champs.
   const sig = IS_DTX ? o : (signals.signals.find(s => s.ticker === o.ticker) || o);
@@ -588,7 +612,14 @@ const plan = {
     nominal_usd: null,
     currency: 'USD',
     position_size_pct: null,
-    max_positions: modeCfg.portfolioSize,
+    // `portfolioSize` (15) est la capacité de la poche PORTEUSE, pas celle du livre : les quatre
+    // poches ont chacune la leur (uhv 15 · ep 15 · etf_us 7 · mx 10) et le moteur les arbitre
+    // lui-même avant d'émettre. Publier 15 face à 18 ordres rendait le plan contradictoire, et
+    // aurait fait plafonner le livre par un chiffre qui ne le décrit pas. Même raison que
+    // `nominal_usd: null` : ce que ce générateur ne sait pas, il ne l'affirme pas. Le garde de
+    // capacité d'engine.js ignore explicitement un plafond non déclaré et borne alors sur le
+    // buying power réel du courtier — la seule limite qui soit vraie à l'exécution.
+    max_positions: null,
     sizing_source: 'engine',
   } : {
     nominal_usd: nominalUsd,

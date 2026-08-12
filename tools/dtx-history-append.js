@@ -72,6 +72,9 @@ function backfill(store) {
           stopLoss: o.stop != null ? Number(o.stop) : null,
           takeProfit: o.tp1 != null ? Number(o.tp1) : null,
           reason: o.pattern || o.strategy || null, orderId: null,
+          // Backfill depuis un ancien `dtx_pool` : ces séances sont antérieures au tag de poche,
+          // il n'existe pas. `null` explicite plutôt qu'un champ absent.
+          sleeve: o.sleeve || null,
         })),
         updates: [], cancels: [], metrics: null,
         recordedAt: new Date().toISOString(),
@@ -122,6 +125,9 @@ function ingestReplay(store) {
           stopLoss: o.stop_loss != null ? Number(o.stop_loss) : (o.stopLoss != null ? Number(o.stopLoss) : null),
           takeProfit: o.take_profit != null ? Number(o.take_profit) : null,
           reason: o.reason || null, orderId: o.order_id || null,
+          // Poche du livre : présente si le rejeu porte l'état du moteur, `null` sinon — jamais
+          // dérivée du type d'actif.
+          sleeve: o.sleeve || null,
         })),
         updates: (sess.actions && sess.actions.UPDATE) || [],
         cancels: (sess.actions && sess.actions.CANCEL) || [],

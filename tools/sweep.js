@@ -169,6 +169,27 @@ const { computeVolCorrSizing } = require('./lib/vol-corr-sizing');
 const scannerFiltersPath = path.join(ROOT, 'data', 'scanner-filters.json');
 const scannerFilters = fs.existsSync(scannerFiltersPath) ? JSON.parse(fs.readFileSync(scannerFiltersPath, 'utf8')) : {};
 
+// ─── Sorties PAR POCHE du livre moteur (R2) ──────────────────────────────────
+// Le tracker porte un seul jeu de sorties par mode ; le livre « best » en a quatre, différents
+// (take-profit uhv aucun · ep 20 % · etf_us aucun · mx 25 %). Un réglage unique est donc faux pour
+// au moins trois poches sur quatre. Une fois la poche connue (tag lu dans l'état du moteur), on
+// applique SA règle à la position. Table versionnée et comparée au yaml par parity-check.
+const sleeveExitsPath = path.join(ROOT, 'data', 'dtx-sleeve-exits.json');
+const _sleeveExitsFile = fs.existsSync(sleeveExitsPath)
+  ? JSON.parse(fs.readFileSync(sleeveExitsPath, 'utf8'))
+  : null;
+/** Règles de sortie d'une poche, ou `null` si la poche est inconnue/absente (⇒ config du mode). */
+function sleeveExits(sleeve) {
+  if (!sleeve || !_sleeveExitsFile || !_sleeveExitsFile.sleeves) return null;
+  const e = _sleeveExitsFile.sleeves[sleeve];
+  if (!e) return null;
+  return {
+    sleeve,
+    takeProfitPct: Number.isFinite(e.takeProfitPct) ? e.takeProfitPct : null,
+    timeoutDays: Number.isFinite(e.timeoutDays) ? e.timeoutDays : null,
+  };
+}
+
 const STRAT_PATTERNS = {
   short_squeeze: /short.?squeeze/i,
   pre_squeeze: /pre.?squeeze/i,
@@ -298,6 +319,12 @@ function parseScan(dir) {
           scoreSource: s.scoreSource || (score == null ? 'none' : 'engine'),
           engineNotional: s.engineNotional ?? null,
           engineRank: s.engineRank ?? null,
+          // POCHE du livre — lue dans l'état du moteur (dtx-scan sleeveIndex), jamais dérivée.
+          // Elle porte les sorties : les 4 poches de `best` ont des take-profit DIFFÉRENTS
+          // (uhv_tp999 999 · ep 20 · etf_us aucun · mx 25), qu'un réglage unique de mode ne peut
+          // pas représenter. Doit survivre jusqu'aux objets trade (même leçon que `universe`).
+          sleeve: s.sleeve || null,
+          engineExits: sleeveExits(s.sleeve),
         } : {}),
       });
     }
@@ -964,7 +991,11 @@ function computeOutcomeHorizons(priceHistory, entryDate, entryPrice, DF) {
 }
 
 function simulateTrade(setup, scanDate, priceHistory, config = {}) {
-  const {
+  // `let` (et non `const`) : les positions du livre moteur portent leurs PROPRES sorties, par
+  // poche. Voir le bloc « SORTIES DU MOTEUR » plus bas — sans cela, `horizonDays`/`partialTP*`
+  // devraient être renommés partout, ce qui rendrait le diff illisible pour un changement de deux
+  // valeurs.
+  let {
     horizonDays = 20, partialTP = false, partialTPPct = 0.5, trailingStop = false,
     maxStopPct = 0, atrStopMult = 0, dailyTrailPct = 0,
     breakevenPct = 0, // after +X% gain, move stop to entry (0 = disabled)
@@ -1006,6 +1037,31 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     tightenAfterDays = 0, // days held before tightening. 0 = off
     tightenToPct = 0,     // tightened stop distance from entry, in % (e.g. 8 = 8%)
   } = config;
+  // ── SORTIES DU MOTEUR, PAR POCHE (R2) ──────────────────────────────────────
+  // Une position du livre « best » n'obéit pas aux sorties du MODE mais à celles de SA POCHE. Le
+  // mode portait `partialTPGain: 30` (vendre 50 % à +30 %, laisser courir le reste) face à un
+  // moteur dont aucune poche ne prend de profit PARTIEL, et dont les take-profit TOTAUX valent
+  // aucun / 20 % / aucun / 25 % selon la poche. Le réglage unique était donc faux pour les quatre.
+  //
+  // `fullTPGain` est une sortie TOTALE (parité pm_base.go : `exitReason = TAKE_PROFIT` ferme la
+  // position), pas un déclencheur de prise partielle — c'est la différence sémantique qui rendait
+  // l'ancien alignement impossible à écrire.
+  //
+  // Poche INCONNUE (ordre non tagué, staging d'avant le 2026-08-12, moteur qui cesse de renvoyer
+  // `state`) ⇒ on garde les réglages du mode et le comportement d'avant. Pas de sortie inventée.
+  let fullTPGain = 0;
+  const _sx = setup && setup.engineExits;
+  if (_sx) {
+    // Aucune poche ne prend de profit partiel : on le désarme quelle que soit la config du mode.
+    partialTP = false;
+    partialTPGain = 0;
+    fullTPGain = _sx.takeProfitPct != null && _sx.takeProfitPct > 0 ? _sx.takeProfitPct : 0;
+    // `timeoutDays` absent (poche etf_us : la rotation EST son exit) ⇒ l'horizon du mode reste le
+    // garde-fou du tracker. Déclaré comme tel dans data/dtx-sleeve-exits.json — ce n'est pas une
+    // règle du moteur qu'on prétendrait reproduire.
+    if (_sx.timeoutDays != null && _sx.timeoutDays > 0) horizonDays = _sx.timeoutDays;
+  }
+
   const EARLY_EXIT_MIN_DAYS = 2; // Go EarlyExitConfig default (portfolio_etf_us.yaml min_days: 2)
   const _staleGrace = staleGraceDays > 0 ? staleGraceDays : staleDays;
   const _staleRate = staleGraceDays > 0 ? staleRaiseRate : 0.002;
@@ -1242,6 +1298,21 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       break;
     }
 
+    // Take-profit TOTAL du moteur (parité pm_base.go). Placé AVANT la prise partielle : les deux
+    // sont mutuellement exclusifs par construction (fullTPGain n'est armé que pour une position à
+    // poche connue, cas où partialTPGain a été mis à 0), l'ordre rend juste l'exclusion évidente.
+    // Remplissage sur gap identique à TP2 : une ouverture au-dessus du niveau remplit à l'ouverture
+    // (amélioration de prix réellement traitée), jamais au niveau théorique.
+    if (fullTPGain > 0) {
+      const tpLevel = entryPrice * (1 + fullTPGain / 100);
+      if (bar.high >= tpLevel) {
+        status = partialRealized > 0 ? 'tp1_partial' : 'tp1';
+        exitDate = date;
+        exitPrice = heldOvernight ? Math.max(tpLevel, bar.open) : tpLevel;
+        break;
+      }
+    }
+
     // v3 gain-based partial TP (systematic-tss: sell 30% at +10%, let rest ride)
     if (partialTPGain > 0 && partialRealized === 0) {
       const currentGain = (bar.high - entryPrice) / entryPrice * 100;
@@ -1402,6 +1473,11 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     ...(setup.scoreSource ? { scoreSource: setup.scoreSource } : {}),
     ...(setup.engineNotional != null ? { engineNotional: setup.engineNotional } : {}),
     ...(setup.engineRank != null ? { engineRank: setup.engineRank } : {}),
+    // Poche du livre + sorties effectivement appliquées à CETTE position. Sans elles, un trade
+    // scellé ne dirait pas sous quelle règle il est sorti, et le DRIFT redeviendrait indiagnosticable
+    // au niveau où il se produit — c'était tout le problème de R7.
+    ...(setup.sleeve ? { sleeve: setup.sleeve } : {}),
+    ...(setup.engineExits ? { engineExits: { takeProfitPct: setup.engineExits.takeProfitPct, timeoutDays: setup.engineExits.timeoutDays, appliedHorizon: horizonDays } } : {}),
     scanDate,
     entryDate,
     actualEntry: entryPrice,
@@ -1493,10 +1569,17 @@ function passesScoreGate(s, cfg) {
 // mesuré — A(dtx, score 95, notionnel 700), B(dtx, score 86, notionnel 5000), C(scanner, score 90) :
 // B<A (notionnel), A<C (score), C<B (score). `Array.sort` rend alors une sortie qui dépend de
 // l'ordre d'ENTRÉE (3 résultats distincts pour le même ensemble), donc un `slice(0, topN)` non
-// déterministe. Or les 4 modes scanner n'ont aucun `excludeSources` et les ordres du moteur
-// (universe="best") entrent bel et bien dans leur vivier : 1 candidat dtx éligible chez
-// turbo/dynamic/balanced au 2026-08-12. La faute ne mord pas tant qu'un SEUL candidat dtx passe
-// les seuils (aucune paire dtx↔dtx n'est comparée) — elle mord dès le deuxième.
+// déterministe.
+//
+// ⚠️ CORRECTION DU 2026-08-12 — ce commentaire affirmait « les 4 modes scanner n'ont aucun
+// excludeSources et les ordres du moteur entrent bel et bien dans leur vivier ». C'EST FAUX, et
+// cette phrase a fait conclure à une « fuite moteur→scanner » qui n'existe pas. Le constructeur
+// d'`excludeSources` (plus bas dans ce fichier) donne à TOUT mode sans `assetClass` la liste
+// COMPLÈTE des pools d'asset-class, `dtx_pool` compris — et les deux consommateurs l'appliquent :
+// simulatePortfolio (`if (excludeSet.has(t.source)) continue`) et le constructeur d'ordres live
+// (`.filter(s => !exclSources.has(s.source))`). Vérifié pour les 5 modes : dtx_pool est ignoré par
+// turbo/dynamic/balanced/fortress et n'est admis que par best. Le tri par vivier homogène reste
+// juste et nécessaire pour best lui-même ; seule sa justification était erronée.
 //
 // La clé de tri est donc une propriété du VIVIER, pas de la paire : un vivier homogène dtx
 // (pool du moteur, mode avec universeFilter) se classe au notionnel ; tout vivier mixte ou

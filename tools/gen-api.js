@@ -190,6 +190,11 @@ function engineOrdersFrom(mode) {
     thesis: o.reason || '',
     qty: o.qty != null ? +o.qty : null,
     orderType: o.orderType || null,
+    // POCHE du livre — elle détermine les SORTIES de cette ligne (take-profit et horizon diffèrent
+    // d'une poche à l'autre : uhv aucun · ep 20 % · etf_us aucun · mx 25 %). Sans elle, un
+    // consommateur de l'API voit `tp1: null` sur les 18 ordres et en conclut qu'aucun n'a de cible,
+    // alors que la moitié en a une, portée par le moteur. Lue dans DtxDecide.state, jamais dérivée.
+    sleeve: o.sleeve || null,
     source: 'engine',
     engineAsOf: ed.asof || null,
     engineMode: ed.engineMode || null,

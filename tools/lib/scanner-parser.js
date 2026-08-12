@@ -97,6 +97,10 @@ function loadSignalsRaw(dir) {
           ...(s.scoreSource ? { scoreSource: s.scoreSource } : {}),
           ...(s.engineNotional != null ? { engineNotional: s.engineNotional } : {}),
           ...(s.engineRank != null ? { engineRank: s.engineRank } : {}),
+          // POCHE du livre moteur. Elle porte les SORTIES de la position (take-profit et horizon
+          // diffèrent d'une poche à l'autre) : la perdre ici ferait retomber le tracker sur les
+          // réglages du mode, faux pour trois poches sur quatre, sans qu'aucun message ne le dise.
+          ...(s.sleeve ? { sleeve: s.sleeve } : {}),
           strategy: s.strategy || '',
           entry: parsePrice(s.entry),
           stop: parsePrice(s.stop),

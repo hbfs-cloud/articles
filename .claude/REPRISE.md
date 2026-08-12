@@ -1,208 +1,204 @@
-# REPRISE — mode « best » (moteur dtx) : état après le chantier du 12/08
+# REPRISE — mode « best » (moteur dtx) : chantier clos au 12/08
 
-Le contenu précédent listait 10 défauts (R1–R10) reproduits mais non corrigés. Ce chantier les a
-**implémentés**. Ce fichier dit maintenant ce qui est fermé, ce qui reste ouvert et pourquoi, et les
-conséquences mesurées à connaître avant le prochain sweep.
+Les dix défauts relevés en revue (R1–R10) sont **traités**. Il reste **un** point ouvert, R6, et il
+l'est par construction : le moteur ne sert pas la donnée qui le fermerait.
 
-Chaque correction porte sa commande de preuve, rejouée. Aucun gate n'a été désactivé pour faire
-passer un chiffre ; les deux écarts qui devaient rester rouges le sont toujours.
-
----
-
-## ✅ Corrigé
-
-### R1. Le tp1 des ordres moteur n'est plus fabriqué, et l'étiquette de stratégie est juste
-
-Le moteur n'émet aucun take-profit sur sa poche porteuse. `dtx-pool-bridge.js` fabriquait
-`tp1 = entry + 2R` uniquement pour franchir le `if (tp1 <= entry) continue` du sweep — un chiffre
-que personne n'avait décidé, qui conditionnait l'admission au simulateur et rendait le R/R de
-100 % des lignes égal à 2.
-
-Trois changements, tous bornés à la source `dtx_pool` :
-
-1. **`dtx-pool-bridge.js`** — `tp1` = celui du moteur, ou `null`. `rr` suit (`null` sans cible).
-2. **`sweep.js buildSetups`** — un setup sans cible est admis pour `dtx_pool` seulement ; toutes les
-   autres sources gardent le rejet, sinon un scanner cassé rendant `tp1: null` entrerait en silence.
-   `simulateTrade` propage `null` (jamais de `NaN` : un `NaN` comparé à `bar.high` est toujours
-   faux, la panne serait muette). Le gate R/R ne s'applique plus faute de R/R à mesurer.
-3. **`sweep.js detectStrategy`** — l'étiquette ne se devine plus par regex sur le `reason` du
-   moteur, qui est une **ligne de log** : `/momentum/i` matchait le mot « momentum » de la liste des
-   *features manquantes*, et les lignes `ROTATION_IN` tombaient sur le défaut `return 'momentum'`.
-   On lit le verbe que le moteur écrit en tête → `dtx_engine` / `dtx_rotation`.
-
-```
-node -e "const sw=require('./tools/sweep.js');const d=sw.parseScan('20260812').dtxPool;
-const by={};d.forEach(x=>by[x.strategy]=(by[x.strategy]||0)+1);
-console.log(d.length,'setups |',JSON.stringify(by),'| tp1 non-null:',d.filter(x=>x.tp1!=null).length)"
-# 18 setups | {"dtx_engine":11,"dtx_rotation":7} | tp1 non-null: 0
-```
-
-**Iso-comportement vérifié.** Les `STRATEGY_FILTERS_MAP` sont des listes d'EXCLUSION : renommer le
-tag aurait rendu les signaux moteur *admissibles* chez fortress_pm, candlestick_only,
-adaptive_fractal, hybrid_af, index_rotation… — un élargissement d'éligibilité obtenu en changeant un
-nom. L'exclusion est donc propagée par dérivation (`if (set.has('momentum')) set.add('dtx_engine')…`),
-pas réécrite dans 12 littéraux.
-
-```
-# parseScan HEAD vs HEAD+patch, toutes clés SAUF dtxPool
-scans: 117 | clés non-dtx comparées: 1755 | différences: 0
-```
-
-### R3 + R4. Liste blanche VERSIONNÉE, lue par les trois entrées
-
-`tools/trading-executor/config.json` est gitignoré : `git status`/`git diff` rendent vide sur ce
-chemin qu'on l'ait modifié ou non, donc toute affirmation « fichier intact » à son sujet était
-invérifiable. Et il ne protégeait qu'une porte sur trois — `daemon.js` prenait son mode dans
-`process.env.MODE` sans consulter la moindre autorisation.
-
-- **`data/executor-allowlist.json`** (nouveau, versionné) — refus par défaut : mode absent = refusé,
-  paire mode/courtier absente = refusée. Plafonds par mode (`maxNotionalUsd`, `maxPositions`).
-- **`tools/trading-executor/allowlist.js`** (nouveau) — porte unique. Fichier illisible = refus
-  global, jamais laissez-passer. Aucun contournement par variable d'environnement.
-- Câblé dans **`run-session.js`** (refus non bloquant pour le lot, compté `DENIED` au résumé),
-  **`daemon.js`** (refus au démarrage — un service qui tourne des heures avant de refuser est un
-  service qu'on croit protégé) et **`index.js`** (après la bascule `--paper`, donc sur le courtier
-  réellement visé).
-
-```
-node tools/trading-executor/index.js --plan /tmp/p-best.json           ; echo $?   # ⛔ … exit=1
-MODE=best  BROKER=paper  node tools/trading-executor/daemon.js         ; echo $?   # ⛔ … exit=1
-MODE=turbo BROKER=alpaca node tools/trading-executor/daemon.js         ; echo $?   # ⛔ … exit=1
-node tools/trading-executor/run-session.js --dry-run --mode turbo                  # 📋 DRY_RUN (passe)
-```
-
-`best` est refusé **explicitement**, avec sa raison, au lieu d'être protégé par une simple absence.
-`secured` et `tkl` (modes morts qui figuraient encore dans l'ancienne liste) sont sortis, tracés
-dans `_retiredModes`. `config.json` local a été aligné et son `_doc` dit désormais qu'il ne fait
-autorité sur rien.
-
-### R5. Garde de capacité dans `engine.js`
-
-`engine.js` n'avait aucun contrôle de buying power ni de plafond : les 18 ordres partaient, et c'est
-le courtier qui tranchait — ou pas. Le garde s'applique après le sizing, juste avant chaque
-soumission (voies VWAP et non-VWAP), et compte le notionnel **engagé** (positions reprises au
-courtier + entrées déjà soumises).
-
-Trois plafonds, le plus contraignant gagne : `max_notional_usd` (liste blanche), `nominal_usd`
-(plan), `buying_power` (courtier). Un plafond **non déclaré** est ignoré explicitement — `Number(null)`
-vaut 0 et passait `isFinite`, ce qui transformait un champ absent en plafond de 0 $ et refusait tout
-(défaut trouvé et corrigé en test, il aurait vidé un plan moteur pour la mauvaise raison). Aucun
-plafond connu du tout ⇒ refus, pas laissez-passer. Les refus sont journalisés nommément dans le
-résumé de session et dans le bloc `capacity` du log d'exécution.
-
-```
-# le cas mesuré : 18 ordres / 23 197 $ sur un compte à 10 000 $
-admis: 10 (9 991 $) | refusés: 8 | ex: NIQ — dépasse nominal_usd (plan) — engagé 9 279 $ + 833 $ > 10 000 $
-# avec un compte réellement dimensionné (BP 50 000 $) : admis 18 (23 197 $), refusés 0
-```
-
-`daemon.js` n'écrase plus `plan.account.nominal_usd` sur un plan moteur : ce `null` est délibéré
-(les quantités viennent du moteur et ne se redimensionnent pas ici), y réinjecter un capital maison
-redonnait au plan une apparence de dimensionnement maîtrisé qu'il n'a pas. Les plans scanner gardent
-le comportement d'avant.
-
-### R8. Cartes PNG régénérées
-
-Puppeteer démarre dans cet environnement (l'échec précédent n'était pas reproductible). Les 5 PNG
-sont rastérisés avec l'extraction corrigée (indexation par libellé) et vérifiés contre le snapshot :
-
-```
-turbo 93.12/-9.48/38.9/3.24/54 · dynamic 57.53/-18.94/35.1/2.16/57 · balanced 44.73/-13.87/45.6/1.23/79
-fortress 19.87/-4.43/39.4/1.8/109 · best 0/0/0/0/0        | tous == snapshot
-```
-
-La carte fortress publiait **+39,40 %** de rendement (= le win rate) et **−109,00 %** de drawdown
-(= le nombre de trades). Elle publie maintenant +19,87 % et −4,43 %. Contrôle visuel du PNG fait.
-
-### R9. `signalOrigin` déclaratif
-
-`gen-status-page.js` classait LLM / Scripted / Engine en devinant sur une liste fermée de 7
-`filterName` : tout mode non listé et non-dtx tombait dans « LLM ». Les deux défauts possibles sont
-également faux. La classe est désormais une propriété **déclarée** du mode.
-
-- Champ `signalOrigin` (`'llm' | 'scripted' | 'engine'`) dans `data/modes-config.json`, posé sur les
-  5 modes via **`tools/set-signal-origin.js`** (nouveau ; garde-fou : un mode `assetClass:'dtx'` ne
-  peut être que `engine`). Diff vérifié : 5 lignes ajoutées, rien d'autre n'a bougé.
-- L'inférence subsiste **uniquement** comme filet pour un mode non déclaré — et elle crie sur stderr.
-  `gen-status-page.js` tourne désormais sans un seul avertissement.
-
-### R10. `assertReplaySanity` couvre les portefeuilles retirés
-
-Les 6 stagings des portefeuilles supprimés (`book_honest`, `us_highvol`, `hvep`, `stockbox_pit`,
-`etf_us`, `ep`) restent dans `data/dtx/` — la règle « No Delete SSD » interdit de les supprimer sans
-validation par item. La garde ne lisait que `modes`, donc la vérification la plus discriminante (le
-ratio de trades) s'éteignait exactement sur les fichiers que plus personne ne surveille. Elle
-retombe maintenant sur `_retired.modes`, et le warning porte la mention.
-
-```
-node -e "console.log(require('./tools/dtx-scan.js').assertReplaySanity('book_honest',{total_trades:9500}))"
-# ['total_trades=9500 = 2.5× baseline 3843 [baseline RETIRÉE du 2026-08-12] (>2.2× ⇒ double-comptage/concaténation)']
-```
-
-Le `_note` du fichier de baselines affirmait le contraire ; il est corrigé. **Les 6 stagings ne sont
-toujours pas supprimés** : ce n'est pas mon appel, et ils sont désormais gardés.
+Ce fichier dit ce qui est fermé, ce qui reste, et surtout **une conclusion de la revue précédente qui
+était fausse** — la « fuite moteur→scanner » n'existe pas et n'a jamais existé.
 
 ---
 
-## ⚠️ Conséquences mesurées — à lire avant le prochain sweep
+## ✅ Fermé
 
-1. **Les scans historiques gardent leur tp1 à 2R.** Les séances du 13/07 au 11/08 portent un
-   `dtx_pool` avec le tp1 fabriqué (RR uniques : `[2]`), parce que leur staging n'existe plus pour
-   les régénérer honnêtement. Ils sont **inertes** : leur `universe` vaut `book_honest`/`us_highvol`/
-   `hvep`/`stockbox_pit`/`etf_us`/`ep`, et le seul mode dtx vivant filtre sur `universeFilter: 'best'`.
-   Seul le scan du 12/08 a été réingéré (18 lignes, tp1 `null`).
+| # | Défaut | Ce qui a changé |
+|---|--------|-----------------|
+| R1 | tp1 fabriqué à 2R, étiquette de stratégie fausse | tp1 du moteur ou `null` ; tags `dtx_engine`/`dtx_rotation` lus du verbe du moteur |
+| R2 | Le tracker ferme ce que le moteur tient | Sorties **par poche**, appliquées à la position |
+| R3 | Liste blanche non versionnée, invérifiable | `data/executor-allowlist.json`, refus par défaut |
+| R4 | `daemon.js` ignorait toute autorisation | Les **trois** entrées consultent la même porte |
+| R5 | Aucun garde de capacité | Trois plafonds dans `engine.js`, le plus contraignant gagne |
+| R7 | La poche du livre était perdue | **Lue** dans `DtxDecide.state`, 18/18 taguées |
+| R8 | Cartes PNG à chiffres faux | Rastérisées ; fortress publiait son win rate comme rendement |
+| R9 | Classe LLM/Scripted devinée | `signalOrigin` déclaré dans `modes-config` |
+| R10 | Garde de sanity éteinte sur 6 stagings | Retombe sur `_retired`, warning explicite |
 
-2. **La fuite moteur→scanner reste ouverte**, comme décidé. Un mode scanner (sans `universeFilter`)
-   peut admettre un candidat `dtx_pool` et le redimensionner selon ses règles. Depuis ce chantier ce
-   candidat n'a plus de cible, donc son exit repose entièrement sur la config du mode. Mesuré au
-   12/08 : **aucun** des 4 modes scanner n'en sélectionne un (`portfolio/v1/*/orders.json` → 0 ticker
-   dtx). L'effet est donc nul aujourd'hui, mais il n'est pas nul par construction. À trancher.
+### R7 puis R2 — le déblocage
 
-3. **Le garde de capacité change le comportement de turbo**, et c'est le même défaut que R5 sur un
-   autre mode : son plan porte `max_positions: 1`, `position_size_pct: 100`, et **5 ordres à
-   10 000 $ chacun** sur un compte à 10 000 $ — 50 000 $ d'intention. Rien ne l'appliquait ; le garde
-   admet maintenant 1 ordre et refuse 4, bruyamment. Soit le plan doit cesser d'émettre 5 ordres pour
-   1 place, soit `max_positions` est faux : à trancher, mais l'écart ne se voyait pas.
+R7 était présenté comme irrécupérable : un ordre CREATE ne porte que 7 champs, aucun ne nomme la
+poche. Mais `DtxDecide` renvoie aussi `state`, et **`state` est indexé par poche** :
+`state.<poche>.pm_state.position_open_dates` liste les symboles que cette poche tient. Partition
+exacte des 18 ordres du 12/08, sans recouvrement :
+
+```
+node -e "const d=require('./data/dtx/best.json');const by={};d.orders.forEach(o=>by[o.sleeve]=(by[o.sleeve]||0)+1);console.log(JSON.stringify(by),d.sleeveCoverage.tagged+'/'+d.sleeveCoverage.total)"
+# {"mx":8,"etf_us":7,"ep":2,"uhv_tp999":1} 18/18
+```
+
+Ce n'est pas une inférence (« GDX est un ETF donc `etf_us` ») : c'est une lecture de ce que le moteur
+déclare. Un symbole revendiqué par deux poches rend `null` et le dit.
+
+Le champ traverse désormais toute la chaîne — chaque étape était une liste blanche qui l'aurait perdu
+en silence : `mapOrder` (staging) → `scanner-parser` (signaux) → `sweep` (setups puis **trades**, pour
+qu'un trade scellé dise sous quelle règle il est sorti) → `gen-api` (API publique) → registre
+point-in-time. Un compteur `sleeveCoverage` dans le staging dit combien d'ordres n'ont pas pu être
+rattachés : si le moteur cessait de renvoyer `state`, le tracker retomberait sur les sorties du mode
+et cela se verrait au lieu de passer inaperçu.
+
+⚠️ `portfolio/v1/best/orders.json` publie encore `sleeve: null` sur les 18 ordres du 12/08 : cette
+séance était **déjà enregistrée** dans `data/dtx-engine-history.json`, qui est immuable par
+(mode, date). Le registre n'a pas été réécrit — forcer un backfill pour compléter un champ
+violerait précisément l'invariant qui fait sa valeur. La poche y sera dès la prochaine ingestion.
+
+R2 en découlait. Le DRIFT n'était pas « un chiffre diffère » mais **le tracker portait UN jeu de
+sorties là où le livre en a QUATRE** :
+
+| poche | % | take-profit moteur | timeout | ce que le tracker faisait |
+|---|---|---|---|---|
+| `uhv_tp999` | 70 | aucun (`999` = injoignable) | 14 | vendait 50 % à +30 % |
+| `ep` | 45 | **20 %**, sortie totale | 20 | idem |
+| `etf_us` | 25 | aucun (la rotation est l'exit) | aucun | idem |
+| `mx` | 15 | **25 %**, sortie totale | 14 | idem |
+
+Et la sémantique ne correspondait même pas : `take_profit_pct` est une sortie **totale** côté moteur
+(`pm_base.go` → `exitReason = TAKE_PROFIT` ferme la position), pas une prise partielle. Aucun réglage
+unique ne pouvait donc être juste — il l'était pour zéro poche sur quatre.
+
+Corrections : table versionnée `data/dtx-sleeve-exits.json` (transcription du yaml, comparée par
+`parity-check`), override par position dans `sweep.js`, et `partialTP`/`partialTPGain` désarmés sur
+le mode — aucune poche du livre ne prend de profit partiel. `horizon: 14` est **conservé** comme
+garde-fou du tracker pour `etf_us`, qui n'a ni take-profit ni timeout côté moteur ; déclaré comme
+garde-fou, pas comme règle du moteur.
+
+```
+# comportement par poche, barres synthétiques +8 %/séance
+uhv_tp999  expired  +45%  15j   ← ne coupe pas : c'est la queue qui porte le CAGR
+ep         tp1      +24%   4j   ← sortie totale à +20 % (remplie à 124 sur gap)
+etf_us     expired  +45%  15j   ← pas de cible ; horizon du mode en garde-fou
+mx         tp1      +25%   4j   ← sortie totale à +25 %
+sans poche expired  +45%  15j   ← comportement d'avant, inchangé
+```
+
+```
+node tools/parity-check.js --warn-only | tail -1
+# Total: 28 | OK: 21 | DRIFT: 0 | GAP (documented, non-blocking): 7
+```
+
+La ligne unique en DRIFT perpétuel est remplacée par **9 lignes** couvrant les 4 poches
+(take-profit + timeout chacune) plus l'absence de prise partielle. Si le moteur change un
+take-profit et que la transcription ne suit pas, la ligne concernée sort en DRIFT.
+
+### Non-régression
+
+```
+# simulateTrade, HEAD vs HEAD+patch, sur le cache de prix réel
+non-dtx : 11 928 simulations comparées, 0 différence
+dtx     :  2 240 simulations comparées, 0 différence
+```
+
+Le zéro côté dtx est attendu et vérifié : le seul scan portant un tag de poche est celui du 12/08,
+qui n'a **aucune barre postérieure** (la séance n'a pas encore eu lieu). Les sorties par poche
+mordront à la prochaine séance ; le tableau synthétique ci-dessus en est la preuve fonctionnelle.
 
 ---
 
-## ⛔ Non corrigé, volontairement
+## ⛔ Ce que la revue précédente affirmait à tort
 
-### R2. Le tracker ferme ce que le moteur tient (`partialTPGain` 30 · `horizon` 14)
+### La « fuite moteur→scanner » n'existe pas
 
-Toujours **ROUGE et VISIBLE** — c'est le comportement voulu, pas un oubli.
+`sweep.js` portait ce commentaire : « les 4 modes scanner n'ont aucun `excludeSources` et les ordres
+du moteur entrent bel et bien dans leur vivier ». **C'est faux**, et cette phrase a produit deux
+conclusions erronées dans la revue précédente : une « fuite ouverte et assumée », et le rejet d'un
+correctif (`excludeSources: ['dtx_pool']`) au motif qu'il « changerait l'éligibilité ».
+
+Le constructeur d'`excludeSources` donne à tout mode sans `assetClass` la liste **complète** des
+pools d'asset-class, `dtx_pool` compris — et les deux consommateurs l'appliquent : le backtest
+(`if (excludeSet.has(t.source)) continue`) et le constructeur d'ordres live
+(`.filter(s => !exclSources.has(s.source))`).
 
 ```
-node tools/parity-check.js --warn-only | grep take_profit_pct
-# best  uhv.take_profit_pct ↔ partialTPGain (%)  999  30  DRIFT
+turbo/dynamic/balanced/fortress → trade dtx_pool IGNORÉ
+best                            → trade dtx_pool ADMIS
 ```
 
-Désarmer `partialTP`/`trailingStop`/`horizon` change la stratégie suivie du mode. `horizon` surtout
-ne peut pas être aligné sans inventer un chiffre : le moteur ne publie pas d'horizon. Retirer le tp1
-fabriqué (R1) ne referme pas cet écart — le sweep sort toujours 50 % à +30 % et ferme à l'horizon.
-Le gate reste rouge tant que le propriétaire du mode n'a pas tranché.
+Conséquences : (1) le correctif écarté était déjà en place ; (2) les scans du 13/07 au 11/08, qui
+gardent le tp1 fabriqué à 2R faute de staging pour les régénérer, sont **inertes sur les deux
+chemins** — les modes scanner les excluent par source, `best` les exclut par `universeFilter`. Rien
+à réécrire. Le commentaire est corrigé dans `sweep.js`.
 
-### R6. La courbe publiée n'est pas celle du livre
+### Le plan turbo n'était pas un cas isolé
 
-`portfolio/v1/best/equity.json.engineBacktest` publie les statistiques **servies** (CAGR 70,9 ·
-MaxDD 27,2 · Sharpe 1,56 · 3 638 trades, `metrics_source: "book_served_stats"`), mais `equityCurve`
-reste la courbe de replay de la poche porteuse — un drawdown recalculé dessus rend 17,49 %. L'écart
-est **dit** dans `curve_warning`. Il ne se referme que le jour où le moteur sert la courbe du livre :
-la reconstruire ici serait exactement ce que `data/dtx/best.json` interdit
-(`note: "NE PAS reconstruire depuis DtxReplay.combined"`).
+Le garde de capacité (R5) a révélé le même défaut que sur `best`, sur les modes scanner. `MAX_ORDERS`
+était la constante 5, sans rapport avec les places du compte :
 
-### R7. Le champ `sleeve` est perdu
+```
+AVANT                                          APRÈS
+turbo     1 place  → 5 ordres = 50 000 $       1 ordre  = 10 000 $
+dynamic   1 place  → 5 ordres = 50 000 $       1 ordre  = 10 000 $
+balanced  3 places → 5 ordres = 16 665 $       3 ordres =  9 999 $
+fortress 10 places → 5 ordres =    250 $       5 ordres =    250 $  (inchangé)
+```
 
-`orderToSignal()` fait **transiter** `sleeve` dès que le staging le fournira, et refuse de le dériver
-(« GDX est un ETF donc `etf_us` » est une inférence, pas une donnée). Le staging ne le porte pas :
-aucune des 15 clés d'un ordre CREATE ne le contient. Conséquence assumée : le DRIFT R2 n'est pas
-diagnosticable à la granularité de la poche tant que l'ingest ne porte pas ce tag.
+La capacité n'est pas un chiffre à inventer : le mode la déclare déjà (`portfolioSize`, qui sert
+aussi à dimensionner chaque position). `MAX_ORDERS` la lit.
+
+⚠️ Les ordres de repêchage n'étaient **pas** des remplaçants : ils sortaient en `action: 'BUY'`, donc
+indiscernables du pick principal, et l'exécuteur les aurait tous envoyés. De vrais remplaçants
+demandent une action distincte que l'exécuteur sait interpréter — comme la cascade `alternates` de la
+voie moteur — pas des ordres d'achat supplémentaires. À faire si le besoin existe.
+
+Au passage, le plan moteur ne déclare plus `max_positions: 15` : 15 est la capacité de la poche
+porteuse, pas celle du livre (les quatre poches ont 15/15/7/10). Publier 15 face à 18 ordres rendait
+le plan contradictoire. Le champ vaut `null` — même raison que `nominal_usd` — et le garde de
+capacité borne alors sur le buying power réel du courtier, seule limite vraie à l'exécution.
+
+---
+
+## Reste ouvert — R6 : la courbe publiée n'est pas celle du livre
+
+`portfolio/v1/best/equity.json.engineBacktest` publie les statistiques **servies** du livre
+(CAGR 70,9 · MaxDD 27,2 · Sharpe 1,56 · 3 638 trades), mais `equityCurve` reste la courbe de replay
+de la poche porteuse : un drawdown recalculé dessus rend 17,49 %.
+
+Vérifié : la surface MCP ne sert pas la courbe du livre. `DtxReplay(best)` rend quatre replays **à
+capital fixe** (`uhv_tp999`, `ep`, `etf_us`, `mx`) plus un `combined` que le staging interdit
+explicitement d'utiliser (`note: "NE PAS reconstruire depuis DtxReplay.combined — il additionne des
+poches à capital fixe et minore rendement comme risque"`). Un livre à allocation dynamique ne se
+reconstitue pas en additionnant des poches rejouées à capital fixe.
+
+L'écart est **dit**, avec le chiffre exact qu'un consommateur obtiendrait :
+
+> `curve_warning`: « Do NOT recompute max drawdown from equityCurve — it is the sub-sampled replay
+> curve of the carrying sleeve, not the served book. Recomputing yields ~17.5 % vs the authoritative
+> 27.2 %. Use max_dd_pct above. »
+
+Ce point se ferme le jour où le moteur sert la courbe du livre. C'est une demande à porter côté
+systematic-tss, pas un correctif côté articles.
+
+---
+
+## Écarts VOULUS, non des dérives
+
+`parity-check` sort 7 GAP documentés, dont trois sur `best` — tous délibérés et datés :
+`minScore 0` (le seuil est interne au moteur et par poche, appliqué avant émission),
+`atrStopMult 0` et `maxStopPct 0` (le tracker honore le stop **du moteur**, décision du 2026-08-07).
+Ne pas les « corriger ».
+
+---
+
+## Trouvé en passant, hors périmètre
+
+`node tools/lessons-engine.test.js` — 9 échecs, **antérieurs à ce chantier** (identiques sur HEAD
+stashé). Ils portent sur `data/scanner-lessons.json` : les règles n'ont pas les champs canoniques
+`class`, `scope`, `effect`, `confidence_base`, `created_at`, `last_validated_at`,
+`invalidation_conditions`, `notes`. Les remplir demande un jugement éditorial par règle — les
+inventer serait exactement le genre de fabrication que ce chantier a passé son temps à retirer. À
+traiter avec le propriétaire des rétrospectives.
 
 ---
 
 ## Note d'intégrité
 
-`data/trading-plans/best-paper-20260812.json` a été supprimé par erreur pendant ce chantier (pris
-pour un artefact de test alors qu'il préexistait à la session, non suivi par git) puis **régénéré**
-avec le même générateur et les mêmes entrées — contenu équivalent, `generated_at` neuf. Aucune
-version committée n'existait pour comparer.
+`data/trading-plans/best-paper-20260812.json` a été supprimé par erreur pendant le chantier (pris
+pour un artefact de test alors qu'il préexistait, non suivi par git) puis régénéré avec le même
+générateur. Il l'a été de nouveau depuis, avec le générateur corrigé, comme les quatre plans scanner
+du jour.

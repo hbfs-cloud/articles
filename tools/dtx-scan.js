@@ -138,7 +138,42 @@ function parseScore(reason) {
   return m ? Number(m[1]) : null;
 }
 
-function mapOrder(or) {
+/**
+ * Index symbole → POCHE du livre, LU dans l'état que le moteur renvoie lui-même.
+ *
+ * POURQUOI (R7, fermé le 2026-08-12). Un ordre CREATE ne porte que 7 champs
+ * (symbol, side, order_type, qty, limit_price, stop_loss, reason) — aucun ne nomme la poche. On a
+ * longtemps cru le tag irrécupérable, donc le DRIFT des sorties (poches uhv/ep/etf_us/mx aux
+ * take-profit 999/20/aucun/25) non diagnosticable. Mais `DtxDecide` renvoie AUSSI `state`, et
+ * `state` est INDEXÉ PAR POCHE : `state.<poche>.pm_state.position_open_dates` liste les symboles
+ * que cette poche tient. Vérifié sur la séance du 2026-08-12 — partition exacte des 18 ordres :
+ * ep(NIQ,RNW) + etf_us(7) + mx(8) + uhv_tp999(NN), sans recouvrement.
+ *
+ * Ce n'est donc PAS une inférence (« GDX est un ETF donc etf_us »), c'est une LECTURE de ce que le
+ * moteur déclare. Un symbole revendiqué par deux poches est AMBIGU : on rend `null` et on le dit,
+ * plutôt que de trancher au hasard.
+ */
+function sleeveIndex(decision) {
+  const state = (decision && decision.state) || null;
+  if (!state || typeof state !== 'object') return { map: {}, conflicts: [] };
+  const map = Object.create(null);
+  const conflicts = [];
+  for (const [sleeve, blk] of Object.entries(state)) {
+    const pm = (blk && blk.pm_state) || null;
+    if (!pm) continue;
+    // position_open_dates est la liste faisant foi (présente même quand position_stops est vide —
+    // les poches de ROTATION n'émettent pas de stop, cf. etf_us).
+    const syms = Object.keys(pm.position_open_dates || {});
+    for (const s of syms) {
+      if (map[s] && map[s] !== sleeve) { conflicts.push(`${s} (${map[s]} vs ${sleeve})`); map[s] = null; continue; }
+      if (map[s] === null) continue; // déjà marqué ambigu
+      map[s] = sleeve;
+    }
+  }
+  return { map, conflicts };
+}
+
+function mapOrder(or, sleeves) {
   // dtx serializes OrderRequest in snake_case: {order_id,symbol,side,order_type,qty,limit_price,
   // stop_price,stop_loss,take_profit,reason,priority} plus optional execution metadata:
   // exec_options {gap_up_pct,gap_down_pct,vwap_weak_skip,regime…,slicer,fill_window…} and
@@ -166,6 +201,9 @@ function mapOrder(or) {
     reason: or.reason || null,
     priority: or.priority != null ? or.priority : null,
     orderId: or.order_id || null,
+    // POCHE du livre — lue dans decision.state (voir sleeveIndex). `null` = état absent ou symbole
+    // revendiqué par deux poches ; jamais deviné depuis le type d'actif.
+    sleeve: (sleeves && Object.prototype.hasOwnProperty.call(sleeves, or.symbol) ? sleeves[or.symbol] : null) || null,
     // Execution metadata so the status page / analyses can surface the gates a consumer must honor.
     execOptions: or.exec_options || null,
     alternates: alts,
@@ -314,6 +352,8 @@ function assertReplaySanity(portfolioId, metrics) {
 function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity, replayErr, engineLabel, engineMode, t0 }) {
   const create = (decision && decision.actions && decision.actions.CREATE) || [];
   const sanityWarnings = assertReplaySanity(cfg.id, metrics);
+  const { map: sleeves, conflicts: sleeveConflicts } = sleeveIndex(decision);
+  const untagged = create.filter((o) => !sleeves[o.symbol]).map((o) => o.symbol);
   return {
     mode: modeInfo.id,
     portfolioId: cfg.id,
@@ -326,7 +366,17 @@ function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity
     // otherwise the config lives only server-side (systematic.dailytickers.com).
     config: modeInfo.path ? path.relative(REPO_ROOT, modeInfo.path) : `MCP:${cfg.id}`,
     currency,
-    orders: create.map(mapOrder),
+    orders: create.map((o) => mapOrder(o, sleeves)),
+    // Traçabilité du tag de poche : combien d'ordres n'ont pas pu être rattachés, et pourquoi.
+    // Un staging où TOUS les ordres sont sans poche signale que le moteur a cessé de renvoyer
+    // `state` — le tracker retombe alors sur les sorties du mode, ce qui doit se voir.
+    sleeveCoverage: {
+      tagged: create.length - untagged.length,
+      total: create.length,
+      untagged,
+      conflicts: sleeveConflicts,
+      source: 'DtxDecide.state[<poche>].pm_state.position_open_dates',
+    },
     updates: (decision && decision.actions && decision.actions.UPDATE) || [],
     cancels: (decision && decision.actions && decision.actions.CANCEL) || [],
     metrics,
@@ -473,6 +523,6 @@ if (require.main === module) main();
 module.exports = {
   discoverModes, stagingStatus, writeStagingCompleteness, COMPLETENESS_MARKER, SCRIPTED_MODES,
   // Shared schema surface — reused by tools/dtx-mcp-ingest.js so the MCP path is byte-compatible.
-  buildStaging, writeStaging, stagingPathFor, extractReplayMetrics, assertReplaySanity, mapOrder, goLiveFor,
+  buildStaging, writeStaging, stagingPathFor, extractReplayMetrics, assertReplaySanity, mapOrder, sleeveIndex, goLiveFor,
   DEFAULT_FROM, STAGING_DIR, CONFIG_DIR, REPO_ROOT, PORTFOLIO_TO_MODE,
 };

@@ -1,0 +1,1539 @@
+{
+  "version": "1.0",
+  "dsl": "dailytickers-trading-plan",
+  "generated_at": "2026-08-12T18:25:18.132Z",
+  "valid_for": "2026-08-12",
+  "mode_status": {
+    "state": "live",
+    "since": "2026-08-12T00:00:00.000Z",
+    "reason": "Catalogue réduit à 5 modes le 2026-08-12 : best remplace les six paniers scriptés.",
+    "acceptsNewEntries": true,
+    "exitsOnly": false,
+    "forceLiquidate": false,
+    "publiclyVisible": true,
+    "tradingMode": "real",
+    "nextReviewAt": null
+  },
+  "broker": {
+    "name": "paper",
+    "type": "simulation",
+    "credentials": {
+      "api_key": "${BROKER_API_KEY}",
+      "api_secret": "${BROKER_API_SECRET}",
+      "base_url": "http://localhost:9999",
+      "note": "Replace ${BROKER_API_KEY} and ${BROKER_API_SECRET} with actual credentials. For paper trading, use sandbox URLs."
+    }
+  },
+  "account": {
+    "nominal_usd": null,
+    "currency": "USD",
+    "position_size_pct": null,
+    "max_positions": null,
+    "sizing_source": "engine"
+  },
+  "mode": {
+    "name": "best",
+    "asset_class": "dtx",
+    "exits_managed_by": "engine",
+    "engine": "systematic-tss",
+    "horizon_days": null,
+    "filter": "dtx_engine",
+    "min_score": null,
+    "rotation": "engine",
+    "breakeven_pct": 0,
+    "be_grace_days": 0,
+    "vix_kill": 35,
+    "trailing_stop": false,
+    "daily_trail_pct": 0,
+    "max_stop_pct": 0,
+    "atr_stop_mult": 0,
+    "stale_days": 0,
+    "entry_gate_pct": 0,
+    "partial_tp": false,
+    "partial_tp_pct": 0,
+    "sector_cap_max": 2,
+    "sizing_method": "engine_qty",
+    "target_risk_pct": null,
+    "correlation_cap": 0.8,
+    "cross_mode_dedup": false,
+    "regime_filters": {},
+    "dd_breaker_pct": 8,
+    "note": "Sizing, stops et sorties viennent du moteur. L'exécutant place les ordres tels quels et ne gère aucun TP, trailing ni horizon."
+  },
+  "session": {
+    "market": "US_EQUITY",
+    "timezone": "America/New_York",
+    "pre_market": "04:00",
+    "market_open": "09:30",
+    "market_close": "16:00",
+    "post_market": "20:00",
+    "extended_hours": false
+  },
+  "risk": {
+    "max_portfolio_heat_pct": "15.0",
+    "max_single_loss_pct": 3,
+    "max_slippage_pct": 1,
+    "max_spread_pct": 0.5,
+    "circuit_breaker": {
+      "daily_loss_pct": 8,
+      "action": "HALT_ALL_ORDERS",
+      "description": "If portfolio drops 8% intraday, cancel all pending orders and alert."
+    },
+    "correlation_limit": 0.8,
+    "max_sector_concentration": 2
+  },
+  "close_now": [],
+  "orders": [
+    {
+      "id": "ORD-001",
+      "action": "BUY",
+      "ticker": "BTG",
+      "broker_symbol": "BTG",
+      "broker": {
+        "symbol": "BTG"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 5.2,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 332,
+          "nominal_usd": 1726.4,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 3.77,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "BUY BTG @ $5.20 | Score=24 | Risk=27.4% | Size=$2K (11.5% equity) | MaxCorr=0.72 || ATR=4.3%, DistMA20=n/a, VolRatio=n/a, RSI=77.2, Mom=n/a || features=partial: dist_ma20,vol_ratio,momentum || Stop=$3.77 (27.4% below)"
+      },
+      "priority": 1
+    },
+    {
+      "id": "ORD-002",
+      "action": "BUY",
+      "ticker": "BWET",
+      "broker_symbol": "BWET",
+      "broker": {
+        "symbol": "BWET"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 347.64,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 2,
+          "nominal_usd": 695.28,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 278.11,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "ROTATION_IN [desk-guard: catastrophe stop 278.1117 (-20%)]"
+      },
+      "priority": 2
+    },
+    {
+      "id": "ORD-003",
+      "action": "BUY",
+      "ticker": "DV",
+      "broker_symbol": "DV",
+      "broker": {
+        "symbol": "DV"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 13.58,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 127,
+          "nominal_usd": 1724.66,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 10.290000000000001,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "BUY DV @ $13.58 | Score=16 | Risk=24.2% | Size=$2K (11.5% equity) | MaxCorr=0.39 || ATR=3.7%, DistMA20=n/a, VolRatio=n/a, RSI=69.4, Mom=n/a || features=partial: dist_ma20,vol_ratio,momentum || Stop=$10.29 (24.2% below)"
+      },
+      "priority": 3
+    },
+    {
+      "id": "ORD-004",
+      "action": "BUY",
+      "ticker": "GBUG",
+      "broker_symbol": "GBUG",
+      "broker": {
+        "symbol": "GBUG"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 49.01,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 14,
+          "nominal_usd": 686.14,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 39.21,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "ROTATION_IN [desk-guard: catastrophe stop 39.2096 (-20%)]"
+      },
+      "priority": 4
+    },
+    {
+      "id": "ORD-005",
+      "action": "BUY",
+      "ticker": "GDMN",
+      "broker_symbol": "GDMN",
+      "broker": {
+        "symbol": "GDMN"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 93.17,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 7,
+          "nominal_usd": 652.19,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 74.54,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "ROTATION_IN [desk-guard: catastrophe stop 74.5368 (-20%)]"
+      },
+      "priority": 5
+    },
+    {
+      "id": "ORD-006",
+      "action": "BUY",
+      "ticker": "GDX",
+      "broker_symbol": "GDX",
+      "broker": {
+        "symbol": "GDX"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 92.46000000000001,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 7,
+          "nominal_usd": 647.22,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 73.97,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "ROTATION_IN [desk-guard: catastrophe stop 73.9705 (-20%)]"
+      },
+      "priority": 6
+    },
+    {
+      "id": "ORD-007",
+      "action": "BUY",
+      "ticker": "IAUX",
+      "broker_symbol": "IAUX",
+      "broker": {
+        "symbol": "IAUX"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 1.7,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 1016,
+          "nominal_usd": 1727.2,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 1.24,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "BUY IAUX @ $1.70 | Score=31 | Risk=27.4% | Size=$2K (11.5% equity) | MaxCorr=0.00 || ATR=5.0%, DistMA20=n/a, VolRatio=n/a, RSI=66.1, Mom=n/a || features=partial: dist_ma20,vol_ratio,momentum || Stop=$1.24 (27.4% below)"
+      },
+      "priority": 7
+    },
+    {
+      "id": "ORD-008",
+      "action": "BUY",
+      "ticker": "JEDI",
+      "broker_symbol": "JEDI",
+      "broker": {
+        "symbol": "JEDI"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 30.85,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 23,
+          "nominal_usd": 709.55,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 24.68,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "ROTATION_IN [desk-guard: catastrophe stop 24.6815 (-20%)]"
+      },
+      "priority": 8
+    },
+    {
+      "id": "ORD-009",
+      "action": "BUY",
+      "ticker": "MSFO",
+      "broker_symbol": "MSFO",
+      "broker": {
+        "symbol": "MSFO"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 13.16,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 54,
+          "nominal_usd": 710.64,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 10.53,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "ROTATION_IN [desk-guard: catastrophe stop 10.5268 (-20%)]"
+      },
+      "priority": 9
+    },
+    {
+      "id": "ORD-010",
+      "action": "BUY",
+      "ticker": "NIQ",
+      "broker_symbol": "NIQ",
+      "broker": {
+        "symbol": "NIQ"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 16.990000000000002,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 49,
+          "nominal_usd": 832.51,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 11.9,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "BUY NIQ @ $16.99 | Score=62 | Risk=30.0% | Size=$1K (8.3% equity) | MaxCorr=0.48 || ATR=5.1%, DistMA20=n/a, VolRatio=6.9x, RSI=87.0, Mom=17.4% || features=partial: dist_ma20 || Stop=$11.90 (30.0% below)"
+      },
+      "priority": 10
+    },
+    {
+      "id": "ORD-011",
+      "action": "BUY",
+      "ticker": "NN",
+      "broker_symbol": "NN",
+      "broker": {
+        "symbol": "NN"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 18.28,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 160,
+          "nominal_usd": 2924.8,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 12.83,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "BUY NN @ $18.28 | Score=95 | Risk=29.8% | Size=$3K (8.4% equity) | MaxCorr=0.00 || ATR=7.3%, DistMA20=28.2%, VolRatio=3.3x, RSI=78.5, Mom=9.2% || Stop=$12.83 (29.8% below)"
+      },
+      "priority": 11
+    },
+    {
+      "id": "ORD-012",
+      "action": "BUY",
+      "ticker": "OTF",
+      "broker_symbol": "OTF",
+      "broker": {
+        "symbol": "OTF"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 12.02,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 143,
+          "nominal_usd": 1718.86,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 9.620000000000001,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "BUY OTF @ $12.02 | Score=16 | Risk=20.0% | Size=$2K (11.5% equity) | MaxCorr=0.40 || ATR=3.0%, DistMA20=n/a, VolRatio=n/a, RSI=69.2, Mom=n/a || features=partial: dist_ma20,vol_ratio,momentum || Stop=$9.62 (20.0% below)"
+      },
+      "priority": 12
+    },
+    {
+      "id": "ORD-013",
+      "action": "BUY",
+      "ticker": "OWL",
+      "broker_symbol": "OWL",
+      "broker": {
+        "symbol": "OWL"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 12.63,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 136,
+          "nominal_usd": 1717.68,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 9.65,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "BUY OWL @ $12.63 | Score=20 | Risk=23.6% | Size=$2K (11.4% equity) | MaxCorr=0.40 || ATR=3.6%, DistMA20=n/a, VolRatio=n/a, RSI=77.0, Mom=n/a || features=partial: dist_ma20,vol_ratio,momentum || Stop=$9.65 (23.6% below)"
+      },
+      "priority": 13
+    },
+    {
+      "id": "ORD-014",
+      "action": "BUY",
+      "ticker": "PLTY",
+      "broker_symbol": "PLTY",
+      "broker": {
+        "symbol": "PLTY"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 39.56,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 18,
+          "nominal_usd": 712.08,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 31.650000000000002,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "ROTATION_IN [desk-guard: catastrophe stop 31.6500 (-20%)]"
+      },
+      "priority": 14
+    },
+    {
+      "id": "ORD-015",
+      "action": "BUY",
+      "ticker": "RNW",
+      "broker_symbol": "RNW",
+      "broker": {
+        "symbol": "RNW"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 7.0200000000000005,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 119,
+          "nominal_usd": 835.38,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 5.51,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "BUY RNW @ $7.02 | Score=70 | Risk=21.6% | Size=$1K (8.4% equity) | MaxCorr=0.00 || ATR=3.3%, DistMA20=n/a, VolRatio=19.1x, RSI=67.2, Mom=10.4% || features=partial: dist_ma20 || Stop=$5.51 (21.6% below)"
+      },
+      "priority": 15
+    },
+    {
+      "id": "ORD-016",
+      "action": "BUY",
+      "ticker": "STGW",
+      "broker_symbol": "STGW",
+      "broker": {
+        "symbol": "STGW"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 9.51,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 181,
+          "nominal_usd": 1721.31,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 7.04,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "BUY STGW @ $9.51 | Score=19 | Risk=26.0% | Size=$2K (11.5% equity) | MaxCorr=0.37 || ATR=4.0%, DistMA20=n/a, VolRatio=n/a, RSI=74.9, Mom=n/a || features=partial: dist_ma20,vol_ratio,momentum || Stop=$7.04 (26.0% below)"
+      },
+      "priority": 16
+    },
+    {
+      "id": "ORD-017",
+      "action": "BUY",
+      "ticker": "TGB",
+      "broker_symbol": "TGB",
+      "broker": {
+        "symbol": "TGB"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 9.040000000000001,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 191,
+          "nominal_usd": 1726.64,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 6.5600000000000005,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "BUY TGB @ $9.04 | Score=16 | Risk=27.4% | Size=$2K (11.5% equity) | MaxCorr=0.68 || ATR=5.6%, DistMA20=n/a, VolRatio=n/a, RSI=67.0, Mom=n/a || features=partial: dist_ma20,vol_ratio,momentum || Stop=$6.56 (27.4% below)"
+      },
+      "priority": 17
+    },
+    {
+      "id": "ORD-018",
+      "action": "BUY",
+      "ticker": "TIC",
+      "broker_symbol": "TIC",
+      "broker": {
+        "symbol": "TIC"
+      },
+      "source": "engine",
+      "engine": {
+        "as_of": "2026-08-12",
+        "engine_mode": "mcp",
+        "note": "Ordre décidé par le moteur systematic-tss. Quantité, type et stop repris tels quels ; ce générateur ne les recalcule pas."
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 10.8,
+        "size": {
+          "method": "ENGINE_QTY",
+          "shares": 160,
+          "nominal_usd": 1728,
+          "pct_of_portfolio": null,
+          "description": "Quantité imposée par le moteur — ne pas redimensionner côté exécution."
+        },
+        "valid_from": "2026-08-12T09:30:00-04:00",
+        "valid_until": "2026-08-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "managed_by": "engine",
+        "stop_loss": {
+          "type": "STOP",
+          "price": 7.84,
+          "trailing": false,
+          "description": "Stop porté par le moteur. Ne pas trailer ni replafonner côté exécution."
+        },
+        "take_profit_1": null,
+        "take_profit_2": null,
+        "time_exit": null,
+        "description": "Le moteur pilote les sorties (rotation/stop). Aucun TP ni horizon n'est fabriqué ici ; la sortie arrive comme un ordre du plan suivant."
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": null,
+        "strategy": "Engine",
+        "rr": null,
+        "sharia": null,
+        "thesis": "BUY TIC @ $10.80 | Score=23 | Risk=27.4% | Size=$2K (11.5% equity) | MaxCorr=0.60 || ATR=4.7%, DistMA20=n/a, VolRatio=n/a, RSI=81.2, Mom=n/a || features=partial: dist_ma20,vol_ratio,momentum || Stop=$7.84 (27.4% below)"
+      },
+      "priority": 18
+    }
+  ],
+  "error_handlers": {
+    "INSUFFICIENT_MARGIN": {
+      "action": "REDUCE_SIZE",
+      "reduce_pct": 50,
+      "retry": true,
+      "max_retries": 1
+    },
+    "SYMBOL_NOT_FOUND": {
+      "action": "SKIP",
+      "log_level": "ERROR"
+    },
+    "CONNECTION_LOST": {
+      "action": "RECONNECT",
+      "max_retries": 10,
+      "backoff_ms": [
+        1000,
+        2000,
+        5000,
+        10000,
+        30000
+      ],
+      "on_failure": "CANCEL_PENDING_AND_ALERT"
+    },
+    "PARTIAL_FILL": {
+      "action": "KEEP_PARTIAL",
+      "adjust_exits": true,
+      "description": "Keep partial fill. Adjust TP/SL quantities proportionally."
+    },
+    "ORDER_REJECTED": {
+      "action": "LOG_AND_SKIP",
+      "log_level": "WARN"
+    },
+    "MARKET_HALTED": {
+      "action": "WAIT_RESUME",
+      "timeout_min": 60,
+      "on_timeout": "CANCEL_ORDER"
+    },
+    "RATE_LIMITED": {
+      "action": "BACKOFF",
+      "delay_ms": 5000,
+      "max_retries": 3
+    },
+    "DUPLICATE_ORDER": {
+      "action": "SKIP",
+      "description": "Order for this symbol already exists. Idempotent — skip."
+    }
+  },
+  "lifecycle": {
+    "on_start": [
+      {
+        "step": "CHECK_MARKET_STATUS",
+        "description": "Verify market is open or will open today"
+      },
+      {
+        "step": "SYNC_ACCOUNT",
+        "description": "Fetch current account balance, buying power, positions"
+      },
+      {
+        "step": "RECONCILE_POSITIONS",
+        "description": "Compare broker positions with expected positions. Alert on discrepancy."
+      },
+      {
+        "step": "CHECK_VIX",
+        "threshold": 35,
+        "action": "HALT_IF_ABOVE",
+        "description": "If VIX > 35, halt all new orders"
+      },
+      {
+        "step": "LOG_STATE",
+        "description": "Log initial account state for audit trail"
+      }
+    ],
+    "on_fill": [
+      {
+        "step": "PLACE_STOP",
+        "description": "Place the engine stop only. No TP, no bracket — the engine owns the exit."
+      },
+      {
+        "step": "LOG_FILL",
+        "description": "Record fill price, time, slippage, fees"
+      },
+      {
+        "step": "NOTIFY",
+        "channel": "telegram",
+        "description": "Send fill notification to Telegram"
+      }
+    ],
+    "on_exit": [
+      {
+        "step": "CANCEL_REMAINING_EXITS",
+        "description": "Cancel the other side (SL if TP hit, TP if SL hit)"
+      },
+      {
+        "step": "LOG_EXIT",
+        "description": "Record exit price, P&L, hold time"
+      },
+      {
+        "step": "CHECK_ROTATION",
+        "description": "If slot freed, check for pending rotation candidates"
+      },
+      {
+        "step": "UPDATE_PORTFOLIO",
+        "description": "Update local portfolio state file"
+      }
+    ],
+    "on_breakeven": [
+      {
+        "step": "MODIFY_STOP",
+        "description": "Move stop loss to entry price (+ spread buffer)"
+      },
+      {
+        "step": "LOG_BREAKEVEN",
+        "description": "Record breakeven activation"
+      }
+    ],
+    "on_horizon_expiry": [
+      {
+        "step": "CLOSE_AT_MARKET",
+        "description": "Submit market close order at next open"
+      },
+      {
+        "step": "CANCEL_EXITS",
+        "description": "Cancel any pending TP/SL orders for this position"
+      }
+    ],
+    "on_error": [
+      {
+        "step": "LOG_ERROR",
+        "description": "Record error with full context"
+      },
+      {
+        "step": "LOOKUP_HANDLER",
+        "description": "Find matching error_handler and execute action"
+      },
+      {
+        "step": "NOTIFY_IF_CRITICAL",
+        "description": "Alert on CONNECTION_LOST, CIRCUIT_BREAKER, or unknown errors"
+      }
+    ],
+    "on_end": [
+      {
+        "step": "CANCEL_UNFILLED",
+        "description": "Cancel any GTC orders that were not filled today"
+      },
+      {
+        "step": "EXPORT_TRADES",
+        "description": "Write execution log to trades-YYYYMMDD.json"
+      },
+      {
+        "step": "SUMMARY",
+        "description": "Print session summary: fills, skips, errors, P&L"
+      }
+    ]
+  },
+  "broker_notes": {}
+}
