@@ -4880,9 +4880,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 2 A+ RISK-ON · OXY, MDT",
-    "desc": "Le score de régime retenu est 0,83 sur l'échelle haussière, en RISK-ON. Les quatre grands indices américains montent le 12 août : SPY +0,40 %, QQQ +0,99 %, IWM +0,64 %, DIA +0,07 %. Le Russell, deuxième derrière le Nasdaq, dit que la hausse n'est pas confinée aux plus grosses capitalisations. Le VIX...",
-    "tags": "us,energy,healthcare,technique,trade-idea",
+    "title": "Top 8 A+ RISK-ON · OXY, COMP, CLF, HL, MDT, CHWY, ZGN, DRH",
+    "desc": "Le classifieur probabiliste place la séance en risk-on (probabilité 0,53, neutre 0,47, aucune probabilité de repli marqué ou de crise à cinq séances). Rendement attendu du S&P +0,28 %, repli attendu 1,97 %. VIX à 15,3 et leadership des petites capitalisations confirment l'appétit pour le risque.",
+    "tags": "us,trade-idea,technique,momentum,energy,materials,healthcare",
     "grade": "",
     "href": "/scanner/20260813/",
     "date": "Jeudi 13 août 2026"
