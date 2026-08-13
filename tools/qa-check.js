@@ -721,31 +721,11 @@ check('scanner/status: pas de ticker en doublon entre Pending Orders et Open Pos
   if (html.includes('>undefined<') || html.includes('">undefined"')) return '"undefined" brut trouvé dans le HTML';
 });
 
-// ─── Check 23: Media pipeline — result.json récent pour le dernier article ──
-warn('media pipeline: result.json généré dans les 24h', () => {
-  const fs = require('fs');
-  const path = require('path');
-  const mediaBase = '/tmp/mw-media';
-  if (!fs.existsSync(mediaBase)) return 'répertoire /tmp/mw-media absent (pipeline jamais lancé)';
-  // Find most recent result.json
-  let newest = null;
-  let newestMtime = 0;
-  try {
-    for (const dir of fs.readdirSync(mediaBase)) {
-      const p = path.join(mediaBase, dir, 'result.json');
-      if (fs.existsSync(p)) {
-        const mtime = fs.statSync(p).mtimeMs;
-        if (mtime > newestMtime) { newestMtime = mtime; newest = p; }
-      }
-    }
-  } catch {}
-  if (!newest) return 'aucun result.json trouvé sous /tmp/mw-media';
-  const ageH = (Date.now() - newestMtime) / 3600000;
-  if (ageH > 24) return `result.json trop vieux: ${Math.round(ageH)}h (relancer generate-media.mjs)`;
-  const r = JSON.parse(fs.readFileSync(newest, 'utf8'));
-  if (!r.youtubeId) return `result.json présent mais youtubeId null — upload YouTube a échoué`;
-  if (!r.audioPath || !fs.existsSync(r.audioPath)) return `audioPath absent ou fichier manquant`;
-});
+// ─── Check 23: RETIRÉ (2026-08-13) — le pipeline média (vidéo/YouTube) est hors périmètre
+// du QA de publication d'articles. Il écrivait dans /tmp/mw-media (artefact local, jamais commité),
+// donc son absence était systématiquement flaggée sur toute machine n'ayant pas lancé de vidéo —
+// bruit permanent sans rapport avec l'intégrité d'un scan/daily/weekly. Le suivi média, s'il doit
+// exister, vit dans son propre outil, pas dans qa-check.
 
 // ─── Check 24: VWAP no-lookahead spot-check ──────────────────────────────────
 warn('backtest-trades: VWAP in plausible range vs actualEntry (0.5–2×)', () => {
@@ -1307,8 +1287,14 @@ check('scanner/status: latest snapshot positions consistent with backtest-trades
 // We read the SWEEP cache ({ticker}.json) since that's what determined exitPrice.
 warn('backtest-trades: pending exitPrice matches sweep cache', () => {
   const bt = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json'), 'utf8'));
-  const cacheDir = path.join(ROOT, 'data/.price-cache');
-  if (!fs.existsSync(cacheDir)) return 'price-cache dir missing';
+  // Le cache prix est un ARTEFACT RUNTIME dérivé : sweep le (re)construit depuis les prix Yahoo/MCP
+  // via tools/lib/price-cache. Son absence sur un clone frais ou avant le premier sweep est NORMALE
+  // (rien à vérifier — reconstruit au prochain sweep), pas une anomalie. On lit par l'API canonique
+  // readHistory(), qui gère le format daté partitionné (data/.price-cache/<date>/<interval>/<market>/
+  // <ticker>.json) ET l'ancien format plat (fallback legacy) — l'ancien check lisait UNIQUEMENT le
+  // format plat mort et flaggait donc « dir missing » à tort en permanence.
+  let priceCache;
+  try { priceCache = require('./lib/price-cache'); } catch { return null; }
 
   const seen = new Set();
   const drifts = [];
@@ -1321,29 +1307,25 @@ warn('backtest-trades: pending exitPrice matches sweep cache', () => {
       if (seen.has(tk)) continue;
       seen.add(tk);
 
-      // sweep's cache: {ticker}.json (dict keyed by date)
-      const sweepCachePath = path.join(cacheDir, `${tk}.json`);
-      if (!fs.existsSync(sweepCachePath)) continue;
+      let history;
+      try { history = priceCache.readHistory(tk); } catch { history = null; }
+      if (!history || typeof history !== 'object' || Array.isArray(history)) continue;
+      const dates = Object.keys(history).sort();
+      if (!dates.length) continue;
+      const lastDate = dates[dates.length - 1];
+      const lastBar = history[lastDate];
+      const latestClose = lastBar?.close ?? lastBar?.c;
+      if (latestClose == null || latestClose === 0) continue;
 
-      try {
-        const history = JSON.parse(fs.readFileSync(sweepCachePath, 'utf8'));
-        if (typeof history !== 'object' || Array.isArray(history)) continue;
-        const dates = Object.keys(history).sort();
-        if (!dates.length) continue;
-        const lastDate = dates[dates.length - 1];
-        const lastBar = history[lastDate];
-        const latestClose = lastBar?.close ?? lastBar?.c;
-        if (latestClose == null || latestClose === 0) continue;
-
-        const drift = Math.abs(t.exitPrice - latestClose) / latestClose;
-        if (drift > 0.001) {
-          drifts.push(`${tk}: exitPrice=${t.exitPrice.toFixed(2)} vs cache[${lastDate}]=${latestClose.toFixed(2)} (${(drift * 100).toFixed(1)}%)`);
-        }
-      } catch (e) { /* skip */ }
+      const drift = Math.abs(t.exitPrice - latestClose) / latestClose;
+      if (drift > 0.001) {
+        drifts.push(`${tk}: exitPrice=${t.exitPrice.toFixed(2)} vs cache[${lastDate}]=${latestClose.toFixed(2)} (${(drift * 100).toFixed(1)}%)`);
+      }
     }
   }
 
   if (drifts.length) return `MtM drift — re-run sweep: ${drifts.join(' | ')}`;
+  return null; // cache absent ou zéro dérive → rien à signaler
 });
 
 check('backtest-trades: no breakeven artifacts (pnlPct=0 with exitPrice!=actualEntry)', () => {
