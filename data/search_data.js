@@ -4881,7 +4881,7 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Top 8 A+ RISK-ON · OXY, COMP, CLF, HL, MDT, CHWY, ZGN, DRH",
-    "desc": "Le classifieur probabiliste place la séance en risk-on (probabilité 0,53, neutre 0,47, aucune probabilité de repli marqué ou de crise à cinq séances). Rendement attendu du S&P +0,28 %, repli attendu 1,97 %. VIX à 15,3 et leadership des petites capitalisations confirment l'appétit pour le risque.",
+    "desc": "Le régime ressort risk-on : l'état domine à 53 % de probabilité contre 47 % au neutre, sans aucune probabilité de repli marqué ni de crise à cinq séances — c'est cette absence de bascule qui donne le score agrégé de 0,85. Rendement attendu du S&P +0,28 %, repli attendu 1,97 %. VIX à 15,3 et leadersh...",
     "tags": "us,trade-idea,technique,momentum,energy,materials,healthcare",
     "grade": "",
     "href": "/scanner/20260813/",
