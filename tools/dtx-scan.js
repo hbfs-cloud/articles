@@ -404,7 +404,16 @@ function writeStaging(out, outPath) {
       if (prev && prev.metricsSource === 'book_served_stats' && prev.metrics) {
         out.metrics = prev.metrics;
         out.metricsSource = prev.metricsSource;
+        // La courbe ET SA PROVENANCE. Ne préserver que `equity` laissait tomber
+        // `equityResolution`/`equitySource` à chaque ré-ingestion nocturne — or gen-api teste
+        // `equityResolution === 'daily'` pour publier la courbe DU LIVRE. Sans eux il retombait sur
+        // la branche de repli et republiait l'avertissement « ceci est la courbe de la poche, ne
+        // recalculez pas le drawdown » sur une courbe qui EST celle du livre. Une donnée conservée
+        // sans son étiquette de provenance redevient une donnée non identifiée.
         if (prev.equity) out.equity = prev.equity;
+        if (prev.equityResolution) out.equityResolution = prev.equityResolution;
+        if (prev.equitySource) out.equitySource = prev.equitySource;
+        if (prev.equityVerifiedAt) out.equityVerifiedAt = prev.equityVerifiedAt;
       }
     }
   } catch (_) { /* staging illisible : on écrit la version fraîche */ }

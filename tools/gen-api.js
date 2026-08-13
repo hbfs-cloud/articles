@@ -458,6 +458,11 @@ function writeMode(mode, prefix) {
   const _served = _staged && _staged.metricsSource === 'book_served_stats' && _staged.metrics
     ? _staged.metrics : null;
   const _engMetrics = _served || ((mode.engine_decision || {}).metrics) || null;
+  // La courbe publiée est-elle bien celle du livre ? Comparaison de longueur avec le staging —
+  // une métadonnée qui décrit un autre objet que celui servi est pire que pas de métadonnée.
+  const _stagedPts = (_staged && _staged.equity && (_staged.equity.dates||[]).length) || 0;
+  const _pubPts = (equity && ((equity.d && equity.d.length) || (equity.dates && equity.dates.length))) || 0;
+  const _curveIsBook = !!(_served && _staged && _staged.equityResolution === 'daily' && _stagedPts > 1 && _pubPts === _stagedPts);
   const _engineBacktest = _engMetrics ? {
     source: _served
       ? 'systematic-tss (dtx) — statistiques SERVIES du livre (data/dtx staging, metricsSource=book_served_stats)'
@@ -482,8 +487,15 @@ function writeMode(mode, prefix) {
     // qui n'était pas celle des chiffres, ce qui n'est plus vrai. On publie à la place ce qu'il faut
     // savoir pour recalculer JUSTE : le dénominateur du CAGR n'est pas le capital initial mais le
     // capital ENGAGÉ (les pourcentages des poches somment à 155), et l'annualisation est en séances.
-    curve_resolution: _staged && _staged.equityResolution === 'daily' ? 'daily' : 'rebalance dates (~13 calendar days), NOT daily',
-    ..._served && _staged && _staged.equityResolution === 'daily' ? {
+    // ⚠️ La métadonnée doit décrire la courbe RÉELLEMENT PUBLIÉE, pas celle du staging.
+    // Défaut introduit le 2026-08-12 et attrapé le 13 : dès que le sweep scelle le mode, la page de
+    // statut cesse de splicer la courbe de backtest et `equityCurve` ne porte plus que le suivi
+    // live (1 point au démarrage). Les champs annonçaient pourtant « curve_is_book: true » et une
+    // note expliquant comment y recalculer le CAGR — une notice de lecture pour une courbe absente.
+    // On exige donc que la courbe publiée ait la MÊME LONGUEUR que celle du staging : c'est le seul
+    // moyen de savoir qu'on décrit bien le même objet.
+    curve_resolution: _curveIsBook ? 'daily' : 'live track since launch (backtest curve served separately)',
+    ..._curveIsBook ? {
       curve_is_book: true,
       curve_source: 'DtxBookEquity (systematic-tss) — même run que les statistiques ci-dessus',
       // Lisibles par un programme, pas seulement dans la phrase ci-dessous : ce sont les deux
