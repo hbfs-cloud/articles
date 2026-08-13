@@ -1,17 +1,13 @@
 # dtx-scan staging. The cloud pipeline (no systematic-tss, no network) READS committed staging;
 # a systematic-tss+network host (dev nightly / ser) refreshes + commits it BEFORE the 23h routine.
 #
-# dtx MCP v15 cut-over (2026-07-13): only the 6 cost-honest viable strategies are wired
-# (DTX_STAGING_MAP), so only those are versioned. Everything else (legacy scripted books +
-# unwired portfolios + machine-local engine state) stays ignored — regenerable byproducts.
+# dtx MCP catalogue cut-over (2026-08-12): `best` is the SOLE portfolio of the catalogue — it
+# aggregates and replaces the six legacy books (book_honest, ep, etf_us, hvep, stockbox_pit,
+# us_highvol), which were removed on 2026-08-13 (superseded, unreferenced by DTX_STAGING_MAP /
+# dtx-pool-bridge). Only `best` is wired and versioned; everything else (legacy books, unwired
+# portfolios, machine-local engine state) stays ignored — regenerable byproducts.
 *.json
 state/
-!us_highvol.json
-!etf_us.json
-!stockbox_pit.json
-!book_honest.json
-!hvep.json
-!ep.json
 # best — seul portefeuille du catalogue depuis le 2026-08-12. Sans cette
 # exception, le staging n'est pas versionné : la routine cloud ne le voit pas,
 # le pont est sauté et le panneau du mode ressort VIDE.

@@ -1471,6 +1471,34 @@ async function statusPageSmokeCheck() {
         resources: 'usable',
         url: 'file://' + statusPath,
         virtualConsole,
+        // jsdom ne fournit ni fetch, ni contexte canvas 2d, ni matchMedia/*Observer — APIs que le
+        // dashboard live utilise et que TOUT navigateur réel possède. Leur absence lève des
+        // ReferenceError/TypeError qui sont des ARTEFACTS d'environnement, pas des bugs de boot
+        // (le « fetch is not defined » passait d'ailleurs à travers FATAL_RE malgré l'intention de
+        // l'ignorer). On les stube AVANT le parse pour que le smoke n'attrape que les VRAIES erreurs
+        // JS du dashboard (fonction non définie, typo, SyntaxError).
+        beforeParse(window) {
+          window.fetch = () => new Promise(() => {}); // ne résout jamais : le boot avance, zéro réseau
+          const ctx2d = { canvas: null };
+          const noop = function () { return ctx2d; };
+          for (const m of ['clearRect', 'fillRect', 'strokeRect', 'beginPath', 'moveTo', 'lineTo',
+            'arc', 'arcTo', 'ellipse', 'stroke', 'fill', 'save', 'restore', 'translate', 'scale',
+            'rotate', 'setTransform', 'resetTransform', 'transform', 'closePath', 'bezierCurveTo',
+            'quadraticCurveTo', 'fillText', 'strokeText', 'setLineDash', 'getLineDash', 'drawImage',
+            'putImageData', 'rect', 'clip', 'roundRect']) ctx2d[m] = noop;
+          ctx2d.measureText = () => ({ width: 0 });
+          ctx2d.getImageData = () => ({ data: [] });
+          ctx2d.createLinearGradient = () => ({ addColorStop() {} });
+          ctx2d.createRadialGradient = () => ({ addColorStop() {} });
+          ctx2d.createPattern = () => null;
+          window.HTMLCanvasElement.prototype.getContext = () => ctx2d;
+          if (!window.matchMedia) window.matchMedia = () => ({ matches: false, media: '',
+            onchange: null, addEventListener() {}, removeEventListener() {}, addListener() {},
+            removeListener() {}, dispatchEvent() { return false; } });
+          const Obs = class { observe() {} unobserve() {} disconnect() {} takeRecords() { return []; } };
+          if (!window.IntersectionObserver) window.IntersectionObserver = Obs;
+          if (!window.ResizeObserver) window.ResizeObserver = Obs;
+        },
       });
       await new Promise(r => setTimeout(r, 2000)); // laisser les scripts asynchrones s'exécuter
       dom.window.close();
