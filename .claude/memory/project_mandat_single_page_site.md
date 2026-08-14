@@ -1,10 +1,10 @@
 ---
 name: mandat-single-page-site
-description: Projet différé (2026-08-14) — site ultra-simple une page présentant le portefeuille dtx « mandat » (ordres du jour, trades, equity curve, metrics, jauge de bande 60-85%)
+description: Projet LIVRÉ v1 le 2026-08-14 (page https://articles.dailytickers.com/mandat/, commit 3a7c9ba8e — CAGR 34,3%, DD 18,1%, Sharpe 1,77, historique J0 démarré ; chronique hebdo = série series/chronique-mandat/) — site ultra-simple une page présentant le portefeuille dtx « mandat » (ordres du jour, trades, equity curve, metrics, jauge de bande 60-85%)
 type: project
 ---
 
-# Mandat — site une page (différé, décidé le 2026-08-14)
+# Mandat — site une page (v1 LIVRÉE le 2026-08-14)
 
 **Demande user** : un site ultra-simple, UNE page, présentant uniquement le portefeuille **`mandat`**
 du moteur systematic (« Mandat 70/30 — cœur BEST v2 (bande 60-85%) + panier SCHD/PDBC/GLD », créé
