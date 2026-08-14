@@ -1419,6 +1419,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ALT",
+    "exchange": "NASDAQ · Healthcare",
+    "name": "ALT — ALT à 2,90 $ : short interest 26,7% du flottant contre 29,0%, aucune dilution nouvelle ...",
+    "title": "ALT — ALT à 2,90 $ : short interest 26,7% du flottant contre 29,0%, aucune dilution nouvelle ...",
+    "desc": "Contrôle du 14 août : ALT cote 2,88 $, toujours sous ses trois moyennes, avec un 8-K de résultats déposé le 12 août dont les chiffres ne sont pas lisibles dans nos données. Plan suspendu, note ramenée de C+ à C.",
+    "tags": "us,healthcare,biotech,speculative,trade-idea",
+    "grade": "C",
+    "href": "/analyses/ALT/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "IOVA",
     "exchange": "NASDAQ · Healthcare",
     "name": "IOVA — IOVA à 6,60 $ : +53% depuis juillet, seconde cible dépassée, T2 battu. Aucun S-3 ni 424...",
@@ -2155,19 +2168,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,ai,energy,trade-idea",
     "grade": "C",
     "href": "/analyses/APLD/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "ALT",
-    "exchange": "NASDAQ · Healthcare",
-    "name": "ALT — ALT à $2,96 : cash ~$331M vs mcap ~$576M, short interest 29% du float en hausse, CEO et...",
-    "title": "ALT — ALT à $2,96 : cash ~$331M vs mcap ~$576M, short interest 29% du float en hausse, CEO et...",
-    "desc": "Analyse Altimmune régénérée : pemvidutide en Phase 3 (MASH + troubles liés à l'alcool), trésorerie ~$331M, capitalisation ~$576M, short interest à 29% du float, initiés acheteurs. Grade B.",
-    "tags": "us,healthcare,biotech,speculative,trade-idea",
-    "grade": "C+",
-    "href": "/analyses/ALT/",
     "date": ""
   },
   {
