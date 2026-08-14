@@ -20,6 +20,7 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { pickOgImage } = require('./lib/og-image.js');
 
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'data', 'analyses-data');
@@ -202,6 +203,13 @@ function renderHead(d) {
   const title = `DailyTickers | ${header.ticker} Analysis — ${header.name} | ${meta.dateDisplay || meta.date}`;
   const desc = esc(meta.description || `${header.ticker} analysis: ${(verdict.summary || '').slice(0, 160)}`);
   const ogDesc = esc(meta.ogDescription || `${header.ticker}: ${verdict.bias} setup, score ${verdict.score}/100.`);
+  // CHANTIER 2 (og:image auto) : PNG du dossier analyses/{TICKER}/ s'il existe,
+  // sinon logo boursier par ticker, sinon /logo.svg.
+  const ogImage = pickOgImage({
+    articleDir: path.join('analyses', header.ticker),
+    type: 'analyses',
+    ticker: header.ticker,
+  }).url;
   return `<!DOCTYPE html>
 <html lang="${meta.lang || 'en'}"${meta.dir === 'rtl' ? ' dir="rtl"' : ''} data-tags="${meta.tags.join(',')}" data-tab="analyses" data-grade="${meta.grade}"${meta.level ? ` data-level="${meta.level}"` : ''}>
 <head>
@@ -211,10 +219,11 @@ function renderHead(d) {
     <meta name="description" content="${desc}">
     <meta property="og:title" content="DailyTickers — ${header.ticker} Analysis">
     <meta property="og:description" content="${ogDesc}">
-    <meta property="og:image" content="https://assets.parqet.com/logos/symbol/${header.ticker}?format=jpg">
+    <meta property="og:image" content="${ogImage}">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://articles.dailytickers.com/analyses/${header.ticker}/">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="${ogImage}">
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
     <link rel="icon" href="/favicon.ico">
     <link rel="stylesheet" href="/assets/report.css">

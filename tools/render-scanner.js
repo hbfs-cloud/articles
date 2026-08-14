@@ -15,6 +15,7 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { pickOgImage } = require('./lib/og-image.js');
 
 // ─── CLI ────────────────────────────────────────────────────────────────────
 
@@ -37,6 +38,10 @@ if (!fs.existsSync(dataPath)) {
 }
 
 const d = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+
+// CHANTIER 2 (og:image auto) : PNG du dossier de l'article s'il existe, sinon la
+// dernière carte générique scanner (scanner/status/daily-card-*.png), sinon /logo.svg.
+const ogImage = pickOgImage({ articleDir: outDir, type: 'scanner' }).url;
 
 // ─── STRICT DATA-QUALITY GUARDS ─────────────────────────────────────────────
 // Le renderer ne réencode/ne transforme JAMAIS le texte issu de data.json (esc()
@@ -794,10 +799,11 @@ function buildPage(d) {
   <meta name="description" content="Scanner ${d.session_label || d.date} &middot; ${regime} (score ${d.regime_score || 0}). ${setups.length} setups A+ en tableaux compacts, niveaux vérifiés.">
   <meta property="og:title" content="Scanner DailyTickers &middot; ${d.session_label || d.date} &middot; ${setups.slice(0,10).map(s=>s.ticker).join(', ')}">
   <meta property="og:description" content="${regime} regime. ${d.session_label || d.date}. ${setups.length} setups A+.">
-  <meta property="og:image" content="https://articles.dailytickers.com/scanner-daily-card.png">
+  <meta property="og:image" content="${ogImage}">
   <meta property="og:url" content="${d.url || `https://articles.dailytickers.com/scanner/${d.date}/`}">
   <meta property="og:type" content="article">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="${ogImage}">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
   <link rel="stylesheet" href="/assets/report.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
