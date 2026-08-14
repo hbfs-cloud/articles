@@ -4267,6 +4267,20 @@ document.addEventListener('DOMContentLoaded',function(){
   const existingDates = fs.readdirSync(historyDir).filter(f => /^\d{8}\.json$/.test(f)).map(f => f.replace('.json', '')).sort();
   fs.writeFileSync(path.join(historyDir, 'dates.json'), JSON.stringify(existingDates));
   console.log(`   Snapshot: history/${todayKey}.json (${existingDates.length} dates)`);
+
+  // ── Page Track Record publique (tech/track-record/index.html) ───────────────
+  // Doit tourner APRÈS ce script : elle relit les artefacts qu'on vient d'écrire
+  // (snapshot du jour) + le registre scellé (backtest-results.json frozen_*) +
+  // portfolio/v1/<mode>/equity.json. Elle ne RECOPIE que des chiffres scellés —
+  // aucun recalcul, aucun carnet live en primaire (invariant SEALED-PRIMARY).
+  // Non bloquant : un échec ici ne doit pas invalider le status page déjà écrit.
+  try {
+    const { generate: genTrackRecord } = require('./gen-track-record.js');
+    const tr = genTrackRecord();
+    console.log(`   Track record: ${tr.path} (${tr.modes} carnets, ${tr.sealed} scellés)`);
+  } catch (e) {
+    console.error(`  [warn] track record non régénéré : ${e.message}`);
+  }
 }
 
 // ─── Backfill: regenerate all history snapshots with current configs ──────────
