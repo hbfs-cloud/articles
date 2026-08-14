@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="tech,formation,technique,education" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Méthodologie : ce qu'une ligne doit franchir avant d'être publiée | DailyTickers</title>
+    <meta name="description"
+        content="La mécanique complète : collecte datée avec contrat de date, contrôles bloquants qui rendent un code de sortie, panel adversarial avant publication, trades scellés en ajout seul. Et ce que « on ne sait pas » déclenche ici — un refus, pas une estimation.">
+    <meta property="og:title" content="Méthodologie : ce qu'une ligne doit franchir avant d'être publiée">
+    <meta property="og:description"
+        content="Collecte datée, contrôles bloquants, panel adversarial, scellement en ajout seul. Trois exemples réels où le refus a gagné contre l'envie de publier.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.dailytickers.com/tech/methodologie/">
+    <meta property="og:type" content="article">
+    <meta name="twitter:card" content="summary_large_image">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        /* Accent : bleu ardoise — méthode, vérification, registre */
+        .hero-section {
+            padding: 5rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #f8fafc 0%, #e0e7ff 100%);
+            text-align: center;
+            border-bottom: 1px solid #c7d2fe;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #3730a3;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1rem 0;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+        }
+
+        .hero-sub {
+            font-size: 1.2rem;
+            color: #475569;
+            max-width: 790px;
+            margin: 1.5rem auto 0;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(67, 56, 202, 0.09);
+            color: #3730a3;
+            border: 1px solid rgba(67, 56, 202, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1.5rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+
+        h2 i {
+            color: #4338ca;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 0.85rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
+
+        .lead-in {
+            font-size: 1.15rem;
+            color: #1e293b;
+            font-weight: 600;
+            line-height: 1.65;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin: 1.75rem 0;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: left;
+            background: #f8fafc;
+            border: 1px solid #c7d2fe;
+            border-radius: 12px;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            color: #3730a3;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #475569;
+            text-align: left;
+        }
+
+        .pedagogy-box {
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            border-left: 4px solid #4338ca;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .pedagogy-box h4 {
+            color: #3730a3;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pedagogy-box p {
+            font-size: 0.97rem;
+            color: #312e81;
+            margin: 0 0 0.7rem;
+            line-height: 1.65;
+        }
+
+        .pedagogy-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .alert-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #dc2626;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .alert-box h4 {
+            color: #b91c1c;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-box p {
+            font-size: 0.97rem;
+            color: #991b1b;
+            margin: 0 0 0.7rem;
+            line-height: 1.65;
+        }
+
+        .alert-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .takeaway-box {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+            border-left: 4px solid #16a34a;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .takeaway-box h4 {
+            color: #15803d;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .takeaway-box ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .takeaway-box li {
+            font-size: 0.97rem;
+            color: #166534;
+            line-height: 1.65;
+            margin: 0.4rem 0;
+        }
+
+        .rule-list {
+            margin: 1.25rem 0 1.5rem;
+            padding-left: 1.3rem;
+        }
+
+        .rule-list li {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: #334155;
+            margin: 0.6rem 0;
+        }
+
+        .data-table {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #eef2ff;
+            text-align: left;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #3730a3;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .data-table td {
+            padding: 0.7rem 0.9rem;
+            border-top: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        .data-table td.num {
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .data-table td.bad {
+            color: #b91c1c;
+            font-weight: 700;
+        }
+
+        .data-table td.good {
+            color: #15803d;
+            font-weight: 700;
+        }
+
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin: 1.75rem 0;
+        }
+
+        .flow-node {
+            background: #fff;
+            border: 1.5px solid #c7d2fe;
+            border-radius: 12px;
+            padding: 0.95rem 1.1rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #1e293b;
+        }
+
+        .flow-node b {
+            display: block;
+            color: #3730a3;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.3rem;
+        }
+
+        .flow-node.stop {
+            border-color: #fca5a5;
+            background: #fef2f2;
+        }
+
+        .flow-node.stop b {
+            color: #b91c1c;
+        }
+
+        .flow-arrow {
+            text-align: center;
+            color: #6366f1;
+            font-size: 1.05rem;
+            margin: -0.15rem 0;
+        }
+
+        .echart-box {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .chart-slot {
+            width: 100%;
+            height: 340px;
+        }
+
+        .chart-caption {
+            font-size: 0.82rem;
+            color: #64748b;
+            line-height: 1.55;
+            margin: 0.4rem 0.6rem 0.6rem;
+        }
+
+        .verdict-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+        }
+
+        .verdict-chip {
+            border-radius: 12px;
+            padding: 1rem 1.1rem;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        .verdict-chip b {
+            display: block;
+            font-size: 0.95rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .verdict-chip.pass b {
+            color: #15803d;
+        }
+
+        .verdict-chip.fix b {
+            color: #b45309;
+        }
+
+        .verdict-chip.block b {
+            color: #b91c1c;
+        }
+
+        @media (max-width: 768px) {
+            .content-card { padding: 1.5rem; }
+            .hero-section { padding: 3rem 1rem 6rem; }
+            .hero-title { font-size: 2rem; }
+            .hero-sub { font-size: 1.05rem; }
+            .metric-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+            .metric-card { padding: 1.25rem; }
+            h2 { font-size: 1.4rem; }
+            .chart-slot { height: 300px; }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">Séries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">MÉTHODE — CE QUI EST VÉRIFIÉ, ET COMMENT</div>
+        <h1 class="hero-title">Ce qu'une ligne doit franchir avant d'être publiée</h1>
+        <p class="hero-sub">
+            Une idée de trade qui arrive devant vous a traversé une collecte datée, une série de
+            contrôles qui rendent un code de sortie plutôt qu'un avis, et une relecture adverse
+            dont le mandat est de la faire tomber. Voici la mécanique, avec trois cas réels où
+            le refus l'a emporté sur l'envie de publier.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-scale-balanced"></i> Méthode publique</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 12 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-lock"></i> Registre scellé</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="container">
+
+        <!-- CONTRAT -->
+        <div id="contrat" class="content-card">
+            <h2><i class="fa-solid fa-file-signature"></i> Le contrat de lecture</h2>
+
+            <p class="lead-in">Une règle gouverne tout le reste : un contrôle qui n'a pas pu être
+                fait ne vaut pas un contrôle passé.</p>
+
+            <p>Elle a l'air d'une évidence. Elle ne l'est pas. La tentation permanente d'une chaîne
+                de production éditoriale, qu'elle soit tenue par des humains ou par des machines,
+                est de transformer un trou en nuance : la donnée manque, on écrit « à surveiller »,
+                on publie quand même, et le lecteur reçoit un contrôle absent présenté comme un
+                contrôle passé avec réserve. Cette page décrit les mécanismes qui rendent ce
+                glissement coûteux.</p>
+
+            <p>Rien ici ne relève de l'intention. Chaque contrôle cité rend un verdict binaire, et
+                un verdict rouge arrête la chaîne au lieu de produire un avertissement que personne
+                ne lira. C'est la seule différence qui compte entre une règle écrite dans une charte
+                et une règle qui tient.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">5 étapes</div>
+                    <div class="metric-label">Collecte datée, contrôles bloquants, panel
+                        adversarial, publication, scellement</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">299</div>
+                    <div class="metric-label">Trades scellés dans la chaîne d'intégrité, répartis
+                        sur quatre carnets (109 / 79 / 57 / 54)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">93 / 394</div>
+                    <div class="metric-label">Trades déclarés inexploitables statistiquement. Aucun
+                        n'a été effacé ni corrigé</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">7 → 6</div>
+                    <div class="metric-label">Panier réduit d'une ligne le 10 août parce qu'un
+                        contrôle de dilution n'avait aucune source disponible</div>
+                </div>
+            </div>
+
+            <div class="flow-diagram">
+                <div class="flow-node"><b>1 · Collecte</b> La date de séance visée est passée en
+                    entrée. Une source qui ne l'atteint pas répond « décalage », pas la veille.</div>
+                <div class="flow-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                <div class="flow-node"><b>2 · Contrôles</b> Fraîcheur, cohérence quantitative, tics
+                    d'écriture. Chacun renvoie 0 ou 1. Un 1 arrête la séquence.</div>
+                <div class="flow-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                <div class="flow-node"><b>3 · Panel adverse</b> Des relecteurs aux mandats opposés
+                    lisent l'artefact fini. Verdict PASS, CORRIGER ou BLOQUER.</div>
+                <div class="flow-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                <div class="flow-node stop"><b>Sortie possible à chaque étage</b> Rien publié, page
+                    absente, registre inchangé. C'est arrivé le 12 août.</div>
+                <div class="flow-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                <div class="flow-node"><b>4 · Publication puis 5 · Scellement</b> Le trade fermé
+                    entre dans un registre en ajout seul, chaîné par empreintes.</div>
+            </div>
+        </div>
+
+        <!-- COLLECTE -->
+        <div id="collecte" class="content-card">
+            <h2><i class="fa-solid fa-calendar-check"></i> La collecte est datée, ou elle n'a pas lieu</h2>
+
+            <p>Le pire défaut d'une chaîne automatisée n'est pas de se tromper bruyamment. C'est de
+                travailler sur le monde d'hier sans le savoir. Un fournisseur de données qui n'a pas
+                encore ingéré la clôture du jour renvoie très volontiers celle de la veille, avec le
+                même format, la même apparence de fraîcheur, et aucun signal d'alerte. Une chaîne
+                naïve calcule ses indicateurs dessus et publie une idée de trade fondée sur une
+                séance qui n'est plus la bonne.</p>
+
+            <p>La parade tient en deux gestes. D'abord, la date de séance visée est passée
+                <em>en entrée</em> de chaque demande de données : le service compare et refuse s'il
+                ne l'atteint pas. Un décalage devient une réponse explicite, jamais un silence.
+                Ensuite, tout ce qui relève du dépôt réglementaire, du résultat trimestriel ou de la
+                déclaration d'initié est borné à la même date de référence : rien de postérieur ne
+                peut entrer dans une analyse censée décrire ce qu'on savait ce jour-là.</p>
+
+            <p>Quand les données sont en retard mais que la source répond, la chaîne ne s'arrête pas
+                tout de suite : elle demande un rafraîchissement, attend, revérifie. L'arrêt franc
+                arrive seulement si le rattrapage échoue. Publier sur des barres périmées « faute de
+                mieux » n'est jamais une option ouverte.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Pour ceux qui découvrent</h4>
+                <p>Une « barre » est le résumé d'une séance pour un titre : ouverture, plus haut,
+                    plus bas, clôture, volume. Presque tous les indicateurs techniques publiés ici
+                    en dérivent. Si la dernière barre disponible date de l'avant-veille, une moyenne
+                    mobile calculée dessus est décalée d'une séance entière sans que le chiffre ait
+                    l'air faux.</p>
+                <p>« Point-in-time » désigne la discipline consistante à ne regarder que ce qui
+                    était connu à une date donnée. Sans elle, un backtest lit des dépôts publiés
+                    après coup et affiche une performance qu'aucun investisseur n'aurait pu obtenir.</p>
+            </div>
+
+            <p>Le scan du 12 août illustre l'usage normal de ce contrat : les barres servies ce
+                soir-là s'arrêtaient une séance trop tôt sur huit lignes, et la dernière était
+                partielle. Le scan le déclare en toutes lettres, en avertissant qu'un lecteur qui
+                recalcule les indicateurs depuis les barres ne retrouvera pas exactement les valeurs
+                publiées. Le défaut est visible parce qu'il a été mesuré, et il est écrit parce que
+                le lisser aurait coûté plus cher que l'avouer.</p>
+        </div>
+
+        <!-- GATES -->
+        <div id="gates" class="content-card">
+            <h2><i class="fa-solid fa-traffic-light"></i> Des règles qui rendent un code de sortie</h2>
+
+            <p>Trois familles de contrôles bloquants se déclenchent avant qu'un texte atteigne un
+                relecteur. Aucune ne produit de recommandation : elles produisent un état binaire,
+                et la chaîne s'interrompt sur le mauvais.</p>
+
+            <h3>Fraîcheur</h3>
+            <p>Pendant la collecte, chaque source consultée est déclarée dans un manifeste avec
+                l'horodatage <em>réellement renvoyé par l'appel</em>, jamais l'heure courante. Le
+                contrôle ne va rien chercher et n'estime rien : il compare des dates. Manifeste
+                absent, source obligatoire manquante, horodatage illisible, âge supérieur au plafond
+                déclaré pour cette source, ou date située dans le futur de plus d'un quart d'heure,
+                signe d'une horloge fausse ou d'un horodatage inventé, tout cela donne le même
+                résultat. Un mode « avertir seulement » existe pour le débogage local ; les
+                procédures de publication l'interdisent.</p>
+
+            <h3>Cohérence quantitative</h3>
+            <p>Un champ déclaré doit être calculé, pas recopié. La leçon vient d'un cas concret :
+                un multiple de volatilité renseigné à la main était faux sur cinq lignes sur sept,
+                et le contrôle censé le lire était mort-né parce qu'un maillon en amont supprimait
+                le champ avant l'inspection. D'où deux règles depuis : tout nouveau contrôle est
+                testé dans les deux sens, en le faisant échouer volontairement ; et « absent » ne
+                se lit jamais comme « zéro ».</p>
+            <p>Côté portefeuilles, aucune modification de paramètre n'est adoptée sur une intuition.
+                Elle est rejouée contre la configuration en place sur une fenêtre longue, et elle ne
+                s'applique que vers l'avant. Une configuration appliquée rétroactivement remplirait
+                le registre de positions fantômes qui n'ont jamais existé.</p>
+
+            <h3>Tics d'écriture</h3>
+            <p>Un dernier contrôle lit la prose visible et cherche les formules qui trahissent un
+                texte de machine : signposting, transitions creuses, connecteurs formels empilés,
+                densité anormale de tirets longs. Zéro trouvaille ne prouve pas qu'un humain a
+                tenu la plume. Une trouvaille suffit à réécrire le passage.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-terminal"></i> Pourquoi un code de sortie, et pas une consigne</h4>
+                <p>Une règle écrite en prose se contourne sans la moindre mauvaise foi : un oubli
+                    suffit, surtout à 23 h, surtout quand la chaîne tourne seule. Une règle qui
+                    renvoie une erreur bloque la séquence entière et rend le contournement visible.
+                    La différence entre les deux se mesure en incidents évités, pas en intentions.</p>
+            </div>
+        </div>
+
+        <!-- PANEL -->
+        <div id="panel" class="content-card">
+            <h2><i class="fa-solid fa-users-viewfinder"></i> Le panel adverse passe avant la publication</h2>
+
+            <p>Les contrôles automatiques attrapent ce qui est formalisable. Ils ne voient pas
+                qu'une thèse contredit le panier qui l'accompagne, ni qu'un chiffre plausible est
+                mesuré dans la mauvaise unité. Cette couche relève d'une relecture, et elle a deux
+                propriétés non négociables : elle est adverse, et elle intervient avant la
+                publication.</p>
+
+            <p>Adverse : plusieurs relecteurs aux mandats opposés lisent l'artefact fini. L'un
+                traque les défauts de structure, un autre la solidité statistique, un autre
+                l'exécutabilité réelle du plan de trade, un autre le risque et la conformité, un
+                dernier le style. Aucun n'a pour mission de valider. Le rédacteur ne se relit jamais
+                lui-même dans le même passage : une relecture par son auteur trouve ce qu'elle a
+                déjà cherché.</p>
+
+            <div class="verdict-strip">
+                <div class="verdict-chip pass"><b>PASS</b> L'artefact part tel quel.</div>
+                <div class="verdict-chip fix"><b>CORRIGER</b> Constats appliqués, puis nouveau
+                    passage complet.</div>
+                <div class="verdict-chip block"><b>BLOQUER</b> Rien ne sort. Page absente, registre
+                    inchangé.</div>
+            </div>
+
+            <h3>Le 12 août, en deux temps</h3>
+
+            <p>Le premier soir, le texte avait été rédigé et les contrôles automatiques étaient
+                verts. Le relecteur quantitatif a rendu BLOQUER sur quinze constats, et la reprise
+                automatique a échoué sur une erreur réseau. Résultat publié ce soir-là : rien. La
+                page renvoyait un 404, le registre n'a pas bougé, aucune ligne n'a été proposée.</p>
+
+            <p>À la reprise, deux panels successifs ont encore fait tomber des choses. Le détail
+                mérite d'être lu, parce qu'il dit où sont les vrais défauts.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Constat</th>
+                            <th>Mesure</th>
+                            <th>Correction</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Liquidité comparée dans des devises mélangées</td>
+                            <td class="num bad">37 M PLN ≈ 9,92 M$</td>
+                            <td>Ligne polonaise retirée du panier, sous le plancher réel. Remplacée
+                                par une italienne dont la date de résultats est confirmée</td>
+                        </tr>
+                        <tr>
+                            <td>Plafond de perte calculé au milieu de la zone d'entrée</td>
+                            <td class="num bad">8,37 % et 8,39 %</td>
+                            <td>Recalculé sur le haut de zone, qui est publié donc atteignable</td>
+                        </tr>
+                        <tr>
+                            <td>Contrôle de dilution au vert hors du périmètre du registre consulté</td>
+                            <td class="num bad">5 lignes</td>
+                            <td>Drapeau passé à « inconnu », avec la mention visible</td>
+                        </tr>
+                        <tr>
+                            <td>Plafond de score contourné par le rendu</td>
+                            <td class="num bad">un 100 affiché</td>
+                            <td>Deux lignes ramenées à 98, le plafond existe pour ça</td>
+                        </tr>
+                        <tr>
+                            <td>Deux contraintes qui se contredisent à cible fixe</td>
+                            <td class="num bad">stop 2,3 % &lt; plancher 3 %</td>
+                            <td>Cibles allongées à 1,79× et 1,54× la volatilité moyenne</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Cinq constats, et l'essentiel vient de la sélection, pas de la rédaction. La ligne
+                polonaise passait pour la plus liquide des trois européennes du panier ; elle en
+                était la plus mince, parce qu'un chiffre en zlotys avait été comparé à des chiffres
+                en dollars. Un relecteur qui ne lit que le texte ne voit rien : la phrase était bien
+                écrite, le nombre était exact, l'unité était fausse.</p>
+
+            <p>La note de publication de ce soir-là porte la trace du reste : les barres en retard
+                sur huit lignes, deux prospectus d'octobre 2025 versés en invalidation sur une
+                valeur, un chiffre d'inflation qui tombait pendant la séance visée. Un scan qui
+                déclare ce qu'il ne sait pas reste utilisable. Un scan lisse ne l'est pas.</p>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Ce qu'un panel ne remplace pas</h4>
+                <p>Un relecteur lit ce qu'on lui présente. Une donnée fausse en amont mais cohérente
+                    en aval traverse le panel sans résistance : tout se tient, tout est faux. C'est
+                    exactement pour ce cas que la collecte est datée et que le refus est la valeur
+                    par défaut. Les couches ne se substituent pas, elles couvrent des angles morts
+                    différents.</p>
+            </div>
+        </div>
+
+        <!-- SCELLEMENT -->
+        <div id="scellement" class="content-card">
+            <h2><i class="fa-solid fa-link"></i> Une fois scellé, un trade ne bouge plus</h2>
+
+            <p>Une idée de trade publiée engage un historique. Si cet historique peut être retouché,
+                la performance affichée ne vaut rien : il suffit d'oublier discrètement les
+                mauvaises lignes pour que n'importe quelle stratégie devienne bonne.</p>
+
+            <p>Chaque trade clôturé entre donc dans un registre en ajout seul. Il y reçoit une
+                empreinte, et cette empreinte intègre celle de l'entrée précédente : modifier un
+                trade ancien invalide mécaniquement toute la suite de la chaîne. La routine de mise
+                à jour recompose la chaîne à chaque passage et s'interrompt si elle ne retombe pas
+                sur ses pieds. Le registre porte aujourd'hui 299 trades scellés, répartis sur quatre
+                carnets : 109, 79, 57 et 54.</p>
+
+            <h3>Et quand une cohorte entière est inexploitable ?</h3>
+
+            <p>Le cas s'est produit. Entre le 16 juin et le 13 juillet 2026, le seuil de score censé
+                filtrer les candidats ne mordait sur personne. Un carnet était réglé à 25 quand le
+                score le plus faible observé valait 65,15. D'autres étaient réglés à 50 quand le
+                minimum observé valait 80. Dans aucun de ces carnets le seuil n'a jamais rejeté un
+                seul candidat : les entrées de cette fenêtre ne sont pas un échantillon de la
+                stratégie annoncée, mais un tirage non filtré du vivier.</p>
+
+            <p>Ces 93 trades sur 394 sont invendables statistiquement. Ils n'ont pourtant été ni
+                supprimés, ni corrigés, ni requalifiés : ils sont <em>déclarés</em>, dans un registre
+                de cohortes qui porte la fenêtre de dates, le champ concerné, la raison et la preuve.
+                Toutes les statistiques publiées comptent désormais ces trades à part. Le marquage
+                est systématique ; l'exclusion des agrégats reste un choix explicite, parce que
+                réécrire sans décision une courbe déjà publiée serait précisément le comportement
+                que l'immuabilité doit empêcher.</p>
+
+            <div class="echart-box">
+                <div id="cohortChart" class="chart-slot"></div>
+                <p class="chart-caption">Rendement moyen simple par trade, cohorte au filtre
+                    inopérant (16/06 → 13/07/2026, 93 trades) contre le reste du registre
+                    (301 trades). L'écart est la raison pour laquelle la fenêtre est déclarée
+                    inexploitable — et la raison pour laquelle elle reste visible.</p>
+            </div>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-circle-check"></i> Ce qu'un lecteur peut vérifier</h4>
+                <ul>
+                    <li>Les statistiques d'un carnet doivent citer un nombre de trades, pas
+                        seulement un pourcentage de réussite.</li>
+                    <li>Une performance qui s'améliore rétroactivement sur des périodes passées est
+                        un signal d'alarme, pas une bonne nouvelle.</li>
+                    <li>Une cohorte écartée doit être nommée, datée et motivée. Une cohorte disparue
+                        sans mention est une cohorte cachée.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- FAIL-CLOSED -->
+        <div id="fail-closed" class="content-card">
+            <h2><i class="fa-solid fa-lock"></i> « Fail-closed » : quand on ne sait pas, on ne publie pas</h2>
+
+            <p>Un système peut échouer dans deux directions. Il peut échouer ouvert : la
+                vérification n'aboutit pas, et le sujet passe quand même, faute de preuve du
+                contraire. Il peut échouer fermé : la vérification n'aboutit pas, donc le sujet est
+                refusé, faute de preuve tout court. Une serrure d'immeuble qui reste verrouillée en
+                cas de panne de courant échoue fermée. La nôtre aussi.</p>
+
+            <h3>Cas 1 — un contrôle de dilution sans source</h3>
+
+            <p>Le 10 août, deux valeurs européennes ont été publiées avec leur drapeau de contrôle
+                de dilution à « faux » et une phrase d'invalidation en guise de couverture. Le motif
+                écrit était honnête : émetteur hors du périmètre du registre américain, donc non
+                vérifiable par cette voie. Sauf que ce drapeau ne signifie ni « risque faible » ni
+                « à surveiller ». Il signifie : le contrôle n'a pas été fait.</p>
+
+            <p>La vérification, faite après coup, a donné deux réponses opposées. Pour la valeur
+                française, la voie existait et le mode d'emploi la prescrivait explicitement : le
+                registre national répond en moins d'une seconde et rend 91 dépôts entre le 13 février
+                et le 10 août, dont 25 déclarations de rachat d'actions, douze relevés du nombre de
+                droits de vote et trois franchissements de seuil. Zéro augmentation de capital, zéro
+                prospectus d'émission. C'était un passage vérifié, pas un trou. Pour la valeur
+                néerlandaise, aucune voie n'existait : le registre américain ne couvre cet émetteur
+                que pour ses programmes de dette, et rien ne permettait d'affirmer qu'aucune action
+                nouvelle n'avait été créée. La ligne a été retirée. Le panier est passé de sept à six.</p>
+
+            <p>Six lignes annoncées valent mieux que sept dont une non contrôlée. C'est la version
+                courte de la règle, et elle coûte régulièrement des lignes.</p>
+
+            <h3>Cas 2 — une valorisation qui ne se calcule pas</h3>
+
+            <p>L'analyse d'une société de données immobilières américaines publiée le 14 août porte
+                un encart inhabituel : <strong>valorisation non concluante</strong>. Les trois
+                méthodes prévues réclamaient un flux de trésorerie disponible, un résultat net
+                détaillé et un montant d'investissements que les sources disponibles ne fournissaient
+                pas. Aucune fourchette de prix cible n'a donc été produite. Le modèle aurait pourtant
+                rendu un nombre : il suffisait de le nourrir de valeurs par défaut, et personne
+                n'aurait rien remarqué.</p>
+
+            <p>Le reste de l'analyse tient debout sans lui. Le titre cote 32,21 $ et se paie 31,8
+                fois l'excédent brut d'exploitation pour 2,1 % de marge nette. Le résultat annuel est
+                tombé de 375 M$ à 7 M$ pendant que le chiffre d'affaires montait de 2,18 à
+                3,25 Md$. Le ratio cours/croissance affiché à 0,62, qui suggère une aubaine, divise
+                par une croissance de bénéfice de +1 261 % obtenue sur une base quasi nulle : un
+                artefact de division, pas une décote. Note attribuée : C+, plan conditionnel, rien à
+                faire au cours du jour.</p>
+
+            <p>Un encart qui dit « je ne sais pas » est plus utile qu'un objectif de cours fabriqué.
+                Il indique au lecteur où s'arrête la démonstration, ce qu'un chiffre inventé
+                dissimulerait derrière une fausse précision.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Le test à s'appliquer</h4>
+                <p>Devant n'importe quelle publication financière, la question utile n'est pas
+                    « quelle est la conclusion ? » mais « qu'est-ce qui manquait, et qu'en a-t-on
+                    fait ? ». Une source qui n'écrit jamais qu'une donnée lui manque n'est pas une
+                    source qui a tout : c'est une source qui comble.</p>
+            </div>
+        </div>
+
+        <!-- LIMITES -->
+        <div id="limites" class="content-card">
+            <h2><i class="fa-solid fa-circle-half-stroke"></i> Ce que cette méthode ne promet pas</h2>
+
+            <p>Elle ne prédit rien. Aucun contrôle décrit ici ne dit qu'une idée de trade sera
+                gagnante, et la discipline de vérification n'améliore pas l'espérance d'une
+                stratégie : elle garantit seulement que les chiffres publiés décrivent bien ce qui
+                a été observé, à la date où ça l'a été.</p>
+
+            <p>Elle n'élimine pas l'erreur. La moitié des exemples de cette page sont nos propres
+                erreurs, rattrapées tard, parfois après publication. La ligne polonaise mal évaluée
+                venait de la sélection, pas d'un maillon défaillant. Les deux européennes du 10 août
+                étaient déjà en ligne quand le défaut a été vu. Ce qui change, c'est ce qu'on en
+                fait : le défaut devient une règle qui rend un code de sortie, et il ne repasse plus
+                deux fois par le même chemin.</p>
+
+            <p>Elle ne remplace pas votre jugement. Un contrôle passé est un contrôle passé à une
+                date, avec une source nommée et une fenêtre déclarée. C'est un point de départ pour
+                une décision, jamais la décision elle-même.</p>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-flag-checkered"></i> Les trois engagements</h4>
+                <ul>
+                    <li><strong>La date.</strong> Chaque chiffre publié appartient à une séance
+                        identifiée, et un décalage se déclare au lieu de se taire.</li>
+                    <li><strong>La source.</strong> Un contrôle nomme le registre qu'il a interrogé
+                        et la fenêtre qu'il a couverte, ou il ne compte pas comme un contrôle.</li>
+                    <li><strong>L'aveu.</strong> Ce qui n'a pas pu être vérifié est écrit noir sur
+                        blanc, et bloque la ligne concernée plutôt que de la nuancer.</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#contrat" class="fnav-item" data-section="contrat"><i
+                    class="fas fa-file-signature"></i><span>Contrat</span></a>
+            <a href="#collecte" class="fnav-item" data-section="collecte"><i
+                    class="fas fa-calendar-check"></i><span>Collecte</span></a>
+            <a href="#gates" class="fnav-item" data-section="gates"><i
+                    class="fas fa-traffic-light"></i><span>Contrôles</span></a>
+            <a href="#panel" class="fnav-item" data-section="panel"><i
+                    class="fas fa-users-viewfinder"></i><span>Panel</span></a>
+            <a href="#scellement" class="fnav-item" data-section="scellement"><i
+                    class="fas fa-link"></i><span>Scellement</span></a>
+            <a href="#fail-closed" class="fnav-item" data-section="fail-closed"><i
+                    class="fas fa-lock"></i><span>Fail-closed</span></a>
+            <a href="#limites" class="fnav-item" data-section="limites"><i
+                    class="fas fa-circle-half-stroke"></i><span>Limites</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+
+    <script>
+        (function () {
+            var el = document.getElementById('cohortChart');
+            if (!el || typeof echarts === 'undefined') return;
+            var chart = echarts.init(el);
+            chart.setOption({
+                tooltip: {
+                    trigger: 'axis',
+                    valueFormatter: function (v) { return v.toFixed(2).replace('.', ',') + ' %'; }
+                },
+                grid: { left: 70, right: 30, bottom: 55, top: 40 },
+                xAxis: {
+                    type: 'category',
+                    data: ['Cohorte au filtre\ninopérant (n=93)', 'Reste du registre\n(n=301)'],
+                    axisLabel: { fontSize: 12, color: '#475569', lineHeight: 16 }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '% par trade',
+                    nameTextStyle: { color: '#64748b' },
+                    axisLabel: {
+                        formatter: function (v) { return v.toFixed(1).replace('.', ',') + ' %'; },
+                        color: '#64748b'
+                    }
+                },
+                series: [{
+                    name: 'Rendement moyen par trade',
+                    type: 'bar',
+                    barMaxWidth: 110,
+                    data: [
+                        { value: -2.97, itemStyle: { color: '#b91c1c' } },
+                        { value: 0.42, itemStyle: { color: '#16a34a' } }
+                    ],
+                    label: {
+                        show: true,
+                        position: 'top',
+                        fontWeight: 700,
+                        color: '#0f172a',
+                        formatter: function (p) {
+                            return (p.value > 0 ? '+' : '') + p.value.toFixed(2).replace('.', ',') + ' %';
+                        }
+                    }
+                }]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+</body>
+
+</html>
