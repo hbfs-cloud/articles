@@ -1,22 +1,28 @@
 ---
 name: telegram-court
-description: Feedback user (2026-08-14) — les notifs Telegram doivent être COURTES, sans liens (ou un seul max), droit à l'essentiel
+description: Spec convergée des notifs Telegram (3 feedbacks user le 14/08) — complètes ET lisibles pour un groupe FR d'investisseurs, une ligne par nom avec contexte simple, zéro pavé de liens, zéro soupe de tickers
 type: feedback
 ---
 
-# Telegram : court, sans liens, l'essentiel
+# Notifs Telegram — la spec convergée (3 itérations user, 2026-08-14)
 
-**Feedback user 2026-08-14** : une notif de synthèse était « beaucoup trop grosse » avec un pavé
-de liens ; un ticker clé (MVST) s'y noyait.
+**Audience** : groupe Telegram FRANCOPHONE d'investisseurs retail. Ils scannent, mais veulent
+comprendre chaque ligne sans cliquer.
 
-**Why** : sur Telegram on scanne, on ne lit pas. Une notif longue enterre l'information ; un
-ticker en fin de liste devient invisible. Les liens multiples diluent (le lecteur sait où est le site).
+**Le user a rejeté successivement** :
+1. Le pavé avec 6 liens (trop gros, ticker clé noyé) ;
+2. La version ultra-compressée « tickers séparés par · » (pas assez complète, compliquée à lire).
 
-**How to apply** :
-- ⚠️ Renforcé (2e rappel, 14/08 soir) : MÊME un récap « complet » demandé explicitement reste COMPACT — ~10 lignes max, 1 ligne par bloc (émoji + label gras + tickers séparés par ·), jamais de paragraphes par section. Deux rappels user le même jour = règle dure.
-- Format cible : titre + 3-4 lignes MAX (Jouer / Surveiller / Éviter, ou équivalent), une règle
-  de clôture, disclaimer court (« Éducatif — pas un conseil. »).
-- ZÉRO pavé de liens. Au plus UN lien quand il est le cœur du message (un article unique).
-- Les tickers importants en <b>gras</b>, jamais noyés en fin d'énumération.
-- Vaut pour TOUS les canaux (alerts, analysis, learning, daily) et pour les workflows qui postent
-  (patcher les prompts publishers au fil de l'eau).
+**Le format VALIDÉ (v3)** :
+- Sections courtes en <b>gras</b> avec un titre parlant (« Nos signaux en cours — tous dans le vert »,
+  « Ordres à poser — on attend le bon prix », « On évite »).
+- **UNE ligne par nom qui compte** : `• TICKER (secteur/nom simple) — le pourquoi en 5-10 mots + le niveau`.
+  Ex : « MNDY (monday.com) — 86–89 $, stop 80, objectif 108 : le "pas cher" du logiciel ».
+- Français simple (« imprime des actions » plutôt que « dilution »), pas de jargon non traduit.
+- Une phrase de clôture qui résume la doctrine. Disclaimer court.
+- ZÉRO pavé de liens (1 max si c'est le cœur). Tickers en <b>gras</b>.
+- Rien d'important en fin d'énumération compressée — chaque nom clé a SA ligne.
+- Complet ≠ long : complet = tous les noms actifs/nouveaux/re-notés couverts, chacun en une ligne.
+
+**How to apply** : ce format vaut pour tous les canaux (analysis, alerts, learning, daily) et doit
+être copié dans les prompts des publishers de workflows.
