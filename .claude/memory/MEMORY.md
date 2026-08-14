@@ -164,3 +164,4 @@
 - [Archive profonde : barre partielle déclarée complète](reference_archive_profonde_barre_partielle.md) — GLD au 10/08 vaut 402,54 en fenêtre courte et 399,39 en fenêtre profonde, avec sessions_complete:true dans les deux cas. Nos plans lisent en profond.
 - [Mandat — site une page (différé)](project_mandat_single_page_site.md) — page statique unique du portefeuille dtx mandat (ordres/trades/equity/metrics + jauge 60-85%), plomberie et vigilances actées 2026-08-14
 - [Token diet](feedback_token_diet.md) — tiering modèles workflows, panels scriptés d'abord, payloads MCP en fichiers, 1 session = 1 produit (2026-08-14)
+- [Telegram court](feedback_telegram_court.md) — notifs courtes, sans liens, essentiel (2026-08-14)
