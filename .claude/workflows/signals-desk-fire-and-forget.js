@@ -94,5 +94,21 @@ ${RULES}
 DO : (1) dernier check : html <b> (pas de **), date macro vérifiée, aucune donnée sensible. (2) mcp__notification__send_message(to='alerts', format='html', body=digest, actions=[{label:'👍 pris', value:'taken'}, {label:'👎 passé', value:'skipped'}]) → message_id. Les deux boutons sont OBLIGATOIRES (libellés/valeurs exacts) : c'est la seule mesure d'adoption, relue par le bilan hebdo via get_responses(message_id). (3) get_delivery_status(message_id) → provider_msg_id présent = livré. (4) log léger : écris les signaux dans un JSON puis node tools/signals-ledger.js append --payload <f.json> (pour le track-record) ; PUIS apponds {date, messageId, kind:'fire-and-forget', tickers:[...]} dans data/signals-telegram-messages.json (get_responses n'a pas de recherche par date : sans cet id, le feedback des boutons est irrécupérable). (5) git : add data/signals-ledger.json data/signals-telegram-messages.json (SPÉCIFIQUES) ; commit "signals(fire-and-forget): <date> — <n> signaux" ; git fetch origin main && rebase ; push origin HEAD:main (retry si rejeté). Retourne message_id + provider_msg_id + nb loggés + commit + push OK.`,
   { label: 'post', phase: 'Post', effort: 'high' }
 )
+// Note Substack courte (EN, best-effort) — UNIQUEMENT après un post Telegram réussi ci-dessus.
+// Un échec de note ne fait JAMAIS échouer le run (try/catch dédié + agent() déjà tolérant aux erreurs).
+let substackNote = null
+try {
+  substackNote = await agent(
+    `Poste une Note Substack COURTE (3-4 phrases, ANGLAIS) — best-effort, ne bloque JAMAIS le run.
+${RULES}
+Contexte (pour le thème du jour uniquement — NE PAS reproduire les niveaux/tickers/entrées/stops en clair, la Note est un teaser public, pas le digest) : régime=${gen.regime || 'n/a'}${gen.macro ? ', macro=' + gen.macro : ''}, ${(verify.kept||[]).length} signal(s) posté(s) sur Telegram.
+DIGEST (référence de thème seulement, pas à copier) : ${JSON.stringify(verify.finalDigest || '').slice(0, 1200)}.
+DO : mcp__claude_ai_substack__create_note(body=<3-4 phrases EN : (1) le thème du marché du jour (régime + catalyseur, sans chiffre non tracé MCP), (2) une phrase teaser sur l'opportunité sans donner les niveaux, (3) "Levels on the site.", (4) le lien https://articles.dailytickers.com/scanner/status/ >).
+Contraintes : zéro terme interne (jamais "MCP", "dtx", "Gateway", nom de script — décrire la donnée, pas l'infra) ; zéro tic IA (EDITORIAL_STYLE.md) ; zéro chiffre inventé. Retourne note_id, ou l'erreur si l'appel échoue (n'insiste pas, ne réessaie pas en boucle).`,
+    { label: 'post:substack-note', phase: 'Post', effort: 'low' }
+  )
+} catch (_e) { substackNote = { error: 'substack note failed (best-effort, run non affecté)' } }
+
 return { status: 'OK', posted: true, regime: gen.regime, kept: verify.kept, dropped: verify.dropped, post: (post||'').slice(0,900),
-  note: 'signals-desk-fire-and-forget : 3-5 signaux auto-postés sur alerts + loggés. Le signals-desk complet (bilan+ledger+harness) reste la référence.' }
+  substackNote: (typeof substackNote === 'string' ? substackNote.slice(0, 300) : substackNote),
+  note: 'signals-desk-fire-and-forget : 3-5 signaux auto-postés sur alerts + loggés + Note Substack EN best-effort. Le signals-desk complet (bilan+ledger+harness) reste la référence.' }

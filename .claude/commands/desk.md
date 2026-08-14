@@ -154,6 +154,27 @@ ici, il ne se rend pas.
 Aucun terme interne nulle part : pas de « MCP », « dtx », « Gateway », ni nom de script. On
 décrit la donnée (« options flow & levels »), pas l'infrastructure.
 
+**Alertes de suivi (obligatoire à CHAQUE run `desk`/`signals`, avant ou après la distribution
+ci-dessus, peu importe l'ordre tant que c'est fait) :**
+
+```bash
+node tools/signal-alerts.js          # détecte les nouveaux événements (entrée/stop/tp1/tp2)
+node tools/signal-alerts.js --pending # liste les events notified:false (JSON, avec suggestedLine html)
+```
+
+Pour chaque event `notified:false` du pending : poster sur Telegram `alerts` (`format:"html"`, le
+champ `suggestedLine` de l'event est déjà au bon gabarit, ex. `❌ <b>TICKER</b> — stop 42,10 touché,
+−1,20R.`), puis marquer :
+
+```bash
+node tools/signal-alerts.js --mark <key,key,...>   # ou --mark-all si tout a été posté
+```
+
+Sans ce `--mark`, le même événement repart au run suivant (doublon Telegram). Si
+`tools/signal-alerts.js` n'existe pas encore sur la branche courante, sauter l'étape sans bloquer
+le run — elle s'active automatiquement dès que le script est présent. Détail complet : skill
+`signals-desk`, étape 5 (« Alertes de suivi »).
+
 ### Phase 7 — registre, puis contrôle de bouclage (script)
 
 ```bash
