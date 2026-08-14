@@ -1419,6 +1419,32 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "CSGP",
+    "exchange": "NASDAQ · Real Estate Services",
+    "name": "CSGP — CoStar Group à 32,21 $ : croissance 18,4 %, résultat net réduit à néant par Homes.com, ...",
+    "title": "CSGP — CoStar Group à 32,21 $ : croissance 18,4 %, résultat net réduit à néant par Homes.com, ...",
+    "desc": "CSGP : une franchise de données immobilières à 78,7 % de marge brute, payée 31,8x l'EBITDA pour 2,1 % de marge nette. Le CEO fondateur achète, la valorisation ne se calcule pas. Rien à faire au spot.",
+    "tags": "us,software,value,technique",
+    "grade": "C+",
+    "href": "/analyses/CSGP/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "",
+    "exchange": "CAPR, INV, AMPG, MVST",
+    "name": "Zone à haut risque · CAPR, INV, AMPG, MVST",
+    "title": "Zone à haut risque · CAPR, INV, AMPG, MVST",
+    "desc": "Dossier d'avertissement du 14 août 2026 : CAPR bondit de 53 %, INV perd 55 %, AMPG recule de 31 %, MVST cote 0,85 $. Ce qui bouge, ce que dit le bilan, ce que disent les dépôts de dilution, et pourquoi la taille de position est le seul paramètre qui vous protège.",
+    "tags": "us,biotech,speculative,small-cap,penny-stocks,technique",
+    "grade": "",
+    "href": "/analyses/GROUPE-HAUT-RISQUE-20260814/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "",
     "exchange": "le breakout du 10 août, et la divergence qui n'existe pas",
     "name": "Énergie (XLE) · le breakout du 10 août et la divergence qui n'existe pas",
