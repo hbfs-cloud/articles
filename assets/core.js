@@ -33,6 +33,10 @@ const tagMeta = {
     utilities: { labels: { fr: "Services Publics", en: "Utilities", ar: "مرافق" }, cat: "sector" },
     quantum: { labels: { fr: "Quantique", en: "Quantum", ar: "كم" }, cat: "sector" },
     airlines: { labels: { fr: "Compagnies Aériennes", en: "Airlines", ar: "طيران" }, cat: "sector" },
+    coal: { labels: { fr: "Charbon", en: "Coal", ar: "فحم" }, cat: "sector" },
+    lng: { labels: { fr: "GNL", en: "LNG", ar: "غاز طبيعي مسال" }, cat: "sector" },
+    oil: { labels: { fr: "Pétrole", en: "Oil", ar: "نفط" }, cat: "sector" },
+    refining: { labels: { fr: "Raffinage", en: "Refining", ar: "تكرير" }, cat: "sector" },
 
     // Theme (cat: "theme")
     ai: { labels: { fr: "IA", en: "AI", ar: "ذكاء اصطناعي" }, cat: "theme" },
@@ -58,7 +62,16 @@ const tagMeta = {
     snowflake: { labels: { fr: "Snowflake", en: "Snowflake", ar: "Snowflake" }, cat: "theme" },
     singer: { labels: { fr: "Singer", en: "Singer", ar: "Singer" }, cat: "theme" },
     opensource: { labels: { fr: "Open-Source", en: "Open-Source", ar: "مصدر مفتوح" }, cat: "theme" },
-    
+    automation: { labels: { fr: "Automatisation", en: "Automation", ar: "أتمتة" }, cat: "theme" },
+    breakout: { labels: { fr: "Cassure", en: "Breakout", ar: "اختراق" }, cat: "theme" },
+    data: { labels: { fr: "Données", en: "Data", ar: "بيانات" }, cat: "theme" },
+    "gene-therapy": { labels: { fr: "Thérapie Génique", en: "Gene Therapy", ar: "علاج جيني" }, cat: "theme" },
+    glp1: { labels: { fr: "GLP-1", en: "GLP-1", ar: "GLP-1" }, cat: "theme" },
+    inflation: { labels: { fr: "Inflation", en: "Inflation", ar: "تضخم" }, cat: "theme" },
+    mash: { labels: { fr: "MASH", en: "MASH", ar: "MASH" }, cat: "theme" },
+    obesity: { labels: { fr: "Obésité", en: "Obesity", ar: "سمنة" }, cat: "theme" },
+    trading: { labels: { fr: "Trading", en: "Trading", ar: "تداول" }, cat: "theme" },
+
     // Special (cat: "special")
     "special-edition": { labels: { fr: "Édition Spéciale", en: "Special Edition", ar: "إصدار خاص" }, cat: "special" },
 
@@ -66,6 +79,7 @@ const tagMeta = {
     "trade-idea": { labels: { fr: "Idée de Trade", en: "Trade Idea", ar: "فكرة تداول" }, cat: "content" },
     formation: { labels: { fr: "Formation", en: "Learning", ar: "تدريب" }, cat: "content" },
     retrospective: { labels: { fr: "Rétrospective", en: "Retrospective", ar: "مراجعة" }, cat: "content" },
+    scanner: { labels: { fr: "Scanner", en: "Scanner", ar: "ماسح" }, cat: "content" },
 };
 
 /**
