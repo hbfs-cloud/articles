@@ -7371,6 +7371,45 @@ window.searchDataPrebuilt = [
     "date": ""
   },
   {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "3,5 millions de tokens par jour : autopsie d'une facture LLM",
+    "desc": "Un pipeline multi-agents consommait 3,5 M de tokens en 24 h. Diagnostic poste par poste : le modèle le plus cher partout, des relecteurs-agents qui refont ce qu'un script vérifie gratuitement, des données volumineuses transportées dans le contexte. Les trois règles qui ont ramené la facture de 1,4 M à 827 k sur un produit équivalent.",
+    "tags": "ai,tech,architecture,formation",
+    "grade": "",
+    "href": "/tech/autopsie-tokens/",
+    "date": ""
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Un pipeline de publication qui sait dire non",
+    "desc": "Gates bloquants (fraîcheur datée, validation quantitative, détecteur de tics), trois états au lieu de deux, panel adversarial avant mise en ligne. Le jour où un relecteur a recompté « 17 » et trouvé 15, et pourquoi refuser de publier est une fonctionnalité, pas une panne.",
+    "tags": "tech,ai,architecture,formation",
+    "grade": "",
+    "href": "/tech/pipeline-qui-refuse/",
+    "date": ""
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Append-only ou rien",
+    "desc": "Pourquoi un registre de publications et de trades ne se réécrit jamais : les écritures perdues du read-modify-write (4 survivantes sur 20), la republication en double qui en découle, la chaîne d'intégrité SHA-256 sur 299 trades scellés, et un quota d'envoi gardé par un jeton à usage unique.",
+    "tags": "tech,architecture,securite,formation",
+    "grade": "",
+    "href": "/tech/append-only/",
+    "date": ""
+  },
+  {
     "type": "série",
     "icon": "fa-graduation-cap",
     "ticker": "",

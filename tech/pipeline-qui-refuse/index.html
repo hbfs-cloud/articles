@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="tech,ai,architecture,formation" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Un pipeline de publication qui sait dire non | DailyTickers</title>
+    <meta name="description"
+        content="Gates bloquants (fraîcheur datée, validation quantitative, détecteur de tics), trois états au lieu de deux, panel adversarial avant mise en ligne. Le jour où un relecteur a recompté « 17 » et trouvé 15, et pourquoi refuser de publier est une fonctionnalité, pas une panne.">
+    <meta property="og:title" content="Un pipeline de publication qui sait dire non">
+    <meta property="og:description"
+        content="Gates bloquants, trois états au lieu de deux, panel adversarial : comment une chaîne de publication automatisée apprend à refuser.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.dailytickers.com/tech/pipeline-qui-refuse/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        /* Accent : rouge — refus, blocage, contrôle */
+        .hero-section {
+            padding: 5rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #fef2f2 0%, #fee2e2 100%);
+            text-align: center;
+            border-bottom: 1px solid #fecaca;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #b91c1c;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(220, 38, 38, 0.1);
+            color: #b91c1c;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1.5rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin: 1.75rem 0;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: left;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            color: #b91c1c;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #475569;
+            text-align: left;
+        }
+
+        .pedagogy-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-left: 4px solid #2563eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .pedagogy-box h4 {
+            color: #1d4ed8;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pedagogy-box p {
+            font-size: 0.95rem;
+            color: #1e3a8a;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .alert-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #dc2626;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .alert-box h4 {
+            color: #b91c1c;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-box p {
+            font-size: 0.95rem;
+            color: #991b1b;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .takeaway-box {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+            border-left: 4px solid #16a34a;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .takeaway-box h4 {
+            color: #15803d;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .takeaway-box ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .takeaway-box li {
+            font-size: 0.95rem;
+            color: #166534;
+            line-height: 1.65;
+            margin: 0.4rem 0;
+        }
+
+        pre.code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            font-family: 'SFMono-Regular', 'Consolas', 'Menlo', monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            overflow: auto;
+            margin: 1.5rem 0;
+        }
+
+        pre.code-block .k { color: #fca5a5; }
+        pre.code-block .s { color: #86efac; }
+        pre.code-block .c { color: #64748b; font-style: italic; }
+        pre.code-block .n { color: #93c5fd; }
+
+        .data-table {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #fef2f2;
+            text-align: left;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #b91c1c;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .data-table td {
+            padding: 0.7rem 0.9rem;
+            border-top: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        .data-table td.bad { color: #b91c1c; font-weight: 700; }
+        .data-table td.good { color: #15803d; font-weight: 700; }
+
+        .state-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 1rem;
+            margin: 1.75rem 0;
+        }
+
+        .state-card {
+            border-radius: 12px;
+            padding: 1.25rem 1.4rem;
+            border: 1.5px solid #e2e8f0;
+            background: #fff;
+        }
+
+        .state-card b {
+            display: block;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.45rem;
+        }
+
+        .state-card p {
+            font-size: 0.88rem;
+            line-height: 1.55;
+            margin: 0;
+            color: #475569;
+        }
+
+        .state-card.pass { border-color: #86efac; background: #f0fdf4; }
+        .state-card.pass b { color: #15803d; }
+        .state-card.fail { border-color: #fca5a5; background: #fef2f2; }
+        .state-card.fail b { color: #b91c1c; }
+        .state-card.unknown { border-color: #fcd34d; background: #fffbeb; }
+        .state-card.unknown b { color: #b45309; }
+
+        .transcript {
+            border-left: 3px solid #cbd5e1;
+            padding: 0.25rem 0 0.25rem 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .transcript .who {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 0.15rem;
+        }
+
+        .transcript .line {
+            font-size: 0.97rem;
+            line-height: 1.6;
+            color: #334155;
+            margin-bottom: 1rem;
+        }
+
+        .transcript .line.verdict { color: #b91c1c; font-weight: 600; }
+
+        .echart-box {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.5rem;
+            margin: 1.75rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-card { padding: 1.5rem; }
+            .hero-section { padding: 3rem 1rem 6rem; }
+            .metric-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+            .metric-card { padding: 1.25rem; }
+            pre.code-block { font-size: 0.74rem; padding: 1.1rem 1.25rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">Séries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">INGÉNIERIE — QUALITÉ &amp; PUBLICATION</div>
+        <h1
+            style="font-size:3rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Un pipeline de publication qui sait dire non
+        </h1>
+        <p
+            style="font-size:1.2rem; color:#475569; max-width:780px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Trois gates bloquants, trois états au lieu de deux, un panel adversarial avant la mise en
+            ligne. Et le soir où un relecteur a recompté un « 17 » annoncé pour trouver 15.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> Gates &amp; panels</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 15 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-ban"></i> Le refus comme fonctionnalité</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="container">
+
+        <!-- INTRO -->
+        <div id="intro" class="content-card">
+            <h2><i class="fa-solid fa-ban" style="color:#dc2626;"></i> Une chaîne qui publie toujours ne
+                contrôle rien</h2>
+
+            <p>Une chaîne de publication automatisée a un biais natif : elle est faite pour produire.
+                Chaque étape est écrite pour aboutir, chaque erreur récupérable est récupérée, et
+                l'absence d'obstacle se lit comme une réussite. Ce biais est confortable jusqu'au jour
+                où le contenu qui sort est faux. Une page web se corrige. Un courriel parti chez de vrais
+                abonnés, non.</p>
+
+            <p>La question d'ingénierie n'est donc pas « comment publier plus vite ». C'est
+                <strong>combien de manières distinctes cette chaîne a-t-elle de refuser</strong>, et
+                est-ce que chacune de ces manières fonctionne vraiment. Notre pipeline en compte trois
+                de nature déterministe, plus une de nature adversariale. Voici ce que chacune arrête, ce
+                qu'elle a laissé passer, et pourquoi la plus dangereuse des pannes est un gate qui
+                répond vert sans avoir rien vérifié.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">3 + 1</div>
+                    <div class="metric-label">Trois gates déterministes bloquants, puis un panel
+                        adversarial avant mise en ligne</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">3 états</div>
+                    <div class="metric-label">Passe / échoue / <em>n'a pas pu vérifier</em>, le
+                        troisième aussi bloquant que le deuxième</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">17 → 15</div>
+                    <div class="metric-label">Un compte affirmé par le rédacteur, recompté aux sources
+                        par un relecteur, corrigé avant publication</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">~30 min</div>
+                    <div class="metric-label">Ce que coûte le panel sur un cycle complet, arbitré et
+                        accepté</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GATES -->
+        <div id="gates" class="content-card">
+            <h2><i class="fa-solid fa-traffic-light" style="color:#dc2626;"></i> Trois gates
+                déterministes</h2>
+
+            <p>Un gate déterministe est un script qui rend un code de sortie. Il ne discute pas, il ne
+                nuance pas, il n'a pas d'avis. Sa valeur vient précisément de là : il produit le même
+                verdict sur la même entrée, toujours, pour un coût nul.</p>
+
+            <h3>1 · Le gate de fraîcheur, ou le contrat de date</h3>
+
+            <p>Notre règle interne interdit de publier sur des données périmées. Elle a longtemps existé
+                en prose, dans un document que tout le monde était censé lire. Une règle en prose ne
+                bloque rien : un article pouvait sortir avec des cotations de l'avant-veille présentées
+                comme fraîches, et personne ne le voyait.</p>
+
+            <p>Le gate transforme la règle en code de sortie. Pendant la collecte, le producteur écrit un
+                manifeste à côté de l'artefact : chaque source de données y est déclarée avec son
+                horodatage <em>réel</em>, celui renvoyé par l'appel, jamais l'heure courante. Le gate ne
+                récupère rien et n'estime rien. Il compare des horodatages, et il bloque dans cinq cas :
+                manifeste absent, source obligatoire manquante, horodatage illisible, source plus vieille
+                que son âge maximal déclaré, ou source <em>datée du futur</em> de plus de quinze minutes.
+                Ce dernier cas mérite d'exister : un horodatage en avance signale soit une horloge
+                fausse, soit un timestamp inventé.</p>
+
+            <pre class="code-block"><span class="c">// Manifeste écrit pendant la collecte, lu par le gate</span>
+{
+  <span class="n">"contenu"</span>: <span class="s">"briefing/20260814"</span>,
+  <span class="n">"sources"</span>: [
+    { <span class="n">"nom"</span>: <span class="s">"cloture_us"</span>, <span class="n">"as_of"</span>: <span class="s">"2026-08-13T20:00:00Z"</span>, <span class="n">"age_max_h"</span>: 24, <span class="n">"requis"</span>: <span class="k">true</span> },
+    { <span class="n">"nom"</span>: <span class="s">"regime"</span>,     <span class="n">"as_of"</span>: <span class="s">"2026-08-14T10:14:00Z"</span>, <span class="n">"age_max_h"</span>: 6,  <span class="n">"requis"</span>: <span class="k">true</span> },
+    { <span class="n">"nom"</span>: <span class="s">"calendrier"</span>, <span class="n">"as_of"</span>: <span class="s">"2026-08-14T10:16:00Z"</span>, <span class="n">"age_max_h"</span>: 24, <span class="n">"requis"</span>: <span class="k">true</span> }
+  ]
+}</pre>
+
+            <h3>2 · La validation quantitative</h3>
+
+            <p>Le second gate lit la sortie chiffrée du producteur et la confronte aux règles dures de la
+                maison : arithmétique des niveaux, rapport risque/récompense minimal calculé depuis une
+                entrée réellement atteignable, plafonds de concentration, exclusions réglementaires,
+                cohérence entre ce qui est annoncé et ce qui est publié. Une sortie non conforme ne part
+                pas. Ce gate tourne avant l'indexation, donc avant qu'un lecteur puisse voir quoi que ce
+                soit.</p>
+
+            <h3>3 · Le détecteur de tics</h3>
+
+            <p>Le troisième gate ne regarde ni les données ni les niveaux : il regarde la langue. Il
+                balaie la prose visible, tags retirés, et signale <strong>77 formules toutes faites</strong>
+                (les tournures de transition mécaniques, les clichés marketing, les définitions
+                réflexes), <strong>8 connecteurs formels</strong> dont l'accumulation trahit une cadence
+                de machine, et une <strong>densité de tirets cadratins au-delà de six pour cinq cents
+                mots</strong>. Il attrape aussi les termes d'infrastructure interne qui n'ont rien à
+                faire dans un texte publié.</p>
+
+            <p>Zéro signalement ne prouve pas qu'un humain a écrit. Un signalement, en revanche, impose de
+                réécrire. Le gate ne corrige rien : il refuse, et rend la main.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Pourquoi trois gates séparés</h4>
+                <p>Chacun mesure une chose que les autres ne voient pas. Un texte peut être parfaitement
+                    écrit sur des données mortes, arithmétiquement juste dans une langue de robot, ou
+                    frais et bien tourné avec un rapport risque/récompense fabriqué. Un gate unique qui
+                    tenterait de tout couvrir échouerait mal : on ne saurait pas ce qui a cassé. Trois
+                    codes de sortie distincts donnent trois diagnostics distincts.</p>
+            </div>
+        </div>
+
+        <!-- TROIS ETATS -->
+        <div id="etats" class="content-card">
+            <h2><i class="fa-solid fa-circle-question" style="color:#dc2626;"></i> Le piège : un gate vert
+                sur rien</h2>
+
+            <p>Le 8 août, un audit a passé au crible trois de nos gates sur une production bloquée : le
+                connecteur de données répondait en erreur, aucune donnée n'avait été collectée, aucun
+                titre n'avait été retenu. Les trois défauts ont survécu entièrement à la panne.</p>
+
+            <p>Le gate de fraîcheur a rendu « 4 sources vérifiées, 0 bloquante », code de sortie 0.
+                Vert. Or les neuf fichiers de rôle produits pendant la collecte portaient <em>tous</em>
+                un statut bloquant. Le gate faisait exactement ce qu'il annonçait, comparer des
+                horodatages, mais un manifeste décrit une <strong>intention</strong> de collecte, il ne
+                prouve pas qu'elle a abouti. Détail plus embarrassant encore : les statuts d'échec
+                existaient bel et bien, écrits proprement sur disque, et aucun outil du dépôt ne les
+                lisait. Les producteurs consignaient consciencieusement leur échec dans le vide.</p>
+
+            <p>Le deuxième gate, lui, avalait son argument de chemin. On lui demandait d'auditer la
+                production du jour ; il ignorait silencieusement l'argument positionnel et auditait le
+                dernier jour ouvré, puis sortait 0. La cible visée n'a reçu aucune couverture tout en
+                affichant un feu vert.</p>
+
+            <p>Le troisième cas est le plus instructif. Une métrique de corrélation était publiée en
+                métadonnée du panier. Elle avait été calculée sur le crible initial, pas sur le panier
+                final : <strong>la moitié des lignes publiées n'avait jamais été mesurée</strong>. Les
+                chiffres affichés décrivaient un portefeuille qui n'existait pas, et les deux règles de
+                dé-concentration qui s'appuyaient dessus ne pouvaient rien mordre.</p>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Pire que l'absence de contrôle</h4>
+                <p>Un gate qui rend 0 est lu comme « vérifié ». Quand il rend 0 parce qu'il n'a rien pu
+                    vérifier, ou parce qu'il a vérifié autre chose, il ne protège plus : il certifie.
+                    C'est strictement pire que son absence. Sans gate, on doute et on relit. Avec un gate
+                    vert, on publie.</p>
+            </div>
+
+            <p>Le correctif tient en une phrase : <strong>un gate doit distinguer trois états, jamais
+                deux</strong>.</p>
+
+            <div class="state-grid">
+                <div class="state-card pass">
+                    <b><i class="fa-solid fa-circle-check"></i> Passe</b>
+                    <p>Le contrôle s'est exécuté et la condition est remplie. Le seul état qui autorise
+                        la suite.</p>
+                </div>
+                <div class="state-card fail">
+                    <b><i class="fa-solid fa-circle-xmark"></i> Échoue</b>
+                    <p>Le contrôle s'est exécuté et la condition est violée. Blocage, avec le détail de
+                        la violation.</p>
+                </div>
+                <div class="state-card unknown">
+                    <b><i class="fa-solid fa-circle-question"></i> N'a pas pu vérifier</b>
+                    <p>Source absente, argument ignoré, exception avalée. Aussi bloquant que l'échec en
+                        publication.</p>
+                </div>
+            </div>
+
+            <p>Quatre règles en découlent, et elles sont devenues des invariants de revue de code chez
+                nous. Un fichier de rôle sans déclaration explicite de statut est traité comme bloquant :
+                l'absence de déclaration ne vaut pas feu vert. Un bloc de rattrapage d'exception à
+                l'intérieur d'un contrôle n'est jamais muet, il remonte au minimum « contrôle non
+                exécuté ». Un outil qui reçoit un argument qu'il ne sait pas traiter le <em>refuse</em>
+                au lieu de l'ignorer, parce qu'ignorer revient à répondre à côté avec assurance. Enfin,
+                une métadonnée d'échec n'a de valeur que si un consommateur la lit : la vérification se
+                fait en cherchant, dans le dépôt, quel outil la consulte. Si personne ne la lit, ce n'est
+                pas un contrôle, c'est de la documentation.</p>
+
+            <p>Après correction, le gate de fraîcheur lit les fichiers de rôle et échoue sur tout statut
+                bloquant. Cinq productions saines passées en régression sont restées identiques au bit
+                près ; seule la production cassée est passée de « 0 bloquante » à neuf.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-user-check"></i> Une leçon sur soi-même</h4>
+                <p>La première version de ce troisième contrôle lisait une variable hors de sa portée, et
+                    son bloc de rattrapage muet avalait l'erreur de référence. Le contrôle ne s'exécutait
+                    jamais, et ne le disait pas. Autrement dit : un échec silencieux écrit en corrigeant
+                    des échecs silencieux. Le motif est assez fort pour se reproduire jusque dans son
+                    propre correctif.</p>
+            </div>
+        </div>
+
+        <!-- PANEL -->
+        <div id="panel" class="content-card">
+            <h2><i class="fa-solid fa-users-viewfinder" style="color:#dc2626;"></i> Le panel adversarial,
+                avant la mise en ligne</h2>
+
+            <p>Les gates déterministes couvrent la forme, les seuils et la fraîcheur. Ils ne savent pas
+                dire si un chiffre est <em>vrai</em>, ni si une thèse tient debout. C'est le travail du
+                panel : plusieurs relecteurs spécialisés, chacun avec un mandat étroit, qui passent sur
+                l'artefact avant qu'il ne soit indexé, avec pouvoir de blocage.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Relecteur</th>
+                            <th>Mandat</th>
+                            <th>Ce qu'il bloque</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Données</strong></td>
+                            <td>Chaque chiffre publié est re-vérifié à la source, chaque ratio
+                                recalculé</td>
+                            <td>Chiffre fabriqué, chiffre périmé, statistique qui ne recoupe pas son
+                                propre tableau</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Exécution</strong></td>
+                            <td>Le contenu est-il jouable aux niveaux annoncés, aujourd'hui</td>
+                            <td>Cible atteignable seulement sur un repli fictif, entrée trop éloignée du
+                                cours</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Risque</strong></td>
+                            <td>Dilution, concentration, plafonds de taille, avertissements
+                                obligatoires</td>
+                            <td>Risque de dilution non divulgué, dépassement de plafond, avertissement
+                                manquant</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cohérence de portefeuille</strong></td>
+                            <td>Le panier exprime-t-il la thèse qu'il déclare</td>
+                            <td>Posture défensive annoncée avec un panier haut bêta, « diversification »
+                                qui est un seul pari</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Édition</strong></td>
+                            <td>Titre exact, structure, sources citées, absence de remplissage</td>
+                            <td>Titre plus fort que le contenu, section vide, affirmation sans source</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Le panel a été explicitement arbitré le 11 août, face à un objectif de latence de cinq
+                minutes sur la production quotidienne. La décision a été de le garder, en connaissance
+                du coût : le budget de cinq minutes porte désormais sur la collecte et la publication
+                scriptées, pas sur le cycle complet. Un cycle complet dure une trentaine de minutes, et
+                c'est accepté. Le raisonnement ne se comprime pas comme du transport de données.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-ruler-combined"></i> Calibrer plutôt que supprimer</h4>
+                <p>La bonne variable d'ajustement n'est pas l'existence du panel, c'est sa taille, et
+                    elle se calibre sur l'enjeu de diffusion : sept relecteurs pour un contenu qui part
+                    par courriel chez des abonnés, trois pour un produit quotidien déjà couvert par des
+                    gates déterministes, zéro pour une page web sans notification. Le score de matérialité
+                    calculé au moment de la publication fournit déjà cette mesure.</p>
+            </div>
+        </div>
+
+        <!-- LE 17 -->
+        <div id="dix-sept" class="content-card">
+            <h2><i class="fa-solid fa-hashtag" style="color:#dc2626;"></i> Le soir où « 17 » valait 15</h2>
+
+            <p>Le cas le plus utile n'est pas une erreur de calcul. C'est un chiffre inventé par
+                confort.</p>
+
+            <p>Le rédacteur produit un article qui s'appuie sur un décompte : le nombre d'éléments
+                retenus après filtrage. Il écrit « 17 » dans le corps du texte et dans le résumé. Le
+                chiffre est plausible, il est cohérent avec le reste du paragraphe, et il donne au propos
+                une précision agréable. Aucun gate déterministe ne peut l'attraper : la structure est
+                bonne, la langue est propre, les données déclarées sont fraîches, le décompte n'est pas
+                un ratio soumis à une règle dure. Le texte passe les trois gates en vert.</p>
+
+            <div class="transcript">
+                <div class="who">Relecteur données</div>
+                <div class="line">Le corps du texte annonce 17 éléments retenus. J'ai recompté depuis les
+                    fichiers sources : j'en trouve 15. Le résumé reprend 17. Écart non expliqué par un
+                    filtrage postérieur.</div>
+
+                <div class="who">Rédacteur</div>
+                <div class="line">Le compte incluait deux lignes écartées plus tard dans la chaîne.</div>
+
+                <div class="who">Arbitre</div>
+                <div class="line verdict">Vérification aux sources : 15. Les deux lignes invoquées ne
+                    figurent dans aucun fichier intermédiaire. Le chiffre publié doit être 15, dans le
+                    corps et dans le résumé. Blocage levé après correction.</div>
+            </div>
+
+            <p>Trois choses méritent d'être notées. D'abord, la fabrication n'était pas un mensonge
+                délibéré : c'est le mode de défaillance ordinaire d'un modèle de langage, qui produit le
+                token le plus vraisemblable quand il n'a pas recompté. Ensuite, la <em>justification</em>
+                apportée après coup était elle aussi fabriquée, ce qui est le vrai danger : un rédacteur
+                interrogé sur un chiffre faux produira volontiers une explication plausible. C'est
+                pourquoi l'arbitre ne tranche jamais sur l'argument, il tranche sur la source.</p>
+
+            <p>Enfin, ce défaut est structurellement invisible aux contrôles automatiques. Il faut
+                quelqu'un dont le mandat est de recompter, et qui ne partage pas le contexte de celui qui
+                a écrit. Un relecteur qui hérite du raisonnement de l'auteur hérite aussi de ses
+                raccourcis.</p>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-eye"></i> La règle qui en découle</h4>
+                <p>Tout compte, tout total, tout « sur N » présent dans un texte publié est un chiffre
+                    vérifiable, donc un chiffre à vérifier. Le relecteur données ne relit pas le
+                    paragraphe : il recompte le fichier et compare. La différence entre relire et
+                    recompter est exactement la différence entre passer et attraper.</p>
+            </div>
+        </div>
+
+        <!-- RELEVE -->
+        <div id="releve" class="content-card">
+            <h2><i class="fa-solid fa-clipboard-check" style="color:#dc2626;"></i> Ce que le refus achète,
+                en une journée</h2>
+
+            <p>La valeur d'un gate se mesure mal en absolu. Elle se mesure à ce qu'il arrête. Relevé
+                factuel sur une seule journée de production, du 10 au 11 août.</p>
+
+            <div class="echart-box">
+                <div id="catchChart" style="height:340px;"></div>
+            </div>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Artefact</th>
+                            <th>Ce que le panel a trouvé</th>
+                            <th>Issue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Revue hebdomadaire</td>
+                            <td>Environ 19 cotations fausses, dont un indice présenté comme la plus
+                                forte hausse mondiale alors qu'il baissait, 4 inversions de signe, une
+                                mesure de volatilité relevée en séance étiquetée clôture de la veille</td>
+                            <td class="bad">Bloqué, réécrit</td>
+                        </tr>
+                        <tr>
+                            <td>Revue hebdomadaire (taille de position)</td>
+                            <td>Lignes dimensionnées entre 31 % et 62 % de l'actif net, contre un plafond
+                                maison de 18,4 %</td>
+                            <td class="bad">Bloqué</td>
+                        </tr>
+                        <tr>
+                            <td>Analyse d'une valeur</td>
+                            <td>Risque de dilution de 32,5 millions d'actions, soit environ 10 % du
+                                capital, absent du texte : onze fois ce qui était déclaré</td>
+                            <td class="bad">Bloqué</td>
+                        </tr>
+                        <tr>
+                            <td>Article de rotation sectorielle</td>
+                            <td>Le panel a trouvé le catalyseur que l'auteur affirmait inexistant. Thèse
+                                entière invalidée, prête à partir</td>
+                            <td class="bad">Bloqué</td>
+                        </tr>
+                        <tr>
+                            <td>Sélection mensuelle</td>
+                            <td>Contrat de date violé, libellé de rapport risque/récompense faux, une
+                                ligne annoncée exécutable au marché sous le plancher maison</td>
+                            <td class="bad">Bloqué</td>
+                        </tr>
+                        <tr>
+                            <td>Revue hebdomadaire, deuxième passe</td>
+                            <td>Gonflée à 13 391 mots pour une vingtaine de faits, puis amputée de 6
+                                sections obligatoires à la réécriture</td>
+                            <td class="bad">Bloqué deux fois, pour des raisons opposées</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Deux blocages sur le même artefact pour des raisons contradictoires méritent d'être
+                affichés plutôt que cachés : la première réécriture a sur-corrigé. Un panel qui ne
+                bloquerait qu'une fois par artefact, par convention, laisserait passer la seconde
+                version. Le nombre de passes n'est pas une métrique de qualité du panel, c'est une
+                métrique de difficulté du sujet.</p>
+        </div>
+
+        <!-- SYNTHESE -->
+        <div id="synthese" class="content-card">
+            <h2><i class="fa-solid fa-flag-checkered" style="color:#dc2626;"></i> Refuser est une
+                fonctionnalité</h2>
+
+            <p>Dans une chaîne de production classique, un blocage est un incident : quelque chose a
+                cassé, il faut réparer pour que ça reparte. Dans une chaîne qui publie des chiffres,
+                le blocage est le produit. Il est ce qu'on achète en construisant les gates, et le taux
+                de blocage n'est pas un indicateur de mauvaise santé.</p>
+
+            <p>Le renversement mental est là. Nos indicateurs de pipeline ne mesurent plus seulement le
+                nombre de publications réussies, ils mesurent le nombre de refus et leurs motifs. Une
+                semaine à zéro refus n'est pas une bonne semaine : c'est une semaine où il faut aller
+                vérifier que les gates s'exécutent encore.</p>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-list-check"></i> Les six invariants</h4>
+                <ul>
+                    <li>Chaque règle éditoriale importante existe en code de sortie, pas seulement en
+                        prose.</li>
+                    <li>Trois états, jamais deux. « N'a pas pu vérifier » bloque comme « échoue ».</li>
+                    <li>Aucun bloc de rattrapage muet dans un contrôle.</li>
+                    <li>Un outil refuse un argument qu'il ne sait pas traiter au lieu de l'ignorer.</li>
+                    <li>Une métadonnée d'échec doit avoir un lecteur identifié dans le dépôt.</li>
+                    <li>Tout compte publié est recompté à la source par quelqu'un qui n'a pas écrit le
+                        texte.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div id="disclaimer" class="content-card">
+            <h2><i class="fa-solid fa-circle-info" style="color:#dc2626;"></i> Portée</h2>
+            <p style="font-size:0.95rem; color:#64748b;">
+                Les incidents et relevés cités proviennent de notre propre chaîne de publication, à des
+                dates identifiées. Ils décrivent une architecture logicielle et des pratiques de
+                contrôle qualité. Cet article ne constitue pas un conseil financier, et les artefacts
+                mentionnés le sont à titre d'illustration technique.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-ban"></i><span>Intro</span></a>
+            <a href="#gates" class="fnav-item" data-section="gates"><i class="fas fa-traffic-light"></i><span>Les gates</span></a>
+            <a href="#etats" class="fnav-item" data-section="etats"><i class="fas fa-circle-question"></i><span>Trois états</span></a>
+            <a href="#panel" class="fnav-item" data-section="panel"><i class="fas fa-users-viewfinder"></i><span>Le panel</span></a>
+            <a href="#dix-sept" class="fnav-item" data-section="dix-sept"><i class="fas fa-hashtag"></i><span>Le « 17 »</span></a>
+            <a href="#releve" class="fnav-item" data-section="releve"><i class="fas fa-clipboard-check"></i><span>Relevé</span></a>
+            <a href="#synthese" class="fnav-item" data-section="synthese"><i class="fas fa-flag-checkered"></i><span>Synthèse</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+
+    <script>
+        (function () {
+            var el = document.getElementById('catchChart');
+            if (!el || typeof echarts === 'undefined') return;
+            var chart = echarts.init(el);
+            chart.setOption({
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                grid: { left: 230, right: 50, bottom: 30, top: 20 },
+                xAxis: { type: 'value', axisLabel: { color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+                yAxis: {
+                    type: 'category',
+                    data: [
+                        'Thèse entière invalidée',
+                        'Risque de dilution non divulgué',
+                        'Dépassement de plafond de taille',
+                        'Inversions de signe',
+                        'Sections obligatoires manquantes',
+                        'Cotations fausses'
+                    ],
+                    axisLabel: { color: '#334155', fontSize: 12 }
+                },
+                series: [{
+                    name: 'Occurrences bloquées',
+                    type: 'bar',
+                    barMaxWidth: 26,
+                    data: [
+                        { value: 1, itemStyle: { color: '#fca5a5' } },
+                        { value: 1, itemStyle: { color: '#f87171' } },
+                        { value: 1, itemStyle: { color: '#ef4444' } },
+                        { value: 4, itemStyle: { color: '#dc2626' } },
+                        { value: 6, itemStyle: { color: '#b91c1c' } },
+                        { value: 19, itemStyle: { color: '#7f1d1d' } }
+                    ],
+                    label: { show: true, position: 'right', fontWeight: 700, color: '#0f172a' }
+                }]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+</body>
+
+</html>

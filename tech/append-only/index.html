@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="tech,architecture,securite,formation" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Append-only ou rien | DailyTickers</title>
+    <meta name="description"
+        content="Pourquoi un registre de publications et de trades ne se réécrit jamais : les écritures perdues du read-modify-write (4 survivantes sur 20), la republication en double qui en découle, la chaîne d'intégrité SHA-256 sur 299 trades scellés, et un quota d'envoi gardé par un jeton à usage unique.">
+    <meta property="og:title" content="Append-only ou rien">
+    <meta property="og:description"
+        content="Écritures perdues, republication en double, chaîne d'intégrité SHA-256 et jeton à usage unique : anatomie d'un registre qui ne se réécrit jamais.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.dailytickers.com/tech/append-only/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        /* Accent : sarcelle — registre, intégrité, permanence */
+        .hero-section {
+            padding: 5rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #f0fdfa 0%, #ccfbf1 100%);
+            text-align: center;
+            border-bottom: 1px solid #99f6e4;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #0f766e;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(13, 148, 136, 0.1);
+            color: #0f766e;
+            border: 1px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1.5rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin: 1.75rem 0;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: left;
+            background: #f0fdfa;
+            border: 1px solid #99f6e4;
+            border-radius: 12px;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            color: #0f766e;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #475569;
+            text-align: left;
+        }
+
+        .pedagogy-box {
+            background: #f0fdfa;
+            border: 1px solid #5eead4;
+            border-left: 4px solid #0d9488;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .pedagogy-box h4 {
+            color: #0f766e;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pedagogy-box p {
+            font-size: 0.95rem;
+            color: #115e59;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .alert-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #dc2626;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .alert-box h4 {
+            color: #b91c1c;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-box p {
+            font-size: 0.95rem;
+            color: #991b1b;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .takeaway-box {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+            border-left: 4px solid #16a34a;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .takeaway-box h4 {
+            color: #15803d;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .takeaway-box ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .takeaway-box li {
+            font-size: 0.95rem;
+            color: #166534;
+            line-height: 1.65;
+            margin: 0.4rem 0;
+        }
+
+        pre.code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            font-family: 'SFMono-Regular', 'Consolas', 'Menlo', monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            overflow: auto;
+            margin: 1.5rem 0;
+        }
+
+        pre.code-block .k { color: #5eead4; }
+        pre.code-block .s { color: #86efac; }
+        pre.code-block .c { color: #64748b; font-style: italic; }
+        pre.code-block .n { color: #fcd34d; }
+        pre.code-block .r { color: #fca5a5; }
+
+        .data-table {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #f0fdfa;
+            text-align: left;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #0f766e;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .data-table td {
+            padding: 0.7rem 0.9rem;
+            border-top: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        .data-table td.mono { font-family: 'SFMono-Regular', 'Consolas', monospace; font-size: 0.8rem; }
+        .data-table td.bad { color: #b91c1c; font-weight: 700; }
+        .data-table td.good { color: #15803d; font-weight: 700; }
+
+        .chain {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin: 1.75rem 0;
+        }
+
+        .chain-block {
+            flex: 1;
+            min-width: 140px;
+            border: 1.5px solid #99f6e4;
+            background: #f0fdfa;
+            border-radius: 10px;
+            padding: 0.8rem 0.9rem;
+            font-size: 0.78rem;
+            line-height: 1.4;
+            color: #115e59;
+        }
+
+        .chain-block b {
+            display: block;
+            font-family: 'SFMono-Regular', 'Consolas', monospace;
+            font-size: 0.74rem;
+            color: #0f766e;
+            margin-bottom: 0.25rem;
+        }
+
+        .chain-block.broken {
+            border-color: #fca5a5;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .chain-block.broken b { color: #b91c1c; }
+
+        .chain-link {
+            color: #14b8a6;
+            font-size: 1rem;
+        }
+
+        .echart-box {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.5rem;
+            margin: 1.75rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-card { padding: 1.5rem; }
+            .hero-section { padding: 3rem 1rem 6rem; }
+            .metric-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+            .metric-card { padding: 1.25rem; }
+            pre.code-block { font-size: 0.74rem; padding: 1.1rem 1.25rem; }
+            .chain { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">Séries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">INGÉNIERIE — INTÉGRITÉ DES DONNÉES</div>
+        <h1
+            style="font-size:3rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Append-only ou rien
+        </h1>
+        <p
+            style="font-size:1.2rem; color:#475569; max-width:780px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Un registre de publications et de trades ne se réécrit jamais. Anatomie de trois
+            défaillances réelles : les écritures perdues, la republication en double qu'elles fabriquent,
+            et les autorisations qui n'autorisent rien parce qu'elles n'écrivent rien.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-link"></i> Registres &amp; intégrité</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 15 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-fingerprint"></i> Chaîne SHA-256</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="container">
+
+        <!-- INTRO -->
+        <div id="intro" class="content-card">
+            <h2><i class="fa-solid fa-scroll" style="color:#0d9488;"></i> Un fait n'est pas un état</h2>
+
+            <p>La plupart des fichiers d'une application décrivent un <em>état</em> : la configuration
+                courante, le panier ouvert, les préférences. On les charge, on les modifie, on les
+                réécrit. C'est le geste par défaut de tout développeur, et il est correct pour un état.</p>
+
+            <p>Deux de nos fichiers ne décrivent pas un état. Ils décrivent des <strong>faits
+                passés</strong> : « ce produit a été publié à cette heure, sur ces canaux », « ce trade
+                s'est clôturé à ce prix, à cette date ». Un fait ne se modifie pas. Il s'ajoute. La
+                différence semble philosophique jusqu'au moment où on mesure ce que coûte l'avoir
+                ignorée : quatre entrées survivantes sur vingt, des publications en double, et cinq mois
+                de statistiques réécrites en silence.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">4 / 20</div>
+                    <div class="metric-label">Entrées de registre survivantes quand deux producteurs
+                        écrivaient en parallèle, avant le passage en ajout pur</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">299</div>
+                    <div class="metric-label">Blocs scellés dans la chaîne d'intégrité, répartis sur cinq
+                        registres de stratégies</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">+91 % → +77 %</div>
+                    <div class="metric-label">Ce qu'une réécriture silencieuse a fait à une performance
+                        publiée, du jour au lendemain</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">1 / 24 h</div>
+                    <div class="metric-label">Quota d'envoi par courriel, tous produits confondus, gardé
+                        par un jeton à usage unique</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ECRITURES PERDUES -->
+        <div id="perdues" class="content-card">
+            <h2><i class="fa-solid fa-eraser" style="color:#0d9488;"></i> Les écritures perdues</h2>
+
+            <p>Le registre de publication était un tableau JSON. Chaque producteur qui publiait quelque
+                chose faisait le geste évident : lire le fichier, ajouter son entrée au tableau, réécrire
+                le fichier entier. Trois opérations, aucune atomicité.</p>
+
+            <pre class="code-block"><span class="c">// L'anti-pattern, dans toute sa banalité</span>
+<span class="k">const</span> registre = JSON.parse(fs.readFileSync(CHEMIN));   <span class="c">// (1) lecture</span>
+registre.push({ type, at: Date.now(), canaux });          <span class="c">// (2) modification</span>
+fs.writeFileSync(CHEMIN, JSON.stringify(registre));       <span class="c">// (3) réécriture TOTALE</span></pre>
+
+            <p>Deux producteurs qui terminent à quelques dizaines de millisecondes d'écart lisent tous
+                les deux la même version, ajoutent chacun leur entrée à <em>leur</em> copie en mémoire, et
+                réécrivent tous les deux le fichier complet. Le second écrase le premier. L'entrée du
+                premier n'existe plus, et rien ne signale sa disparition : le fichier est valide, bien
+                formé, simplement incomplet.</p>
+
+            <p>Mesuré chez nous, sur une soirée où plusieurs produits se publiaient en parallèle :
+                <strong>quatre entrées sur vingt survivaient</strong>. Quatre-vingts pour cent des faits
+                enregistrés s'évaporaient dans la fenêtre entre lecture et réécriture.</p>
+
+            <div class="echart-box">
+                <div id="lostWritesChart" style="height:320px;"></div>
+            </div>
+
+            <h3>La conséquence, qui est pire que la cause</h3>
+
+            <p>Une entrée perdue ne se contente pas de manquer dans une archive. Ce registre est
+                <em>consulté</em> avant chaque publication pour répondre à une question simple : ce
+                produit est-il déjà sorti aujourd'hui ? Un produit dont l'entrée a disparu est réputé
+                n'avoir jamais été publié. Il est donc republié le lendemain. Les lecteurs reçoivent deux
+                fois le même contenu, et la trace qui aurait permis de le comprendre est justement celle
+                qui manque.</p>
+
+            <p>Un bug de concurrence sur trois lignes se transforme ainsi en défaut visible par
+                l'utilisateur final, avec un délai de vingt-quatre heures entre la cause et le symptôme.
+                C'est le profil de panne le plus coûteux à diagnostiquer.</p>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Le symptôme trompeur</h4>
+                <p>Quand la republication est apparue, le premier réflexe a été de suspecter la logique
+                    anti-doublon : mauvaise fenêtre de cadence, mauvais fuseau horaire, mauvaise clé de
+                    comparaison. Cette logique était juste. Elle interrogeait un registre amputé. Un
+                    contrôle correct sur une donnée perdue rend un verdict faux avec une parfaite
+                    assurance.</p>
+            </div>
+        </div>
+
+        <!-- AJOUT PUR -->
+        <div id="ajout" class="content-card">
+            <h2><i class="fa-solid fa-plus" style="color:#0d9488;"></i> Une ligne, un fait, un ajout</h2>
+
+            <p>Le correctif tient dans un changement de format et un changement d'appel système. Le
+                registre devient un fichier de lignes JSON, une ligne par publication, et l'écriture se
+                fait en mode ajout, drapeau <code>O_APPEND</code>. Le noyau garantit que le décalage
+                d'écriture est calculé au moment de l'écriture, pas au moment de l'ouverture : deux
+                processus qui ajoutent en même temps produisent deux lignes, dans un ordre non garanti,
+                mais toutes les deux présentes.</p>
+
+            <pre class="code-block"><span class="c">// Le registre : une ligne par fait, ajoutée, jamais relue-réécrite</span>
+fs.appendFileSync(CHEMIN, JSON.stringify({ type, at, canaux }) + <span class="s">"\n"</span>);
+
+<span class="c">// Sur disque</span>
+{<span class="n">"type"</span>:<span class="s">"signals"</span>,<span class="n">"at"</span>:<span class="s">"2026-08-11T13:34:39.500Z"</span>,<span class="n">"canaux"</span>:[<span class="s">"web"</span>,<span class="s">"telegram"</span>]}
+{<span class="n">"type"</span>:<span class="s">"retro"</span>,  <span class="n">"at"</span>:<span class="s">"2026-08-11T13:34:39.641Z"</span>,<span class="n">"canaux"</span>:[<span class="s">"web"</span>,<span class="s">"telegram"</span>]}</pre>
+
+            <p>Le bénéfice secondaire est arrivé sans être cherché. Deux exécuteurs travaillent sur des
+                clones distincts du même dépôt, un poste local et une routine distante. Avec un tableau
+                JSON monolithique, leur convergence produisait des marqueurs de conflit à l'intérieur du
+                fichier. Effet de bord redoutable : la publication continuait de passer, mais
+                l'enregistrement échouait, donc le même produit était jugé « jamais publié » à chaque
+                exécution suivante. Indéfiniment.</p>
+
+            <p>Avec un fichier de lignes, la stratégie de fusion devient une <strong>union de
+                lignes</strong>, déclarée au niveau du dépôt. C'est la bonne sémantique : deux
+                publications distinctes sont deux faits, pas un conflit. Personne n'a besoin de trancher
+                entre elles.</p>
+
+            <h3>Deux gardes qui ne coûtent rien</h3>
+
+            <p>Un registre append-only reste lisible par quelqu'un, et cette lecture a ses propres
+                pièges. Deux d'entre eux nous ont coûté des soirées.</p>
+
+            <p><strong>Absent et illisible sont deux choses différentes.</strong> Un fichier tronqué,
+                traité comme « rien n'a jamais été publié », rouvre le quota en grand. Le premier
+                démarrage légitime doit passer ; une ligne abîmée doit fermer le quota tout en laissant
+                le reste fonctionner. Notre lecteur garde donc ce qu'il a su lire et lève un drapeau
+                séparé : le canal courriel se ferme, le web continue, et personne n'est paralysé par une
+                ligne corrompue vieille de trois semaines.</p>
+
+            <p><strong>Les chemins s'ancrent sur le dépôt, jamais sur le répertoire courant.</strong>
+                Un chemin relatif transformait le quota en passoire : lancé depuis un sous-dossier,
+                l'outil lisait un registre vide et autorisait tout. Les sous-processus et les routines
+                distantes n'ont aucune raison de partager le répertoire de travail de l'opérateur.</p>
+        </div>
+
+        <!-- CHAINE -->
+        <div id="chaine" class="content-card">
+            <h2><i class="fa-solid fa-link" style="color:#0d9488;"></i> La chaîne d'intégrité des trades
+                scellés</h2>
+
+            <p>Le second registre est plus sensible. Il contient l'historique des trades clôturés, celui
+                sur lequel sont calculées les performances publiées. Sa réécriture n'a pas été
+                accidentelle : elle était <em>prévue</em> par le code. Chaque exécution du moteur de
+                simulation recalculait l'ensemble de l'historique.</p>
+
+            <p>Pendant cinq mois, des bugs successifs du moteur ont donc réécrit silencieusement le
+                passé. Une stratégie est passée de +91 % à +77 % du jour au lendemain, sans qu'aucune
+                position n'ait changé. Quarante et un changements de configuration en cinquante jours
+                déclenchaient à chaque fois une re-simulation complète. Le problème n'est pas qu'un
+                chiffre soit devenu faux : c'est qu'aucun chiffre publié n'était plus opposable, y
+                compris les justes.</p>
+
+            <h3>Comment on scelle</h3>
+
+            <p>Chaque trade clos est réduit à sa forme canonique : symbole, date de détection, date
+                d'entrée, date de sortie, prix d'entrée réel, prix de sortie, performance, statut,
+                stratégie. Cette forme est hachée en SHA-256. Le hachage du trade est ensuite combiné au
+                hachage du bloc précédent pour produire le hachage du bloc courant. Une chaîne, au sens
+                strict.</p>
+
+            <pre class="code-block"><span class="k">function</span> hashTrade(t) {
+  <span class="k">const</span> canonique = JSON.stringify({
+    symbole: t.symbole, dateDetection: t.dateDetection, dateEntree: t.dateEntree,
+    dateSortie: t.dateSortie, entree: t.entree, sortie: t.sortie,
+    perf: t.perf, statut: t.statut, strategie: t.strategie,
+  });
+  <span class="k">return</span> sha256(canonique);
+}
+
+<span class="k">function</span> construireChaine(trades) {
+  <span class="k">let</span> precedent = <span class="s">"0000000000000000"</span>;
+  <span class="k">return</span> trades.map(t =&gt; {
+    <span class="k">const</span> bloc = sha256(precedent + hashTrade(t));
+    precedent = bloc;
+    <span class="k">return</span> { hashTrade: hashTrade(t), bloc, symbole: t.symbole };
+  });
+}</pre>
+
+            <div class="chain">
+                <div class="chain-block"><b>bloc 41</b>SAP · clôturé au stop</div>
+                <div class="chain-link"><i class="fas fa-arrow-right"></i></div>
+                <div class="chain-block"><b>bloc 42</b>LMT · première cible</div>
+                <div class="chain-link"><i class="fas fa-arrow-right"></i></div>
+                <div class="chain-block broken"><b>bloc 43</b>Prix de sortie modifié → hachage différent</div>
+                <div class="chain-link"><i class="fas fa-arrow-right"></i></div>
+                <div class="chain-block broken"><b>44 … 299</b>Toute la suite invalidée</div>
+            </div>
+
+            <p>La vérification tourne au démarrage du moteur, avant tout calcul. Elle rejoue la chaîne
+                enregistrée contre les trades présents et s'arrête au premier écart, en nommant l'index
+                exact et le symbole concerné. Elle distingue deux fautes, ce qui compte pour le
+                diagnostic : un bloc dont le hachage ne correspond plus signale une <strong>modification
+                </strong> ; un bloc dont le trade n'existe simplement plus signale une
+                <strong>suppression</strong>. Le moteur avorte dans les deux cas.</p>
+
+            <p>Une garde complémentaire couvre le cas dégénéré que la chaîne seule ne verrait pas :
+                <strong>le nombre de trades clos ne peut jamais décroître</strong>. Une chaîne vide se
+                vérifie parfaitement.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Événement</th>
+                            <th>Détecté par</th>
+                            <th>Réaction</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Un prix de sortie est corrigé sur un trade clos</td>
+                            <td class="mono">hachage de bloc ≠ hachage enregistré</td>
+                            <td class="bad">Abandon, index et symbole nommés</td>
+                        </tr>
+                        <tr>
+                            <td>Un trade clos disparaît de l'historique</td>
+                            <td class="mono">chaîne plus longue que les trades</td>
+                            <td class="bad">Abandon, position du trade supprimé</td>
+                        </tr>
+                        <tr>
+                            <td>L'historique est vidé puis reconstruit</td>
+                            <td class="mono">compte de trades clos en baisse</td>
+                            <td class="bad">Abandon</td>
+                        </tr>
+                        <tr>
+                            <td>De nouveaux trades se clôturent</td>
+                            <td class="mono">préfixe intact, longueur en hausse</td>
+                            <td class="good">Ajout autorisé, nouveaux blocs scellés</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Le même principe gouverne les agrégats. Les statistiques scellées d'une stratégie ne sont
+                jamais recalculées en entier une fois qu'elles existent : le segment postérieur au gel
+                avance à partir des performances déjà scellées, et le préfixe reste verrouillé octet par
+                octet. Un calcul sur toute la période n'a lieu qu'une seule fois dans la vie d'une
+                stratégie, à la première clôture.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-scale-balanced"></i> Ce que l'immutabilité ne couvre pas</h4>
+                <p>La règle protège les trades clos et les agrégats scellés. Elle ne gèle pas un
+                    <em>contenu publié</em>. Un article ou une page qui contient une erreur le jour même
+                    doit être corrigé, et invoquer l'immutabilité pour refuser de le faire est un
+                    contresens que nous avons commis une fois. La frontière est nette : on ne réécrit pas
+                    l'histoire des faits, on corrige la description qu'on en donne.</p>
+            </div>
+        </div>
+
+        <!-- JETON -->
+        <div id="jeton" class="content-card">
+            <h2><i class="fa-solid fa-key" style="color:#0d9488;"></i> Le quota d'envoi et le jeton à
+                usage unique</h2>
+
+            <p>Troisième cas, et le plus instructif sur ce qu'une autorisation doit être. Un courriel
+                part chez de vrais abonnés et ne se rattrape pas. Notre règle : au plus un envoi par
+                période de vingt-quatre heures, tous produits confondus, et il doit se mériter par un
+                score de matérialité entier de 0 à 100, seuil à 70, accompagné d'une justification écrite
+                d'au moins cent vingt caractères. Les deux sont persistés dans le registre : une barrière
+                qui ne laisse aucune trace n'est pas auditable, et trois mois plus tard la question
+                « pourquoi cet envoi est-il parti ? » n'a plus de réponse.</p>
+
+            <h3>Une vérification qui n'écrit rien n'autorise rien</h3>
+
+            <p>La première version proposait une commande de vérification : elle lisait le registre,
+                calculait, et affichait un verdict. Elle n'écrivait rien. Deux appels successifs
+                répondaient donc oui deux fois, et le double envoi ne demandait même pas une situation de
+                concurrence, juste deux appels.</p>
+
+            <p>Le correctif est un principe : <strong>décider et enregistrer sont le même geste</strong>.
+                Une seule commande autorise, et elle le fait sous verrou, dans un seul processus, où la
+                vérification des barrières, la consommation du quota et l'émission de l'autorisation sont
+                indissociables. Le quota est brûlé <em>avant</em> que l'autorisation existe, jamais
+                après.</p>
+
+            <h3>Une décision imprimée n'empêche personne</h3>
+
+            <p>Restait un trou plus large que le premier. La commande savait dire non, mais rien
+                n'obligeait à la consulter. Le point d'envoi acceptait un simple booléen, et un booléen
+                ne lit pas de registre. Les barrières gardaient une porte à côté de laquelle il n'y avait
+                pas de mur.</p>
+
+            <p>L'autorisation est devenue un <strong>jeton à usage unique</strong> écrit sur disque,
+                émis sous verrou après consommation du quota, et consommé au point d'envoi. Pas de jeton
+                valide, pas d'envoi, quel que soit l'appelant et quelle que soit sa bonne foi. Trois
+                détails de conception font le reste du travail.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Propriété</th>
+                            <th>Valeur</th>
+                            <th>Ce qu'elle empêche</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Durée de vie</td>
+                            <td class="mono">10 minutes</td>
+                            <td>Qu'une autorisation obtenue le matin serve le soir, alors que la
+                                matérialité qui la justifiait a expiré</td>
+                        </tr>
+                        <tr>
+                            <td>Fenêtre de relais</td>
+                            <td class="mono">2 minutes</td>
+                            <td>Que le second point de contrôle rejette ce que le premier vient
+                                légitimement de dépenser</td>
+                        </tr>
+                        <tr>
+                            <td>Une consommation par rôle</td>
+                            <td class="mono">1 rôle = 1 fois</td>
+                            <td>Que deux envois se partagent un jeton : le second présente le même rôle
+                                que le premier et se fait refuser</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Le jeton est vérifié à deux endroits distincts, un contrôle local avant le départ de
+                l'appel et le service d'envoi lui-même quand il tourne près du dépôt. Les deux consomment.
+                La fenêtre de relais existe pour que ce doublon de sécurité ne devienne pas un doublon de
+                refus, et la règle « une consommation par rôle » garantit qu'elle ne serve jamais à faire
+                passer deux envois.</p>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-lock"></i> Un jeton n'est pas un secret à versionner</h4>
+                <p>Ces fichiers de jetons sont éphémères et portent une autorisation. Ils n'ont rien à
+                    faire dans le dépôt : un jeton committé est une autorisation qui voyage. La ligne
+                    d'exclusion fait partie du correctif, pas d'un nettoyage ultérieur.</p>
+            </div>
+        </div>
+
+        <!-- SYNTHESE -->
+        <div id="synthese" class="content-card">
+            <h2><i class="fa-solid fa-flag-checkered" style="color:#0d9488;"></i> Ce que la discipline
+                coûte, ce qu'elle rend</h2>
+
+            <p>L'ajout pur coûte peu et rend beaucoup. Le fichier grossit, ce qui se règle par une
+                compaction hors ligne. La lecture demande un balayage, ce qui est négligeable sur des
+                volumes de cet ordre. En échange : aucune écriture perdue, une fusion sans conflit entre
+                clones, un historique opposable, et une reconstruction possible de n'importe quel état
+                passé à partir des faits.</p>
+
+            <p>La question à se poser devant chaque fichier de données est courte : est-ce que ce fichier
+                décrit ce qui <em>est</em>, ou ce qui <em>a eu lieu</em> ? La première catégorie se
+                réécrit sans remords. La seconde, jamais.</p>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-list-check"></i> Les sept règles</h4>
+                <ul>
+                    <li>Un fichier de faits s'écrit en ajout pur, une ligne par fait. Jamais de
+                        lecture-modification-réécriture.</li>
+                    <li>La fusion entre clones se fait par union de lignes : deux faits distincts ne sont
+                        pas un conflit.</li>
+                    <li>Absent et illisible ne sont pas le même état. Le premier est un premier
+                        démarrage ; le second ferme les canaux irréversibles.</li>
+                    <li>Les chemins s'ancrent sur le dépôt, jamais sur le répertoire courant.</li>
+                    <li>Un historique scellé se vérifie par chaîne de hachages avant tout calcul, et son
+                        compte ne peut jamais décroître.</li>
+                    <li>Décider et enregistrer sont le même geste, sous verrou, dans un seul processus.</li>
+                    <li>Une autorisation qui n'est qu'affichée n'empêche rien. Elle doit être un objet
+                        que le point d'action doit consommer.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div id="disclaimer" class="content-card">
+            <h2><i class="fa-solid fa-circle-info" style="color:#0d9488;"></i> Portée</h2>
+            <p style="font-size:0.95rem; color:#64748b;">
+                Les incidents, volumes et paramètres cités proviennent de notre propre chaîne de
+                publication et de son registre de simulation, à des dates identifiées. Cet article décrit
+                des choix d'architecture logicielle et ne constitue pas un conseil financier. Les
+                performances passées mentionnées illustrent un problème d'intégrité de données et ne
+                préjugent pas des résultats futurs.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-scroll"></i><span>Fait ou état</span></a>
+            <a href="#perdues" class="fnav-item" data-section="perdues"><i class="fas fa-eraser"></i><span>Écritures perdues</span></a>
+            <a href="#ajout" class="fnav-item" data-section="ajout"><i class="fas fa-plus"></i><span>Ajout pur</span></a>
+            <a href="#chaine" class="fnav-item" data-section="chaine"><i class="fas fa-link"></i><span>Chaîne SHA-256</span></a>
+            <a href="#jeton" class="fnav-item" data-section="jeton"><i class="fas fa-key"></i><span>Jeton unique</span></a>
+            <a href="#synthese" class="fnav-item" data-section="synthese"><i class="fas fa-flag-checkered"></i><span>Synthèse</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+
+    <script>
+        (function () {
+            var el = document.getElementById('lostWritesChart');
+            if (!el || typeof echarts === 'undefined') return;
+            var chart = echarts.init(el);
+            chart.setOption({
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                legend: { data: ['Entrées enregistrées', 'Entrées perdues'], top: 0, textStyle: { color: '#475569' } },
+                grid: { left: 60, right: 30, bottom: 40, top: 45 },
+                xAxis: {
+                    type: 'category',
+                    data: ['Lecture-modification-réécriture', 'Ajout pur (O_APPEND)'],
+                    axisLabel: { color: '#334155', fontSize: 12 }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'sur 20 publications',
+                    max: 20,
+                    axisLabel: { color: '#64748b' },
+                    splitLine: { lineStyle: { color: '#f1f5f9' } }
+                },
+                series: [
+                    {
+                        name: 'Entrées enregistrées',
+                        type: 'bar',
+                        stack: 'total',
+                        barMaxWidth: 90,
+                        itemStyle: { color: '#0d9488' },
+                        label: { show: true, position: 'inside', color: '#fff', fontWeight: 700 },
+                        data: [4, 20]
+                    },
+                    {
+                        name: 'Entrées perdues',
+                        type: 'bar',
+                        stack: 'total',
+                        barMaxWidth: 90,
+                        itemStyle: { color: '#fca5a5' },
+                        label: { show: true, position: 'inside', color: '#7f1d1d', fontWeight: 700, formatter: function (p) { return p.value > 0 ? p.value : ''; } },
+                        data: [16, 0]
+                    }
+                ]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+</body>
+
+</html>

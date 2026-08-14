@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="ai,tech,architecture,formation" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3,5 millions de tokens par jour : autopsie d'une facture LLM | DailyTickers</title>
+    <meta name="description"
+        content="Un pipeline multi-agents consommait 3,5 M de tokens en 24 h. Diagnostic poste par poste : le modèle le plus cher partout, des relecteurs-agents qui refont ce qu'un script vérifie gratuitement, des données volumineuses transportées dans le contexte. Les trois règles qui ont ramené la facture de 1,4 M à 827 k sur un produit équivalent.">
+    <meta property="og:title" content="3,5 millions de tokens par jour : autopsie d'une facture LLM">
+    <meta property="og:description"
+        content="Où part l'argent dans un pipeline multi-agents, et les trois règles qui ont divisé la facture par deux sans perte de qualité.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.dailytickers.com/tech/autopsie-tokens/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        /* Accent : ambre — facture, dépense, arbitrage */
+        .hero-section {
+            padding: 5rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+            text-align: center;
+            border-bottom: 1px solid #fde68a;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #b45309;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(217, 119, 6, 0.1);
+            color: #b45309;
+            border: 1px solid rgba(217, 119, 6, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1.5rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin: 1.75rem 0;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: left;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 12px;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            color: #b45309;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #475569;
+            text-align: left;
+        }
+
+        .pedagogy-box {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-left: 4px solid #d97706;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .pedagogy-box h4 {
+            color: #b45309;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pedagogy-box p {
+            font-size: 0.95rem;
+            color: #78350f;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .alert-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #dc2626;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .alert-box h4 {
+            color: #b91c1c;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-box p {
+            font-size: 0.95rem;
+            color: #991b1b;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .takeaway-box {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+            border-left: 4px solid #16a34a;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .takeaway-box h4 {
+            color: #15803d;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .takeaway-box ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .takeaway-box li {
+            font-size: 0.95rem;
+            color: #166534;
+            line-height: 1.65;
+            margin: 0.4rem 0;
+        }
+
+        pre.code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            font-family: 'SFMono-Regular', 'Consolas', 'Menlo', monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            overflow: auto;
+            margin: 1.5rem 0;
+        }
+
+        pre.code-block .k { color: #fcd34d; }
+        pre.code-block .s { color: #86efac; }
+        pre.code-block .c { color: #64748b; font-style: italic; }
+        pre.code-block .n { color: #93c5fd; }
+
+        .data-table {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #fffbeb;
+            text-align: left;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #b45309;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .data-table td {
+            padding: 0.7rem 0.9rem;
+            border-top: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        .data-table td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .data-table td.bad { color: #b91c1c; font-weight: 700; }
+        .data-table td.good { color: #15803d; font-weight: 700; }
+
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: stretch;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .flow-node {
+            flex: 1;
+            min-width: 150px;
+            background: #fff;
+            border: 1.5px solid #fde68a;
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            color: #1e293b;
+        }
+
+        .flow-node b {
+            display: block;
+            color: #b45309;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.25rem;
+        }
+
+        .flow-node.cost {
+            border-color: #fca5a5;
+            background: #fef2f2;
+        }
+
+        .flow-node.cost b { color: #b91c1c; }
+
+        .flow-arrow {
+            text-align: center;
+            color: #f59e0b;
+            font-size: 1.1rem;
+            margin: -0.25rem 0;
+        }
+
+        .echart-box {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.5rem;
+            margin: 1.75rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-card { padding: 1.5rem; }
+            .hero-section { padding: 3rem 1rem 6rem; }
+            .metric-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+            .metric-card { padding: 1.25rem; }
+            pre.code-block { font-size: 0.74rem; padding: 1.1rem 1.25rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">Séries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">INGÉNIERIE — COÛT DES SYSTÈMES IA</div>
+        <h1
+            style="font-size:3rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            3,5 millions de tokens par jour : autopsie d'une facture LLM
+        </h1>
+        <p
+            style="font-size:1.2rem; color:#475569; max-width:780px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Une journée de production, relevée. Où part l'argent dans un pipeline multi-agents,
+            pourquoi la moitié de la dépense n'achetait aucune qualité, et les trois règles qui ont
+            ramené un produit équivalent de 1,4 million à 827 000 tokens.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-receipt"></i> Post-mortem chiffré</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 14 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-scale-balanced"></i> Coût / qualité</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="container">
+
+        <!-- FACTURE -->
+        <div id="facture" class="content-card">
+            <h2><i class="fa-solid fa-receipt" style="color:#d97706;"></i> La facture d'une journée</h2>
+
+            <p>Une chaîne de production éditoriale automatisée tourne chez nous tous les soirs. Elle
+                collecte des données de marché, écrit, relit, valide, publie. Elle est bâtie comme une
+                équipe : des agents spécialisés, un orchestrateur, des scripts déterministes autour.
+                Le 13 août, sur 24 heures, elle a consommé environ <strong>3,5 millions de tokens</strong>
+                rien qu'en sous-agents.</p>
+
+            <p>Ce chiffre n'a rien d'un accident ponctuel. Il est le résultat mécanique d'une série de
+                choix d'architecture qui semblaient tous raisonnables pris isolément : mettre le meilleur
+                modèle partout puisqu'on veut la meilleure qualité, faire relire par plusieurs agents
+                puisque la relecture croisée attrape des erreurs, passer les données dans le prompt
+                puisque c'est le plus simple. Empilés, ces trois choix ont produit une facture dont
+                <strong>60 à 70 % était évitable sans perdre un gramme de qualité</strong>.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">3,5 M</div>
+                    <div class="metric-label">Tokens de sous-agents consommés sur 24 heures, tous
+                        produits confondus</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">4,3 M</div>
+                    <div class="metric-label">Tokens pour <em>une seule</em> production, lors d'un
+                        incident antérieur d'orchestration</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">827 k</div>
+                    <div class="metric-label">Tokens pour le même produit après les correctifs, contre
+                        1,4 M la veille</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">3 causes</div>
+                    <div class="metric-label">Modèle uniforme, relecture redondante, données dans le
+                        contexte</div>
+                </div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Pour ceux qui découvrent</h4>
+                <p>Un <strong>token</strong> est l'unité de facturation d'un modèle de langage : environ
+                    quatre caractères de texte. Tout ce qui entre dans la fenêtre du modèle est payé
+                    (les instructions, les données, l'historique de la conversation), et tout ce qui en
+                    sort l'est aussi, plus cher. Un système d'agents qui se relisent les uns les autres
+                    repaie donc le même texte à chaque étape. C'est cette répétition, invisible dans le
+                    code, qui fabrique les grosses factures.</p>
+            </div>
+        </div>
+
+        <!-- DIAGNOSTIC -->
+        <div id="diagnostic" class="content-card">
+            <h2><i class="fa-solid fa-stethoscope" style="color:#d97706;"></i> Trois postes, un même
+                réflexe</h2>
+
+            <p>En décomposant la journée poste par poste, les trois causes se ressemblent : à chaque
+                fois, on a payé un raisonnement là où une opération suffisait.</p>
+
+            <h3>1 · Le modèle le plus cher partout, y compris pour du travail mécanique</h3>
+
+            <p>Le pipeline utilisait le modèle haut de gamme, en mode raisonnement approfondi, sur
+                <em>toutes</em> les étapes. Y compris celles qui consistent à lire un fichier JSON et
+                vérifier qu'un champ existe. Une étape d'extraction n'a pas besoin de jugement : elle a
+                besoin d'être fiable et rapide. Elle produit exactement le même résultat avec un modèle
+                intermédiaire et un budget de réflexion moyen, pour une fraction du prix.</p>
+
+            <p>La bonne question n'est pas « quel est le meilleur modèle ? » mais « cette étape
+                demande-t-elle un arbitrage, ou l'application d'une règle ? ». Un rédacteur arbitre.
+                Un arbitre arbitre. Un parseur applique.</p>
+
+            <h3>2 · Des relecteurs qui refont ce qu'un script vérifie gratuitement</h3>
+
+            <p>Notre panel de relecture faisait vérifier par des agents le calcul du rapport
+                risque/récompense, le respect des seuils de niveaux, la présence des balises
+                structurelles, les tournures de style à bannir. Or ces quatre contrôles étaient
+                <strong>déjà implémentés en scripts déterministes</strong>, exécutés dans le même
+                pipeline, coût en tokens nul, résultat reproductible au bit près.</p>
+
+            <p>Un agent qui recalcule un ratio que trois lignes de code calculent mieux n'ajoute pas
+                une seconde opinion : il ajoute une source de bruit payante. Pire, il peut se tromper là
+                où le script ne le peut pas.</p>
+
+            <h3>3 · Des données volumineuses transportées dans le contexte</h3>
+
+            <p>Les appels de données revenaient directement dans la fenêtre de l'agent. Une salve de
+                cotations pour huit symboles ramenait <strong>15 000 caractères de JSON</strong> dans le
+                contexte, soit près de 4 000 tokens, relus intégralement à chaque tour de conversation
+                suivant. Sur une session qui enchaîne vingt tours, ce même bloc est payé vingt fois.</p>
+
+            <p>La donnée n'a pourtant aucune raison de traverser le modèle. Elle doit atterrir sur
+                disque, être réduite par un script à ce qui compte, et n'entrer dans le prompt que sous
+                forme condensée.</p>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Le multiplicateur silencieux</h4>
+                <p>Un fichier d'instructions de 36 000 caractères rechargé à chaque invocation coûte
+                    environ 9 000 tokens <em>avant</em> que le travail commence. Une référence de 77 000
+                    caractères en coûte 19 000. Ces coûts sont invisibles dans les logs applicatifs
+                    parce qu'ils ne correspondent à aucune action : ils se paient à l'ouverture de la
+                    porte.</p>
+            </div>
+        </div>
+
+        <!-- FAN-OUT -->
+        <div id="fanout" class="content-card">
+            <h2><i class="fa-solid fa-diagram-project" style="color:#d97706;"></i> L'incident qui a rendu
+                le problème visible</h2>
+
+            <p>Le 22 juillet, une seule production a coûté <strong>4,3 millions de tokens et 28 minutes
+                </strong>. Une production. La cause tenait en une ligne d'orchestration : le workflow
+                lançait un agent de validation <em>par titre</em>, soit quatorze agents en parallèle,
+                chacun en mode raisonnement approfondi, chacun refaisant sa propre collecte de données
+                (identité de l'instrument, dépôts réglementaires, cotation, indicateurs) et relisant les
+                mêmes fichiers de contexte.</p>
+
+            <p>Le résultat n'était même pas bon : cinq titres retenus sur quatorze, et une liste finale
+                incomplète. On avait payé quatorze contextes complets pour un verdict qui tient dans un
+                tableau.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node cost"><b>Avant</b>1 agent par titre × 14 titres, chacun
+                        appelant les données pour son compte</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i></div>
+                <div class="flow-row">
+                    <div class="flow-node cost"><b>Coût</b>≈ 50 allers-retours de données, 14 fenêtres de
+                        contexte, 4,3 M tokens, 28 min</div>
+                </div>
+            </div>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node"><b>Après</b>1 salve groupée multi-symboles en amont, dump sur
+                        disque, puis raisonnement sur le pré-collecté</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i></div>
+                <div class="flow-row">
+                    <div class="flow-node"><b>Coût</b>2 à 4 appels de données au total, 1 seul agent de
+                        verdict sur le lot</div>
+                </div>
+            </div>
+
+            <p>La règle qui en sort est simple à énoncer et facile à violer sans s'en apercevoir :
+                <strong>le nombre d'allers-retours vers une source de données doit croître avec le nombre
+                de TYPES de données, jamais avec le nombre d'éléments à traiter</strong>. Huit types de
+                données pour quatorze titres, c'est huit requêtes multi-symboles, pas cent douze.</p>
+
+            <p>Le corollaire d'orchestration est tout aussi net : avant d'écrire une boucle parallèle
+                d'agents, vérifier qu'aucune branche n'appelle une source externe. Si une branche le
+                fait, la parallélisation ne divise pas le temps, elle multiplie la facture par le nombre
+                de branches.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Le test des deux questions</h4>
+                <p>Avant tout éclatement en agents parallèles : (1) est-ce que chaque branche a
+                    vraiment besoin de sa propre fenêtre de contexte, ou est-ce qu'un seul agent peut
+                    trancher sur le lot entier ? (2) est-ce qu'une branche déclenche un appel réseau
+                    qu'une autre branche déclenche aussi ? Deux « non » autorisent le fan-out. Un seul
+                    « oui » impose de sortir la collecte en amont.</p>
+            </div>
+        </div>
+
+        <!-- TIERING -->
+        <div id="tiering" class="content-card">
+            <h2><i class="fa-solid fa-layer-group" style="color:#d97706;"></i> Règle 1 : une hiérarchie
+                de modèles par rôle</h2>
+
+            <p>Le premier correctif consiste à cesser de traiter « le modèle » comme un paramètre global.
+                Chaque étape d'un workflow a un rôle, et chaque rôle a un besoin cognitif différent.
+                Notre grille tient en trois lignes.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rôle dans le workflow</th>
+                            <th>Ce qu'il produit</th>
+                            <th>Niveau de modèle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Rédacteur, arbitre</strong></td>
+                            <td>Un jugement : quelle thèse tient, quel désaccord entre relecteurs
+                                l'emporte, quelle formulation est honnête</td>
+                            <td>Haut de gamme, raisonnement approfondi</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Analyste, relecteur de jugement</strong></td>
+                            <td>Une opinion argumentée sur un artefact déjà écrit</td>
+                            <td>Intermédiaire, effort élevé</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Extraction, validation, mise en forme</strong></td>
+                            <td>Un résultat déterministe : un champ, un compte, un booléen</td>
+                            <td>Intermédiaire effort moyen, ou modèle rapide</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Le défaut par défaut devient le niveau intermédiaire à effort élevé, et le haut de gamme
+                se mérite. Une étape qui parse, valide ou filtre ne reçoit jamais le modèle le plus
+                cher : c'est une règle, pas une recommandation, parce que l'exception se généralise
+                toujours toute seule.</p>
+
+            <pre class="code-block"><span class="c"># Avant : un seul niveau, appliqué partout</span>
+stages = [
+  collecte(modele=<span class="s">"haut-de-gamme"</span>, effort=<span class="s">"high"</span>),   <span class="c"># parse du JSON</span>
+  extraction(modele=<span class="s">"haut-de-gamme"</span>, effort=<span class="s">"high"</span>), <span class="c"># lit 6 champs</span>
+  redaction(modele=<span class="s">"haut-de-gamme"</span>, effort=<span class="s">"high"</span>),  <span class="c"># légitime</span>
+  validation(modele=<span class="s">"haut-de-gamme"</span>, effort=<span class="s">"high"</span>), <span class="c"># compare des seuils</span>
+]
+
+<span class="c"># Après : le niveau suit le rôle</span>
+stages = [
+  collecte(modele=<span class="s">"rapide"</span>),                                <span class="c"># mécanique</span>
+  extraction(modele=<span class="s">"intermediaire"</span>, effort=<span class="s">"medium"</span>),  <span class="c"># mécanique</span>
+  redaction(modele=<span class="s">"haut-de-gamme"</span>, effort=<span class="s">"high"</span>),     <span class="c"># jugement</span>
+  validation(script=<span class="s">"regles-dures"</span>),                        <span class="c"># zéro token</span>
+]</pre>
+
+            <p>Cette dernière ligne est la plus rentable de toutes : la validation n'a pas changé de
+                modèle, elle a quitté le modèle.</p>
+        </div>
+
+        <!-- MECANIQUE -->
+        <div id="mecanique" class="content-card">
+            <h2><i class="fa-solid fa-gears" style="color:#d97706;"></i> Règle 2 : le jugement aux
+                agents, la mécanique aux scripts</h2>
+
+            <p>La deuxième règle trace une frontière franche. Un contrôle qui peut s'écrire comme une
+                fonction pure s'écrit comme une fonction pure. Un contrôle qui demande de lire un texte
+                et de dire s'il sonne juste reste à un agent.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Contrôle</th>
+                            <th>Nature</th>
+                            <th>Qui l'exécute</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Rapport risque/récompense, arithmétique des niveaux</td>
+                            <td>Calcul</td>
+                            <td class="good">Script — coût nul, reproductible</td>
+                        </tr>
+                        <tr>
+                            <td>Balises structurelles, présence des sections obligatoires</td>
+                            <td>Grammaire</td>
+                            <td class="good">Script</td>
+                        </tr>
+                        <tr>
+                            <td>Formules toutes faites et tics d'écriture</td>
+                            <td>Correspondance de motifs</td>
+                            <td class="good">Script — 77 formules, 8 connecteurs, densité de ponctuation</td>
+                        </tr>
+                        <tr>
+                            <td>Fraîcheur des données déclarées</td>
+                            <td>Comparaison d'horodatages</td>
+                            <td class="good">Script</td>
+                        </tr>
+                        <tr>
+                            <td>Le chiffre affiché correspond-il à la source ?</td>
+                            <td>Vérification contextuelle</td>
+                            <td class="bad">Agent — irréductible</td>
+                        </tr>
+                        <tr>
+                            <td>La thèse tient-elle debout, le titre est-il honnête ?</td>
+                            <td>Jugement éditorial</td>
+                            <td class="bad">Agent — irréductible</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Le panel de routine est passé de cinq à sept relecteurs à <strong>deux lentilles de
+                jugement</strong> : un relecteur qui confronte chaque chiffre à sa source, un relecteur
+                éditorial. Le reste est descendu dans les scripts, qui tournent de toute façon et qui
+                bloquent la publication. Les panels larges restent, mais pour ce qu'ils justifient : une
+                première publication importante, un contenu qui part par courriel, un format nouveau.</p>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-check-double"></i> Le test avant de spawner un relecteur</h4>
+                <ul>
+                    <li>Ce contrôle produit-il le même verdict sur la même entrée, toujours ? Alors c'est
+                        un script.</li>
+                    <li>Existe-t-il déjà un script qui le couvre ? Alors le relecteur est une dépense
+                        nette.</li>
+                    <li>Le verdict dépend-il d'un contexte que le script n'a pas ? Alors l'agent est
+                        justifié, et il faut lui donner ce contexte, pas le laisser le redécouvrir.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- DISQUE -->
+        <div id="disque" class="content-card">
+            <h2><i class="fa-solid fa-hard-drive" style="color:#d97706;"></i> Règle 3 : les données sur
+                disque, pas dans le contexte</h2>
+
+            <p>La troisième règle est la plus simple à implémenter et la plus rentable sur les gros
+                volumes. Dès qu'une collecte dépasse deux symboles croisés avec deux types de données,
+                elle sort du modèle : un script appelle la source, écrit le résultat brut dans un
+                fichier, et un second script en extrait les quelques valeurs utiles. L'agent reçoit un
+                résumé compact, pas un dump.</p>
+
+            <pre class="code-block"><span class="c"># Anti-pattern : le JSON brut entre dans la conversation</span>
+quotes = fetch(symbols=[...8 symboles...])   <span class="c"># 15 000 caractères</span>
+agent(prompt=<span class="s">f"Voici les cotations : {quotes}. Analyse."</span>)
+<span class="c"># → ~4 000 tokens, repayés à chaque tour suivant de la session</span>
+
+<span class="c"># Pattern : le disque sert de mémoire, le script sert de filtre</span>
+run(<span class="s">"collecte --symbols … --types quote,flags --out data/brut.json"</span>)
+resume = run(<span class="s">"reduire data/brut.json --champs last,var_pct,volume"</span>)
+agent(prompt=<span class="s">f"Cotations : {resume}"</span>)   <span class="c"># ~300 tokens</span></pre>
+
+            <p>Un corollaire compte autant que la règle : <strong>un résultat déjà écrit sur disque ne se
+                re-télécharge jamais</strong>. Quand un retour d'outil est trop gros et déborde
+                automatiquement dans un fichier, le réflexe correct est de parser ce fichier, pas de
+                relancer l'appel pour « avoir la donnée sous les yeux ». Le second geste paie deux fois
+                la même information.</p>
+
+            <p>Dernier point, moins technique et plus organisationnel : une méga-session qui enchaîne
+                cinq produits différents finit par saturer sa fenêtre, se faire compacter, et repayer
+                tout son historique à chaque compaction. Une session, un produit. Le découpage
+                n'améliore pas seulement le coût, il améliore la traçabilité de ce qui a été décidé
+                où.</p>
+        </div>
+
+        <!-- RESULTAT -->
+        <div id="resultat" class="content-card">
+            <h2><i class="fa-solid fa-chart-column" style="color:#d97706;"></i> Ce que ça a donné</h2>
+
+            <p>Les trois règles ont été appliquées d'un bloc sur la chaîne éditoriale. La mesure porte
+                sur un produit équivalent, même format, même exigence de sortie, même panel de
+                publication : <strong>827 000 tokens contre 1,4 million la veille</strong>. La facture
+                du produit a été divisée par 1,7, la qualité de sortie n'a pas bougé, et le temps de
+                cycle a baissé parce que les étapes mécaniques ne raisonnent plus.</p>
+
+            <div class="echart-box">
+                <div id="costChart" style="height:340px;"></div>
+            </div>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Poste</th>
+                            <th>Avant</th>
+                            <th>Après</th>
+                            <th>Levier</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Étapes mécaniques (extraction, validation, mise en forme)</td>
+                            <td class="num">Haut de gamme, effort maximal</td>
+                            <td class="num">Intermédiaire ou script</td>
+                            <td>Hiérarchie par rôle</td>
+                        </tr>
+                        <tr>
+                            <td>Panel de relecture de routine</td>
+                            <td class="num">5 à 7 agents</td>
+                            <td class="num">2 lentilles de jugement</td>
+                            <td>Script d'abord</td>
+                        </tr>
+                        <tr>
+                            <td>Collecte de données</td>
+                            <td class="num">JSON inline dans le prompt</td>
+                            <td class="num">Fichier + résumé compact</td>
+                            <td>Disque</td>
+                        </tr>
+                        <tr>
+                            <td>Validation d'une liste de N éléments</td>
+                            <td class="num">N agents, N collectes</td>
+                            <td class="num">1 collecte groupée, 1 agent</td>
+                            <td>Batch avant fan-out</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ARBITRAGE -->
+        <div id="arbitrage" class="content-card">
+            <h2><i class="fa-solid fa-scale-balanced" style="color:#d97706;"></i> Ce qui reste cher, et
+                qu'on garde</h2>
+
+            <p>Une diète mal faite coupe le muscle. Deux postes coûteux ont été explicitement
+                sanctuarisés.</p>
+
+            <p>Le premier est le <strong>panel adversarial avant publication</strong>. C'est du
+                raisonnement, il ne se compresse pas comme du transport de données, et il rallonge un
+                cycle complet à une trentaine de minutes. Il reste, parce qu'une seule journée de relevé
+                lui doit : une dizaine de cotations fausses attrapées dans une revue hebdomadaire, un
+                risque de dilution de 32,5 millions d'actions manqué par le rédacteur, et un article
+                dont la thèse entière reposait sur l'absence d'un catalyseur qui existait. Le coût du
+                panel est connu ; le coût d'une publication fausse ne l'est pas.</p>
+
+            <p>Le second est le <strong>modèle haut de gamme sur le rédacteur et l'arbitre</strong>.
+                Ce sont les deux seuls rôles où une meilleure capacité change le produit fini plutôt que
+                sa vitesse. Économiser là revient à économiser sur ce qu'on vend.</p>
+
+            <p>Ce qui a été supprimé n'était ni du contrôle ni de la rédaction : c'était de la
+                redondance déguisée en rigueur. Un système d'agents donne l'illusion réconfortante que
+                plus d'yeux valent mieux, et cette illusion a un prix par token. La discipline consiste
+                à demander, pour chaque agent que l'on ajoute, ce qu'il voit que personne d'autre ne
+                voit.</p>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-list-check"></i> La checklist en six points</h4>
+                <ul>
+                    <li>Le niveau de modèle suit le rôle. Aucune étape mécanique ne reçoit le modèle le
+                        plus cher.</li>
+                    <li>Aucun agent ne recalcule ce qu'un script calcule déjà.</li>
+                    <li>La collecte de données est groupée en amont ; les branches parallèles ne
+                        rappellent jamais la source.</li>
+                    <li>Les gros retours vont sur disque et n'entrent dans le prompt que réduits.</li>
+                    <li>Une session, un produit. Les compactions à répétition repaient tout.</li>
+                    <li>Les instructions rechargées à chaque invocation sont un coût fixe : les tenir
+                        courtes est un gain à chaque appel.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div id="disclaimer" class="content-card">
+            <h2><i class="fa-solid fa-circle-info" style="color:#d97706;"></i> Portée de ces chiffres</h2>
+            <p style="font-size:0.95rem; color:#64748b;">
+                Les volumes cités sont ceux relevés sur notre propre chaîne de production éditoriale,
+                sur des journées identifiées. Ils dépendent de notre découpage en agents, de nos formats
+                de sortie et de nos volumes de données : ils illustrent des ordres de grandeur et des
+                mécanismes, ils ne se transposent pas tels quels. Cet article décrit une architecture
+                logicielle et ne constitue pas un conseil financier.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#facture" class="fnav-item" data-section="facture"><i class="fas fa-receipt"></i><span>La facture</span></a>
+            <a href="#diagnostic" class="fnav-item" data-section="diagnostic"><i class="fas fa-stethoscope"></i><span>Diagnostic</span></a>
+            <a href="#fanout" class="fnav-item" data-section="fanout"><i class="fas fa-diagram-project"></i><span>L'incident</span></a>
+            <a href="#tiering" class="fnav-item" data-section="tiering"><i class="fas fa-layer-group"></i><span>Modèles</span></a>
+            <a href="#mecanique" class="fnav-item" data-section="mecanique"><i class="fas fa-gears"></i><span>Scripts</span></a>
+            <a href="#disque" class="fnav-item" data-section="disque"><i class="fas fa-hard-drive"></i><span>Données</span></a>
+            <a href="#resultat" class="fnav-item" data-section="resultat"><i class="fas fa-chart-column"></i><span>Résultat</span></a>
+            <a href="#arbitrage" class="fnav-item" data-section="arbitrage"><i class="fas fa-scale-balanced"></i><span>Arbitrage</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+
+    <script>
+        (function () {
+            var el = document.getElementById('costChart');
+            if (!el || typeof echarts === 'undefined') return;
+            var chart = echarts.init(el);
+            chart.setOption({
+                tooltip: { trigger: 'axis', valueFormatter: function (v) { return (v / 1000).toFixed(0) + ' k tokens'; } },
+                grid: { left: 70, right: 30, bottom: 60, top: 40 },
+                xAxis: {
+                    type: 'category',
+                    data: ['Incident\nfan-out', 'Journée\navant règles', 'Produit\navant', 'Produit\naprès'],
+                    axisLabel: { fontSize: 11, color: '#475569', lineHeight: 14 }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'tokens',
+                    axisLabel: { formatter: function (v) { return (v / 1000000).toFixed(1) + ' M'; }, color: '#64748b' }
+                },
+                series: [{
+                    name: 'Tokens',
+                    type: 'bar',
+                    barMaxWidth: 68,
+                    data: [
+                        { value: 4300000, itemStyle: { color: '#b91c1c' } },
+                        { value: 3500000, itemStyle: { color: '#dc2626' } },
+                        { value: 1400000, itemStyle: { color: '#f59e0b' } },
+                        { value: 827000, itemStyle: { color: '#16a34a' } }
+                    ],
+                    label: {
+                        show: true, position: 'top', fontWeight: 700, color: '#0f172a',
+                        formatter: function (p) { return p.value >= 1000000 ? (p.value / 1000000).toFixed(2) + ' M' : Math.round(p.value / 1000) + ' k'; }
+                    }
+                }]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+</body>
+
+</html>
