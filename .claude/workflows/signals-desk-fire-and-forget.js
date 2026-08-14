@@ -5,7 +5,7 @@ export const meta = {
   phases: [
     { title: 'Generate', detail: 'preflight MCP + régime live + macro-date vérifiée + screen best 3-5 + validation niveaux' },
     { title: 'Verify', detail: 'recalcul INDÉPENDANT R/R_TP1≥1.5, stop≥1.5×ATR, earnings, actionnable, date macro — drop les échecs' },
-    { title: 'Post', detail: 'auto-post alerts (html) + log ledger léger + push ; statut posté même si MCP down ou 0 setup' },
+    { title: 'Post', detail: 'auto-post alerts (html) + boutons feedback pris/passé + message_id persisté + log ledger léger + push ; statut posté même si MCP down ou 0 setup' },
   ],
 }
 
@@ -27,6 +27,12 @@ const RULES = `
 - earnings ≤ 3 séances → DROP. dilution (sec_filings,flags dilutif : shelf/ATM/underwriter toxique) → DROP.
 - 📅 DATE MACRO (leçon macro-date-verify) : le feed MCP economic_events est AVEUGLE au CPI/FOMC. Vérifier toute date macro citée via args.macroEvents (dates BLS/Fed pré-vérifiées) OU WebSearch (BLS/Fed/BEA). NE JAMAIS asserter un jour non vérifié. Un event macro ≤3 séances → tilt demi-taille + éviter d'être long en aveugle le facteur menacé (semis/growth pour un CPI).
 - idées ≠ données desk : 'alerts' est PUBLIC → idées de trade UNIQUEMENT, jamais positions/equity/P&L/ordres réels. format html <b> (jamais **), &→&amp;.
+- BOUTONS DE FEEDBACK (obligatoire sur tout envoi PORTANT DES SIGNAUX ; pas sur les messages de statut
+  MCP down / pas de setup, où « pris/passé » n'a aucun sens) : send_message porte
+  actions=[{label:'👍 pris', value:'taken'}, {label:'👎 passé', value:'skipped'}] — libellés/valeurs EXACTS.
+  Les clics sont relus par le bilan hebdo via get_responses(message_id) → taux de prise par famille.
+  Sans actions, aucune donnée d'adoption n'est captée. Et TOUJOURS persister le message_id retourné
+  (data/signals-telegram-messages.json) : get_responses n'a pas de recherche par date.
 LEAN = PAS de bilan des signaux précédents, PAS de state-aggregation, PAS de harness multi-persona lourd (juste le recalcul 2e passe), PAS de branche/PR.
 Presets testés config/signal-presets.yaml (status: tested).
 `
@@ -85,7 +91,7 @@ if (DRY) { return { status: 'OK', dryRun: true, regime: gen.regime, kept: verify
 const post = await agent(
   `Auto-poste le digest lean + log léger (fire-and-forget). Digest html (déjà recalculé) : ${JSON.stringify(verify.finalDigest || '').slice(0, 3000)}.
 ${RULES}
-DO : (1) dernier check : html <b> (pas de **), date macro vérifiée, aucune donnée sensible. (2) mcp__notification__send_message(to='alerts', format='html', body=digest) → message_id. (3) get_delivery_status(message_id) → provider_msg_id présent = livré. (4) log léger : écris les signaux dans un JSON puis node tools/signals-ledger.js append --payload <f.json> (pour le track-record). (5) git : add data/signals-ledger.json (SPÉCIFIQUE) ; commit "signals(fire-and-forget): <date> — <n> signaux" ; git fetch origin main && rebase ; push origin HEAD:main (retry si rejeté). Retourne message_id + provider_msg_id + nb loggés + commit + push OK.`,
+DO : (1) dernier check : html <b> (pas de **), date macro vérifiée, aucune donnée sensible. (2) mcp__notification__send_message(to='alerts', format='html', body=digest, actions=[{label:'👍 pris', value:'taken'}, {label:'👎 passé', value:'skipped'}]) → message_id. Les deux boutons sont OBLIGATOIRES (libellés/valeurs exacts) : c'est la seule mesure d'adoption, relue par le bilan hebdo via get_responses(message_id). (3) get_delivery_status(message_id) → provider_msg_id présent = livré. (4) log léger : écris les signaux dans un JSON puis node tools/signals-ledger.js append --payload <f.json> (pour le track-record) ; PUIS apponds {date, messageId, kind:'fire-and-forget', tickers:[...]} dans data/signals-telegram-messages.json (get_responses n'a pas de recherche par date : sans cet id, le feedback des boutons est irrécupérable). (5) git : add data/signals-ledger.json data/signals-telegram-messages.json (SPÉCIFIQUES) ; commit "signals(fire-and-forget): <date> — <n> signaux" ; git fetch origin main && rebase ; push origin HEAD:main (retry si rejeté). Retourne message_id + provider_msg_id + nb loggés + commit + push OK.`,
   { label: 'post', phase: 'Post', effort: 'high' }
 )
 return { status: 'OK', posted: true, regime: gen.regime, kept: verify.kept, dropped: verify.dropped, post: (post||'').slice(0,900),

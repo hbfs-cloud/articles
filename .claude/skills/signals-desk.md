@@ -78,6 +78,10 @@ Les signaux passés vivent dans `data/signals-ledger.json` (append-only). Chaque
 3. `node tools/signals-ledger.js lessons` → rafraîchit `data/signals-lessons.json` (voir étape 3).
 Le bilan du message = les `open`/`closedRecent` du `report`. (Complément : `list_notifications`/`get_context` pour le contexte narratif.)
 
+**Alertes de suivi (entre deux runs).** `node tools/signal-alerts.js [--prices <f.json>] [--asof J]` compare le registre + les prix du jour à l'état du dernier run et empile les événements NOUVEAUX (entrée touchée / stop touché / TP1 / TP2) dans `data/signal-alerts-pending.json`, dédupliqués par `signal+event`. Le script **ne notifie pas** (le MCP Notification est en OAuth2 : un subprocess `node` ne peut pas l'appeler). La routine fait donc : `node tools/signal-alerts.js` → lire les events `notified:false` (`--pending`) → `send_message(to='alerts', format='html', ...)` avec les mêmes boutons `actions` qu'un digest → `node tools/signal-alerts.js --mark <key,key,...>` (ou `--mark-all`). Sans le `--mark`, la même alerte repart au run suivant. `--dry` pour vérifier sans rien écrire.
+
+**Adoption lue sur les boutons.** Le bilan **hebdo** ne se contente pas du R réalisé : pour chaque `messageId` des 7 derniers jours (`data/signals-telegram-messages.json`, cf étape 6), appeler `get_responses(message_id)` → `{responses:[{responder, value, created_at}]}` avec `value` ∈ `taken` / `skipped`. Croiser avec le registre donne les deux chiffres qui comptent : le **taux de prise** par famille × régime, et surtout l'écart entre ce qui gagne et ce qui est effectivement suivi (une famille rentable mais jamais prise = digest mal formulé ou entrée pas actionnable, pas un problème de stratégie). Zéro réponse sur un digest = information aussi, à ne pas lire comme un succès.
+
 ## Étape 5bis — HARNESS (senior-review, BLOQUANT avant post)
 Passer le panier final + le message par le harness `senior-review` (type `basket`) : personas **Quant** (chiffres réconciliés MCP), **Trader** (R/R≥1,5 à une entrée actionnable, pas de chase), **Risk** (dilution, gap event), **Strategist** (cohérence panier↔thèse — déjà en étape 4, re-vérifiée), **AI-Forensics** (zéro tic IA, cf `EDITORIAL_STYLE.md`). **CHECKS NUMÉRIQUES OBLIGATOIRES du harness (post-mortem 10/07 — les règles §4 existaient mais un run les a violées trois fois : HLT R/R TP1 1,42 publié « 2,0 », INTC stop 0,6×ATR, earnings en fenêtre non flaggés ; le harness RECALCULE, il ne relit pas)** : pour CHAQUE signal du digest, recalculer depuis les niveaux publiés (a) R/R_TP1 = (TP1−entrée)/(entrée−stop) ≥ 1,5, (b) (entrée−stop)/ATR14 ≥ 1,5, (c) earnings ≤ J+12 → flag présent dans le texte, (d) chaque claim data (dark pool/put-call/flux) tracé à un appel MCP de la session, (e) la ligne FLUX du signal (swing-signals §4bis) présente ET cohérente avec les fetches (un signal publié avec put-skew + SI en hausse + distribution 13F non mentionnés = BLOCK) — un seul échec = **BLOCK du signal concerné** (les autres peuvent partir). Gate **PASS/FIX/BLOCK** :
 - FIX → appliquer les corrections en place.
@@ -114,14 +118,31 @@ Stop [x] (−x %) · Cibles [y] (+y % vs prix) / [z] (+z %) · R/R [n]
 
 **Poster** via `send_message(to='alerts', format='html', ...)` — c'est le job de ce skill (contrairement aux briques qui demandent). **Sauf** : (a) argument « ne poste pas » → dry-run, montrer seulement ; (b) STOP MCP ou BLOCK harness/Strategist → ne pas poster, remonter le problème.
 
+**Boutons de feedback (OBLIGATOIRE sur tout post de signaux).** L'appel porte `actions` — deux boutons, libellés et valeurs EXACTS, jamais d'autre wording :
+```
+send_message(to='alerts', format='html', body=digest,
+             actions=[{label:'👍 pris', value:'taken'}, {label:'👎 passé', value:'skipped'}])
+```
+Le clic est capté côté serveur (`value` → réponse). C'est la seule mesure de ce que les lecteurs prennent VRAIMENT : le registre dit si le signal a marché, les boutons disent s'il a été suivi. Un digest posté sans `actions` ne produit aucune donnée d'adoption — la semaine est perdue.
+
+**Persister le `message_id`** retourné : `get_responses` en a besoin, il n'y a pas de recherche par date. Après l'envoi, appondre dans `data/signals-telegram-messages.json` :
+```
+node -e 'const f="data/signals-telegram-messages.json",fs=require("fs");
+const d=fs.existsSync(f)?JSON.parse(fs.readFileSync(f,"utf8")):{messages:[]};
+d.messages.push({date:"<JJ/MM ISO>",messageId:"<message_id>",kind:"signals-desk",tickers:["<TICKERS>"]});
+fs.writeFileSync(f,JSON.stringify(d,null,2)+"\n")'
+```
+(Filet de secours si le fichier a sauté : `list_notifications` retrouve les envois récents et leurs ids.)
+
 ## Étape 7 — Log (registre append-only)
 Écrire les signaux émis dans un fichier JSON `[{date,family,ticker,entry,stop,tp1,tp2,rr,thesis,regime,confidence,status}]` puis `node tools/signals-ledger.js append --payload <f.json>` → alimente le track-record (dédup par id, jamais d'écrasement). Le prochain run les revalide (étape 5) et en tire des leçons (étape 3) = **boucle d'amélioration fermée**. Optionnel : `remember(workspace='dailystocks', type='project', ...)` pour le contexte cross-agent.
 
 ## Étape 8 — Git : PUSH DIRECT SUR MAIN
-Les changements de ce skill sont **minuscules** (2 fichiers : `data/signals-ledger.json` + `data/signals-lessons.json`), **aucun scan scanner** → **push DIRECT sur `main`**, PAS de branche/PR :
+Les changements de ce skill sont **minuscules** (registre, leçons, file d'alertes, ids Telegram), **aucun scan scanner** → **push DIRECT sur `main`**, PAS de branche/PR :
 ```
 git fetch origin main && git rebase origin/main   # ou merge ; garder les fichiers générés sur conflit
-git add data/signals-ledger.json data/signals-lessons.json   # fichiers SPÉCIFIQUES uniquement (jamais git add -A)
+git add data/signals-ledger.json data/signals-lessons.json \
+        data/signal-alerts-pending.json data/signals-telegram-messages.json   # fichiers SPÉCIFIQUES uniquement (jamais git add -A)
 git commit -m "signals(ledger): <date> <matin|soir> — <n> signaux + sweep"
 git push origin HEAD:main
 ```
