@@ -1,7 +1,7 @@
 {
   "_comment": "Synthesized rules accumulated from weekly retrospectives. Updated at end of each scanner/retrospective/YYYYMMDD/ — append-only with conflict resolution. Read by /scanner Phase 0 step 8 and applied during Phase 2 selection.",
-  "_version": "v3.5-20260810",
-  "_updated": "2026-08-03",
+  "_version": "v3.6-20260814",
+  "_updated": "2026-08-14",
   "_source_retros": [
     "20260220",
     "20260228",
@@ -25,7 +25,15 @@
     "20260710",
     "20260717",
     "20260710-scan",
-    "20260720"
+    "20260720",
+    "20260721",
+    "20260722",
+    "20260723",
+    "20260724",
+    "20260727",
+    "20260728",
+    "20260729",
+    "20260730"
   ],
   "_methodology": "Append-only. Each rule cites the retros that triggered it. Conflict resolution: most recent retro wins.\n\n  Severity levels:\n  - 'hard_block' = encoded in scanner-filters.json + validate-scan.js to refuse publication outright. Scan FAILS validation if violated.\n  - 'selection_filter' = Claude applies the rule when CHOOSING the top 10 candidates at Phase 2. validate-scan.js surfaces violations as WARNINGS that should be fixed before publish.\n  - 'advisory' = Claude biases selection (e.g. weight Pre-Squeeze higher in EARLY RISK-OFF) but a deviation is acceptable with rationale.\n  - 'infrastructure' = always-on execution logic in sweep.js/signal-monitor.js, not a selection rule.\n  - 'deprecated' = rule is no longer active, kept for historical context.\n\n  v2.0 UPGRADE NOTES (20260619 audit):\n  - Promoted regime-score-label-lag from advisory to hard_block (prevented D* grade week)\n  - Promoted rr-min-by-regime from selection_filter to hard_block (100% violation rate with zero enforcement)\n  - Promoted stopped-ticker-cooldown from selection_filter to hard_block (RIO double loss pattern)\n  - Deprecated energy-early-risk-off-sizing (redundant with energy-early-risk-off-block)\n  - Added 12 new rules from audit of 17 retros\n  - All '?' values resolved, all rules have complete field sets",
   "rules": [
@@ -2869,6 +2877,384 @@
       "confidence_base": 0.82,
       "invalidation_conditions": [],
       "expires_at": "2027-04-26"
+    },
+    {
+      "id": "breakeven-label-requires-flat-pnl",
+      "class": "process_rule",
+      "status": "candidate",
+      "severity": "advisory",
+      "rule": "Le statut 'breakeven' ne peut etre applique qu'a une sortie dont |pnlPct| <= 0,1%. Sinon requalifier : 'sl' quand le stop a reellement cote dans la seance de sortie (et alors sortie AU PRIX DU STOP, pas a l'ouverture), sinon 'expired'/sortie anticipee au prix reellement cote. Un 'breakeven' porteur d'une perte reelle fausse tout taux de reussite agrege PAR STATUT, et toujours dans le sens qui nous flatte.",
+      "scope": {
+        "setups": [],
+        "regimes": [
+          "RISK-ON",
+          "RECOVERY",
+          "NEUTRAL",
+          "EARLY RISK-OFF",
+          "RISK-OFF"
+        ],
+        "modes": [
+          "dynamic",
+          "turbo",
+          "fortress",
+          "balanced"
+        ]
+      },
+      "effect": {
+        "action": "validate_exit_status_label",
+        "target": {},
+        "params": {
+          "max_abs_pnl_pct_for_breakeven": 0.1,
+          "requalify_to": "sl_if_stop_traded_else_early_exit",
+          "fail_closed": true
+        }
+      },
+      "evidence": {
+        "sample_size": 5,
+        "wins": 0,
+        "losses": 5,
+        "expectancy": -0.648,
+        "period": "2026-07-22 -> 2026-07-30",
+        "tickers": [
+          "AAPL",
+          "CSX",
+          "ADM"
+        ],
+        "clusters": [
+          "status-mislabel-20260722-20260729"
+        ],
+        "source_retros": [
+          "20260722",
+          "20260728",
+          "20260729"
+        ],
+        "note": "5 positions taggees 'breakeven' avec un pnl reel negatif sur 3 scans : AAPL/dynamic 22/07 (-1,47%, R -0,22), CSX/dynamic + CSX/turbo 28/07 (-2,65%, R -0,51 chacune), ADM/dynamic + ADM/turbo 29/07 (stop plein reellement cote intraday, -4,70%, R -1,00 chacune, contre -3,48% et R -0,74 declares). Contre-exemple sur le meme lot d'observation : FRO/dynamic + FRO/turbo le 30/07 sont taggees 'breakeven' avec un pnl reel de 0,00% exact. Le defaut est donc intermittent, pas constant."
+      },
+      "confidence": 0.35,
+      "confidence_base": 0.35,
+      "half_life_days": null,
+      "created_at": "2026-08-14",
+      "last_validated_at": "2026-08-14",
+      "expires_at": null,
+      "invalidation_conditions": [
+        "Si sur 3 lots retro consecutifs TOUS les trades taggues 'breakeven' affichent |pnlPct| <= 0,1% (comme le lot FRO du 20260730), le defaut est resolu : deprecier."
+      ],
+      "notes": "Advisory car c'est une contrainte de MESURE a cabler cote scellement, pas une heuristique de marche ni un filtre de selection : elle n'ecarte aucun candidat. Complementaire de stop-exit-must-be-a-traded-price (hard_block, cote prix) qui traite le gap d'ouverture ; ici c'est l'ETIQUETTE et le cas miroir (stop cote intraday mais sortie bookee a l'ouverture) qui sont en cause.",
+      "applies_to": [
+        "top_10",
+        "tkl_pool"
+      ],
+      "from_retros": [
+        "20260722",
+        "20260728",
+        "20260729"
+      ]
+    },
+    {
+      "id": "sealed-exit-must-be-replayed-to-horizon",
+      "class": "process_rule",
+      "status": "candidate",
+      "severity": "advisory",
+      "rule": "Avant de sceller une sortie qui n'est ni un stop cote ni un TP cote a la date retenue, rejouer la position sur les barres reelles jusqu'a l'echeance PUBLIEE. Une sortie figee a J+1 sans declencheur reel invente une date et un statut. Corollaire : mae_pct/mfe_pct doivent couvrir la fenetre entree -> sortie REELLE, jamais la fenetre tronquee J0-J1.",
+      "scope": {
+        "setups": [],
+        "regimes": [
+          "RISK-ON",
+          "RECOVERY",
+          "NEUTRAL",
+          "EARLY RISK-OFF",
+          "RISK-OFF"
+        ],
+        "modes": []
+      },
+      "effect": {
+        "action": "replay_exit_against_real_bars_until_published_horizon",
+        "target": {},
+        "params": {
+          "trigger": "exit_without_traded_stop_or_tp",
+          "replay_window": "entry_to_published_horizon",
+          "recompute": [
+            "exitDate",
+            "exitPrice",
+            "status",
+            "mae_pct",
+            "mfe_pct",
+            "r_multiple"
+          ]
+        }
+      },
+      "evidence": {
+        "sample_size": 4,
+        "wins": 1,
+        "losses": 3,
+        "expectancy": -0.1225,
+        "period": "2026-07-23 -> 2026-07-30",
+        "tickers": [
+          "CAKE",
+          "KLAC",
+          "ADM"
+        ],
+        "clusters": [
+          "premature-sealing-20260723-20260729"
+        ],
+        "source_retros": [
+          "20260723",
+          "20260729"
+        ],
+        "note": "20260723 : 2/2 positions scellees le 24/07 a des prix ne correspondant a aucun declencheur ce jour-la. CAKE scellee -1,79%/R-0,26 valait en realite TP2 le 29/07 a +17,51%/R+2,51 (ecart 2,77 R) ; KLAC scellee 'breakeven' 0,00 valait un stop plein le 27/07 a -7,00%/R-1,00 (ecart 1,00 R). mfe scelle sous-estime x21 sur CAKE (0,97% vs 20,47%), mae x3 sur KLAC (-2,79% vs -8,36%). 20260729 : ADM/dynamic et ADM/turbo bookees a l'ouverture du 30/07 (80,41) alors que le stop 79,39 a cote intraday sans gap d'ouverture -> ecart 0,26 R chacune. Ecart absolu moyen scelle-vs-reel sur les 4 : 1,07 R. Les erreurs vont dans LES DEUX SENS, donc un controle sur l'agregat ne les voit pas."
+      },
+      "confidence": 0.3,
+      "confidence_base": 0.3,
+      "half_life_days": null,
+      "created_at": "2026-08-14",
+      "last_validated_at": "2026-08-14",
+      "expires_at": null,
+      "invalidation_conditions": [
+        "Si sur les 3 prochains lots retro verifies barre par barre, aucune sortie scellee ne differe de la sortie rejouee (date, prix, statut), le defaut est resolu : deprecier.",
+        "Si l'ecart R absolu moyen scelle-vs-reel retombe sous 0,10 R sur 3 lots consecutifs, deprecier."
+      ],
+      "notes": "Advisory : contrainte de mesure cote scellement, aucun impact sur la selection. Tant qu'elle n'est pas cablee, AUCUN chiffre de performance publie n'est defendable ligne a ligne, y compris quand il nous est defavorable.",
+      "applies_to": [
+        "top_10",
+        "tkl_pool"
+      ],
+      "from_retros": [
+        "20260723",
+        "20260729"
+      ]
+    },
+    {
+      "id": "sample-size-by-unique-underlying",
+      "class": "process_rule",
+      "status": "candidate",
+      "severity": "advisory",
+      "rule": "Taux de reussite, R moyen, R median et dispersion d'une retrospective se calculent au niveau des SOUS-JACENTS DISTINCTS, en moyennant les modes quand ils divergent, pas au niveau des positions. Un ticker pris par N modes produit N lignes de journal mais UN SEUL evenement de marche : compter au niveau position multiplie mecaniquement son poids par N, a la hausse comme a la baisse.",
+      "scope": {
+        "setups": [],
+        "regimes": [],
+        "modes": [
+          "balanced",
+          "dynamic",
+          "turbo",
+          "fortress"
+        ]
+      },
+      "effect": {
+        "action": "aggregate_stats_by_unique_underlying",
+        "target": {},
+        "params": {
+          "group_by": "ticker",
+          "collapse_modes": "mean_r",
+          "report_both": true
+        }
+      },
+      "evidence": {
+        "sample_size": 9,
+        "wins": 3,
+        "losses": 4,
+        "expectancy": -0.116,
+        "period": "2026-07-22 -> 2026-07-30",
+        "tickers": [
+          "AAPL",
+          "CF",
+          "ROST",
+          "AI.PA",
+          "CSX",
+          "ADM",
+          "FRO",
+          "CFG",
+          "VTV"
+        ],
+        "clusters": [
+          "mode-duplication-20260722-20260730"
+        ],
+        "source_retros": [
+          "20260722",
+          "20260728",
+          "20260729",
+          "20260730"
+        ],
+        "note": "15 positions scellees pour 9 sous-jacents distincts sur 4 scans. 20260722 : 5 positions / 4 titres (AAPL en double). 20260728 : 2 positions / 1 titre (CSX, entree, sortie, pnl strictement identiques). 20260729 : 3 positions / 1 titre (ADM). 20260730 : 5 positions / 3 titres, avec un cas de DIVERGENCE reelle (FRO balanced +0,32 R sur 7 seances contre FRO dynamic/turbo 0,00 R a J+3) qui justifie de moyenner plutot que de deduper. Expectancy calculee au niveau sous-jacent : -0,116 R contre -0,043 R au niveau position sur le meme perimetre."
+      },
+      "confidence": 0.4,
+      "confidence_base": 0.4,
+      "half_life_days": null,
+      "created_at": "2026-08-14",
+      "last_validated_at": "2026-08-14",
+      "expires_at": null,
+      "invalidation_conditions": [
+        "Aucune : c'est une convention de comptage, pas une heuristique de marche. A deprecier seulement si le journal des positions cesse de dupliquer un meme sous-jacent entre modes."
+      ],
+      "notes": "Advisory car elle ne modifie aucune selection : elle change le denominateur des statistiques publiees. Convention appliquee au second pilier de la note dans les retrospectives mono-scan du 21/07 au 30/07.",
+      "applies_to": [
+        "top_10",
+        "tkl_pool"
+      ],
+      "from_retros": [
+        "20260722",
+        "20260728",
+        "20260729",
+        "20260730"
+      ]
+    },
+    {
+      "id": "breakeven-arm-requires-min-mfe",
+      "class": "market_truth",
+      "status": "candidate",
+      "severity": "advisory",
+      "rule": "Le passage du stop au seuil d'entree (protection du gain) ne doit pas s'armer tant que l'excursion favorable n'a pas depasse un plancher nettement au-dessus du bruit quotidien du titre (piste : 1,0x ATR14, a calibrer). Observe : armement des +1,3% a +2,8% de MFE, puis fermeture au premier retest intraday du prix d'entree, sur des lignes dont la cible a ete cotee ENSUITE, a l'interieur de l'horizon publie.",
+      "scope": {
+        "setups": [
+          "momentum",
+          "breakout"
+        ],
+        "regimes": [
+          "RISK-ON",
+          "RECOVERY",
+          "NEUTRAL"
+        ],
+        "modes": [
+          "dynamic",
+          "turbo",
+          "fortress"
+        ]
+      },
+      "effect": {
+        "action": "require_min_mfe_before_arming_breakeven",
+        "target": {
+          "strategy": [
+            "momentum",
+            "breakout"
+          ]
+        },
+        "params": {
+          "min_mfe_atr_multiple": 1,
+          "observed_arming_mfe_pct_range": [
+            1.3,
+            2.8
+          ],
+          "fallback": "keep_initial_stop"
+        }
+      },
+      "evidence": {
+        "sample_size": 5,
+        "wins": 0,
+        "losses": 0,
+        "expectancy": 0,
+        "period": "2026-07-22 -> 2026-07-30",
+        "tickers": [
+          "TX",
+          "FRO",
+          "CF",
+          "AI.PA"
+        ],
+        "clusters": [
+          "early-breakeven-arming-20260722-20260730"
+        ],
+        "source_retros": [
+          "20260722",
+          "20260724",
+          "20260730"
+        ],
+        "note": "20260724 : TX/dynamic coupe a 0,00 R le 27/07 apres +1,32% de MFE ; la cible du mode (50,89) a cote le 04/08, six seances plus tard et DANS l'horizon publie de 8 seances (echeance 07/08). 20260730 : FRO/dynamic et FRO/turbo coupes a 0,00 R le 03/08 apres +2,80% de MFE, sur un simple retest intraday de l'entree, pendant que FRO/balanced tient 7 seances et sort a +2,13% (R +0,32) sur le meme achat. 20260722 : CF et AI.PA rendent la totalite de leur MFE (+3,35% et +1,05%) en une seule seance avant fermeture au seuil d'entree. Les 5 lignes finissent a 0,00 R : expectancy nulle par construction, ce que la regle vise est le manque a gagner, pas la perte."
+      },
+      "confidence": 0.25,
+      "confidence_base": 0.25,
+      "half_life_days": 180,
+      "created_at": "2026-08-14",
+      "last_validated_at": "2026-08-14",
+      "expires_at": "2026-08-14",
+      "invalidation_conditions": [
+        "Si sur les 5 prochains arrets au seuil d'entree en momentum, moins de 2 auraient atteint TP1 dans l'horizon restant, le seuil d'armement n'est pas en cause : deprecier.",
+        "Si le contre-factuel 'plancher de MFE a 1,0x ATR14' degrade l'esperance sur un replay de 30 jours, rejeter."
+      ],
+      "notes": "Confiance volontairement basse : 5 observations, 3 scans, et un contre-argument serieux non tranche. Sur FRO, le titre est redescendu a 37,29 le 11/08 sous le prix d'achat avant de remonter a 40,52 le 13/08 : les sorties precoces se defendent aussi apres coup. Ce que ces cas etablissent, c'est qu'une meme entree traitee par deux regles donne deux resultats, pas qu'une regle a raison. A revalider avec un backtest 30 jours (validate-config-change.js) avant tout changement de parametre.",
+      "applies_to": [
+        "top_10"
+      ],
+      "from_retros": [
+        "20260722",
+        "20260724",
+        "20260730"
+      ]
+    },
+    {
+      "id": "tactical-exit-shadows-published-stop",
+      "class": "process_rule",
+      "status": "candidate",
+      "severity": "advisory",
+      "rule": "Quand le mecanisme qui ferme reellement les positions (trailing, seuil d'entree, sortie temporelle) est systematiquement plus serre que le stop publie, le stop publie cesse de decrire le risque reel : publier a cote la distance de sortie effective attendue, et surveiller le taux de touche reelle des niveaux publies. Un R calcule contre un stop qui ne ferme jamais rien sous-estime mecaniquement l'amplitude des mouvements.",
+      "scope": {
+        "setups": [
+          "momentum",
+          "breakout",
+          "pullback"
+        ],
+        "regimes": [
+          "RISK-ON",
+          "RECOVERY",
+          "NEUTRAL"
+        ],
+        "modes": [
+          "dynamic",
+          "turbo",
+          "fortress",
+          "balanced"
+        ]
+      },
+      "effect": {
+        "action": "publish_effective_exit_distance_and_track_level_touch_rate",
+        "target": {},
+        "params": {
+          "alert_if_level_touch_rate_below_pct": 30,
+          "publish_field": "expected_effective_exit_distance_pct"
+        }
+      },
+      "evidence": {
+        "sample_size": 12,
+        "wins": 3,
+        "losses": 5,
+        "expectancy": -0.054,
+        "period": "2026-07-22 -> 2026-07-30",
+        "tickers": [
+          "AAPL",
+          "ROST",
+          "CF",
+          "AI.PA",
+          "CSX",
+          "FRO",
+          "CFG",
+          "VTV"
+        ],
+        "clusters": [
+          "levels-never-quoted-20260722-20260730"
+        ],
+        "source_retros": [
+          "20260722",
+          "20260728",
+          "20260730"
+        ],
+        "note": "12 positions sur 3 scans, 0 stop publie cote, 0 TP1 publie cote avant la sortie. 20260722 : les 2 sorties taggees 'sl' se declenchent a -2,59% et -1,77% quand les stops publies sont a -6,71% et -5,89% (ecart moyen 4,1 points de pourcentage). 20260728 : le stop CSX (49,34) est passe a 8 centimes sans jamais coter sur 13 seances (plus-bas 49,42) et le TP1 (+8,1%) est reste hors d'atteinte d'un titre dont l'amplitude realisee vaut 6,1%. 20260730 : les 3 cibles restent a 1,6%, 2,6% et 4,4% du plus-haut reel apres 3 semaines. Complementaire de tp1-reachability (hard_block, cote cible) : ici c'est le cote STOP et la coherence entre niveau publie et mecanisme de sortie qui sont en cause."
+      },
+      "confidence": 0.3,
+      "confidence_base": 0.3,
+      "half_life_days": null,
+      "created_at": "2026-08-14",
+      "last_validated_at": "2026-08-14",
+      "expires_at": null,
+      "invalidation_conditions": [
+        "Si sur 3 lots retro consecutifs >= 30% des stops ou TP1 publies sont reellement cotes avant la sortie, le decrochage niveau/mecanisme n'est pas systematique : deprecier."
+      ],
+      "notes": "Advisory : la regle demande une publication supplementaire et une metrique de suivi, elle ne modifie ni le calibrage du stop ni la selection. Le point lecteur compte autant que le point statistique : le risque affiche sur la fiche n'est pas le risque gere.",
+      "applies_to": [
+        "top_10",
+        "tkl_pool"
+      ],
+      "from_retros": [
+        "20260722",
+        "20260728",
+        "20260730"
+      ]
     }
   ],
   "_open_questions": [
