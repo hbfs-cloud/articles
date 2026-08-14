@@ -1419,6 +1419,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "IOVA",
+    "exchange": "NASDAQ · Healthcare",
+    "name": "IOVA — IOVA à 6,60 $ : +53% depuis juillet, seconde cible dépassée, T2 battu. Aucun S-3 ni 424...",
+    "title": "IOVA — IOVA à 6,60 $ : +53% depuis juillet, seconde cible dépassée, T2 battu. Aucun S-3 ni 424...",
+    "desc": "Contrôle du 14 août : IOVA à 6,52 $, toutes les cibles dépassées, deuxième trimestre battu à -0,11 $. Le « mixed shelf de juin » cité dans notre note précédente n'apparaît dans aucun dépôt : nous le retirons. B- vers C+.",
+    "tags": "us,healthcare,biotech,trade-idea",
+    "grade": "C+",
+    "href": "/analyses/IOVA/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "",
     "exchange": "NBIS, CEG, AMKR, AEHR, QMCO, PSIX",
     "name": "L'infrastructure de l'IA hors GPU · NBIS, CEG, AMKR, AEHR, QMCO, PSIX",
@@ -1648,19 +1661,6 @@ window.searchDataPrebuilt = [
     "tags": "us,financials,small-cap,speculative,earnings",
     "grade": "D",
     "href": "/analyses/INV/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "IOVA",
-    "exchange": "NASDAQ · Healthcare",
-    "name": "IOVA — Revenus T2 à 99,313 M$ (+66%), perte nette divisée par 2,4. Le marché paie 39% de plus ...",
-    "title": "IOVA — Revenus T2 à 99,313 M$ (+66%), perte nette divisée par 2,4. Le marché paie 39% de plus ...",
-    "desc": "IOVA post-résultats T2 2026 : revenus 99,313 M$ contre 59,952 M$ un an plus tôt, titre en hausse d'environ 39% en séance au-dessus de son plus-haut annuel. Mais la fourchette 2026 n'a pas été relevée et 41 millions d'actions ont été créées depuis février.",
-    "tags": "us,healthcare,biotech,earnings,trade-idea",
-    "grade": "B-",
-    "href": "/analyses/IOVA/",
     "date": ""
   },
   {
