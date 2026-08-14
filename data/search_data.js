@@ -1419,6 +1419,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ALLR",
+    "exchange": "NASDAQ · Healthcare",
+    "name": "ALLR — ALLR à 1,40 $ : au-dessus des trois moyennes, RSI 56,9 contre 37,2, robinet d'émission ...",
+    "title": "ALLR — ALLR à 1,40 $ : au-dessus des trois moyennes, RSI 56,9 contre 37,2, robinet d'émission ...",
+    "desc": "Contrôle du 14 août : ALLR repasse au-dessus de ses trois moyennes (1,40 $ contre 1,17 $ au dernier pointage) et aucun nouveau prospectus n'a été déposé depuis six mois. Bilan net non re-vérifié depuis le 10-Q de mars. Note relevée de D à C.",
+    "tags": "us,healthcare,biotech,speculative",
+    "grade": "C",
+    "href": "/analyses/ALLR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ALT",
     "exchange": "NASDAQ · Healthcare",
     "name": "ALT — ALT à 2,90 $ : short interest 26,7% du flottant contre 29,0%, aucune dilution nouvelle ...",
@@ -2350,19 +2363,6 @@ window.searchDataPrebuilt = [
     "tags": "",
     "grade": "B",
     "href": "/analyses/AAPL/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "ALLR",
-    "exchange": "NASDAQ · Healthcare",
-    "name": "ALLR — Stenoparib Phase 2 SCLC/ovaire, brevet DRP 2039+, mais micro-cap $23M avec programme de...",
-    "title": "ALLR — Stenoparib Phase 2 SCLC/ovaire, brevet DRP 2039+, mais micro-cap $23M avec programme de...",
-    "desc": "Analyse Allarity Therapeutics : biotech Phase 2 stenoparib (dual PARP+WNT), micro-cap $23M, dilution active via Tumim, cash $29.8M. Profil hautement spéculatif.",
-    "tags": "us,healthcare,speculative",
-    "grade": "D",
-    "href": "/analyses/ALLR/",
     "date": ""
   },
   {
