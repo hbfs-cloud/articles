@@ -241,6 +241,7 @@ codifiées). Ne pas générer un daily/weekly/retro/analyse/series « à la main
 | `swing-signals` | swing, signaux swing, swings tactiques, trade court terme, bilan swing, quels signaux today, coups rapides, jouable aujourd'hui |
 | `squeeze-radar` | squeeze, short squeeze, short interest, cost to borrow, CTB, days to cover, gamma squeeze |
 | `earnings-reaction` | earnings, résultats, post-earnings, earnings drift, gap and go, beat, guidance relevée, saison des résultats, PEAD |
+| `sector-funnel` | analyse sectorielle, secteur du moment, funnel sectoriel, entonnoir, sector deep dive (commande : `/sector-funnel`) |
 | `sector-rotation` | rotation, rotation sectorielle, force relative, RS, leaders, quel secteur, surpondérer, sous-pondérer, sector tilt |
 | `macro-event-playbook` | CPI, Fed, FOMC, macro, événement, playbook, OPEP, jobs, NFP, calendrier économique, positionnement, de-risk |
 
