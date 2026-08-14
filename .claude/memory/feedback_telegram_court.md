@@ -13,6 +13,7 @@ de liens ; un ticker clé (MVST) s'y noyait.
 ticker en fin de liste devient invisible. Les liens multiples diluent (le lecteur sait où est le site).
 
 **How to apply** :
+- ⚠️ Renforcé (2e rappel, 14/08 soir) : MÊME un récap « complet » demandé explicitement reste COMPACT — ~10 lignes max, 1 ligne par bloc (émoji + label gras + tickers séparés par ·), jamais de paragraphes par section. Deux rappels user le même jour = règle dure.
 - Format cible : titre + 3-4 lignes MAX (Jouer / Surveiller / Éviter, ou équivalent), une règle
   de clôture, disclaimer court (« Éducatif — pas un conseil. »).
 - ZÉRO pavé de liens. Au plus UN lien quand il est le cœur du message (un article unique).
