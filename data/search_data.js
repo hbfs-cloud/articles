@@ -1419,6 +1419,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "EQX",
+    "exchange": "NYSE American · Matériaux de base",
+    "name": "EQX — EQX à 11,56 $ : le nombre d'actions post-fusion est enfin dans les données, PE prévisio...",
+    "title": "EQX — EQX à 11,56 $ : le nombre d'actions post-fusion est enfin dans les données, PE prévisio...",
+    "desc": "Contrôle du 14 août : le flux affiche enfin 1,167 milliard d'actions, l'écart de données qui motivait la note D est résorbé, et l'entrée conditionnelle à 10,26 $ a été prise puis dépassée. Note relevée de D à C+.",
+    "tags": "us,gold,mining,commodity,technique,trade-idea,earnings",
+    "grade": "C+",
+    "href": "/analyses/EQX/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ALLR",
     "exchange": "NASDAQ · Healthcare",
     "name": "ALLR — ALLR à 1,40 $ : au-dessus des trois moyennes, RSI 56,9 contre 37,2, robinet d'émission ...",
@@ -1804,19 +1817,6 @@ window.searchDataPrebuilt = [
     "tags": "us,semis,tech,ai,technique,trade-idea,earnings",
     "grade": "C",
     "href": "/analyses/MU/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "EQX",
-    "exchange": "NYSE American · Matériaux de base",
-    "name": "EQX — EQX a émis 421,8 M d'actions vendredi (+53,4% du capital). Le flux de données affiche t...",
-    "title": "EQX — EQX a émis 421,8 M d'actions vendredi (+53,4% du capital). Le flux de données affiche t...",
-    "desc": "Equinox Gold a bouclé sa fusion avec Orla vendredi 31 juillet en émettant jusqu'à 421,8 millions d'actions, soit +53,4% du capital. Les données de marché affichent encore l'ancien nombre d'actions : le titre paraît bon marché pour une raison qui n'existe plus. Résultats mercredi.",
-    "tags": "us,gold,mining,commodity,technique,trade-idea,earnings",
-    "grade": "D",
-    "href": "/analyses/EQX/",
     "date": ""
   },
   {
