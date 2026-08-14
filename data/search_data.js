@@ -1419,6 +1419,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "STRL",
+    "exchange": "NASDAQ · Engineering & Construction",
+    "name": "STRL — Sterling Infrastructure à 573,24 $ : chiffre d'affaires +90,1 %, rentabilité des fonds ...",
+    "title": "STRL — Sterling Infrastructure à 573,24 $ : chiffre d'affaires +90,1 %, rentabilité des fonds ...",
+    "desc": "STRL : -43 % depuis le 4 juin, +96 % sur douze mois. Les comptes ont doublé, le multiple a été divisé par deux. Tout le dossier tient dans un chiffre : 22,7x l'EBITDA pour 23,8 % de marge brute.",
+    "tags": "us,industrials,ai,technique",
+    "grade": "B",
+    "href": "/analyses/STRL/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "EQX",
     "exchange": "NYSE American · Matériaux de base",
     "name": "EQX — EQX à 11,56 $ : le nombre d'actions post-fusion est enfin dans les données, PE prévisio...",
