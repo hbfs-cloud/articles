@@ -60,7 +60,12 @@ function loadPublishedEntries(scanDate) {
   if (fs.existsSync(p)) {
     try {
       const j = JSON.parse(fs.readFileSync(p, 'utf8'));
-      for (const pool of ['signals', 'momentum', 'breakout', 'pullback', 'pre_squeeze']) {
+      // ⚠️ ÉTENDU le 2026-08-14 (rétro 20260721) : `tkl_pool` est un pool PUBLIÉ, avec zone
+      // d'entrée complète (entry_low + entry + entry_high). Il était absent de cette liste, donc
+      // toute ligne notée issue de ce pool tombait en fail-closed « entrée publiée introuvable »
+      // et rendait la rétro inattestable — 8 lignes sur 18 pour le scan du 21/07. L'ajout n'assouplit
+      // rien : il donne au contrôle la donnée qui lui manquait pour attester ces lignes.
+      for (const pool of ['signals', 'momentum', 'breakout', 'pullback', 'pre_squeeze', 'tkl_pool']) {
         for (const s of j[pool] || []) {
           if (!s || !s.ticker || map[s.ticker] !== undefined) continue;
           // Borne HAUTE de la zone : le chase se mesure au-dessus de la zone.
