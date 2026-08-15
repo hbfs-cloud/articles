@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "La baisse de taux a disparu, le marché est monté quand même",
+    "desc": "Weekly DailyTickers du 17 au 21 août 2026. En huit jours, la probabilité d'une baisse de taux en septembre est tombée à 1,15% et celle d'une hausse est montée à 24,50%. Les petites capitalisations ont fait leur plus haute clôture 2026 pendant ce revirement. L'énergie prend 7,67% en une semaine, la consommation discrétionnaire est le seul secteur en baisse — et publie ses résultats mardi, mercredi et jeudi. Minutes de la Fed mercredi. Niveaux, configurations, scénarios.",
+    "tags": "us,eu,asia,crypto,commodity,macro,earnings,energy,consumer,technique,trade-idea,etf",
+    "grade": "",
+    "href": "/weekly/20260817/",
+    "date": "17 août 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Le choc de l'emploi qui n'en était pas un",
     "desc": "Weekly DailyTickers du 10 au 14 août 2026. L'emploi américain de juillet recule de 23 000 postes contre +83 000 attendus — mais le privé crée 30 000 emplois et le public en perd 53 000, sur des facteurs saisonniers révisables. Le marché a basculé sur la composante la moins fiable. CPI mercredi, PPI jeudi, ventes de détail vendredi. Niveaux, trois scénarios et ce qu'on ne fait pas.",
     "tags": "us,eu,asia,commodity,macro,earnings,technique,trade-idea,etf,gold,mining,defense,healthcare,small-cap",
@@ -375,19 +388,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/weekly/20251229/",
     "date": "29 décembre 2025 - 3 janvier 2026"
-  },
-  {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "La baisse de taux a disparu, le marché est monté quand même",
-    "desc": "Weekly DailyTickers du 17 au 21 août 2026. En huit jours, la probabilité d'une baisse de taux en septembre est tombée à 1,15% et celle d'une hausse est montée à 24,50%. Les petites capitalisations ont fait leur plus haute clôture 2026 pendant ce revirement. L'énergie prend 7,67% en une semaine, la consommation discrétionnaire est le seul secteur en baisse — et publie ses résultats mardi, mercredi et jeudi. Minutes de la Fed mercredi. Niveaux, configurations, scénarios.",
-    "tags": "us,eu,asia,crypto,commodity,macro,earnings,energy,consumer,technique,trade-idea,etf",
-    "grade": "",
-    "href": "/weekly/20260817/",
-    "date": "17 août 2026"
   },
   {
     "type": "daily",
