@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "La baisse de taux a disparu, le marché est monté quand même",
+    "desc": "Weekly DailyTickers du 17 au 21 août 2026. En huit jours, la probabilité d'une baisse de taux en septembre est tombée à 1,15% et celle d'une hausse est montée à 24,50%. Les petites capitalisations ont fait leur plus haute clôture 2026 pendant ce revirement. L'énergie prend 7,67% en une semaine, la consommation discrétionnaire est le seul secteur en baisse — et publie ses résultats mardi, mercredi et jeudi. Minutes de la Fed mercredi. Niveaux, configurations, scénarios.",
+    "tags": "us,eu,asia,crypto,commodity,macro,earnings,energy,consumer,technique,trade-idea,etf",
+    "grade": "",
+    "href": "/weekly/20260817/",
+    "date": "17 août 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Le choc de l'emploi qui n'en était pas un",
     "desc": "Weekly DailyTickers du 10 au 14 août 2026. L'emploi américain de juillet recule de 23 000 postes contre +83 000 attendus — mais le privé crée 30 000 emplois et le public en perd 53 000, sur des facteurs saisonniers révisables. Le marché a basculé sur la composante la moins fiable. CPI mercredi, PPI jeudi, ventes de détail vendredi. Niveaux, trois scénarios et ce qu'on ne fait pas.",
     "tags": "us,eu,asia,commodity,macro,earnings,technique,trade-idea,etf,gold,mining,defense,healthcare,small-cap",
@@ -1415,6 +1428,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/daily/20260217/",
     "date": "17 février 2026"
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "",
+    "exchange": "l'énergie passe de dernière à première en cinq séances",
+    "name": "Rotation sectorielle · l'énergie passe de dernière à première, et ce que ça vaut",
+    "title": "Rotation sectorielle · l'énergie passe de dernière à première, et ce que ça vaut",
+    "desc": "Bilan de rotation sectorielle des cinq séances closes le 14 août 2026. L'énergie passe du 11e au 1er rang, la consommation discrétionnaire du 3e au 11e. Force relative recalculée sur les bougies, classement pondéré, tilt chiffré pour la semaine du 17 août et ses invalidations.",
+    "tags": "us,etf,macro,technique",
+    "grade": "",
+    "href": "/analyses/ROTATION-20260817/",
+    "date": ""
   },
   {
     "type": "analyse",
@@ -5029,6 +5055,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/status/",
     "date": "Updated continuously"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 5 A+ RISK-ON · SNAP, XENE, ETSY, AUR, UEC",
+    "desc": "La défensivité mesurée est au plancher : zéro sur cent, sans probabilité de repli marqué ni de crise à l'instant t. La répartition instantanée reste partagée entre risk-on et neutre (50/50), et à cinq séances le modèle garde 46 % de chances de rester en risk-on, 28 % de basculer au neutre, 17 % en r...",
+    "tags": "us,trade-idea,technique,momentum,healthcare,energy,consumer",
+    "grade": "",
+    "href": "/scanner/20260817/",
+    "date": "Lundi 17 août 2026"
   },
   {
     "type": "scanner",

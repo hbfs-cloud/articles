@@ -1,0 +1,148 @@
+{
+  "scanFolder": "scanner/20260727",
+  "scan": {
+    "scanDate": "2026-07-27",
+    "regime": "RECOVERY",
+    "regimeScore": 0.74,
+    "vix": 17.6,
+    "session_label": "lundi 27 juillet 2026"
+  },
+  "gradedAt": "2026-08-14",
+  "method": "0 trade scellé dans backtest-trades.json pour ce scanDate -> aucune sortie officielle à re-pricer. Investigation manuelle demandée par le retro-batch (note d'origine) : vérification des 43 candidats publiés non scellés (6 pool 'signals' à zone d'entrée précise + 18 tickers uniques pool 'dtx_pool', dédupliqués depuis 43 lignes car même panier de rotation dupliqué 3x dans le JSON source) via bars_daily réels MCP (QueryData, 2026-07-27 -> 2026-08-13, 24 tickers, 1 salve batchée). Règle de fill : ordre limite d'achat -> si l'open de séance est DANS ou EN-DESSOUS de la zone [entry_low, entry_high], fill à l'open (gap favorable) ; si l'open est au-dessus mais que low_séance <= entry_high, fill à entry_high (touché intraday). Règle de sortie (donnée par le mandat) : stop compté au prix du stop UNIQUEMENT si low_séance <= stop (long) ; si l'open a déjà gappé sous le stop, sortie à l'OPEN. Même logique miroir pour tp1/tp2 côté haut.",
+  "sealedTrades": {
+    "count": 0,
+    "note": "Confirmé : aucune ligne dans data/backtest-trades.json pour scanDate=2026-07-27. Rien à re-pricer sur trade scellé au sens strict du mandat."
+  },
+  "shadowVerification_publishedSignalsUnsealed": {
+    "pool_signals_6_names": [
+      {
+        "ticker": "PPG",
+        "strategy": "Pullback",
+        "entryZone": [116, 116.6],
+        "stop": 110.73,
+        "tp1": 126.53,
+        "tp2": 132,
+        "triggered": true,
+        "entryFill": {"date": "2026-07-29", "price": 114.78, "mode": "gap-through à l'open (open 114.78 < entry_low 116)"},
+        "outcome": "STOP",
+        "exitFill": {"date": "2026-07-29", "price": 110.73, "mode": "low séance 110.67 <= stop 110.73, sortie au niveau du stop (pas de gap, open 114.78 > stop) — MÊME séance que l'entrée"},
+        "pnl": -4.05,
+        "r": -1.00,
+        "mfe_approx": 1.24,
+        "mae_approx": -4.05,
+        "postStopFollowThrough": "Whipsaw : PPG a ensuite rallié à 119.72 le 2026-08-07, soit +4.3% AU-DESSUS du prix d'entrée réel (114.78), 9 séances après le stop."
+      },
+      {
+        "ticker": "GL",
+        "strategy": "Pullback",
+        "entryZone": [173.48, 174.3],
+        "stop": 166.82,
+        "tp1": 186.8,
+        "tp2": 195,
+        "triggered": true,
+        "entryFill": {"date": "2026-07-27", "price": 174.04, "mode": "open dans la zone [173.48,174.3]"},
+        "outcome": "TP1",
+        "exitFill": {"date": "2026-08-10", "price": 186.8, "mode": "high séance 188.5 >= tp1 186.8, touché intraday (pas de gap, open 186.61 < tp1)"},
+        "pnl": 12.76,
+        "r": 1.77,
+        "mfe_approx_R": 2.00,
+        "mae_approx_R": -0.13,
+        "note": "TP2 (195) jamais atteint dans la fenêtre observée (high max post-TP1 = 188.5 le jour même, puis repli à 177.9 le 2026-08-12)."
+      },
+      {
+        "ticker": "TLX.DE",
+        "strategy": "Pullback",
+        "entryZone": [115.1, 115.7],
+        "stop": 111.46,
+        "tp1": 122.38,
+        "tp2": 126.2,
+        "triggered": true,
+        "entryFill": {"date": "2026-07-27", "price": 115.3, "mode": "open dans la zone [115.1,115.7]"},
+        "outcome": "OPEN (ni stop ni TP touchés au 2026-08-12, dernière séance disponible)",
+        "priceRangeObserved": [113.8, 117.7],
+        "lastClose": 114.1,
+        "note": "Horizon dû le 2026-08-10 est dépassé sans résolution stop/TP — position toujours techniquement ouverte, ~-1% latent vs entrée."
+      },
+      {
+        "ticker": "AALB.AS",
+        "strategy": "Breakout",
+        "entryZone": [42.5, 43.1],
+        "stop": 41.4,
+        "tp1": 46,
+        "tp2": 48,
+        "triggered": true,
+        "entryFill": {"date": "2026-07-27", "price": 42.4, "mode": "gap-through à l'open (open 42.4 légèrement < entry_low 42.5)"},
+        "outcome": "STOP",
+        "exitFill": {"date": "2026-07-27", "price": 41.4, "mode": "low séance 40.9 <= stop 41.4, sortie au niveau du stop (pas de gap, open 42.4 > stop) — MÊME séance que l'entrée"},
+        "pnl": -1.0,
+        "r": -1.00,
+        "mfe_approx": 0.6,
+        "mae_approx": -1.0,
+        "postStopFollowThrough": "Whipsaw : AALB.AS a ensuite rallié à 45.08 le 2026-08-07, soit +6.3% AU-DESSUS du prix d'entrée réel (42.4), 8 séances après le stop."
+      },
+      {
+        "ticker": "TWLO",
+        "strategy": "Pullback",
+        "entryZone": [191.46, 192.4],
+        "stop": 177.5,
+        "tp1": 223,
+        "tp2": 238,
+        "triggered": true,
+        "entryFill": {"date": "2026-07-27", "price": 192.4, "mode": "low séance 191.83 touche la zone (open 194.42 au-dessus), fill au prix limite 192.4"},
+        "outcome": "TP1 (et au-delà)",
+        "exitFill": {"date": "2026-08-07", "price": 235.25, "mode": "GAP à l'open : open 235.25 déjà >= tp1 223 (et proche de tp2 238) — sortie à l'open, pas au niveau nominal du TP1. High séance 254.5 dépasse même tp2 238."},
+        "pnl_at_gapopen": 42.85,
+        "r_at_gapopen": 2.88,
+        "r_if_full_move_to_session_high": 4.17,
+        "mae_approx_R": -0.66,
+        "note": "Meilleur trade shadow du scan — gap catalyseur (probable réaction résultats) le 2026-08-07 qui a traversé tp1 ET tp2 en une séance."
+      },
+      {
+        "ticker": "IRDM",
+        "strategy": "Pullback",
+        "entryZone": [45.5, 46],
+        "stop": 42.5,
+        "tp1": 52.71,
+        "tp2": 55,
+        "triggered": true,
+        "entryFill": {"date": "2026-07-27", "price": 46.0, "mode": "low séance 45.33 sous la zone, open 46.02 quasi au plafond — fill ~46.0"},
+        "outcome": "OPEN (ni stop ni TP touchés au 2026-08-13)",
+        "priceRangeObserved": [44.29, 50.65],
+        "lastClose": 49.78,
+        "note": "Horizon dû le 2026-08-10 dépassé sans résolution — +8.2% latent vs entrée, high max 50.65 encore loin de tp1 52.71."
+      }
+    ],
+    "pool_dtx_18_unique_tickers_summary": {
+      "note": "43 lignes publiées dtx_pool = le même panier de rotation dupliqué 3 fois (ingestions successives du staging) -> 18 tickers uniques réels. Vérification limitée à la cohérence entrée vs quotes réels (pas de re-pricing complet stop/TP, hors mandat strict sur trades scellés).",
+      "entriesConsistentWithRealRange": ["ALAB", "AMAT", "AMD", "CRWD", "DDOG", "INTC", "MRNY", "MU", "PANW", "REMX", "SNDK", "STX", "TESL", "TSII", "TSLP"],
+      "entriesNeverTouchedByRealQuotes_07-27_to_08-13": [
+        {"ticker": "BNO", "engineEntry": 53.9471, "realHighMax": 51.06, "gapPct": "-5.6% de marge manquante"},
+        {"ticker": "DBO", "engineEntry": 23.3107, "realHighMax": 21.78, "gapPct": "-6.6% de marge manquante"},
+        {"ticker": "SAFT", "engineEntry": 105.78, "realRangeFull": [102.9, 103.75], "stop": 80.7129, "flag": "Instrument quasi plat (range réalisé <1% sur 3 semaines) mais stop placé à -23.7% — incohérence risque/volatilité manifeste, prix d'entrée jamais atteint."}
+      ]
+    }
+  },
+  "grading": {
+    "n_sealed": 0,
+    "hitRate_entry_pct_shadow_signals_pool": "4/6 déclenchés dont 2 non résolus (66% déclenchement, 100% des déclenchés = 4/4 mais 2 encore ouverts)",
+    "wr_pct_sealed": null,
+    "avg_r_sealed": null,
+    "wr_pct_shadow_resolved_signals_pool": 50,
+    "avg_r_shadow_resolved_signals_pool": 0.885,
+    "best": {
+      "ticker": "TWLO",
+      "r": "+2.88R (au gap d'ouverture, jusqu'à +4.17R sur le high de séance)",
+      "story": "Pullback acheté à 192.4 le 27/07 sur repli intraday sous la zone d'entrée. Gap catalyseur le 07/08 (open 235.25, high 254.5) qui traverse TP1 (223) ET TP2 (238) en une seule séance."
+    },
+    "worst": {
+      "tickers": ["PPG", "AALB.AS"],
+      "r": "-1.00R chacun",
+      "story": "Les deux seuls stops du lot ont été touchés le JOUR MÊME de l'entrée (gap-through sous la zone puis poursuite baissière intraday). Les deux ont ensuite entièrement repris au-dessus du prix d'entrée sous 10 séances (whipsaw)."
+    }
+  },
+  "lessons": [
+    "0/43 candidats publiés le 2026-07-27 n'ont été scellés dans backtest-trades.json, alors que la vérification MCP sur les seuls 6 noms du pool 'signals' montre au moins un gagnant net (GL, +1.77R sur TP1 touché le 10/08) et un gagnant majeur par gap (TWLO, +2.88R à +4.17R le 07/08) : une séance entière de setups tradables et rentables n'a laissé aucune trace de suivi — à auditer comme un défaut probable du sealing/risk-gating de ce jour-là, pas comme un 'jour sans signal'.",
+    "Les 2 seuls stops déclenchés le 2026-07-27 (PPG et AALB.AS) ont tous deux été touchés LA MÊME séance que l'entrée (entrée par gap-through sous la zone, poursuite baissière intraday jusqu'au stop), et les 2 ont ensuite intégralement repris au-dessus du prix d'entrée réel en moins de 10 séances (PPG : +4.3% vs entrée au 07/08 ; AALB.AS : +6.3% vs entrée au 07/08) — 2/2 stops same-day-as-entry ont whipsaké. Règle candidate falsifiable : exiger une confirmation (ex. clôture sous le stop sur 2 séances consécutives) avant de valider un stop quand l'entrée elle-même a été remplie par un gap-through le jour 1.",
+    "3/18 tickers uniques du pool dtx_pool (BNO, DBO, SAFT) référencent un prix d'entrée jamais coté par le marché réel sur toute la fenêtre 27/07-13/08 (BNO: entrée 53.95 vs high réel max 51.06 ; DBO: entrée 23.31 vs high réel max 21.78 ; SAFT: entrée 105.78 / stop -23.7% vs un instrument dont le range réalisé sur 3 semaines est inférieur à 1%). Le prix de référence synthétique/rebalancing du moteur dtx peut diverger totalement de la cote réelle sur certains noms — règle candidate : ajouter un garde-fou '% du range réalisé récent' avant qu'une entrée dtx_pool ne soit pontée vers les signaux publiés."
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "scanFolder": "scanner/20260724",
+  "scan": {
+    "scanDate": "2026-07-24",
+    "regime": "RISK-ON",
+    "regimeScore": 0.7,
+    "vix": 18.8,
+    "session_label": "vendredi 24 juillet 2026"
+  },
+  "horizonDueBy": "2026-08-07",
+  "gradedAt": "2026-08-14",
+  "verificationWindow": {
+    "start_date": "2026-07-24",
+    "end_date": "2026-08-13",
+    "source": "MCP QueryData bars_daily (yahoo)"
+  },
+  "sealedTradesCount": 1,
+  "trades": [
+    {
+      "mode": "dynamic",
+      "ticker": "TX",
+      "strategy": "momentum",
+      "entryDate": "2026-07-24",
+      "actualEntry": 47.12,
+      "actualStop": 44.5457,
+      "actualTp1": 50.89,
+      "actualTp2": 53.73,
+      "recordedExit": {
+        "exitDate": "2026-07-27",
+        "exitPrice": 47.12,
+        "status": "breakeven"
+      },
+      "realBars": [
+        ["2026-07-24", 47.33, 47.51, 46.64, 47.30],
+        ["2026-07-27", 47.34, 47.74, 46.75, 47.74],
+        ["2026-07-28", 47.60, 50.14, 47.54, 49.33],
+        ["2026-08-04", 50.00, 51.19, 50.00, 50.34]
+      ],
+      "verification": {
+        "entryFillPlausible": true,
+        "entryFillNote": "47.12 est dans le range 46.64-47.51 de la séance du 24/07 (O/H/L/C fournis par MCP) — fill plausible.",
+        "exitRuleApplied": "breakeven (pas stop ni TP) — règle HARD stop/TP non applicable telle quelle, mais même logique de vérification : le niveau de sortie (47.12) doit avoir réellement coté ce jour-là.",
+        "exitLevelTraded": true,
+        "exitLevelNote": "Le 27/07, range réel 46.75-47.74 englobe 47.12 (le prix d'entrée/breakeven) — la sortie à ce niveau est réellement cotée, CONFIRMÉE.",
+        "maeVerified": true,
+        "maeCheck": "Low 46.64 le 24/07 -> (46.64-47.12)/47.12 = -1.02% = mae_pct fourni. Match exact.",
+        "mfeVerified": true,
+        "mfeCheck": "High 47.74 le 27/07 -> (47.74-47.12)/47.12 = +1.32% = mfe_pct fourni. Match exact.",
+        "tp1PrematureCheck": "TP1 (50.89) n'a été réellement touché QUE le 04/08 (high 51.19, 6 séances après la sortie breakeven) — la sortie du 27/07 a bien précédé tout franchissement de TP1, aucune correction de statut nécessaire.",
+        "correctionNeeded": false
+      },
+      "pnl_pct": 0.0,
+      "r_multiple": 0.0,
+      "mae_pct": -1.02,
+      "mfe_pct": 1.32,
+      "holdDays": 2,
+      "verdict": "VERIFIED — trade correctement scellé, aucune correction de prix/PnL/R nécessaire"
+    }
+  ],
+  "scanGrade": {
+    "n": 1,
+    "entryFillRate_pct": 100.0,
+    "tp1HitRate_pct": 0.0,
+    "tp2HitRate_pct": 0.0,
+    "stopHitRate_pct": 0.0,
+    "breakevenRate_pct": 100.0,
+    "winRate_pct": 0.0,
+    "avg_r": 0.0,
+    "median_r": 0.0,
+    "best_trade": {
+      "ticker": "TX",
+      "r_multiple": 0.0,
+      "story": "Entrée validée à 47.12$ le 24/07 (fill dans le range du jour), mais retournement immédiat : stoppé à breakeven (47.12$) dès la séance suivante (27/07, range 46.75-47.74$) avant tout développement du momentum. TP1 (50.89$, +8% depuis l'entrée) n'a été réellement touché que 6 séances plus tard (04/08), hors fenêtre de la position — sortie neutre, ni gain ni perte."
+    },
+    "worst_trade": {
+      "ticker": "TX",
+      "r_multiple": 0.0,
+      "story": "n=1 : meilleur et pire trade sont le même (seul trade scellé du scan). Résultat plat (R=0), pas de perte réelle malgré le stop-out — juste une sortie prématurée sur bruit de marché avant un mouvement qui a fini par valider la thèse momentum."
+    }
+  },
+  "lessons": [
+    "CANDIDATE (n=1, à corroborer — pas encore le seuil de ≥2 occurrences) : le trailing-to-breakeven du mode dynamic a coupé TX à 47.12$ le 27/07 dès que le prix est repassé sous l'entrée intraday, alors que TP1 (50.89$, +8%) a fini par être touché 6 séances plus tard (04/08), dans l'horizon restant (horizon=8, due 07/08). Hypothèse falsifiable : si sur les 5 prochains breakeven-stops du mode dynamic, ≥3 auraient atteint TP1 dans l'horizon restant en l'absence du trailing-to-breakeven, le seuil de déclenchement du trailing est trop précoce/trop serré et doit être desserré (ex: exiger un MFE minimum plus élevé avant d'armer le breakeven, pas seulement +1.3%)."
+  ]
+}
