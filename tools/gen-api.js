@@ -443,7 +443,7 @@ function writeMode(mode, prefix) {
   // métriques FAISANT FOI + la résolution réelle de la courbe. Rien n'est recalculé ici.
   // ⛔ LES STATISTIQUES SERVIES DU LIVRE PRIMENT. Le registre point-in-time archive les métriques
   // renvoyées par le replay, qui sont celles de la POCHE PORTEUSE (`strategy:"highvol-breakout-corr"`,
-  // CAGR 39,59 / DD 20,2 / 4 577 trades), pas celles du LIVRE (`book_served_stats` : CAGR 70,9 /
+  // CAGR 39,59 / DD 20,2 / 4 577 trades), pas celles du LIVRE (`book_served_stats` : CAGR 50,4 apres correction de parite 2026-08-15 /
   // DD 27,2 / Sharpe 1,56 / 3 638 trades, staging data/dtx/<mode>.json). Les publier sous le label
   // « authoritative » affichait un rendement minoré de 31 points de CAGR et un risque minoré de
   // 7 points de DD, en contradiction frontale avec la source qui fait foi — et un consommateur
