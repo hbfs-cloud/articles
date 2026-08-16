@@ -28,8 +28,12 @@ dernières sorties 10/08 (3 SL + 4 breakeven sur la série 03-06/08). `portfolio
    `simulateTrade` rejette en dur `rr < 1.5` sur momentum/breakout/pullback/pre_squeeze, or le
    plancher PUBLIÉ est passé à 0,7 en RISK-ON le 10/08 → 100 % des signaux éditoriaux du
    10→17/08 (43 lignes) invisibles au tracker, zéro entrée sur TOUS les modes. Fix 16/08 :
-   alerte bruyante `[rr-gate]` dans sweep (observabilité) ; l'ALIGNEMENT des planchers reste une
-   décision de stratégie à valider par `validate-config-change.js` (non prise unilatéralement).
+   alerte bruyante `[rr-gate]` dans sweep (observabilité). **DÉCISION USER 16/08 : « aligne oui,
+   il ne faut rien bloquer »** → gate aligné PAR ÈRE sur le plancher publié (1,5 avant le
+   2026-08-10, 0,7 depuis) — historique identique à l'octet, chaînes intègres, returns/DD
+   inchangés ; le tracker récupère les signaux post-10/08 (fortress +4 positions du 13/08 :
+   OXY/COMP/CLF/HL ; balanced OXY ; turbo FRSH scellé breakeven). L'alerte reste comme détecteur
+   de récidive (divergence future des deux planchers).
 5. **Look-ahead dans le seed du circuit breaker (fortress seul, 07/08)** : `initialCBHistory`
    prenait les SL `exitDate >= windowStart` SANS borne `< firstNewScan` → les SL du 10/08
    pré-armaient la pause d'une sim démarrant le 07/08 (pauseUntil=13/08 dès J1, 7 candidats

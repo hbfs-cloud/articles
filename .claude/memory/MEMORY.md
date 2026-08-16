@@ -166,3 +166,4 @@
 - [Token diet](feedback_token_diet.md) — tiering modèles workflows, panels scriptés d'abord, payloads MCP en fichiers, 1 session = 1 produit (2026-08-14)
 - [Telegram court](feedback_telegram_court.md) — notifs courtes, sans liens, essentiel (2026-08-14)
 - [Fortress à sec aout 2026](project_fortress_starvation_aug2026.md) — incident 0 entrée 07-16/08, étape fortress-pm perdue par le dédup commande/skill
+- [Gate R/R aligné plancher éditorial](decision_rr_gate_aligned.md) — décision 16/08 : gate tracker par ère (1,5 avant 10/08, 0,7 depuis), voir MCP memory rr-gate-aligned-editorial-floor

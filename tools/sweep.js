@@ -1192,7 +1192,14 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   // remette un plancher R/R sur des ordres qui n'ont pas de TP.
   if (setup.tp1 != null) {
     const rrRatio = (setup.tp1 - setup.entry) / originalRisk;
-    if ((!rrStratKey || RR_GATE_STRATEGIES.has(rrStratKey)) && rrRatio < 1.5) return null;
+    // Plancher aligné sur le plancher ÉDITORIAL en vigueur à la date du scan (décision user
+    // 2026-08-16 : « il ne faut rien bloquer »). Le 2026-08-10, validate-scan.js est passé à
+    // rr_min=0,7 (stops sous structure, cibles sous résistance) mais ce gate restait à 1,5 :
+    // 43/43 signaux publiés du 10 au 17/08 étaient rejetés en silence — zéro entrée sur tous
+    // les modes pendant que le site affichait des setups. Avant le 10/08 le plancher publié
+    // était 1,5 : le garder pour ces dates laisse tout l'historique identique à l'octet.
+    const rrFloor = scanDate >= '2026-08-10' ? 0.7 : 1.5;
+    if ((!rrStratKey || RR_GATE_STRATEGIES.has(rrStratKey)) && rrRatio < rrFloor) return null;
   }
 
   // v8.3 post-widening R:R gate — reject trades where ATR widening collapses actual R:R
@@ -2296,20 +2303,20 @@ async function main() {
   }
   console.log(`Total setups parsed: ${allSetups.length} across ${scans.length} scans`);
 
-  // Cohérence éditorial ↔ tracker sur le R/R. simulateTrade rejette en dur rr<1,5 sur
-  // momentum/breakout/pullback/pre_squeeze, mais le plancher PUBLIÉ par le scanner est passé à
-  // 0,7 en RISK-ON le 2026-08-10 : un scan entier peut tomber sous le gate et rendre le tracker
-  // aveugle SANS UN MOT (mesuré : 100 % des signaux éditoriaux du 10 au 17/08 rejetés, zéro
-  // entrée sur tous les modes). Ce bloc ne change rien à la sélection — il rend le décalage
-  // impossible à rater. Aligner les deux planchers = décision de stratégie (validate-config-change).
+  // Cohérence éditorial ↔ tracker sur le R/R. Le gate de simulateTrade est ALIGNÉ par ère sur le
+  // plancher publié (1,5 avant le 2026-08-10, 0,7 depuis — décision user du 16/08 après l'incident
+  // « 43/43 signaux publiés invisibles au tracker »). Ce bloc détecte toute RÉCIDIVE : un scan dont
+  // 100 % des signaux éditoriaux tombent sous le plancher de leur propre ère signifie qu'un des
+  // deux planchers a bougé sans l'autre. Il ne change rien à la sélection.
   {
     const recentDates = [...new Set(allSetups.map(s => s.scanDate))].sort().slice(-10);
     for (const d of recentDates) {
+      const floor = d >= '2026-08-10' ? 0.7 : 1.5;
       const eds = allSetups.filter(s => s.scanDate === d && (!s.source || s.source === 'signals') && s.tp1 != null);
       if (!eds.length) continue;
-      const under = eds.filter(s => (s.tp1 - s.entry) / Math.max(1e-9, s.entry - s.stop) < 1.5);
+      const under = eds.filter(s => (s.tp1 - s.entry) / Math.max(1e-9, s.entry - s.stop) < floor);
       if (under.length === eds.length) {
-        console.log(`⚠️ [rr-gate] ${d}: ${eds.length}/${eds.length} signaux éditoriaux sous R/R 1,5 — AUCUN candidat tracker ce jour-là (plancher publié 0,7 vs gate simulateTrade 1,5)`);
+        console.log(`⚠️ [rr-gate] ${d}: ${eds.length}/${eds.length} signaux éditoriaux sous le plancher R/R ${floor} de leur ère — AUCUN candidat tracker ce jour-là (les planchers éditorial et tracker ont divergé)`);
       }
     }
   }
