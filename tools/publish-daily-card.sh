@@ -275,7 +275,15 @@ if [ "$SKIP_SWEEP" = false ]; then
   echo ""
   echo "🔄 Step 3: Running sweep (~5 min)..."
   SWEEP_START=$(date +%s)
-  node tools/sweep.js 2>&1 | tail -20
+  # 8 Go de heap : la grille complète OOM au heap par défaut (~4 Go) depuis mi-août 2026.
+  # Le pipe vers tail masquait l'exit code de node (crash lu comme succès le 16/08) —
+  # on capture le rc réel via PIPESTATUS et on ÉCHOUE bruyamment.
+  NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=8192}" node tools/sweep.js 2>&1 | tail -20
+  SWEEP_RC=${PIPESTATUS[0]}
+  if [ "$SWEEP_RC" -ne 0 ]; then
+    echo "❌ sweep.js a échoué (rc=$SWEEP_RC) — livre backtest-trades NON mis à jour" >&2
+    exit 1
+  fi
   SWEEP_END=$(date +%s)
   echo "   Sweep done in $((SWEEP_END - SWEEP_START))s"
 

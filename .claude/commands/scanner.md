@@ -41,9 +41,15 @@ artefacts — ne joue plus les salves MCP à la main. → §Collecte scriptée
 # 1. l'AGENT émet le jeton (max 60 min marketdata, 1440 systematic)
 #    GetReadOnlyToken(minutes=60) / DtxMintReadOnlyToken(ttl_minutes=240)
 #    → export MCP_TOKEN_MARKETDATA=… MCP_TOKEN_SYSTEMATIC=…
-# 2. collecte parallèle + gate de fraîcheur en une commande
-bash tools/run-collect.sh scanner-wave1 <dossier>/_data --var refdate=<derniere_cloture> [--var symbol=X]
+# 2. les TROIS chaînes en parallèle : A vivier+enrichissement · B dtx · C tracking+sweep
+bash tools/scan-parallel.sh <YYYYMMDD> <derniere_cloture> <asof>
 ```
+
+⛔ **La chaîne C (update-tracking + `sweep.js --quick`) fait partie du scan** — c'est le SEUL endroit
+du pipeline qui fait tourner le sweep (`downstream-split.sh compute` ne le lance PAS, et `distribute`
+appelle `publish-daily-card.sh --no-sweep`). Sauter scan-parallel = livre `backtest-trades.json` gelé
+(incident : aucun sweep entre le 13/08 09:15 et le 16/08/2026 — modes sans nouvelles entrées, fortress
+à sec). `run-collect.sh scanner-wave1` seul = chaîne A uniquement, N'EST PAS un substitut.
 
 Reste à l'agent seul : `RefreshBars`/`DtxRefreshBars`, sélection, rédaction, gates adversariaux, décision
 de publier.
@@ -54,8 +60,8 @@ de publier.
 3. Scan précédent (`ls scanner/ | sort | tail -1`) → anti-doublon (min 70 % nouveaux = max 3 repeats /10).
 4. `data/scanner-positions.json` (tickers bloqués, zéro overlap) + `data/scanner-filters.json`
    (sector_map + diversification).
-5. Modes downstream = **6** : `turbo`, `dynamic`, `balanced`, `secured`, `fortress`, `tkl` (TKL gaté
-   per-mode via `modes-config.json#tklPoolEnabled`).
+5. Modes downstream = **5** (catalogue 2026-08-11) : `best` (dtx), `turbo`, `dynamic`, `balanced`,
+   `fortress` (secured/tkl morts).
 6. Pre-flight gotchas :
    `~/.claude/projects/-Users-marketwatchxyz-GolandProjects-articles/memory/feedback_pipeline_gotchas.md`.
 7. Mémoire : `node tools/lessons-retrieve.js --regime <REGIME>` (`--setups`/`--mode` une fois connus),
@@ -148,6 +154,12 @@ Coupure CALCUL / DIFFUSION (obligatoire depuis 2026-08-11) : la Phase 5A tourne 
 bash tools/downstream-split.sh compute YYYYMMDD YYYY-MM-DD
 ```
 
+- ⛔ **Phase 5.5 fortress-pm (AI-driven, OBLIGATOIRE, PAS scriptable)** : AVANT `compute`, invoquer
+  `Skill(skill="fortress-pm")` et écrire la clé **`fortress_pool`** dans `signals.json`
+  (candidats A+ Halal factcheckés, `strategy:"FortressA+"`, `sharia:true` ; `[]` = 0 légitime).
+  Clé ABSENTE → `scanner-parser.js` retombe en `fortress_fallback` (top-10 sharia score≥92,
+  quasi toujours vide) → les panneaux fortress/aplus s'assèchent. Incident : scans 13-17/08/2026
+  sans la clé = fortress 0 ordre pendant une semaine. Détail : skill `scanner-pipeline` §Phase 5.5.
 - `compute` = ingest dtx (decide **ET** replay), history-append, pont `dtx_pool`, `gen-status-page`,
   `gen-api`/`gen-mode-cards`/`daily-synthesis`, `qa-check`. Local, idempotent, rejouable ; il prend un
   **verrou** (s'il attend, laisse-le attendre). `risk-snapshots.json` > 12 h → il échoue (voulu, ne pas

@@ -2296,6 +2296,24 @@ async function main() {
   }
   console.log(`Total setups parsed: ${allSetups.length} across ${scans.length} scans`);
 
+  // Cohérence éditorial ↔ tracker sur le R/R. simulateTrade rejette en dur rr<1,5 sur
+  // momentum/breakout/pullback/pre_squeeze, mais le plancher PUBLIÉ par le scanner est passé à
+  // 0,7 en RISK-ON le 2026-08-10 : un scan entier peut tomber sous le gate et rendre le tracker
+  // aveugle SANS UN MOT (mesuré : 100 % des signaux éditoriaux du 10 au 17/08 rejetés, zéro
+  // entrée sur tous les modes). Ce bloc ne change rien à la sélection — il rend le décalage
+  // impossible à rater. Aligner les deux planchers = décision de stratégie (validate-config-change).
+  {
+    const recentDates = [...new Set(allSetups.map(s => s.scanDate))].sort().slice(-10);
+    for (const d of recentDates) {
+      const eds = allSetups.filter(s => s.scanDate === d && (!s.source || s.source === 'signals') && s.tp1 != null);
+      if (!eds.length) continue;
+      const under = eds.filter(s => (s.tp1 - s.entry) / Math.max(1e-9, s.entry - s.stop) < 1.5);
+      if (under.length === eds.length) {
+        console.log(`⚠️ [rr-gate] ${d}: ${eds.length}/${eds.length} signaux éditoriaux sous R/R 1,5 — AUCUN candidat tracker ce jour-là (plancher publié 0,7 vs gate simulateTrade 1,5)`);
+      }
+    }
+  }
+
   // 2. Fetch all ticker histories
   const tickers = [...new Set(allSetups.map(t => t.ticker))];
   console.log(`\nFetching price history for ${tickers.length} tickers...`);
@@ -3106,8 +3124,15 @@ async function main() {
           if (firstNewScan && (cfg.circuitBreakerStops || 0) > 0) {
             const dfLocal = dayFnsFor(cfg.calendar);
             const windowStart = dfLocal.addDays(firstNewScan, -(cbWin + 2));
+            // Borne supérieure OBLIGATOIRE : sans `< firstNewScan`, les SL de trades scellés dont la
+            // sortie est POSTÉRIEURE au début de la fenêtre re-simulée entraient dans le seed — le CB
+            // arrivait pré-armé avec des stops du futur (look-ahead) et bloquait des entrées que la
+            // simulation originale avait légitimement prises. Mesuré le 16/08 : fortress, seed
+            // [06/08, 10/08, 10/08] pour une sim démarrant le 07/08 → pauseUntil=13/08 dès le jour 1,
+            // 7 candidats admissibles (JCI 95…) refusés à slots libres. Les SL postérieurs comptent
+            // toujours : la sim les revit elle-même via les positions phantom au fil des jours.
             const slHistory = existing
-              .filter(t => t.status === 'sl' && t.exitDate && t.exitDate >= windowStart)
+              .filter(t => t.status === 'sl' && t.exitDate && t.exitDate >= windowStart && t.exitDate < firstNewScan)
               .map(t => t.exitDate);
             if (slHistory.length > 0) {
               cfg2.initialCBHistory = slHistory;

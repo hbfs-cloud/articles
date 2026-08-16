@@ -165,3 +165,4 @@
 - [Mandat — site une page (différé)](project_mandat_single_page_site.md) — page statique unique du portefeuille dtx mandat (ordres/trades/equity/metrics + jauge 60-85%), plomberie et vigilances actées 2026-08-14
 - [Token diet](feedback_token_diet.md) — tiering modèles workflows, panels scriptés d'abord, payloads MCP en fichiers, 1 session = 1 produit (2026-08-14)
 - [Telegram court](feedback_telegram_court.md) — notifs courtes, sans liens, essentiel (2026-08-14)
+- [Fortress à sec aout 2026](project_fortress_starvation_aug2026.md) — incident 0 entrée 07-16/08, étape fortress-pm perdue par le dédup commande/skill

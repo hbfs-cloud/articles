@@ -63,7 +63,10 @@ log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
   # règle projet — les re-simuler chaque soir ne change rien. Le sweep COMPLET
   # reste nécessaire une fois par semaine et après tout changement de config.
   SWEEP_MODE="${SWEEP_MODE:---quick}"
-  node tools/sweep.js $SWEEP_MODE >> /tmp/C.log 2>&1
+  # Le sweep COMPLET (grille 24,7M combos, 120+ scans) dépasse le heap node par défaut (~4 Go)
+  # depuis mi-août 2026 : OOM silencieux en pleine pré-sim (constaté le 16/08, exit masqué par un
+  # pipe). 8 Go suffisent ; sans effet notable sur --quick.
+  NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=8192}" node tools/sweep.js $SWEEP_MODE >> /tmp/C.log 2>&1
   echo "C rc=$?" > /tmp/C.status
 ) & PC=$!
 
