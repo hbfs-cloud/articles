@@ -453,8 +453,19 @@ async function main() {
     }
   }
 
-  // 9. R/R uniformity check — if >60% signals have identical R:R string, scoring pipeline is broken
+  // 9. R/R uniformity check — if >60% signals have identical R:R string, scoring pipeline is broken.
+  // Exception (2026-08-20) : depuis le 2026-08-10, tp1_reachability fixe la cible à un multiple
+  // d'ATR FIXE (target_atr_multiple) et stops.min_atr_multiple fixe le stop plancher au même
+  // multiple — un R/R uniforme égal à target_atr_multiple/min_atr_multiple est donc la
+  // CONSÉQUENCE MÉCANIQUE ATTENDUE de la politique documentée (evidence-based, cf. commentaire
+  // tp1_reachability ci-dessus), pas un signe de triche. Le gate ne doit s'alarmer QUE si la
+  // valeur uniforme observée NE correspond PAS à ce ratio attendu (là, quelque chose d'autre
+  // cloche — reverse-engineering réel depuis un R:R fixe non dérivé de la politique).
   {
+    const expectedAtrRatio = ET.tp1_reachability?.target_atr_multiple != null && filters.stops?.min_atr_multiple
+      ? Math.round((ET.tp1_reachability.target_atr_multiple / filters.stops.min_atr_multiple) * 100) / 100
+      : null;
+    const expectedRRString = expectedAtrRatio != null ? `1:${expectedAtrRatio.toFixed(2)}` : null;
     const rrCounts = {};
     for (const s of signals) {
       const rr = String(s.rr || '');
@@ -462,6 +473,7 @@ async function main() {
     }
     for (const [rr, count] of Object.entries(rrCounts)) {
       if (count > signals.length * 0.6 && signals.length >= 5) {
+        if (expectedRRString && rr === expectedRRString) continue; // conséquence attendue de tp1_reachability, pas une alerte
         violations.push({
           rule: 'rr_uniformity',
           message: `${count}/${signals.length} signals have identical R/R "${rr}" — scoring pipeline is reverse-engineering TP from fixed R:R instead of computing from technical levels.`

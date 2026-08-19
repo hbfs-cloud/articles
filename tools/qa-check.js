@@ -749,7 +749,7 @@ warn('backtest-trades: VWAP in plausible range vs actualEntry (0.5–2×)', () =
 });
 
 // ─── Check 25: R:R minimum gate on latest scan signals ───────────────────────
-check('signals.json (dernier scan): R:R ≥ 1.5 pour tous les signaux', () => {
+check('signals.json (dernier scan): R:R ≥ floor éditorial (rr_min_by_regime)', () => {
   const scannerDir = path.join(ROOT, 'scanner');
   const dirs = fs.readdirSync(scannerDir).filter(d => /^\d{8}$/.test(d)).sort().reverse();
   if (!dirs.length) return 'aucun dossier scanner trouvé';

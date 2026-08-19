@@ -159,6 +159,14 @@ const minRR = (() => {
   return (rs.length ? Math.min(...rs).toFixed(2) : '1.50').replace('.', ',');
 })();
 
+/** True only if at least one published setup has a REAL entry zone (entry_low != entry_high).
+ *  When every setup is a single-price entry (zero-width zone, e.g. 2026-08-20 scan), the
+ *  "measured at midpoint, worse at top-of-zone" pedagogy is false — there IS no top-of-zone
+ *  distinct from the published price. Gate the zone-specific copy on this flag instead of
+ *  asserting it unconditionally (was: always claimed a zone existed, even with none). */
+const hasEntryZone = (d.setups || []).some(s =>
+  typeof s.entry_low === 'number' && typeof s.entry_high === 'number' && s.entry_low !== s.entry_high);
+
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 /** Escape for HTML attribute values (id, data-*, src, href) */
@@ -593,7 +601,7 @@ function macroCalendarTable(rows) {
     return `            <tr><td><strong>${esc(r.date)}</strong></td><td>${esc(r.event)}</td><td class="${impactClass}"><strong>${esc(impact)}</strong></td><td>${esc(r.note ?? r.risk ?? '')}</td></tr>`;
   });
   return `        <div style="overflow-x:auto"><table class="data-table">
-          <thead><tr><th>Date</th><th>&Eacute;v&eacute;nement</th><th>Impact</th><th>Sens du risque</th></tr></thead>
+          <thead><tr><th>Date</th><th>&Eacute;v&eacute;nement</th><th>Impact</th><th>Horaire / note</th></tr></thead>
           <tbody>${trs.join('')}</tbody>
         </table></div>`;
 }
@@ -758,7 +766,10 @@ function buildPage(d) {
   const vixColor = (d.kpis && d.kpis.vix && d.kpis.vix.color) || 'var(--pos)';
   const spxVal   = (d.kpis && d.kpis.spx)  ? `${d.kpis.spx.value}` : '';
   const spxColor = (d.kpis && d.kpis.spx && d.kpis.spx.color) || 'var(--pos)';
-  const avgScore = (d.kpis && d.kpis.avg_score) || (setups.reduce((a, s) => a + s.score, 0) / (setups.length || 1)).toFixed(1);
+  const avgScoreRaw = (d.kpis && d.kpis.avg_score) || (setups.reduce((a, s) => a + s.score, 0) / (setups.length || 1)).toFixed(1);
+  // French locale: comma decimal, matching every other numeric KPI on the page (vix/spx are
+  // pre-formatted strings already; avg_score ships as a raw JS number in data.json).
+  const avgScore = String(avgScoreRaw).replace('.', ',');
 
   // ── Hero badges ────────────────────────────────────────────────────────────
   const regimeDot = regime === 'RISK-ON' ? '&#x1F7E2;' : regime.includes('RISK-OFF') ? '&#x1F534;' : '&#x1F7E1;';
@@ -860,9 +871,8 @@ ${alertsHtml(d.alerts)}
 
 <!-- REGIME -->
 <section id="regime" class="section-block">
-  <div class="section-header"><h2><i class="fas fa-gauge"></i> Régime de marché : ${regime} (confiance ${d.regime_score ? String((d.regime_score * 100).toFixed(1)).replace('.', ',') + '%' : 'n/a'})</h2></div>
+  <div class="section-header"><h2><i class="fas fa-gauge"></i> Régime de marché : ${regime} (score ${d.regime_score ? String((d.regime_score * 100).toFixed(1)).replace('.', ',') + '%' : 'n/a'})</h2></div>
   <div class="content-card">
-    <p>${''}</p>
     <h3 style="margin:1.25rem 0 0.6rem;font-weight:700;">Market Snapshot (${d.session_label || d.date})</h3>
     <div style="overflow-x:auto"><table class="data-table">
       <thead><tr><th>Indice / Actif</th><th>Prix</th><th>Variation</th><th>Signal</th></tr></thead>
@@ -906,8 +916,11 @@ ${sectorRotationTable(d.sector_rotation)}
 ${strategyTablesHtml}
     <div class="pedagogy-box">
       <h4><i class="fas fa-info-circle"></i> Comment utiliser ces niveaux</h4>
-      <p>Entrée = zone d'exécution à l'ouverture (9h30–9h45 ET) si le prix s'y trouve. Le stop est un ordre dur, pas mental. TP = objectif principal : prendre 50% à l'objectif, remonter le stop au point mort, laisser courir le reste. Le R/R du tableau est mesuré au MILIEU de la zone d'entrée. Rempli au haut de la zone — le pire cas —, il est plus faible : le plus bas du scan tombe alors à 1:${minRR}.</p>
-      <p style="font-size:0.85rem;color:#64748b;margin-top:0.5rem;">Badges : <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span> ligne conforme aux critères de finance islamique retenus ici (secteur d'activité et endettement) — <span class="badge" style="background:#e2e8f0;color:#334155;border:1px solid #94a3b8;font-size:.68rem">CONV</span> ligne conventionnelle, non conforme.</p>
+      <p>Entrée = zone d'exécution à l'ouverture (9h30–9h45 ET) si le prix s'y trouve. Le stop est un ordre dur, pas mental. TP = objectif principal : prendre 50% à l'objectif, remonter le stop au point mort, laisser courir le reste. ${hasEntryZone
+        ? `Le R/R du tableau est mesuré au MILIEU de la zone d'entrée. Rempli au haut de la zone — le pire cas —, il est plus faible : le plus bas du scan tombe alors à 1:${minRR}.`
+        : `Entrée = prix unique (pas de zone) sur ce scan : le R/R affiché est le R/R exact, pas une mesure au milieu d'une fourchette — il n'y a pas de « pire remplissage » distinct à anticiper.`
+      } Taille de position : nombre d'actions = (risque max en % du capital, voir Méthodologie §5) ÷ (entrée − stop) ; ne jamais sizer au jugé. Si le prix ouvre en gap au-delà de l'entrée + 0,5&times; l'ATR14 de la ligne, ne pas chasser : le setup est annulé pour la séance. Une entrée est nulle également si son filtre de surextension (RSI14 ou écart MME50, voir invalidations) est franchi avant l'exécution, même si le setup a été publié en-dessous du seuil.</p>
+      <p style="font-size:0.85rem;color:#64748b;margin-top:0.5rem;">Badges : <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span> ligne dont le secteur d'activité est conforme aux critères de finance islamique retenus ici (l'endettement, quand vérifié, est précisé ligne par ligne dans les invalidations — non systématiquement audité) — <span class="badge" style="background:#e2e8f0;color:#334155;border:1px solid #94a3b8;font-size:.68rem">CONV</span> ligne conventionnelle, non conforme.</p>
     </div>
   </div>
 </section>
@@ -925,8 +938,8 @@ ${strategyTablesHtml}
       <p>Trois filtres DSL complémentaires : Momentum (tendance + volume), Breakout (sortie de base / gap volume), Pullback (repli vers support dans un uptrend intact). Short Squeeze exclu depuis le 20 mars 2026.</p>
     </div>
     <div class="pedagogy-box">
-      <h4>3. Scoring composite (4 facteurs)</h4>
-      <p>Technique (40%), Momentum (30%), Confluence (20% — min. 3 signaux alignés pour A+), Catalyseur (10%). Seuls les setups ≥85 qualifient A+.</p>
+      <h4>3. Scoring composite</h4>
+      <p>Score interne combinant technique, momentum, volume et contexte macro par ticker. Le libellé « A+ » de ce rapport désigne les setups les mieux classés du vivier qui franchissent tous les filtres durs ci-dessous (dilution, bande de stop, R/R, corrélation, plancher Sharia/géographique) — ce n'est pas un seuil de score fixe : les scores publiés varient d'un scan à l'autre selon la composition du vivier du jour.</p>
     </div>
     <div class="pedagogy-box">
       <h4>4. Niveaux réels vérifiés</h4>
@@ -934,7 +947,7 @@ ${strategyTablesHtml}
     </div>
     <div class="pedagogy-box">
       <h4>5. Anti-dilution &amp; ranking</h4>
-      <p>Pour les émetteurs relevant du régulateur américain : registre de dépôts interrogé par type de formulaire (prospectus de placement, enregistrement en étagère, avis d'effet) sur dix ans, fenêtre de contrôle de 90 jours. Hors de ce périmètre — émetteurs étrangers, fonds indiciels — il n'y a pas de registre à interroger : le champ reste vide et la réserve est écrite sur la ligne, jamais remplacée par un feu vert. Diversification secteur/géographie. R/R minimum au pire remplissage (haut de zone) sur ce scan : 1:${minRR}. Conformité Sharia taggée sur chaque ligne.</p>
+      <p>Pour les émetteurs relevant du régulateur américain : registre de dépôts interrogé par type de formulaire (prospectus de placement, enregistrement en étagère, avis d'effet) sur dix ans, fenêtre de contrôle de 90 jours — présence du formulaire ET nature de l'opération (item-level pour les 8-K) sont à vérifier, la seule présence/absence d'un formulaire ne suffit pas à conclure. Hors de ce périmètre — émetteurs étrangers, fonds indiciels — il n'y a pas de registre à interroger : le champ reste vide et la réserve est écrite sur la ligne, jamais remplacée par un feu vert. Diversification secteur/géographie. ${hasEntryZone ? `R/R minimum au pire remplissage (haut de zone) sur ce scan : 1:${minRR}.` : `Entrées à prix unique sur ce scan (pas de zone) : R/R exact 1:${minRR} pour toutes les lignes.`} Conformité Sharia taggée sur chaque ligne (secteur d'activité ; endettement vérifié au cas par cas, voir invalidations).</p>
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:1rem;">
       <h4 style="margin:0 0 0.5rem;">Sources de données</h4>
