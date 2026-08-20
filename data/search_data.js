@@ -1445,6 +1445,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "LUNR",
+    "exchange": "NASDAQ · Aerospace & Defense",
+    "name": "LUNR — Speculative Bullish setup, score 68/100.",
+    "title": "LUNR — Speculative Bullish setup, score 68/100.",
+    "desc": "LUNR analysis: Intuitive Machines is turning a record $1.8B backlog and a fresh $600M+ satellite win into a real space-infrastructure story, but a live $500M ATM and negative equity cap the upside.",
+    "tags": "us,industrials,defense,speculative,momentum,short-squeeze",
+    "grade": "B-",
+    "href": "/analyses/LUNR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "",
     "exchange": "l'énergie passe de dernière à première en cinq séances",
     "name": "Rotation sectorielle · l'énergie passe de dernière à première, et ce que ça vaut",
