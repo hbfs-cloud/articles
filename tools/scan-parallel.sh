@@ -70,7 +70,16 @@ log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
   echo "C rc=$?" > /tmp/C.status
 ) & PC=$!
 
-log "3 chaînes lancées (A vivier+enrichissement · B dtx · C suivi+sweep)"
+# ── D : rotations sectorielles + plus hauts beta par sous-jacent (page /rotation/) ──
+# Indépendant du scan du jour : RankBeta (serveur, <3s) + barres sectorielles. Best-effort,
+# jamais bloquant (le générateur sort en 0 sans jeton). Écrit data/rotation-beta.json +
+# portfolio/v1/rotation.json (API).
+(
+  REFDATE="$REF" node tools/gen-rotation-beta.js > /tmp/D.log 2>&1
+  echo "D rc=$?" > /tmp/D.status
+) & PD=$!
+
+log "4 chaînes lancées (A vivier+enrichissement · B dtx · C suivi+sweep · D rotations/beta)"
 # Le verdict vient du CODE RETOUR de la chaîne, pas d'un grep dans un fichier de
 # statut. Un fichier absent (sous-shell tué, /tmp purgé, deux scans concurrents
 # qui se marchent dessus) faisait échouer le grep, donc passer le test : le
@@ -78,6 +87,7 @@ log "3 chaînes lancées (A vivier+enrichissement · B dtx · C suivi+sweep)"
 wait $PA; ARC=$?; log "A terminée (rc=$ARC) — $(cat /tmp/A.status 2>/dev/null)"
 wait $PB; BRC=$?; log "B terminée (rc=$BRC) — $(cat /tmp/B.status 2>/dev/null)"
 wait $PC; CRC=$?; log "C terminée (rc=$CRC) — $(cat /tmp/C.status 2>/dev/null)"
+wait $PD; DRC=$?; log "D terminée (rc=$DRC) — $(cat /tmp/D.status 2>/dev/null)"
 if [ "$ARC" -ne 0 ] || grep -q "ÉCHEC" /tmp/A.status 2>/dev/null; then
   echo "Chemin critique en échec (rc=$ARC) — on ne poursuit PAS sur des données partielles." >&2
   exit 1
@@ -87,4 +97,5 @@ fi
 # laisser dans un log que personne ne rouvre.
 [ "$BRC" -ne 0 ] && log "⚠ chaîne dtx en échec (rc=$BRC) — décisions du moteur absentes ce soir (voir /tmp/B.log)"
 [ "$CRC" -ne 0 ] && log "⚠ chaîne suivi+sweep en échec (rc=$CRC) — stats non rafraîchies (voir /tmp/C.log)"
+[ "$DRC" -ne 0 ] && log "⚠ chaîne rotations/beta en échec (rc=$DRC) — page /rotation/ non rafraîchie (voir /tmp/D.log)"
 log "collecte complète — prêt pour sélection/génération"
