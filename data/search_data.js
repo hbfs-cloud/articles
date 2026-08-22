@@ -390,6 +390,19 @@ window.searchDataPrebuilt = [
     "date": "29 décembre 2025 - 3 janvier 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Les actions reculent, la crypto s'envole : la rotation vers les actifs durs",
+    "desc": "Weekly du 17 au 21 août 2026. Les actions refluent (S&P -1,4%, Nasdaq -2,4%) pendant que la santé (+4,3%), l'énergie (+2,8%) et surtout la crypto (Ether +24%, XRP +27%, Bitcoin +16%) s'envolent après le sommet crypto de la Maison-Blanche et le doublement des rachats du Trésor. Le récit d'une baisse de taux a disparu : le marché price une hausse à 56,5% d'ici décembre. Core PCE mercredi 26, Jackson Hole 27-29, NVIDIA le 26. Niveaux, configurations, scénarios.",
+    "tags": "us,crypto,commodity,macro,energy,healthcare,technique,trade-idea,etf,semis,gold",
+    "grade": "",
+    "href": "/weekly/20260824/",
+    "date": "24 août 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
@@ -5107,6 +5120,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/status/",
     "date": "Updated continuously"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ RISK-ON · NVDA, UBER, TSCO, FTNT, HPE, BMY, BSX, IGV, INFY, PCG",
+    "desc": "Notre modèle de régime cote RISK-ON à 0,81 (VIX 16 la veille, 15,7 en clôture), mais le classifieur probabiliste ne donne que 0,52 de confiance avec 0,48 en neutre et une probabilité de bascule EARLY RISK-OFF de 17 % à 5 jours : un risk-on réel mais fragile. D'où un book qui participe à la hausse to...",
+    "tags": "us,etf,asia,technique,macro,trade-idea,semis,software,healthcare,industrials",
+    "grade": "",
+    "href": "/scanner/20260824/",
+    "date": "Lundi 24 août 2026"
   },
   {
     "type": "scanner",
