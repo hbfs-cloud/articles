@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Les actions reculent, la crypto s'envole : la rotation vers les actifs durs",
+    "desc": "Weekly du 17 au 21 août 2026. Les actions refluent (S&P -1,4%, Nasdaq -2,4%) pendant que la santé (+4,3%), l'énergie (+2,8%) et surtout la crypto (Ether +24%, XRP +27%, Bitcoin +16%) s'envolent après le sommet crypto de la Maison-Blanche et le doublement des rachats du Trésor. Le récit d'une baisse de taux a disparu : le marché price une hausse à 56,5% d'ici décembre. Core PCE mercredi 26, Jackson Hole 27-29, NVIDIA le 26. Niveaux, configurations, scénarios.",
+    "tags": "us,crypto,commodity,macro,energy,healthcare,technique,trade-idea,etf,semis,gold",
+    "grade": "",
+    "href": "/weekly/20260824/",
+    "date": "24 août 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "La baisse de taux a disparu, le marché est monté quand même",
     "desc": "Weekly DailyTickers du 17 au 21 août 2026. En huit jours, la probabilité d'une baisse de taux en septembre est tombée à 1,15% et celle d'une hausse est montée à 24,50%. Les petites capitalisations ont fait leur plus haute clôture 2026 pendant ce revirement. L'énergie prend 7,67% en une semaine, la consommation discrétionnaire est le seul secteur en baisse — et publie ses résultats mardi, mercredi et jeudi. Minutes de la Fed mercredi. Niveaux, configurations, scénarios.",
     "tags": "us,eu,asia,crypto,commodity,macro,earnings,energy,consumer,technique,trade-idea,etf",
@@ -388,19 +401,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/weekly/20251229/",
     "date": "29 décembre 2025 - 3 janvier 2026"
-  },
-  {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Les actions reculent, la crypto s'envole : la rotation vers les actifs durs",
-    "desc": "Weekly du 17 au 21 août 2026. Les actions refluent (S&P -1,4%, Nasdaq -2,4%) pendant que la santé (+4,3%), l'énergie (+2,8%) et surtout la crypto (Ether +24%, XRP +27%, Bitcoin +16%) s'envolent après le sommet crypto de la Maison-Blanche et le doublement des rachats du Trésor. Le récit d'une baisse de taux a disparu : le marché price une hausse à 56,5% d'ici décembre. Core PCE mercredi 26, Jackson Hole 27-29, NVIDIA le 26. Niveaux, configurations, scénarios.",
-    "tags": "us,crypto,commodity,macro,energy,healthcare,technique,trade-idea,etf,semis,gold",
-    "grade": "",
-    "href": "/weekly/20260824/",
-    "date": "24 août 2026"
   },
   {
     "type": "daily",
@@ -1467,6 +1467,32 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/daily/20260217/",
     "date": "17 février 2026"
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "MRSH",
+    "exchange": "NYSE · Financials — Courtage d'assurance & conseil",
+    "name": "MRSH — MMC (Marsh McLennan) : biais haussier modéré, score 79/100 — compounder défensif à ache...",
+    "title": "MRSH — MMC (Marsh McLennan) : biais haussier modéré, score 79/100 — compounder défensif à ache...",
+    "desc": "Marsh McLennan : le plus grand courtier en assurance et cabinet de conseil en risque du monde, revenus récurrents, 4 dépassements de BPA, mais valorisé au niveau de sa juste valeur selon les analystes — un compounder de qualité à acheter sur repli plutôt qu'à chasser.",
+    "tags": "us,financials,earnings,dividende",
+    "grade": "A-",
+    "href": "/analyses/MRSH/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "LPLA",
+    "exchange": "NASDAQ · Financials — Marchés de capitaux",
+    "name": "LPLA — Haussier setup, score 83/100.",
+    "title": "LPLA — Haussier setup, score 83/100.",
+    "desc": "LPL Financial : la plus grande plateforme de conseillers indépendants des États-Unis, 4 dépassements de BPA consécutifs, PER prévisionnel 12x et PEG 0,5 — croissance de qualité à prix raisonnable, portée par les rachats en cours et l'intégration de Commonwealth.",
+    "tags": "us,financials,earnings,value",
+    "grade": "A-",
+    "href": "/analyses/LPLA/",
+    "date": ""
   },
   {
     "type": "analyse",
@@ -5127,7 +5153,7 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ RISK-ON · NVDA, UBER, TSCO, FTNT, HPE, BMY, BSX, IGV, INFY, PCG",
+    "title": "Top 9 A+ RISK-ON · UBER, TSCO, FTNT, HPE, BMY, BSX, IGV, INFY, PCG",
     "desc": "Notre modèle de régime cote RISK-ON à 0,81 (VIX 16 la veille, 15,7 en clôture), mais le classifieur probabiliste ne donne que 0,52 de confiance avec 0,48 en neutre et une probabilité de bascule EARLY RISK-OFF de 17 % à 5 jours : un risk-on réel mais fragile. D'où un book qui participe à la hausse to...",
     "tags": "us,etf,asia,technique,macro,trade-idea,semis,software,healthcare,industrials",
     "grade": "",
