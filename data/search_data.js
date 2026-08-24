@@ -1471,6 +1471,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "AAOI",
+    "exchange": "NASDAQ · Technology — Optique / semi-conducteurs",
+    "name": "AAOI — Prudence / haut risque setup, score 45/100.",
+    "title": "AAOI — Prudence / haut risque setup, score 45/100.",
+    "desc": "Applied Optoelectronics : le fournisseur d'optique datacenter chute de 12% sur une augmentation de capital de 600 M$, la plus grosse d'une cadence de dilution quasi mensuelle. Véhicule de trading haut-bêta à 2x l'objectif des analystes, pas un investissement.",
+    "tags": "us,semis,tech,ai,speculative",
+    "grade": "C-",
+    "href": "/analyses/AAOI/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "MRSH",
     "exchange": "NYSE · Financials — Courtage d'assurance & conseil",
     "name": "MRSH — MMC (Marsh McLennan) : biais haussier modéré, score 79/100 — compounder défensif à ache...",
@@ -2311,19 +2324,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,ai,energy,trade-idea",
     "grade": "C",
     "href": "/analyses/APLD/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "AAOI",
-    "exchange": "NASDAQ · Technology",
-    "name": "AAOI — Fiber optics AI infrastructure pure-play. +884% YTD. Revenue +34% YoY. New FAB2 cleanro...",
-    "title": "AAOI — Fiber optics AI infrastructure pure-play. +884% YTD. Revenue +34% YoY. New FAB2 cleanro...",
-    "desc": "Applied Optoelectronics analysis: fiber-optic AI data center play. Pulled back 37% from $234 high. RSI 43, below EMA20/50. Q1 2026 EPS miss. Trade TP2 hit. Grade B+.",
-    "tags": "us,tech,semis,ai",
-    "grade": "C",
-    "href": "/analyses/AAOI/",
     "date": ""
   },
   {
