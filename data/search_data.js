@@ -1484,6 +1484,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "CAN",
+    "exchange": "NASDAQ · Technology — ASIC de minage Bitcoin (matériel)",
+    "name": "CAN — Spéculatif / très haut risque setup, score 34/100.",
+    "title": "CAN — Spéculatif / très haut risque setup, score 34/100.",
+    "desc": "Canaan a bondi d'environ 80% en une semaine (et +18% aujourd'hui) porté par le rallye du Bitcoin au-dessus de 79 000 $ et le lancement de mineurs domestiques au salon Bitcoin Asia. Mais c'est un penny stock chinois à 0,42 $, effondré de 93% depuis un an, à marge brute de 3,4%, revenus en baisse et une étagère de dilution de 270 M$ (programme ATM réactivable). Ticket de loterie à haut bêta, pas un investissement. Note abaissée de B à D+.",
+    "tags": "us,crypto,semis,speculative,penny-stocks",
+    "grade": "D+",
+    "href": "/analyses/CAN/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "RZLV",
     "exchange": "NASDAQ · Technology — Logiciels / IA de commerce (agentic commerce)",
     "name": "RZLV — Spéculatif / haut risque setup, score 42/100.",
@@ -2480,19 +2493,6 @@ window.searchDataPrebuilt = [
     "tags": "us,financials,trade-idea,technique",
     "grade": "A",
     "href": "/analyses/MTB/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "CAN",
-    "exchange": "NASDAQ · Technology",
-    "name": "CAN — Verdict Express — 2 Minutes",
-    "title": "CAN — Verdict Express — 2 Minutes",
-    "desc": "CAN analysis: Canaan Inc. est un fabricant chinois de circuits integres ASIC pour le minage de Bitcoin, base a Singapour. Fondee en 2013, la société concoit, fabrique et vend",
-    "tags": "us,tech,financials",
-    "grade": "B",
-    "href": "/analyses/CAN/",
     "date": ""
   },
   {
