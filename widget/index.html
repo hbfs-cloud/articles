@@ -406,7 +406,7 @@ body:has(.tape){overflow:hidden}
 
   // ══════ Copy for Chat ══════
   function copyForChat(data) {
-    var sorted = data.picks.slice().sort(function(a,b){ return b.score - a.score; });
+    var sorted = data.picks.slice().sort(function(a,b){ return (b.score||0) - (a.score||0); });
     var lines = [];
     lines.push('\ud83c\udfaf *DailyTickers A+ Picks*');
     lines.push('\ud83d\udcc5 ' + new Date(data.updated).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric', year:'numeric'}));
@@ -418,7 +418,7 @@ body:has(.tape){overflow:hidden}
       var t = isETF(p) ? '\ud83d\udcca' : '\ud83c\udfe2';
       var lp = livePrices[p.ticker];
       var priceStr = lp ? ' | Now: $'+fmt(lp.price) : '';
-      lines.push(flag + ' *' + p.ticker + '* ' + t + ' | ' + p.strategy + ' | Score: ' + p.score + '/100' + priceStr);
+      lines.push(flag + ' *' + p.ticker + '* ' + t + ' | ' + p.strategy + (p.score != null ? ' | Score: ' + p.score + '/100' : '') + priceStr);
       lines.push('   Entry: $' + p.entry + ' | Stop: $' + p.stop + ' | TP1: $' + p.tp1 + (p.tp2 ? ' | TP2: $' + p.tp2 : '') + ' | R:R ' + p.rr);
       if (p.catalyst) lines.push('   \u26a1 ' + p.catalyst);
       lines.push('');
@@ -437,7 +437,7 @@ body:has(.tape){overflow:hidden}
   // ══════ RENDER: Tape ══════
   function renderTape(data) {
     var root = document.getElementById('root');
-    var sorted = data.picks.slice().sort(function(a,b){ return b.score - a.score; });
+    var sorted = data.picks.slice().sort(function(a,b){ return (b.score||0) - (a.score||0); });
     var themeClass = theme === 'light' ? 'tape--light' : 'tape--dark';
     var isDark = theme !== 'light';
     var h = '<div class="tape ' + themeClass + '"';
@@ -446,9 +446,11 @@ body:has(.tape){overflow:hidden}
     h += '<a href="https://articles.dailytickers.com/" target="_blank" class="tape-brand">';
     h += '<img src="https://articles.dailytickers.com/logo.svg" alt="MW">';
     h += '<span>MARKET WATCH</span></a>';
-    h += '<div class="tape-regime">';
-    h += '<div class="tape-regime-dot" style="background:' + regimeColor(data.regime) + '"></div>';
-    h += '<span class="tape-regime-value" style="color:' + regimeColor(data.regime) + '">' + (data.regime || '?') + '</span></div>';
+    if (data.regime) {
+      h += '<div class="tape-regime">';
+      h += '<div class="tape-regime-dot" style="background:' + regimeColor(data.regime) + '"></div>';
+      h += '<span class="tape-regime-value" style="color:' + regimeColor(data.regime) + '">' + data.regime + '</span></div>';
+    }
     h += '<div class="tape-track"><div class="tape-scroll">';
     for (var dup = 0; dup < 2; dup++) {
       sorted.forEach(function(p) {
@@ -462,7 +464,7 @@ body:has(.tape){overflow:hidden}
         h += '<span class="tape-strat">' + p.strategy + '</span>';
         h += '<span class="tape-entry">$<strong>' + p.entry + '</strong></span>';
         h += '<span class="tape-rr">R:R ' + p.rr + '</span>';
-        h += '<span class="tape-score">' + p.score + '</span>';
+        if (p.score != null) h += '<span class="tape-score">' + p.score + '</span>';
         h += '</a>';
       });
     }
@@ -480,7 +482,7 @@ body:has(.tape){overflow:hidden}
   // ══════ RENDER: Vertical ══════
   function renderVertical(data) {
     var root = document.getElementById('root');
-    var sorted = data.picks.slice().sort(function(a,b){ return b.score - a.score; });
+    var sorted = data.picks.slice().sort(function(a,b){ return (b.score||0) - (a.score||0); });
     var h = '<div class="vlist">';
     h += '<div class="vlist-header">';
     h += '<a href="https://articles.dailytickers.com/" target="_blank" class="vlist-brand">';
@@ -503,7 +505,7 @@ body:has(.tape){overflow:hidden}
       h += '<span class="vp-flag">' + flag + '</span>';
       h += '<span class="vp-type vp-type--' + tp + '">' + typeLabel(p) + '</span>';
       h += '</div><div class="vp-name">' + (p.name || '') + '</div></div>';
-      h += '<div class="vp-score">' + p.score + '<small>/100</small></div>';
+      if (p.score != null) h += '<div class="vp-score">' + p.score + '<small>/100</small></div>';
       h += '</div>';
       h += '<div class="vp-mid"><span class="vp-strat">' + p.strategy + '</span><span class="vp-rr">R:R ' + p.rr + '</span></div>';
       // Live price row
