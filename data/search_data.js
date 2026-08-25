@@ -1484,6 +1484,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "TTMI",
+    "exchange": "NASDAQ · Technology — Circuits imprimés (PCB) / systèmes défense",
+    "name": "TTMI — Qualité et croissance, timing à respecter setup, score 60/100.",
+    "title": "TTMI — Qualité et croissance, timing à respecter setup, score 60/100.",
+    "desc": "TTM Technologies fabrique les circuits imprimés qui alimentent deux mégatendances : les centres de données IA (+91% au T2) et l'aérospatiale-défense (carnet 1,7 Md$, book-to-bill 1,30). Premier trimestre à 1 Md$, guidance relevée (~5 $ de BPA 2026), valorisation raisonnable (~16-22x les bénéfices attendus). Mais le titre a reculé de 49% depuis son plus-haut sur l'acquisition d'Epiq à 1,1 Md$ cash et cote sous ses moyennes 50 et 200 jours. Bon dossier, timing à respecter.",
+    "tags": "us,tech,defense,ai,industrials",
+    "grade": "B-",
+    "href": "/analyses/TTMI/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "VICR",
     "exchange": "NASDAQ · Technology — Composants et systèmes de puissance",
     "name": "VICR — Qualité, mais graphique cassé setup, score 62/100.",
