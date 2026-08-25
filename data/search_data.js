@@ -1484,6 +1484,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "KLAC",
+    "exchange": "NASDAQ · Technology — Équipement de contrôle de procédé (semi-conducteurs)",
+    "name": "KLAC — qualité rare, valorisation élevée — score 66/100, grade B.",
+    "title": "KLAC — qualité rare, valorisation élevée — score 66/100, grade B.",
+    "desc": "KLA détient un quasi-monopole sur le contrôle de procédé, un maillon indispensable de chaque puce avancée et donc de la vague IA. Marges et rentabilité d'exception (marge nette 36%, ROE 87%), croissance et dividende en hausse. Mais le titre, après un fractionnement 10-pour-1 et un parcours de +270%, a corrigé de 41% depuis son sommet de juin et se paie encore cher (~49x les bénéfices). Belle société, prix à surveiller.",
+    "tags": "us,semis,tech,ai,dividende",
+    "grade": "B",
+    "href": "/analyses/KLAC/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "TTMI",
     "exchange": "NASDAQ · Technology — Circuits imprimés (PCB) / systèmes défense",
     "name": "TTMI — Qualité et croissance, timing à respecter setup, score 60/100.",
@@ -3104,19 +3117,6 @@ window.searchDataPrebuilt = [
     "tags": "us,healthcare,earnings",
     "grade": "A+",
     "href": "/analyses/BTSG/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "KLAC",
-    "exchange": "NASDAQ · Technology",
-    "name": "KLAC — Momentum setup, score 70/100. Entry $2120.00, target $2350.00.",
-    "title": "KLAC — Momentum setup, score 70/100. Entry $2120.00, target $2350.00.",
-    "desc": "KLAC analysis: KLA is the toll bridge of semiconductor manufacturing — every chip produced requires KLA inspection, and as nodes shrink toward 2nm/1.4nm, the number of require",
-    "tags": "us,semis,tech,ai",
-    "grade": "B+",
-    "href": "/analyses/KLAC/",
     "date": ""
   },
   {
