@@ -1484,6 +1484,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "RZLV",
+    "exchange": "NASDAQ · Technology — Logiciels / IA de commerce (agentic commerce)",
+    "name": "RZLV — Spéculatif / haut risque setup, score 42/100.",
+    "title": "RZLV — Spéculatif / haut risque setup, score 42/100.",
+    "desc": "Rezolve AI bondit de 20% après la sélection de sa base de données par Google Cloud (Web3). Un vrai jalon de crédibilité pour un ex-SPAC en forte croissance — mais posé sur un bilan en going concern : capitaux propres négatifs (-247 M$), programme ATM actif, résultats dans 5 séances. Véhicule de trading spéculatif, pas un investissement.",
+    "tags": "us,tech,ai,software,speculative",
+    "grade": "C-",
+    "href": "/analyses/RZLV/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "AAOI",
     "exchange": "NASDAQ · Technology — Optique / semi-conducteurs",
     "name": "AAOI — Prudence / haut risque setup, score 45/100.",
