@@ -1484,6 +1484,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "VICR",
+    "exchange": "NASDAQ · Technology — Composants et systèmes de puissance",
+    "name": "VICR — Qualité, mais graphique cassé setup, score 62/100.",
+    "title": "VICR — Qualité, mais graphique cassé setup, score 62/100.",
+    "desc": "Vicor est un fournisseur de modules de puissance haut de gamme pour clusters IA (livraison 48V direct-au-chip), très rentable et en trésorerie nette : 30% de marge nette, +49% de croissance, carnet de 300 M$. Excellente société. Mais le titre, après +700% en un an jusqu'à 383 $, corrige de 49% et casse toutes ses moyennes. Dossier de qualité, graphique cassé : à surveiller, pas à acheter dans la chute.",
+    "tags": "us,tech,ai,semis,momentum",
+    "grade": "B-",
+    "href": "/analyses/VICR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "CAN",
     "exchange": "NASDAQ · Technology — ASIC de minage Bitcoin (matériel)",
     "name": "CAN — Spéculatif / très haut risque setup, score 34/100.",
