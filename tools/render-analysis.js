@@ -298,14 +298,14 @@ function renderHeader(d) {
       <div class="ticker-symbol" style="display:none">${esc(header.ticker)}</div>
       <div class="ticker-name" style="display:none">${esc(header.name)} &mdash; ${esc(header.exchange)} &middot; ${esc(header.sector)}</div>
       <div class="ticker-exchange" style="display:none">${esc(header.exchange)} &middot; ${esc(header.sector)}</div>
-      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
         <img src="/logo.svg" alt="DailyTickers" width="44" height="44" style="border-radius:10px;">
-        <div>
+        <div style="text-align:center;">
           <h1 style="margin:0;font-size:1.8rem;font-weight:800;">${esc(header.ticker)} <span style="font-weight:400;font-size:1rem;color:#64748b;">&mdash; ${esc(header.name)}</span></h1>
           <div style="font-size:0.85rem;color:#64748b;">${esc(header.exchange)} &middot; ${esc(header.sector)} &middot; ${esc(meta.dateDisplay || meta.date)}</div>
         </div>
       </div>
-      <div style="display:flex;align-items:baseline;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+      <div style="display:flex;align-items:baseline;justify-content:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
         <span style="font-size:2.2rem;font-weight:800;">${formatHeaderPrice(header.price, d.meta)}</span>
         <span style="font-size:1.1rem;font-weight:600;color:${changePctColor(header.changePct)};">${changePctSign(header.changePct)}${(header.changePct || 0).toFixed(2)}%</span>
         ${badges}
