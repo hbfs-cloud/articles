@@ -302,6 +302,14 @@ if [ "$SKIP_SWEEP" = false ]; then
   echo "🔄 Step 4a1: Re-grade analyses (watchlist + max-age 30)..."
   node tools/refresh-analyses.js --max-age 30 --commit || echo "⚠️  refresh-analyses failed (non-blocking)"
 
+  # Step 4a2: cycle de vie des analyses — transitions mécaniques sur CLÔTURES (déclenché/validé/
+  # invalidé/fenêtre écoulée) + horodatage « niveaux vérifiés le » + data/analyses-status.json,
+  # l'endpoint lu par le garde-fou JS de core.js (bandeau rouge/vert/ambre sur chaque dossier).
+  # Non-bloquant : en échec, les pages basculent d'elles-mêmes en « niveaux non vérifiés ».
+  echo ""
+  echo "🔄 Step 4a2: Cycle de vie des analyses (clôtures + endpoint statuts)..."
+  node tools/analyses-lifecycle.js || echo "⚠️  analyses-lifecycle failed (non-blocking — pages afficheront « non vérifié »)"
+
   # ─── Step 4b: Replay trades with 1-min OHLCV (realistic entry/exit times) ──
   echo ""
   echo "🔁 Step 4b: Replaying trades with 1-min data..."
@@ -410,6 +418,8 @@ git add \
   scanner-daily-card.html \
   data/scanner-metrics.json \
   data/scanner-positions.json \
+  data/analyses-status.json \
+  data/analyses-data/*.json \
   2>/dev/null || true
 
 git add \

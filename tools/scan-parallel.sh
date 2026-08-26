@@ -67,7 +67,12 @@ log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
   # depuis mi-août 2026 : OOM silencieux en pleine pré-sim (constaté le 16/08, exit masqué par un
   # pipe). 8 Go suffisent ; sans effet notable sur --quick.
   NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=8192}" node tools/sweep.js $SWEEP_MODE >> /tmp/C.log 2>&1
-  echo "C rc=$?" > /tmp/C.status
+  C_RC=$?
+  # Cycle de vie des analyses (statuts sur clôtures + endpoint du garde-fou JS des pages).
+  # Best-effort : un échec laisse les dossiers « non vérifiés » côté client (fail-closed),
+  # il ne bloque jamais le scan — mais on le voit dans le log.
+  node tools/analyses-lifecycle.js >> /tmp/C.log 2>&1 || echo "⚠ analyses-lifecycle en échec (voir /tmp/C.log)" >> /tmp/C.log
+  echo "C rc=$C_RC" > /tmp/C.status
 ) & PC=$!
 
 # ── D : rotations sectorielles + plus hauts beta par sous-jacent (page /rotation/) ──

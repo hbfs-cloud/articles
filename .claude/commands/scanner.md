@@ -45,7 +45,12 @@ artefacts — ne joue plus les salves MCP à la main. → §Collecte scriptée
 bash tools/scan-parallel.sh <YYYYMMDD> <derniere_cloture> <asof>
 ```
 
-⛔ **La chaîne C (update-tracking + `sweep.js --quick`) fait partie du scan** — c'est le SEUL endroit
+⛔ **La chaîne C (update-tracking + `sweep.js --quick` + `analyses-lifecycle.js`) fait partie du scan** —
+`analyses-lifecycle.js` fait vivre les statuts des dossiers d'analyse (déclenché/validé/invalidé/fenêtre
+écoulée, sur CLÔTURES uniquement) et régénère `data/analyses-status.json`, l'endpoint du garde-fou JS
+de core.js : sans lui, toutes les pages analyses basculent en « niveaux non vérifiés » après 5 jours
+(voulu — le doute bénéficie au lecteur). Lire son résumé du soir : transitions + cotations KO.
+La chaîne C est aussi le SEUL endroit
 du pipeline qui fait tourner le sweep (`downstream-split.sh compute` ne le lance PAS, et `distribute`
 appelle `publish-daily-card.sh --no-sweep`). Sauter scan-parallel = livre `backtest-trades.json` gelé
 (incident : aucun sweep entre le 13/08 09:15 et le 16/08/2026 — modes sans nouvelles entrées, fortress

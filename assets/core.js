@@ -664,3 +664,88 @@ function initRetentionKit() {
 
     document.addEventListener('DOMContentLoaded', initRelated);
 })();
+
+// ─── Garde-fou fraîcheur des analyses ───────────────────────────────────────
+// Sur chaque page /analyses/<DOSSIER>/, lit /data/analyses-status.json (généré chaque soir
+// par tools/analyses-lifecycle.js) et affiche un bandeau de statut sous la brand-bar :
+//   invalidé/stop → rouge · validé (TP) → vert · fenêtre écoulée → ambre ·
+//   d'actualité   → ligne discrète « niveaux vérifiés à la clôture du X ».
+// GARDE-FOU : si le fichier est introuvable, si le dossier n'y figure pas, ou si la
+// vérification date de plus de 5 jours (l'update du soir n'a pas tourné), on affiche
+// l'avertissement « niveaux non vérifiés » — le doute bénéficie TOUJOURS au lecteur,
+// jamais à la page. Aucune dépendance : échec réseau = bandeau d'avertissement.
+(function() {
+    if (document.documentElement.dataset.tab !== 'analyses') return;
+    var m = location.pathname.match(/^\/analyses\/([A-Za-z0-9.\-]+)\/?/);
+    if (!m) return;
+    var slug = m[1];
+    // Les pages non-dossier (rotation, cohortes A+, batchs) ne portent pas de plan de trade :
+    // on ne bannit que les slugs type ticker (registre = source de vérité, cf. fallback plus bas).
+    var looksTicker = /^[A-Z0-9.\-]{1,8}$/.test(slug);
+
+    var FRESH_MAX_DAYS = 5; // week-end + jour férié inclus
+
+    function fmtDateFR(iso) {
+        if (!iso) return '?';
+        var mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+        var d = new Date(iso.slice(0, 10) + 'T12:00:00Z');
+        return d.getUTCDate() + ' ' + mois[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+    }
+
+    function render(kind, title, detail) {
+        var palette = {
+            red:   { bg: '#fef2f2', border: '#fecaca', fg: '#b91c1c', icon: 'fa-ban' },
+            green: { bg: '#f0fdf4', border: '#86efac', fg: '#15803d', icon: 'fa-circle-check' },
+            amber: { bg: '#fffbeb', border: '#fde68a', fg: '#b45309', icon: 'fa-triangle-exclamation' },
+            note:  { bg: '#f8fafc', border: '#e2e8f0', fg: '#475569', icon: 'fa-clock' }
+        }[kind];
+        var el = document.createElement('div');
+        el.className = 'analysis-lifecycle-banner';
+        el.setAttribute('role', 'status');
+        el.style.cssText = 'max-width:1100px;margin:0.75rem auto 0;padding:0.65rem 1rem;border-radius:10px;font-size:0.9rem;line-height:1.4;' +
+            'background:' + palette.bg + ';border:1px solid ' + palette.border + ';color:' + palette.fg + ';';
+        el.innerHTML = '<i class="fa-solid ' + palette.icon + '" style="margin-right:0.5rem"></i><strong>' + title + '</strong>' +
+            (detail ? ' — ' + detail : '');
+        var anchor = document.querySelector('.ticker-header') || document.body.firstElementChild;
+        if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(el, anchor);
+        else document.body.insertBefore(el, document.body.firstChild);
+    }
+
+    function warnUnverified(extra) {
+        render('amber', 'Niveaux non vérifiés',
+            (extra ? extra + ' ' : '') + 'Considérez ce dossier comme potentiellement périmé : les niveaux (entrée, stop, objectifs) ne sont valables qu\'au jour de leur dernière vérification.');
+    }
+
+    fetch('/data/analyses-status.json', { cache: 'no-cache' })
+        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function(agg) {
+            var e = agg.entries && agg.entries[slug];
+            if (!e) { if (looksTicker) warnUnverified('Dossier absent du suivi quotidien.'); return; }
+            if (!e.hasPlan) return; // dossier informatif sans plan : rien à bannir
+
+            var genAge = (Date.now() - new Date(agg.generatedAt)) / 86400000;
+            var verAge = e.verifiedAt ? (Date.now() - new Date(e.verifiedAt)) / 86400000 : Infinity;
+
+            var s = e.status;
+            if (s === 'stopped' || s === 'invalidated') {
+                render('red', 'Thèse invalidée', (e.note ? e.note + '. ' : '') +
+                    'Les niveaux publiés dans ce dossier sont caducs — ne pas suivre ce plan.');
+            } else if (s === 'tp1-hit' || s === 'tp2-hit' || s === 'completed') {
+                render('green', 'Thèse validée', (e.note ? e.note + '. ' : '') +
+                    'Objectif atteint : ce dossier est clos, les niveaux affichés sont historiques.');
+            } else if (s === 'expired') {
+                render('amber', 'Fenêtre écoulée', (e.note ? e.note + '. ' : '') +
+                    'Analyse d\'époque : la fenêtre de validité du plan est passée, les niveaux sont périmés.');
+            } else if (verAge > FRESH_MAX_DAYS || genAge > FRESH_MAX_DAYS) {
+                // Le garde-fou proprement dit : statut « ouvert » mais plus personne ne vérifie.
+                warnUnverified('Dernière vérification : ' + fmtDateFR(e.verifiedAt || agg.generatedAt) + '.');
+            } else if (s === 'pending' || s === 'watch') {
+                render('note', 'En attente de déclenchement',
+                    'Entrée non touchée en clôture à ce jour — niveaux vérifiés à la clôture du ' + fmtDateFR(e.closeDate) + '.');
+            } else {
+                render('note', 'Dossier d\'actualité',
+                    'Niveaux vérifiés à la clôture du ' + fmtDateFR(e.closeDate) + '.');
+            }
+        })
+        .catch(function() { if (looksTicker) warnUnverified('Suivi indisponible.'); });
+})();
