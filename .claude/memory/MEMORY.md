@@ -168,3 +168,4 @@
 - [Fortress à sec aout 2026](project_fortress_starvation_aug2026.md) — incident 0 entrée 07-16/08, étape fortress-pm perdue par le dédup commande/skill
 - [Gate R/R aligné plancher éditorial](decision_rr_gate_aligned.md) — décision 16/08 : gate tracker par ère (1,5 avant 10/08, 0,7 depuis), voir MCP memory rr-gate-aligned-editorial-floor
 - [Cycle de vie des analyses](project_analyses_lifecycle.md) — statuts sur clôtures + endpoint analyses-status.json + garde-fou JS core.js (2026-08-26)
+- [Compaction mémoire MCP 2026-08-26](mcp-compaction-20260826/README.md) — 1159 → 395 mémoires actives (−66%), registres d'archive + index des évincées, soft-delete réversible
