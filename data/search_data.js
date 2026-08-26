@@ -1497,6 +1497,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "AMKR",
+    "exchange": "NASDAQ · Technology — Packaging & test de semi-conducteurs (OSAT)",
+    "name": "AMKR — bon marché et stratégique, mais graphique cassé — score 61/100, grade B-.",
+    "title": "AMKR — bon marché et stratégique, mais graphique cassé — score 61/100, grade B-.",
+    "desc": "Amkor est le n°2 mondial du packaging et test de semi-conducteurs (OSAT), maillon indispensable des puces IA — avec un accord de 10 ans avec TSMC en Arizona. Trimestre record (1,9 Md$, +26%), valorisation raisonnable (~20x, VE/EBITDA 9,7x). Mais métier à marge brute mince (16,8%, guidée en hausse), et le titre a corrigé de 50% depuis juin, sous toutes ses moyennes. Dossier bon marché, graphique cassé, lecture NVIDIA ce soir.",
+    "tags": "us,semis,tech,ai,momentum",
+    "grade": "B-",
+    "href": "/analyses/AMKR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "KLAC",
     "exchange": "NASDAQ · Technology — Équipement de contrôle de procédé (semi-conducteurs)",
     "name": "KLAC — qualité rare, valorisation élevée — score 66/100, grade B.",
