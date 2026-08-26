@@ -1932,14 +1932,14 @@
           <span class="filter-count" id="filterCount"></span>
         </div>
         <div class="filter-group">
-          <div class="filter-chips" id="statusFilter" title="Statut du dossier — mis à jour chaque soir sur les clôtures">
+          <div class="filter-chips" id="statusFilter" data-i18n-title="status.help">
             <button class="filter-chip active" data-status="all" data-i18n="filter.all">Tous</button>
-            <button class="filter-chip" data-status="active" style="--chip-color: #16a34a"><i class="fa-solid fa-circle-check"></i> D’actualité</button>
-            <button class="filter-chip" data-status="pending" style="--chip-color: #475569"><i class="fa-solid fa-hourglass-half"></i> En attente</button>
-            <button class="filter-chip" data-status="validated" style="--chip-color: #059669"><i class="fa-solid fa-trophy"></i> Validé</button>
-            <button class="filter-chip" data-status="invalidated" style="--chip-color: #dc2626"><i class="fa-solid fa-ban"></i> Invalidé</button>
-            <button class="filter-chip" data-status="expired" style="--chip-color: #d97706"><i class="fa-solid fa-clock-rotate-left"></i> Périmé</button>
-            <button class="filter-chip" data-status="unverified" style="--chip-color: #ea580c"><i class="fa-solid fa-triangle-exclamation"></i> Non vérifié</button>
+            <button class="filter-chip" data-status="active" style="--chip-color: #16a34a"><i class="fa-solid fa-circle-check"></i> <span data-i18n="status.active">Current</span></button>
+            <button class="filter-chip" data-status="pending" style="--chip-color: #475569"><i class="fa-solid fa-hourglass-half"></i> <span data-i18n="status.pending">Awaiting</span></button>
+            <button class="filter-chip" data-status="validated" style="--chip-color: #059669"><i class="fa-solid fa-trophy"></i> <span data-i18n="status.validated">Validated</span></button>
+            <button class="filter-chip" data-status="invalidated" style="--chip-color: #dc2626"><i class="fa-solid fa-ban"></i> <span data-i18n="status.invalidated">Invalidated</span></button>
+            <button class="filter-chip" data-status="expired" style="--chip-color: #d97706"><i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="status.expired">Stale</span></button>
+            <button class="filter-chip" data-status="unverified" style="--chip-color: #ea580c"><i class="fa-solid fa-triangle-exclamation"></i> <span data-i18n="status.unverified">Not verified</span></button>
           </div>
         </div>
         <div class="quick-tags" id="quickTags">
@@ -2905,15 +2905,20 @@
     // « non vérifié ». Les cartes sans dossier au registre (rotation, cohortes A+…) n'ont
     // pas de badge et ne sortent que sous « Tous ».
     // ===================================================================
+    // Labels via le système i18n (clés status.*) — EN par défaut, traduits par setLang comme le reste.
     var ANALYSIS_STATUS_THEMES = {
-      active:      { bg: "#16a34a", label: "D’ACTUALITÉ",   icon: "fa-circle-check" },
-      validated:   { bg: "#059669", label: "VALIDÉ",         icon: "fa-trophy" },
-      pending:     { bg: "#475569", label: "EN ATTENTE",     icon: "fa-hourglass-half" },
-      invalidated: { bg: "#dc2626", label: "INVALIDÉ",       icon: "fa-ban" },
-      expired:     { bg: "#d97706", label: "PÉRIMÉ",         icon: "fa-clock-rotate-left" },
-      unverified:  { bg: "#ea580c", label: "NON VÉRIFIÉ",    icon: "fa-triangle-exclamation" },
-      info:        { bg: "#64748b", label: "INFORMATIF",     icon: "fa-circle-info" }
+      active:      { bg: "#16a34a", icon: "fa-circle-check" },
+      validated:   { bg: "#059669", icon: "fa-trophy" },
+      pending:     { bg: "#475569", icon: "fa-hourglass-half" },
+      invalidated: { bg: "#dc2626", icon: "fa-ban" },
+      expired:     { bg: "#d97706", icon: "fa-clock-rotate-left" },
+      unverified:  { bg: "#ea580c", icon: "fa-triangle-exclamation" },
+      info:        { bg: "#64748b", icon: "fa-circle-info" }
     };
+    function statusUiLang() {
+      var l = (typeof currentLangFilter !== "undefined" && currentLangFilter !== "all") ? currentLangFilter : (document.documentElement.lang || "en");
+      return (typeof translations !== "undefined" && translations[l]) ? l : "en";
+    }
     var analysisStatusAgg = null, analysisStatusFailed = false;
     function classifyAnalysisStatus(e, agg) {
       if (!e) return "unverified";
@@ -2948,10 +2953,11 @@
         if (host) {
           var pill = document.createElement("span");
           pill.className = "analysis-status-pill";
-          pill.title = e && e.note ? e.note : t.label;
+          var key = "status." + kind, label = (typeof resolve === "function") ? resolve(statusUiLang(), key) : kind;
           pill.style.cssText = "display:inline-block;margin-left:0.5rem;vertical-align:middle;background:" + t.bg +
-            ";color:#fff;padding:0.15rem 0.55rem;border-radius:999px;font-weight:800;font-size:0.65rem;letter-spacing:0.04em;white-space:nowrap;";
-          pill.innerHTML = '<i class="fa-solid ' + t.icon + '" style="margin-right:0.3rem"></i>' + t.label;
+            ";color:#fff;padding:0.15rem 0.55rem;border-radius:999px;font-weight:800;font-size:0.65rem;letter-spacing:0.04em;white-space:nowrap;text-transform:uppercase;";
+          // <span data-i18n> : re-traduit automatiquement par setLang quand l'utilisateur change de langue
+          pill.innerHTML = '<i class="fa-solid ' + t.icon + '" style="margin-right:0.3rem"></i><span data-i18n="' + key + '">' + label + '</span>';
           host.appendChild(pill);
         }
       });
@@ -5035,6 +5041,7 @@
         'promo.qs.sub': 'Tout ce qu\'il faut savoir pour trader, condensé en 30 minutes. Zéro prérequis.',
         'promo.badge': 'NOUVEAU',
         'filter.all': 'Tous',
+        'status.active': 'D’actualité', 'status.pending': 'En attente', 'status.validated': 'Validé', 'status.invalidated': 'Invalidé', 'status.expired': 'Périmé', 'status.unverified': 'Non vérifié', 'status.info': 'Informatif', 'status.help': 'Statut du dossier — mis à jour chaque soir sur les clôtures',
         'filter.label': 'Filtres',
         'filter.clear': 'Effacer',
         'filter.confidence': 'Fiabilité',
@@ -5092,6 +5099,7 @@
         'promo.qs.sub': 'Everything you need to know to trade, in 30 minutes. Zero prerequisites.',
         'promo.badge': 'NEW',
         'filter.all': 'All',
+        'status.active': 'Current', 'status.pending': 'Awaiting trigger', 'status.validated': 'Validated', 'status.invalidated': 'Invalidated', 'status.expired': 'Stale', 'status.unverified': 'Not verified', 'status.info': 'Informational', 'status.help': 'Dossier status — updated nightly on closing prices',
         'filter.label': 'Filters',
         'filter.clear': 'Clear',
         'filter.confidence': 'Confidence',
@@ -5149,6 +5157,7 @@
         'promo.qs.sub': 'كل ما تحتاج معرفته للتداول في 30 دقيقة. بدون متطلبات مسبقة.',
         'promo.badge': 'جديد',
         'filter.all': 'الكل',
+        'status.active': 'ساري', 'status.pending': 'في الانتظار', 'status.validated': 'متحقق', 'status.invalidated': 'ملغى', 'status.expired': 'قديم', 'status.unverified': 'غير متحقق', 'status.info': 'معلوماتي', 'status.help': 'حالة الملف — تُحدَّث كل ليلة على أسعار الإغلاق',
         'filter.label': 'تصفية',
         'filter.clear': 'مسح',
         'filter.confidence': 'الموثوقية',
@@ -5206,6 +5215,7 @@
         'promo.qs.sub': 'Todo lo que necesitas saber para operar, en 30 minutos. Sin prerequisitos.',
         'promo.badge': 'NUEVO',
         'filter.all': 'Todos',
+        'status.active': 'Vigente', 'status.pending': 'En espera', 'status.validated': 'Validado', 'status.invalidated': 'Invalidado', 'status.expired': 'Caducado', 'status.unverified': 'No verificado', 'status.info': 'Informativo', 'status.help': 'Estado del expediente — actualizado cada noche con los cierres',
         'filter.label': 'Filtros',
         'filter.clear': 'Borrar',
         'filter.confidence': 'Confianza',
@@ -5263,6 +5273,7 @@
         'promo.qs.sub': '30分钟掌握交易基础。零门槛。',
         'promo.badge': '新',
         'filter.all': '全部',
+        'status.active': '有效', 'status.pending': '等待触发', 'status.validated': '已验证', 'status.invalidated': '已失效', 'status.expired': '已过时', 'status.unverified': '未验证', 'status.info': '信息参考', 'status.help': '案件状态 — 每晚按收盘价更新',
         'filter.label': '筛选',
         'filter.clear': '清除',
         'filter.confidence': '可信度',
@@ -5322,6 +5333,12 @@
         var key = el.getAttribute('data-i18n');
         var val = resolve(uiLang, key);
         if (val) el.textContent = val;
+      });
+
+      // Apply title translations (tooltips)
+      document.querySelectorAll('[data-i18n-title]').forEach(function(el) {
+        var val = resolve(uiLang, el.getAttribute('data-i18n-title'));
+        if (val) el.setAttribute('title', val);
       });
 
       // Apply placeholder translations

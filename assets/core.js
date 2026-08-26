@@ -665,29 +665,121 @@ function initRetentionKit() {
     document.addEventListener('DOMContentLoaded', initRelated);
 })();
 
-// ─── Statut & fraîcheur des analyses (bande + pastille header + garde-fou) ─────────
-// Sur chaque page /analyses/<DOSSIER>/, lit /data/analyses-status.json (généré chaque soir par
-// tools/analyses-lifecycle.js) et rend le statut IMPOSSIBLE À RATER :
-//   • une BANDE pleine largeur en tête du ticker-header (couleur = statut),
-//   • une PASTILLE pleine couleur dans la rangée des badges (prix · score · grade · halal).
-// Couleurs : vert = d'actualité / validé · gris-bleu = en attente · rouge = invalidé ·
-// ambre = fenêtre écoulée · orange = NON VÉRIFIÉ.
-// GARDE-FOU : fichier introuvable, dossier absent, ou vérification > 5 jours (l'update du soir
-// n'a pas tourné) → « Niveaux non vérifiés ». Le doute bénéficie TOUJOURS au lecteur.
-// Le même vocabulaire/couleurs est exposé en window.DT_ANALYSIS_STATUS pour la landing (cartes).
+// ─── Analysis status & freshness (header strip + pill + safety net) ─────────────────────────
+// On every /analyses/<DOSSIER>/ page, reads /data/analyses-status.json (regenerated nightly by
+// tools/analyses-lifecycle.js — close-based transitions) and makes the status impossible to miss:
+//   • a full-width STRIP at the top of the ticker-header (colour = status),
+//   • a solid PILL in the badges row (price · score · grade · halal).
+// Colours: green = current / validated · slate = awaiting trigger · red = invalidated ·
+// amber = window expired · orange = NOT VERIFIED.
+// SAFETY NET: file unreachable, dossier missing, or verification older than 5 days (the nightly
+// update did not run) → "Levels not verified". Doubt always benefits the reader.
+// Language: <html lang> of the page (en default · fr · ar · es · zh). The registry itself is
+// language-neutral (structured `event`); all wording lives here.
+// Vocabulary + classifier exposed as window.DT_ANALYSIS_STATUS for the landing page cards.
 (function() {
     var THEMES = {
-        active:      { bg: '#16a34a', label: 'DOSSIER D’ACTUALITÉ',              icon: 'fa-circle-check' },
-        validated:   { bg: '#059669', label: 'THÈSE VALIDÉE',                    icon: 'fa-trophy' },
-        pending:     { bg: '#475569', label: 'EN ATTENTE DE DÉCLENCHEMENT',          icon: 'fa-hourglass-half' },
-        invalidated: { bg: '#dc2626', label: 'INVALIDÉ — STOP TOUCHÉ',          icon: 'fa-ban' },
-        expired:     { bg: '#d97706', label: 'FENÊTRE ÉCOULÉE — PÉRIMÉ',  icon: 'fa-clock-rotate-left' },
-        unverified:  { bg: '#ea580c', label: 'NIVEAUX NON VÉRIFIÉS',              icon: 'fa-triangle-exclamation' },
-        info:        { bg: '#64748b', label: 'DOSSIER INFORMATIF',                    icon: 'fa-circle-info' }
+        active:      { bg: '#16a34a', icon: 'fa-circle-check' },
+        validated:   { bg: '#059669', icon: 'fa-trophy' },
+        pending:     { bg: '#475569', icon: 'fa-hourglass-half' },
+        invalidated: { bg: '#dc2626', icon: 'fa-ban' },
+        expired:     { bg: '#d97706', icon: 'fa-clock-rotate-left' },
+        unverified:  { bg: '#ea580c', icon: 'fa-triangle-exclamation' },
+        info:        { bg: '#64748b', icon: 'fa-circle-info' }
+    };
+    var I18N = {
+        en: {
+            label: { active: 'CURRENT', validated: 'THESIS VALIDATED', pending: 'AWAITING TRIGGER', invalidated: 'INVALIDATED — STOP HIT', expired: 'WINDOW EXPIRED — STALE', unverified: 'LEVELS NOT VERIFIED', info: 'INFORMATIONAL' },
+            active: 'Levels verified at the {date} close — plan still valid.',
+            pending: 'Entry not reached on a closing basis yet — levels verified at the {date} close.',
+            validated: 'Target reached: this dossier is closed, the levels shown are historical.',
+            invalidated: 'The published levels are void — do not follow this plan.',
+            expired: 'The plan’s validity window has passed; the levels are stale.',
+            info: 'No trade plan: background reading, no levels to follow.',
+            unverified: 'Treat this dossier as potentially stale: levels are only valid as of their last verification.',
+            unverifiedLast: 'Last verification: {date}.', unverifiedMissing: 'Dossier absent from the daily tracking.', unverifiedDown: 'Tracking unavailable.',
+            ev: { stop: 'Closed at the stop on {date} ({close})', stop_after_tp1: 'Stop hit after TP1 on {date} ({close})', tp1: 'TP1 reached at the close on {date} ({close})', tp2: 'TP2 reached at the close on {date} ({close})', completed: 'TP1 reached, then window closed on {date}', expired: '{horizon}-session window elapsed on {date} without stop or target', expired_untriggered: 'Never triggered — {horizon}-session window elapsed on {date}', triggered: 'Entry triggered at the close on {date}' },
+            months: ['January','February','March','April','May','June','July','August','September','October','November','December'], fmt: 'mdy'
+        },
+        fr: {
+            label: { active: 'DOSSIER D’ACTUALITÉ', validated: 'THÈSE VALIDÉE', pending: 'EN ATTENTE DE DÉCLENCHEMENT', invalidated: 'INVALIDÉ — STOP TOUCHÉ', expired: 'FENÊTRE ÉCOULÉE — PÉRIMÉ', unverified: 'NIVEAUX NON VÉRIFIÉS', info: 'DOSSIER INFORMATIF' },
+            active: 'Niveaux vérifiés à la clôture du {date} — plan toujours valable.',
+            pending: 'Entrée non touchée en clôture à ce jour — niveaux vérifiés à la clôture du {date}.',
+            validated: 'Objectif atteint : dossier clos, les niveaux affichés sont historiques.',
+            invalidated: 'Les niveaux publiés sont caducs — ne pas suivre ce plan.',
+            expired: 'La fenêtre de validité du plan est passée, les niveaux sont périmés.',
+            info: 'Pas de plan de trade : lecture de fond, pas de niveaux à suivre.',
+            unverified: 'Considérez ce dossier comme potentiellement périmé : les niveaux ne valent qu’au jour de leur dernière vérification.',
+            unverifiedLast: 'Dernière vérification : {date}.', unverifiedMissing: 'Dossier absent du suivi quotidien.', unverifiedDown: 'Suivi indisponible.',
+            ev: { stop: 'Clôture au stop le {date} ({close})', stop_after_tp1: 'Stop touché après TP1 le {date} ({close})', tp1: 'TP1 atteint en clôture le {date} ({close})', tp2: 'TP2 atteint en clôture le {date} ({close})', completed: 'TP1 atteint puis fenêtre close le {date}', expired: 'Fenêtre de {horizon} séances écoulée le {date} sans stop ni objectif', expired_untriggered: 'Jamais déclenché — fenêtre de {horizon} séances écoulée le {date}', triggered: 'Entrée déclenchée en clôture le {date}' },
+            months: ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'], fmt: 'dmy'
+        },
+        es: {
+            label: { active: 'VIGENTE', validated: 'TESIS VALIDADA', pending: 'A LA ESPERA DE ACTIVACIÓN', invalidated: 'INVALIDADO — STOP TOCADO', expired: 'VENTANA VENCIDA — CADUCADO', unverified: 'NIVELES NO VERIFICADOS', info: 'INFORMATIVO' },
+            active: 'Niveles verificados al cierre del {date} — plan aún válido.',
+            pending: 'Entrada aún no alcanzada al cierre — niveles verificados al cierre del {date}.',
+            validated: 'Objetivo alcanzado: expediente cerrado, los niveles mostrados son históricos.',
+            invalidated: 'Los niveles publicados quedan sin efecto — no seguir este plan.',
+            expired: 'La ventana de validez del plan ha pasado; los niveles están caducados.',
+            info: 'Sin plan de trading: lectura de fondo, sin niveles que seguir.',
+            unverified: 'Considere este expediente potencialmente caducado: los niveles solo valen al día de su última verificación.',
+            unverifiedLast: 'Última verificación: {date}.', unverifiedMissing: 'Expediente ausente del seguimiento diario.', unverifiedDown: 'Seguimiento no disponible.',
+            ev: { stop: 'Cierre en el stop el {date} ({close})', stop_after_tp1: 'Stop tocado tras TP1 el {date} ({close})', tp1: 'TP1 alcanzado al cierre el {date} ({close})', tp2: 'TP2 alcanzado al cierre el {date} ({close})', completed: 'TP1 alcanzado y ventana cerrada el {date}', expired: 'Ventana de {horizon} sesiones vencida el {date} sin stop ni objetivo', expired_untriggered: 'Nunca activado — ventana de {horizon} sesiones vencida el {date}', triggered: 'Entrada activada al cierre el {date}' },
+            months: ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'], fmt: 'dmy'
+        },
+        ar: {
+            label: { active: 'ساري', validated: 'الفرضية متحققة', pending: 'في انتظار التفعيل', invalidated: 'ملغى — وقف الخسارة', expired: 'انتهت المهلة — قديم', unverified: 'مستويات غير مُتحقّق منها', info: 'معلوماتي' },
+            active: 'تم التحقق من المستويات عند إغلاق {date} — الخطة ما زالت سارية.',
+            pending: 'لم يُبلغ سعر الدخول عند الإغلاق بعد — تم التحقق عند إغلاق {date}.',
+            validated: 'تم بلوغ الهدف: الملف مغلق والمستويات المعروضة تاريخية.',
+            invalidated: 'المستويات المنشورة لم تعد سارية — لا تتبع هذه الخطة.',
+            expired: 'انتهت مهلة صلاحية الخطة؛ المستويات قديمة.',
+            info: 'لا خطة تداول: قراءة خلفية بلا مستويات.',
+            unverified: 'اعتبر هذا الملف قديماً محتملاً: المستويات صالحة فقط في يوم آخر تحقق.',
+            unverifiedLast: 'آخر تحقق: {date}.', unverifiedMissing: 'الملف غير مدرج في المتابعة اليومية.', unverifiedDown: 'المتابعة غير متاحة.',
+            ev: { stop: 'إغلاق عند وقف الخسارة في {date} ({close})', stop_after_tp1: 'وقف الخسارة بعد TP1 في {date} ({close})', tp1: 'بلوغ TP1 عند الإغلاق في {date} ({close})', tp2: 'بلوغ TP2 عند الإغلاق في {date} ({close})', completed: 'بلوغ TP1 ثم إغلاق المهلة في {date}', expired: 'انتهت مهلة {horizon} جلسة في {date} دون وقف أو هدف', expired_untriggered: 'لم يُفعّل — انتهت مهلة {horizon} جلسة في {date}', triggered: 'تفعيل الدخول عند الإغلاق في {date}' },
+            months: null, fmt: 'iso'
+        },
+        zh: {
+            label: { active: '有效', validated: '论点已验证', pending: '等待触发', invalidated: '已失效 — 触及止损', expired: '窗口已过 — 已过时', unverified: '价位未验证', info: '信息参考' },
+            active: '价位已按 {date} 收盘验证 — 计划仍然有效。',
+            pending: '收盘尚未触及入场位 — 价位已按 {date} 收盘验证。',
+            validated: '已达目标：本案已结束，所示价位为历史数据。',
+            invalidated: '已发布的价位已作废 — 请勿跟随此计划。',
+            expired: '计划有效窗口已过，价位已过时。',
+            info: '无交易计划：背景阅读，无需跟随价位。',
+            unverified: '请将本案视为可能已过时：价位仅在最后验证日有效。',
+            unverifiedLast: '最后验证：{date}。', unverifiedMissing: '本案未纳入每日跟踪。', unverifiedDown: '跟踪不可用。',
+            ev: { stop: '{date} 收盘触及止损 ({close})', stop_after_tp1: 'TP1 后于 {date} 触及止损 ({close})', tp1: '{date} 收盘达到 TP1 ({close})', tp2: '{date} 收盘达到 TP2 ({close})', completed: '达到 TP1，窗口于 {date} 关闭', expired: '{horizon} 个交易日窗口于 {date} 结束，未触及止损或目标', expired_untriggered: '从未触发 — {horizon} 个交易日窗口于 {date} 结束', triggered: '{date} 收盘触发入场' },
+            months: null, fmt: 'iso'
+        }
     };
     var FRESH_MAX_DAYS = 5;
 
-    /** Statut brut du registre → clé de thème (partagé page article / cartes landing). */
+    function pickLang() {
+        var l = (document.documentElement.lang || 'en').slice(0, 2).toLowerCase();
+        return I18N[l] ? l : 'en';
+    }
+    function fmtDate(iso, lang) {
+        if (!iso) return '?';
+        var L = I18N[lang] || I18N.en, day = iso.slice(0, 10);
+        if (L.fmt === 'iso' || !L.months) return day;
+        var d = new Date(day + 'T12:00:00Z');
+        return L.fmt === 'mdy'
+            ? L.months[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear()
+            : d.getUTCDate() + ' ' + L.months[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+    }
+    function fill(tpl, vars) {
+        return String(tpl).replace(/\{(\w+)\}/g, function(_, k) { return vars[k] != null ? vars[k] : ''; });
+    }
+    /** Structured registry event → sentence in the page language (null if no event). */
+    function fmtEvent(ev, lang) {
+        if (!ev || !ev.type) return null;
+        var L = I18N[lang] || I18N.en, tpl = L.ev[ev.type] || I18N.en.ev[ev.type];
+        if (!tpl) return null;
+        return fill(tpl, { date: fmtDate(ev.date, lang), close: ev.close != null ? Number(ev.close).toFixed(2) : '', horizon: ev.horizon || '' });
+    }
+    /** Raw registry status → theme key (shared by article page and landing cards). */
     function classify(e, agg) {
         if (!e) return 'unverified';
         if (!e.hasPlan) return 'info';
@@ -701,35 +793,27 @@ function initRetentionKit() {
         if (s === 'pending' || s === 'watch') return 'pending';
         return 'active';
     }
-    window.DT_ANALYSIS_STATUS = { THEMES: THEMES, classify: classify, FRESH_MAX_DAYS: FRESH_MAX_DAYS };
+    window.DT_ANALYSIS_STATUS = { THEMES: THEMES, I18N: I18N, classify: classify, fmtEvent: fmtEvent, fmtDate: fmtDate, FRESH_MAX_DAYS: FRESH_MAX_DAYS };
 
     if (document.documentElement.dataset.tab !== 'analyses') return;
     var m = location.pathname.match(/^\/analyses\/([A-Za-z0-9.\-]+)\/?/);
     if (!m) return;
     var slug = m[1];
     var looksTicker = /^[A-Z0-9.\-]{1,8}$/.test(slug);
-
-    function fmtDateFR(iso) {
-        if (!iso) return '?';
-        var mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-        var d = new Date(iso.slice(0, 10) + 'T12:00:00Z');
-        return d.getUTCDate() + ' ' + mois[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
-    }
+    var lang = pickLang(), L = I18N[lang];
 
     function render(kind, detail) {
-        var t = THEMES[kind] || THEMES.info;
+        var t = THEMES[kind] || THEMES.info, label = L.label[kind] || I18N.en.label[kind];
         var header = document.querySelector('.ticker-header');
         if (!header) return;
-        // 1. Bande pleine largeur en tête du header
         var strip = document.createElement('div');
         strip.className = 'analysis-status-strip analysis-status-' + kind;
         strip.setAttribute('role', 'status');
         strip.style.cssText = 'display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;margin:-0.25rem 0 1rem;padding:0.6rem 0.9rem;' +
             'border-radius:10px;background:' + t.bg + ';color:#fff;font-weight:700;font-size:0.95rem;letter-spacing:0.01em;';
-        strip.innerHTML = '<i class="fa-solid ' + t.icon + '"></i><span>' + t.label + '</span>' +
+        strip.innerHTML = '<i class="fa-solid ' + t.icon + '"></i><span>' + label + '</span>' +
             (detail ? '<span style="font-weight:500;opacity:0.95">— ' + detail + '</span>' : '');
         header.insertBefore(strip, header.firstChild);
-        // 2. Pastille dans la rangée des badges (prix / score / grade / halal)
         var anyBadge = header.querySelector('.badge');
         var row = anyBadge ? anyBadge.parentNode : null;
         if (row) {
@@ -737,30 +821,27 @@ function initRetentionKit() {
             pill.className = 'analysis-status-pill';
             pill.style.cssText = 'background:' + t.bg + ';color:#fff;padding:0.35rem 0.8rem;border-radius:999px;font-weight:800;' +
                 'font-size:0.8rem;letter-spacing:0.03em;white-space:nowrap;';
-            pill.innerHTML = '<i class="fa-solid ' + t.icon + '" style="margin-right:0.35rem"></i>' + t.label;
+            pill.innerHTML = '<i class="fa-solid ' + t.icon + '" style="margin-right:0.35rem"></i>' + label;
             row.insertBefore(pill, row.firstChild);
         }
     }
-
-    function warnUnverified(extra) {
-        render('unverified', (extra ? extra + ' ' : '') +
-            'Considérez ce dossier comme potentiellement périmé : les niveaux ne valent qu’au jour de leur dernière vérification.');
-    }
+    function warnUnverified(extra) { render('unverified', (extra ? extra + ' ' : '') + L.unverified); }
 
     fetch('/data/analyses-status.json', { cache: 'no-cache' })
         .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
         .then(function(agg) {
             var e = agg.entries && agg.entries[slug];
-            if (!e) { if (looksTicker) warnUnverified('Dossier absent du suivi quotidien.'); return; }
+            if (!e) { if (looksTicker) warnUnverified(L.unverifiedMissing); return; }
             var kind = classify(e, agg);
-            var note = e.note ? e.note + '. ' : '';
-            if (kind === 'info')        render('info', 'Pas de plan de trade : lecture de fond, pas de niveaux à suivre.');
-            else if (kind === 'invalidated') render('invalidated', note + 'Les niveaux publiés sont caducs — ne pas suivre ce plan.');
-            else if (kind === 'validated')   render('validated', note + 'Objectif atteint : dossier clos, niveaux historiques.');
-            else if (kind === 'expired')     render('expired', note + 'La fenêtre de validité du plan est passée, les niveaux sont périmés.');
-            else if (kind === 'unverified')  warnUnverified('Dernière vérification : ' + fmtDateFR(e.verifiedAt || agg.generatedAt) + '.');
-            else if (kind === 'pending')     render('pending', 'Entrée non touchée en clôture à ce jour — niveaux vérifiés à la clôture du ' + fmtDateFR(e.closeDate || e.verifiedAt) + '.');
-            else render('active', 'Niveaux vérifiés à la clôture du ' + fmtDateFR(e.closeDate || e.verifiedAt) + ' — plan toujours valable.');
+            var evTxt = fmtEvent(e.event, lang), pre = evTxt ? evTxt + '. ' : '';
+            var when = fmtDate(e.closeDate || e.publishedAt || e.verifiedAt, lang);
+            if (kind === 'info')             render('info', L.info);
+            else if (kind === 'invalidated') render('invalidated', pre + L.invalidated);
+            else if (kind === 'validated')   render('validated', pre + L.validated);
+            else if (kind === 'expired')     render('expired', pre + L.expired);
+            else if (kind === 'unverified')  warnUnverified(fill(L.unverifiedLast, { date: fmtDate(e.verifiedAt || agg.generatedAt, lang) }));
+            else if (kind === 'pending')     render('pending', fill(L.pending, { date: when }));
+            else                             render('active', fill(L.active, { date: when }));
         })
-        .catch(function() { if (looksTicker) warnUnverified('Suivi indisponible.'); });
+        .catch(function() { if (looksTicker) warnUnverified(L.unverifiedDown); });
 })();

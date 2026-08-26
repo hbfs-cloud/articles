@@ -104,33 +104,48 @@ function replayPlan(t, pubPrice, closes, horizon, startStatus) {
                               : (side === 1 ? c >= entry : c <= entry);
       if (hit) { triggered = true; triggerIdx = i; }
       else if (i + 1 >= horizon) {
-        return { status: 'expired', note: `jamais déclenché — fenêtre de ${horizon} séances écoulée le ${d}`, closeDate: d, close: c };
+        return { status: 'expired', note: `jamais déclenché — fenêtre de ${horizon} séances écoulée le ${d}`, closeDate: d, close: c, event: { type: 'expired_untriggered', date: d, close: c, horizon } };
       }
       if (!triggered) continue;
     }
     // Déclenché (éventuellement cette séance même) : stop d'abord — lecture conservatrice.
     if (side === 1 ? c <= stop : c >= stop) {
-      return { status: 'stopped', note: `${tp1Hit ? 'stop après TP1' : 'clôture au stop'} le ${d} (${c.toFixed(2)})`, closeDate: d, close: c };
+      return { status: 'stopped', note: `${tp1Hit ? 'stop après TP1' : 'clôture au stop'} le ${d} (${c.toFixed(2)})`, closeDate: d, close: c, event: { type: tp1Hit ? 'stop_after_tp1' : 'stop', date: d, close: c } };
     }
     if (tp2 != null && (side === 1 ? c >= tp2 : c <= tp2)) {
-      return { status: 'tp2-hit', note: `TP2 en clôture le ${d} (${c.toFixed(2)})`, closeDate: d, close: c };
+      return { status: 'tp2-hit', note: `TP2 en clôture le ${d} (${c.toFixed(2)})`, closeDate: d, close: c, event: { type: 'tp2', date: d, close: c } };
     }
     if (!tp1Hit && tp1 != null && (side === 1 ? c >= tp1 : c <= tp1)) {
       tp1Hit = true;
       // pas de return : on continue à surveiller tp2/stop, mais on mémorise la validation
-      var tp1Info = { status: 'tp1-hit', note: `TP1 en clôture le ${d} (${c.toFixed(2)})`, closeDate: d, close: c };
+      var tp1Info = { status: 'tp1-hit', note: `TP1 en clôture le ${d} (${c.toFixed(2)})`, closeDate: d, close: c, event: { type: 'tp1', date: d, close: c } };
     }
     if (i - triggerIdx + 1 >= horizon) {
       return tp1Hit
-        ? { status: 'completed', note: `TP1 atteint puis fenêtre close le ${d}`, closeDate: d, close: c }
-        : { status: 'expired', note: `fenêtre de ${horizon} séances écoulée le ${d} sans stop ni objectif`, closeDate: d, close: c };
+        ? { status: 'completed', note: `TP1 atteint puis fenêtre close le ${d}`, closeDate: d, close: c, event: { type: 'completed', date: d, close: c, horizon } }
+        : { status: 'expired', note: `fenêtre de ${horizon} séances écoulée le ${d} sans stop ni objectif`, closeDate: d, close: c, event: { type: 'expired', date: d, close: c, horizon } };
     }
   }
   if (tp1Hit && startStatus !== 'tp1-hit') return tp1Info || null;
   if (triggered && (startStatus === 'pending' || startStatus === 'watch')) {
     const last = closes[closes.length - 1];
-    return { status: 'active', note: `entrée déclenchée en clôture le ${closes[triggerIdx].date}`, closeDate: last.date, close: last.close };
+    return { status: 'active', note: `entrée déclenchée en clôture le ${closes[triggerIdx].date}`, closeDate: last.date, close: last.close, event: { type: 'triggered', date: closes[triggerIdx].date, close: closes[triggerIdx].close } };
   }
+  return null;
+}
+
+/** Reconstruit l'événement structuré depuis une note FR déjà écrite (formats déterministes du script). */
+function parseNoteToEvent(note) {
+  if (!note) return null;
+  let m;
+  if ((m = note.match(/^clôture au stop le (\d{4}-\d{2}-\d{2}) \(([\d.]+)\)/))) return { type: 'stop', date: m[1], close: +m[2] };
+  if ((m = note.match(/^stop après TP1 le (\d{4}-\d{2}-\d{2}) \(([\d.]+)\)/))) return { type: 'stop_after_tp1', date: m[1], close: +m[2] };
+  if ((m = note.match(/^TP2 en clôture le (\d{4}-\d{2}-\d{2}) \(([\d.]+)\)/))) return { type: 'tp2', date: m[1], close: +m[2] };
+  if ((m = note.match(/^TP1 en clôture le (\d{4}-\d{2}-\d{2}) \(([\d.]+)\)/))) return { type: 'tp1', date: m[1], close: +m[2] };
+  if ((m = note.match(/^TP1 atteint puis fenêtre close le (\d{4}-\d{2}-\d{2})/))) return { type: 'completed', date: m[1] };
+  if ((m = note.match(/^jamais déclenché — fenêtre de (\d+) séances écoulée le (\d{4}-\d{2}-\d{2})/))) return { type: 'expired_untriggered', date: m[2], horizon: +m[1] };
+  if ((m = note.match(/^fenêtre de (\d+) séances écoulée le (\d{4}-\d{2}-\d{2})/))) return { type: 'expired', date: m[2], horizon: +m[1] };
+  if ((m = note.match(/^entrée déclenchée en clôture le (\d{4}-\d{2}-\d{2})/))) return { type: 'triggered', date: m[1] };
   return null;
 }
 
@@ -162,6 +177,7 @@ async function main() {
       name: (d.header && d.header.name) || slug,
       verifiedAt: meta.levelsVerifiedAt || null, closeDate: meta.levelsCloseDate || null,
       note: (t && t.statusNote) || null, hasPlan: !!(t && t.entry && t.stop),
+      event: meta.lastEvent || parseNoteToEvent(t && t.statusNote) || null,
     };
     registry[slug] = entryReg;
 
@@ -189,8 +205,8 @@ async function main() {
       stamped++;
       if (res && res.status !== status) {
         (meta.statusHistory = meta.statusHistory || []).push({ at: nowISO, from: status, to: res.status, note: res.note, close: res.close });
-        t.status = res.status; t.statusNote = res.note;
-        entryReg.status = res.status; entryReg.display = DISPLAY[res.status] || res.status; entryReg.note = res.note;
+        t.status = res.status; t.statusNote = res.note; meta.lastEvent = res.event || null;
+        entryReg.status = res.status; entryReg.display = DISPLAY[res.status] || res.status; entryReg.note = res.note; entryReg.event = res.event || null;
         transitions.push(`${slug}: ${status} → ${res.status} (${res.note})`);
       }
       if (!DRY) fs.writeFileSync(path.join(DATA_DIR, f), JSON.stringify(d, null, 2));
