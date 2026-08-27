@@ -14,8 +14,27 @@ Before doing anything else:
 2. Read `USER.md` — this is who you're helping
 3. Read `memory/YYYY-MM-DD.md` (today + yesterday) for recent context
 4. **If in MAIN SESSION** (direct chat with your human): Also read `MEMORY.md`
+5. Read `CODEX.md` — this is the Codex compatibility layer for this originally-Claude project
+6. Read `CLAUDE.md` — this is the canonical project operating manual
+7. If working inside a directory that has a local `CLAUDE.md`, read that file too before editing there
 
 Don't ask permission. Just do it.
+
+## Codex Compatibility
+
+This repository was originally operated by Claude Code. Codex must still use the project rules, workflows,
+and incident memories encoded for Claude.
+
+- `CLAUDE.md` remains the canonical project manual. Do not ignore it because of the filename.
+- `CODEX.md` explains how to translate Claude-specific conventions to Codex.
+- Directory-level `CLAUDE.md` files are still authoritative for `daily/`, `weekly/`, `scanner/`,
+  `analyses/`, `portfolio/`, `tech/`, `series/`, and `lab-src/`.
+- `.claude/skills/`, `.claude/commands/`, and `.claude/memory/` are project assets, not Claude-only noise.
+  Read the relevant files when the task touches those workflows.
+- When a rule says "Claude", "Claude Code", or "agent", apply it to the current Codex session unless it
+  explicitly depends on a Claude-only hosted feature.
+- When a command references Claude-only slash commands, use the matching `.claude/commands/<name>.md`
+  file as the procedure and execute the equivalent local scripts/tools yourself.
 
 ## Memory
 

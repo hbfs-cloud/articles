@@ -251,6 +251,17 @@ function verifyEquityCoherence(modeId, stats, equity) {
     coherenceReport.details.push({ mode: modeId, status: 'no-frozen' });
     return;
   }
+  const modeCfg = (((modesConfigFull && modesConfigFull.modes) || {})[modeId] || {});
+  const frozenPts = Array.isArray(frozen.equityCurve) ? frozen.equityCurve.filter(p => p && p.date).length : 0;
+  const frozenDtxAnemic = modeCfg.assetClass === 'dtx'
+    && (frozen.trades || 0) < 10
+    && Math.abs(frozen.returnTotal || 0) < 5
+    && frozenPts < 10;
+  if (frozenDtxAnemic) {
+    coherenceReport.skipped++;
+    coherenceReport.details.push({ mode: modeId, status: 'dtx-frozen-anemic', frozenPts, frozenTrades: frozen.trades || 0 });
+    return;
+  }
   coherenceReport.checked++;
   const problems = [];
 
@@ -463,6 +474,24 @@ function writeMode(mode, prefix) {
   const _stagedPts = (_staged && _staged.equity && (_staged.equity.dates||[]).length) || 0;
   const _pubPts = (equity && ((equity.d && equity.d.length) || (equity.dates && equity.dates.length))) || 0;
   const _curveIsBook = !!(_served && _staged && _staged.equityResolution === 'daily' && _stagedPts > 1 && _pubPts === _stagedPts);
+  const _engineBacktestCurve = (() => {
+    if (!_staged || !_staged.equity || !Array.isArray(_staged.equity.dates) || !Array.isArray(_staged.equity.values)) return null;
+    const base = (_staged.metrics && (_staged.metrics.committed_capital || _staged.metrics.initial_capital))
+      || _staged.equity.values[0]
+      || 100000;
+    if (!base || !isFinite(base)) return null;
+    const d = [];
+    const v = [];
+    const n = Math.min(_staged.equity.dates.length, _staged.equity.values.length);
+    for (let i = 0; i < n; i++) {
+      const date = String(_staged.equity.dates[i] || '').slice(0, 10);
+      const value = Number(_staged.equity.values[i]);
+      if (!date || !isFinite(value)) continue;
+      d.push(date);
+      v.push(+(value / base * 100).toFixed(2));
+    }
+    return d.length >= 2 ? { d, v, rebasedTo: 100, source: 'data/dtx staging equity' } : null;
+  })();
   const _engineBacktest = _engMetrics ? {
     source: _served
       ? 'systematic-tss (dtx) — statistiques SERVIES du livre (data/dtx staging, metricsSource=book_served_stats)'
@@ -479,6 +508,7 @@ function writeMode(mode, prefix) {
     r2: _engMetrics.r2 ?? null,
     win_rate: _engMetrics.win_rate ?? null,
     total_trades: _engMetrics.total_trades ?? null,
+    ...(_engineBacktestCurve ? { equityCurve: _engineBacktestCurve } : {}),
     // COURBE DU LIVRE (R6, fermé le 2026-08-12). Le moteur sert désormais la vraie courbe
     // (`DtxBookEquity`), ingérée par tools/dtx-book-equity-ingest.js qui REFUSE de l'écrire si
     // recalculer CAGR/MaxDD depuis ses valeurs ne reproduit pas les statistiques servies (±0,05 pt ;

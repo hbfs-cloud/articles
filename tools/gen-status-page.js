@@ -718,6 +718,13 @@ async function main() {
     // is by definition ret (sweep covers closed period only), unrealized = 0.
     const frozenKey = `frozen_${id}`;
     const frozen = results[frozenKey];
+    const frozenDtxBlocksEngine = !!(frozen
+      && cfg.assetClass === 'dtx'
+      && (
+        (frozen.trades || 0) >= 10
+        || Math.abs(frozen.returnTotal || 0) >= 5
+        || ((frozen.equityCurve || []).filter(p => p && p.date).length >= 10)
+      ));
     if (frozen) {
       m.ret = frozen.returnTotal;
       m.dd = frozen.maxDD;
@@ -925,7 +932,7 @@ async function main() {
     // qa-check 27b/c/d codifie l'invariant hero/chart/API == frozen. Modes dtx SANS frozen
     // (us_highvol, hvep, etf_us, ep) : splice backtest+live inchangé.
     const _dtx = loadDtxStaging(id);
-    if (!frozen && _dtx && _dtx.metrics && _dtx.equity && (_dtx.equity.dates || []).length >= 2) {
+    if ((!frozen || !frozenDtxBlocksEngine) && _dtx && _dtx.metrics && _dtx.equity && (_dtx.equity.dates || []).length >= 2) {
       const met = _dtx.metrics, eq = _dtx.equity;
       // BASE DE REBASAGE = la valeur de DÉPART DE LA COURBE, pas le capital initial nominal.
       // La courbe du livre (DtxBookEquity) démarre au capital ENGAGÉ (155 000 sur best : les
