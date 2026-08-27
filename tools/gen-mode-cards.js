@@ -56,9 +56,10 @@ function readStatusMetrics(modeKey) {
   if (!fs.existsSync(htmlPath)) return null;
   const statusHtml = fs.readFileSync(htmlPath, 'utf8');
   const panelId = `p-${modeKey}`;
-  const section = statusHtml.match(new RegExp(`id="${panelId}"[\\s\\S]{0,15000}`));
-  if (!section) return null;
-  const html = section[0];
+  const start = statusHtml.indexOf(`id="${panelId}"`);
+  if (start < 0) return null;
+  const next = statusHtml.indexOf('id="p-', start + panelId.length);
+  const html = statusHtml.slice(start, next < 0 ? statusHtml.length : next);
 
   const perfBlock = html.match(/class="perf-stats"[\s\S]{0,4000}?<\/div>\s*<\/div>/);
   const perfHtml  = perfBlock ? perfBlock[0] : '';
@@ -84,14 +85,21 @@ function readStatusMetrics(modeKey) {
     const v = parseFloat(String(num).replace(/[^0-9.+-]/g, ''));
     if (!isNaN(v)) byLabel[lab.split('(')[0].trim()] = v;
   }
-  const L = (...names) => { for (const n of names) if (byLabel[n] != null) return byLabel[n]; return 0; };
+  const L = (...names) => {
+    for (const n of names) {
+      if (byLabel[n] != null) return byLabel[n];
+      const k = Object.keys(byLabel).find(x => x === n || x.startsWith(n + ' '));
+      if (k) return byLabel[k];
+    }
+    return 0;
+  };
 
   const worstM = html.match(/Worst:\s*([+\-]?[\d.]+)%/);
   const nowM   = html.match(/Now:\s*([+\-]?[\d.]+)%/);
   const bestM  = html.match(/Best:\s*([+\-]?[\d.]+)%/);
 
   return {
-    ret:    L('total return'),
+    ret:    L('total return', 'engine return'),
     dd:     L('max drawdown'),
     wr:     L('win rate'),
     pf:     L('profit factor'),

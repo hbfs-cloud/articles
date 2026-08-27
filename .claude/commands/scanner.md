@@ -169,8 +169,9 @@ bash tools/downstream-split.sh compute YYYYMMDD YYYY-MM-DD
   `gen-api`/`gen-mode-cards`/`daily-synthesis`, `qa-check`. Local, idempotent, rejouable ; il prend un
   **verrou** (s'il attend, laisse-le attendre). `risk-snapshots.json` > 12 h → il échoue (voulu, ne pas
   contourner avec `RISK_MAX_AGE_H`).
-- **dtx : DECIDE *ET* REPLAY obligatoires** par config (incident 2026-07-23 : `--decide` seul = dashboard
-  frozen), lots **≤3** (au-delà : 502), back-off 60 s, poll `DtxJobStatus`. → §dtx refresh
+- **dtx : DECIDE *ET* REPLAY obligatoires** pour chaque portefeuille câblé par `tools/dtx-scan.js`
+  (actuellement `best`) et présent dans `DtxListConfigs` (incident 2026-07-23 : `--decide` seul =
+  dashboard frozen), lots **≤3** (au-delà : 502), back-off 60 s, poll `DtxJobStatus`. → §dtx refresh
 - Les relecteurs de Phase 6 **ne modifient aucun fichier** pendant que `compute` tourne.
 - Carte annotée du downstream, Telegram via MCP notification, avertissements (candlestick supprimé, aucune
   exécution broker, connector marketdata instable, `capital_flow` invalide) → **§Downstream**.

@@ -785,11 +785,12 @@ node tools/sweep.js                     # Append-only: nouveaux trades fermés (
 #    → écrire fortress_pool dans scanner/YYYYMMDD/signals.json AVANT gen-status-page.
 #    Sinon aplus/fortress fallback (fortress_fallback) et peuvent rendre vides / non-Halal. Voir §5.5.
 node tools/refresh-risk-metrics.js --ingest /tmp/risk-mcp.json   # VaR + stress + regimeProb — VOIE --ingest (MCP connecté). L'AGENT écrit risk-mcp.json {regimeProbability, modes{}} via GetMarketContext(facets=regime) + PortfolioRisk. PAS de MCP_GATEWAY_URL en local (OAuth2 zéro token → auth-fail). Corrélation US-only (EU .PA casse) + souvent cassée serveur → fallback concentration manuelle.
-# ── dtx (systematic-tss) refresh — les 6 stratégies v15 cost-honest ─────────────────────────────────
-#    book_honest · us_highvol · hvep · stockbox_pit · etf_us · ep   (cut-over dtx MCP v15, 2026-07-13)
+# ── dtx (systematic-tss) refresh — portefeuilles câblés ─────────────────────────────────
+#    Source mécanique: tools/dtx-scan.js#SCRIPTED_MODES / PORTFOLIO_TO_MODE.
+#    Catalogue actif depuis 2026-08-12 : best (panier multi-poches).
 # ⚠️ MCP = SEUL MOTEUR ("le MCP fait foi"). Binaire local + bundle SUPPRIMÉS (cut-over 2026-07-08).
 # Un subprocess `node` NE PEUT PAS appeler le MCP (OAuth2, ZÉRO token). C'est une ÉTAPE AGENT à faire
-# AVANT le pipeline shell (voir "dtx refresh — MCP SEUL MOTEUR" §ci-dessous) : pour chacun des 6 modes,
+# AVANT le pipeline shell (voir "dtx refresh — MCP SEUL MOTEUR" §ci-dessous) : pour chaque portefeuille câblé,
 # l'AGENT appelle DtxReplay + DtxDecide (poll DtxJobStatus), écrit les JSON bruts, puis :
 #   node tools/dtx-mcp-ingest.js --portfolio <id> --decide /tmp/<id>.decide.json --replay /tmp/<id>.replay.json --asof <J+1> --from 2021-01-01 --to <statusSince>
 # → data/dtx/<id>.json (engineMode:"mcp"). Si un mode échoue au MCP → laisser le staging committé
@@ -832,13 +833,14 @@ trade — le clamper à 3-8% rejetterait tout le panier. Les gates réellement a
 **Fail-closed** : staging absent / vide / malformé / `mcp_ok:false` / `error` → `_scanRuns['factor']`
 `{incomplete:true, signals:0}` + **exit 3**, RIEN fabriqué (aligné `pead-scanner.js`).
 
-### dtx refresh — MCP SEUL MOTEUR ("le MCP fait foi") — modes scriptés
+### dtx refresh — MCP SEUL MOTEUR ("le MCP fait foi") — portefeuilles câblés
 
 **Architecture (cut-over 2026-07-08).** Le serveur MCP dtx (`systematic.dailytickers.com`) est le
 **SEUL moteur**. **Le binaire local + le bundle `tools/bin/dtx-data/` ont été SUPPRIMÉS** — plus aucun
 fallback binaire. Le staging `data/dtx/<id>.json` (orders = `decide` CREATE, equity+metrics = `replay`)
-alimente les **6 modes câblés v15 cost-honest** (`book_honest`, `us_highvol`, `hvep`, `stockbox_pit`,
-`etf_us`, `ep`) via `gen-status-page` → `DTX_STAGING_MAP` (identity : mode id == portfolio == staging).
+alimente les portefeuilles câblés via `tools/dtx-scan.js#SCRIPTED_MODES` et `gen-status-page`
+→ `DTX_STAGING_MAP`. Depuis le 2026-08-12, le portefeuille actif est `best` (panier multi-poches qui
+remplace les six anciens portefeuilles scriptés).
 **Books multi-sleeve** (`book_honest`, `hvep`) : `extractReplayMetrics` détecte `results.length>1 &&
 combined`, stampe les vraies métriques `combined` et blende les courbes des sleeves (rebase 100k) — NE
 publie PAS le sleeve dominant (ex. les 81 % highvol pour book_honest). Un **seul producteur** : l'ingest MCP
@@ -895,10 +897,11 @@ données inventées), envoyer l'alerte Telegram
 en nommant la **cause réelle** si connue (connector-absent vs serveur-down), consigner l'échec dans le
 rapport, et **ne jamais continuer cette étape en silence**.
 
-**Procédure AGENT PAR MODE (Phase 5, AVANT `publish-daily-card.sh` / `gen-status-page`)** — si le
-preflight passe, pour CHACUN des **6 modes v15** (`book_honest`, `us_highvol`, `hvep`, `stockbox_pit`,
-`etf_us`, `ep`), `asof` = séance J+1, `from`=`2021-01-01`, `to` = `statusSince` du mode (splice
-backtest↔live). Devise : `ep`/`stockbox_pit`/`us_highvol`/`etf_us`/`book_honest` = USD, `hvep` = EUR :
+**Procédure AGENT PAR PORTEFEUILLE (Phase 5, AVANT `publish-daily-card.sh` / `gen-status-page`)** — si le
+preflight passe, pour chaque portefeuille câblé retourné par `DtxListConfigs` et présent dans
+`tools/dtx-scan.js#SCRIPTED_MODES` (actuellement `best`), `asof` = séance J+1, `from`=`2021-01-01`,
+`to` = `statusSince` du mode (splice backtest↔live). Devise : utiliser celle retournée par
+`DtxListConfigs` si disponible, sinon USD pour `best` :
 
 1. `DtxReplay(portfolio=<id>, from=2021-01-01, to=<statusSince>)` → poll `DtxJobStatus` → écrire `result` dans `/tmp/<id>.replay.json`.
 2. `DtxDecide(portfolio=<id>, asof=<J+1>, balances={base_currency:<cur>, cash_by_currency:{<cur>:100000}, total_equity:100000}, positions=[], orders=[])` → poll `DtxJobStatus` → écrire `result` dans `/tmp/<id>.decide.json`.

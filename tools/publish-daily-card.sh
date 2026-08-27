@@ -335,7 +335,7 @@ if [ "$SKIP_SWEEP" = false ]; then
   # subprocess CANNOT call the MCP (OAuth2 on claude.ai, ZERO-token rule) — only the AGENT
   # (Claude Code locally; `claude -p` in the cloud bot) holds mcp__claude_ai_systematic__*.
   #
-  # So the 5 dtx-wired scripted modes (highvol/forex/etf/etf_eu/stockbox) get their staging
+  # So the dtx-wired scripted portfolios (currently `best`) get their staging
   # (data/dtx/<mode>.json — "Orders to Place" from DtxDecide + backtest equity from DtxReplay)
   # produced by the AGENT via `tools/dtx-mcp-ingest.js` BEFORE this shell pipeline runs (see the
   # scanner-pipeline skill §"dtx refresh — MCP SOLE ENGINE", Phase 5). This step can NO LONGER
@@ -352,9 +352,9 @@ if [ "$SKIP_SWEEP" = false ]; then
   # escalates a stale/missing mode to ❌) and prints a LOUD summary. It is NON-crashing (never exits
   # non-zero here) but NEVER silent — an incomplete run is surfaced, not swallowed.
   if node -e 'const r=require("./tools/dtx-scan").writeStagingCompleteness(process.argv[1]);process.exit(r.complete?0:1)' "$SCAN_DATE_ISO"; then
-    echo "  ✅ dtx staging COMPLET — les 5 modes scriptés ont un staging MCP frais (engineMode:mcp, aujourd'hui)."
+    echo "  ✅ dtx staging COMPLET — les portefeuilles dtx câblés ont un staging MCP frais (engineMode:mcp, aujourd'hui)."
   else
-    echo "  ❗❗❗ dtx staging INCOMPLET — un ou plusieurs des 5 modes scriptés n'ont PAS de staging MCP frais."
+    echo "  ❗❗❗ dtx staging INCOMPLET — un ou plusieurs portefeuilles dtx câblés n'ont PAS de staging MCP frais."
     echo "  ❗❗❗ L'AGENT n'a PAS régénéré ces modes via le MCP dtx ce run (MCP injoignable / connector absent / job échoué)."
     echo "  ❗❗❗ → data/dtx/_staging-completeness.json marque le run INCOMPLET ; qa-check.js le remontera en ❌ (fail loud)."
     echo "  ❗❗❗ → l'agent DOIT avoir envoyé une alerte Telegram (alias 'alerts'). Staging conservé = STALE, JAMAIS fabriqué."

@@ -980,29 +980,36 @@ async function main() {
       m.liveFromLbl = goLiveISO;
       m.liveFromHuman = fmtDateEN(goLiveISO);
 
-      // Hero HEADLINE = live return since launch (honest). Live-book stats stay live — mostly 0/—
-      // for a freshly-launched mode, which is the correct "building" state (not the backtest's).
+      // Hero HEADLINE = engine book track record. Earlier versions kept the headline on the
+      // post-launch live segment, which is honest but visually read as "the engine is empty":
+      // best showed 0%, 0 trades while the same panel carried a 1,400-point DTX equity curve and
+      // 3,638 replay trades underneath. The status page is the engine tearsheet; live history
+      // remains labelled separately and the live tracker below still records ONLY liveRet.
       const _liveHero = (m.pit && m.pit.hasData) ? m.pit : null;
-      m.ret = _liveHero ? _liveHero.ret : liveRet;
-      m.realized = _liveHero ? _liveHero.realized : (m.realized != null && frozen ? m.realized : (liveRet - (m.unrealized || 0)));
-      m.unrealized = _liveHero ? _liveHero.unrealized : (m.unrealized != null && frozen ? m.unrealized : 0);
-      m.dd = _liveHero ? _liveHero.dd : (frozen && frozen.maxDD != null ? frozen.maxDD : 0);
-      m.wr = _liveHero ? _liveHero.wr : (frozen && frozen.trades ? m.wr : 0);
-      m.trades = _liveHero ? _liveHero.trades : (frozen && frozen.trades ? m.trades : 0);
-      m.avgHold = _liveHero ? _liveHero.avgHold : (frozen && frozen.trades ? m.avgHold : null);
-      m.pf = _liveHero ? _liveHero.pf : (frozen && frozen.trades ? m.pf : null);
+      const engineRet = met.return_pct != null
+        ? met.return_pct
+        : +(eq.values[eq.values.length - 1] / base * 100 - 100).toFixed(2);
+      m.ret = _liveHero ? _liveHero.ret : engineRet;
+      m.realized = _liveHero ? _liveHero.realized : engineRet;
+      m.unrealized = _liveHero ? _liveHero.unrealized : 0;
+      m.dd = _liveHero ? _liveHero.dd : (met.max_dd_pct != null ? -Math.abs(met.max_dd_pct) : 0);
+      m.wr = _liveHero ? _liveHero.wr : (met.win_rate != null ? met.win_rate : 0);
+      m.trades = _liveHero ? _liveHero.trades : (met.total_trades != null ? met.total_trades : 0);
+      m.avgHold = _liveHero ? _liveHero.avgHold : null;
+      m.pf = _liveHero ? _liveHero.pf : null;
       m.pfLow = null; m.pfHigh = null; m.pfReliable = null;
-      m.r2 = _liveHero ? _liveHero.r2 : null;
-      m.cagr = _liveHero ? _liveHero.cagr : null;
-      m.sharpe = _liveHero ? _liveHero.sharpe : null;
+      m.r2 = _liveHero ? _liveHero.r2 : (met.r2 != null ? met.r2 : null);
+      m.cagr = _liveHero ? _liveHero.cagr : (met.cagr_pct != null ? met.cagr_pct : null);
+      m.sharpe = _liveHero ? _liveHero.sharpe : (met.sharpe != null ? met.sharpe : null);
 
       // BACKTEST context block — labelled, separate from the live headline.
       m.dtxBacktest = {
-        ret: met.return_pct, cagr: met.cagr_pct,
+        ret: engineRet, cagr: met.cagr_pct,
         dd: met.max_dd_pct != null ? -Math.abs(met.max_dd_pct) : null,
         sharpe: met.sharpe, r2: met.r2, wr: met.win_rate, trades: met.total_trades,
         from: met.from, to: met.to,
         fromYr: String(met.from || '2021').slice(0, 4), toYr: String(met.to || goLiveISO).slice(0, 4),
+        liveRet,
       };
 
       m.dtxEngine = true;
@@ -1013,10 +1020,11 @@ async function main() {
 
       // Point live DU JOUR → tracker (append-only, idempotent par (mode,date)) + courbe du soir.
       // Un soir sans changement (mode 100% cash) enregistre un ret inchangé : c'est factuel.
-      const _todayRet = m.ret != null ? m.ret : liveRet;
+      const _todayRet = liveRet;
+      const _todayLiveTrades = _liveHero ? _liveHero.trades : (liveRaw.length ? (liveRaw[liveRaw.length - 1].trades || 0) : 0);
       const _appended = dlt.appendPoint(_track, id, {
         date: TODAY_ISO, goLive: goLiveISO,
-        ret: _todayRet, unrealized: m.unrealized, trades: m.trades,
+        ret: _todayRet, unrealized: _liveHero ? m.unrealized : 0, trades: _todayLiveTrades,
         ordersPublished: Array.isArray(_dtx.orders) ? _dtx.orders.length : null,
       });
       if (_appended) {
@@ -1587,13 +1595,13 @@ ${cfg.assetClass === 'dtx' ? `<div class="section-card">
         <span><b>${m.dtxBacktest.sharpe != null ? m.dtxBacktest.sharpe : '—'}</b> Sharpe</span>
         <span class="bt-ctx-cum"><b>${m.dtxBacktest.ret != null ? (m.dtxBacktest.ret > 0 ? '+' : '') + m.dtxBacktest.ret + '%' : '—'}</b> cumulative</span>
       </span>
-      <span class="bt-ctx-note">Real engine · ${m.dtxBacktest.trades} trades over the book history (muted/dashed). Live track (solid) begins ${m.liveFromHuman} — building.</span>
+      <span class="bt-ctx-note">Real engine · ${m.dtxBacktest.trades} trades over the book history (muted/dashed). Live track (solid) begins ${m.liveFromHuman}${m.dtxBacktest.liveRet != null ? ` · ${m.dtxBacktest.liveRet > 0 ? '+' : ''}${m.dtxBacktest.liveRet}% since launch` : ''}.</span>
       ${m.dtxLiveTrack ? `<span class="bt-ctx-note" title="Série live append-only (data/dtx-live-track.json) : un point réel par soirée de pipeline, jamais interpolé. Drift = return live cumulé vs return du même segment dans le replay moteur complet — indicatif (échantillonnage bi-hebdomadaire du replay).">Live history · ${m.dtxLiveTrack.points} pt${m.dtxLiveTrack.points > 1 ? 's' : ''}${m.dtxLiveTrack.first ? ' since ' + m.dtxLiveTrack.first : ''}${m.dtxLiveTrack.drift ? ` · Drift vs engine ${m.dtxLiveTrack.drift.drift_pp > 0 ? '+' : ''}${m.dtxLiveTrack.drift.drift_pp} pp <b style="color:${m.dtxLiveTrack.drift.status === 'OK' ? '#10b981' : m.dtxLiveTrack.drift.status === 'WATCH' ? '#f59e0b' : '#ef4444'}">[${m.dtxLiveTrack.drift.status}]</b>` : ' · drift: pending engine replay'}</span>` : ''}
     </div>` : ''}
   </div>
   <div class="perf-stats">
-    <div class="ps" title="${m.dtxEngine ? 'Real LIVE return since this mode went live (' + m.liveFromHuman + '). Includes mark-to-market on open positions. The multi-year backtest is summarised separately under the curve.' : 'Cumulative percent gain of the portfolio since inception. Includes mark-to-market on open positions.'}">
-      <span class="ps-v ${H.ret > 0 ? 'pos' : H.ret < 0 ? 'neg' : 'flat'}" style="color:${cfg.color}">${H.ret > 0 ? '+' : ''}${H.ret}%</span><span class="ps-l">${m.dtxEngine ? `Live Return <small style="opacity:.7">since ${m.liveFromHuman}</small>` : 'Total Return'}${H.unrealized ? ' <small style="opacity:.6">(incl. ' + (H.unrealized > 0 ? '+' : '') + H.unrealized + '% MtM)</small>' : ''}</span>${liveMtm ? `<span class="ps-live" title="Portfolio value RIGHT NOW, including the mark-to-market of open positions. The headline above is the SEALED backtest (closed trades only, immutable) — this live figure moves with open P&amp;L and is shown separately so it never displaces the track record. Caveat: if a position is marked below its stop level, this MtM overstates the loss (it ignores the stop-sell scenario).">Live incl. MtM <b class="${liveMtm.ret > 0 ? 'pos' : liveMtm.ret < 0 ? 'neg' : 'flat'}">${liveMtm.ret > 0 ? '+' : ''}${liveMtm.ret}%</b>${liveMtm.unreal ? ` <span class="ps-live-o">· open ${liveMtm.unreal > 0 ? '+' : ''}${liveMtm.unreal}%</span>` : ''}</span>` : ''}
+    <div class="ps" title="${m.dtxEngine ? 'Cumulative return of the systematic engine book over the displayed backtest curve. The live post-launch track is shown separately under the curve.' : 'Cumulative percent gain of the portfolio since inception. Includes mark-to-market on open positions.'}">
+      <span class="ps-v ${H.ret > 0 ? 'pos' : H.ret < 0 ? 'neg' : 'flat'}" style="color:${cfg.color}">${H.ret > 0 ? '+' : ''}${H.ret}%</span><span class="ps-l">${m.dtxEngine ? `Engine Return <small style="opacity:.7">${m.dtxBacktest ? m.dtxBacktest.fromYr + '→' + m.dtxBacktest.toYr : ''}</small>` : 'Total Return'}${H.unrealized ? ' <small style="opacity:.6">(incl. ' + (H.unrealized > 0 ? '+' : '') + H.unrealized + '% MtM)</small>' : ''}</span>${liveMtm ? `<span class="ps-live" title="Portfolio value RIGHT NOW, including the mark-to-market of open positions. The headline above is the SEALED backtest (closed trades only, immutable) — this live figure moves with open P&amp;L and is shown separately so it never displaces the track record. Caveat: if a position is marked below its stop level, this MtM overstates the loss (it ignores the stop-sell scenario).">Live incl. MtM <b class="${liveMtm.ret > 0 ? 'pos' : liveMtm.ret < 0 ? 'neg' : 'flat'}">${liveMtm.ret > 0 ? '+' : ''}${liveMtm.ret}%</b>${liveMtm.unreal ? ` <span class="ps-live-o">· open ${liveMtm.unreal > 0 ? '+' : ''}${liveMtm.unreal}%</span>` : ''}</span>` : ''}
     </div>
     <div class="ps" title="Largest peak-to-trough drop on the equity curve. Lower is better; measures worst pain experienced.">
       <span class="ps-v neg">${H.dd}%</span><span class="ps-l">Max Drawdown</span>

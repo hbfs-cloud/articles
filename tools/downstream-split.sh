@@ -157,6 +157,21 @@ case "$MODE" in
       node tools/dtx-pool-bridge.js --folder "$DATE" --date "$ASOF" >> /tmp/ds-dtx.log 2>&1
       log "dtx ingéré"
     fi
+
+    # Garde de complétude DTX côté CALCUL. C'est ici que scanner/status est
+    # régénéré ; attendre `publish-daily-card --no-sweep` pour écrire le marqueur
+    # laisse `scanner/status/#best` sur une preuve de fraîcheur obsolète. Le
+    # subprocess ne peut pas appeler le MCP : il vérifie uniquement que l'agent a
+    # bien produit un staging MCP frais pour les portefeuilles câblés (aujourd'hui :
+    # best). Incomplet = arrêt du compute, pas publication d'une page stale.
+    if node -e 'const r=require("./tools/dtx-scan").writeStagingCompleteness(process.argv[1]);process.exit(r.complete?0:1)' "$ASOF" > /tmp/ds-dtx-completeness.log 2>&1; then
+      log "dtx staging complet"
+    else
+      cat /tmp/ds-dtx-completeness.log >&2
+      echo "dtx staging INCOMPLET — scanner/status/#best ne peut pas être garanti à jour. Régénérer via systematic MCP puis relancer compute." >&2
+      exit 1
+    fi
+
     node tools/gen-status-page.js > /tmp/ds-status.log 2>&1 || { echo "gen-status-page ÉCHEC" >&2; exit 1; }
     log "status page"
     # les trois consommateurs du snapshot, en parallèle — seul gen-api en dépend

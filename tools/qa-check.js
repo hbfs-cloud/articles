@@ -349,15 +349,15 @@ warn('scanner: modes live scriptés — marqueur présent mais 0 signal (jour ca
 });
 
 // 4d. dtx scripted-mode staging COMPLETENESS (anti-silent-skip). Depuis le cut-over 2026-07-08, le
-// MCP dtx (systematic.dailytickers.com) est le SEUL moteur des 5 modes scriptés (us_highvol, forex,
-// etf_us, etf_eu, stockbox_nasdaq) — le binaire local a été SUPPRIMÉ. Seul l'AGENT peut appeler le MCP ;
+// MCP dtx (systematic.dailytickers.com) est le SEUL moteur des portefeuilles scriptés câblés
+// (aujourd'hui: best) — le binaire local a été SUPPRIMÉ. Seul l'AGENT peut appeler le MCP ;
 // un subprocess `node` ne le peut pas. publish-daily-card.sh Step 4d écrit data/dtx/_staging-completeness.json
 // enregistrant, PAR MODE, si le staging committé est un snapshot MCP frais (aujourd'hui) au moment du scan.
 // Ici on ESCALADE un mode stale/absent en ❌ (fail loud) — mais UNIQUEMENT si le marqueur vient d'un run
 // qui a eu lieu aujourd'hui (generatedAt = aujourd'hui). Pas de marqueur / marqueur ancien → skip (pas de
 // faux ❌ hors run). C'est la porte de complétude : une nuit où le MCP dtx était injoignable et où l'agent
 // n'a pas pu régénérer un mode est ATTRAPÉE ici, jamais passée en silence.
-check('dtx: staging scriptés complets (5 modes MCP frais — pas de skip silencieux)', () => {
+check('dtx: staging scriptés complets (portefeuilles MCP frais — pas de skip silencieux)', () => {
   const markerPath = path.join(ROOT, 'data', 'dtx', '_staging-completeness.json');
   const today = new Date().toISOString().slice(0, 10);
   let marker = null;
@@ -938,15 +938,16 @@ check('scanner/status: SEALED-PRIMARY invariant (hero = sealed sweep, no sim/str
 
   for (const [id, cfg] of Object.entries(modes)) {
     if (NON_PUBLIC.has(cfg.status)) continue;
+    if (cfg.assetClass === 'dtx') continue; // covered by the dtx-specific staging/metrics gates
     const anchor = `id="p-${id}"`;
     const start = html.indexOf(anchor);
     if (start === -1) continue; // panel presence covered by another check
     const next = html.indexOf('id="p-', start + anchor.length);
     const panel = html.slice(start, next === -1 ? html.length : next);
-    // Scripted dtx modes (backtest+live splice) label the headline "Live Return" (honest live
-    // since-launch number), quality modes label it "Total Return" — accept either.
-    const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">(?:Total Return|Live Return)/);
-    if (!heroM) { issues.push(`${id}: hero Total/Live Return introuvable`); continue; }
+    // Scripted dtx modes label the headline "Engine Return"; quality modes label it "Total Return".
+    // Historical "Live Return" is accepted for old snapshots while the public page rolls forward.
+    const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">(?:Total Return|Live Return|Engine Return)/);
+    if (!heroM) { issues.push(`${id}: hero return introuvable`); continue; }
     const heroRet = parseFloat(heroM[1]);
     const frozen = br[`frozen_${id}`];
     const frozenRet = frozen && typeof frozen.returnTotal === 'number' ? frozen.returnTotal : null;
@@ -1017,6 +1018,7 @@ check('scanner/status: bout scellé du chart == frozen equityCurve (SEALED-PRIMA
 
   for (const [id, cfg] of Object.entries(modes)) {
     if (NON_PUBLIC.has(cfg.status)) continue;
+    if (cfg.assetClass === 'dtx') continue; // API follows the engine snapshot, not frozen_<id>
     const frozen = br[`frozen_${id}`];
     const frozenRet = frozen && typeof frozen.returnTotal === 'number' ? frozen.returnTotal : null;
     const frozenTrades = frozen && typeof frozen.trades === 'number' ? frozen.trades : 0;
@@ -1080,8 +1082,8 @@ check('portfolio/v1: equity.json == dashboard hero == frozen (SEALED-PRIMARY)', 
     if (start === -1) { issues.push(`${id}: panneau hero absent`); continue; }
     const nextIdx = html.indexOf('id="p-', start + anchor.length);
     const panel = html.slice(start, nextIdx === -1 ? html.length : nextIdx);
-    const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">(?:Total Return|Live Return)/);
-    if (!heroM) { issues.push(`${id}: hero Total/Live Return introuvable`); continue; }
+    const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">(?:Total Return|Live Return|Engine Return)/);
+    if (!heroM) { issues.push(`${id}: hero return introuvable`); continue; }
     const heroRet = parseFloat(heroM[1]);
 
     // API equity.json
@@ -1159,7 +1161,7 @@ check('scanner/status: couverture SEALED-PRIMARY (tout mode live est scellé ou 
     if (start !== -1) {
       const nextIdx = html.indexOf('id="p-', start + anchor.length);
       const panel = html.slice(start, nextIdx === -1 ? html.length : nextIdx);
-      const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">(?:Total Return|Live Return)/);
+      const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">(?:Total Return|Live Return|Engine Return)/);
       if (heroM) heroRet = parseFloat(heroM[1]);
     }
 
