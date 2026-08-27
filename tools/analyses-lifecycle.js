@@ -35,6 +35,7 @@ const MAX_AGE_DAYS = parseInt(argOf('--max-age', '120'), 10);
 const ONLY = argOf('--tickers', '').split(',').map(s => s.trim()).filter(Boolean);
 
 const OPEN_STATUSES = new Set(['active', 'pending', 'watch', 'tp1-hit']);
+const TERMINAL_STATUSES = new Set(['stopped', 'invalidated', 'expired', 'tp2-hit', 'completed', 'no-trade', 'archived', 'info']);
 const HORIZON_DEFAULT = 20, HORIZON_MIN = 5, HORIZON_MAX = 60;
 
 function todayISO() { return new Date().toISOString().slice(0, 10); }
@@ -170,7 +171,38 @@ async function main() {
     let d;
     try { d = JSON.parse(fs.readFileSync(path.join(DATA_DIR, f), 'utf8')); } catch { continue; }
     const meta = d.meta || {}, t = d.tradeIdea || null;
-    const status = (t && t.status) || meta.status || (t ? 'active' : 'info');
+    let status = (t && t.status) || meta.status || (t ? 'active' : 'info');
+    const hasPlan = !!(t && t.entry && t.stop);
+    const inOnlyScope = !ONLY.length || ONLY.includes(slug);
+    let cleanupChanged = false;
+
+    // Registry cleanup: old generated analyses often carried `meta.status:"active"` while
+    // `tradeIdea.status` had already reached a terminal state. The public registry uses the
+    // trade idea as the source of truth, so keep meta in sync for future tools.
+    if (inOnlyScope && t && t.status && meta.status !== t.status) { meta.status = t.status; cleanupChanged = true; }
+
+    // If a dossier has no executable levels, it is not an "active" trade dossier. Mark it as
+    // informational so the front-end does not display a stale "levels not verified" warning.
+    if (inOnlyScope && !hasPlan && OPEN_STATUSES.has(status)) {
+      status = 'info';
+      meta.status = 'info';
+      if (t) {
+        t.status = 'info';
+        t.statusNote = t.statusNote || 'Pas de plan de trade exploitable — dossier informatif.';
+      }
+      cleanupChanged = true;
+    }
+
+    // Terminal/status-only dossiers do not need a fresh market replay. Stamp them once so the
+    // registry is complete while preserving the original event/note.
+    if (inOnlyScope && !meta.levelsVerifiedAt && (TERMINAL_STATUSES.has(status) || !hasPlan)) {
+      meta.levelsVerifiedAt = nowISO;
+      if (!meta.levelsCloseDate) meta.levelsCloseDate = meta.date || todayISO();
+      stamped++;
+      cleanupChanged = true;
+    }
+    if (cleanupChanged && !DRY) fs.writeFileSync(path.join(DATA_DIR, f), JSON.stringify(d, null, 2));
+
     const entryReg = {
       status, display: DISPLAY[status] || status,
       publishedAt: meta.date || null, grade: meta.grade || null,
@@ -182,7 +214,7 @@ async function main() {
     registry[slug] = entryReg;
 
     const ageDays = meta.date ? (Date.now() - new Date(meta.date)) / 86400000 : Infinity;
-    const inScope = t && t.entry && t.stop && OPEN_STATUSES.has(status) && ageDays <= MAX_AGE_DAYS
+    const inScope = hasPlan && OPEN_STATUSES.has(status) && ageDays <= MAX_AGE_DAYS
       && (!ONLY.length || ONLY.includes(slug));
     if (!inScope) continue;
 
