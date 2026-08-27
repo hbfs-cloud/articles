@@ -26,6 +26,8 @@ if (!fs.existsSync(fullPath)) {
 const html = fs.readFileSync(fullPath, 'utf8');
 const dom = new JSDOM(html);
 const doc = dom.window.document;
+const scanDir = path.dirname(fullPath);
+const signalsPath = path.join(scanDir, 'signals.json');
 
 // --- Extract date from folder name (YYYYMMDD) ---
 const dateMatch = argPath.match(/(\d{8})/);
@@ -201,6 +203,35 @@ for (const pick of picks) {
 // Sort by score descending
 picks.sort((a, b) => b.score - a.score);
 
+// New scanner renderer no longer exposes score in the synthesis table. Fall back
+// to signals.json, which is the canonical structured source for watchlist fields.
+if (picks.length === 0 && fs.existsSync(signalsPath)) {
+  const sig = JSON.parse(fs.readFileSync(signalsPath, 'utf8'));
+  for (const s of (sig.signals || [])) {
+    const entry = s.entry != null ? Number(s.entry)
+      : (s.entry_low != null && s.entry_high != null ? (Number(s.entry_low) + Number(s.entry_high)) / 2 : null);
+    const stop = s.stop != null ? Number(s.stop) : null;
+    const tp1 = s.tp1 != null ? Number(s.tp1) : null;
+    if (!s.ticker || s.score == null || !s.strategy || entry == null) continue;
+    picks.push({
+      ticker: String(s.ticker),
+      name: s.name || s.ticker,
+      strategy: s.strategy,
+      entry: Math.round(entry * 100) / 100,
+      stop: stop != null ? Math.round(stop * 100) / 100 : null,
+      tp1: tp1 != null ? Math.round(tp1 * 100) / 100 : null,
+      tp2: s.tp2 != null ? Math.round(Number(s.tp2) * 100) / 100 : null,
+      rr: typeof s.rr === 'string' ? s.rr : (s.rr_entry != null ? `1:${Number(s.rr_entry).toFixed(2)}` : null),
+      score: Number(s.score),
+      region: s.region || 'US',
+      tags: [s.sector, s.strategy].filter(Boolean).map(x => String(x).toLowerCase()),
+      catalyst: s.thesis || s.catalyst || '',
+      sharia: !!s.sharia,
+    });
+  }
+  picks.sort((a, b) => b.score - a.score);
+}
+
 // --- Extract alerts ---
 const alerts = {
   regime_change: false,
@@ -234,6 +265,7 @@ const nextIso = nextDate.toISOString().split('T')[0] + 'T23:00:00Z';
 
 // --- Build watchlist.json ---
 const watchlist = {
+  updated_at: isoDate,
   updated: isoDate,
   source: 'DailyTickers Scanner',
   url: `https://articles.dailytickers.com/scanner/${dateStr}/`,
