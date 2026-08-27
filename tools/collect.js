@@ -78,6 +78,22 @@ function maxObservedDate(value) {
   return best;
 }
 
+function semanticFailure(call, value) {
+  if (!call || call.server !== 'systematic' || !value || typeof value !== 'object') return null;
+  const status = value.status || (value.result && value.result.status);
+  const payload = value.result && typeof value.result === 'object' ? value.result : value;
+  if (call.tool === 'GetHealth') {
+    if (payload.ok === false) return 'systematic GetHealth ok=false';
+    if (payload.freshness_ok === false) return 'systematic GetHealth freshness_ok=false';
+    if (payload.behind_expected === true) return 'systematic GetHealth behind_expected=true';
+  }
+  if (status === 'stale_data' || status === 'data_date_mismatch') {
+    return `systematic ${call.tool} ${status}`;
+  }
+  if (payload.behind_expected === true) return `systematic ${call.tool} behind_expected=true`;
+  return null;
+}
+
 function arg(name, def) {
   const i = process.argv.indexOf(name);
   return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : def;
@@ -392,9 +408,23 @@ function socleRead(c) {
     const waveLog = { name: wave.name, ms: Date.now() - t0, calls: [] };
     for (let i = 0; i < results.length; i++) {
       const r = results[i], c = calls[i];
-      waveLog.calls.push({ as: r.as, server: c.server, tool: c.tool, ok: r.ok, ms: r.ms, wait_ms: r.waitMs || 0, error: r.error || null });
+      const semanticError = r.ok ? semanticFailure(c, r.value) : null;
+      waveLog.calls.push({
+        as: r.as,
+        server: c.server,
+        tool: c.tool,
+        ok: r.ok && !semanticError,
+        ms: r.ms,
+        wait_ms: r.waitMs || 0,
+        error: r.error || semanticError || null,
+      });
       if (!r.ok) {
         if (estDetachee) { log(`   ~ ${r.as} indisponible — vague détachée, non bloquant`); continue; }
+        failures++; continue;
+      }
+      if (semanticError) {
+        if (estDetachee) { log(`   ~ ${r.as} refusé — ${semanticError} (vague détachée, non bloquant)`); continue; }
+        log(`   ✗ ${r.as} — ${semanticError}`);
         failures++; continue;
       }
       fs.writeFileSync(path.join(outDir, `${r.as}.json`), JSON.stringify(r.value, null, 2));
