@@ -8,6 +8,34 @@ user_invocable: false
 
 Automated order execution DSL. Generates a plan from scanner signals, executes against a broker.
 
+## DTX / Broker-MCP Contract V2 Hard Stop
+
+For any broker-mcp integration consuming `DtxDecide` Contract V2, the
+authoritative runbook is
+`tools/trading-executor/DTX_DECIDE_V2_CONTRACT.md`.
+
+Do not route V2 responses through the legacy scanner-plan executor. A response
+with `contract_version: "2.0"` or `execution_plan.groups` must be handled by a
+dedicated DTX V2 client that:
+
+- calls `GetHealth(expected_close=...)`, `DtxListConfigs`, `DtxHowTo`, then
+  scheduled `DtxDecide` only;
+- requests `consumer_capabilities.contract_version="2.0"`;
+- executes `execution_plan.groups`, not `actions.CREATE`;
+- validates plan identity, validity window, unique groups/candidates, ranks,
+  `max_winners=1`, complete order/protection/execution fields, and required
+  protections before any order;
+- uses stable `request_id` for technical retries;
+- persists opaque DTX state unchanged per portfolio;
+- enforces global `broker+account+symbol` locks and idempotent
+  `engine_order_fingerprint`;
+- promotes candidates only for causes explicitly present in
+  `promotion_policy.promote_on`;
+- refuses the whole plan when validation, freshness, protections, broker support,
+  or idempotence cannot be guaranteed.
+
+Never invent or patch missing DTX fields broker-side.
+
 ## Setup
 ```bash
 cp tools/trading-executor/config.example.json tools/trading-executor/config.json

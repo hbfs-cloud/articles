@@ -81,6 +81,16 @@ Outils MCP :
 `DtxJobStatus(job_id)` jusqu'à `status:"done"` → lire `result`. Le serveur a un **cache OHLCV chaud**
 (prefetch auto au boot + chaque soir) et un garde-fou RAM (date-clamp) qui a levé l'OOM des gros univers.
 
+**Broker-MCP DtxDecide Contract V2 (exécution réelle/paper).** Toute intégration broker qui consomme une
+réponse `DtxDecide` V2 (`contract_version:"2.0"` / `execution_plan.groups`) doit suivre
+`tools/trading-executor/DTX_DECIDE_V2_CONTRACT.md`. DTX reste l'unique source de stratégie, sizing,
+niveaux, protections, fenêtres, promotions et validité. Le broker-mcp exécute uniquement les champs
+structurés, valide le contrat complet, persiste l'état opaque DTX, applique idempotence/verrous symbole,
+et refuse tout ordre si fraîcheur, protection, validité, support broker ou idempotence ne sont pas
+garantis. Ne jamais exécuter `actions.CREATE` en parallèle de `execution_plan.groups`, ne jamais inventer
+qty/stop/take-profit/limite/alternate, ne jamais convertir LIMIT en MARKET, ne jamais promouvoir hors
+`promotion_policy.promote_on`.
+
 **Câblage scanner (staging des 5 modes scriptés).** Un subprocess `node` NE PEUT PAS appeler le MCP
 (OAuth2, ZÉRO token) → seul l'**AGENT** (Claude Code / `claude -p`) l'appelle. Le staging
 `data/dtx/<id>.json` est donc produit par l'agent AVANT le pipeline shell :

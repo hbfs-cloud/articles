@@ -23,6 +23,13 @@ const ORDER_STATES = {
 class Engine extends EventEmitter {
   constructor(plan, adapter, opts = {}) {
     super();
+    if (plan && (plan.contract_version === '2.0' || plan.execution_plan)) {
+      throw new Error(
+        'Refusing DtxDecide Contract V2 plan in legacy trading-executor. ' +
+        'V2 plans must be executed by a dedicated broker-mcp DTX V2 client that implements ' +
+        'tools/trading-executor/DTX_DECIDE_V2_CONTRACT.md.'
+      );
+    }
     this.plan = plan;
     this.adapter = adapter;
     this.verbose = opts.verbose || false;

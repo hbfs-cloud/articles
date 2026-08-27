@@ -2,6 +2,21 @@
 
 Automated trading execution engine — generates plans from scanner signals and executes them across multiple brokers with real-time market data.
 
+## DTX V2 Contract Boundary
+
+`tools/trading-executor/` is the legacy scanner-plan executor. It is not a
+complete `DtxDecide` Contract V2 broker-mcp client.
+
+The authoritative V2 broker contract is
+[`DTX_DECIDE_V2_CONTRACT.md`](DTX_DECIDE_V2_CONTRACT.md). Any V2 implementation
+must execute `execution_plan.groups`, validate the whole V2 contract, preserve
+DTX state, enforce group promotion rules, maintain idempotence, and refuse all
+orders when freshness, protections, or contract validation cannot be guaranteed.
+
+The legacy `Engine` fails closed when handed a V2 response (`contract_version:
+"2.0"` or `execution_plan` present) so a DTX V2 plan cannot be silently executed
+through the old scanner DSL.
+
 ## Architecture
 
 ```
