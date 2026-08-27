@@ -17,6 +17,26 @@ The legacy `Engine` fails closed when handed a V2 response (`contract_version:
 "2.0"` or `execution_plan` present) so a DTX V2 plan cannot be silently executed
 through the old scanner DSL.
 
+Raw `systematic` MCP responses must be consumed the same way `/scanner` consumes
+them: the agent calls `GetHealth`/`DtxListConfigs`/`DtxHowTo`/`DtxDecide`, polls
+`DtxJobStatus`, writes the raw JSON, and only then a local Node process reads the
+file. Do not put MCP tokens in a subprocess environment and do not let Node call
+the MCP directly.
+
+Use the V2 consumer as the broker-side gate:
+
+```bash
+node tools/trading-executor/dtx-v2-consumer.js \
+  --decide scanner/20260827/_dtx/decide_best.json \
+  --request-id <stable-request-id>
+```
+
+It unwraps MCP job envelopes, rejects `async_pending` until `DtxJobStatus` is
+done, refuses legacy `actions.CREATE` payloads as scanner-only staging input, and
+validates `execution_plan.groups` before any future V2 executor can arm orders.
+For V2, `actions.CREATE` remains compatibility data only; the executable source
+is `execution_plan.groups`.
+
 ## Architecture
 
 ```
