@@ -51,8 +51,10 @@ log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
   fi
   node tools/collect.js --plan "$PLAN" --out "$DIR/_dtx" --quiet \
     --var refdate="$REF" --var asof="$ASOF" > /tmp/B.log 2>&1
+  B_COLLECT_RC=$?
   node tools/dtx-replay-cache.js --dir "$DIR/_dtx" --asof "$ASOF" --plan "$DTX_PLAN" >> /tmp/B-cache.log 2>&1 || true
-  echo "B rc=$? (plan $PLAN)" > /tmp/B.status
+  echo "B rc=$B_COLLECT_RC (plan $PLAN)" > /tmp/B.status
+  exit "$B_COLLECT_RC"
 ) & PB=$!
 
 # ── C : suivi + sweep (ne portent que sur des trades déjà scellés) ───────────
