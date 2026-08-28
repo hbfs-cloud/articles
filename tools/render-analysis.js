@@ -33,7 +33,8 @@ function validate(data, schema, loc) {
   if (!data && data !== 0 && data !== false && data !== '') return errs;
   if (schema.required && schema.type === 'object' && typeof data === 'object') {
     for (const k of schema.required) {
-      if (data[k] === undefined || data[k] === null) errs.push(`${loc}.${k} is required`);
+      const nullable = Array.isArray(schema.properties?.[k]?.type) && schema.properties[k].type.includes('null');
+      if (data[k] === undefined || (data[k] === null && !nullable)) errs.push(`${loc}.${k} is required`);
     }
   }
   if (schema.type === 'object' && schema.properties && typeof data === 'object' && data !== null) {
@@ -44,6 +45,7 @@ function validate(data, schema, loc) {
   if (schema.type === 'array' && Array.isArray(data) && schema.items) {
     data.forEach((item, i) => errs.push(...validate(item, schema.items, `${loc}[${i}]`)));
   }
+  if (Array.isArray(schema.type) && data !== null && !schema.type.includes(typeof data)) errs.push(`${loc} must be one of ${schema.type.join(', ')}`);
   if (schema.type === 'number' && typeof data !== 'number') errs.push(`${loc} must be number, got ${typeof data}`);
   if (schema.type === 'integer' && (!Number.isInteger(data))) errs.push(`${loc} must be integer`);
   if (schema.type === 'string' && typeof data !== 'string') errs.push(`${loc} must be string, got ${typeof data}`);
@@ -143,9 +145,15 @@ function formatHeaderPrice(price, meta) {
   return '$' + price.toFixed(2);
 }
 
-function renderChartEmbed(header, meta) {
+function renderChartEmbed(header, meta, technicals) {
   const t = header.ticker;
   const assetType = (meta && meta.assetType) || 'stock';
+  if (Array.isArray(technicals?.priceHistory) && technicals.priceHistory.length > 1) {
+    return `
+    <div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
+      <div id="priceHistoryChart" role="img" aria-label="${t} 120-session closing-price chart" style="width:100%;height:300px;border:1px solid #e2e8f0;border-radius:8px;"></div>
+    </div>`;
+  }
 
   if (assetType === 'crypto') {
     const symbol = t.replace('-USD', '').replace('-', '');
@@ -320,7 +328,7 @@ ${metrics.map(([label, val]) => `        <div class="ticker-metric"><div class="
       <div id="article-clickable-tags" class="card-tags"></div>
     </header>
 
-${renderChartEmbed(header, d.meta)}`;
+${renderChartEmbed(header, d.meta, d.technicals)}`;
 }
 
 function renderVerdict(d) {
@@ -422,8 +430,11 @@ function renderEarnings(d) {
           <thead><tr><th>Quarter</th><th>EPS Actual</th><th>EPS Est.</th><th>Surprise</th><th>Revenue</th></tr></thead>
           <tbody>
 ${e.quarters.map(q => {
-    const beat = q.epsActual > q.epsEstimate;
-    return `            <tr><td>${esc(q.quarter)}</td><td><strong>$${q.epsActual.toFixed(2)}</strong></td><td>$${q.epsEstimate.toFixed(2)}</td><td><span class="badge badge-${beat ? 'green' : q.epsActual === q.epsEstimate ? 'blue' : 'red'}">${esc(q.surprise || (beat ? 'Beat' : q.epsActual === q.epsEstimate ? 'Inline' : 'Miss'))}</span></td><td>${esc(q.revActual || '-')}</td></tr>`;
+    const hasEstimate = Number.isFinite(q.epsEstimate);
+    const beat = hasEstimate && q.epsActual > q.epsEstimate;
+    const badge = !hasEstimate ? 'blue' : beat ? 'green' : q.epsActual === q.epsEstimate ? 'blue' : 'red';
+    const label = q.surprise || (!hasEstimate ? 'Estimate N/A' : beat ? 'Beat' : q.epsActual === q.epsEstimate ? 'Inline' : 'Miss');
+    return `            <tr><td>${esc(q.quarter)}</td><td><strong>$${q.epsActual.toFixed(2)}</strong></td><td>${hasEstimate ? '$' + q.epsEstimate.toFixed(2) : 'N/A'}</td><td><span class="badge badge-${badge}">${esc(label)}</span></td><td>${esc(q.revActual || '-')}</td></tr>`;
   }).join('\n')}
           </tbody>
         </table>
@@ -980,8 +991,10 @@ function renderScripts(d) {
   const rv = (d.technicals && d.technicals.radarValues) || {};
   const techRadar = radarAxes(rv);
   const riskRadar = radarAxes(d.risks.riskRadarValues);
+  const priceHistory = Array.isArray(d.technicals?.priceHistory) ? d.technicals.priceHistory : [];
   return `
     <script>
+${priceHistory.length > 1 ? `    (function(){var el=document.getElementById('priceHistoryChart');if(!el)return;var rows=${JSON.stringify(priceHistory).replace(/<\//g, '<\\/')};var c=echarts.init(el);c.setOption({animation:false,grid:{left:58,right:20,top:24,bottom:42},tooltip:{trigger:'axis'},xAxis:{type:'category',boundaryGap:false,data:rows.map(function(x){return x.date;}),axisLabel:{hideOverlap:true,color:'#64748b'}},yAxis:{type:'value',scale:true,axisLabel:{color:'#64748b',formatter:function(v){return '$'+v.toFixed(0);}},splitLine:{lineStyle:{color:'#e2e8f0'}}},series:[{name:'Close',type:'line',showSymbol:false,smooth:false,data:rows.map(function(x){return x.close;}),lineStyle:{width:2,color:'#0f76b7'},areaStyle:{color:'rgba(15,118,183,0.08)'}}]});window.addEventListener('resize',function(){c.resize();});})();` : ''}
     (function(){var el=document.getElementById('gaugeScore');if(!el)return;var c=echarts.init(el);c.setOption({series:[{type:'gauge',radius:'90%',axisLine:{lineStyle:{width:12,color:[[0.3,'#ef4444'],[0.5,'#f59e0b'],[0.7,'#3b82f6'],[1,'#22c55e']]}},pointer:{itemStyle:{color:'auto'}},axisTick:{distance:-12,length:6,lineStyle:{color:'#fff',width:1}},splitLine:{distance:-14,length:12,lineStyle:{color:'#fff',width:2}},axisLabel:{color:'auto',distance:16,fontSize:11},detail:{valueAnimation:true,formatter:'{value}',color:'auto',fontSize:28,fontWeight:800,offsetCenter:[0,'70%']},data:[{value:${d.verdict.score}}]}]});window.addEventListener('resize',function(){c.resize();});})();
 ${techRadar ? `    (function(){var el=document.getElementById('radarTech${chartId}');if(!el)return;var c=echarts.init(el);c.setOption({radar:{indicator:${techRadar.indicator},shape:'circle',splitArea:{areaStyle:{color:['rgba(59,130,246,0.02)','rgba(59,130,246,0.04)']}}},series:[{type:'radar',data:[{value:${techRadar.values},name:'${t}',areaStyle:{color:'rgba(59,130,246,0.15)'},lineStyle:{color:'#3b82f6'},itemStyle:{color:'#3b82f6'}}]}]});window.addEventListener('resize',function(){c.resize();});})();` : ''}
     (function(){var el=document.getElementById('riskGaugeChart');if(!el)return;var c=echarts.init(el);c.setOption({series:[{type:'gauge',radius:'90%',center:['50%','60%'],startAngle:200,endAngle:-20,min:0,max:10,axisLine:{lineStyle:{width:10,color:[[0.3,'#22c55e'],[0.5,'#3b82f6'],[0.7,'#f59e0b'],[1,'#ef4444']]}},pointer:{length:'60%',width:4,itemStyle:{color:'auto'}},axisTick:{show:false},splitLine:{show:false},axisLabel:{show:false},detail:{valueAnimation:true,formatter:'{value}/10',color:'auto',fontSize:16,fontWeight:800,offsetCenter:[0,'40%']},data:[{value:${d.risks.riskScore}}]}]});window.addEventListener('resize',function(){c.resize();});})();

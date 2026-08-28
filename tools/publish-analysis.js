@@ -42,7 +42,8 @@ function validate(data, schema, loc) {
   if (data == null) return errs;
   if (schema.required && schema.type === 'object' && typeof data === 'object') {
     for (const k of schema.required) {
-      if (data[k] === undefined || data[k] === null) errs.push(`${loc}.${k} is required`);
+      const nullable = Array.isArray(schema.properties?.[k]?.type) && schema.properties[k].type.includes('null');
+      if (data[k] === undefined || (data[k] === null && !nullable)) errs.push(`${loc}.${k} is required`);
     }
   }
   if (schema.type === 'object' && schema.properties && typeof data === 'object') {
@@ -53,6 +54,7 @@ function validate(data, schema, loc) {
   if (schema.type === 'array' && Array.isArray(data) && schema.items) {
     data.forEach((item, i) => errs.push(...validate(item, schema.items, `${loc}[${i}]`)));
   }
+  if (Array.isArray(schema.type) && data !== null && !schema.type.includes(typeof data)) errs.push(`${loc} must be one of ${schema.type.join(', ')}`);
   if (schema.type === 'number' && typeof data !== 'number') errs.push(`${loc} must be number`);
   if (schema.type === 'string' && typeof data !== 'string') errs.push(`${loc} must be string`);
   return errs;
