@@ -323,6 +323,13 @@ if (tab === 'daily' || tab === 'weekly' || tab === 'scanner') {
     date = date.replace(/\b(Janvier|Février|Mars|Avril|Mai|Juin|Juillet|Août|Septembre|Octobre|Novembre|Décembre)\b/g, m => m.toLowerCase());
 }
 
+// Analysis dates can also come from an English <title>; normalize every tab consistently.
+const analysisEnToFr = {January:'janvier',February:'février',March:'mars',April:'avril',May:'mai',June:'juin',July:'juillet',August:'août',September:'septembre',October:'octobre',November:'novembre',December:'décembre'};
+const analysisEngDate = date.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/);
+if (analysisEngDate && analysisEnToFr[analysisEngDate[1]]) {
+    date = `${analysisEngDate[2]} ${analysisEnToFr[analysisEngDate[1]]} ${analysisEngDate[3]}`;
+}
+
 let badgeHtml = '';
 const isRetrospective = tab === 'scanner' && (
     html.includes('RÉTROSPECTIVE') ||
@@ -354,7 +361,7 @@ if (tab === 'analyses') {
 <div class="report-card" data-lang="${dataLang}" data-grade="${finalGrade}" data-tags="${tags}" data-conf="${reliability}">
     <div class="ticker-card-header">
         <div class="ticker-logo">
-            <img src="https://assets.parqet.com/logos/symbol/${ticker}?format=jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <img src="https://assets.parqet.com/logos/symbol/${ticker}?format=jpg" alt="${ticker} logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
             <div class="ticker-logo-fallback" style="display:none; background: linear-gradient(135deg, var(--accent), #7c3aed); color: white; font-weight: 800; font-size: 0.8rem; width: 100%; height: 100%; align-items: center; justify-content: center; border-radius: 10px;">${ticker.substring(0, 4)}</div>
         </div>
         <div>

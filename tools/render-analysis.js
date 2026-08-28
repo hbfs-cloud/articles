@@ -465,7 +465,7 @@ function renderCapitalStructure(d) {
       <div id="capital" class="content-card">
         <h2><i class="fa-solid fa-money-bill-trend-up"></i> Capital Structure &amp; Dilution</h2>
         <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
-${metricTile(cs.sharesOutstanding, 'Shares Out.')}${metricTile(cs.sharesAuthorized, 'Authorized')}${cs.dilutionRisk ? `          <div class="ticker-metric"><div class="tm-value"><span class="badge badge-${cs.dilutionRisk === 'low' ? 'green' : cs.dilutionRisk === 'moderate' ? 'blue' : 'red'}">${esc(cs.dilutionRisk)}</span></div><div class="tm-label">Dilution Risk</div></div>\n` : ''}        </div>`;
+${metricTile(cs.sharesOutstanding, 'Shares Out.')}${metricTile(cs.sharesAuthorized, 'Authorized')}${cs.dilutionRisk ? `          <div class="ticker-metric"><div class="tm-value"><span class="badge badge-${cs.dilutionRisk === 'low' ? 'green' : cs.dilutionRisk === 'moderate' ? 'blue' : cs.dilutionRisk === 'unknown' ? 'gray' : 'red'}">${esc(cs.dilutionRisk)}</span></div><div class="tm-label">Dilution Risk</div></div>\n` : ''}        </div>`;
   if (cs.warrants && cs.warrants.length) {
     html += `\n        <h4>Warrants</h4>
         <table class="data-table"><thead><tr><th>Series</th><th>Type</th><th>Strike</th><th>Shares</th><th>Exp.</th><th>Dilution</th><th>Status</th></tr></thead><tbody>
@@ -525,9 +525,9 @@ ${t.radarValues && Object.keys(rv).length ? `          <div><div id="radarTech${
             <table class="data-table"><tbody>
               <tr><td><strong>RSI (14)</strong></td><td style="color:${t.rsi14 > 70 ? '#ef4444' : t.rsi14 < 30 ? '#22c55e' : '#334155'};font-weight:600;">${t.rsi14.toFixed(1)}</td></tr>
               <tr><td><strong>EMA 20</strong></td><td>$${t.ema20.toFixed(2)}</td></tr>
-              <tr><td><strong>EMA 50</strong></td><td>$${t.ema50.toFixed(2)}</td></tr>
-              <tr><td><strong>EMA 200</strong></td><td>$${t.ema200.toFixed(2)}</td></tr>
-              <tr><td><strong>MACD</strong></td><td style="color:${(t.macd||0) >= 0 ? '#22c55e' : '#ef4444'};font-weight:600;">${(t.macd||0).toFixed(3)}</td></tr>
+              <tr><td><strong>${esc(t.ma50Type || 'EMA')} 50</strong></td><td>${t.ma50Available === false ? 'N/A' : '$' + t.ema50.toFixed(2)}</td></tr>
+              <tr><td><strong>${esc(t.ma200Type || 'EMA')} 200</strong></td><td>${t.ma200Available === false ? 'N/A' : '$' + t.ema200.toFixed(2)}</td></tr>
+              <tr><td><strong>MACD</strong></td><td style="color:${t.macd == null ? '#64748b' : t.macd >= 0 ? '#22c55e' : '#ef4444'};font-weight:600;">${t.macd == null ? 'N/A' : t.macd.toFixed(3)}</td></tr>
 ${t.macdSignal != null ? `              <tr><td><strong>Signal</strong></td><td>${t.macdSignal.toFixed(3)}</td></tr>` : ''}
               <tr><td><strong>ATR (14)</strong></td><td>$${t.atr14.toFixed(2)}</td></tr>
 ${t.wyckoff ? `              <tr><td><strong>Wyckoff</strong></td><td>${esc(t.wyckoff)}</td></tr>` : ''}
@@ -863,7 +863,7 @@ function renderDisclaimer() {
         <div class="disclaimer-mega">
           <p>This analysis is provided for <strong>informational and educational purposes only</strong>. It does not constitute financial advice, investment recommendation, or solicitation to buy or sell any security.</p>
           <p>Past performance is not indicative of future results. All investments involve risk, including the possible loss of principal. Always conduct your own research and consult a licensed financial advisor before making investment decisions.</p>
-          <p>Data sourced from real-time market data, Yahoo Finance, SEC EDGAR, and public market data. Accuracy is not guaranteed.</p>
+          <p>Data comes from point-in-time market snapshots, company filings, Yahoo Finance, SEC EDGAR, and public market data. Accuracy is not guaranteed.</p>
         </div>
       </div>`;
 }
@@ -874,7 +874,7 @@ function renderFab(d) {
     d.business          && { id: 'business',      icon: 'fa-building',                 label: 'Business' },
     d.news && d.news.length && { id: 'news',      icon: 'fa-newspaper',                label: 'News' },
     d.fundamentals      && { id: 'fondamentaux',  icon: 'fa-chart-line',               label: 'Fundamentals' },
-    d.earnings && d.earnings.quarters && { id: 'earnings', icon: 'fa-chart-bar',       label: 'Earnings' },
+    d.earnings && d.earnings.quarters && d.earnings.quarters.length && { id: 'earnings', icon: 'fa-chart-bar', label: 'Earnings' },
     d.insiders          && { id: 'insiders',      icon: 'fa-user-tie',                 label: 'Insiders' },
     d.capitalStructure  && { id: 'capital',       icon: 'fa-money-bill-trend-up',      label: 'Capital' },
     d.technicals        && { id: 'technique',     icon: 'fa-chart-area',               label: 'Technical' },
