@@ -27,10 +27,20 @@ const DATA_DIR = path.join(ROOT, 'data', 'analyses-data');
 const SCHEMA = JSON.parse(fs.readFileSync(path.join(__dirname, 'lib', 'analysis-schema.json'), 'utf8'));
 
 // ─── Minimal JSON Schema validator ──────────────────────────────────────────
-function validate(data, schema, loc) {
+function validate(data, schema, loc, rootSchema) {
   loc = loc || '';
+  rootSchema = rootSchema || schema;
   const errs = [];
+  if (schema.$ref) {
+    const parts = schema.$ref.replace(/^#\//, '').split('/').map(x => x.replace(/~1/g, '/').replace(/~0/g, '~'));
+    const resolved = parts.reduce((node, key) => node && node[key], rootSchema);
+    return resolved ? validate(data, resolved, loc, rootSchema) : [`${loc} has unresolved schema ref ${schema.$ref}`];
+  }
   if (!data && data !== 0 && data !== false && data !== '') return errs;
+  const actualType = Array.isArray(data) ? 'array' : data === null ? 'null' : typeof data;
+  const expectedTypes = Array.isArray(schema.type) ? schema.type : schema.type ? [schema.type] : [];
+  const typeMatches = expectedTypes.includes(actualType) || (expectedTypes.includes('integer') && actualType === 'number' && Number.isInteger(data));
+  if (expectedTypes.length && !typeMatches) return [`${loc || '$'} must be ${expectedTypes.join(' or ')}, got ${actualType}`];
   if (schema.required && schema.type === 'object' && typeof data === 'object') {
     for (const k of schema.required) {
       const nullable = Array.isArray(schema.properties?.[k]?.type) && schema.properties[k].type.includes('null');
@@ -39,16 +49,32 @@ function validate(data, schema, loc) {
   }
   if (schema.type === 'object' && schema.properties && typeof data === 'object' && data !== null) {
     for (const [k, sub] of Object.entries(schema.properties)) {
-      if (data[k] !== undefined) errs.push(...validate(data[k], sub, `${loc}.${k}`));
+      if (data[k] !== undefined) errs.push(...validate(data[k], sub, `${loc}.${k}`, rootSchema));
+    }
+    if (schema.additionalProperties === false) for (const key of Object.keys(data)) {
+      if (!Object.prototype.hasOwnProperty.call(schema.properties, key)) errs.push(`${loc}.${key} is not allowed`);
     }
   }
   if (schema.type === 'array' && Array.isArray(data) && schema.items) {
-    data.forEach((item, i) => errs.push(...validate(item, schema.items, `${loc}[${i}]`)));
+    data.forEach((item, i) => errs.push(...validate(item, schema.items, `${loc}[${i}]`, rootSchema)));
   }
-  if (Array.isArray(schema.type) && data !== null && !schema.type.includes(typeof data)) errs.push(`${loc} must be one of ${schema.type.join(', ')}`);
-  if (schema.type === 'number' && typeof data !== 'number') errs.push(`${loc} must be number, got ${typeof data}`);
-  if (schema.type === 'integer' && (!Number.isInteger(data))) errs.push(`${loc} must be integer`);
-  if (schema.type === 'string' && typeof data !== 'string') errs.push(`${loc} must be string, got ${typeof data}`);
+  if (schema.type === 'number' && !Number.isFinite(data)) errs.push(`${loc} must be a finite number`);
+  if (schema.type === 'integer' && !Number.isInteger(data)) errs.push(`${loc} must be integer`);
+  if (schema.enum && !schema.enum.includes(data)) errs.push(`${loc} must be one of ${schema.enum.join(', ')}`);
+  if (schema.pattern && typeof data === 'string' && !(new RegExp(schema.pattern).test(data))) errs.push(`${loc} does not match ${schema.pattern}`);
+  if (schema.format === 'date' && typeof data === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(data)) errs.push(`${loc} must be an ISO date`);
+  if (schema.format === 'uri' && typeof data === 'string') {
+    try {
+      const parsed = new URL(data, 'https://articles.dailytickers.com');
+      if (parsed.protocol !== 'https:' || (!data.startsWith('/') && !data.startsWith('https://'))) {
+        errs.push(`${loc} must use HTTPS or a root-relative path`);
+      }
+    } catch { errs.push(`${loc} must be a valid URI`); }
+  }
+  if (schema.minLength != null && typeof data === 'string' && data.length < schema.minLength) errs.push(`${loc} must have length >= ${schema.minLength}`);
+  if (schema.maxLength != null && typeof data === 'string' && data.length > schema.maxLength) errs.push(`${loc} must have length <= ${schema.maxLength}`);
+  if (schema.minItems != null && Array.isArray(data) && data.length < schema.minItems) errs.push(`${loc} must contain >= ${schema.minItems} items`);
+  if (schema.maxItems != null && Array.isArray(data) && data.length > schema.maxItems) errs.push(`${loc} must contain <= ${schema.maxItems} items`);
   if (schema.minimum != null && data < schema.minimum) errs.push(`${loc} must be >= ${schema.minimum}`);
   if (schema.maximum != null && data > schema.maximum) errs.push(`${loc} must be <= ${schema.maximum}`);
   return errs;
@@ -56,6 +82,16 @@ function validate(data, schema, loc) {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const safeEditorialHtml = s => esc(s).replace(/&lt;(\/?)(p|strong|em)&gt;/gi, '<$1$2>');
+function safeUrl(value) {
+  const url = String(value || '').trim();
+  if (url.startsWith('/') && !url.startsWith('//')) return url;
+  try {
+    return new URL(url).protocol === 'https:' ? url : '#';
+  } catch {
+    return '#';
+  }
+}
 
 function gradeColor(g) {
   if (!g) return '#64748b';
@@ -133,7 +169,7 @@ function impactBadge(i) {
 function sourceRefsHtml(refs) {
   if (!refs || !refs.length) return '';
   return `\n      <div class="source-refs" style="display:flex;flex-wrap:wrap;gap:0.5rem 1rem;margin-top:0.75rem;padding-top:0.5rem;border-top:1px solid #e2e8f0;">\n` +
-    refs.map(r => `        <a href="${esc(r.url)}" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">${esc(r.name)}</span>${r.date ? `<span class="source-date">&middot; ${esc(r.date)}</span>` : ''}</a>`).join('\n') +
+    refs.map(r => `        <a href="${esc(safeUrl(r.url))}" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">${esc(r.name)}</span>${r.date ? `<span class="source-date">&middot; ${esc(r.date)}</span>` : ''}</a>`).join('\n') +
     `\n      </div>`;
 }
 
@@ -182,7 +218,7 @@ function renderChartEmbed(header, meta) {
     return `
     <div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
       <div onclick="openChartModal()" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
-        <img src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="${t}" style="width:100%;display:block;" loading="lazy">
+        <img src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="${t}" style="width:100%;display:block;" loading="eager" fetchpriority="high">
         <div style="background:#f8fafc;padding:6px 12px;font-size:0.7rem;color:#64748b;"><span><i class="fa-solid fa-chart-line"></i> Click to enlarge</span></div>
       </div>
     </div>`;
@@ -192,7 +228,7 @@ function renderChartEmbed(header, meta) {
   return `
     <div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
       <div onclick="openChartModal()" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
-        <img src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="${t} Chart" style="width:100%;display:block;" loading="lazy">
+        <img src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="${t} Chart" style="width:100%;display:block;" loading="eager" fetchpriority="high">
         <div style="background:#f8fafc;padding:6px 12px;font-size:0.7rem;color:#64748b;"><span><i class="fa-solid fa-chart-line"></i> Click to enlarge</span></div>
       </div>
     </div>`;
@@ -282,17 +318,18 @@ function renderHeader(d) {
     ? `<span class="badge badge-green">☪ ${header.halalStatus === 'disputed' ? 'Disputed' : 'Halal'}</span>`
     : '';
 
+  const usableMetric = value => value != null && !['', 'N/A', '$0', '—', '-'].includes(String(value).trim());
   const metrics = [
-    m.marketCap      && ['Market Cap', m.marketCap],
-    m.volume         && ['Volume', m.volume],
-    m.fwdPE          && ['Fwd P/E', m.fwdPE],
+    usableMetric(m.marketCap)     && ['Market Cap', m.marketCap],
+    usableMetric(m.volume)        && ['Volume', m.volume],
+    usableMetric(m.fwdPE)         && ['Fwd P/E', m.fwdPE],
     m.beta != null   && ['Beta', m.beta],
-    m.range52w       && ['52W Range', m.range52w],
-    m.shortInterest  && ['Short Interest', m.shortInterest],
-    m.divYield       && ['Div Yield', m.divYield],
-    m.analystTarget  && ['Analyst Target', m.analystTarget],
-    m.pegRatio       && ['PEG', m.pegRatio],
-    m.evEbitda       && ['EV/EBITDA', m.evEbitda],
+    usableMetric(m.range52w)      && ['52W Range', m.range52w],
+    usableMetric(m.shortInterest) && ['Short Interest', m.shortInterest],
+    usableMetric(m.divYield)      && ['Div Yield', m.divYield],
+    usableMetric(m.analystTarget) && ['Analyst Target', m.analystTarget],
+    usableMetric(m.pegRatio)      && ['PEG', m.pegRatio],
+    usableMetric(m.evEbitda)      && ['EV/EBITDA', m.evEbitda],
   ].filter(Boolean);
 
   return `
@@ -300,14 +337,14 @@ function renderHeader(d) {
       <div class="ticker-symbol" style="display:none">${esc(header.ticker)}</div>
       <div class="ticker-name" style="display:none">${esc(header.name)} &mdash; ${esc(header.exchange)} &middot; ${esc(header.sector)}</div>
       <div class="ticker-exchange" style="display:none">${esc(header.exchange)} &middot; ${esc(header.sector)}</div>
-      <div style="display:flex;align-items:center;justify-content:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+      <div class="ticker-identity" style="display:flex;align-items:center;justify-content:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
         <img src="/logo.svg" alt="DailyTickers" width="44" height="44" style="border-radius:10px;">
         <div style="text-align:center;">
           <h1 style="margin:0;font-size:1.8rem;font-weight:800;">${esc(header.ticker)} <span style="font-weight:400;font-size:1rem;color:#64748b;">&mdash; ${esc(header.name)}</span></h1>
           <div style="font-size:0.85rem;color:#64748b;">${esc(header.exchange)} &middot; ${esc(header.sector)} &middot; ${esc(meta.dateDisplay || meta.date)}</div>
         </div>
       </div>
-      <div style="display:flex;align-items:baseline;justify-content:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+      <div class="ticker-quote-row" style="display:flex;align-items:baseline;justify-content:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
         <span style="font-size:2.2rem;font-weight:800;">${formatHeaderPrice(header.price, d.meta)}</span>
         <span style="font-size:1.1rem;font-weight:600;color:${changePctColor(header.changePct)};">${changePctSign(header.changePct)}${(header.changePct || 0).toFixed(2)}%</span>
         ${badges}
@@ -366,7 +403,7 @@ function renderBusiness(d) {
   let html = `
       <div id="business" class="content-card">
         <h2><i class="fa-solid fa-building"></i> Business Overview</h2>
-        ${b.overview}`;
+        ${safeEditorialHtml(b.overview)}`;
   if (b.segments && b.segments.length) {
     // Colonnes émises seulement si au moins un segment porte la donnée —
     // sinon le <thead> annonçait 4 colonnes pour des lignes à 2 cellules.
@@ -380,7 +417,7 @@ ${b.segments.map(s => `            <tr><td><strong>${esc(s.name)}</strong></td><
           </tbody>
         </table>`;
   }
-  html += `\n      </div>`;
+  html += `${sourceRefsHtml(b.sourceRefs)}\n      </div>`;
   return html;
 }
 
@@ -394,7 +431,7 @@ ${d.news.map(n => `        <div style="display:flex;gap:0.75rem;align-items:flex
           <div>
             <div style="font-weight:600;font-size:0.9rem;">${esc(n.title)} <span class="badge ${impactBadge(n.impact)}" style="font-size:0.65rem;">${n.impact}</span></div>
 ${n.detail ? `            <div style="font-size:0.82rem;color:#64748b;margin-top:0.25rem;">${esc(n.detail)}</div>` : ''}
-${n.sourceUrl ? `            <a href="${esc(n.sourceUrl)}" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">${esc(n.source || 'Source')}</span></a>` : ''}
+${n.sourceUrl ? `            <a href="${esc(safeUrl(n.sourceUrl))}" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">${esc(n.source || 'Source')}</span></a>` : ''}
           </div>
         </div>`).join('\n')}
       </div>`;
@@ -433,6 +470,7 @@ ${e.quarters.map(q => {
           </tbody>
         </table>
 ${e.beatNote ? `        <div class="pedagogy-box" style="margin-top:1rem;"><p><strong>${esc(e.beatNote)}</strong>${e.nextEarnings ? ` &mdash; Next: ${esc(e.nextEarnings)}` : ''}</p></div>` : ''}
+${sourceRefsHtml(e.sourceRefs)}
       </div>`;
 }
 
@@ -494,7 +532,7 @@ function renderFilingsReview(d) {
         <h2><i class="fa-solid fa-file-shield"></i> SEC Filings Review</h2>
         <div class="pedagogy-box"><p>${esc(fr.summary)}</p></div>
         <table class="data-table"><thead><tr><th>Date</th><th>Form</th><th>Accession</th><th>What the filing changes</th></tr></thead><tbody>
-${fr.filings.map(f => `          <tr><td>${esc(f.date)}</td><td>${esc(f.form)}</td><td><a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.accession)}</a></td><td>${esc(f.finding)}</td></tr>`).join('\n')}
+${fr.filings.map(f => `          <tr><td>${esc(f.date)}</td><td>${esc(f.form)}</td><td><a href="${esc(safeUrl(f.url))}" target="_blank" rel="noopener">${esc(f.accession)}</a></td><td>${esc(f.finding)}</td></tr>`).join('\n')}
         </tbody></table>
         <h4 style="margin-top:1rem;">Contrarian checks</h4>
         <ul class="check-list negative">${fr.contrarianRisks.map(r => `<li><i class="fa-solid fa-circle-xmark"></i><span>${esc(r)}</span></li>`).join('')}</ul>
@@ -817,7 +855,7 @@ ${pm.markets.map(m => `          <div style="padding:1rem;border:1px solid #e2e8
             <div style="font-size:0.85rem;font-weight:600;margin-bottom:0.5rem;">${esc(m.question)}</div>
             <div style="font-size:1.5rem;font-weight:800;color:#6366f1;">${esc(m.probability)}</div>
             ${m.volume ? `<div style="font-size:0.72rem;color:#94a3b8;">Vol: ${esc(m.volume)}</div>` : ''}
-            ${m.source ? `<a href="${m.sourceUrl || '#'}" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">${esc(m.source)}</span></a>` : ''}
+            ${m.source ? `<a href="${esc(safeUrl(m.sourceUrl))}" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">${esc(m.source)}</span></a>` : ''}
           </div>`).join('\n')}
         </div>
         ${pm.interpretation ? `<div class="pedagogy-box"><p>${esc(pm.interpretation)}</p></div>` : ''}${sourceRefsHtml(pm.sourceRefs)}
@@ -1083,7 +1121,8 @@ function main() {
     if (errors.length) {
       console.error(`[VALIDATION] ${file}:`);
       errors.forEach(e => console.error(`  - ${e}`));
-      if (errors.some(e => e.includes('is required'))) { exitCode = 1; if (dryRun) continue; }
+      exitCode = 1;
+      continue;
     }
 
     if (dryRun) {

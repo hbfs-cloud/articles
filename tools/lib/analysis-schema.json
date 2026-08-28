@@ -24,7 +24,11 @@
         "ogDescription": { "type": "string", "maxLength": 200 },
         "version":     { "type": "integer", "default": 1, "description": "Incremented on re-render, enables archive history" },
         "lastMcpRefresh": { "type": "string", "description": "ISO timestamp of last MCP data fetch" },
-        "status":      { "type": "string", "enum": ["active", "invalidated", "archived"], "default": "active" },
+        "status":      { "type": "string", "enum": ["active", "pending", "watch", "wait", "speculative", "rejected", "missed", "triggered", "invalidated", "tp1-hit", "tp2-hit", "stopped", "expired", "completed", "no-trade", "archived", "info"], "default": "active" },
+        "levelsCloseDate": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "levelsVerifiedAt": { "type": "string" },
+        "lastEvent": { "type": "object" },
+        "statusHistory": { "type": "array", "items": { "type": "object" } },
         "invalidationNote": { "type": "string", "description": "If status=invalidated, explain why (e.g. 'Price ran past entry, R/R collapsed')" },
         "assetType": { "type": "string", "enum": ["stock", "etf", "crypto", "forex", "commodity", "index"], "default": "stock", "description": "Asset class — drives render behavior (chart source, section variants, metrics)" }
       }
@@ -101,7 +105,8 @@
           }
         }},
         "moat":        { "type": "string" },
-        "theme":       { "type": "string" }
+        "theme":       { "type": "string" },
+        "sourceRefs":  { "$ref": "#/$defs/sourceRefs" }
       }
     },
 
@@ -138,7 +143,8 @@
               "value":    { "type": "string" },
               "signal":   { "type": "string", "description": "Badge text, e.g. '+12% YoY'" },
               "signalColor": { "type": "string", "enum": ["green", "red", "blue", "amber", "gray"] },
-              "comparison": { "type": "string", "description": "vs sector/peer context" }
+              "comparison": { "type": "string", "description": "vs sector/peer context" },
+              "source": { "type": "string", "description": "Proximate source label for this metric" }
             }
           }
         },
@@ -167,7 +173,8 @@
         },
         "beatStreak":  { "type": "integer" },
         "beatNote":    { "type": "string", "description": "e.g. '4 consecutive beats' or '3 beats + 1 inline'" },
-        "nextEarnings": { "type": "string" }
+        "nextEarnings": { "type": "string" },
+        "sourceRefs":  { "$ref": "#/$defs/sourceRefs" }
       }
     },
 
@@ -595,7 +602,7 @@
         "thesis":      { "type": "string" },
         "catalysts":   { "type": "array", "items": { "type": "string" } },
         "invalidation": { "type": "array", "items": { "type": "string" } },
-        "status":      { "type": "string", "enum": ["active", "watch", "wait", "speculative", "rejected", "missed", "triggered", "invalidated", "tp1-hit", "tp2-hit", "stopped"], "default": "active" },
+        "status":      { "type": "string", "enum": ["active", "pending", "watch", "wait", "speculative", "rejected", "missed", "triggered", "invalidated", "tp1-hit", "tp2-hit", "stopped", "expired", "completed", "no-trade", "archived", "info"], "default": "active" },
         "statusNote":  { "type": "string" },
         "forecast":    {
           "type": "object",

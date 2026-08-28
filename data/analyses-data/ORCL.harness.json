@@ -1,28 +1,111 @@
 {
-  "content": "analyses/ORCL",
-  "generated_at": "2026-08-04T12:05:00Z",
+  "artifact": "analyses/ORCL/index.html",
+  "reference_close": "2026-08-27",
   "sources": [
-    { "name": "quote", "as_of": "2026-08-03T20:03:55Z", "max_age_h": 24, "required": true,
-      "origin": "QueryData quote ORCL (clôture US lundi 3 août, fetch pré-ouverture mardi)" },
-    { "name": "technicals_bars", "as_of": "2026-08-04T11:39:00Z", "max_age_h": 24, "required": true,
-      "origin": "QueryData technicals + bars_daily 90j (RSI/EMA/ATR/MACD sur clôtures du 3 août)" },
-    { "name": "financials_stats", "as_of": "2026-08-04T11:39:00Z", "max_age_h": 168, "required": true,
-      "origin": "QueryData financials,stats ORCL" },
-    { "name": "earnings_quarterly", "as_of": "2026-08-04T11:39:00Z", "max_age_h": 168, "required": true,
-      "origin": "QueryData earnings_quarterly (4 trimestres servis) + release Oracle Q4 FY26 du 2026-06-10" },
-    { "name": "sec_filings_flags", "as_of": "2026-08-04T11:39:00Z", "max_age_h": 168, "required": true,
-      "origin": "QueryData sec_filings (S-3/424B5/8-K 180j, shelf 333-277990) + flags" },
-    { "name": "insider_transactions", "as_of": "2026-08-04T11:39:00Z", "max_age_h": 96, "required": true,
-      "origin": "QueryData insider_transactions 90j (EDGAR Form 4) + GetInsiderActivity 30j" },
-    { "name": "short_interest", "as_of": "2026-07-15T00:00:00Z", "max_age_h": 720, "required": true,
-      "origin": "QueryData short_interest (FINRA settlement 2026-07-15, dernier publié)" },
-    { "name": "options_positioning", "as_of": "2026-08-04T11:39:00Z", "max_age_h": 24, "required": true,
-      "origin": "OptionsAnalytics sentiment + chaîne OI/volume weekly 2026-08-07 (IV chaîne inutilisables, non citées)" },
-    { "name": "regime", "as_of": "2026-08-04T09:43:00Z", "max_age_h": 6, "required": true,
-      "origin": "DtxRegime RISK_ON 0.76 + GetMarketContext context_conditional risk_on 0.562 (session)" },
-    { "name": "websearch_dilution_guidance", "as_of": "2026-08-04T11:39:00Z", "max_age_h": 168, "required": true,
-      "origin": "WebSearch sourcé (release Oracle Q4FY26, programme 50 Md$, nantissement Ellison/WBD, presse citée)" },
-    { "name": "instruments_bundle", "as_of": null, "max_age_h": 24, "required": false,
-      "origin": "GetInstruments a échoué 2× (cap 300s) — substitué par QueryData ciblé, champs équivalents; S/R serveur vide (niveaux dérivés des barres), dark pool indisponible, capital flow null, memory MCP get_context en timeout (5×) — mémoire git utilisée" }
-  ]
+    {
+      "name": "status",
+      "as_of": "2026-08-28T18:58:58Z",
+      "data_through": "2026-08-28",
+      "max_age_h": 6,
+      "required": true,
+      "note": "marketdata.GetStatus rechecked: service healthy; SPY/QQQ/VIX witnesses at the 2026-08-27 reference close"
+    },
+    {
+      "name": "instrument",
+      "as_of": "2026-08-28T13:40:06.449Z",
+      "data_through": "2026-08-28",
+      "max_age_h": 24,
+      "required": true,
+      "note": "marketdata.GetInstruments (date de référence 2026-08-27)"
+    },
+    {
+      "name": "bars",
+      "as_of": "2026-08-28T13:40:06.450Z",
+      "data_through": "2026-08-28",
+      "max_age_h": 24,
+      "required": true,
+      "note": "marketdata.QueryData (date de référence 2026-08-27)"
+    },
+    {
+      "name": "fundamentals",
+      "as_of": "2026-08-28T13:40:06.450Z",
+      "data_through": "2026-08-28",
+      "max_age_h": 168,
+      "required": true,
+      "note": "marketdata.QueryData (date de référence 2026-08-27)"
+    },
+    {
+      "name": "dilution",
+      "as_of": "2026-08-28T13:40:06.451Z",
+      "data_through": "2026-08-28",
+      "max_age_h": 168,
+      "required": true,
+      "note": "anti-dilution : S-3/424B/ATM/warrants — BLOQUANT, leçon INDO"
+    },
+    {
+      "name": "insiders",
+      "as_of": "2026-08-28T13:40:06.451Z",
+      "data_through": "2026-08-28",
+      "max_age_h": 96,
+      "required": false,
+      "note": "marketdata.QueryData (date de référence 2026-08-27)"
+    },
+    {
+      "name": "short_squeeze",
+      "as_of": "2026-08-28T13:40:06.453Z",
+      "data_through": "2026-08-28",
+      "max_age_h": 168,
+      "required": false,
+      "note": "marketdata.QueryData (date de référence 2026-08-27)"
+    },
+    {
+      "name": "options",
+      "as_of": "2026-08-28T13:40:06.453Z",
+      "data_through": "2026-08-28",
+      "max_age_h": 24,
+      "required": false,
+      "note": "marketdata.QueryData (date de référence 2026-08-27)"
+    },
+    {
+      "name": "technicals",
+      "as_of": "2026-08-28T13:40:06.453Z",
+      "data_through": "2026-08-28",
+      "max_age_h": 24,
+      "required": true,
+      "note": "marketdata.QueryData (date de référence 2026-08-27)"
+    },
+    {
+      "name": "sentiment",
+      "as_of": "2026-08-28T13:40:06.454Z",
+      "data_through": "2026-08-28",
+      "max_age_h": 24,
+      "required": false,
+      "note": "marketdata.QueryData (date de référence 2026-08-27)"
+    },
+    {
+      "name": "peers",
+      "as_of": "2026-08-28T13:40:06.454Z",
+      "data_through": null,
+      "max_age_h": 168,
+      "required": false,
+      "note": "marketdata.GetReferentialData (date de référence 2026-08-27)"
+    },
+    {
+      "name": "move",
+      "as_of": "2026-08-28T13:40:06.454Z",
+      "data_through": "2026-08-28",
+      "max_age_h": 24,
+      "required": false,
+      "note": "marketdata.ExplainSymbolMove (date de référence 2026-08-27)"
+    },
+    {
+      "name": "systematic_regime",
+      "as_of": "2026-08-28T10:55:24Z",
+      "data_through": "2026-08-27",
+      "max_age_h": 24,
+      "required": true,
+      "note": "Systematic market regime snapshot for the 2026-08-27 close"
+    }
+  ],
+  "content": "analyses/ORCL"
 }

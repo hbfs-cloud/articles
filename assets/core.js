@@ -790,7 +790,7 @@ function initRetentionKit() {
         var genAge = agg && agg.generatedAt ? (Date.now() - new Date(agg.generatedAt)) / 86400000 : Infinity;
         var verAge = e.verifiedAt ? (Date.now() - new Date(e.verifiedAt)) / 86400000 : Infinity;
         if (verAge > FRESH_MAX_DAYS || genAge > FRESH_MAX_DAYS) return 'unverified';
-        if (s === 'pending' || s === 'watch') return 'pending';
+        if (s === 'pending' || s === 'watch' || s === 'wait') return 'pending';
         return 'active';
     }
     window.DT_ANALYSIS_STATUS = { THEMES: THEMES, I18N: I18N, classify: classify, fmtEvent: fmtEvent, fmtDate: fmtDate, FRESH_MAX_DAYS: FRESH_MAX_DAYS };

@@ -3,6 +3,7 @@
 
 const fs=require('fs');
 const path=require('path');
+const {execFileSync}=require('child_process');
 const ROOT=path.resolve(__dirname,'..');
 const DATE='2026-08-28', REFDATE='2026-08-27', REFRESHED=new Date().toISOString();
 
@@ -65,7 +66,7 @@ const SEC_NOTES={
   CRWV:'The September 2025 424B3 concerned the proposed Core Scientific merger, terminated on October 30, 2025; it is historical transaction evidence, not current financing capacity.',
   APLD:'Reviewed 424B3 filings include 8,393,611 warrant shares and preferred-conversion financing; those claims are distinct from ordinary operating debt.',
   NBIS:'The November 12, 2025 filing established a 25M-share ATM; the September 12, 2025 filing priced 10.810811M shares alongside $2.75B of convertible debt. Legacy going-concern doubt was reported as removed, not current.',
-  WULF:'The April 2026 prospectus records a completed 47.4M-share offering at $19, $900.6M gross, plus a 7.11M-share option.',
+  WULF:'The April 2026 prospectus priced a 47.4M-share base offering at $19 and described a 7.11M-share option; the Q2 10-Q proves the option was exercised and 54.51M shares were ultimately issued for $1.0357B gross.',
   HUT:'The February 2026 ATM disclosed $1B capacity, $284.2M already sold and $715.8M remaining; project debt must be separated from corporate recourse.',
   CORZ:'The August 2026 current report includes a $100M revolver, $500M letter-of-credit facility, liens, covenants, a $150M liquidity floor and two warrant classes.',
   IREN:'The August 2026 annual results supersede stale aggregator fields: FY26 revenue was $707M, impairment was $638.8M, cash was $5.896B, restricted cash was $1.724B and debt was about $7.593B. The $6B ATM had sold about $1B under accession 0001140361-26-007918.',
@@ -121,6 +122,31 @@ const FINANCIAL_OVERRIDES={
   MU:{operatingMargins:null}
 };
 const SUPPRESS_GENERIC_CAPITAL_FLAGS=new Set(['PANW','ORCL','CRWV','NBIS','GEV','MRVL','INTC','IREN']);
+const EDITORIAL_DIR=path.join(ROOT,'data','analysis-editorial-overrides');
+const TRADE_OVERRIDE_DIR=path.join(ROOT,'data','analysis-trade-overrides');
+const GRADE_OVERRIDE_DIR=path.join(ROOT,'data','analysis-grade-overrides');
+const DILUTED_DISCLOSURE_APPEND={
+  ALLR:'Adding 1,373,497 unvested RSUs, 50,000 options and 8,557 warrants to 15,910,724 outstanding shares gives a 17,342,778-share minimum observable diluted exposure; convertibles and variable-price Tumim issuance prevent a complete fully diluted total.',
+  AMKR:'Amkor does not provide a current fully diluted point-in-time bridge in the reviewed materials, so unvested awards are not added to the 248.5M basic count without vesting and treasury-stock assumptions.',
+  KLAC:'KLA does not provide a current fully diluted point-in-time bridge in the reviewed materials, so no award estimate is added to the 1.31B split-adjusted basic count.',
+  LPLA:'LPL does not provide a current fully diluted point-in-time bridge in the reviewed materials, so the dossier does not construct a synthetic total.',
+  MRSH:'Marsh does not provide a current fully diluted point-in-time bridge in the reviewed materials, so awards are not added to the basic count heuristically.',
+  RZLV:'Rezolve does not provide a current fully diluted point-in-time bridge that reconciles warrant exercise assumptions and Crownpeak consideration-share timing, so no synthetic total is presented.',
+  VICR:'Vicor does not provide a current fully diluted point-in-time bridge in the reviewed materials, so awards are not estimated from the 34.4M basic count.'
+};
+const EDITORIAL_KEYS={
+  verdict:new Set(['summary','whyAvoid','whyBuy']),
+  business:new Set(['moat','overview','segments','sourceRefs']),
+  earnings:new Set(['beatNote','nextEarnings','sourceRefs']),
+  fundamentals:new Set(['editorialRows','sourceRefs']),
+  capitalStructure:new Set(['sharesOutstanding','shareHistory','sourceRefs']),
+  filingsReview:new Set(['additionalFilings','contrarianRisks','findingsByAccession']),
+  technicals:new Set(['setupNote','sourceRefs']),
+  macro:new Set(['impact']),
+  risks:new Set(['pedagogy','riskCards','riskSummary']),
+  tradeIdea:new Set(['catalysts','invalidation','thesis']),
+  globalScore:new Set(['keyTakeawaysNegative','keyTakeawaysPositive'])
+};
 
 const load=f=>{try{return JSON.parse(fs.readFileSync(f,'utf8'));}catch{return {};}};
 const at=(a,t)=>a.find(x=>x&&x.type===t)||{};
@@ -129,6 +155,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const positive=(...v)=>v.map(num).find(x=>x!==null&&x>0)??null;
 const money=v=>{v=num(v);if(v===null)return'N/A';const a=Math.abs(v);if(a>=1e12)return'$'+(v/1e12).toFixed(2)+'T';if(a>=1e9)return'$'+(v/1e9).toFixed(2)+'B';if(a>=1e6)return'$'+(v/1e6).toFixed(1)+'M';return'$'+v.toLocaleString('en-US',{maximumFractionDigits:0});};
 const qty=v=>{v=num(v);if(v===null)return'N/A';if(Math.abs(v)>=1e9)return(v/1e9).toFixed(2)+'B';if(Math.abs(v)>=1e6)return(v/1e6).toFixed(1)+'M';return v.toLocaleString('en-US',{maximumFractionDigits:0});};
+const parseQtyString=v=>{const m=String(v||'').trim().match(/^([0-9]+(?:\.[0-9]+)?)\s*([MB])$/i);return m?Number(m[1])*(m[2].toUpperCase()==='B'?1e9:1e6):null;};
 const pct=(v,scale=100)=>num(v)===null?'N/A':(num(v)*scale).toFixed(1)+'%';
 const px=v=>num(v)===null?'N/A':'$'+num(v).toFixed(2);
 const qresults=(t,f)=>{const j=load(path.join(ROOT,'analyses',t,'_data',f));return j.data?.items?.flatMap(x=>x.results||[])||j.results||[];};
@@ -138,6 +165,260 @@ const levels=lines=>csv(lines).map(x=>num(x.price)).filter(x=>x!==null);
 const grade=s=>s>=90?'A+':s>=84?'A':s>=78?'A-':s>=72?'B+':s>=66?'B':s>=60?'B-':s>=54?'C+':s>=48?'C':s>=42?'C-':s>=35?'D+':'D';
 const gradeColor=s=>s>=78?'High':s>=60?'Moderate':'Low';
 const secUrl=(cik,a,doc)=>`https://www.sec.gov/Archives/edgar/data/${Number(cik)}/${a.replace(/-/g,'')}/${doc}`;
+
+function deepMerge(base,override){
+  if(!override||typeof override!=='object'||Array.isArray(override))return override;
+  const out={...(base&&typeof base==='object'&&!Array.isArray(base)?base:{})};
+  for(const[k,v]of Object.entries(override))out[k]=v&&typeof v==='object'&&!Array.isArray(v)?deepMerge(out[k],v):v;
+  return out;
+}
+
+function loadEditorialOverrides(){
+  if(!fs.existsSync(EDITORIAL_DIR))return{};
+  return fs.readdirSync(EDITORIAL_DIR).filter(f=>f.endsWith('.json')).sort().reduce((all,f)=>{
+    const group=load(path.join(EDITORIAL_DIR,f));
+    for(const[t,v]of Object.entries(group)){
+      if(all[t])throw new Error(`Duplicate editorial override for ${t}: ${f}`);
+      all[t]=v;
+    }
+    return all;
+  },{});
+}
+
+function loadGroupedOverrides(dir,label){
+  if(!fs.existsSync(dir))return{};
+  return fs.readdirSync(dir).filter(f=>f.endsWith('.json')).sort().reduce((all,f)=>{
+    const group=load(path.join(dir,f));
+    for(const[t,v]of Object.entries(group)){
+      if(all[t])throw new Error(`Duplicate ${label} override for ${t}: ${f}`);
+      all[t]=v;
+    }
+    return all;
+  },{});
+}
+
+function applyTradeOverride(data,override){
+  if(!override)return data;
+  const t=data.header.ticker,entry=Number(data.tradeIdea.entry);
+  if(Number(override.entry)!==entry)throw new Error(`${t}: trade override cannot change entry ${entry}`);
+  const stop=Number(override.stop),tp1=Number(override.tp1),tp2=Number(override.tp2);
+  if(![stop,tp1,tp2].every(Number.isFinite))throw new Error(`${t}: trade override levels must be finite numbers`);
+  const long=tp1>entry;
+  if(!(long?stop<entry&&entry<tp1&&tp1<tp2:stop>entry&&entry>tp1&&tp1>tp2))throw new Error(`${t}: trade override geometry is inconsistent`);
+  const basis=override.basis||{};
+  if(basis.asOf!==REFDATE||!basis.stop||!basis.tp1||!basis.tp2||!/^analyses\/[A-Z0-9.\-]+\/_data\/bars\.json$/.test(basis.source||''))throw new Error(`${t}: trade override needs dated stop/TP basis and a bars source`);
+  const risk=Math.abs(entry-stop),rr1=Math.abs(tp1-entry)/risk,rr2=Math.abs(tp2-entry)/risk;
+  Object.assign(data.tradeIdea,{
+    stop,tp1,tp2,
+    stopPct:`${((stop/entry-1)*100).toFixed(1)}%`,
+    tp1Pct:`${tp1>=entry?'+':''}${((tp1/entry-1)*100).toFixed(1)}%`,
+    tp2Pct:`${tp2>=entry?'+':''}${((tp2/entry-1)*100).toFixed(1)}%`,
+    rr:`1:${rr1.toFixed(2)} to TP1 / 1:${rr2.toFixed(2)} to TP2`,
+    entryNote:`${data.tradeIdea.entryNote} Stop basis: ${basis.stop} TP1 basis: ${basis.tp1} TP2 basis: ${basis.tp2}`
+  });
+  if(override.status){
+    const allowed=new Set(['watch','wait','rejected']);
+    if(!allowed.has(override.status)||String(override.statusReason||'').trim().length<30)throw new Error(`${t}: trade status override requires watch/wait/rejected and a substantive statusReason`);
+    data.tradeIdea.status=override.status;
+    data.tradeIdea.statusNote=override.statusReason;
+    data.tradeIdea.entryNote=`${override.statusReason} Stop basis: ${basis.stop} TP1 basis: ${basis.tp1} TP2 basis: ${basis.tp2}`;
+    data.meta.status=override.status;
+    data.verdict.bias=override.status==='watch'?'Bullish':'Neutral';
+    if(data.filingsReview?.summary)data.filingsReview.summary=data.filingsReview.summary.replace(/trade state (?:pending|watch|wait|rejected)/i,`trade state ${override.status}`);
+    if(data.globalScore?.mindsetTip){
+      data.globalScore.mindsetTip=data.globalScore.mindsetTip.replace(/Current trade state: (?:pending|watch|wait|rejected)\./i,`Current trade state: ${override.status}.`);
+    }
+    if(Array.isArray(data.header?.badges))data.header.badges=data.header.badges.map(b=>['pending','watch','wait','rejected'].includes(String(b?.text||'').toLowerCase())?{...b,text:override.status.toUpperCase(),color:override.status==='watch'?'blue':'amber'}:b);
+    if(Array.isArray(data.technicals?.badges))data.technicals.badges=data.technicals.badges.map(b=>['pending','watch','wait','rejected'].includes(String(b).toLowerCase())?override.status.toUpperCase():b);
+    if(/absent from the frozen/i.test(override.statusReason)||/absent from the frozen/i.test(basis.entry||'')){
+      const dated=`For ${t}, only stop ${px(stop)}, TP1 ${px(tp1)} and TP2 ${px(tp2)} are dated structural pivots through ${basis.asOf}; entry ${px(entry)} has no observed provenance.`;
+      const operational=/\b(?:activat(?:e|es|ed|ion)|entry|order|sizing|size(?: the position)?|cap (?:portfolio )?risk|risk no more|calculate shares|chase|stop distance|15-minute confirmation|watch status|confirmation remains)\b/i;
+      const keepNonOperational=text=>String(text||'').split(/(?<=[.!?])\s+/).filter(sentence=>!operational.test(sentence)).join(' ').trim();
+      const dormantNote=override.statusReason;
+      const cleanedSummary=keepNonOperational(data.verdict?.summary);
+      if(data.verdict)data.verdict.summary=`${cleanedSummary}${cleanedSummary?' ':''}${dormantNote}`;
+      for(const key of['whyBuy','whyAvoid'])if(Array.isArray(data.verdict?.[key])){
+        data.verdict[key]=data.verdict[key].map(point=>operational.test(point)?`${t}: the captured record does not establish an executable regular-session setup.`:point);
+      }
+      data.technicals.setupNote=`${override.statusReason} ${dated} ${t} requires a newly observed regular-session structure before execution can be reconsidered. Daily indicators and pivots run only through the 2026-08-27 close.`;
+      const openingIndicator=(data.macro?.indicators||[]).find(x=>x.name==='Opening observation');
+      if(openingIndicator)openingIndicator.signal=`${t}: no executable regular-session level is established by this frozen observation.`;
+      const executionCard=(data.risks?.riskCards||[]).find(card=>/structural execution|trade gate|watch geometry/i.test(card.title||''));
+      if(executionCard){
+        executionCard.points=[override.statusReason,dated];
+        executionCard.verdict=`${t} has zero authorized sizing and no executable order until a fresh dated RTH structure replaces the dormant entry.`;
+      }
+      for(const card of data.risks?.riskCards||[]){
+        if(card===executionCard)continue;
+        card.points=(card.points||[]).map(point=>operational.test(point)?`${data.header.name}: ${card.title.toLowerCase()} remains context, not trade authorization, while the observed setup is incomplete.`:point);
+        if(operational.test(card.verdict||''))card.verdict=`${card.title} cannot authorize execution for ${t} without a newly observed regular-session structure.`;
+      }
+      const pedagogyLead=keepNonOperational(data.risks?.pedagogy);
+      if(data.risks){
+        data.risks.riskSummary=`${keepNonOperational(data.risks.riskSummary)} ${dormantNote}`.trim();
+        data.risks.pedagogy=`${pedagogyLead} For ${data.header.name}, gap behavior and liquidity, spread or slippage are not established for this dormant structure; the sizing implication is zero, event timing must be rechecked, and the old level must not be chased or anticipated.`.trim();
+      }
+      const fundamentalInvalidations=(data.tradeIdea.invalidation||[]).filter(x=>!/activat|order|siz|stop|opening|slippage|spread|chase/i.test(x)).slice(-2);
+      data.tradeIdea.horizon=`${t}: no active holding horizon`;
+      data.tradeIdea.thesis=`${keepNonOperational(data.tradeIdea.thesis)} ${override.statusReason} ${t}'s dated ${px(stop)} stop and ${px(tp1)}/${px(tp2)} targets remain analytical references, not operational instructions.`.trim();
+      data.tradeIdea.invalidation=[override.statusReason,`${t} needs a fresh regular-session structure before its dormant entry, stop, targets or sizing can become operational.`,...fundamentalInvalidations];
+      while(data.tradeIdea.invalidation.length<3)data.tradeIdea.invalidation.push(`${t} company-specific fundamental deterioration requires a new dossier before execution.`);
+      const preservedCatalysts=(data.tradeIdea.catalysts||[]).filter(x=>!/15-minute|activation|opening range/i.test(x));
+      data.tradeIdea.catalysts=[...preservedCatalysts,`${t} fresh RTH structure with an observed entry`,`${t} revalidation of the dated ${px(stop)} structural reference`,`${t} event calendar cleared before execution`].slice(0,Math.max(3,preservedCatalysts.length));
+      for(const key of['keyTakeawaysPositive','keyTakeawaysNegative'])if(Array.isArray(data.globalScore?.[key])){
+        data.globalScore[key]=data.globalScore[key].map(point=>operational.test(point)?`${data.header.name}: no current RTH setup is evidenced.`:point);
+      }
+      data.disclaimer=`${t} research snapshot dated ${DATE}, for education rather than personalized advice. Rebuild the market structure from fresh dated evidence before treating any displayed level as operational.`;
+    }
+  }
+  const selectLevels=(required,existing)=>[...required,...(existing||[])]
+    .filter(Number.isFinite)
+    .filter((v,i,a)=>a.indexOf(v)===i)
+    .slice(0,3)
+    .sort((a,b)=>a-b);
+  const existingSupports=override.replaceTechnicalLevels===true?[]:data.technicals.supports;
+  const existingResistances=override.replaceTechnicalLevels===true?[]:data.technicals.resistances;
+  data.technicals.supports=selectLevels(long?[stop]:[entry,tp1,tp2],existingSupports);
+  data.technicals.resistances=selectLevels(long?[entry,tp1,tp2]:[stop],existingResistances);
+  return data;
+}
+
+function applyGradeOverride(data,override){
+  if(!override)return data;
+  const t=data.header.ticker,score=Number(override.score),g=String(override.grade||'');
+  if(!Number.isInteger(score)||score<0||score>100||grade(score)!==g)throw new Error(`${t}: grade override score/grade mismatch`);
+  if(override.asOf!==REFDATE||String(override.basis||'').trim().length<40)throw new Error(`${t}: grade override needs a dated substantive basis`);
+  data.verdict.score=score;
+  data.meta.grade=g;
+  const row=(data.fundamentals.rows||[]).find(x=>x.metric==='Fundamental grade audit');
+  if(row){row.value=`${score}/100 (${g})`;row.signal=override.basis;row.signalColor=score>=72?'green':score>=54?'amber':'red';}
+  return data;
+}
+
+function validateEditorialOverride(ticker,override){
+  for(const[section,value]of Object.entries(override||{})){
+    if(section==='news'){
+      if(!Array.isArray(value))throw new Error(`${ticker}: editorial news must be an array`);
+      continue;
+    }
+    const allowed=EDITORIAL_KEYS[section];
+    if(!allowed)throw new Error(`${ticker}: editorial override cannot replace ${section}`);
+    if(!value||typeof value!=='object'||Array.isArray(value))throw new Error(`${ticker}: editorial ${section} must be an object`);
+    for(const key of Object.keys(value))if(!allowed.has(key))throw new Error(`${ticker}: editorial override cannot replace ${section}.${key}`);
+  }
+}
+
+function applyEditorialOverride(data,override){
+  if(!override)return data;
+  validateEditorialOverride(data.header.ticker,override);
+  const editorialRows=override.fundamentals?.editorialRows||[];
+  const additionalFilings=override.filingsReview?.additionalFilings||[];
+  const findingsByAccession=override.filingsReview?.findingsByAccession||{};
+  const clean=JSON.parse(JSON.stringify(override));
+  if(clean.fundamentals)delete clean.fundamentals.editorialRows;
+  if(clean.filingsReview){
+    delete clean.filingsReview.additionalFilings;
+    delete clean.filingsReview.findingsByAccession;
+  }
+  const merged=deepMerge(data,clean);
+  const overriddenShares=parseQtyString(override.capitalStructure?.sharesOutstanding);
+  if(overriddenShares&&positive(merged.header?.price)&&merged.header?.metrics){
+    merged.header.metrics.marketCap=money(overriddenShares*merged.header.price);
+  }
+  if(editorialRows.length){
+    const names=new Set(editorialRows.map(x=>x.metric));
+    merged.fundamentals.rows=[...editorialRows,...merged.fundamentals.rows.filter(x=>!names.has(x.metric))];
+    // A provider-level EBITDA field has no inspectable period or denominator.
+    // Remove it when the curated rows supply a dated EBITDA or mine-margin bridge.
+    if(editorialRows.some(x=>/EBITDA|mine-margin/i.test(x.metric||''))){
+      merged.fundamentals.rows=merged.fundamentals.rows.filter(x=>x.metric!=='EBITDA');
+    }
+  }
+  if(Array.isArray(merged.business?.segments)){
+    merged.business.segments=merged.business.segments.map(s=>({
+      name:s.name||s.segment||'Reported activity',
+      revenue:s.revenue||s.value||'',
+      ...(s.pct?{pct:s.pct}:{}),
+      description:s.description||s.signal||''
+    }));
+  }
+  if(additionalFilings.length){
+    if(!Array.isArray(additionalFilings))throw new Error(`${data.header.ticker}: additional SEC filings must be an array`);
+    const byAccession=new Map((merged.filingsReview.filings||[]).map(f=>[f.accession,f]));
+    for(const filing of additionalFilings){
+      if(!/^\d{10}-\d{2}-\d{6}$/.test(filing.accession||'')||!/^https:\/\/www\.sec\.gov\/Archives\/edgar\/data\//i.test(filing.url||''))throw new Error(`${data.header.ticker}: malformed additional SEC filing`);
+      byAccession.set(filing.accession,filing);
+    }
+    merged.filingsReview.filings=[...byAccession.values()].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  }
+  if(Object.keys(findingsByAccession).length){
+    const secRecord=(sec.records||[]).find(r=>r.ticker===merged.header.ticker);
+    const filingInventory=[...(secRecord?.filings||[]),...(merged.filingsReview.filings||[])];
+    const byAccession=new Map(filingInventory.map(f=>[f.accession,f]));
+    const missing=Object.keys(findingsByAccession).filter(accession=>!byAccession.has(accession));
+    if(missing.length)throw new Error(`${merged.header.ticker}: editorial SEC findings missing from inventory: ${missing.join(', ')}`);
+    merged.filingsReview.filings=Object.keys(findingsByAccession).map(accession=>{
+      const f=byAccession.get(accession);
+      return {date:f.date,form:f.form,accession:f.accession,finding:findingsByAccession[accession],url:f.url};
+    });
+    merged.filingsReview.summary=`${merged.filingsReview.filings.length} decision-relevant primary filing(s) are displayed with accession-specific findings. Grade ${merged.meta.grade} measures fundamentals; trade state ${merged.tradeIdea.status} measures timing and is evaluated separately.`;
+  }
+  const {entry,stop,tp1,tp2}=merged.tradeIdea||{};
+  if([entry,stop,tp1,tp2].every(Number.isFinite)){
+    const long=tp1>entry;
+    if(!(merged.technicals.supports||[]).length)merged.technicals.supports=(long?[stop]:[tp2,tp1]).filter(Number.isFinite).filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b);
+    if(!(merged.technicals.resistances||[]).length)merged.technicals.resistances=(long?[entry,tp1,tp2]:[entry,stop]).filter(Number.isFinite).filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b);
+  }
+  const t=merged.header.ticker,lower=t.toLowerCase();
+  if(DILUTED_DISCLOSURE_APPEND[t]&&!/fully diluted|minimum observable diluted/i.test(merged.capitalStructure?.shareHistory||'')){
+    merged.capitalStructure.shareHistory=`${merged.capitalStructure.shareHistory} ${DILUTED_DISCLOSURE_APPEND[t]}`;
+  }
+  const marketRef=(name,url)=>[{name,url,date:REFDATE}];
+  if(merged.shortInterest)merged.shortInterest.sourceRefs=marketRef('Nasdaq short-interest history',`https://www.nasdaq.com/market-activity/stocks/${lower}/short-interest`);
+  if(merged.options)merged.options.sourceRefs=marketRef('Nasdaq options chain',`https://www.nasdaq.com/market-activity/stocks/${lower}/option-chain`);
+  if(merged.social)merged.social.sourceRefs=marketRef('Stocktwits symbol stream',`https://stocktwits.com/symbol/${encodeURIComponent(t)}`);
+  if(merged.performance)merged.performance.sourceRefs=marketRef('Nasdaq historical prices',`https://www.nasdaq.com/market-activity/stocks/${lower}/historical`);
+  if(merged.insiders)merged.insiders.sourceRefs=marketRef('Nasdaq insider activity',`https://www.nasdaq.com/market-activity/stocks/${lower}/insider-activity`);
+  if(merged.capitalFlow){
+    merged.capitalFlow.netFlow='N/A';
+    merged.capitalFlow.institutionalFlow='N/A';
+    merged.capitalFlow.retailFlow='N/A';
+    merged.capitalFlow.darkPoolPct='N/A';
+    merged.capitalFlow.signal=`${t}: directional flow remains unscored because no dated, inspectable transaction-level source was captured.`;
+    merged.capitalFlow.sourceRefs=[];
+  }
+  if(merged.technicals){
+    if(!/daily (?:indicators|bars|structure|pivots).*2026-08-27|2026-08-27.*daily (?:indicators|bars|structure|pivots)/i.test(merged.technicals.setupNote||'')){
+      merged.technicals.setupNote=`${merged.technicals.setupNote} Daily indicators and pivots run only through the 2026-08-27 close.`;
+    }
+    merged.technicals.sourceRefs=[
+      {name:`Nasdaq ${t} quote and market activity`,url:`https://www.nasdaq.com/market-activity/stocks/${lower}`,date:DATE},
+      {name:`Nasdaq ${t} historical prices`,url:`https://www.nasdaq.com/market-activity/stocks/${lower}/historical`,date:REFDATE},
+      ...(merged.technicals.sourceRefs||[]).filter(ref=>!/^Finviz /i.test(ref.name||''))
+    ];
+  }
+  if(merged.globalScore&&merged.risks?.pedagogy){
+    const companySpecific=String(merged.risks.pedagogy).split(/(?<=[.!?])\s+/)[0];
+    merged.globalScore.mindsetTip=`${companySpecific} Current trade state: ${merged.tradeIdea.status}.`;
+  }
+  // The quote-provider field has no inspectable EBITDA denominator. Curated,
+  // dated valuation rows carry the reproducible measures instead.
+  if(merged.header?.metrics){
+    merged.header.metrics.evEbitda='';
+    if(merged.header.metrics.marketCap==='$0')merged.header.metrics.marketCap='';
+  }
+  if(merged.tradeIdea?.status==='pending'){
+    merged.tradeIdea.status='wait';
+    merged.meta.status='wait';
+    merged.tradeIdea.statusNote=`Wait: ${merged.tradeIdea.statusNote||'the plan is not active.'}`;
+    if(Array.isArray(merged.header?.badges))merged.header.badges=merged.header.badges.map(b=>String(b?.text||'').toLowerCase()==='pending'?{...b,text:'WAIT'}:b);
+    if(Array.isArray(merged.technicals?.badges))merged.technicals.badges=merged.technicals.badges.map(b=>String(b).toLowerCase()==='pending'?'WAIT':b);
+    if(merged.filingsReview?.summary)merged.filingsReview.summary=merged.filingsReview.summary.replace(/trade state pending/i,'trade state wait');
+  }
+  if(merged.tradeIdea?.status==='wait'&&merged.verdict?.summary)merged.verdict.summary=merged.verdict.summary.replace(/trade remains pending/gi,'trade remains on wait');
+  merged.meta.tags=(merged.meta.tags||[]).filter(tag=>tag!=='editorial-reviewed');
+  return merged;
+}
 
 function bars(t){
   const b=qtype(t,'bars.json','bars_daily')[0]?.bars||[];
@@ -301,7 +582,7 @@ function build(t,secRecord,priorVersion=0){
     insiders:{insiderPct:pct(ho.insidersPercent,1),institutionPct:pct(ho.institutionsPercent,1),recentTransactions:insiderRows.map(x=>({date:x.date,insider:x.insider,type:/purchase|buy/i.test(x.type)?'buy':/sale|sell/i.test(x.type)?'sell':'grant',shares:qty(x.shares),value:num(x.shares)!==null&&num(x.price)!==null?money(num(x.shares)*num(x.price)):'N/A'})),signal:insiderRows.length?'Structured transactions shown; grants and sales are not treated as thesis confirmation.':'No structured transaction table was captured.',sourceRefs:refs},
     capitalStructure:{sharesOutstanding:qty(positive(st.sharesOutstanding)??(positive(qt.marketCap)&&spot?qt.marketCap/spot:null)),sharesAuthorized:'See filing review',dilutionRisk,shareHistory:secSummary,sourceRefs:refs},
     filingsReview:{summary:`${Math.max(filings.length,reviewedForDisplay.length)} relevant SEC filing(s) were inventoried and ${reviewedForDisplay.length} primary document(s) were opened. Grade ${g} measures fundamental quality; trade state ${state} measures timing.`,filings:reviewedForDisplay.map(f=>({date:f.date,form:f.form,accession:f.accession,finding:FILING_NOTES[t]?.[f.accession]||((SEC_NOTES[t]&&f.accession===firstCapitalAccession)?SEC_NOTES[t]:f.finding||filingFinding(f)),url:f.url})),contrarianRisks:[companyRisk,...capitalPoints]},
-    shortInterest:{siPct:pct(sip,siScale),daysToCover:num(si.daysToCover)!==null?num(si.daysToCover).toFixed(2):num(st.shortRatio)!==null?num(st.shortRatio).toFixed(2):'N/A',ctb:positive(si.costToBorrow)===null?'N/A':pct(si.costToBorrow,si.costToBorrow>1?1:100),trend:'Current snapshot only; no acceleration claim without a comparable series.',squeezeScore:'Context only',sourceRefs:refs},
+    shortInterest:{siPct:pct(sip,siScale),daysToCover:num(si.daysToCover)!==null?num(si.daysToCover).toFixed(2):num(st.shortRatio)!==null?num(st.shortRatio).toFixed(2):'N/A',ctb:positive(si.costToBorrow)===null?'N/A':pct(si.costToBorrow,si.costToBorrow>1?1:100),trend:`${t} point-in-time short-interest context only; no acceleration claim without a comparable dated series.`,squeezeScore:'Context only',sourceRefs:refs},
     options:{callOI:qty(mp.totalCallOI),putOI:qty(mp.totalPutOI),cpRatio:num(mp.callPutRatio)===null?'N/A':num(mp.callPutRatio).toFixed(2),maxPain:px(mp.maxPainStrike),ivMean:'N/A',skew:num(ov.put_call_volume_ratio)===null?'N/A':`Put/call volume ${num(ov.put_call_volume_ratio).toFixed(2)}`,unusual:ov.unusual_activity?'Unusual activity detected':'No unusual activity confirmed',sourceRefs:refs},
     technicals:{rsi14,...(num(te.macd)!==null?{macd:num(te.macd)}:{}),...(num(te.signal)!==null?{macdSignal:num(te.signal)}:{}),ema20,ema50,ema200,ma50Type:'EMA',ma200Type:'EMA',ma50Available:b.length>=50,ma200Available:b.length>=200,atr14:atr,badges:[`RSI ${rsi14.toFixed(1)}`,state.toUpperCase(),copy.theme],supports:supports.slice(0,3),resistances:resistances.slice(0,3),setupNote:`${status} Quote ${px(spot)} is timestamped ${quoteTime}. ${opening?`Activation ${px(entry)} and stop ${px(stop)} use the observed regular-session opening range (${opening.time}, high ${px(opening.high)}, low ${px(opening.low)}) plus ATR.`:`Displayed geometry is a dormant structural reference only; no current-session RTH opening range was available, so it is not an executable setup.`} EMA, ATR, RSI and structural pivots use daily bars closed through ${REFDATE}.`,wyckoff:'Transitional',radarValues:{rsi:clamp(Math.round(100-Math.abs(rsi14-55)*2),0,100),trend:spot>ema20?70:40,volume:clamp(Math.round((qt.volume||0)/1e6*10),10,100),momentum:extended?75:55,volatility:clamp(Math.round(atr/spot*1000),10,100),support:entry>=spot*.97?70:40},sourceRefs:refs},
     macro:{indicators:[{name:'Reference close',value:REFDATE,signal:'Daily structure is point-in-time controlled'},{name:'Quote snapshot',value:quoteTime,signal:'Exact timestamp; not represented as a publication-time live quote'},{name:'Opening observation',value:opening?.time||'Unavailable',signal:'Regular-session range used for the single activation level'}],regime:'risk-on',impact:`${anchorFact?anchorFact+' ':''}Company filings and entry geometry override the sector label.`,sourceRefs:[{name:'AI-chain daily article',url:'/daily/20260827/',date:'2026-08-27'},...(anchorSource?[{name:'Official earnings Exhibit 99.1',url:anchorSource.url,date:'2026-08-26'}]:[])]},
@@ -312,23 +593,37 @@ function build(t,secRecord,priorVersion=0){
     ],pedagogy:'A real economic link to AI, power, crypto or metals does not guarantee a good entry. The setup must pay for normal volatility and company-specific risk.',riskRadarValues:{dilution:dilutionRisk==='high'?90:dilutionRisk==='moderate'?55:20,burnRate:lossmaking?80:25,beta:clamp(Math.round((st.beta||1)*45),10,100),shortInterest:clamp(Math.round((sip||0)*500),5,100),insiderSelling:ins.net_activity==='bearish'?75:30,macroRisk:50},sourceRefs:refs},
     social:{platforms:[{platform:'Stocktwits',icon:'fa-solid fa-comments',mentions:String(sw.messageCount||'N/A'),trend:sw.sentimentLabel||'unavailable',trendColor:sw.sentimentLabel==='positive'?'green':sw.sentimentLabel==='negative'?'red':'gray',detail:`${sw.watchers||'N/A'} watchers; not used as a trigger.`},{platform:'Aggregate sentiment',icon:'fa-solid fa-satellite-dish',mentions:String(so.sourceCount||'N/A'),trend:so.sentimentLabel||'unavailable',trendColor:'gray',detail:`Confidence ${pct(so.confidence)}.`}],pumpDumpScore:clamp((small?2:0)+(dilutionRisk==='high'?2:0)+((sip||0)>.2?2:0),0,6),pumpDumpChecklist:[{criterion:'SEC issuer mapping complete',pass:!secRecord?.error},{criterion:'Short interest below 20%',pass:(sip||0)<=.2},{criterion:`SEC-reviewed dilution risk is ${dilutionRisk}`,pass:dilutionRisk==='low'}],sourceRefs:refs},
     performance:{ytd:num(ytd(b))===null?'N/A':ytd(b).toFixed(1)+'%',oneYear:b.length<230?'N/A — insufficient one-year history':performance(b,365).toFixed(1)+'%',threeYear:'N/A — insufficient aligned history',benchmarks:[],alpha:'Not calculated without aligned benchmark bars.',sourceRefs:refs},
-    capitalFlow:{netFlow:'N/A',institutionalFlow:'N/A',retailFlow:'N/A',darkPoolPct:num(dp.percentVolume)===null?'N/A':pct(dp.percentVolume,dp.percentVolume>1?1:100),signal:'No directional flow claim is made without aligned detailed flow data.',sourceRefs:refs},
+    capitalFlow:{netFlow:'N/A',institutionalFlow:'N/A',retailFlow:'N/A',darkPoolPct:num(dp.percentVolume)===null?'N/A':pct(dp.percentVolume,dp.percentVolume>1?1:100),signal:`${t}: directional flow remains unscored without aligned, dated transaction-level data.`,sourceRefs:refs},
     tradeIdea:{entry:Number(entry.toFixed(4)),entryNote:opening?`Single activation level ${px(entry)} from the observed RTH opening range. Quote snapshot ${px(spot)} at ${quoteTime}. ${status}`:`Dormant structural reference, not an order level. Quote snapshot ${px(spot)} at ${quoteTime}. ${status}`,stop:Number(stop.toFixed(4)),stopPct:`${((stop/entry-1)*100).toFixed(1)}%`,tp1:Number(tp1.toFixed(4)),tp1Pct:`+${((tp1/entry-1)*100).toFixed(1)}%`,tp2:Number(tp2.toFixed(4)),tp2Pct:`+${((tp2/entry-1)*100).toFixed(1)}%`,rr:`1:${((tp1-entry)/(entry-stop)).toFixed(2)} to TP1 / 1:${((tp2-entry)/(entry-stop)).toFixed(2)} to TP2`,horizon:'10 trading sessions after activation',thesis:`${event?event.summary+' ':''}${roleDetail} ${status}`,catalysts:[copy.theme,opening?'Completed 15-minute close above activation with non-zero RTH volume':'Fresh RTH opening range required before any activation',`Next earnings: ${eventDate||'not confirmed'}`],invalidation:[`Hard stop ${px(stop)} only after a valid activation`,companyRisk,'Any new earnings, regulatory or financing event requires a fresh review.'],status:state,statusNote:status},
-    globalScore:{profile:copy.theme,keyTakeawaysPositive:[roleDetail,`Revenue growth: ${pct(fn.revenueGrowth)}`,`Grade audit: ${scoreRationale}`],keyTakeawaysNegative:[companyRisk,...capitalPoints.slice(0,2)],mindsetTip:'The quality grade and trade state answer different questions; use the one stated activation level for timing.'},
-    disclaimer:'Educational market analysis, not financial advice. Intraday prices can move before publication; recheck the stated trigger and event calendar.'
+    globalScore:{profile:copy.theme,keyTakeawaysPositive:[roleDetail,`Revenue growth: ${pct(fn.revenueGrowth)}`,`Grade audit: ${scoreRationale}`],keyTakeawaysNegative:[companyRisk,...capitalPoints.slice(0,2)],mindsetTip:`For ${t}, grade ${g} controls business quality while ${state} controls timing; neither overrides the stated activation and invalidation.`},
+    disclaimer:`${t} research snapshot dated ${DATE}, for education rather than personalized advice. Revalidate the quote timestamp, event calendar and activation before acting.`
   };
 }
 
 const sec=load(path.join(ROOT,'data','analyses-data','_ai-chain-sec.json'));
 const secMap=new Map((sec.records||[]).map(x=>[x.ticker,x]));
-const requested=process.argv.slice(2).map(x=>x.toUpperCase());
+const editorialOverrides=loadEditorialOverrides();
+const tradeOverrides=loadGroupedOverrides(TRADE_OVERRIDE_DIR,'trade');
+const gradeOverrides=loadGroupedOverrides(GRADE_OVERRIDE_DIR,'grade');
+const editorialOnly=process.argv.includes('--editorial-only');
+const headBaseline=process.argv.includes('--head-baseline');
+if(headBaseline&&!editorialOnly)throw new Error('--head-baseline requires --editorial-only');
+const requested=process.argv.slice(2).filter(x=>!x.startsWith('--')).map(x=>x.toUpperCase());
 const tickers=requested.length?requested:Object.keys(ROLE);
 for(const t of tickers){
   if(!ROLE[t])throw new Error(`Unknown AI-chain ticker ${t}`);
   const out=path.join(ROOT,'data','analyses-data',`${t}.json`);
-  const prior=load(out),sameBatch=prior.meta?.date===DATE&&Array.isArray(prior.meta?.tags)&&prior.meta.tags.includes('ai-chain');
+  const prior=headBaseline?JSON.parse(execFileSync('git',['show',`HEAD:data/analyses-data/${t}.json`],{cwd:ROOT,encoding:'utf8'})):load(out);
+  const sameBatch=prior.meta?.date===DATE&&Array.isArray(prior.meta?.tags)&&prior.meta.tags.includes('ai-chain');
   const priorVersion=sameBatch?Math.max(0,(Number(prior.meta?.version)||1)-1):(Number(prior.meta?.version)||0);
-  const data=build(t,secMap.get(t)||{ticker:t,error:'SEC batch record missing'},priorVersion);
+  if(editorialOnly&&!prior.meta)throw new Error(`${t}: existing validated dossier is required for --editorial-only`);
+  if(editorialOnly&&!editorialOverrides[t])throw new Error(`${t}: editorial override is required for --editorial-only`);
+  const base=editorialOnly?prior:build(t,secMap.get(t)||{ticker:t,error:'SEC batch record missing'},priorVersion);
+  const data=applyTradeOverride(applyEditorialOverride(applyGradeOverride(base,gradeOverrides[t]),editorialOverrides[t]),tradeOverrides[t]);
+  const lifecycle=data.tradeIdea?.status;
+  if(lifecycle&&data.globalScore?.mindsetTip){
+    data.globalScore.mindsetTip=data.globalScore.mindsetTip.replace(/Current trade state: (?:pending|watch|wait|rejected)\./i,`Current trade state: ${lifecycle}.`);
+  }
   fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,JSON.stringify(data,null,2)+'\n');
   console.log(`[ai-chain] ${t}: ${data.meta.grade} ${data.verdict.score} / ${data.tradeIdea.status} / dilution ${data.capitalStructure.dilutionRisk}`);
 }

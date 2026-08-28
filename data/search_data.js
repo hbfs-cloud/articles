@@ -1594,7 +1594,7 @@ window.searchDataPrebuilt = [
     "title": "ALLR — fundamentals, SEC filings, technical structure, risks and trade levels.",
     "desc": "ALLR: individual article observation list dossier with official SEC review and actionable trade state.",
     "tags": "us,equities,ai-chain,observed,healthcare",
-    "grade": "D+",
+    "grade": "D",
     "href": "/analyses/ALLR/",
     "date": ""
   },
@@ -1620,7 +1620,7 @@ window.searchDataPrebuilt = [
     "title": "EQX — fundamentals, SEC filings, technical structure, risks and trade levels.",
     "desc": "EQX: individual precious-metals equity beta dossier with official SEC review and actionable trade state.",
     "tags": "us,equities,ai-chain,metals,basic-materials",
-    "grade": "A-",
+    "grade": "B",
     "href": "/analyses/EQX/",
     "date": ""
   },
@@ -1633,7 +1633,7 @@ window.searchDataPrebuilt = [
     "title": "AG — fundamentals, SEC filings, technical structure, risks and trade levels.",
     "desc": "AG: individual precious-metals equity beta dossier with official SEC review and actionable trade state.",
     "tags": "us,equities,ai-chain,metals,basic-materials",
-    "grade": "A-",
+    "grade": "B+",
     "href": "/analyses/AG/",
     "date": ""
   },
@@ -1945,7 +1945,7 @@ window.searchDataPrebuilt = [
     "title": "MU — fundamentals, SEC filings, technical structure, risks and trade levels.",
     "desc": "MU: individual ai hardware propagation dossier with official SEC review and actionable trade state.",
     "tags": "us,equities,ai-chain,hardware,technology",
-    "grade": "A",
+    "grade": "B",
     "href": "/analyses/MU/",
     "date": ""
   },
@@ -1971,7 +1971,7 @@ window.searchDataPrebuilt = [
     "title": "AMD — fundamentals, SEC filings, technical structure, risks and trade levels.",
     "desc": "AMD: individual ai hardware propagation dossier with official SEC review and actionable trade state.",
     "tags": "us,equities,ai-chain,hardware,technology",
-    "grade": "A",
+    "grade": "B",
     "href": "/analyses/AMD/",
     "date": ""
   },
@@ -1984,7 +1984,7 @@ window.searchDataPrebuilt = [
     "title": "AVGO — fundamentals, SEC filings, technical structure, risks and trade levels.",
     "desc": "AVGO: individual ai hardware propagation dossier with official SEC review and actionable trade state.",
     "tags": "us,equities,ai-chain,hardware,technology",
-    "grade": "A",
+    "grade": "B",
     "href": "/analyses/AVGO/",
     "date": ""
   },
@@ -1997,7 +1997,7 @@ window.searchDataPrebuilt = [
     "title": "MRVL — fundamentals, SEC filings, technical structure, risks and trade levels.",
     "desc": "MRVL: individual ai hardware propagation dossier with official SEC review and actionable trade state.",
     "tags": "us,equities,ai-chain,hardware,technology",
-    "grade": "B+",
+    "grade": "B",
     "href": "/analyses/MRVL/",
     "date": ""
   },
@@ -2010,7 +2010,7 @@ window.searchDataPrebuilt = [
     "title": "ANET — fundamentals, SEC filings, technical structure, risks and trade levels.",
     "desc": "ANET: individual ai hardware propagation dossier with official SEC review and actionable trade state.",
     "tags": "us,equities,ai-chain,hardware,technology",
-    "grade": "A-",
+    "grade": "B+",
     "href": "/analyses/ANET/",
     "date": ""
   },
@@ -2036,7 +2036,7 @@ window.searchDataPrebuilt = [
     "title": "VICR — fundamentals, SEC filings, technical structure, risks and trade levels.",
     "desc": "VICR: individual ai hardware propagation dossier with official SEC review and actionable trade state.",
     "tags": "us,equities,ai-chain,hardware,technology",
-    "grade": "B+",
+    "grade": "B",
     "href": "/analyses/VICR/",
     "date": ""
   },
@@ -2088,7 +2088,7 @@ window.searchDataPrebuilt = [
     "title": "KLAC — fundamentals, SEC filings, technical structure, risks and trade levels.",
     "desc": "KLAC: individual ai hardware propagation dossier with official SEC review and actionable trade state.",
     "tags": "us,equities,ai-chain,hardware,technology",
-    "grade": "A-",
+    "grade": "B+",
     "href": "/analyses/KLAC/",
     "date": ""
   },
@@ -2205,7 +2205,7 @@ window.searchDataPrebuilt = [
     "title": "FTNT — fundamentals, SEC filings, technical structure, risks and trade levels.",
     "desc": "FTNT: individual cybersecurity follow-through dossier with official SEC review and actionable trade state.",
     "tags": "us,equities,ai-chain,cyber,technology",
-    "grade": "A",
+    "grade": "B+",
     "href": "/analyses/FTNT/",
     "date": ""
   },
@@ -2257,7 +2257,7 @@ window.searchDataPrebuilt = [
     "title": "NVDA — fundamentals, SEC filings, technical structure, risks and trade levels.",
     "desc": "NVDA: individual direct post-earnings leader dossier with official SEC review and actionable trade state.",
     "tags": "us,equities,ai-chain,leaders,technology",
-    "grade": "A",
+    "grade": "A-",
     "href": "/analyses/NVDA/",
     "date": ""
   },
