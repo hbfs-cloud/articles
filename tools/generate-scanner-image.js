@@ -331,7 +331,7 @@ ${(portfolio || []).map(p => {
   <div style="height:3px;background:${p.rotate ? '#ef4444' : s.c};border-radius:2px;margin-bottom:7px"></div>
   <div style="display:flex;justify-content:space-between;margin-bottom:1px">
     <span style="font-weight:800;font-size:14px;color:#0f172a">${p.ticker}${p.rotate ? ' ↩' : ''}</span>
-    <span style="background:#f1f5f9;color:#64748b;font-size:8px;font-weight:700;padding:1px 4px;border-radius:3px">${p.score}</span>
+    <span style="background:#f1f5f9;color:#64748b;font-size:8px;font-weight:700;padding:1px 4px;border-radius:3px">${p.score ?? 'LIVE'}</span>
   </div>
   <div style="font-size:8px;color:#94a3b8;margin-bottom:3px">${p.strategy}</div>
   <div style="font-weight:800;font-size:18px;color:${p.rotate ? '#ef4444' : s.c};margin-bottom:3px">${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</div>
@@ -471,6 +471,26 @@ async function generatePNG(html, outputPath) {
   // Use arm64-compatible chromium from playwright if available (Hetzner aarch64 CI)
   const fs = require('fs');
   const { execSync } = require('child_process');
+
+  // Chrome for Testing 146 on macOS can hang in Page.captureScreenshot.
+  // Use the installed Playwright browser locally; CI keeps the Puppeteer path below.
+  if (process.platform === 'darwin') {
+    const { execFileSync } = require('child_process');
+    const os = require('os');
+    const tmp = path.join(os.tmpdir(), `scanner-card-${process.pid}-${Date.now()}.html`);
+    try {
+      fs.writeFileSync(tmp, html);
+      execFileSync('playwright', [
+        'screenshot', '--browser', 'chromium', '--viewport-size', '1080,800',
+        '--full-page', '--wait-for-timeout', '1000', '--timeout', '60000',
+        `file://${tmp}`, outputPath,
+      ], { stdio: 'pipe', timeout: 65000 });
+      console.log(`✅ PNG generated: ${outputPath}`);
+      return;
+    } finally {
+      try { fs.unlinkSync(tmp); } catch (_) {}
+    }
+  }
   let executablePath;
   const playwrightBase = '/home/ci/.cache/ms-playwright';
   if (fs.existsSync(playwrightBase)) {
@@ -683,4 +703,4 @@ _articles.dailytickers.com_`;
   console.log('\n✅ Done.');
 }
 
-main().catch(e => { console.error('Fatal:', e.message); process.exit(1); });
+main().then(() => process.exit(0)).catch(e => { console.error('Fatal:', e.message); process.exit(1); });
