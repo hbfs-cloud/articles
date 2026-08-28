@@ -1,0 +1,101 @@
+{
+  "artifact": "scanner/$scandate/retro/index.html",
+  "waves": [
+    {
+      "name": "integrity",
+      "calls": [
+        {
+          "as": "fundamentals_events",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "financials,stats,earnings_quarterly,analyst_actions",
+            "symbols": "$symbols",
+            "end_date": "$refdate"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true,
+            "note": "earnings et fondamentaux point-in-time pour distinguer erreur de selection et evenement exogene"
+          }
+        },
+        {
+          "as": "filings_flags",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "sec_filings,flags",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "days": 365
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true,
+            "note": "controle SEC et anti-dilution post-mortem"
+          }
+        },
+        {
+          "as": "insiders",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "insider_transactions,institutional_holdings",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "days": 365
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": false
+          }
+        },
+        {
+          "as": "signals",
+          "server": "marketdata",
+          "tool": "GetSymbolSignals",
+          "args": {
+            "symbol": "$symbols"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "attribution",
+      "calls": [
+        {
+          "as": "move_clf",
+          "server": "marketdata",
+          "tool": "ExplainSymbolMove",
+          "args": { "symbol": "CLF" },
+          "freshness": { "max_age_h": 24, "required": false }
+        },
+        {
+          "as": "move_peb",
+          "server": "marketdata",
+          "tool": "ExplainSymbolMove",
+          "args": { "symbol": "PEB" },
+          "freshness": { "max_age_h": 24, "required": false }
+        },
+        {
+          "as": "move_m",
+          "server": "marketdata",
+          "tool": "ExplainSymbolMove",
+          "args": { "symbol": "M" },
+          "freshness": { "max_age_h": 24, "required": false }
+        },
+        {
+          "as": "move_amrx",
+          "server": "marketdata",
+          "tool": "ExplainSymbolMove",
+          "args": { "symbol": "AMRX" },
+          "freshness": { "max_age_h": 24, "required": false }
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "_comment": "Synthesized rules accumulated from weekly retrospectives. Updated at end of each scanner/retrospective/YYYYMMDD/ — append-only with conflict resolution. Read by /scanner Phase 0 step 8 and applied during Phase 2 selection.",
-  "_version": "v3.7-20260821",
-  "_updated": "2026-08-21",
+  "_version": "v3.8-20260829",
+  "_updated": "2026-08-29",
   "_source_retros": [
     "20260220",
     "20260228",
@@ -34,7 +34,8 @@
     "20260728",
     "20260729",
     "20260730",
-    "20260821"
+    "20260821",
+    "20260814"
   ],
   "_methodology": "Append-only. Each rule cites the retros that triggered it. Conflict resolution: most recent retro wins.\n\n  Severity levels:\n  - 'hard_block' = encoded in scanner-filters.json + validate-scan.js to refuse publication outright. Scan FAILS validation if violated.\n  - 'selection_filter' = Claude applies the rule when CHOOSING the top 10 candidates at Phase 2. validate-scan.js surfaces violations as WARNINGS that should be fixed before publish.\n  - 'advisory' = Claude biases selection (e.g. weight Pre-Squeeze higher in EARLY RISK-OFF) but a deviation is acceptable with rationale.\n  - 'infrastructure' = always-on execution logic in sweep.js/signal-monitor.js, not a selection rule.\n  - 'deprecated' = rule is no longer active, kept for historical context.\n\n  v2.0 UPGRADE NOTES (20260619 audit):\n  - Promoted regime-score-label-lag from advisory to hard_block (prevented D* grade week)\n  - Promoted rr-min-by-regime from selection_filter to hard_block (100% violation rate with zero enforcement)\n  - Promoted stopped-ticker-cooldown from selection_filter to hard_block (RIO double loss pattern)\n  - Deprecated energy-early-risk-off-sizing (redundant with energy-early-risk-off-block)\n  - Added 12 new rules from audit of 17 retros\n  - All '?' values resolved, all rules have complete field sets",
   "rules": [
@@ -3259,7 +3260,7 @@
     },
     {
       "id": "eu-book-systematic-drag-riskon",
-      "class": "selection_rule",
+      "class": "market_truth",
       "status": "candidate",
       "severity": "advisory",
       "rule": "Sur la fenetre 06-20/08 en RISK-ON, le sous-book EU sous-performe structurellement le US (PF 0,42 vs ~1,0, WR 33%). Quand le book EU accumule un PF<0,6 sur >=8 lignes reglees dans un meme cycle, plafonner le poids EU (max 2 lignes / scan) et relever le seuil de confluence EU jusqu a ce qu un lot retro le re-valide. Ne jamais inverser un signal quanti EU : reduction de POIDS et hausse de SEUIL uniquement.",
@@ -3328,7 +3329,7 @@
     },
     {
       "id": "riskon-label-vs-defensive-breadth-divergence",
-      "class": "regime_rule",
+      "class": "market_truth",
       "status": "candidate",
       "severity": "advisory",
       "rule": "Regime engine a imprime RISK-ON sur les 9 scans 06-20/08, mais la vraie breadth etait rotationnelle : le momentum haut-beta cyclique (homebuilder PHM, industriel TT, aerien LUV, casino CZR, JCI) s est fait stopper en masse tandis que les defensifs/value/energie (KO,OXY,HL,SCHD,TSCO) et les Pullback portaient (Pullback avgR +0,10 PF 1,37 vs Momentum -0,04). Quand le label est RISK-ON mais que les gagnants d un lot retro clusterisent en defensifs/staples/energie ET que le momentum cyclique haut-beta stoppe, appliquer un check de divergence breadth : reduire le nombre de momentum cycliques haut-beta et relever la part Pullback/defensif.",
@@ -3394,6 +3395,53 @@
       "from_retros": [
         "20260821"
       ]
+    },
+    {
+      "id": "targeted-sec-insider-coverage",
+      "class": "process_rule",
+      "status": "active",
+      "severity": "hard_block",
+      "rule": "Avant toute affirmation d absence de dilution, filing ou activite insider, interroger explicitement sec_filings, flags et insider_transactions avec la liste complete des tickers retenus, verifier la presence de chaque type attendu, epuiser la pagination et lire le document lorsqu un item sensible apparait. Une requete d univers plafonnee, un ticker seulement present ou une premiere page ne prouvent jamais une absence: le statut doit rester non verifie et la publication doit echouer si l affirmation demeure.",
+      "scope": {
+        "setups": [],
+        "regimes": [],
+        "modes": []
+      },
+      "effect": {
+        "action": "require_targeted_sec_and_insider_coverage",
+        "target": {},
+        "params": {
+          "required_types": ["sec_filings", "flags", "insider_transactions"],
+          "require_every_published_symbol": true,
+          "require_all_expected_types": true,
+          "require_pagination_exhausted": true,
+          "require_sensitive_item_review": true,
+          "partial_universe_means_absence": false
+        }
+      },
+      "evidence": {
+        "sample_size": 4,
+        "wins": 1,
+        "losses": 2,
+        "expectancy": -0.289,
+        "period": "2026-08-14 -> 2026-08-27",
+        "tickers": ["CLF", "PEB", "M", "AMRX"],
+        "clusters": ["coverage-integrity"],
+        "source_retros": ["20260814"],
+        "note": "Le scan utilisait un appel insiders generique plafonne a 100 noms sur 944, dont la reponse avertissait que zero resultat ne signifiait pas absence. Il a pourtant affirme qu aucun candidat ne portait de programme d emission actif. La requete SEC ciblee de la retro retrouve pour AMRX un 8-K du 10/08 avec item 3.02, trois jours avant la selection, ainsi que trois ventes des 11-12/08 deposees le 13/08 pour environ 6,33 M$. La reponse combinee sec_filings,flags etait elle-meme paginee: les flags ont du etre relances separement. Le trade AMRX a touche TP1 puis le reliquat est compte au point mort selon la convention same-bar conservatrice: cette regle corrige une erreur de preuve, pas une conclusion de performance."
+      },
+      "confidence": 1,
+      "confidence_base": 1,
+      "half_life_days": null,
+      "created_at": "2026-08-29",
+      "last_validated_at": "2026-08-29",
+      "expires_at": null,
+      "invalidation_conditions": [
+        "Aucune: une couverture partielle ne peut logiquement prouver une absence. La regle peut seulement etre remplacee par un controle automatique plus strict."
+      ],
+      "notes": "Hard block d integrite et de provenance. Il ne disqualifie pas automatiquement un ticker avec item 3.02; il impose la lecture et interdit une assurance non etayee.",
+      "applies_to": ["top_10", "tkl_pool"],
+      "from_retros": ["20260814"]
     }
   ],
   "_open_questions": [
@@ -3630,6 +3678,11 @@
       "id": "momentum-overweight-vs-pullback",
       "question": "Reduire la part Momentum (50/71) au profit de Pullback ameliore-t-il le PF global ? Comparer avgR Momentum vs Pullback sur 2 lots.",
       "next_retro_check": "20260905"
+    },
+    {
+      "id": "pullback-support-without-reclaim",
+      "question": "Les pullbacks qui touchent seulement une moyenne mobile avec MACD baissier sous-performent-ils ceux qui impriment une reprise confirmee? Mesurer au moins 20 lignes avant toute nouvelle regle de selection.",
+      "next_retro_check": "20260930"
     }
   ],
   "_closed_questions": [
