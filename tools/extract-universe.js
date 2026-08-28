@@ -45,7 +45,10 @@ const ranked = [...seen.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).m
 if (!ranked.length) { console.error('[extract-universe] vivier VIDE — screeners en échec ou aucun candidat. Ne pas poursuivre en silence.'); process.exit(1); }
 
 // Découpage en lots pour les appels multi-symboles (QueryData accepte un CSV).
-const B = 12, batches = [];
+// Le plan scanner-wave2 déclare cinq appels gouvernants. Répartir le vivier en
+// cinq lots équilibrés garantit que batch1..batch5 existent même lors d'une
+// séance pauvre en candidats, tout en restant sous la borne de 12 à limit=60.
+const B = Math.ceil(ranked.length / 5), batches = [];
 for (let i = 0; i < ranked.length; i += B) batches.push(ranked.slice(i, i + B).join(','));
 const vars = { symbols: ranked.join(','), count: String(ranked.length) };
 batches.forEach((b, i) => { vars['batch' + (i + 1)] = b; });

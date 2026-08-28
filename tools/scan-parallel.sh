@@ -23,6 +23,21 @@ log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
 (
   node tools/collect.js --plan plans/scanner-wave1.json --out "$DIR/_data" --quiet \
     --var refdate="$REF" > /tmp/A1.log 2>&1 || { { echo "A1 ÉCHEC — vivier"; grep -E "✗|ÉCHEC" /tmp/A1.log; } > /tmp/A.status; exit 1; }
+  if [ ! -s "$DIR/_data/screen_eu.json" ]; then
+    EU_DIR="$DIR/_data-eu-fallback"
+    EU_START=$(node -e "const d=new Date('${REF}T00:00:00Z'); d.setUTCDate(d.getUTCDate()-250); console.log(d.toISOString().slice(0,10))")
+    node tools/collect.js --plan plans/scanner-eu-fallback-universe.json --out "$EU_DIR" --quiet \
+      --var refdate="$REF" >> /tmp/A1.log 2>&1 \
+      || { echo "A1-EU ÉCHEC — référentiel fallback" > /tmp/A.status; exit 1; }
+    node tools/extract-eu-fallback-universe.js --in "$EU_DIR/eu_referential.json" --out "$EU_DIR/vars.json" \
+      >> /tmp/A1.log 2>&1 || { echo "A1-EU ÉCHEC — univers fallback" > /tmp/A.status; exit 1; }
+    node tools/collect.js --plan plans/scanner-eu-fallback-data.json --out "$EU_DIR/data" --quiet \
+      --vars-file "$EU_DIR/vars.json" --var refdate="$REF" --var startdate="$EU_START" >> /tmp/A1.log 2>&1 \
+      || { echo "A1-EU ÉCHEC — indicateurs fallback" > /tmp/A.status; exit 1; }
+    node tools/build-eu-screener-fallback.js --in "$EU_DIR/data" --out "$DIR/_data/screen_eu.json" \
+      --harness "$DIR/_data/harness.json" >> /tmp/A1.log 2>&1 \
+      || { echo "A1-EU ÉCHEC — scoring fallback" > /tmp/A.status; exit 1; }
+  fi
   node tools/extract-universe.js --in "$DIR/_data" --out "$DIR/_data/vars.json" --limit 60 \
     >> /tmp/A1.log 2>&1 || { echo "A2 ÉCHEC — vivier vide" > /tmp/A.status; exit 1; }
   # Le code retour de l'enrichissement DOIT être testé. Sans ce garde, un

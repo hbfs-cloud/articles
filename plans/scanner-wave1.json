@@ -117,24 +117,6 @@
           }
         },
         {
-          "as": "screen_eu",
-          "server": "marketdata",
-          "tool": "RunScreener",
-          "args": {
-            "pass_expr": "rsi14 > 45 and rsi14 < 75 and ema20 > ema50 and vol > 500000 and close > 5",
-            "score_expr": "(75 - rsi14) * 2 + obvz * 10",
-            "region": "EU",
-            "as_of": "$refdate",
-            "top_k": 15,
-            "force_async": true
-          },
-          "freshness": {
-            "max_age_h": 24,
-            "required": true
-          },
-          "cache_minutes": 360
-        },
-        {
           "as": "earnings_7d",
           "server": "marketdata",
           "tool": "GetEarningsCalendarFiltered",
@@ -165,8 +147,27 @@
     {
       "name": "contexte-detache",
       "detached": true,
-      "deadline_ms": 45000,
+      "deadline_ms": 120000,
       "calls": [
+        {
+          "as": "screen_eu",
+          "server": "marketdata",
+          "tool": "RunScreener",
+          "args": {
+            "pass_expr": "rsi14 > 45 and rsi14 < 75 and ema20 > ema50 and vol > 500000 and close > 5",
+            "score_expr": "(75 - rsi14) * 2 + obvz * 10",
+            "region": "EU",
+            "as_of": "$refdate",
+            "top_k": 15,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false,
+            "note": "tentative primaire EU; fallback référentiel + indicateurs obligatoire si indisponible"
+          },
+          "cache_minutes": 360
+        },
         {
           "as": "overview",
           "server": "marketdata",

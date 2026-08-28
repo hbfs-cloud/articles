@@ -736,7 +736,13 @@ async function main() {
       if (frozen.equityCurve && frozen.equityCurve.length > 0) {
         // Trim flat tail (post-backtest plateau where price data ran out)
         const ec = [...frozen.equityCurve];
+        const rawLast = ec[ec.length - 1];
         while (ec.length > 1 && ec[ec.length - 1].value === ec[ec.length - 2].value) ec.pop();
+
+        // The last frozen date is the sealed endpoint even when its value is
+        // unchanged. Preserve it so a live MtM tail remains visibly anchored
+        // after the authoritative session instead of replacing that session.
+        if (rawLast && rawLast.date && ec[ec.length - 1]?.date !== rawLast.date) ec.push(rawLast);
 
         // Clamp: drop any points dated after today (future dates from stale price cache)
         const todayISO = TODAY_ISO; // canonical NY trading day
@@ -1874,7 +1880,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
 <div class="section-card" id="sec-pos-${id}">
   <div class="sc-head">
     <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">${liveCount}/${cfg.portfolioSize}${terminalCount ? ' + ' + terminalCount + ' closed today' : ''}${pos.length > liveCount + terminalCount ? ' + ' + (pos.length - liveCount - terminalCount) + ' expired' : ''}</span></h3>
-    ${pos.length ? `<span class="sc-meta" title="Moyenne simple par position ouverte (non pondérée portefeuille)">avg/pos: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b></span>` : ''}
+${pos.length ? `    <span class="sc-meta" title="Moyenne simple par position ouverte (non pondérée portefeuille)">avg/pos: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b></span>` : ''}
   </div>
   ${pos.length ? `
   ${(() => {
@@ -2885,7 +2891,9 @@ document.addEventListener('DOMContentLoaded',function(){
     tmLoadIdx(tmCurrentIdx);
   };
   var VALID_MODES=${JSON.stringify(Object.keys(modes))};
-  var activeMode=${JSON.stringify(Object.keys(modes)[0] || '')};
+  // The SSR markup opens Balanced by default. Initialize the same mode in JS;
+  // otherwise the first hidden mode gets a chart while the visible panel stays blank.
+  var activeMode=${JSON.stringify(modes.balanced ? 'balanced' : (Object.keys(modes)[0] || ''))};
   var MODE_CATALOG=${modeCatalog};
   // Les 5 modes du catalogue, tous affichés au premier passage. Depuis le
   // 2026-08-12 le catalogue EST la sélection par défaut — il n'y a plus de

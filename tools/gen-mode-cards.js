@@ -486,6 +486,28 @@ body {
 async function generatePNG(html, outputPath) {
   const puppeteer = require('puppeteer');
   const fsSync    = require('fs');
+  let browser;
+
+  // Chrome for Testing 146 on macOS can hang indefinitely in
+  // Page.captureScreenshot. The Playwright CLI uses the installed browser
+  // channel and avoids that protocol regression.
+  if (process.platform === 'darwin') {
+    const { execFileSync } = require('child_process');
+    const os = require('os');
+    const tmp = path.join(os.tmpdir(), `dtx-mode-card-${process.pid}-${Date.now()}.html`);
+    try {
+      fsSync.writeFileSync(tmp, html);
+      execFileSync('playwright', [
+        'screenshot', '--browser', 'chromium', '--viewport-size', '1920,1080',
+        '--full-page', '--wait-for-timeout', '300', '--timeout', '60000',
+        `file://${tmp}`, outputPath,
+      ], { stdio: 'pipe', timeout: 65000 });
+      console.log(`  PNG: ${outputPath}`);
+      return;
+    } finally {
+      try { fsSync.unlinkSync(tmp); } catch (_) {}
+    }
+  }
 
   let executablePath;
   const playwrightBase = '/home/ci/.cache/ms-playwright';
@@ -500,22 +522,21 @@ async function generatePNG(html, outputPath) {
     } catch (_) { /* fallback */ }
   }
 
-  const browser = await puppeteer.launch({
+  try {
+    browser = await puppeteer.launch({
     executablePath,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-  });
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
-  await page.setContent(html, { waitUntil: 'networkidle0' });
-  await new Promise(r => setTimeout(r, 800));
-  const clip = await page.evaluate(() => {
-    const el = document.body.firstElementChild;
-    const rect = el.getBoundingClientRect();
-    return { x: 0, y: 0, width: 1920, height: Math.max(1080, Math.ceil(rect.height)) };
-  });
-  await page.screenshot({ path: outputPath, clip, type: 'png' });
-  await browser.close();
-  console.log(`  PNG: ${outputPath} (${clip.height}px)`);
+      protocolTimeout: 60000,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+    });
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
+    await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await new Promise(r => setTimeout(r, 300));
+    await page.screenshot({ path: outputPath, type: 'png', fullPage: true, timeout: 30000 });
+    console.log(`  PNG: ${outputPath}`);
+  } finally {
+    if (browser) await browser.close().catch(() => {});
+  }
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────

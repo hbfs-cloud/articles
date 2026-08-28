@@ -78,6 +78,29 @@ function maxObservedDate(value) {
   return best;
 }
 
+/** Date de marché maximale portée par une série OHLCV, sans confondre fetchedAt. */
+function maxBarDate(value) {
+  let best = null;
+  const visit = (node, inBars = false) => {
+    if (Array.isArray(node)) {
+      if (inBars) {
+        for (const row of node) {
+          const raw = Array.isArray(row) ? row[0]
+            : row && typeof row === 'object' ? (row.date || row.time || row.timestamp) : row;
+          const match = String(raw || '').match(/\d{4}-\d{2}-\d{2}/);
+          if (match && (!best || match[0] > best)) best = match[0];
+        }
+      }
+      for (const item of node) visit(item, inBars);
+      return;
+    }
+    if (!node || typeof node !== 'object') return;
+    for (const [key, child] of Object.entries(node)) visit(child, inBars || key === 'bars');
+  };
+  visit(value);
+  return best;
+}
+
 function semanticFailure(call, value) {
   if (!call || call.server !== 'systematic' || !value || typeof value !== 'object') return null;
   const status = value.status || (value.result && value.result.status);
@@ -442,7 +465,7 @@ function socleRead(c) {
           // se présentant comme celui du jour, et rien dans le harnais ne l'aurait dit : l'âge de
           // la collecte et la date du contenu sont deux grandeurs différentes, et seule la
           // première était mesurée.
-          data_through: maxObservedDate(r.value),
+          data_through: c.freshness.expects_close ? maxBarDate(r.value) : maxObservedDate(r.value),
           max_age_h: c.freshness.max_age_h,
           required: c.freshness.required !== false,
           // Opt-in : cette source DOIT atteindre la clôture de référence. Réservé aux séries de
