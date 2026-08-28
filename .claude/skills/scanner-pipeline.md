@@ -57,8 +57,8 @@ SPEC de ce que chaque étape fait ; cette section dicte l'ORDRE d'exécution rap
 1. **Prep + manifeste** (Phase 0) : lire les inputs de prep, puis `node tools/scan-plan.js` → écrit
    `/tmp/scan-plan.json` (le plan de TOUS les appels MCP, en vagues). Lire ce fichier.
 2. **SALVE 1 — contexte + univers** (UN seul message, tous les `tool_use` en //). Tirer
-   `waves.wave1_context_universes` : preflight `GetStatus` + 5 `RunScreener` + `RunAutoScreener` +
-   `GetMarketContext` overview/regime + `economic_events` + `GetEarningsCalendarFiltered` + les 6
+   `waves.wave1_context_universes` : preflight `GetStatus` + 4 `RunScreener` US + `RunAutoScreener` +
+   `GetMarketContext` overview/regime + `economic_events` + `GetEarningsCalendarFiltered` + les 5
    screeners d'univers. **Dumper chaque réponse brute → `/tmp/mcp-raw/<key>.json`.** Preflight KO →
    MCP HARD STOP (alerter, ne rien fabriquer).
 3. **SALVE dtx — PAR LOTS de ≤3** (`waves.wave_dtx_batches`) : l'origine dtx **sature en burst (502
@@ -73,7 +73,7 @@ SPEC de ce que chaque étape fait ; cette section dicte l'ORDRE d'exécution rap
 5. **Assembler (node, zéro MCP)** : `node tools/scan-ingest-all.js` → écrit candlestick/metals/hybrid
    staging (mécanique), les `price-stage-*`, les `<scanner>-bars-bundle.json`, et **ingère dtx**
    (`dtx-mcp-ingest.js`, garde sanity exit 7 respectée). Pour les scanners PRE-SCORÉS
-   (highvol/momentum/factor/etf/etf-eu/forex/trendline-*), appliquer la **formule de score documentée**
+   (highvol/momentum/factor/etf/forex/trendline-*), appliquer la **formule de score documentée**
    (Phase 1/1c) sur le `<scanner>-bars-bundle.json` **en local** (aucun round-trip) → écrire le
    `/tmp/<scanner>-stage.json` final.
 6. **SALVE 3 — validation** (//, Phase 2) : `sec_filings/flags/insider/dark_pool/unusual_options/earnings`
@@ -265,18 +265,11 @@ Le screener évalue `market_cap` à **0** dans le contexte DSL → `market_cap >
    region: "us", top_k: 15   → post-filtre market_cap>=2e9 + no-ETF
    ```
 
-5. **EU diversification** — retirer market_cap du pass_expr :
-   ```
-   pass_expr: "rsi14 > 45 and rsi14 < 75 and ema20 > ema50 and vol > 500000 and close > 5"
-   score_expr: "(75 - rsi14) * 2 + obvz * 10"
-   region: "eu", top_k: 15   → post-filtre market_cap>=1e9 + no-ETF
-   ```
-
-Les queries 1+2 produisent **20-30 candidats** dans toutes les conditions de marché. Les queries 3+4 complètent l'univers quand les conditions le permettent (squeeze/survente). La query 5 apporte la diversification géographique. **Pool total attendu : 25-50 candidats uniques** avant dedup + filtering Phase 2.
+Les queries 1+2 produisent **20-30 candidats** dans toutes les conditions de marché. Les queries 3+4 complètent l'univers quand les conditions le permettent (squeeze/survente). **Pool total attendu : 25-50 candidats US uniques** avant dedup + filtering Phase 2.
 
 **⚠️ Safety check** : si TOUS les résultats RunScreener ont `market_cap < 500000000` → le screener est cassé → STOP + alerter le user. Ne JAMAIS ignorer des résultats full-penny-stock.
 
-**Assemblage pool** : merge les 5 résultats + RunAutoScreener → dedup par ticker → rejeter tout candidat avec market_cap < $2B → enrichir top 30 via QueryData
+**Assemblage pool** : merge les 4 résultats US + RunAutoScreener → dedup par ticker → rejeter tout candidat avec market_cap < $2B → enrichir top 30 via QueryData
 
 **Salve minimale (à jouer en parallèle, un seul message)** :
 
@@ -318,7 +311,7 @@ Chaque signal dans les pools a la même shape que les signaux classiques (ticker
 **Règles d'assemblage multi-list :**
 1. Chaque screener alimente directement son pool (Momentum screener → `momentum[]`)
 2. Les candidats passent la validation complète Phase 2 (dilution, earnings, Sharia, scoring)
-3. Le `signals[]` composite est construit APRÈS les pools : pick les meilleurs de chaque pool en respectant la diversification (max 3/secteur, min 5 US + 2 EU)
+3. Le `signals[]` composite est construit APRÈS les pools : pick les meilleurs de chaque pool en respectant la diversification (max 3/secteur, 8 actions US + 2 ETFs US)
 4. Un ticker peut apparaître dans 1 pool + le composite, mais jamais dans 2 pools différents
 5. `scanner-parser.js:loadSignals()` fusionne les pools dans `signals` pour backward compat (sweep.js, gen-api.js, etc.)
 
@@ -329,12 +322,12 @@ Chaque signal dans les pools a la même shape que les signaux classiques (ticker
 
 ### Phase 1c — Production des staging MCP (AGENT) — ⛔ AVANT `publish-daily-card.sh`
 
-**10 scanners sont MCP-PRIMARY** (fetch Yahoo + univers local RETIRÉS, décret archi 2026-07-12 « le MCP fait foi »). Ils NE FETCHENT PLUS RIEN : chacun ingère (`--ingest <staging.json>`) un fichier produit **par l'AGENT** (toi). **Un subprocess `node` NE PEUT PAS appeler le MCP** (OAuth2 sur claude.ai, ZÉRO token) — seul l'AGENT (`/scanner` local ou `claude -p` cloud) voit `mcp__marketdata__*`. Donc tu produis les 10 staging **AVANT** de lancer `publish-daily-card.sh` ; le runner shell se contente de `if [ -f "$STAGE" ]` → `--ingest`, sinon **skip non-bloquant** (0 signal légitime ce run, JAMAIS de fetch local réintroduit, JAMAIS de données inventées).
+**9 scanners sont MCP-PRIMARY** (fetch Yahoo + univers local RETIRÉS, décret archi 2026-07-12 « le MCP fait foi »). Ils NE FETCHENT PLUS RIEN : chacun ingère (`--ingest <staging.json>`) un fichier produit **par l'AGENT** (toi). **Un subprocess `node` NE PEUT PAS appeler le MCP** (OAuth2 sur claude.ai, ZÉRO token) — seul l'AGENT (`/scanner` local ou `claude -p` cloud) voit `mcp__marketdata__*`. Donc tu produis les 9 staging **AVANT** de lancer `publish-daily-card.sh` ; le runner shell se contente de `if [ -f "$STAGE" ]` → `--ingest`, sinon **skip non-bloquant** (0 signal légitime ce run, JAMAIS de fetch local réintroduit, JAMAIS de données inventées).
 
 **`candlestick` est le MODÈLE** (déjà câblé, `CANDLESTICK_STAGE` + `--ingest`). Chaque scanner flippé suit le même gate avec sa propre env-var (défaut `/tmp/<name>-stage.json`).
 
 **Deux familles de staging :**
-- **`candidates[]` PRE-SCORÉ** (l'AGENT calcule métriques + score, le scanner applique les gates hérités penny<5 / Sharia / R:R puis top-N) : `highvol`, `forex`, `momentum`, `etf`, `etf-eu`, `trendline-forex`, `trendline-indices`, `factor`.
+- **`candidates[]` PRE-SCORÉ** (l'AGENT calcule métriques + score, le scanner applique les gates hérités penny<5 / Sharia / R:R puis top-N) : `highvol`, `forex`, `momentum`, `etf`, `trendline-forex`, `trendline-indices`, `factor`.
 - **`bars` map / `candidates[].bars`** (l'AGENT fournit les barres OHLCV brutes, le scanner score/détecte) : `candlestick` (`candidates:[{ticker,bars}]`), `metals` (`bars:{TICKER:[...]}`), `hybrid` (`bars:{TICKER:[...]}`).
 
 Barres = **`QueryData(types=bars_daily)`** (forme array `[[date,o,h,l,c,v],...]` ascendante OU objet `[{date,open,high,low,close,volume}]` — les deux acceptées). Univers/candidats = **`RunScreener`** (rappel Phase 1 : JAMAIS `market_cap` en `pass_expr` → post-filtre en code). Toujours `mcp_ok:true` + `asof:"YYYY-MM-DD"`. **MCP down / couverture insuffisante → NE PAS écrire le staging** (le scanner skippera, 0 signal légitime) — ne JAMAIS fabriquer.
@@ -347,7 +340,6 @@ Barres = **`QueryData(types=bars_daily)`** (forme array `[[date,o,h,l,c,v],...]`
 | `forex` | `FOREX_STAGE` (`/tmp/forex-stage.json`) | `QueryData bars_daily` sur paires FX + DX-Y.NYB → l'agent score 3 axes | `{mcp_ok,asof,dxyMom30?,dxySymbol?,universeFetched?,candidates:[{ticker,name?,score,price(\|entry),atr,sharia?,region?,horizon?,metrics:{rsi,atrPct,bbPctB,ret30d,ret14d,ret7d,momentumScore,mrScore,rsScore,distMA20,distMA50,distMA200}}]}` |
 | `momentum` | `MOMENTUM_STAGE` (`/tmp/momentum-stage.json`) | `RunScreener` US + `QueryData bars_daily` → l'agent score mom 20/50/100 | `{mcp_ok,asof,regime?,universe?,universeFetched?,candidates:[{ticker,name?,score,entry,stop?,sharia?,region?,universe?,horizon?,metrics:{mom20,mom50,mom100,rsi,atr,…}}]}` |
 | `etf` (US) | `ETF_STAGE` (`/tmp/etf-stage.json`) | `RunScreener` ETF US + `QueryData bars_daily` → l'agent score momentum | `{mcp_ok,asof?,regime?,universeFetched?,candidates:[{ticker,name?,score,entry,stop,cluster?,mom20?,rsi?,atrPct?,category?,sharia?,estDolVol?,estBars?}]}` |
-| `etf-eu` | `ETF_EU_STAGE` (`/tmp/etf-eu-stage.json`) | idem, univers ETF Europe (`--universe etf-eu`) | même shape que `etf` |
 | `trendline-forex` | `TRENDLINE_FOREX_STAGE` (`/tmp/trendline-forex-stage.json`) | `QueryData bars_daily` FX (daily) → l'agent score trend/breakout | `{mcp_ok,asof,regime?,universe?,universeFetched?,candidates:[{ticker,name?,score,entry,stop?,sharia?,region?,universe?,horizon?,metrics:{distMA200,rsi,atrPct,atr?,volRatio?,maAligned?}}]}` |
 | `trendline-indices` | `TRENDLINE_INDICES_STAGE` (`/tmp/trendline-indices-stage.json`) | idem mais **barres 4h** (`QueryData` interval 4h), univers indices | même shape que `trendline-forex` |
 | `hybrid` | `HYBRID_STAGE` (`/tmp/hybrid-stage.json`) | `QueryData bars_daily` sur mega-caps (breadth SMA200) | `{mcp_ok,asof,regime?,bars:{TICKER:[[date,o,h,l,c,v]…]}}` |
@@ -362,7 +354,7 @@ Barres = **`QueryData(types=bars_daily)`** (forme array `[[date,o,h,l,c,v],...]`
 #### Selection Rules (`scanner-filters.json`) — rappel compact
 - Score ≥ **90** (seuil risk layer v4)
 - Min **3** signaux de confluence par setup
-- Diversification : min **5 US + 2 EU + 1 APAC + 2 ETFs**
+- Univers : **8 actions cotées aux États-Unis + 2 ETFs cotés aux États-Unis**
 - Max **3 par secteur** (selon `sector_map`)
 - Max **3 repeats** depuis le scan précédent
 - **Zéro overlap** avec `scanner-positions.json#open_positions`
@@ -395,7 +387,7 @@ Barres = **`QueryData(types=bars_daily)`** (forme array `[[date,o,h,l,c,v],...]`
 **⚠️ Risk Gating Post-Screener (OBLIGATOIRE — Risk Layer v1)** :
    - `GetMarketContext(facets='regime', model='ensemble', horizon_days=5)` (canonique, ex-GetRegimeProbability) : si `crisis > 0.30` ou `early_risk_off > 0.50` → top réduit à 5, breakout_only, taille × 0.5
    - `PortfolioRisk(action='correlation', symbols='T1,T2,...', lookback_days=60, method='pearson')` (canonique, ex-GetCorrelationMatrix — `symbols` en **CSV string, PAS un array**) : `max_pair.rho > 0.85` → drop le score le plus bas ; `avg_off_diagonal > 0.65` → forcer min 2 secteurs.
-     ⚠️ **US-only** : mélanger des tickers EU (`.PA`) casse le calcul (« 0 common trading days »). L'endpoint est parfois cassé côté serveur (même sur large-caps US) → en cas d'échec, **FALLBACK concentration manuelle** : max 2/secteur + dispersion géographique. **NE JAMAIS inventer de rho.**
+     ⚠️ **US-only** : mélanger des tickers EU (`.PA`) casse le calcul (« 0 common trading days »). L'endpoint est parfois cassé côté serveur (même sur large-caps US) → en cas d'échec, **FALLBACK concentration manuelle** : max 2/secteur + dispersion sectorielle. **NE JAMAIS inventer de rho.**
    - `GetEarningsCalendarFiltered` (days_ahead=7, min_expected_move=4) : ticker dans `exclusion_window` → DISQUALIFIER ou tag "earnings risk"
    - `PortfolioRisk(action='sizing', signals=[...], constraints={...}, mode='balanced')` (canonique, ex-OptimizeSizing — `signals` = JSON array, `constraints` = JSON object ; method=vol_target, max_position_risk_pct=1.0, max_pairwise_correlation=0.7 dans `constraints`). Utiliser le `risk_pct` renvoyé pour dimensionner les positions.
 
@@ -434,7 +426,7 @@ Cette validation **n'est PAS optionnelle** : elle tourne dans la Phase 2, imméd
 des résultats du screener TKL. **Aucun ticker TKL n'entre dans `signals.json` sans avoir passé tous les
 checks.**
 
-**Sélection multi-list :** 10 par pool stratégique (momentum, breakout, pullback, pre_squeeze) + 10 composite. Composite = meilleur de chaque pool diversifié (score ≥ **90**, confluence ≥ 3 signaux, géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
+**Sélection multi-list :** 10 par pool stratégique (momentum, breakout, pullback, pre_squeeze) + 10 composite. Composite = meilleur de chaque pool diversifié (score ≥ **90**, confluence ≥ 3 signaux, 8 actions US + 2 ETFs US).
 
 **⚠️ SCORING RULES (hard enforced by validate-scan.js since 2026-06-30) :**
 - **Score max 98** — no perfect scores. Score reflects REALISTIC probability of TP1 hit.
@@ -481,7 +473,7 @@ Après sélection des 10 candidats, CHAQUE signal passe la checklist v2.0.
 - [ ] `limit-high-beta-ai-infra` : distance_50dma > 2× cap stratégie OU RSI > 72 → REJECT. Max 1 AI infra en RECOVERY/ERO
 - [ ] `earnings-window-strict` : earnings ±3j bourse → REJECT
 - [ ] `dilution-block-toxic-underwriters` : S-1/S-3/424B < 90j + underwriter toxique → REJECT
-- [ ] `diversification-floor` : max 3/secteur (hard), min 5 US + 2 EU + 1 APAC + 2 ETFs, max 3 repeats
+- [ ] `diversification-floor` : max 3/secteur (hard), 8 actions US + 2 ETFs US, max 3 repeats
 - [ ] `high-score-low-rsi-conflict` : score ≥ 93 AND RSI < 55 → REJECT
 - [ ] `rsi-no-mans-land-momentum` : Momentum AND RSI ∈ [40,50] → REJECT (sauf turbo)
 - [ ] `tkl-momentum-quality-gate` : TKL pool AND (prix < $5 OU score < 88) → REJECT
@@ -528,10 +520,7 @@ Après sélection des 10 candidats, CHAQUE signal passe la checklist v2.0.
   "tkl_pool": [...],      // TKL momentum (separate pipeline)
   "crypto_pool": [...],   // crypto signals (separate pipeline)
   "metals_pool": [...],   // metals signals (separate pipeline)
-  "forex_pool": [...],    // forex signals (separate pipeline)
-  "eu_smallcap_pool": [...] // EU small-cap PEA (SIM-ONLY) — PRODUIT PAR L'AGENT VIA MCP, pas un node script.
-                            // universe=eu_smallcap, strategy=MomentumRotation, +peaEligible/peaPmeEligible/peaProof.
-                            // Downstream (scanner-parser/sweep/gen-status-page) lit ce pool committé. Voir Pipeline Quotidien.
+  "forex_pool": [...]     // forex signals (separate pipeline)
 }
 ```
 
@@ -562,8 +551,8 @@ Requis pour les checks advisory de `validate-scan.js` et la consommation par le 
   défaut signifie que le scan a été filtré contre la fenêtre earnings ±3j.
 - `dilution_clear: true` — `false` UNIQUEMENT si on accepte un ticker flaggé avec rationale explicite
   (extrêmement rare) ; `true` par défaut = anti-dilution v2 passée.
-- `region: "US"|"EU"|"UK"|"ASIA"|"CHINA"|"JAPAN"|"ETF"` — sert à l'advisory de plancher de
-  diversification (5 US + 2 EU + 1 APAC + 2 ETFs).
+- `region: "US"|"ETF"` — `US` pour les actions cotées aux États-Unis, `ETF` pour les ETFs cotés aux
+  États-Unis. Toute autre valeur est bloquante à partir du 2026-08-29.
 - `earnings_source: "8k_item_202"` — **BLOQUANT (gate G4)**. La date de résultats DOIT venir du dépôt
   **8-K item 2.02**, jamais du champ calendrier prévisionnel. Le **20260730** ce champ a laissé passer
   10 titres ayant déjà publié (F, AWK, EXR, REG, FE, CNC, IVZ + LYV/KKR/OWL/RAL le jour même).
@@ -756,7 +745,6 @@ node tools/forex-scanner.js --ingest /tmp/forex-stage.json --output signals --da
 # node tools/momentum-scanner.js --universe casablanca --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 5 --top 15
 node tools/momentum-scanner.js --ingest /tmp/momentum-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 5 --top 20  # Momentum Rotation (US). MCP-PRIMARY : staging PRE-SCORÉ (candidates[] scorés côté agent).
 node tools/etf-scanner.js --ingest /tmp/etf-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --top 10  # ETF Momentum (US). MCP-PRIMARY --ingest.
-node tools/etf-scanner.js --universe etf-eu --ingest /tmp/etf-eu-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --top 10  # ETF Momentum (Europe). Staging DISTINCT (ETF_EU_STAGE).
 node tools/trendline-scanner.js --universe forex --ingest /tmp/trendline-forex-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 50 --top 10  # Trendline Breakout (forex). MCP-PRIMARY --ingest (TRENDLINE_FOREX_STAGE).
 node tools/trendline-scanner.js --universe indices --interval 4h --ingest /tmp/trendline-indices-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 50 --top 10  # Trendline Breakout (indices 4h). Staging DISTINCT (TRENDLINE_INDICES_STAGE, barres 4h).
 node tools/hybrid-scanner.js --ingest /tmp/hybrid-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME  # Hybrid breadth analysis → signals.json (MegaCap si narrow rally). MCP-PRIMARY --ingest.
@@ -767,20 +755,7 @@ node tools/factor-scanner.js --ingest /tmp/factor-stage.json --output signals --
 #   VOIE LOCALE (DEPRECATED, fallback Yahoo — si pas de staging MCP) : momentum 12-1 + low-vol (REELS, prix) + quality-proxy (-maxDD, prix) sur data/tkl-universe.json.
 # node tools/factor-scanner.js --output signals --date YYYYMMDD --folder FOLDER --top 15  # fallback local
 # Rebalance mensuel (21j) equal-weight top-15 + hysteresis buffer → panier FIGÉ hors jour de rebalance (turnover ~25%/mois, backtest 3.8y CAGR ~43% / maxDD ~11.6% / Sharpe ~1.60). Quality FONDAMENTALE (ROE/marges/levier) = hors portée (débloquable via QueryData fondamentaux dans le staging). No --regime flag pour la voie locale ; --regime optionnel pour --ingest (sanity rr, le facteur reste un rank pur).
-# EU SMALL-CAP PEA (mode `eu_smallcap`, SIM-ONLY) → eu_smallcap_pool. ⚠️ PAS de ligne node ici :
-#   c'est un pool PRODUIT PAR L'AGENT VIA MCP (exactement comme le top-10 / le staging dtx), PAS un
-#   script node. Un subprocess node ne peut pas appeler le MCP (OAuth2, ZÉRO token). À la Phase 1/2,
-#   l'AGENT (toi) appelle mcp__marketdata__* (RunScreener region=eu SANS market_cap en pass_expr +
-#   post-filtre, QueryData country/technicals pour l'éligibilité PEA = siège UE/EEE, exclure UK/CH/
-#   US-shares-listed-EU/foncières), écrit la clé `eu_smallcap_pool[]` dans scanner/YYYYMMDD/signals.json
-#   (shape pool : ticker/score/strategy=MomentumRotation/entry/stop/tp1/tp2/rr/sharia/region=EU/
-#   universe=eu_smallcap + peaEligible/peaPmeEligible/peaProof/hqCountry/currency). Le DOWNSTREAM lit
-#   ce pool committé : scanner-parser.js (euSmallcapPool via poolFrom, NON fusionné dans signals[]) →
-#   sweep.js (ASSET_POOL_SOURCES.equity_eu='eu_smallcap_pool' → isolé, exclu des modes equity US,
-#   gate universeFilter='eu_smallcap') → gen-status-page.js (panneau, devise EUR, SCRIPTED_IDS).
-#   ZÉRO FABRICATION : chaque chiffre vient d'un appel MCP ; MCP down/couverture EU insuffisante → STOP,
-#   ne rien inventer, laisser le pool absent/vide (géré, jamais bloquant). Spec : docs/specs/eu-smallcap-pea-scanner.md.
-node tools/sweep.js                     # Append-only: nouveaux trades fermés (le mode `factor` consomme factor_pool via assetClass us_factor ; le mode `eu_smallcap` consomme eu_smallcap_pool via assetClass equity_eu/universeFilter — P&L via sweep comme hybrid, PAS dtx)
+node tools/sweep.js                     # Append-only: nouveaux trades fermés (le mode `factor` consomme factor_pool via assetClass us_factor).
 # ⛔ Phase 5.5 OBLIGATOIRE (AI-driven, PAS un script node) : Skill(skill="fortress-pm")
 #    → écrire fortress_pool dans scanner/YYYYMMDD/signals.json AVANT gen-status-page.
 #    Sinon aplus/fortress fallback (fortress_fallback) et peuvent rendre vides / non-Halal. Voir §5.5.
@@ -1209,8 +1184,6 @@ c'est voulu, il n'y a qu'un seul moment de mise en ligne. Si `--skip-downstream`
 - **MCP screener renvoie vide** → utiliser les top movers de `GetMarketContext(facets="overview")` +
   sélection manuelle des candidats
 - **Le screener DSL score tout à 0** → ignorer les résultats DSL, s'appuyer sur AutoScreener seul
-- **Screener EU vide** → remplir les slots EU depuis les movers EU de
-  `GetMarketContext(facets="overview")` ou des large-caps EU connues
 - **Sweep timeout** → continuer le pipeline, le sweep n'est pas bloquant
 - **Échec de la notification Telegram** → logger un warning, ne pas bloquer
 - **`refresh-risk-metrics.js`** → **voie `--ingest` (MCP connecté)**. En local, un subprocess node ne peut

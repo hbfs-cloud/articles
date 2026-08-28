@@ -19,7 +19,7 @@
  *   /tmp/hybrid-stage.json       {mcp_ok,asof,bars:{TICKER:[...]}}                          (bars-map, MÉCANIQUE)
  *   /tmp/price-stage-NN.json     {symbols,result} (repris tels quels des bruts barres → price-cache)
  *   /tmp/<scanner>-bars-bundle.json  {mcp_ok,asof,bars:{TICKER:[...]}} pour les scanners PRE-SCORÉS
- *       (highvol/momentum/factor/etf/etf-eu/forex/trendline-*) — l'AGENT applique la formule de score
+ *       (highvol/momentum/factor/etf/forex/trendline-*) — l'AGENT applique la formule de score
  *       documentée (une ligne, LOCAL, zéro round-trip) et écrit /tmp/<scanner>-stage.json final.
  *   + ingest dtx : /tmp/<id>.decide.json + .replay.json → `node tools/dtx-mcp-ingest.js …` (garde sanity 7).
  *
@@ -36,7 +36,7 @@ const scan = require('./dtx-scan');
 const REPO = path.resolve(__dirname, '..');
 const RAW_DIR = '/tmp/mcp-raw';
 const DTX_MODES = ['best'];
-const PRE_SCORED = ['highvol', 'momentum', 'factor', 'etf', 'etf-eu', 'forex', 'trendline-forex', 'trendline-indices'];
+const PRE_SCORED = ['highvol', 'momentum', 'factor', 'etf', 'forex', 'trendline-forex', 'trendline-indices'];
 
 function readJson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (_) { return null; } }
 function raw(key) { return readJson(path.join(RAW_DIR, `${key}.json`)); }

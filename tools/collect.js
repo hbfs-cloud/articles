@@ -218,10 +218,9 @@ async function resolveAsync(server, value, maxMs) {
 /**
  * Cache court par appel — `"cache_minutes": N` dans le manifeste.
  *
- * Une vague parallèle dure le temps de son appel LE PLUS LENT. Sur le vivier
- * scanner, screen_eu prend 87 s et fixe à lui seul la durée des 13 appels. Or un
- * screener européen ne change pas d'une heure à l'autre : le rejouer à chaque run
- * paie 87 s pour un résultat identique.
+ * Une vague parallèle dure le temps de son appel LE PLUS LENT. Les appels de
+ * contexte et les référentiels changent moins vite que les cotations : les rejouer
+ * à chaque retry paie leur latence pour un résultat identique.
  *
  * La clé inclut l'outil ET les arguments substitués : changer une expression DSL
  * ou une date de référence invalide le cache automatiquement. Pas de faux positif

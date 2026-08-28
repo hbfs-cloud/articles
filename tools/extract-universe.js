@@ -25,12 +25,16 @@ const strategy = (arg('--strategy', '') || '').trim().toLowerCase();
 if (!inDir || !outFile) { console.error('Usage: --in <dir> --out <vars.json> [--limit N] [--exclude A,B]'); process.exit(2); }
 
 const seen = new Map(); // symbole -> meilleur score vu
-for (const f of fs.readdirSync(inDir).filter(f => f.endsWith('.json') && !f.startsWith('_') && f !== 'harness.json')) {
+// The production editorial universe is US-listed only. Restrict inputs by source name so a
+// same-day retry cannot absorb a stale screen_eu.json left by an older pipeline version.
+const isUsUniverseSource = f => f === 'autoscreen.json' || /^screen_.+_us\.json$/.test(f);
+const isForeignListing = sym => /\.(AS|BR|DE|F|L|LS|MC|MI|PA|ST|SW|TO|V)$/.test(sym);
+for (const f of fs.readdirSync(inDir).filter(isUsUniverseSource)) {
   let d; try { d = JSON.parse(fs.readFileSync(path.join(inDir, f), 'utf8')); } catch { continue; }
   const items = (d.data && d.data.items) || d.items || [];
   for (const it of items) for (const c of (it.candidates || [])) {
     const sym = (c.symbol || c.ticker || '').toUpperCase();
-    if (!sym || exclude.has(sym)) continue;
+    if (!sym || exclude.has(sym) || isForeignListing(sym)) continue;
     if (strategy) {
       const cs = String(c.strategy || c.strategy_name || '').toLowerCase();
       // Pas de stratégie déclarée ⇒ on ne devine pas : le candidat est écarté. Le retenir

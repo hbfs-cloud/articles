@@ -1081,26 +1081,41 @@ async function main() {
   // Merge EDGAR-discovered advisories (top 10 only — TKL EDGAR hits are hard blocks above)
   advisories.push(...advisoriesFromEdgar);
 
-  // Diversification floors (advisory — Claude's selection should hit these)
+  // Production universe and composition. Historical scans before effective_from keep
+  // their original regional contract; new scans are US-listed stocks + US-listed ETFs only.
   if (filters.diversification) {
-    const counts = { US: 0, EU: 0, APAC: 0, ETF: 0, Other: 0 };
-    for (const s of signals) {
-      const r = String(s.region || '').toUpperCase().trim();
-      if (r === 'US') counts.US++;
-      else if (['EU', 'UK', 'FR', 'DE', 'IT', 'ES', 'NL', 'CH'].includes(r)) counts.EU++;
-      else if (['ASIA', 'APAC', 'CHINA', 'JAPAN', 'KOREA', 'HK', 'TW'].includes(r)) counts.APAC++;
-      else if (r === 'ETF') counts.ETF++;
-      else counts.Other++;
-    }
-    const floors = {
-      US: filters.diversification.min_us_count,
-      EU: filters.diversification.min_eu_count,
-      APAC: filters.diversification.min_apac_count,
-      ETF: filters.diversification.min_etf_count
-    };
-    for (const [region, floor] of Object.entries(floors)) {
-      if (floor == null) continue;
-      if (counts[region] < floor) advisories.push(`Region "${region}" has ${counts[region]} setups (recommend ≥${floor}) [diversification_floor]`);
+    const compactDate = String(dirName).replace(/-/g, '');
+    const effectiveDate = String(filters.diversification.effective_from || '').replace(/-/g, '');
+    const contractActive = !effectiveDate || (/^\d{8}$/.test(compactDate) && compactDate >= effectiveDate);
+    if (contractActive) {
+      const allowed = new Set((filters.diversification.allowed_regions || ['US', 'ETF']).map(r => String(r).toUpperCase()));
+      const counts = { US: 0, ETF: 0 };
+      for (const s of signals) {
+        const region = String(s.region || '').toUpperCase().trim();
+        const ticker = String(s.ticker || '').toUpperCase().trim();
+        const foreignListing = /\.(AS|BR|DE|F|L|LS|MC|MI|PA|ST|SW|TO|V)$/.test(ticker);
+        if (!allowed.has(region) || foreignListing) {
+          violations.push({
+            rule: 'us_listed_universe',
+            message: `${s.ticker}: region "${region || '(missing)'}" or exchange suffix is outside the US stocks/US ETFs scanner universe.`
+          });
+          continue;
+        }
+        counts[region] = (counts[region] || 0) + 1;
+      }
+      const floors = {
+        US: filters.diversification.min_us_count,
+        ETF: filters.diversification.min_etf_count
+      };
+      for (const [region, floor] of Object.entries(floors)) {
+        if (floor == null) continue;
+        if ((counts[region] || 0) < floor) {
+          violations.push({
+            rule: 'us_universe_composition',
+            message: `Region "${region}" has ${counts[region] || 0} setups; at least ${floor} required.`
+          });
+        }
+      }
     }
   }
 
@@ -1113,7 +1128,7 @@ async function main() {
   // avg_off_diagonal_correlation affichés décrivaient donc un panier qui n'a pas existé —
   // et les deux règles de dé-concentration (rho > 0,85 ; moyenne hors-diagonale > 0,65)
   // ne pouvaient pas mordre sur la moitié du panier.
-  // Cause structurelle : PortfolioRisk est US-only, les lignes EU/APAC cassent le calcul.
+  // Le contrat courant est US-only, donc toute ligne publiée doit être couverte.
   // Ce n'est PAS une raison de publier une métrique partielle sans le dire.
   // NOTE — la première version de ce contrôle lisait une variable `raw` HORS PORTÉE et son
   // `catch` muet avalait la ReferenceError : le contrôle ne s'exécutait jamais et ne le disait

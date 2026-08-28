@@ -179,17 +179,6 @@ if [ "$SKIP_SWEEP" = false ]; then
   fi
 
   echo ""
-  echo "📈 Step 2k2: ETF Momentum scan (Europe)..."
-  # MCP-PRIMARY : même binaire, univers etf-eu. Staging distinct (RunScreener etf-eu + QueryData
-  # bars_daily) produit par l'AGENT ; absent → skip non-bloquant. Chemin surchargé par ETF_EU_STAGE.
-  ETF_EU_STAGE="${ETF_EU_STAGE:-/tmp/etf-eu-stage.json}"
-  if [ -f "$ETF_EU_STAGE" ]; then
-    node tools/etf-scanner.js --universe etf-eu --ingest "$ETF_EU_STAGE" --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --top 10 || echo "⚠️  ETF EU scan failed (non-blocking)"
-  else
-    echo "⚠️  ETF EU staging absent ($ETF_EU_STAGE) — MCP-primary : staging produit par l'AGENT (mcp__marketdata__*). Skip non-bloquant."
-  fi
-
-  echo ""
   echo "📐 Step 2l: Trendline Breakout scan (forex)..."
   # MCP-PRIMARY : trendline-scanner ingère un staging (RunScreener/QueryData bars_daily FX) produit par
   # l'AGENT ; absent → skip non-bloquant. Chemin surchargé par TRENDLINE_FOREX_STAGE.

@@ -96,7 +96,6 @@ function contextCalls() {
     RS('rs_pullback', 'rsi14 > 42 and rsi14 < 60 and ema20 > ema50 and close > ema50 and atrpct < 3 and vol > 1000000 and close > 10', '60 - rsi14', { top_k: 25 }),
     RS('rs_breakout', 'near_breakout(0.03) and rsi14 > 52 and rsi14 < 72 and vol > 1500000 and close > 10', 'rsi14', { top_k: 25 }),
     RS('rs_presqueeze', 'near_breakout(0.05) and rsi14 > 45 and rsi14 < 65 and vol > 800000 and close > 10', 'rsi14', { top_k: 20 }),
-    { key: 'rs_eu', tool: 'RunScreener', params: { pass_expr: 'rsi14 > 48 and rsi14 < 72 and ema20 > ema50 and vol > 300000 and close > 5', score_expr: 'rsi14', region: 'eu', force_async: true, top_k: 20 }, note: 'post-filtre market_cap>=1e9 + no-ETF ; ⚠️ tagger event ECB proche' },
     { key: 'autoscreener', tool: 'RunAutoScreener', params: {}, note: 'régime-aware pool' },
     { key: 'ctx_overview', tool: 'GetMarketContext', params: { facets: 'overview' }, note: 'async — poller Jobs' },
     { key: 'ctx_regime', tool: 'GetMarketContext', params: { facets: 'regime', model: 'ensemble', horizon_days: 5 }, note: 'risk gating' },
@@ -105,7 +104,7 @@ function contextCalls() {
   ];
 }
 
-// ── Screeners d'univers des scanners PRE-SCORÉS (stock US/EU) — Phase 1c ──
+// ── Screeners d'univers US des scanners PRE-SCORÉS — Phase 1c ──
 function stagingUniverseCalls() {
   return [
     { key: 'uni_highvol', tool: 'RunScreener', params: { pass_expr: 'near_breakout(0.04) and vol > 2000000 and rsi14 > 50 and close > 10', score_expr: 'rsi14 + atrpct * 5', region: 'us', force_async: true, top_k: 60 }, forScanner: 'highvol' },
@@ -113,7 +112,6 @@ function stagingUniverseCalls() {
     { key: 'uni_factor', tool: 'RunScreener', params: { pass_expr: 'vol > 1500000 and close > 10', score_expr: 'vol', region: 'us', force_async: true, top_k: 120 }, forScanner: 'factor', note: 'composite 12-1/vol/maxDD calculé côté agent depuis barres 5y' },
     { key: 'uni_candlestick', tool: 'RunScreener', params: { pass_expr: 'vol > 1000000 and close > 5', score_expr: 'vol', region: 'us', force_async: true, top_k: 200 }, forScanner: 'candlestick', note: 'univers large — patterns chandeliers détectés côté scanner depuis barres' },
     { key: 'uni_etf_us', tool: 'RunScreener', params: { pass_expr: 'vol > 500000', score_expr: 'vol', region: 'us', asset: 'etf', force_async: true, top_k: 60 }, forScanner: 'etf' },
-    { key: 'uni_etf_eu', tool: 'RunScreener', params: { pass_expr: 'vol > 200000', score_expr: 'vol', region: 'eu', asset: 'etf', force_async: true, top_k: 60 }, forScanner: 'etf-eu' },
   ];
 }
 

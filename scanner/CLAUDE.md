@@ -583,26 +583,20 @@ Quand un setup a un catalyseur lié à un événement binaire (earnings beat/mis
 
 ---
 
-### Diversification Géographique & Setups A+ Europe/Asie/ETFs
+### Univers US Stocks & ETFs
 
-**OBLIGATOIRE** : Le scanner doit inclure des setups de qualité A+ sur les marchés européens, asiatiques et les ETFs, pas uniquement des actions US.
-
-#### Objectif
-Détecter les meilleures opportunités J+1 (next day) sur tous les marchés majeurs pour une vision globale et diversifiée.
+**OBLIGATOIRE** : Le scanner éditorial couvre uniquement les titres cotés aux États-Unis. Le top 10
+contient 8 actions US et 2 ETFs cotés aux États-Unis. Ne lancer aucun screener EU/APAC, aucun fallback
+EU et aucun staging ETF EU.
 
 #### Univers de Screening
 
-**Marchés Européens** :
-- **Actions individuelles** : DAX (Allemagne), CAC 40 (France), FTSE 100 (UK), IBEX 35 (Espagne), FTSE MIB (Italie)
-- **ETFs Europe** : VGK (Vanguard FTSE Europe), EWG (iShares Germany), EWQ (iShares France), EWU (iShares UK), EWP (iShares Spain), EWI (iShares Italy)
-- **Exemples tickers** : SAP, Siemens, TotalEnergies, BBVA, UniCredit, ASML, LVMH, Airbus, Stellantis, Nestlé
+**Actions cotées aux États-Unis** :
+- Actions ordinaires et ADRs liquides retournés par `RunScreener(region="us")`
+- Capitalisation post-filtrée ≥ $2B, prix > $10 et volume > 1,5M pour le vivier principal
+- `region: "US"` dans le signal publié
 
-**Marchés Asiatiques** :
-- **Actions individuelles** : KOSPI (Corée), Nikkei 225 (Japon), Hang Seng (Hong Kong), SSE (Shanghai)
-- **ETFs Asie** : EWJ (iShares Japan), EWY (iShares South Korea), EWH (iShares Hong Kong), FXI (iShares China), MCHI (iShares MSCI China)
-- **Exemples tickers** : Samsung, TSMC, Sony, Toyota, Alibaba, Tencent, POSCO, SK Hynix
-
-**ETFs Sectoriels & Thématiques** (US & Global) :
+**ETFs cotés aux États-Unis** :
 - **Secteurs** : XLF (Financials), XLE (Energy), XLK (Tech), XLV (Healthcare), XLI (Industrials), XLY (Consumer Discretionary), XLP (Consumer Staples), XLRE (Real Estate), XLU (Utilities), XLB (Materials)
 - **Thématiques** : ARKK (Innovation), ICLN (Clean Energy), TAN (Solar), LIT (Lithium), BOTZ (Robotics), HACK (Cybersecurity), CLOU (Cloud), JETS (Airlines), DRIV (Auto)
 - **Commodités** : GLD (Gold), SLV (Silver), USO (Oil), UNG (Natural Gas), DBA (Agriculture)
@@ -610,33 +604,30 @@ Détecter les meilleures opportunités J+1 (next day) sur tous les marchés maje
 
 #### Méthodologie de Sélection
 
-1. **Screening multi-région** : Utiliser `RunScreener` avec les symboles des 3 zones (US, EU, Asia, ETFs)
+1. **Screening US** : utiliser `RunScreener(region="us")` pour les actions et le staging `ETF_STAGE` pour les ETFs US
 2. **Critères A+** :
    - Score composite ≥ 85/100
    - Confluence technique : ≥ 3 signaux alignés (RSI, volume, S/R, pattern)
    - Catalyseur identifiable (earnings, news, breakout technique)
    - Liquidité suffisante (volume moyen > $10M/jour pour actions, > $50M/jour pour ETFs)
-3. **Diversification** : Minimum 2 setups Europe + 1 setup Asie + 2 ETFs parmi les 10 candidats retenus
+3. **Diversification** : exactement 8 actions US + 2 ETFs US parmi les 10 candidats retenus
 4. **Horizon J+1** : Setups avec potentiel de mouvement dans les prochaines 24-48h (pas swing long terme)
 
 #### Présentation dans le Scanner
 
-Pour chaque setup Europe/Asie/ETF, **ajouter un badge géographique** :
+Pour chaque setup, **ajouter le badge d'univers correspondant** :
 
 ```html
 <div class="setup-badges">
-    <span class="badge badge-blue">Europe 🇪🇺</span>  <!-- EU -->
-    <span class="badge badge-purple">Asia 🌏</span>   <!-- Asie -->
-    <span class="badge badge-green">ETF 📊</span>     <!-- ETF -->
+    <span class="badge badge-blue">US</span>
+    <span class="badge badge-green">ETF</span>
     <span class="badge badge-{color}">{Stratégie}</span>
 </div>
 ```
 
 **Exemple de répartition idéale sur 10 setups** :
-- 5 US (stocks individuelles)
-- 2 Europe (actions ou ETFs Europe)
-- 1 Asie (action ou ETF Asie)
-- 2 ETFs thématiques/sectoriels
+- 8 actions cotées aux États-Unis
+- 2 ETFs cotés aux États-Unis
 
 #### Titre de la Carte Scanner (OBLIGATOIRE)
 
@@ -661,16 +652,16 @@ Le `<div class="report-card-meta">` doit contenir la date au format `{Day}, {Mon
 
 #### Mise à jour Index.html
 
-Lors de l'ajout de la carte scanner dans `index.html`, **mentionner la couverture géographique** dans la description :
+Lors de l'ajout de la carte scanner dans `index.html`, **mentionner la composition US** dans la description :
 
 ```html
 <p style="font-size:0.85rem; color:var(--text-muted);">
-    {Description du régime}. {Stratégies}. 10 setups analysés : {Tickers US} (US), {Tickers EU} (Europe), {Tickers Asia} (Asie), {ETFs}.
+    {Description du régime}. {Stratégies}. 10 setups analysés : {8 actions US}, {2 ETFs US}.
 </p>
 ```
 
 **Exemple** :
-> "Rotation défensive confirmée. Hausse VIX +4.2%. 10 setups analysés : XOM, HRL, UNH (US), SAP, BBVA (EU), EWJ (Asie), GLD, XLE (ETFs)."
+> "Rotation défensive confirmée. Hausse VIX +4.2%. 10 setups analysés : XOM, HRL, UNH, JPM, LLY, CAT, NVDA, COST (actions US), GLD, XLE (ETFs US)."
 
 ### Template HTML Obligatoire (CRITIQUE)
 
@@ -678,7 +669,7 @@ Chaque scanner DOIT suivre exactement cette structure HTML. Référence : `scann
 
 #### Balise `<html>` — Attributs Obligatoires
 ```html
-<html lang="en" data-tags="us,eu,asia,commodity,etf,technique,trade-idea,macro,energy,financials,healthcare" data-tab="scanner">
+<html lang="en" data-tags="us,commodity,etf,technique,trade-idea,macro,energy,financials,healthcare" data-tab="scanner">
 ```
 - `lang` : langue de l'article (fr, en, ar)
 - `data-tags` : tags pertinents (voir taxonomie dans CLAUDE.md racine)
@@ -795,7 +786,7 @@ Le scanner utilise le **thème light standard** (fond `#f8fafc`, texte `#0f172a`
 4. **Navigation Grid** : Liens internes vers chaque setup (grille cliquable)
 5. **10 Setup Cards** (`id="setup-{TICKER}"` pour chaque) :
    - Header avec ticker, nom, prix, variation
-   - Badges : stratégie détectée, fiabilité, signal technique, badge géographique (US/EU/Asia/ETF)
+   - Badges : stratégie détectée, fiabilité, signal technique, badge d'univers (US/ETF)
    - **ECharts Gauge** : Score composite 0-100 (`id="gaugeSetup{TICKER}"`)
    - **ECharts Radar** : Profil du setup 6 axes (`id="radarSetup{TICKER}"`)
    - **Thèse d'investissement** : paragraphe explicatif du setup

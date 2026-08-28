@@ -83,7 +83,6 @@ En parallèle, un seul message :
 mcp__claude_ai_marketdata__GetMarketContext(facets="overview")   # async, seul (pas combinable) — canonique, ex-GetMarketOverview
 mcp__claude_ai_marketdata__RunAutoScreener()
 mcp__claude_ai_marketdata__RunScreener(expression="...", region="us")   # 3 DSL strategies
-mcp__claude_ai_marketdata__RunScreener(expression="...", region="eu")
 ```
 
 Poller via `Jobs(job_id=...)`. Extraire : régime, VIX, SPX ; movers, secteurs, thèmes ; candidats + scores.
@@ -94,7 +93,7 @@ silencieux, vérifié 2026-08-10) ; sans borne mcap le screener ne rend que des 
 
 ## Phase 2 — Ticker Selection & Validation
 
-Règles (`scanner-filters.json`) : score ≥ 90 · min 3 confluences · min 5 US + 2 EU + 1 APAC + 2 ETFs ·
+Règles (`scanner-filters.json`) : score ≥ 90 · min 3 confluences · 8 actions US + 2 ETFs US ·
 max 3/secteur · max 3 repeats · zéro overlap positions ouvertes · aucun earnings ±3 séances.
 39 règles (hard blocks / selection filters / advisories) → §Pre-Flight Rule Checklist ; gate par signal →
 §Phase 2b.
@@ -245,6 +244,6 @@ charge. → §Phase 8
 
 ## Error Handling
 
-Screener vide · scores DSL tous à 0 · EU vide · sweep timeout · Telegram KO · `refresh-risk-metrics`
+Screener vide · scores DSL tous à 0 · sweep timeout · Telegram KO · `refresh-risk-metrics`
 auth-fail · boucles Phase 6 > 3 · TKL pool vide → conduites à tenir détaillées en **§Error Handling
 (/scanner)**. Règle transverse : dégrader honnêtement, alerter bruyamment, **ne jamais fabriquer**.

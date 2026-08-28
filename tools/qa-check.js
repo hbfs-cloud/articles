@@ -255,7 +255,6 @@ const SCRIPT_SCANNER_MARKERS = {
   bull:       { special: 'candlestick' },  // _candlestickScan (candlestick-scanner.js)
   highvol:    { keys: ['highvol'] },       // highvol-scanner.js
   etf:        { keys: ['etf'] },           // etf-scanner.js (US, défaut)
-  etf_eu:     { keys: ['etf:etf_eu'] },    // etf-scanner.js --universe etf-eu (tag interne etf_eu)
   momentum:   { keys: ['momentum'] },      // momentum-scanner.js (americanbull, défaut)
   casablanca: { keys: ['casablanca'] },    // casablanca-scanner.js
   trendline:  { prefix: 'trendline' },     // trendline-scanner.js — n'importe quel univers compte
