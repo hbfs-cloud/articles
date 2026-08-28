@@ -78,7 +78,7 @@
           "tool": "QueryData",
           "args": {
             "types": "bars_daily",
-            "symbols": "XLK,XLF,XLE,XLV,XLI,XLY,XLP,XLU,XLC,XLRE",
+            "symbols": "XLK,XLB,XLF,XLE,XLV,XLI,XLY,XLP,XLU,XLC,XLRE",
             "end_date": "$refdate",
             "limit": 25
           },
@@ -140,6 +140,98 @@
           "freshness": {
             "max_age_h": 24,
             "required": false
+          }
+        },
+        {
+          "as": "insiders_3d",
+          "server": "marketdata",
+          "tool": "GetInsiderActivity",
+          "args": {
+            "days": 3,
+            "limit": 25,
+            "max_symbols": 100
+          },
+          "freshness": {
+            "max_age_h": 96,
+            "required": true
+          }
+        },
+        {
+          "as": "watchlist_digest",
+          "server": "marketdata",
+          "tool": "WatchlistDigest",
+          "args": {
+            "symbols": "IOVA,ALT,ALLR,EQX,NVDA,CRWD,CRM,GLD,COIN,CIFR"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "institutional_flows",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "quote,social_sentiment,trading_signals,unusual_options,dark_pool,max_pain,short_interest",
+            "symbols": "SPY,QQQ,NVDA,CRWD,CRM,GLD,COIN,CIFR",
+            "end_date": "$refdate",
+            "days": 5
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "move_nvda",
+          "server": "marketdata",
+          "tool": "ExplainSymbolMove",
+          "args": {
+            "symbol": "NVDA"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "move_crwd",
+          "server": "marketdata",
+          "tool": "ExplainSymbolMove",
+          "args": {
+            "symbol": "CRWD"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "move_crm",
+          "server": "marketdata",
+          "tool": "ExplainSymbolMove",
+          "args": {
+            "symbol": "CRM"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "correlation_ai_gold",
+          "server": "marketdata",
+          "tool": "PortfolioRisk",
+          "args": {
+            "action": "correlation",
+            "symbols": "NVDA,CRWD,CRM,GLD,COIN,CIFR",
+            "lookback_days": 60,
+            "method": "pearson"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
           }
         }
       ]
