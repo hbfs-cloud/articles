@@ -17,7 +17,7 @@
         "dir":         { "type": "string", "enum": ["ltr", "rtl"], "default": "ltr" },
         "level":       { "type": "string", "enum": ["beginner", "intermediate", "expert"], "default": "intermediate" },
         "tags":        { "type": "array", "items": { "type": "string" }, "minItems": 1 },
-        "grade":       { "type": "string", "enum": ["A+", "A", "B+", "B", "C+", "C", "D+", "D"] },
+        "grade":       { "type": "string", "enum": ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D"] },
         "date":        { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
         "dateDisplay": { "type": "string", "description": "Human-readable date, e.g. '21 juin 2026'" },
         "description": { "type": "string", "maxLength": 300 },
@@ -219,6 +219,7 @@
             "dilutionPct": { "type": "string" },
             "status":     { "type": "string", "enum": ["ITM", "ATM", "OTM", "Expired"] },
             "cashless":   { "type": "boolean" }
+            ,"note":      { "type": "string" }
           }
         }},
         "atm": {
@@ -240,6 +241,28 @@
         }},
         "shareHistory": { "type": "string", "description": "e.g. 'Shares 1Y ago: 30M, now: 33M (+10%)'" },
         "sourceRefs":   { "$ref": "#/$defs/sourceRefs" }
+      }
+    },
+
+    "filingsReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "filings", "contrarianRisks"],
+      "properties": {
+        "summary": { "type": "string" },
+        "filings": { "type": "array", "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["date", "form", "accession", "finding", "url"],
+          "properties": {
+            "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+            "form": { "type": "string" },
+            "accession": { "type": "string" },
+            "finding": { "type": "string" },
+            "url": { "type": "string", "format": "uri" }
+          }
+        }},
+        "contrarianRisks": { "type": "array", "items": { "type": "string" } }
       }
     },
 
@@ -572,7 +595,7 @@
         "thesis":      { "type": "string" },
         "catalysts":   { "type": "array", "items": { "type": "string" } },
         "invalidation": { "type": "array", "items": { "type": "string" } },
-        "status":      { "type": "string", "enum": ["active", "triggered", "invalidated", "tp1-hit", "tp2-hit", "stopped"], "default": "active" },
+        "status":      { "type": "string", "enum": ["active", "watch", "wait", "speculative", "rejected", "missed", "triggered", "invalidated", "tp1-hit", "tp2-hit", "stopped"], "default": "active" },
         "statusNote":  { "type": "string" },
         "forecast":    {
           "type": "object",

@@ -1529,7 +1529,7 @@ window.searchDataPrebuilt = [
     "title": "NBTX — verdict, risks, confirmation, invalidation and current trade levels.",
     "desc": "NBTX: Rejected. Fresh review of fundamentals, capital structure, technicals and trade levels.",
     "tags": "us,equities,trade-idea,healthcare",
-    "grade": "D",
+    "grade": "C-",
     "href": "/analyses/NBTX/",
     "date": ""
   },
@@ -1542,7 +1542,7 @@ window.searchDataPrebuilt = [
     "title": "VG — verdict, risks, confirmation, invalidation and current trade levels.",
     "desc": "VG: Rejected; stop sits inside normal noise. Fresh review of fundamentals, capital structure, technicals and trade levels.",
     "tags": "us,equities,trade-idea,energy",
-    "grade": "D+",
+    "grade": "C-",
     "href": "/analyses/VG/",
     "date": ""
   },
@@ -1555,7 +1555,7 @@ window.searchDataPrebuilt = [
     "title": "CRWD — verdict, risks, confirmation, invalidation and current trade levels.",
     "desc": "CRWD: Wait for post-earnings digestion. Fresh review of fundamentals, capital structure, technicals and trade levels.",
     "tags": "us,equities,trade-idea,technology",
-    "grade": "D",
+    "grade": "B-",
     "href": "/analyses/CRWD/",
     "date": ""
   },
@@ -1568,7 +1568,7 @@ window.searchDataPrebuilt = [
     "title": "IBKR — verdict, risks, confirmation, invalidation and current trade levels.",
     "desc": "IBKR: Rejected at current levels. Fresh review of fundamentals, capital structure, technicals and trade levels.",
     "tags": "us,equities,trade-idea,financial-services",
-    "grade": "D",
+    "grade": "B+",
     "href": "/analyses/IBKR/",
     "date": ""
   },
@@ -1581,7 +1581,7 @@ window.searchDataPrebuilt = [
     "title": "ELVN — verdict, risks, confirmation, invalidation and current trade levels.",
     "desc": "ELVN: Wait; flows conflict. Fresh review of fundamentals, capital structure, technicals and trade levels.",
     "tags": "us,equities,trade-idea,healthcare",
-    "grade": "C",
+    "grade": "C+",
     "href": "/analyses/ELVN/",
     "date": ""
   },
@@ -1607,7 +1607,7 @@ window.searchDataPrebuilt = [
     "title": "BHVN — verdict, risks, confirmation, invalidation and current trade levels.",
     "desc": "BHVN: Speculative; first target does not pay enough. Fresh review of fundamentals, capital structure, technicals and trade levels.",
     "tags": "us,equities,trade-idea,healthcare",
-    "grade": "D",
+    "grade": "D+",
     "href": "/analyses/BHVN/",
     "date": ""
   },
@@ -1620,7 +1620,7 @@ window.searchDataPrebuilt = [
     "title": "ARWR — verdict, risks, confirmation, invalidation and current trade levels.",
     "desc": "ARWR: Wait for regular-session confirmation. Fresh review of fundamentals, capital structure, technicals and trade levels.",
     "tags": "us,equities,trade-idea,healthcare",
-    "grade": "C",
+    "grade": "C+",
     "href": "/analyses/ARWR/",
     "date": ""
   },
@@ -1633,7 +1633,7 @@ window.searchDataPrebuilt = [
     "title": "CNC — verdict, risks, confirmation, invalidation and current trade levels.",
     "desc": "CNC: Wait; insider flow is negative. Fresh review of fundamentals, capital structure, technicals and trade levels.",
     "tags": "us,equities,trade-idea,healthcare",
-    "grade": "D+",
+    "grade": "C-",
     "href": "/analyses/CNC/",
     "date": ""
   },
@@ -1646,7 +1646,7 @@ window.searchDataPrebuilt = [
     "title": "DINO — verdict, risks, confirmation, invalidation and current trade levels.",
     "desc": "DINO: Wait for a new pivot. Fresh review of fundamentals, capital structure, technicals and trade levels.",
     "tags": "us,equities,trade-idea,energy",
-    "grade": "C",
+    "grade": "C+",
     "href": "/analyses/DINO/",
     "date": ""
   },
@@ -1672,7 +1672,7 @@ window.searchDataPrebuilt = [
     "title": "FSLR — verdict, risks, confirmation, invalidation and current trade levels.",
     "desc": "FSLR: Wait; trend is damaged. Fresh review of fundamentals, capital structure, technicals and trade levels.",
     "tags": "us,equities,trade-idea,technology",
-    "grade": "C",
+    "grade": "C+",
     "href": "/analyses/FSLR/",
     "date": ""
   },
@@ -1698,7 +1698,7 @@ window.searchDataPrebuilt = [
     "title": "TSM — verdict, risks, confirmation, invalidation and current trade levels.",
     "desc": "TSM: Watch; target remains too distant. Fresh review of fundamentals, capital structure, technicals and trade levels.",
     "tags": "us,equities,trade-idea,technology",
-    "grade": "B",
+    "grade": "B+",
     "href": "/analyses/TSM/",
     "date": ""
   },
@@ -1711,7 +1711,7 @@ window.searchDataPrebuilt = [
     "title": "AMZN — verdict, risks, confirmation, invalidation and current trade levels.",
     "desc": "AMZN: Watch; initial plan rejected. Fresh review of fundamentals, capital structure, technicals and trade levels.",
     "tags": "us,equities,trade-idea,consumer-cyclical",
-    "grade": "C+",
+    "grade": "B",
     "href": "/analyses/AMZN/",
     "date": ""
   },
@@ -1724,7 +1724,7 @@ window.searchDataPrebuilt = [
     "title": "OKTA — verdict, risks, confirmation, invalidation and current trade levels.",
     "desc": "OKTA: Validated only on a pullback. Fresh review of fundamentals, capital structure, technicals and trade levels.",
     "tags": "us,equities,trade-idea,technology",
-    "grade": "B",
+    "grade": "B-",
     "href": "/analyses/OKTA/",
     "date": ""
   },

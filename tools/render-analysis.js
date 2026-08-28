@@ -311,7 +311,7 @@ function renderHeader(d) {
         ${badges}
         <span class="badge badge-blue">Score ${verdict.score}</span>
         <span style="background:${gradeColor(meta.grade)};color:#fff;padding:0.3rem 0.7rem;border-radius:8px;font-weight:800;">${meta.grade}</span>
-        ${halalBadge}
+${halalBadge ? `        ${halalBadge}` : ''}
 ${(d.archiveHistory && d.archiveHistory.length) ? `        <button type="button" onclick="document.getElementById('historyModal').style.display='flex'" style="background:none;border:1px solid #e2e8f0;color:#64748b;cursor:pointer;padding:0.3rem 0.7rem;border-radius:8px;font-size:0.8rem;display:inline-flex;align-items:center;gap:0.4rem;"><i class="fa-solid fa-clock-rotate-left"></i>Historique</button>` : ''}
       </div>
       <div class="ticker-metrics" style="display:flex;flex-wrap:wrap;gap:1rem;">
@@ -320,7 +320,7 @@ ${metrics.map(([label, val]) => `        <div class="ticker-metric"><div class="
       <div id="article-clickable-tags" class="card-tags"></div>
     </header>
 
-    ${renderChartEmbed(header, d.meta)}`;
+${renderChartEmbed(header, d.meta)}`;
 }
 
 function renderVerdict(d) {
@@ -469,7 +469,7 @@ ${metricTile(cs.sharesOutstanding, 'Shares Out.')}${metricTile(cs.sharesAuthoriz
   if (cs.warrants && cs.warrants.length) {
     html += `\n        <h4>Warrants</h4>
         <table class="data-table"><thead><tr><th>Series</th><th>Type</th><th>Strike</th><th>Shares</th><th>Exp.</th><th>Dilution</th><th>Status</th></tr></thead><tbody>
-${cs.warrants.map(w => `            <tr><td>${esc(w.series)}</td><td>${esc(w.type)}</td><td>$${w.strike}</td><td>${esc(w.shares)}</td><td>${esc(w.expiration)}</td><td>${esc(w.dilutionPct)}</td><td><span class="badge badge-${w.status === 'OTM' ? 'green' : w.status === 'ITM' ? 'red' : 'blue'}">${w.status}</span></td></tr>`).join('\n')}
+${cs.warrants.map(w => `            <tr><td>${esc(w.series)}</td><td>${esc(w.type || 'N/A')}</td><td>${w.strike == null ? 'N/A' : '$' + w.strike}</td><td>${esc(w.shares || 'N/A')}</td><td>${esc(w.expiration || 'N/A')}</td><td>${esc(w.dilutionPct || w.note || 'See filing')}</td><td>${w.status ? `<span class="badge badge-${w.status === 'OTM' ? 'green' : w.status === 'ITM' ? 'red' : 'blue'}">${esc(w.status)}</span>` : 'Outstanding'}</td></tr>`).join('\n')}
           </tbody></table>`;
   }
   if (cs.atm && cs.atm.active) {
@@ -479,6 +479,21 @@ ${cs.warrants.map(w => `            <tr><td>${esc(w.series)}</td><td>${esc(w.typ
   html += sourceRefsHtml(cs.sourceRefs);
   html += `\n      </div>`;
   return html;
+}
+
+function renderFilingsReview(d) {
+  const fr = d.filingsReview;
+  if (!fr) return '';
+  return `
+      <div id="filings" class="content-card">
+        <h2><i class="fa-solid fa-file-shield"></i> SEC Filings Review</h2>
+        <div class="pedagogy-box"><p>${esc(fr.summary)}</p></div>
+        <table class="data-table"><thead><tr><th>Date</th><th>Form</th><th>Accession</th><th>What the filing changes</th></tr></thead><tbody>
+${fr.filings.map(f => `          <tr><td>${esc(f.date)}</td><td>${esc(f.form)}</td><td><a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.accession)}</a></td><td>${esc(f.finding)}</td></tr>`).join('\n')}
+        </tbody></table>
+        <h4 style="margin-top:1rem;">Contrarian checks</h4>
+        <ul class="check-list negative">${fr.contrarianRisks.map(r => `<li><i class="fa-solid fa-circle-xmark"></i><span>${esc(r)}</span></li>`).join('')}</ul>
+      </div>`;
 }
 
 function renderShortInterest(d) {
@@ -807,9 +822,14 @@ ${pm.markets.map(m => `          <div style="padding:1rem;border:1px solid #e2e8
 function renderTradeIdea(d) {
   const t = d.tradeIdea;
   const isInvalidated = t.status === 'invalidated' || t.status === 'stopped';
-  const op = isInvalidated ? 'opacity:0.45;' : '';
+  const isClosed = isInvalidated || t.status === 'rejected' || t.status === 'missed';
+  const op = isClosed ? 'opacity:0.65;' : '';
   const statusBanner = isInvalidated
     ? `\n        <div style="background:#dc2626;color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-ban"></i> TRADE ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
+    : t.status === 'rejected' || t.status === 'missed'
+    ? `\n        <div style="background:#64748b;color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-circle-pause"></i> ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
+    : t.status === 'watch' || t.status === 'wait' || t.status === 'speculative'
+    ? `\n        <div style="background:${t.status === 'watch' ? '#2563eb' : t.status === 'speculative' ? '#7c3aed' : '#d97706'};color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-eye"></i> ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
     : t.status === 'tp1-hit' || t.status === 'tp2-hit'
     ? `\n        <div style="background:#22c55e;color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-check"></i> ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
     : '';
@@ -832,7 +852,7 @@ ${cards.map(c => `          <div style="border-left:4px solid ${c.color};padding
             <div style="font-size:0.78rem;color:#64748b;">${esc(c.note)}</div>
           </div>`).join('\n')}
         </div>
-${t.thesis ? `        <div class="pedagogy-box"${isInvalidated ? ' style="opacity:0.45;"' : ''}><h4><i class="fa-solid fa-lightbulb"></i> Thesis</h4><p>${esc(t.thesis)}</p></div>` : ''}
+${t.thesis ? `        <div class="pedagogy-box"${isClosed ? ' style="opacity:0.65;"' : ''}><h4><i class="fa-solid fa-lightbulb"></i> Thesis</h4><p>${esc(t.thesis)}</p></div>` : ''}
 ${t.catalysts && t.catalysts.length ? `        <div style="margin-top:1rem;${op}"><h4 style="font-size:0.95rem;margin-bottom:0.5rem;"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Catalysts</h4><ul style="display:flex;flex-direction:column;gap:0.4rem;padding-left:1.2rem;">${t.catalysts.map(c => `<li style="font-size:0.9rem;">${esc(c)}</li>`).join('')}</ul></div>` : ''}
 ${t.invalidation && t.invalidation.length ? `        <div class="alert-box" style="margin-top:1rem;${op}"><h4 style="margin:0 0 0.5rem;"><i class="fa-solid fa-triangle-exclamation"></i> Invalidation</h4><ul style="margin:0;padding-left:1.2rem;">${t.invalidation.map(i => `<li style="font-size:0.9rem;">${esc(i)}</li>`).join('')}</ul></div>` : ''}
 ${t.forecast ? `        <div class="pedagogy-box" style="margin-top:1rem;"><h4>Price Forecast (${esc(t.forecast.horizon || '10 Days')})</h4><p>Probabilistic range 80%: <strong>[$${t.forecast.ciLow.toFixed(2)} &ndash; $${t.forecast.ciHigh.toFixed(2)}]</strong></p><p style="font-size:0.75rem;color:#64748b;">Quantitative projection only. Exclude earnings windows (&pm;3 days).</p></div>` : ''}
@@ -877,6 +897,7 @@ function renderFab(d) {
     d.earnings && d.earnings.quarters && d.earnings.quarters.length && { id: 'earnings', icon: 'fa-chart-bar', label: 'Earnings' },
     d.insiders          && { id: 'insiders',      icon: 'fa-user-tie',                 label: 'Insiders' },
     d.capitalStructure  && { id: 'capital',       icon: 'fa-money-bill-trend-up',      label: 'Capital' },
+    d.filingsReview     && { id: 'filings',       icon: 'fa-file-shield',               label: 'SEC Review' },
     d.technicals        && { id: 'technique',     icon: 'fa-chart-area',               label: 'Technical' },
     d.performance       && { id: 'performance',   icon: 'fa-trophy',                   label: 'Perf' },
     d.forecast          && { id: 'forecast',      icon: 'fa-chart-line',               label: 'Forecast' },
@@ -992,6 +1013,7 @@ function render(data) {
     renderEarnings(data),
     renderInsiders(data),
     renderCapitalStructure(data),
+    renderFilingsReview(data),
     renderShortInterest(data),
     renderOptions(data),
     renderTechnicals(data),
