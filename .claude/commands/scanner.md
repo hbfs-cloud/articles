@@ -14,7 +14,7 @@ skill `scanner-pipeline`** — DSL, dtx, carte du downstream, checklists, error 
 4. **`--no-push` obligatoire en Phase 4** — aucun `git push` avant la Phase 8. →§Phase 4
 5. **Panel AVANT push** — les 7 relecteurs tournent avant la mise en ligne, jamais en rattrapage (`analysis-senior-review-first`, violée le 22/07). →§Phase 6
 6. **`risk_gating` non vide** — `data.json#engine_meta.risk_gating` = ensemble_confidence, crisis_prob_5d, max_pair_correlation, avg_off_diagonal_correlation, sizing ; vide = scan NON conforme. →§Phase 6
-7. **R/R depuis le MIDPOINT** (jamais `entry_low`), ≥ seuil régime : RISK-ON 1.5 · RECOVERY/NEUTRAL 1.7 · EARLY RISK-OFF/RISK-OFF 2.0. →§Phase 3
+7. **Cible atteignable d'abord, R/R au pire fill ensuite** — TP1 dans la bande ATR de `editorial_targets.tp1_reachability`, puis R/R calculé depuis `entry_high` ≥ seuil actif de `editorial_targets.rr_min_by_regime` (RISK-ON/RECOVERY/NEUTRAL 0.7 · EARLY RISK-OFF/RISK-OFF 0.9). Ne jamais réutiliser les anciens seuils 1.5/2.0, retirés sur preuve rétrospective le 10/08. →§Phase 3
 8. **VWAP entry gate** always-on : `min(open_next, VWAP_next)` clampé `day_low` ; `open > entry_high × 1.02` → pullback VWAP seul. →§Phase 3
 9. **`_pipelineOrder` + `_memoryImpact`** top-level obligatoires dans `signals.json` (gate G4 : earnings screené sur le vivier COMPLET avant enrichissement). →§Phase 3
 10. **`earnings_source: "8k_item_202"`** — jamais le calendrier prévisionnel (gate G4, incident 20260730). →§Phase 3

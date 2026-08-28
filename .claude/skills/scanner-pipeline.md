@@ -426,7 +426,7 @@ Cette validation **n'est PAS optionnelle** : elle tourne dans la Phase 2, imméd
 des résultats du screener TKL. **Aucun ticker TKL n'entre dans `signals.json` sans avoir passé tous les
 checks.**
 
-**Sélection multi-list :** 10 par pool stratégique (momentum, breakout, pullback, pre_squeeze) + 10 composite. Composite = meilleur de chaque pool diversifié (score ≥ **90**, confluence ≥ 3 signaux, 8 actions US + 2 ETFs US).
+**Sélection multi-list :** 10 par pool stratégique (momentum, breakout, pullback, pre_squeeze) + 10 composite. Composite = meilleur de chaque pool diversifié (score ≥ **80**, confluence ≥ 3 signaux, 8 actions US + 2 ETFs US). Le seuil 80 est la source active de la checklist pré-flight; un score plus élevé ne transforme pas automatiquement une ligne en ordre exécutable.
 
 **⚠️ SCORING RULES (hard enforced by validate-scan.js since 2026-06-30) :**
 - **Score max 98** — no perfect scores. Score reflects REALISTIC probability of TP1 hit.
@@ -459,7 +459,8 @@ Après sélection des 10 candidats, CHAQUE signal passe la checklist v2.0.
 
 #### HARD BLOCKS (auto-reject, aucun override)
 - [ ] `stops-min-atr-multiple` : stop < 1.5× ATR(14) OU stop_pct < 3% OU stop_pct > 8% → REJECT (toutes stratégies y compris Candlestick)
-- [ ] `rr-min-by-regime` : R/R < seuil régime → REJECT. Seuils H10 : RISK-ON 1.5, NEUTRAL 1.5, EARLY RISK-OFF/RISK-OFF 2.0. Seuils H15+ : NEUTRAL 1.7, ERO/RO 2.0
+- [ ] `tp1-reachability` : TP1 hors bande `[1.0, 2.0] × ATR14` depuis `entry_high` → REJECT. C'est le gate principal depuis le 2026-08-10.
+- [ ] `rr-min-by-regime` : R/R calculé au pire fill (`entry_high`) sous le seuil actif → REJECT. RISK-ON/RECOVERY/NEUTRAL 0.7, EARLY RISK-OFF/RISK-OFF 0.9. Les anciens seuils 1.5/2.0 ne sont plus opérationnels.
 - [ ] `regime-score-label-lag` : label diverge ≥ 2 niveaux du score (ex: label RISK-ON + score < 50 = NEUTRAL effectif) → REJECT scan. Score < 40 = EARLY RISK-OFF quel que soit le label
 - [ ] `stopped-ticker-cooldown` : ticker stoppé dans les 3 derniers scans OU ticker dans 3+ scans consécutifs → REJECT
 - [ ] `regime-override-ensemble-block` : override régime diverge > 0.2 de l'ensemble + catalyseur binaire ≤ 48h → REJECT override
@@ -505,7 +506,7 @@ Après sélection des 10 candidats, CHAQUE signal passe la checklist v2.0.
 
 ### Phase 3 — Data Generation
 
-**Titre carte OBLIGATOIRE** : `Top 10 A+ {REGIME} — {TICKER1}, ..., {TICKER10}` (composite)
+**Titre carte OBLIGATOIRE** : `Top 10 conditionnel {REGIME} — {TICKER1}, ..., {TICKER10}` (composite). Réserver `A+` aux lignes qui franchissent réellement le seuil A+ documenté; ne pas l'utiliser comme simple synonyme de top 10.
 
 **signals.json output format :**
 ```json
@@ -524,17 +525,17 @@ Après sélection des 10 candidats, CHAQUE signal passe la checklist v2.0.
 }
 ```
 
-**R/R et Horizon par régime (table harmonisée v2.0) :**
-| Régime | Horizon | R/R min | TP1 max |
-|--------|---------|---------|---------|
-| RISK-ON | H10 | 1.5 | 1.5R |
-| NEUTRAL | H10 | 1.5 | 1.5R |
-| EARLY RISK-OFF | H15 | 2.0 | 2.0R |
-| RISK-OFF | H15 | 2.0 | 2.0R |
+**Cible, R/R et horizon par régime (politique active depuis le 2026-08-10) :**
+| Régime | Horizon | TP1 atteignable | R/R min au pire fill |
+|--------|---------|-----------------|----------------------|
+| RISK-ON | H10 | 1.0–2.0 × ATR14 | 0.7 |
+| RECOVERY / NEUTRAL | H10 | 1.0–2.0 × ATR14 | 0.7 |
+| EARLY RISK-OFF | H15 | 1.0–2.0 × ATR14 | 0.9 |
+| RISK-OFF | H15 | 1.0–2.0 × ATR14 | 0.9 |
 
-⚠️ Le **seuil `rr-min-by-regime` consommé par `/scanner`** (source `scanner-lessons.json#rr-min-by-regime`)
-est : **RISK-ON 1.5 · RECOVERY/NEUTRAL 1.7 · EARLY RISK-OFF/RISK-OFF 2.0**. Le R/R se calcule depuis le
-**MIDPOINT de la zone d'entrée**, jamais depuis `entry_low`.
+La source de vérité est `data/scanner-filters.json#editorial_targets`. Le TP1 atteignable est le gate
+principal ; le R/R reste un garde-fou secondaire et se calcule depuis **`entry_high`**, jamais depuis
+`entry_low` ni le midpoint. Cette politique remplace explicitement l'ancienne table 1.5/2.0.
 
 #### Artefacts générés
 1. `scanner/YYYYMMDD/data.json` conforme **exactement** à `scanner/template/schema.json`

@@ -776,7 +776,7 @@ function buildPage(d) {
   const heroBadges = [
     badge(`${regimeDot} ${regime}`, regimeBadgeColor(regime)),
     badge(d.session_label || d.date || '', 'blue'),
-    badge(`${setups.length} Setups A+`, 'green'),
+    badge(`${setups.length} setups conditionnels`, 'green'),
     ...(d.alerts || []).map(a => badge(`&#x26A0; ${a.title}`, 'amber'))
   ].join('\n    ');
 
@@ -806,10 +806,10 @@ function buildPage(d) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Top ${setups.length} A+ ${regime} &middot; ${setups.slice(0,10).map(s=>s.ticker).join(', ')} | DailyTickers Scanner</title>
-  <meta name="description" content="Scanner ${d.session_label || d.date} &middot; ${regime} (score ${d.regime_score || 0}). ${setups.length} setups A+ en tableaux compacts, niveaux vérifiés.">
+  <title>Top ${setups.length} conditionnel ${regime} &middot; ${setups.slice(0,10).map(s=>s.ticker).join(', ')} | DailyTickers Scanner</title>
+  <meta name="description" content="Scanner ${d.session_label || d.date} &middot; ${regime} (score ${d.regime_score || 0}). ${setups.length} setups conditionnels, niveaux vérifiés.">
   <meta property="og:title" content="Scanner DailyTickers &middot; ${d.session_label || d.date} &middot; ${setups.slice(0,10).map(s=>s.ticker).join(', ')}">
-  <meta property="og:description" content="${regime} regime. ${d.session_label || d.date}. ${setups.length} setups A+.">
+  <meta property="og:description" content="Régime ${regime}. ${d.session_label || d.date}. ${setups.length} setups conditionnels.">
   <meta property="og:image" content="${ogImage}">
   <meta property="og:url" content="${d.url || `https://articles.dailytickers.com/scanner/${d.date}/`}">
   <meta property="og:type" content="article">
@@ -820,11 +820,25 @@ function buildPage(d) {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    .content-card, .chart-grid-2col > *, .ticker-metric { min-width: 0; }
+    .content-card { max-width: 100%; box-sizing: border-box; }
+    .data-table-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .setups-table td, .setups-table th { vertical-align: middle; }
     .setups-table td.setup-phrase { font-size: 0.86rem; color: #334155; line-height: 1.35; }
     .strategy-table-title { margin: 1.75rem 0 0.6rem; font-weight: 700; font-size: 1.05rem; }
     .setups-table td:nth-child(3), .setups-table td:nth-child(4),
     .setups-table td:nth-child(5), .setups-table td:nth-child(6) { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    @media (max-width: 600px) {
+      html, body { max-width: 100%; overflow-x: hidden; }
+      .ticker-header { width: 100% !important; max-width: 100% !important; box-sizing: border-box; overflow: hidden; }
+      .ticker-header .ticker-meta { display: grid !important; grid-template-columns: minmax(0, 1fr) !important; width: 100%; justify-items: center; }
+      .ticker-header .badge { max-width: 100%; white-space: normal !important; text-align: center; overflow-wrap: anywhere; }
+      .ticker-header h1, .ticker-header .ticker-subtitle { width: 100%; max-width: 100%; box-sizing: border-box; overflow-wrap: anywhere; }
+      .content-card { padding: 1rem !important; }
+      .ticker-metrics { width: 100%; max-width: 100%; box-sizing: border-box; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+      .ticker-metric .tm-value { overflow-wrap: anywhere; }
+      .chart-grid-2col { grid-template-columns: minmax(0, 1fr) !important; }
+    }
   </style>
 </head>
 <body>
@@ -846,7 +860,7 @@ function buildPage(d) {
     ${heroBadges}
   </div>
   <h1 class="ticker-name">Scanner DailyTickers — ${d.session_label || d.date}</h1>
-  <p class="ticker-subtitle">Top ${setups.length} A+ ${regime} — niveaux vérifiés sur données de séance, tableaux compacts par stratégie</p>
+  <p class="ticker-subtitle">Top ${setups.length} conditionnel ${regime} — niveaux vérifiés sur données de séance, tableaux compacts par stratégie</p>
   <div class="ticker-metrics">
     <div class="ticker-metric"><div class="tm-value" style="color:${regColor};">${regime}</div><div class="tm-label">Régime</div></div>
     <div class="ticker-metric"><div class="tm-value">${avgScore}</div><div class="tm-label">Score moyen</div></div>
@@ -873,8 +887,8 @@ ${alertsHtml(d.alerts)}
 <section id="regime" class="section-block">
   <div class="section-header"><h2><i class="fas fa-gauge"></i> Régime de marché : ${regime} (score ${d.regime_score ? String((d.regime_score * 100).toFixed(1)).replace('.', ',') + '%' : 'n/a'})</h2></div>
   <div class="content-card">
-    <h3 style="margin:1.25rem 0 0.6rem;font-weight:700;">Market Snapshot (${d.session_label || d.date})</h3>
-    <div style="overflow-x:auto"><table class="data-table">
+    <h3 style="margin:1.25rem 0 0.6rem;font-weight:700;">Tableau de marché (${d.session_label || d.date})</h3>
+    <div class="data-table-wrap"><table class="data-table">
       <thead><tr><th>Indice / Actif</th><th>Prix</th><th>Variation</th><th>Signal</th></tr></thead>
       <tbody>
 ${(d.market_snapshot || []).map(r => `        <tr><td><strong>${esc(r.name ?? r.label)}</strong></td><td>${esc(r.price ?? r.value)}</td><td class="${rowDir(r)}">${esc(r.change)}</td><td>${esc(r.signal ?? r.note)}</td></tr>`).join('\n')}
@@ -912,14 +926,14 @@ ${sectorRotationTable(d.sector_rotation)}
 <section id="synthese" class="section-block">
   <div class="section-header"><h2><i class="fas fa-table-list"></i> Signaux du jour — ${setups.length} setups par stratégie</h2></div>
   <div class="content-card">
-    <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés et vérifiés sur les données de séance. Les setups momentum/breakout jugés faibles (R/R non actionnable, entrée trop étendue) ont été retirés. Prendre 50% à TP1 puis stop au point mort.</p>
+    <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés sur la clôture de référence. Tous les setups restent non exécutables avant l'observation du VWAP de la prochaine séance. Le sizing portefeuille ayant été rejeté, l'allocation recommandée au panier complet est de 0%.</p>
 ${strategyTablesHtml}
     <div class="pedagogy-box">
       <h4><i class="fas fa-info-circle"></i> Comment utiliser ces niveaux</h4>
-      <p>Entrée = zone d'exécution à l'ouverture (9h30–9h45 ET) si le prix s'y trouve. Le stop est un ordre dur, pas mental. TP = objectif principal : prendre 50% à l'objectif, remonter le stop au point mort, laisser courir le reste. ${hasEntryZone
-        ? `Le R/R du tableau est mesuré au MILIEU de la zone d'entrée. Rempli au haut de la zone — le pire cas —, il est plus faible : le plus bas du scan tombe alors à 1:${minRR}.`
+      <p>Entrée = zone conditionnelle à l'ouverture (9h30–9h45 ET), uniquement si le prix s'y trouve et tient le VWAP observé. Le stop est un ordre dur, pas mental. ${hasEntryZone
+        ? `Le R/R du tableau est calculé au HAUT de la zone d'entrée, soit le pire remplissage autorisé; le plancher du scan est 1:${minRR}.`
         : `Entrée = prix unique (pas de zone) sur ce scan : le R/R affiché est le R/R exact, pas une mesure au milieu d'une fourchette — il n'y a pas de « pire remplissage » distinct à anticiper.`
-      } Taille de position : nombre d'actions = (risque max en % du capital, voir Méthodologie §5) ÷ (entrée − stop) ; ne jamais sizer au jugé. Si le prix ouvre en gap au-delà de l'entrée + 0,5&times; l'ATR14 de la ligne, ne pas chasser : le setup est annulé pour la séance. Une entrée est nulle également si son filtre de surextension (RSI14 ou écart MME50, voir invalidations) est franchi avant l'exécution, même si le setup a été publié en-dessous du seuil.</p>
+      } Aucun sizing individuel n'est fourni tant que le sizing portefeuille reste rejeté. Si l'ouverture dépasse le haut de la zone de 2%, l'entrée directe est annulée et seul un retour au VWAP peut réarmer la ligne. Une entrée est également nulle si son filtre de surextension est franchi avant l'exécution.</p>
       <p style="font-size:0.85rem;color:#64748b;margin-top:0.5rem;">Badges : <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span> ligne dont le secteur d'activité est conforme aux critères de finance islamique retenus ici (l'endettement, quand vérifié, est précisé ligne par ligne dans les invalidations — non systématiquement audité) — <span class="badge" style="background:#e2e8f0;color:#334155;border:1px solid #94a3b8;font-size:.68rem">CONV</span> ligne conventionnelle, non conforme.</p>
     </div>
   </div>
@@ -939,15 +953,15 @@ ${strategyTablesHtml}
     </div>
     <div class="pedagogy-box">
       <h4>3. Scoring composite</h4>
-      <p>Score interne combinant technique, momentum, volume et contexte macro par ticker. Le libellé « A+ » de ce rapport désigne les setups les mieux classés du vivier qui franchissent tous les filtres durs ci-dessous (dilution, bande de stop, R/R, corrélation, plancher Sharia/géographique) — ce n'est pas un seuil de score fixe : les scores publiés varient d'un scan à l'autre selon la composition du vivier du jour.</p>
+      <p>Score interne recalculé sur le snapshot final, combinant le filtre de stratégie et le RSI. Il classe une watchlist conditionnelle; il ne constitue ni une note fondamentale ni une autorisation d'achat.</p>
     </div>
     <div class="pedagogy-box">
       <h4>4. Niveaux réels vérifiés</h4>
-      <p>Entrée / stop / TP / R/R calculés sur les données de séance réelles (plus-bas de cassure, résistances 52 sem., extensions mesurées). Les setups à R/R non actionnable ou entrée trop étendue au-dessus de l'EMA20 sont retirés du pool.</p>
+      <p>Entrée / stop / TP / R/R calculés sur les données de clôture réelles et les résistances récentes. La cible principale reste dans une bande atteignable de 1 à 2 ATR. Une ligne ne devient exécutable qu'après confirmation du VWAP de la séance suivante.</p>
     </div>
     <div class="pedagogy-box">
       <h4>5. Anti-dilution &amp; ranking</h4>
-      <p>Pour les émetteurs relevant du régulateur américain : registre de dépôts interrogé par type de formulaire (prospectus de placement, enregistrement en étagère, avis d'effet) sur dix ans, fenêtre de contrôle de 90 jours — présence du formulaire ET nature de l'opération (item-level pour les 8-K) sont à vérifier, la seule présence/absence d'un formulaire ne suffit pas à conclure. Hors de ce périmètre — émetteurs étrangers, fonds indiciels — il n'y a pas de registre à interroger : le champ reste vide et la réserve est écrite sur la ligne, jamais remplacée par un feu vert. Diversification secteur/géographie. ${hasEntryZone ? `R/R minimum au pire remplissage (haut de zone) sur ce scan : 1:${minRR}.` : `Entrées à prix unique sur ce scan (pas de zone) : R/R exact 1:${minRR} pour toutes les lignes.`} Conformité Sharia taggée sur chaque ligne (secteur d'activité ; endettement vérifié au cas par cas, voir invalidations).</p>
+      <p>Pour les émetteurs relevant du régulateur américain : registre de dépôts interrogé par type de formulaire (prospectus de placement, enregistrement en étagère, avis d'effet) sur dix ans, fenêtre de contrôle de 90 jours — présence du formulaire ET nature de l'opération (item-level pour les 8-K) sont à vérifier, la seule présence/absence d'un formulaire ne suffit pas à conclure. Hors de ce périmètre — émetteurs étrangers, fonds indiciels — il n'y a pas de registre à interroger : le champ reste vide et la réserve est écrite sur la ligne, jamais remplacée par un feu vert. Diversification secteur/géographie. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Entrées à prix unique sur ce scan (pas de zone) : R/R exact 1:${minRR} pour toutes les lignes.`} Conformité Sharia taggée sur chaque ligne (secteur d'activité ; endettement vérifié au cas par cas, voir invalidations).</p>
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:1rem;">
       <h4 style="margin:0 0 0.5rem;">Sources de données</h4>
@@ -955,7 +969,7 @@ ${strategyTablesHtml}
         <li>Prix &amp; niveaux : flux d'indicateurs du fournisseur de données de marché, arrêté à la clôture de référence du scan</li>
         <li>Régime : modèle 6 composantes (crédit, VIX, dollar, liquidité, actions, taux)</li>
         <li>Screening : filtres techniques multi-stratégies (momentum, breakout, pullback)</li>
-        <li>Généré : ${d.session_label || d.date}</li>
+        <li>Séance couverte : ${d.session_label || d.date}</li>
       </ul>
     </div>
   </div>

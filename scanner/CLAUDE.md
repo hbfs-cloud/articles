@@ -256,7 +256,7 @@ Tous les outils downstream (sweep.js, gen-status-page.js, update-tracking.js, ge
    - Momentum expansion : `close>sma(close,20) && vol>sma(vol,20)*2 && rsi14>50 && rsi14<75`
    - Breakout squeeze : `close>sma(close,50) && atr(14)>atr(28)*1.2`
 2b. **`RunScreener` — TKL Pool** (screeners momentum small/mid-cap, alimentent le mode TKL)
-   Ces screeners élargissent l'univers au-delà des large-caps. Les résultats sont ajoutés dans `signals.json` (section `tkl_pool`) mais ne comptent PAS dans les 10 setups A+ du scanner HTML.
+   Ces screeners élargissent l'univers au-delà des large-caps. Les résultats sont ajoutés dans `signals.json` (section `tkl_pool`) mais ne comptent PAS dans les 10 setups conditionnels du scanner HTML.
 
    - **TKL-Momentum** (small/mid-caps en tendance avec volume) :
      ```
@@ -634,7 +634,7 @@ Pour chaque setup, **ajouter le badge d'univers correspondant** :
 Le `<h2>` de chaque carte scanner dans `data/scanner.json` DOIT suivre ce format exact :
 
 ```
-Top 10 A+ {REGIME} — {TICKER1}, {TICKER2}, {TICKER3}, ..., {TICKER10}
+Top 10 conditionnel {REGIME} — {TICKER1}, {TICKER2}, {TICKER3}, ..., {TICKER10}
 ```
 
 - **{REGIME}** : le régime détecté en MAJUSCULES — **UNIQUEMENT ces 5 valeurs** : `RISK-ON`, `EARLY RISK-OFF`, `RISK-OFF`, `NEUTRAL`, `RECOVERY`
@@ -645,8 +645,8 @@ Top 10 A+ {REGIME} — {TICKER1}, {TICKER2}, {TICKER3}, ..., {TICKER10}
 - **Jamais** de titre générique ("Daily Scanner", "Scan du jour", etc.)
 
 **Exemples conformes** :
-- `Top 10 A+ EARLY RISK-OFF — MRVL, HIMS, CF, IOT, ADBE, LLY, TLT, SQQQ, DBA, SAP`
-- `Top 10 A+ RISK-OFF — XOM, EQNR, RTX, KR, ADM, TTE, GLD, EWY, SH, UNG`
+- `Top 10 conditionnel EARLY RISK-OFF — MRVL, HIMS, CF, IOT, ADBE, LLY, TLT, SQQQ, DBA, SAP`
+- `Top 10 conditionnel RISK-OFF — XOM, EQNR, RTX, KR, ADM, TTE, GLD, EWY, SH, UNG`
 
 Le `<div class="report-card-meta">` doit contenir la date au format `{Day}, {Month} {DD}, {YYYY}` (en anglais) ou `{Jour} {DD} {Mois} {YYYY}` (en français).
 
@@ -1032,7 +1032,7 @@ Après génération du fichier HTML, ces 5 étapes sont **BLOQUANTES**. Si l'une
 5. **Commit & Push** :
    ```bash
    git add scanner/YYYYMMDD/ data/scanner.json data/search_data.js mcp/watchlist.json data/radar.json
-   git commit -m "feat: scanner YYYYMMDD — {régime}, 10 setups A+"
+   git commit -m "feat: scanner YYYYMMDD — {régime}, 10 setups conditionnels"
    git push origin main
    ```
 

@@ -118,21 +118,19 @@ if (tab === 'analyses') {
         }
     }
 } else if (tab === 'scanner') {
-    // For scanner: build a rich title from og:description (has regime + tickers)
-    // e.g. "Top 10 setups A+ — Régime EARLY RISK-OFF — 5 US + 2 EU + 1 APAC + 2 ETFs"
+    // Current scanner pages already expose the canonical conditional title in <title>.
+    // Only reconstruct legacy/generic titles, and never re-inject the retired A+ label.
     const ogDesc = doc.querySelector('meta[property="og:description"]');
-    if (ogDesc) {
+    if (!/^Top\s+\d+\s+conditionnel\b/i.test(title) && ogDesc) {
         const ogText = ogDesc.getAttribute('content');
-        // Extract regime from badge or og:description
-        const regimeMatch = ogText.match(/R[ée]gime\s+(\S+(?:\s+\S+)?)/i);
-        const regime = regimeMatch ? regimeMatch[1].replace(/[.,;:!]+$/, '') : '';
-        // Extract tickers from setup cards (id="setup-TICKER")
-        const setupCards = Array.from(doc.querySelectorAll('[id^="setup-"]'));
-        const tickers = setupCards.map(el => el.id.replace('setup-', '')).filter(Boolean).slice(0, 10);
+        const regimeMatch = ogText.match(/\b(EARLY RISK-OFF|RISK-OFF|RISK-ON|RECOVERY|NEUTRAL)\b/i);
+        const regime = regimeMatch ? regimeMatch[1].toUpperCase() : '';
+        const tickers = [...new Set(Array.from(doc.querySelectorAll('[data-ticker]'))
+            .map(el => el.getAttribute('data-ticker')).filter(Boolean))].slice(0, 10);
         if (tickers.length > 0 && regime) {
-            title = `Top ${tickers.length} A+ ${regime} — ${tickers.join(', ')}`;
+            title = `Top ${tickers.length} conditionnel ${regime} — ${tickers.join(', ')}`;
         } else if (regime) {
-            title = `Top 10 A+ ${regime}`;
+            title = `Top 10 conditionnel ${regime}`;
         }
     }
 } else if (tab === 'daily' || tab === 'weekly') {
