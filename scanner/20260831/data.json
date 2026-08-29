@@ -15,7 +15,6 @@
     "pullback",
     "industrials",
     "healthcare",
-    "energy",
     "software"
   ],
   "kpis": {
@@ -29,7 +28,7 @@
       "change_pct": -0.25,
       "color": "#dc2626"
     },
-    "avg_score": 84.6,
+    "avg_score": 85.1,
     "dominant_patterns": [
       "Momentum",
       "Pullback"
@@ -44,21 +43,26 @@
     {
       "type": "warning",
       "title": "Allocation simultanée interdite",
-      "text": "Le sizing portefeuille a été rejeté: 257,75% d’exposition brute et réserve cash négative. Allocation recommandée du panier complet: 0%. Chaque ligne reste une surveillance conditionnelle indépendante."
+      "text": "Le sizing portefeuille a été rejeté: l’exposition brute proposée dépassait le capital disponible. Allocation recommandée du panier complet: 0%. La corrélation maximale de 0,4998 repose sur seulement 26 observations; elle ne prouve pas une diversification robuste."
+    },
+    {
+      "type": "warning",
+      "title": "Momentum plafonné",
+      "text": "Momentum compte 30 propositions arrivées à horizon: 22 résolues et 8 jamais remplies. Les 22 résolues affichent un profit factor de 0,59. Le plafond temporaire est de 40%; le panier n’en garde que 3 sur 9."
     },
     {
       "type": "info",
-      "title": "Données optionnelles dégradées",
-      "text": "Les flux institutionnels optionnels ont été limités par le fournisseur et le moteur probabiliste fonctionne en fallback à 25% de confiance. Aucun substitut n’a été inventé."
+      "title": "Données optionnelles limitées",
+      "text": "Les flux institutionnels optionnels ont été limités. Le contrôle secondaire context_conditional a utilisé son fallback rule-based, avec 50% de confiance, faute d’historique TLT suffisant; le régime systématique à 0,79 reste la source canonique."
     }
   ],
-  "intro": "Le régime systématique reste RISK-ON à 0,79, mais la séance de vendredi a été plus faible sous la surface: Nasdaq -0,52%, Russell 2000 -1,39%, or -3,43% et bitcoin -3,57%. Le panier du lundi privilégie des entrées conditionnelles, huit actions US et deux ETF US, sans poursuite automatique des gaps.",
-  "strategy": "Momentum seulement sur cassure tenue; pullback seulement après stabilisation et reprise du VWAP. Un gap supérieur à 2% au-dessus de la zone annule l’entrée directe et impose un retour VWAP.",
+  "intro": "Le régime systématique reste RISK-ON à 0,79, mais la séance de vendredi a été plus faible sous la surface: Nasdaq -0,52%, Russell 2000 -1,39%, or -3,43% et bitcoin -3,57%. Le panier du lundi garde sept actions US et deux ETF US, plafonne Momentum après sa mauvaise rétro récente et exige une confirmation VWAP. Une dixième ligne n’a pas été forcée après le rejet d’un ticker mal identifié.",
+  "strategy": "Trois Momentum au maximum, seulement sur cassure tenue. Les Pullback exigent la reprise de l’EMA20 et du VWAP; ils sont mieux orientés dans la dernière rétro, mais leur échantillon reste limité. Un gap supérieur à 2% au-dessus de la zone annule l’entrée directe.",
   "regime_prose": "Le S&P 500 reste au-dessus de ses moyennes 50, 100 et 200 jours; le VIX est sous sa moyenne 14 jours et ne monte pas. En contrepoint, le dollar a gagné 0,52%, les taux 10 ans atteignent 4,72% et les actifs à bêta élevé ont corrigé. Le régime autorise le risque, pas le relâchement des gates.",
   "regime_strategy_weights": {
-    "momentum": 0.4,
-    "breakout": 0.1,
-    "pullback": 0.5,
+    "momentum": 0.33,
+    "breakout": 0.22,
+    "pullback": 0.45,
     "presqueeze": 0
   },
   "market_snapshot": [
@@ -116,6 +120,7 @@
     "title": "Pourquoi un bon score ne suffit pas",
     "content": "Le score classe les candidats; il ne remplace ni la fenêtre earnings, ni les dépôts SEC, ni le VWAP. Le scan garde donc des zones conditionnelles et accepte de ne rien exécuter si le marché ne confirme pas."
   },
+  "score_methodology": "Score technique exact du screener archivé. Ce nombre classe les candidats; il ne mesure pas une probabilité de gain. Les axes sans donnée vérifiée restent neutres à 50 et sont signalés comme indisponibles.",
   "macro_calendar": [
     {
       "date": "31 août",
@@ -155,10 +160,10 @@
   ],
   "sector_rotation": [
     {
-      "sector": "Banques régionales",
+      "sector": "Banques",
       "perf": "repli contrôlé",
       "signal": "reprise EMA20 requise",
-      "exposure": "KRE",
+      "exposure": "KBE",
       "dir": "flat"
     },
     {
@@ -176,30 +181,30 @@
       "dir": "up"
     },
     {
-      "sector": "Énergie",
-      "perf": "résilient",
-      "signal": "pétrole presque stable vendredi",
-      "exposure": "VLO",
+      "sector": "Industrie",
+      "perf": "repli dans tendance longue",
+      "signal": "reclaim EMA20 obligatoire",
+      "exposure": "PCAR, GE",
       "dir": "flat"
     },
     {
-      "sector": "Services financiers",
-      "perf": "constructif",
-      "signal": "infrastructures de marché",
-      "exposure": "NDAQ",
-      "dir": "up"
+      "sector": "Crédit spécialisé",
+      "perf": "constructif mais sensible aux taux",
+      "signal": "cassure tenue requise",
+      "exposure": "HTGC",
+      "dir": "flat"
     },
     {
-      "sector": "Consommation",
-      "perf": "momentum étendu",
-      "signal": "force propre, pas de poursuite du gap",
-      "exposure": "EL",
-      "dir": "up"
+      "sector": "Immobilier coté",
+      "perf": "sous pression des taux",
+      "signal": "reprise EMA20 obligatoire",
+      "exposure": "ELS",
+      "dir": "flat"
     }
   ],
-  "macro_thesis": "La structure de tendance reste favorable, mais vendredi a montré une contraction du risque: petites capitalisations, crypto et métaux ont reculé ensemble tandis que le dollar et les taux montaient. Le scanner répond par des facteurs moins concentrés, IGV et KRE comme ETF de contrôle, et des entrées soumises au VWAP.",
+  "macro_thesis": "La structure de tendance reste favorable, mais vendredi a montré une contraction du risque: petites capitalisations, crypto et métaux ont reculé ensemble tandis que le dollar et les taux montaient. Le scanner réduit Momentum à trois lignes, privilégie des reclaims plutôt que des poursuites, garde IGV et KBE comme expositions diversifiées et accepte de publier neuf plans au lieu de forcer un substitut.",
   "engine_meta": {
-    "generated_at": "2026-08-28T22:37:42.799Z",
+    "generated_at": "2026-08-29T05:32:38.861Z",
     "regime": "RISK-ON",
     "reference_close": "2026-08-28",
     "freshness": {
@@ -208,21 +213,23 @@
     },
     "risk_gating": {
       "systematic_regime_score": 0.79,
-      "marketdata_ensemble_status": "degraded_fallback_rule_based",
-      "marketdata_fallback_confidence": 0.25,
-      "crisis_prob_5d": 0.15,
-      "regime_source": "systematic DtxRegime is canonical; marketdata probability engine degraded to fallback_rule_based",
-      "max_pair_correlation": 0.6861,
+      "marketdata_model": "context_conditional",
+      "marketdata_engine": "fallback_rule_based",
+      "ensemble_confidence": 0.5,
+      "crisis_prob_5d": 0.0829,
+      "regime_source": "systematic DtxRegime is canonical; marketdata context_conditional output used its disclosed fallback_rule_based engine because TLT history was insufficient",
+      "max_pair_correlation": 0.4998,
       "max_pair_symbols": [
-        "NWSA",
-        "ADP"
+        "BDX",
+        "NWSA"
       ],
-      "avg_off_diagonal_correlation": 0.2109,
-      "correlation_method": "Pearson log returns on 60 governed daily sessions; local fallback after PortfolioRisk returned 0 common days",
-      "sizing": "MCP balanced inverse-ATR sizing returned 257.75% gross exposure and was rejected; candidates remain conditional and are not a simultaneous portfolio allocation",
-      "sizing_endpoint_cash_reserve_pct": -157.75,
-      "sizing_endpoint_expected_vol_pct": 39.97,
-      "sizing_endpoint_max_correlation": 0.6837,
+      "avg_off_diagonal_correlation": 0.093,
+      "correlation_observations": 26,
+      "correlation_method": "pearson log returns; requested 60 sessions",
+      "sizing": "MCP balanced inverse-ATR sizing returned 242.33% gross exposure and was rejected; candidates remain conditional and are not a simultaneous portfolio allocation",
+      "sizing_endpoint_cash_reserve_pct": -142.33,
+      "sizing_endpoint_expected_vol_pct": 35,
+      "sizing_endpoint_max_correlation": 0.5478,
       "allocation_recommendation_pct": 0
     }
   },
@@ -248,21 +255,34 @@
       "extra_badges": [],
       "radar_scores": {
         "momentum": 80,
-        "fundamentals": 64,
-        "technical": 84,
-        "volume": 76,
-        "sentiment": 62,
-        "macro": 68
+        "fundamentals": 50,
+        "technical": 80,
+        "volume": 48,
+        "sentiment": 50,
+        "macro": 50
+      },
+      "radar_unavailable": [
+        "fundamentals",
+        "sentiment",
+        "macro"
+      ],
+      "selection_evidence": {
+        "screen_snapshot_as_of": "2026-08-28",
+        "detected_at": "2026-08-28",
+        "estimated_valid_bars": 10,
+        "source_screen_score": 84.8,
+        "avg_daily_dollar_volume": 341781031.32,
+        "score_note": "Score technique exact du screener archivé; ce n’est pas une probabilité de gain."
       },
       "entry_low": 189.71,
       "entry_high": 190.66,
       "entry_display": "189.71–190.66 $; gate min(open, VWAP), pullback VWAP seul si gap >2%",
       "stop": 183.95,
-      "tp1": 196.89,
+      "tp1": 196.88,
       "tp2": 200.01,
       "rr": "1:0.93",
       "rr_entry": 0.93,
-      "tp1_atr_multiple": 1.5,
+      "tp1_atr_multiple": 1.497,
       "execution": {
         "status": "conditional_next_session",
         "observed_vwap": null,
@@ -270,7 +290,7 @@
         "gate": "No order before the 09:30–09:45 ET window; require price in zone and above observed VWAP."
       },
       "horizon_days": 10,
-      "thesis": "La tendance de fond est haussière et le RSI approche 70. Cette force justifie une surveillance, mais l’entrée est conditionnée à une cassure tenue et non à une poursuite aveugle.",
+      "thesis": "La tendance reste haussière, mais le titre est déjà à près de 15% de sa moyenne 50 jours. Il ne mérite une entrée que sur cassure tenue dans la zone; un gap sans retour VWAP est refusé.",
       "confirmations": [
         "RSI14 69.8 et ATR14 4.15 $",
         "EMA20 182.08 $ contre EMA50 170.64 $",
@@ -292,7 +312,37 @@
       "earnings_clear": true,
       "dilution_clear": true,
       "earnings_source": "8k_item_202",
-      "dilution_scope": "official SEC forms reviewed over 90 days; no S-1, S-3, EFFECT or 424B5 found; provider flags unavailable"
+      "earnings_forward_evidence": {
+        "checked_at": "2026-08-29T04:57:55Z",
+        "days_ahead": 7,
+        "result": "no earnings found in next 7 days",
+        "event_found": false,
+        "source_artifact": "scanner/20260831/_data2/earnings_selected.json"
+      },
+      "issuer_filing_regime": "domestic_issuer",
+      "dilution_scope": "official SEC/EDGAR filings reviewed over 90 days; equity offering hits: 0; non-equity offerings are classified separately",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260831/_data2/sec_selected_evidence.json",
+        "checked_at": "2026-08-29T04:34:10Z",
+        "pagination_exhausted": true,
+        "latest_earnings_filing": {
+          "form": "8-K",
+          "date": "2026-08-06",
+          "accession": "0001628280-26-053790",
+          "items": [
+            "2.02",
+            "9.01"
+          ]
+        },
+        "issuer_calendar_verified": false,
+        "dilution_window": {
+          "from": "2026-05-30",
+          "to": "2026-08-28",
+          "days": 90
+        },
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": []
+      }
     },
     {
       "ticker": "RVTY",
@@ -314,21 +364,34 @@
       "extra_badges": [],
       "radar_scores": {
         "momentum": 80,
-        "fundamentals": 64,
-        "technical": 84,
-        "volume": 76,
-        "sentiment": 62,
-        "macro": 68
+        "fundamentals": 50,
+        "technical": 80,
+        "volume": 51,
+        "sentiment": 50,
+        "macro": 50
+      },
+      "radar_unavailable": [
+        "fundamentals",
+        "sentiment",
+        "macro"
+      ],
+      "selection_evidence": {
+        "screen_snapshot_as_of": "2026-08-28",
+        "detected_at": "2026-08-28",
+        "estimated_valid_bars": 10,
+        "source_screen_score": 84.6,
+        "avg_daily_dollar_volume": 197420531.28,
+        "score_note": "Score technique exact du screener archivé; ce n’est pas une probabilité de gain."
       },
       "entry_low": 128.93,
       "entry_high": 129.57,
       "entry_display": "128.93–129.57 $; gate min(open, VWAP), pullback VWAP seul si gap >2%",
       "stop": 123.59,
-      "tp1": 135.24,
+      "tp1": 135.23,
       "tp2": 138.07,
       "rr": "1:0.95",
       "rr_entry": 0.95,
-      "tp1_atr_multiple": 1.5,
+      "tp1_atr_multiple": 1.499,
       "execution": {
         "status": "conditional_next_session",
         "observed_vwap": null,
@@ -336,7 +399,7 @@
         "gate": "No order before the 09:30–09:45 ET window; require price in zone and above observed VWAP."
       },
       "horizon_days": 10,
-      "thesis": "Le momentum santé est fort mais déjà étendu au-dessus de l’EMA20. Une entrée n’est recevable que si la cassure tient le VWAP sans accélération verticale.",
+      "thesis": "Le momentum santé est propre au-dessus des trois moyennes, avec une extension moins forte que BDX. La confirmation attendue est une reprise du haut de zone qui conserve le VWAP.",
       "confirmations": [
         "RSI14 69.6 et ATR14 3.78 $",
         "EMA20 120.51 $ contre EMA50 114.1 $",
@@ -358,73 +421,37 @@
       "earnings_clear": true,
       "dilution_clear": true,
       "earnings_source": "8k_item_202",
-      "dilution_scope": "official SEC forms reviewed over 90 days; no S-1, S-3, EFFECT or 424B5 found; provider flags unavailable"
-    },
-    {
-      "ticker": "VLO",
-      "name": "Valero Energy",
-      "description": "Raffinage et carburants renouvelables",
-      "logo_gradient": [
-        "#92400e",
-        "#f59e0b"
-      ],
-      "price": 352.36,
-      "change_pct": 1.66,
-      "score": 83,
-      "pattern": "Momentum",
-      "region": "US",
-      "region_flag": "US",
-      "region_label": "États-Unis",
-      "sector": "Energy",
-      "sharia": false,
-      "extra_badges": [],
-      "radar_scores": {
-        "momentum": 78,
-        "fundamentals": 64,
-        "technical": 84,
-        "volume": 76,
-        "sentiment": 62,
-        "macro": 72
+      "earnings_forward_evidence": {
+        "checked_at": "2026-08-29T04:57:55Z",
+        "days_ahead": 7,
+        "result": "no earnings found in next 7 days",
+        "event_found": false,
+        "source_artifact": "scanner/20260831/_data2/earnings_selected.json"
       },
-      "entry_low": 352.71,
-      "entry_high": 354.47,
-      "entry_display": "352.71–354.47 $; gate min(open, VWAP), pullback VWAP seul si gap >2%",
-      "stop": 337.85,
-      "tp1": 370.22,
-      "tp2": 378.09,
-      "rr": "1:0.95",
-      "rr_entry": 0.95,
-      "tp1_atr_multiple": 1.5,
-      "execution": {
-        "status": "conditional_next_session",
-        "observed_vwap": null,
-        "observed_at": null,
-        "gate": "No order before the 09:30–09:45 ET window; require price in zone and above observed VWAP."
-      },
-      "horizon_days": 10,
-      "thesis": "Le raffineur termine près du haut de séance dans une tendance haussière. Le pétrole était stable vendredi; le trade dépend donc de la force propre du titre et d’un maintien au-dessus du VWAP.",
-      "confirmations": [
-        "RSI14 68 et ATR14 10.49 $",
-        "EMA20 334.07 $ contre EMA50 308.78 $",
-        "TP1 fixé à 1,50 ATR au-dessus du haut de zone; stop à 4.7% du pire remplissage",
-        "Entrée uniquement si la zone tient et si le prix confirme au-dessus du VWAP"
-      ],
-      "invalidations": [
-        "Cassure du stop 337.85 $",
-        "Ouverture au-dessus de 361.56 $ sans retour VWAP",
-        "Perte du VWAP avec pression vendeuse croissante",
-        "Donnée devenue stale, earnings surprise ou bascule du régime"
-      ],
-      "market_cap": 101454110720,
-      "extension": {
-        "rsi": 68,
-        "atr": 10.4942,
-        "distance_50dma_pct": 17.21
-      },
-      "earnings_clear": true,
-      "dilution_clear": true,
-      "earnings_source": "8k_item_202",
-      "dilution_scope": "official SEC forms reviewed over 90 days; no S-1, S-3, EFFECT or 424B5 found; provider flags unavailable"
+      "issuer_filing_regime": "domestic_issuer",
+      "dilution_scope": "official SEC/EDGAR filings reviewed over 90 days; equity offering hits: 0; non-equity offerings are classified separately",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260831/_data2/sec_selected_evidence.json",
+        "checked_at": "2026-08-29T04:34:10Z",
+        "pagination_exhausted": true,
+        "latest_earnings_filing": {
+          "form": "8-K",
+          "date": "2026-08-04",
+          "accession": "0000031791-26-000022",
+          "items": [
+            "2.02",
+            "9.01"
+          ]
+        },
+        "issuer_calendar_verified": false,
+        "dilution_window": {
+          "from": "2026-05-30",
+          "to": "2026-08-28",
+          "days": 90
+        },
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": []
+      }
     },
     {
       "ticker": "NWSA",
@@ -446,11 +473,24 @@
       "extra_badges": [],
       "radar_scores": {
         "momentum": 78,
-        "fundamentals": 64,
-        "technical": 84,
-        "volume": 76,
-        "sentiment": 62,
-        "macro": 68
+        "fundamentals": 50,
+        "technical": 80,
+        "volume": 60,
+        "sentiment": 50,
+        "macro": 50
+      },
+      "radar_unavailable": [
+        "fundamentals",
+        "sentiment",
+        "macro"
+      ],
+      "selection_evidence": {
+        "screen_snapshot_as_of": "2026-08-28",
+        "detected_at": "2026-08-28",
+        "estimated_valid_bars": 10,
+        "source_screen_score": 83.1,
+        "avg_daily_dollar_volume": 115966688.06,
+        "score_note": "Score technique exact du screener archivé; ce n’est pas une probabilité de gain."
       },
       "entry_low": 31,
       "entry_high": 31.16,
@@ -460,7 +500,7 @@
       "tp2": 32.83,
       "rr": "1:0.94",
       "rr_entry": 0.94,
-      "tp1_atr_multiple": 1.5,
+      "tp1_atr_multiple": 1.494,
       "execution": {
         "status": "conditional_next_session",
         "observed_vwap": null,
@@ -468,7 +508,7 @@
         "gate": "No order before the 09:30–09:45 ET window; require price in zone and above observed VWAP."
       },
       "horizon_days": 10,
-      "thesis": "Le titre consolide près de ses plus hauts récents avec une structure de momentum. La zone publiée sert de filtre: une perte du VWAP annule le signal plutôt que d’être moyennée.",
+      "thesis": "La structure est haussière sans l’extension extrême des anciens leaders Momentum. Les dépôts SEC récents concernent des mises à jour d’entreprise, pas une nouvelle publication de résultats; le trade reste soumis à la tenue du VWAP.",
       "confirmations": [
         "RSI14 68.1 et ATR14 0.74 $",
         "EMA20 29.66 $ contre EMA50 28.41 $",
@@ -490,20 +530,50 @@
       "earnings_clear": true,
       "dilution_clear": true,
       "earnings_source": "8k_item_202",
-      "dilution_scope": "official SEC forms reviewed over 90 days; no S-1, S-3, EFFECT or 424B5 found; provider flags unavailable"
+      "earnings_forward_evidence": {
+        "checked_at": "2026-08-29T04:57:55Z",
+        "days_ahead": 7,
+        "result": "no earnings found in next 7 days",
+        "event_found": false,
+        "source_artifact": "scanner/20260831/_data2/earnings_selected.json"
+      },
+      "issuer_filing_regime": "domestic_issuer",
+      "dilution_scope": "official SEC/EDGAR filings reviewed over 90 days; equity offering hits: 0; non-equity offerings are classified separately",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260831/_data2/sec_selected_evidence.json",
+        "checked_at": "2026-08-29T04:34:10Z",
+        "pagination_exhausted": true,
+        "latest_earnings_filing": {
+          "form": "8-K",
+          "date": "2026-08-05",
+          "accession": "0001564708-26-000171",
+          "items": [
+            "2.02",
+            "9.01"
+          ]
+        },
+        "issuer_calendar_verified": false,
+        "dilution_window": {
+          "from": "2026-05-30",
+          "to": "2026-08-28",
+          "days": 90
+        },
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": []
+      }
     },
     {
-      "ticker": "NDAQ",
-      "name": "Nasdaq",
-      "description": "Bourses, données et logiciels de marché",
+      "ticker": "HTGC",
+      "name": "Hercules Capital",
+      "description": "Financement spécialisé des entreprises technologiques et sciences de la vie",
       "logo_gradient": [
         "#3730a3",
         "#818cf8"
       ],
-      "price": 99.31,
-      "change_pct": -0.04,
-      "score": 83.6,
-      "pattern": "Momentum",
+      "price": 17.48,
+      "change_pct": -0.23,
+      "score": 84.8,
+      "pattern": "Breakout",
       "region": "US",
       "region_flag": "US",
       "region_label": "États-Unis",
@@ -511,22 +581,35 @@
       "sharia": false,
       "extra_badges": [],
       "radar_scores": {
-        "momentum": 78,
-        "fundamentals": 64,
-        "technical": 84,
-        "volume": 76,
-        "sentiment": 62,
-        "macro": 68
+        "momentum": 73,
+        "fundamentals": 50,
+        "technical": 72,
+        "volume": 44,
+        "sentiment": 50,
+        "macro": 50
       },
-      "entry_low": 99.41,
-      "entry_high": 99.91,
-      "entry_display": "99.41–99.91 $; gate min(open, VWAP), pullback VWAP seul si gap >2%",
-      "stop": 96.67,
-      "tp1": 102.84,
-      "tp2": 104.3,
-      "rr": "1:0.91",
-      "rr_entry": 0.91,
-      "tp1_atr_multiple": 1.5,
+      "radar_unavailable": [
+        "fundamentals",
+        "sentiment",
+        "macro"
+      ],
+      "selection_evidence": {
+        "screen_snapshot_as_of": "2026-08-28",
+        "detected_at": "2026-08-27",
+        "estimated_valid_bars": 10,
+        "source_screen_score": 84.8,
+        "avg_daily_dollar_volume": 32058232.6,
+        "score_note": "Score technique exact du screener archivé; ce n’est pas une probabilité de gain."
+      },
+      "entry_low": 17.74,
+      "entry_high": 17.83,
+      "entry_display": "17.74–17.83 $; gate min(open, VWAP), pullback VWAP seul si gap >2%",
+      "stop": 17.25,
+      "tp1": 18.27,
+      "tp2": 18.49,
+      "rr": "1:0.76",
+      "rr_entry": 0.76,
+      "tp1_atr_multiple": 1.494,
       "execution": {
         "status": "conditional_next_session",
         "observed_vwap": null,
@@ -534,42 +617,89 @@
         "gate": "No order before the 09:30–09:45 ET window; require price in zone and above observed VWAP."
       },
       "horizon_days": 10,
-      "thesis": "Nasdaq consolide au-dessus de ses moyennes 20, 50 et 200 jours. Le momentum reste propre, mais l’entrée exige une reprise du haut de zone et du VWAP.",
+      "thesis": "Le titre consolide au-dessus des moyennes 20, 50 et 200 jours. Son émission de 325 M$ de notes senior à 6,300% échéance 2031 est une dette, pas une offre d’actions, mais elle renforce la sensibilité aux taux. La cassure doit tenir; sous le VWAP, le plan reste désarmé.",
       "confirmations": [
-        "RSI14 68.6 et ATR14 1.95 $",
-        "EMA20 96.71 $ contre EMA50 93.33 $",
+        "RSI14 63.7 et ATR14 0.29 $",
+        "EMA20 17.01 $ contre EMA50 16.52 $",
         "TP1 fixé à 1,50 ATR au-dessus du haut de zone; stop à 3.2% du pire remplissage",
         "Entrée uniquement si la zone tient et si le prix confirme au-dessus du VWAP"
       ],
       "invalidations": [
-        "Cassure du stop 96.67 $",
-        "Ouverture au-dessus de 101.91 $ sans retour VWAP",
+        "Cassure du stop 17.25 $",
+        "Ouverture au-dessus de 18.19 $ sans retour VWAP",
         "Perte du VWAP avec pression vendeuse croissante",
         "Donnée devenue stale, earnings surprise ou bascule du régime"
       ],
-      "market_cap": 55512039424,
+      "market_cap": 3271626752,
       "extension": {
-        "rsi": 68.6,
-        "atr": 1.9545,
-        "distance_50dma_pct": 9.33
+        "rsi": 63.7,
+        "atr": 0.2946,
+        "distance_50dma_pct": 7.35
       },
       "earnings_clear": true,
       "dilution_clear": true,
       "earnings_source": "8k_item_202",
-      "dilution_scope": "official SEC forms reviewed over 90 days; no S-1, S-3, EFFECT or 424B5 found; provider flags unavailable"
+      "earnings_forward_evidence": {
+        "checked_at": "2026-08-29T04:57:55Z",
+        "days_ahead": 7,
+        "result": "no earnings found in next 7 days",
+        "event_found": false,
+        "source_artifact": "scanner/20260831/_data2/earnings_selected.json"
+      },
+      "issuer_filing_regime": "domestic_issuer",
+      "dilution_scope": "official SEC/EDGAR filings reviewed over 90 days; equity offering hits: 0; non-equity offerings are classified separately",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260831/_data2/sec_selected_evidence.json",
+        "checked_at": "2026-08-29T04:34:10Z",
+        "pagination_exhausted": true,
+        "latest_earnings_filing": {
+          "form": "8-K",
+          "date": "2026-07-30",
+          "accession": "0001280784-26-000043",
+          "items": [
+            "2.02",
+            "9.01"
+          ]
+        },
+        "issuer_calendar_verified": false,
+        "dilution_window": {
+          "from": "2026-05-30",
+          "to": "2026-08-28",
+          "days": 90
+        },
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": [
+          {
+            "form": "424B2",
+            "date": "2026-07-23",
+            "accession": "0001193125-26-314096",
+            "classification": "debt",
+            "security": "$325,000,000 6.300% senior notes due 2031",
+            "verified_from_primary_filing": true
+          },
+          {
+            "form": "424B2",
+            "date": "2026-07-21",
+            "accession": "0001193125-26-309610",
+            "classification": "debt",
+            "security": "preliminary prospectus for 6.300% senior notes due 2031",
+            "verified_from_primary_filing": true
+          }
+        ]
+      }
     },
     {
-      "ticker": "ADP",
-      "name": "Automatic Data Processing",
-      "description": "Paie et gestion des ressources humaines",
+      "ticker": "PCAR",
+      "name": "PACCAR",
+      "description": "Camions, pièces et financement commercial",
       "logo_gradient": [
         "#365314",
         "#a3e635"
       ],
-      "price": 287.48,
-      "change_pct": 0.98,
-      "score": 84,
-      "pattern": "Momentum",
+      "price": 125.34,
+      "change_pct": -0.95,
+      "score": 85.9,
+      "pattern": "Pullback",
       "region": "US",
       "region_flag": "US",
       "region_label": "États-Unis",
@@ -577,87 +707,256 @@
       "sharia": false,
       "extra_badges": [],
       "radar_scores": {
-        "momentum": 79,
-        "fundamentals": 64,
-        "technical": 84,
-        "volume": 76,
-        "sentiment": 62,
-        "macro": 68
+        "momentum": 48,
+        "fundamentals": 50,
+        "technical": 80,
+        "volume": 41,
+        "sentiment": 50,
+        "macro": 50
       },
-      "entry_low": 287.77,
-      "entry_high": 289.2,
-      "entry_display": "287.77–289.2 $; gate min(open, VWAP), pullback VWAP seul si gap >2%",
-      "stop": 278.76,
-      "tp1": 298.93,
-      "tp2": 303.79,
-      "rr": "1:0.93",
-      "rr_entry": 0.93,
-      "tp1_atr_multiple": 1.5,
+      "radar_unavailable": [
+        "fundamentals",
+        "sentiment",
+        "macro"
+      ],
+      "selection_evidence": {
+        "screen_snapshot_as_of": "2026-08-28",
+        "detected_at": "2026-08-26",
+        "estimated_valid_bars": 8,
+        "source_screen_score": 85.9,
+        "avg_daily_dollar_volume": 369338306.34,
+        "score_note": "Score technique exact du screener archivé; ce n’est pas une probabilité de gain."
+      },
+      "entry_low": 129.31,
+      "entry_high": 129.95,
+      "entry_display": "129.31–129.95 $; gate min(open, VWAP), pullback VWAP seul si gap >2%",
+      "stop": 124.94,
+      "tp1": 134.64,
+      "tp2": 136.99,
+      "rr": "1:0.94",
+      "rr_entry": 0.94,
+      "tp1_atr_multiple": 1.499,
       "execution": {
         "status": "conditional_next_session",
         "observed_vwap": null,
         "observed_at": null,
-        "gate": "No order before the 09:30–09:45 ET window; require price in zone and above observed VWAP."
+        "max_intraday_chase_pct": 2,
+        "gate": "No order before 09:30–09:45 ET. Require price in zone and above observed VWAP; reject if price rallied more than 2% from the opening print before entering the zone."
       },
       "horizon_days": 10,
-      "thesis": "Le titre accélère dans une tendance longue intacte avec un RSI proche de 69. La cassure doit tenir; un gap supérieur à 2% renvoie le plan vers un pullback VWAP.",
+      "thesis": "Le titre corrige vers ses moyennes tout en restant au-dessus de la moyenne 200 jours. Il faut reprendre l’EMA20 avant d’acheter: le repli seul n’est pas une confirmation.",
       "confirmations": [
-        "RSI14 69 et ATR14 6.48 $",
-        "EMA20 274.74 $ contre EMA50 259.35 $",
-        "TP1 fixé à 1,50 ATR au-dessus du haut de zone; stop à 3.6% du pire remplissage",
+        "RSI14 40.7 et ATR14 3.13 $",
+        "EMA20 129.18 $ contre EMA50 127.01 $",
+        "TP1 fixé à 1,50 ATR au-dessus du haut de zone; stop à 3.9% du pire remplissage",
         "Entrée uniquement si la zone tient et si le prix confirme au-dessus du VWAP"
       ],
       "invalidations": [
-        "Cassure du stop 278.76 $",
-        "Ouverture au-dessus de 294.98 $ sans retour VWAP",
+        "Cassure du stop 124.94 $",
+        "Ouverture au-dessus de 132.55 $ sans retour VWAP",
+        "Hausse supérieure à 2% depuis l’ouverture avant l’entrée dans la zone: aucune poursuite",
         "Perte du VWAP avec pression vendeuse croissante",
         "Donnée devenue stale, earnings surprise ou bascule du régime"
       ],
-      "market_cap": 114205097984,
+      "market_cap": 65974583296,
       "extension": {
-        "rsi": 69,
-        "atr": 6.4838,
-        "distance_50dma_pct": 13.1
+        "rsi": 40.7,
+        "atr": 3.1288,
+        "distance_50dma_pct": -1.44
       },
       "earnings_clear": true,
       "dilution_clear": true,
       "earnings_source": "8k_item_202",
-      "dilution_scope": "official SEC forms reviewed over 90 days; no S-1, S-3, EFFECT or 424B5 found; provider flags unavailable"
+      "earnings_forward_evidence": {
+        "checked_at": "2026-08-29T04:57:55Z",
+        "days_ahead": 7,
+        "result": "no earnings found in next 7 days",
+        "event_found": false,
+        "source_artifact": "scanner/20260831/_data2/earnings_selected.json"
+      },
+      "issuer_filing_regime": "domestic_issuer",
+      "dilution_scope": "official SEC/EDGAR filings reviewed over 90 days; equity offering hits: 0; non-equity offerings are classified separately",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260831/_data2/sec_selected_evidence.json",
+        "checked_at": "2026-08-29T04:34:10Z",
+        "pagination_exhausted": true,
+        "latest_earnings_filing": {
+          "form": "8-K",
+          "date": "2026-07-28",
+          "accession": "0001193125-26-318918",
+          "items": [
+            "2.02",
+            "9.01"
+          ]
+        },
+        "issuer_calendar_verified": false,
+        "dilution_window": {
+          "from": "2026-05-30",
+          "to": "2026-08-28",
+          "days": 90
+        },
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": []
+      }
     },
     {
-      "ticker": "DV",
-      "name": "DoubleVerify",
-      "description": "Mesure et qualité de la publicité numérique",
+      "ticker": "GE",
+      "name": "GE Aerospace",
+      "description": "Moteurs, services et équipements aéronautiques",
       "logo_gradient": [
-        "#155e75",
-        "#38bdf8"
+        "#365314",
+        "#a3e635"
       ],
-      "price": 13.38,
-      "change_pct": 0.3,
-      "score": 84.4,
-      "pattern": "Momentum",
+      "price": 342.58,
+      "change_pct": -0.04,
+      "score": 84.3,
+      "pattern": "Pullback",
       "region": "US",
       "region_flag": "US",
       "region_label": "États-Unis",
-      "sector": "Communication Services",
+      "sector": "Industrials",
       "sharia": false,
       "extra_badges": [],
       "radar_scores": {
-        "momentum": 79,
-        "fundamentals": 64,
-        "technical": 84,
-        "volume": 76,
-        "sentiment": 62,
-        "macro": 68
+        "momentum": 49,
+        "fundamentals": 50,
+        "technical": 80,
+        "volume": 43,
+        "sentiment": 50,
+        "macro": 50
       },
-      "entry_low": 13.39,
-      "entry_high": 13.46,
-      "entry_display": "13.39–13.46 $; gate min(open, VWAP), pullback VWAP seul si gap >2%",
-      "stop": 13.02,
-      "tp1": 13.79,
-      "tp2": 13.96,
-      "rr": "1:0.76",
-      "rr_entry": 0.76,
+      "radar_unavailable": [
+        "fundamentals",
+        "sentiment",
+        "macro"
+      ],
+      "selection_evidence": {
+        "screen_snapshot_as_of": "2026-08-28",
+        "detected_at": "2026-08-25",
+        "estimated_valid_bars": 8,
+        "source_screen_score": 84.3,
+        "avg_daily_dollar_volume": 1235105386.9,
+        "score_note": "Score technique exact du screener archivé; ce n’est pas une probabilité de gain."
+      },
+      "entry_low": 355.53,
+      "entry_high": 357.3,
+      "entry_display": "355.53–357.3 $; gate min(open, VWAP), pullback VWAP seul si gap >2%",
+      "stop": 342.19,
+      "tp1": 371.52,
+      "tp2": 378.64,
+      "rr": "1:0.94",
+      "rr_entry": 0.94,
+      "tp1_atr_multiple": 1.5,
+      "execution": {
+        "status": "conditional_next_session",
+        "observed_vwap": null,
+        "observed_at": null,
+        "max_intraday_chase_pct": 2,
+        "gate": "No order before 09:30–09:45 ET. Require price in zone and above observed VWAP; reject if price rallied more than 2% from the opening print before entering the zone."
+      },
+      "horizon_days": 10,
+      "thesis": "La tendance longue reste positive, mais le recul a cassé les moyennes courtes. Le plan attend une reprise de l’EMA20 et du VWAP; sans cette séquence, aucune entrée.",
+      "confirmations": [
+        "RSI14 41.7 et ATR14 9.48 $",
+        "EMA20 355.17 $ contre EMA50 352.25 $",
+        "TP1 fixé à 1,50 ATR au-dessus du haut de zone; stop à 4.2% du pire remplissage",
+        "Entrée uniquement si la zone tient et si le prix confirme au-dessus du VWAP"
+      ],
+      "invalidations": [
+        "Cassure du stop 342.19 $",
+        "Ouverture au-dessus de 364.45 $ sans retour VWAP",
+        "Hausse supérieure à 2% depuis l’ouverture avant l’entrée dans la zone: aucune poursuite",
+        "Perte du VWAP avec pression vendeuse croissante",
+        "Donnée devenue stale, earnings surprise ou bascule du régime"
+      ],
+      "market_cap": 355448160256,
+      "extension": {
+        "rsi": 41.7,
+        "atr": 9.4812,
+        "distance_50dma_pct": -4.92
+      },
+      "earnings_clear": true,
+      "dilution_clear": true,
+      "earnings_source": "8k_item_202",
+      "earnings_forward_evidence": {
+        "checked_at": "2026-08-29T04:57:55Z",
+        "days_ahead": 7,
+        "result": "no earnings found in next 7 days",
+        "event_found": false,
+        "source_artifact": "scanner/20260831/_data2/earnings_selected.json"
+      },
+      "issuer_filing_regime": "domestic_issuer",
+      "dilution_scope": "official SEC/EDGAR filings reviewed over 90 days; equity offering hits: 0; non-equity offerings are classified separately",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260831/_data2/sec_selected_evidence.json",
+        "checked_at": "2026-08-29T04:34:10Z",
+        "pagination_exhausted": true,
+        "latest_earnings_filing": {
+          "form": "8-K",
+          "date": "2026-07-16",
+          "accession": "0000040545-26-000047",
+          "items": [
+            "2.02",
+            "9.01"
+          ]
+        },
+        "issuer_calendar_verified": false,
+        "dilution_window": {
+          "from": "2026-05-30",
+          "to": "2026-08-28",
+          "days": 90
+        },
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": []
+      }
+    },
+    {
+      "ticker": "ELS",
+      "name": "Equity LifeStyle Properties",
+      "description": "Immobilier résidentiel de loisirs et communautés préfabriquées",
+      "logo_gradient": [
+        "#4a044e",
+        "#e879f9"
+      ],
+      "price": 63.74,
+      "change_pct": -0.27,
+      "score": 83.4,
+      "pattern": "Pullback",
+      "region": "US",
+      "region_flag": "US",
+      "region_label": "États-Unis",
+      "sector": "Real Estate",
+      "sharia": false,
+      "extra_badges": [],
+      "radar_scores": {
+        "momentum": 50,
+        "fundamentals": 50,
+        "technical": 80,
+        "volume": 64,
+        "sentiment": 50,
+        "macro": 50
+      },
+      "radar_unavailable": [
+        "fundamentals",
+        "sentiment",
+        "macro"
+      ],
+      "selection_evidence": {
+        "screen_snapshot_as_of": "2026-08-28",
+        "detected_at": "2026-08-28",
+        "estimated_valid_bars": 10,
+        "source_screen_score": 83.4,
+        "avg_daily_dollar_volume": 80547756.76,
+        "score_note": "Score technique exact du screener archivé; ce n’est pas une probabilité de gain."
+      },
+      "entry_low": 64.94,
+      "entry_high": 65.26,
+      "entry_display": "64.94–65.26 $; gate min(open, VWAP), pullback VWAP seul si gap >2%",
+      "stop": 63.15,
+      "tp1": 66.89,
+      "tp2": 67.71,
+      "rr": "1:0.77",
+      "rr_entry": 0.77,
       "tp1_atr_multiple": 1.5,
       "execution": {
         "status": "conditional_next_session",
@@ -666,95 +965,59 @@
         "gate": "No order before the 09:30–09:45 ET window; require price in zone and above observed VWAP."
       },
       "horizon_days": 10,
-      "thesis": "DoubleVerify avance régulièrement au-dessus de ses trois moyennes. La faible volatilité impose une exécution stricte dans la zone et interdit de poursuivre un écart d’ouverture.",
+      "thesis": "Le REIT conserve sa moyenne 200 jours mais travaille sous l’EMA20. Une reprise de cette moyenne et du VWAP est obligatoire, particulièrement avec le 10 ans américain à 4,72%.",
       "confirmations": [
-        "RSI14 69.4 et ATR14 0.22 $",
-        "EMA20 12.92 $ contre EMA50 12.1 $",
+        "RSI14 42.6 et ATR14 1.09 $",
+        "EMA20 64.87 $ contre EMA50 64.66 $",
         "TP1 fixé à 1,50 ATR au-dessus du haut de zone; stop à 3.2% du pire remplissage",
         "Entrée uniquement si la zone tient et si le prix confirme au-dessus du VWAP"
       ],
       "invalidations": [
-        "Cassure du stop 13.02 $",
-        "Ouverture au-dessus de 13.73 $ sans retour VWAP",
+        "Cassure du stop 63.15 $",
+        "Ouverture au-dessus de 66.57 $ sans retour VWAP",
         "Perte du VWAP avec pression vendeuse croissante",
         "Donnée devenue stale, earnings surprise ou bascule du régime"
       ],
-      "market_cap": 2073733888,
+      "market_cap": 12780565504,
       "extension": {
-        "rsi": 69.4,
-        "atr": 0.2205,
-        "distance_50dma_pct": 13.29
+        "rsi": 42.6,
+        "atr": 1.0866,
+        "distance_50dma_pct": -1.55
       },
       "earnings_clear": true,
       "dilution_clear": true,
       "earnings_source": "8k_item_202",
-      "dilution_scope": "official SEC forms reviewed over 90 days; no S-1, S-3, EFFECT or 424B5 found; provider flags unavailable"
-    },
-    {
-      "ticker": "EL",
-      "name": "Estée Lauder",
-      "description": "Cosmétiques et soins premium",
-      "logo_gradient": [
-        "#14532d",
-        "#4ade80"
-      ],
-      "price": 103.39,
-      "change_pct": -2.66,
-      "score": 84.6,
-      "pattern": "Momentum",
-      "region": "US",
-      "region_flag": "US",
-      "region_label": "États-Unis",
-      "sector": "Consumer Staples",
-      "sharia": false,
-      "extra_badges": [],
-      "radar_scores": {
-        "momentum": 80,
-        "fundamentals": 64,
-        "technical": 84,
-        "volume": 76,
-        "sentiment": 62,
-        "macro": 68
+      "earnings_forward_evidence": {
+        "checked_at": "2026-08-29T04:57:55Z",
+        "days_ahead": 7,
+        "result": "no earnings found in next 7 days",
+        "event_found": false,
+        "source_artifact": "scanner/20260831/_data2/earnings_selected.json"
       },
-      "entry_low": 103.49,
-      "entry_high": 104.01,
-      "entry_display": "103.49–104.01 $; gate min(open, VWAP), pullback VWAP seul si gap >2%",
-      "stop": 98.44,
-      "tp1": 109.32,
-      "tp2": 111.98,
-      "rr": "1:0.95",
-      "rr_entry": 0.95,
-      "tp1_atr_multiple": 1.5,
-      "execution": {
-        "status": "conditional_next_session",
-        "observed_vwap": null,
-        "observed_at": null,
-        "gate": "No order before the 09:30–09:45 ET window; require price in zone and above observed VWAP."
-      },
-      "horizon_days": 10,
-      "thesis": "Estée Lauder progresse dans une tendance forte mais déjà étendue. Le setup reste un satellite: aucune poursuite d’un gap et confirmation VWAP obligatoire.",
-      "confirmations": [
-        "RSI14 69.6 et ATR14 3.54 $",
-        "EMA20 95.08 $ contre EMA50 89.47 $",
-        "TP1 fixé à 1,50 ATR au-dessus du haut de zone; stop à 5.4% du pire remplissage",
-        "Entrée uniquement si la zone tient et si le prix confirme au-dessus du VWAP"
-      ],
-      "invalidations": [
-        "Cassure du stop 98.44 $",
-        "Ouverture au-dessus de 106.09 $ sans retour VWAP",
-        "Perte du VWAP avec pression vendeuse croissante",
-        "Donnée devenue stale, earnings surprise ou bascule du régime"
-      ],
-      "market_cap": 37406351360,
-      "extension": {
-        "rsi": 69.6,
-        "atr": 3.5409,
-        "distance_50dma_pct": 19.84
-      },
-      "earnings_clear": true,
-      "dilution_clear": true,
-      "earnings_source": "8k_item_202",
-      "dilution_scope": "official SEC forms reviewed over 90 days; no S-1, S-3, EFFECT or 424B5 found; provider flags unavailable"
+      "issuer_filing_regime": "domestic_issuer",
+      "dilution_scope": "official SEC/EDGAR filings reviewed over 90 days; equity offering hits: 0; non-equity offerings are classified separately",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260831/_data2/sec_selected_evidence.json",
+        "checked_at": "2026-08-29T04:34:10Z",
+        "pagination_exhausted": true,
+        "latest_earnings_filing": {
+          "form": "8-K",
+          "date": "2026-07-23",
+          "accession": "0001628280-26-049302",
+          "items": [
+            "2.02",
+            "9.01"
+          ]
+        },
+        "issuer_calendar_verified": false,
+        "dilution_window": {
+          "from": "2026-05-30",
+          "to": "2026-08-28",
+          "days": 90
+        },
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": []
+      }
     },
     {
       "ticker": "IGV",
@@ -766,7 +1029,7 @@
       ],
       "price": 109.5,
       "change_pct": -0.74,
-      "score": 88.1,
+      "score": 90.4,
       "pattern": "Breakout",
       "region": "ETF",
       "region_flag": "ETF US",
@@ -778,21 +1041,34 @@
       ],
       "radar_scores": {
         "momentum": 78,
-        "fundamentals": 64,
-        "technical": 84,
-        "volume": 76,
-        "sentiment": 62,
-        "macro": 68
+        "fundamentals": 50,
+        "technical": 80,
+        "volume": 59,
+        "sentiment": 50,
+        "macro": 50
+      },
+      "radar_unavailable": [
+        "fundamentals",
+        "sentiment",
+        "macro"
+      ],
+      "selection_evidence": {
+        "screen_snapshot_as_of": "2026-08-28",
+        "detected_at": "2026-08-27",
+        "estimated_valid_bars": 10,
+        "source_screen_score": 90.4,
+        "avg_daily_dollar_volume": 1262732647.5,
+        "score_note": "Score technique exact du screener archivé; ce n’est pas une probabilité de gain."
       },
       "entry_low": 110.5,
       "entry_high": 111.05,
       "entry_display": "110.5–111.05 $; gate min(open, VWAP), pullback VWAP seul si gap >2%",
       "stop": 106.51,
-      "tp1": 115.32,
+      "tp1": 115.31,
       "tp2": 117.45,
       "rr": "1:0.94",
       "rr_entry": 0.94,
-      "tp1_atr_multiple": 1.5,
+      "tp1_atr_multiple": 1.498,
       "execution": {
         "status": "conditional_next_session",
         "observed_vwap": null,
@@ -822,6 +1098,13 @@
       "earnings_clear": null,
       "dilution_clear": null,
       "earnings_source": "n_a_etf",
+      "earnings_forward_evidence": {
+        "checked_at": "2026-08-29T04:57:55Z",
+        "days_ahead": 7,
+        "result": "no issuer earnings (ETF)",
+        "event_found": false,
+        "source_artifact": "scanner/20260831/_data2/earnings_selected.json"
+      },
       "dilution_scope": "n_a_etf; component-level event risk disclosed in calendar/look-through",
       "lookthrough": {
         "factor": "us_software",
@@ -833,16 +1116,16 @@
       }
     },
     {
-      "ticker": "KRE",
-      "name": "SPDR S&P Regional Banking ETF",
-      "description": "Banques régionales américaines",
+      "ticker": "KBE",
+      "name": "SPDR S&P Bank ETF",
+      "description": "Banques américaines diversifiées",
       "logo_gradient": [
         "#1f2937",
         "#60a5fa"
       ],
-      "price": 74.3,
-      "change_pct": -0.07,
-      "score": 85.7,
+      "price": 68.46,
+      "change_pct": 0.06,
+      "score": 84.8,
       "pattern": "Pullback",
       "region": "ETF",
       "region_flag": "ETF US",
@@ -853,22 +1136,35 @@
         "ETF US"
       ],
       "radar_scores": {
-        "momentum": 48,
-        "fundamentals": 64,
-        "technical": 84,
-        "volume": 76,
-        "sentiment": 62,
-        "macro": 68
+        "momentum": 49,
+        "fundamentals": 50,
+        "technical": 80,
+        "volume": 42,
+        "sentiment": 50,
+        "macro": 50
       },
-      "entry_low": 75.55,
-      "entry_high": 75.93,
-      "entry_display": "75.55–75.93 $; gate min(open, VWAP), pullback VWAP seul si gap >2%",
-      "stop": 73.47,
-      "tp1": 77.83,
-      "tp2": 78.64,
-      "rr": "1:0.77",
-      "rr_entry": 0.77,
-      "tp1_atr_multiple": 1.75,
+      "radar_unavailable": [
+        "fundamentals",
+        "sentiment",
+        "macro"
+      ],
+      "selection_evidence": {
+        "screen_snapshot_as_of": "2026-08-28",
+        "detected_at": "2026-08-27",
+        "estimated_valid_bars": 10,
+        "source_screen_score": 84.8,
+        "avg_daily_dollar_volume": 91834982.4,
+        "score_note": "Score technique exact du screener archivé; ce n’est pas une probabilité de gain."
+      },
+      "entry_low": 69.45,
+      "entry_high": 69.79,
+      "entry_display": "69.45–69.79 $; gate min(open, VWAP), pullback VWAP seul si gap >2%",
+      "stop": 67.53,
+      "tp1": 71.6,
+      "tp2": 72.29,
+      "rr": "1:0.80",
+      "rr_entry": 0.8,
+      "tp1_atr_multiple": 1.996,
       "execution": {
         "status": "conditional_next_session",
         "observed_vwap": null,
@@ -876,33 +1172,40 @@
         "gate": "No order before the 09:30–09:45 ET window; require price in zone and above observed VWAP."
       },
       "horizon_days": 10,
-      "thesis": "Les banques régionales restent au-dessus de leur moyenne 50 jours mais sous leur moyenne 20 jours. Le setup n’est recevable qu’après reprise de l’EMA20 et du VWAP; sous cette séquence, il reste désarmé.",
+      "thesis": "Les banques restent au-dessus de leur moyenne 200 jours mais sous leurs moyennes courtes. L’ETF évite le doublon avec une banque individuelle; il reste désarmé sans reprise de l’EMA20 et du VWAP.",
       "confirmations": [
-        "RSI14 40.8 et ATR14 1.08 $",
-        "EMA20 75.48 $ contre EMA50 74.78 $",
-        "TP1 fixé à 1,75 ATR au-dessus du haut de zone; stop à 3.2% du pire remplissage",
+        "RSI14 42 et ATR14 0.91 $",
+        "EMA20 69.38 $ contre EMA50 68.69 $",
+        "TP1 fixé à 2,00 ATR au-dessus du haut de zone; stop à 3.2% du pire remplissage",
         "Entrée uniquement si la zone tient et si le prix confirme au-dessus du VWAP"
       ],
       "invalidations": [
-        "Cassure du stop 73.47 $",
-        "Ouverture au-dessus de 77.45 $ sans retour VWAP",
+        "Cassure du stop 67.53 $",
+        "Ouverture au-dessus de 71.19 $ sans retour VWAP",
         "Perte du VWAP avec pression vendeuse croissante",
         "Donnée devenue stale, earnings surprise ou bascule du régime"
       ],
       "market_cap": null,
       "extension": {
-        "rsi": 40.8,
-        "atr": 1.0818,
-        "distance_50dma_pct": -1.55
+        "rsi": 42,
+        "atr": 0.9067,
+        "distance_50dma_pct": -1.02
       },
       "earnings_clear": null,
       "dilution_clear": null,
       "earnings_source": "n_a_etf",
+      "earnings_forward_evidence": {
+        "checked_at": "2026-08-29T04:57:55Z",
+        "days_ahead": 7,
+        "result": "no issuer earnings (ETF)",
+        "event_found": false,
+        "source_artifact": "scanner/20260831/_data2/earnings_selected.json"
+      },
       "dilution_scope": "n_a_etf; component-level event risk disclosed in calendar/look-through",
       "lookthrough": {
-        "factor": "us_regional_banks",
+        "factor": "us_banks",
         "clusters": [
-          "regional_banks",
+          "banks",
           "credit_cycle",
           "yield_curve"
         ]

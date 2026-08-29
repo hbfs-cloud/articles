@@ -350,6 +350,12 @@ Avant de figer le top 10, appliquer ces 4 vérifs MCP-driven :
 3. Continuer avec les candidats restants
 ```
 
+Un scan publié pour la prochaine séance ne doit jamais être créé comme position ouverte avant sa date de séance. Le tracking ignore les dossiers futurs; lors d'une revalidation, une position portant la même `scan_date` que le scan courant est un résultat de tracking, pas une exposition antérieure.
+
+### Plafond De Performance Récente (BLOQUANT)
+
+Aucune stratégie ne peut dépasser 50% du top publié. Un plafond temporaire plus strict doit venir de `data/scanner-strategy-overlays.json`, être hashé sur une rétro immuable arrivée à horizon, inclure une date d’expiration et documenter la censure. L’overlay courant limite Momentum à 40%; il ne prouve pas que Pullback ou Breakout sont supérieurs.
+
 ### Filtre Stratégie (OBLIGATOIRE)
 
 **Short Squeeze EXCLU** de tous les scans (décision 20/03/2026).
@@ -585,9 +591,9 @@ Quand un setup a un catalyseur lié à un événement binaire (earnings beat/mis
 
 ### Univers US Stocks & ETFs
 
-**OBLIGATOIRE** : Le scanner éditorial couvre uniquement les titres cotés aux États-Unis. Le top 10
-contient 8 actions US et 2 ETFs cotés aux États-Unis. Ne lancer aucun screener EU/APAC, aucun fallback
-EU et aucun staging ETF EU.
+**OBLIGATOIRE** : Le scanner éditorial couvre uniquement les titres cotés aux États-Unis. La cible est
+8 actions US et 2 ETFs US; le minimum publiable est 6 actions US et 2 ETFs US. Ne jamais forcer un
+remplaçant qui échoue les gates. Ne lancer aucun screener EU/APAC, aucun fallback EU et aucun staging ETF EU.
 
 #### Univers de Screening
 
@@ -606,11 +612,11 @@ EU et aucun staging ETF EU.
 
 1. **Screening US** : utiliser `RunScreener(region="us")` pour les actions et le staging `ETF_STAGE` pour les ETFs US
 2. **Critères A+** :
-   - Score composite ≥ 85/100
+   - Score éditorial ≥ 80/100 (`min-composite-score`)
    - Confluence technique : ≥ 3 signaux alignés (RSI, volume, S/R, pattern)
    - Catalyseur identifiable (earnings, news, breakout technique)
    - Liquidité suffisante (volume moyen > $10M/jour pour actions, > $50M/jour pour ETFs)
-3. **Diversification** : exactement 8 actions US + 2 ETFs US parmi les 10 candidats retenus
+3. **Diversification** : cible 8 actions US + 2 ETFs US; minimum 6 + 2 si aucun autre candidat ne passe
 4. **Horizon J+1** : Setups avec potentiel de mouvement dans les prochaines 24-48h (pas swing long terme)
 
 #### Présentation dans le Scanner
@@ -625,7 +631,7 @@ Pour chaque setup, **ajouter le badge d'univers correspondant** :
 </div>
 ```
 
-**Exemple de répartition idéale sur 10 setups** :
+**Répartition cible sur 10 setups** :
 - 8 actions cotées aux États-Unis
 - 2 ETFs cotés aux États-Unis
 
@@ -634,14 +640,15 @@ Pour chaque setup, **ajouter le badge d'univers correspondant** :
 Le `<h2>` de chaque carte scanner dans `data/scanner.json` DOIT suivre ce format exact :
 
 ```
-Top 10 conditionnel {REGIME} — {TICKER1}, {TICKER2}, {TICKER3}, ..., {TICKER10}
+Top {N} conditionnel {REGIME} — {TICKER1}, {TICKER2}, {TICKER3}, ..., {TICKERN}
 ```
 
 - **{REGIME}** : le régime détecté en MAJUSCULES — **UNIQUEMENT ces 5 valeurs** : `RISK-ON`, `EARLY RISK-OFF`, `RISK-OFF`, `NEUTRAL`, `RECOVERY`
   - ⚠️ **INTERDIT** : `DEEP RISK-OFF`, `STRONG RISK-ON`, `EXTREME RISK-OFF`, `MODERATE NEUTRAL`, ou tout autre label inventé
   - Si le marché est très baissier → `RISK-OFF` (pas "DEEP RISK-OFF")
   - Si début de détérioration → `EARLY RISK-OFF`
-- **{TICKERS}** : les 10 tickers séparés par des virgules, dans l'ordre du scan
+- **{N}** : nombre réellement publié (8 à 10), jamais gonflé avec un filler
+- **{TICKERS}** : les tickers séparés par des virgules, dans l'ordre du scan
 - **Jamais** de titre générique ("Daily Scanner", "Scan du jour", etc.)
 
 **Exemples conformes** :
@@ -656,7 +663,7 @@ Lors de l'ajout de la carte scanner dans `index.html`, **mentionner la compositi
 
 ```html
 <p style="font-size:0.85rem; color:var(--text-muted);">
-    {Description du régime}. {Stratégies}. 10 setups analysés : {8 actions US}, {2 ETFs US}.
+    {Description du régime}. {Stratégies}. {N} setups analysés : {actions US}, {ETFs US}.
 </p>
 ```
 

@@ -11,6 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 const ms = require('./lib/mode-status');
+const { isPlanActive } = require('./lib/dtx-plan-window');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'portfolio', 'v1');
@@ -171,7 +172,9 @@ console.log(`  Source: ${path.relative(ROOT, latestFile)} (${snap.date})${orders
 // sont exposés tels quels. Un registre marqué stale ne publie rien.
 function engineOrdersFrom(mode) {
   const ed = mode && mode.engine_decision;
-  if (!ed || ed.stale === true) return null;
+  if (!ed) return null;
+  const provenance = ed.decisionProvenance || {};
+  if (!isPlanActive(provenance, ed.executionPlan)) return [];
   const raw = Array.isArray(ed.orders) ? ed.orders : [];
   if (!raw.length) return [];
   return raw.map(o => ({
@@ -195,6 +198,17 @@ function engineOrdersFrom(mode) {
     // consommateur de l'API voit `tp1: null` sur les 18 ordres et en conclut qu'aucun n'a de cible,
     // alors que la moitié en a une, portée par le moteur. Lue dans DtxDecide.state, jamais dérivée.
     sleeve: o.sleeve || null,
+    broker: o.broker || null,
+    groupId: o.groupId || null,
+    candidateId: o.candidateId || null,
+    rank: o.rank != null ? +o.rank : null,
+    protection: o.protection || null,
+    execution: o.execution || null,
+    decisionContext: o.decisionContext || null,
+    planId: provenance.planId,
+    planRevision: provenance.planRevision,
+    validFrom: provenance.validFrom,
+    validUntil: provenance.validUntil,
     source: 'engine',
     engineAsOf: ed.asof || null,
     engineMode: ed.engineMode || null,
@@ -210,8 +224,8 @@ function engineOrdersFrom(mode) {
 // moteur n'est emprunté que par un mode réellement déclaré assetClass:"dtx".
 function rawOrdersFor(mode, modeId) {
   const isEngineMode = (((modesConfigFull && modesConfigFull.modes) || {})[modeId] || {}).assetClass === 'dtx';
-  const eng = isEngineMode ? engineOrdersFrom(mode) : null;
-  return eng !== null ? eng : (mode.orders || []);
+  if (isEngineMode) return engineOrdersFrom(mode) || [];
+  return mode.orders || [];
 }
 
 // ─── T2: coherence guard (equity.json ⇄ frozen source of truth) ──────────────
@@ -468,7 +482,12 @@ function writeMode(mode, prefix) {
   })();
   const _served = _staged && _staged.metricsSource === 'book_served_stats' && _staged.metrics
     ? _staged.metrics : null;
-  const _engMetrics = _served || ((mode.engine_decision || {}).metrics) || null;
+  const _engMetrics = (_staged && _staged.metrics) || ((mode.engine_decision || {}).metrics) || null;
+  const _metricsSource = (_staged && _staged.metricsSource) || (_served ? 'book_served_stats' : 'engine_history');
+  const _apiDecisionProvenance = (mode.engine_decision && mode.engine_decision.decisionProvenance)
+    || (_staged && _staged.decisionProvenance)
+    || null;
+  const _isReplayReconstruction = _metricsSource === 'mcp_replay' && _staged?.equityResolution === 'replay';
   // La courbe publiée est-elle bien celle du livre ? Comparaison de longueur avec le staging —
   // une métadonnée qui décrit un autre objet que celui servi est pire que pas de métadonnée.
   const _stagedPts = (_staged && _staged.equity && (_staged.equity.dates||[]).length) || 0;
@@ -495,10 +514,12 @@ function writeMode(mode, prefix) {
   const _engineBacktest = _engMetrics ? {
     source: _served
       ? 'systematic-tss (dtx) — statistiques SERVIES du livre (data/dtx staging, metricsSource=book_served_stats)'
-      : `systematic-tss (dtx) — métriques de replay de la poche « ${_engMetrics.strategy || 'n/a'} », PAS les statistiques servies du livre`,
-    metrics_source: _served ? 'book_served_stats' : 'replay_sleeve',
+      : _isReplayReconstruction
+        ? 'systematic-tss (dtx) — reconstruction DtxReplay à capital fixe; ce ne sont pas les statistiques du livre dynamique servi'
+        : `systematic-tss (dtx) — métriques de replay « ${_engMetrics.strategy || 'n/a'} »`,
+    metrics_source: _metricsSource,
     book_strategy: _engMetrics.strategy ?? null,
-    as_of: (mode.engine_decision || {}).asof || null,
+    as_of: (_staged && _staged.asof) || (mode.engine_decision || {}).asof || null,
     from: _engMetrics.from ?? null, to: _engMetrics.to ?? null,
     return_pct: _engMetrics.return_pct ?? null,
     cagr_pct: _engMetrics.cagr_pct ?? null,
@@ -524,7 +545,7 @@ function writeMode(mode, prefix) {
     // note expliquant comment y recalculer le CAGR — une notice de lecture pour une courbe absente.
     // On exige donc que la courbe publiée ait la MÊME LONGUEUR que celle du staging : c'est le seul
     // moyen de savoir qu'on décrit bien le même objet.
-    curve_resolution: _curveIsBook ? 'daily' : 'live track since launch (backtest curve served separately)',
+    curve_resolution: _curveIsBook ? 'daily' : _isReplayReconstruction ? 'decimated fixed-capital DtxReplay reconstruction' : 'live track since launch (backtest curve served separately)',
     ..._curveIsBook ? {
       curve_is_book: true,
       curve_source: 'DtxBookEquity (systematic-tss) — même run que les statistiques ci-dessus',
@@ -543,7 +564,10 @@ function writeMode(mode, prefix) {
       // Filet : si l'ingestion de la courbe du livre n'a pas tourné, on retombe sur la courbe de
       // poche — et on le DIT, avec le chiffre exact qu'un consommateur obtiendrait.
       curve_is_book: false,
-      curve_warning: 'Do NOT recompute max drawdown from equityCurve — it is the sub-sampled replay curve of the carrying sleeve, not the served book. Recomputing yields ~17.5% vs the authoritative 27.2%. Use max_dd_pct above.',
+      curve_warning: _isReplayReconstruction
+        ? 'This curve and the headline metrics are the same fixed-capital DtxReplay reconstruction. It is decimated, so a drawdown recomputed from visible points can understate the paired replay max_dd_pct. It is not the served dynamic-book curve.'
+        : 'This public curve is not a verified served-book curve; do not infer book-level drawdown from it.',
+      ...(_staged?.rejectedServedSnapshot ? { rejected_served_snapshot: _staged.rejectedServedSnapshot } : {}),
     },
   } : null;
   write(`${p}equity.json`, {
@@ -563,7 +587,8 @@ function writeMode(mode, prefix) {
   // 5. orders.json — orders only valid on scan date
   // Modes that do not accept new entries (paused, stopped, pausing, liquidated, draft) emit empty orders.
   const ordersAllowed = status.acceptsNewEntries;
-  const modeOrders = (!ordersAllowed || ordersStale) ? [] : rawOrdersFor(mode, modeId).map(o => o.source === 'engine' ? ({
+  const isEngineMode = _modeCfgFull.assetClass === 'dtx';
+  const modeOrders = (!ordersAllowed || (!isEngineMode && ordersStale)) ? [] : rawOrdersFor(mode, modeId).map(o => o.source === 'engine' ? ({
     ...o, allocPct,
   }) : ({
     ticker: o.ticker, action: o.action || 'BUY', score: o.score, strategy: o.strategy,
@@ -576,7 +601,9 @@ function writeMode(mode, prefix) {
   write(`${p}orders.json`, {
     updatedAt: now, date: snap.date, scanDate: scanDir, mode: prefix || 'balanced',
     status,
-    allocPct, orders: modeOrders
+    allocPct,
+    ...(isEngineMode ? { decisionProvenance: _apiDecisionProvenance } : {}),
+    orders: modeOrders
   });
 
   // 6. actions.json

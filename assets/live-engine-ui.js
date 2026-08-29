@@ -995,6 +995,9 @@
     if (!toastContainer) return;
     var status = evalResult.status;
     if (['SL_HIT', 'TP2_HIT', 'TP1_HIT', 'TP1_PARTIAL', 'EXPIRED'].indexOf(status) < 0) return;
+    // Expiry already has an inline chip and a Close Now row. Repeating every expired
+    // position as an overlay obscures the compact dashboard header on phones.
+    if (status === 'EXPIRED' && window.matchMedia('(max-width:600px)').matches) return;
 
     var key = evalResult.ticker + ':' + status;
     var now = Date.now();
@@ -1011,7 +1014,8 @@
 
     // Cap visible toasts
     var existing = toastContainer.children;
-    while (existing.length >= MAX_TOASTS) {
+    var maxVisible = window.matchMedia('(max-width:600px)').matches ? 1 : MAX_TOASTS;
+    while (existing.length >= maxVisible) {
       toastContainer.removeChild(existing[0]);
     }
 

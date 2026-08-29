@@ -96,10 +96,12 @@ function extractAllFromDir(dir) {
       score: s.score || 85,
       strategy: s.strategy,
       entry: s.entry,
+      entry_low: s.entry_low || s.entry,
+      entry_high: s.entry_high || s.entry,
       stop: s.stop,
       tp1: s.tp1,
       tp2: s.tp2,
-      horizon_days: 20,
+      horizon_days: s.horizon || 20,
     }));
 }
 
@@ -125,10 +127,13 @@ async function main() {
     .filter(d => /^\d{8}(-\d+)?$/.test(d))
     .filter(d => {
       const dateStr = d.slice(0, 8);
-      const scanDate = new Date(dateStr.slice(0, 4) + '-' + dateStr.slice(4, 6) + '-' + dateStr.slice(6, 8));
+      const scanDateIso = dateStr.slice(0, 4) + '-' + dateStr.slice(4, 6) + '-' + dateStr.slice(6, 8);
+      const scanDate = new Date(scanDateIso);
       const cutoff = new Date(today);
       cutoff.setDate(cutoff.getDate() - 35);
-      return scanDate >= cutoff;
+      // A next-session scan can be published before its session. It must not become
+      // an "open position" using the previous close before that session has begun.
+      return scanDate >= cutoff && scanDateIso <= today;
     })
     .sort();
 
@@ -160,12 +165,17 @@ async function main() {
         strategy: t.strategy || 'Momentum',
         chart_url: `https://finviz.com/chart.ashx?t=${t.ticker}&ty=c&ta=1&p=d&s=l`,
         entry: t.entry,
+        entry_low: t.entry_low,
+        entry_high: t.entry_high,
         stop: t.stop,
         tp1: t.tp1,
         tp2: t.tp2,
         horizon_days: t.horizon_days || 20,
         expire_date: expireDate,
-        status: 'open',
+        status: 'pending',
+        filled: false,
+        entry_date: null,
+        fill_basis: null,
         current_price: null,
         exit_price: null,
         exit_date: null,
@@ -188,9 +198,9 @@ async function main() {
     await sleep(150); // Throttle — Yahoo rate-limits at ~15 rps
   }
 
-  // Determine status for each trade — walk OHLC bars day by day.
-  // First touch wins: low <= stop → SL, high >= tp2 → TP2, high >= tp1 → TP1.
-  // No more close-only cheat (P0 audit fix).
+  // Determine status for each trade — walk OHLC bars day by day. A plan is not a
+  // position until its published entry zone trades. Daily bars cannot prove VWAP or
+  // opening-window gates, so activation is explicitly labelled unverified.
   for (const trade of allTrades) {
     const ticker = trade.ticker_yahoo;
     const data = ohlcData[ticker];
@@ -207,8 +217,19 @@ async function main() {
       .sort();
 
     let exitFound = false;
+    let activated = false;
     for (const d of dates) {
       const bar = data.history[d];
+      if (!activated) {
+        const entryLow = trade.entry_low || trade.entry;
+        const entryHigh = trade.entry_high || trade.entry;
+        if (!(bar.high >= entryLow && bar.low <= entryHigh)) continue;
+        activated = true;
+        trade.filled = true;
+        trade.entry_date = d;
+        trade.fill_basis = 'daily_zone_touch_unverified_vwap';
+        trade.status = 'open';
+      }
       // Flag ambiguous bars — same bar hit SL AND a TP level (first-touch picks SL = conservative)
       const hitSL = bar.low <= trade.stop;
       const hitTP = (trade.tp2 && bar.high >= trade.tp2) || bar.high >= trade.tp1;
@@ -244,13 +265,18 @@ async function main() {
 
     if (exitFound) continue;
 
-    // No exit hit during window — either expired or still open
+    // No exit hit during window — either never filled, expired, or still open.
     const expired = today >= trade.expire_date;
-    if (expired && lastPrice != null) {
+    if (!activated) {
+      trade.status = expired ? 'no_fill' : 'pending';
+      trade.pnl_pct = null;
+    } else if (expired && dates.length) {
+      const expiryDate = dates[dates.length - 1];
+      const expiryClose = Number(data.history[expiryDate]?.close);
       trade.status = 'expired';
-      trade.exit_price = lastPrice;
-      trade.exit_date = today;
-      trade.pnl_pct = +((lastPrice - trade.entry) / trade.entry * 100).toFixed(2);
+      trade.exit_price = Number.isFinite(expiryClose) ? expiryClose : lastPrice;
+      trade.exit_date = expiryDate;
+      trade.pnl_pct = +((trade.exit_price - trade.entry) / trade.entry * 100).toFixed(2);
     } else if (lastPrice != null) {
       trade.status = 'open';
       trade.pnl_pct = +((lastPrice - trade.entry) / trade.entry * 100).toFixed(2);
@@ -295,8 +321,8 @@ async function main() {
   }
 
   // Capital allocation
-  const entered = open.filter(t => t.current_price && t.entry && t.current_price >= t.entry * 0.98);
-  const pending = open.filter(t => t.current_price && t.entry && t.current_price < t.entry * 0.98);
+  const entered = open;
+  const pending = allTrades.filter(t => t.status === 'pending');
   const workingCapitalPct = +Math.min(100, +(entered.length * FRACTION * 100).toFixed(1));
   const pendingOrdersPct = +Math.min(100 - workingCapitalPct, +(pending.length * FRACTION * 100).toFixed(1));
   const availableCashPct = +Math.max(0, 100 - workingCapitalPct - pendingOrdersPct).toFixed(1);
@@ -350,6 +376,10 @@ async function main() {
 
   const metrics = {
     updated_at: new Date().toISOString(),
+    measurement_basis: 'daily_zone_touch_proxy_unverified_vwap',
+    execution_verified: false,
+    performance_label: 'Diagnostic proxy only; sealed 15-minute retrospective is the execution-performance reference.',
+    tp1_accounting_assumption: 'full_exit_proxy',
     trades_total: allTrades.length,
     trades_closed: closed.length,
     trades_open: open.length,
@@ -418,7 +448,9 @@ async function main() {
       else { signal = 'yellow'; status_label = '🟡 Neutre'; }
       return {
         id: t.id, ticker: t.ticker, scan_date: t.scan_date,
-        entry: t.entry, current_price: t.current_price,
+        entry: t.entry, entry_low: t.entry_low, entry_high: t.entry_high,
+        entry_date: t.entry_date, filled: t.filled, fill_basis: t.fill_basis,
+        execution_verified: false, current_price: t.current_price,
         return_pct: ret, stop: t.stop, tp1: t.tp1, tp2: t.tp2,
         days_remaining: daysLeft, expire_date: t.expire_date,
         strategy: t.strategy,
@@ -455,4 +487,11 @@ async function main() {
   console.log(`✅ scanner-positions.json: ${activePositions.length} open positions`);
 }
 
-main().catch(console.error);
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { extractAllFromDir };

@@ -17,6 +17,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const parser = require('./lib/scanner-parser');
 const { recentDilutionFilings } = require('./pre-scan-filter');
 const { computeAllowedActions, boundDecision } = require('./lib/allowed-actions');
@@ -88,11 +89,23 @@ function loadRawSignalsJson(dir) {
   }
 }
 
-function loadOpenPositions() {
+function loadOpenPositions(scanDateIso) {
   try {
     const j = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'scanner-positions.json'), 'utf8'));
-    return new Set((j.open_positions || []).map(p => String(p.ticker).toUpperCase()));
+    return new Set((j.open_positions || [])
+      // Positions created by this same scan are tracking output, not pre-existing
+      // exposure. Unknown dates remain fail-closed and are treated as prior positions.
+      .filter(p => !p.scan_date || !scanDateIso || String(p.scan_date) < scanDateIso)
+      .map(p => String(p.ticker).toUpperCase()));
   } catch { return new Set(); }
+}
+
+function loadStrategyOverlay(sourceFile) {
+  try {
+    return JSON.parse(fs.readFileSync(sourceFile, 'utf8'));
+  } catch {
+    return null;
+  }
 }
 
 function fail(violations) {
@@ -117,7 +130,10 @@ async function main() {
 
   const filters = loadFilters();
   const { dir, dirName, signals, tklPool, regime, regimeScore } = loadScanSignals(arg);
-  const openPositions = loadOpenPositions();
+  const scanDateIso = /^\d{8}$/.test(dirName)
+    ? `${dirName.slice(0, 4)}-${dirName.slice(4, 6)}-${dirName.slice(6, 8)}`
+    : null;
+  const openPositions = loadOpenPositions(scanDateIso);
 
   const violations = [];
   const advisories = []; // advisories non-bloquants (déclaré tôt : utilisé par la règle 15 candlestick)
@@ -153,6 +169,71 @@ async function main() {
           rule: 'scan_size',
           message: `Strategy "${st}" has ${n} editorial signals (max ${ss.max_per_strategy} per strategy).`
         });
+      }
+    }
+  }
+
+  // 1b. Strategy concentration + immutable recent-performance overlays.
+  // The temporary policy is hash-bound to a mature-cohort audit so a later
+  // retrospective rewrite cannot silently change a historical validation.
+  {
+    const gate = filters.audit_gates?.recent_strategy_performance;
+    const active = gate && (!gate.active_from || !scanDateIso || scanDateIso >= gate.active_from);
+    if (active) {
+      const source = path.resolve(ROOT, gate.source || 'data/retro-summary.json');
+      const overlay = loadStrategyOverlay(source);
+      if (!overlay) {
+        violations.push({
+          rule: 'recent_strategy_performance',
+          message: `Strategy overlay ${path.relative(ROOT, source)} is missing or invalid; concentration cannot be validated fail-closed.`
+        });
+      } else {
+        const counts = signals.reduce((acc, s) => {
+          const key = String(s.strategy || '').trim();
+          acc[key] = (acc[key] || 0) + 1;
+          return acc;
+        }, {});
+        const defaultShare = gate.default_max_share_pct ?? 50;
+        const defaultMax = Math.max(1, Math.floor(editorialCount * defaultShare / 100));
+        for (const [strategy, count] of Object.entries(counts)) {
+          if (count > defaultMax) {
+            violations.push({
+              rule: 'strategy_concentration',
+              message: `${strategy}: ${count}/${editorialCount} exceeds the default concentration cap ${defaultMax} (${defaultShare}%).`
+            });
+          }
+        }
+
+        const evidencePath = overlay.evidence_source && path.resolve(ROOT, overlay.evidence_source);
+        if (!evidencePath || !fs.existsSync(evidencePath) || !overlay.evidence_sha256) {
+          violations.push({
+            rule: 'recent_strategy_performance',
+            message: 'Strategy overlay lacks an existing evidence_source or evidence_sha256; fail-closed.'
+          });
+        } else {
+          const actualHash = crypto.createHash('sha256').update(fs.readFileSync(evidencePath)).digest('hex');
+          if (actualHash !== overlay.evidence_sha256) {
+            violations.push({
+              rule: 'recent_strategy_performance',
+              message: `Strategy overlay evidence hash mismatch for ${overlay.evidence_source}; expected ${overlay.evidence_sha256}, got ${actualHash}.`
+            });
+          }
+        }
+        for (const policy of overlay.policies || []) {
+          if (policy.status !== 'active') continue;
+          if (scanDateIso && policy.effective_from && scanDateIso < policy.effective_from) continue;
+          if (scanDateIso && policy.expires_after && scanDateIso > policy.expires_after) continue;
+          const maxShare = Number(policy.max_share_pct);
+          if (!Number.isFinite(maxShare)) continue;
+          const maxCount = Math.max(1, Math.floor(editorialCount * maxShare / 100));
+          const count = counts[String(policy.strategy)] || 0;
+          if (count > maxCount) {
+            violations.push({
+              rule: 'recent_strategy_performance',
+              message: `${policy.strategy}: ${count}/${editorialCount} exceeds temporary cap ${maxCount} from immutable mature-cohort evidence through ${overlay.evidence_cutoff} (PF ${policy.mature_evidence?.profit_factor}, average R ${policy.mature_evidence?.average_r}). This cap does not validate substitutes.`
+            });
+          }
+        }
       }
     }
   }
@@ -263,14 +344,20 @@ async function main() {
       sectorCount[sect] = (sectorCount[sect] || 0) + 1;
     }
     const cap = filters.diversification.max_per_sector;
-    // ADVISORY (not a hard gate): the cap describes the *published* curated selection
-    // ("no 3 techs in one week"), but this validator sees the raw candidate pool (up to
-    // max_total). Enforcing it hard on the pool false-flags normal candidate spread — same
-    // class of issue as the old scan_size:exact rule. Kept advisory, consistent with the
-    // region floors (min_us/min_eu…), so it still surfaces at curation time without blocking.
+    const compactDate = String(dirName).replace(/-/g, '').slice(0, 8);
+    const effectiveDate = String(filters.diversification.effective_from || '').replace(/-/g, '');
+    const hardCapActive = !effectiveDate || (/^\d{8}$/.test(compactDate) && compactDate >= effectiveDate);
     for (const [sect, n] of Object.entries(sectorCount)) {
+      if (hardCapActive && sect === 'Other') {
+        violations.push({
+          rule: 'sector_mapping_missing',
+          message: `${n} published signal(s) lack an explicit sector_map entry — concentration cannot be verified fail-closed.`
+        });
+      }
       if (n > cap) {
-        advisories.push(`Sector "${sect}" has ${n} editorial candidates (soft cap ${cap})${sect === 'Other' ? ' — add to sector_map if this is a real sector' : ''} — curate the published top-N to avoid same-week concentration [sector_concentration]`);
+        const message = `Sector "${sect}" has ${n} published candidates (cap ${cap}) — reduce concentration before publication.`;
+        if (hardCapActive) violations.push({ rule: 'sector_concentration', message });
+        else advisories.push(`${message} [sector_concentration]`);
       }
     }
   }
@@ -327,7 +414,13 @@ async function main() {
       try {
         const edgar = await recentDilutionFilings(ticker, filters);
         if (edgar.hits.length > 0) {
-          const detail = edgar.hits.map(h => `${h.form} (${h.ageDays}d ago)`).join(', ');
+          const signal = signals.find(s => String(s.ticker).toUpperCase() === String(ticker).toUpperCase());
+          const classifiedNonEquity = new Set((signal?.sec_evidence?.non_equity_offering_hits || [])
+            .filter(h => h.verified_from_primary_filing === true)
+            .map(h => `${h.form}:${h.date}`));
+          const unexplainedHits = edgar.hits.filter(h => !classifiedNonEquity.has(`${h.form}:${h.date}`));
+          const detail = unexplainedHits.map(h => `${h.form} (${h.ageDays}d ago)`).join(', ');
+          if (!unexplainedHits.length) continue;
           if (pool === 'tkl') {
             violations.push({
               rule: 'tkl.edgar_dilution',
@@ -504,14 +597,45 @@ async function main() {
     }
   }
 
-  // 12. Market cap minimum for top 10 — reject penny stocks
+  // 12. Liquidity and market-cap evidence for the governed US-only scanner.
   if (filters.tickers?.min_market_cap_usd) {
     const minMcap = filters.tickers.min_market_cap_usd;
+    const minAdv = filters.tickers.min_avg_daily_volume_usd || 0;
+    const compactDate = String(dirName).replace(/-/g, '').slice(0, 8);
+    const effectiveDate = String(filters.diversification?.effective_from || '').replace(/-/g, '');
+    const hardEvidenceActive = !effectiveDate || (/^\d{8}$/.test(compactDate) && compactDate >= effectiveDate);
+    let referenceClose = null;
+    try {
+      const scanData = JSON.parse(fs.readFileSync(path.join(dir, 'data.json'), 'utf8'));
+      referenceClose = scanData.engine_meta?.reference_close || scanData.engine_meta?.freshness?.marketdata_bars || null;
+    } catch { /* missing reference close is handled fail-closed below */ }
     for (const s of signals) {
+      const isEtf = String(s.region || '').toUpperCase() === 'ETF';
       if (typeof s.entry === 'number' && s.entry < 5) {
         violations.push({
           rule: 'penny_stock',
           message: `${s.ticker}: entry price $${s.entry} < $5 — penny stock territory. Minimum market cap $${(minMcap/1e6).toFixed(0)}M required.`
+        });
+      }
+      if (!hardEvidenceActive) continue;
+      if (!isEtf && (!Number.isFinite(s.market_cap) || s.market_cap < minMcap)) {
+        violations.push({
+          rule: 'market_cap_evidence',
+          message: `${s.ticker}: market_cap=${s.market_cap ?? 'missing'}; a verified value >= $${(minMcap / 1e6).toFixed(0)}M is required.`
+        });
+      }
+      const evidence = s.selection_evidence || {};
+      const adv = Number(evidence.avg_daily_dollar_volume);
+      if (!Number.isFinite(adv) || adv < minAdv) {
+        violations.push({
+          rule: 'liquidity_evidence',
+          message: `${s.ticker}: archived average daily dollar volume ${Number.isFinite(adv) ? `$${Math.round(adv)}` : 'missing'} is below the $${(minAdv / 1e6).toFixed(0)}M floor.`
+        });
+      }
+      if (!referenceClose || String(evidence.screen_snapshot_as_of || '') !== String(referenceClose) || !Number.isFinite(Number(evidence.estimated_valid_bars)) || Number(evidence.estimated_valid_bars) < 1) {
+        violations.push({
+          rule: 'selection_freshness_evidence',
+          message: `${s.ticker}: source screen ${evidence.screen_snapshot_as_of || 'missing'} must match governed reference close ${referenceClose || 'missing'} with estimated_valid_bars >= 1.`
         });
       }
     }
@@ -989,7 +1113,7 @@ async function main() {
           const isEtf = region === 'ETF' || String(s.sector || '').toUpperCase().startsWith('ETF') || !!s.lookthrough;
           let allowed, expected;
           if (isEtf) { allowed = OK_ETF; expected = 'n_a_etf (aucun résultat à publier)'; }
-          else if (region && region !== 'US') { allowed = OK_NON_US; expected = 'issuer_calendar_verified (aucun dépôt réglementaire hors SEC)'; }
+          else if ((region && region !== 'US') || s.issuer_filing_regime === 'foreign_private_issuer') { allowed = OK_NON_US; expected = 'issuer_calendar_verified (émetteur privé étranger, aucun 8-K item 2.02)'; }
           else { allowed = new Set(['8k_item_202']); expected = '8k_item_202 (dépôt SEC item 2.02, JAMAIS le calendrier prévisionnel)'; }
           if (!allowed.has(src)) {
             violations.push({
@@ -1070,8 +1194,56 @@ async function main() {
       advisories.push(`${s.ticker}: ${s.extension.distance_50dma_pct.toFixed(1)}% above 50-DMA > ${s.strategy} cap ${cap}% [overextension_50dma]`);
   }
 
-  // Earnings + dilution flags (advisory — Claude's selection should set true; only flag if false)
+  // Final-basket event and filing evidence. A boolean is not evidence: new scans must
+  // carry the exact forward query and accession-level SEC/issuer coverage.
   const allSignals = [...signals, ...tklPool];
+  {
+    const compactDate = String(dirName).replace(/-/g, '').slice(0, 8);
+    const effectiveDate = String(filters.diversification?.effective_from || '').replace(/-/g, '');
+    const hardEvidenceActive = !effectiveDate || (/^\d{8}$/.test(compactDate) && compactDate >= effectiveDate);
+    if (hardEvidenceActive) for (const s of signals) {
+      const isEtf = String(s.region || '').toUpperCase() === 'ETF';
+      const forward = s.earnings_forward_evidence || {};
+      if (!forward.checked_at || Number(forward.days_ahead) < 7 || forward.event_found !== false || !forward.source_artifact) {
+        violations.push({
+          rule: 'earnings_forward_evidence',
+          message: `${s.ticker}: exact final-basket earnings evidence is missing, shorter than 7 days, or reports an event.`
+        });
+      }
+      if (isEtf) continue;
+      const sec = s.sec_evidence || {};
+      if (sec.pagination_exhausted !== true || !Array.isArray(sec.equity_offering_hits) || !Array.isArray(sec.non_equity_offering_hits)) {
+        violations.push({
+          rule: 'sec_evidence',
+          message: `${s.ticker}: accession-level SEC evidence must include exhausted pagination plus separate equity/non-equity offering arrays.`
+        });
+      }
+      if (sec.equity_offering_hits?.length || s.dilution_clear !== true) {
+        violations.push({
+          rule: 'dilution_evidence',
+          message: `${s.ticker}: recent equity offering evidence is non-empty or dilution_clear is not true.`
+        });
+      }
+      if (s.issuer_filing_regime === 'foreign_private_issuer') {
+        if (sec.issuer_calendar_verified !== true || s.earnings_source !== 'issuer_calendar_verified') {
+          violations.push({
+            rule: 'foreign_issuer_evidence',
+            message: `${s.ticker}: foreign private issuer requires an exact issuer-calendar check and issuer_calendar_verified source.`
+          });
+        }
+      } else {
+        const filing = sec.latest_earnings_filing || {};
+        if (filing.form !== '8-K' || !/^\d{10}-\d{2}-\d{6}$/.test(String(filing.accession || '')) || !filing.date) {
+          violations.push({
+            rule: 'earnings_accession_evidence',
+            message: `${s.ticker}: domestic issuer requires the latest earnings 8-K date and accession number.`
+          });
+        }
+      }
+    }
+  }
+
+  // Legacy flags remain visible as advisories for older/specialist pools.
   for (const s of allSignals) {
     const prefix = tklPool.includes(s) ? `TKL ${s.ticker}` : s.ticker;
     if (s.earnings_clear === false) advisories.push(`${prefix}: earnings_clear=false (±3d window) [earnings_window]`);
@@ -1168,4 +1340,4 @@ async function main() {
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(2); });
 
-module.exports = { loadFilters, loadScanSignals };
+module.exports = { loadFilters, loadScanSignals, loadOpenPositions, loadStrategyOverlay };

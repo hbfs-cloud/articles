@@ -1,7 +1,7 @@
 openapi: "3.0.3"
 info:
   title: DailyTickers Portfolio API
-  version: "1.4.0"
+  version: "1.4.1"
   description: >
     Free JSON endpoints to replicate the DailyTickers portfolios (5 modes: Best, Turbo, Dynamic,
     Balanced, Fortress). Best is engine-backed (systematic-tss): its signals come from the engine
@@ -12,6 +12,7 @@ info:
     (secured, tkl, alpha, aplus, highvol, hybrid, forex, etf, etf_eu, etf_us, stockbox,
     stockbox_pit, factor, book_honest, us_highvol, hvep, ep) were still advertised in the mode
     enum and all returned 404; `best`, the only newly published directory, was missing from it.
+    Changelog 1.4.1 (2026-08-29): documented the existing root /rotation.json endpoint.
     Also documented: /risk.json, /modes.json, /regime.json, /config-history.json,
     /instruments.json, and the response fields (status, reliability, engineBacktest, risk,
     scanDate) that the generator has been emitting.
@@ -441,6 +442,35 @@ paths:
                               shortable: { type: boolean }
                               min_order_size: { type: number }
                               price_increment: { type: number }
+
+  /rotation.json:
+    servers:
+      - url: https://articles.dailytickers.com/portfolio/v1
+        description: Root endpoint (no mode prefix)
+    get:
+      summary: Cross-asset sector rotation snapshot
+      description: >
+        Sector ETF performance, bellwethers and beta-ranked references used by the
+        public rotation dashboard. This is descriptive market context, not an order feed.
+      responses:
+        "200":
+          description: Latest rotation snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  schema: { type: string, example: "rotation-beta.v1" }
+                  updated: { type: string, format: date-time }
+                  asof: { type: string, format: date }
+                  window: { type: object, additionalProperties: true }
+                  note: { type: string }
+                  sectors:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+                  references:
+                    type: array
+                    items: { type: object, additionalProperties: true }
 
 components:
   schemas:

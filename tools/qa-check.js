@@ -364,15 +364,17 @@ check('dtx: staging scriptés complets (portefeuilles MCP frais — pas de skip 
   if (marker) {
     const genDay = String(marker.generatedAt || '').slice(0, 10);
     if (genDay === today) {
-      if (marker.complete) return;  // les modes frais → OK
-      const skipped = (marker.skipped || []).map(id => {
-        const m = (marker.modes || {})[id] || {};
-        return `${id} (${m.status || '?'})`;
-      });
-      return `staging dtx INCOMPLET pour le scan ${marker.scanDate || '?'} — mode(s) NON régénéré(s) via MCP ce run: `
-        + `${skipped.join(', ')}. MCP dtx injoignable / connector absent / job(s) échoué(s) → staging conservé = STALE `
-        + `(jamais fabriqué). L'agent DOIT avoir alerté Telegram (alias 'alerts'). Régénérer via `
-        + `DtxReplay+DtxDecide → dtx-mcp-ingest, PUIS relancer gen-status-page.`;
+      if (!marker.complete) {
+        const skipped = (marker.skipped || []).map(id => {
+          const m = (marker.modes || {})[id] || {};
+          return `${id} (${m.status || '?'})`;
+        });
+        return `staging dtx INCOMPLET pour le scan ${marker.scanDate || '?'} — mode(s) NON régénéré(s) via MCP ce run: `
+          + `${skipped.join(', ')}. MCP dtx injoignable / connector absent / job(s) échoué(s) → staging conservé = STALE `
+          + `(jamais fabriqué). L'agent DOIT avoir alerté Telegram (alias 'alerts'). Régénérer via `
+          + `DtxReplay+DtxDecide → dtx-mcp-ingest, PUIS relancer gen-status-page.`;
+      }
+      // A complete marker does not bypass the independent staging checks below.
     }
   }
   // FILET ASOF (durci 2026-07-16). « Pas de marqueur » n'est PLUS un pass silencieux : entre le
@@ -439,6 +441,60 @@ check('dtx: métriques replay saines (AUCUN staging corrompu — frais OU stale 
   return `staging dtx avec métriques replay ABERRANTES (NON publiable, y compris stale) — `
     + `${suspects.join(' | ')}. Un replay hors bornes = param drift / job corrompu / OOM serveur ayant laissé un staging cassé. `
     + `Re-appeler DtxReplay (from=2021-01-01) séquentiellement, vérifier trades vs config/dtx/_sanity-baselines.json, ré-ingérer, alerter 'alerts'.`;
+});
+
+check('dtx: fenêtres Contract V2 appliquées aux pools et ordres publics', () => {
+  const now = Date.now();
+  const issues = [];
+  const scanDirs = fs.readdirSync(path.join(ROOT, 'scanner')).filter(d => /^\d{8}$/.test(d)).sort();
+  const latest = scanDirs[scanDirs.length - 1];
+  let scan = {};
+  try { scan = readJSON(`scanner/${latest}/signals.json`); } catch { /* reported elsewhere */ }
+  const pool = Array.isArray(scan.dtx_pool) ? scan.dtx_pool : [];
+  for (const id of ['best']) {
+    let stg;
+    try { stg = readJSON(`data/dtx/${id}.json`); } catch { continue; }
+    const from = Date.parse(stg.decisionProvenance?.validFrom || '');
+    const until = Date.parse(stg.decisionProvenance?.validUntil || '');
+    if (!Number.isFinite(from) || !Number.isFinite(until)) {
+      issues.push(`${id}: validFrom/validUntil absents`);
+      continue;
+    }
+    if (now < from || now > until) {
+      const leakedPool = pool.filter(s => s && s.universe === id).length;
+      let publicOrders = [];
+      try { publicOrders = readJSON(`portfolio/v1/${id}/orders.json`).orders || []; } catch { /* API covered elsewhere */ }
+      if (leakedPool) issues.push(`${id}: ${leakedPool} signal(s) dtx_pool hors fenêtre`);
+      if (publicOrders.length) issues.push(`${id}: ${publicOrders.length} ordre(s) API hors fenêtre`);
+    }
+  }
+  if (issues.length) return issues.join(' | ');
+});
+
+check('dtx: courbe, headline et provenance décrivent le même replay', () => {
+  const issues = [];
+  for (const id of ['best']) {
+    let stg, api;
+    try { stg = readJSON(`data/dtx/${id}.json`); api = readJSON(`portfolio/v1/${id}/equity.json`); }
+    catch { continue; }
+    if (stg.metricsSource !== 'mcp_replay') continue;
+    const sv = stg.equity?.values || [];
+    const sm = Number(stg.metrics?.return_pct);
+    if (sv.length > 1 && Number.isFinite(sm)) {
+      const sr = (Number(sv[sv.length - 1]) / Number(sv[0]) - 1) * 100;
+      if (Math.abs(sr - sm) > 0.05) issues.push(`${id}: staging curve return ${sr.toFixed(2)} != metrics ${sm}`);
+    }
+    const av = api.equityCurve?.v || [];
+    const ar = av.length > 1 ? Number(av[av.length - 1]) / Number(av[0]) * 100 - 100 : NaN;
+    const hm = Number(api.stats?.ret);
+    if (!Number.isFinite(ar) || !Number.isFinite(hm) || Math.abs(ar - hm) > 0.05) {
+      issues.push(`${id}: API curve/headline mismatch (${Number.isFinite(ar) ? ar.toFixed(2) : 'n/a'} vs ${hm})`);
+    }
+    if (api.engineBacktest?.metrics_source !== 'mcp_replay' || api.engineBacktest?.curve_is_book !== false) {
+      issues.push(`${id}: provenance API ne déclare pas la reconstruction mcp_replay non-book`);
+    }
+  }
+  if (issues.length) return issues.join(' | ');
 });
 
 // 5a-bis. GARDE-FOU FRAÎCHEUR FROZEN (anti-gel silencieux). Bug du 26/06→21/07 2026 : les héros LLM
@@ -530,14 +586,16 @@ check('risk-snapshots.json: var95_5d présent pour tout mode avec position(s) ou
   }
 });
 
-// ─── Check 5d (Fix #4): régime dégradé (fallback / warnings) — visible, non bloquant ──
-// scanner/status/history/<dernier>.json → regimeProbability.model / warnings[]. Le modèle
+// ─── Check 5d (Fix #4): régime dégradé (fallback) — visible, non bloquant ──
+// scanner/status/history/<dernier>.json → regimeProbability.model. Le modèle
 // attendu en régime nominal est 'context_conditional' ; 'fallback_rule_based' (ou modèle
 // absent) signale que le bar service bootstrappe / est indisponible — c'est TRANSITOIRE,
 // donc jamais bloquant, mais ne doit plus rester enfoui : affiché en ⚠️ explicite ici,
-// distinct du warning générique de fraîcheur (check 28).
+// distinct du warning générique de fraîcheur (check 28). Les warnings instrument
+// conservés dans le snapshot (par exemple historique TLT court) ne dégradent pas à eux
+// seuls un modèle nominal avec un état et une confiance exploitables.
 const EXPECTED_REGIME_MODEL = 'context_conditional';
-warn('scanner/status/history (dernier snapshot): regimeProbability.model non dégradé', () => {
+check('scanner/status/history (dernier snapshot): provenance regimeProbability explicite', () => {
   const histDir = path.join(ROOT, 'scanner', 'status', 'history');
   if (!fs.existsSync(histDir)) return 'scanner/status/history/ absent';
   const files = fs.readdirSync(histDir).filter(f => /^\d{8}\.json$/.test(f)).sort().reverse();
@@ -551,8 +609,12 @@ warn('scanner/status/history (dernier snapshot): regimeProbability.model non dé
   if (!rp.model || rp.model !== EXPECTED_REGIME_MODEL) {
     issues.push(`model="${rp.model || 'absent'}" (attendu "${EXPECTED_REGIME_MODEL}")`);
   }
-  if (Array.isArray(rp.warnings) && rp.warnings.length) {
-    issues.push(`warnings: ${rp.warnings.join(' / ')}`);
+  if (!rp.engine) issues.push('engine absent');
+  if (!rp.currentState || rp.currentState === 'unavailable') {
+    issues.push(`currentState="${rp.currentState || 'absent'}"`);
+  }
+  if (!Number.isFinite(Number(rp.currentStateConfidence)) || Number(rp.currentStateConfidence) <= 0) {
+    issues.push(`currentStateConfidence="${rp.currentStateConfidence ?? 'absent'}"`);
   }
   if (issues.length) {
     return `${files[0]} — ${issues.join(' | ')} — dégradation MCP probablement transitoire (bar service bootstrapping ?), à surveiller si récurrent`;

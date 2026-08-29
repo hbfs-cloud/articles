@@ -13,7 +13,7 @@
  *     → writes each raw tool result to a JSON file
  *       → `node tools/dtx-mcp-ingest.js --portfolio <id> --decide <file> [--replay <file>]`
  *         → writes data/dtx/<id>.json in the EXACT schema the NATIVE path (dtx-scan.js) produces
- *           → gen-status-page.js reads it (orders = decide CREATE, equity/metrics = replay).
+ *           → gen-status-page.js reads it (orders = rank-1 candidates from V2 groups, metrics = replay).
  *
  * The staging schema is built via dtx-scan.js's shared helpers (buildStaging / extractReplayMetrics /
  * writeStaging) so this file is byte-compatible with the binary producer by construction — only the
@@ -21,10 +21,8 @@
  *
  * The local binary path (`node tools/dtx-scan.js`) stays the OFFLINE / no-agent FALLBACK.
  *
- * DtxDecide JSON shape : { state, actions:{ CREATE:[{symbol,side,order_type,qty,limit_price,
- *                         stop_price,stop_loss,take_profit,reason,priority,order_id,
- *                         exec_options?{gap_*,vwap_weak_skip,regime…,slicer,fill_window…},
- *                         alternates?[{symbol,limit_price,qty,stop_loss}]}], UPDATE, CANCEL } }
+ * DtxDecide JSON shape : Contract V2 with execution_plan.groups[].candidates[].
+ *                         actions.CREATE is compatibility output and is never consumed.
  * DtxReplay JSON shape : { portfolio_id, results:[{cagr_pct,max_dd_pct,sharpe,r2,win_rate,
  *                         total_trades,final_equity,equity_dates[],equity_values[], ...}] }
  * Order fields are snake_case; dtx-scan.mapOrder maps them → the staging camelCase order fields.
@@ -125,7 +123,7 @@ function main() {
   const { modeInfo, cfg } = resolveMode(opts.portfolio, opts);
   const currency = cfg.currency || 'USD';
 
-  // 1) decide payload → orders. Tolerate either the bare {actions:…} or a wrapper {result:{actions}}.
+  // 1) decide payload → validated Contract V2 groups. Tolerate the MCP result wrapper.
   let decide = readJson(opts.decide, 'decide');
   if (decide && !decide.actions && decide.result && decide.result.actions) decide = decide.result;
   if (!decide || !decide.actions) {
@@ -180,7 +178,24 @@ function main() {
     try { prior = JSON.parse(fs.readFileSync(outPath, 'utf8')); } catch (_) { prior = null; }
     if (prior && prior.asof && prior.asof !== opts.asof && Array.isArray(prior.orders)
         && JSON.stringify(prior.orders) === JSON.stringify(out.orders)) {
-      frozenReasons.push(`batch CREATE (${out.orders.length} ordres) byte-identique au staging du ${prior.asof} — réponse moteur figée, pas recalculée pour ${opts.asof}`);
+      // V2 can legitimately emit the same economic orders for the next session when
+      // both decisions consume the same completed close (Friday -> Monday is the
+      // common case). Stable prices are not proof of a frozen engine if the response
+      // carries a fresh idempotent call and a new, valid execution plan for --asof.
+      const plan = decide.execution_plan || {};
+      const validFrom = Date.parse(plan.valid_from || '');
+      const validUntil = Date.parse(plan.valid_until || '');
+      const v2RecalculationProof = decide.contract_version === '2.0'
+        && decide.requested_asof === opts.asof
+        && decide.data_asof === decide.expected_data_date
+        && decide.data_asof <= opts.asof
+        && decide.request_id && decide.run_id && decide.call_id && plan.plan_id
+        && Number.isFinite(validFrom) && Number.isFinite(validUntil) && validUntil > validFrom;
+      if (v2RecalculationProof) {
+        console.log(`  [${modeInfo.id}] batch économique inchangé vs ${prior.asof}, mais recalcul V2 prouvé par request/run/call/plan + fenêtre ${plan.valid_from}→${plan.valid_until}`);
+      } else {
+        frozenReasons.push(`batch CREATE (${out.orders.length} ordres) byte-identique au staging du ${prior.asof} sans preuve V2 complète de recalcul — réponse potentiellement figée pour ${opts.asof}`);
+      }
     }
   }
   if (frozenReasons.length) {

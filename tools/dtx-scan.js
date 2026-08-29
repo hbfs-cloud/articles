@@ -203,11 +203,130 @@ function mapOrder(or, sleeves) {
     orderId: or.order_id || null,
     // POCHE du livre — lue dans decision.state (voir sleeveIndex). `null` = état absent ou symbole
     // revendiqué par deux poches ; jamais deviné depuis le type d'actif.
-    sleeve: (sleeves && Object.prototype.hasOwnProperty.call(sleeves, or.symbol) ? sleeves[or.symbol] : null) || null,
+    sleeve: or.sleeve || (sleeves && Object.prototype.hasOwnProperty.call(sleeves, or.symbol) ? sleeves[or.symbol] : null) || null,
     // Execution metadata so the status page / analyses can surface the gates a consumer must honor.
     execOptions: or.exec_options || null,
     alternates: alts,
+    groupId: or.group_id || null,
+    candidateId: or.candidate_id || null,
+    rank: or.rank != null ? Number(or.rank) : null,
+    broker: or.broker || null,
+    protection: or.protection || null,
+    execution: or.execution || null,
+    decisionContext: or.decision_context || null,
   };
+}
+
+function validateDecisionV2(decision, expected = {}) {
+  const errors = [];
+  const requiredText = (value, field) => {
+    if (typeof value !== 'string' || !value.trim()) errors.push(`${field} missing`);
+  };
+  if (!decision || typeof decision !== 'object') return ['decision missing'];
+  if (decision.contract_version !== '2.0') errors.push('contract_version must equal 2.0');
+  for (const key of ['request_id', 'run_id', 'call_id']) requiredText(decision[key], key);
+  if (expected.asof && decision.requested_asof !== expected.asof) {
+    errors.push(`requested_asof=${decision.requested_asof || 'missing'} != ${expected.asof}`);
+  }
+  const plan = decision.execution_plan;
+  if (!plan || typeof plan !== 'object') return [...errors, 'execution_plan missing'];
+  requiredText(plan.plan_id, 'execution_plan.plan_id');
+  if (!Number.isInteger(plan.revision) || plan.revision < 1) errors.push('execution_plan.revision must be >= 1');
+  const validFrom = Date.parse(plan.valid_from || '');
+  const validUntil = Date.parse(plan.valid_until || '');
+  if (!Number.isFinite(validFrom)) errors.push('execution_plan.valid_from invalid');
+  if (!Number.isFinite(validUntil)) errors.push('execution_plan.valid_until invalid');
+  if (Number.isFinite(validFrom) && Number.isFinite(validUntil) && validUntil <= validFrom) errors.push('execution_plan validity window is empty');
+  if (!Array.isArray(plan.groups)) return [...errors, 'execution_plan.groups missing'];
+
+  const groupIds = new Set();
+  const candidateIds = new Set();
+  for (let gi = 0; gi < plan.groups.length; gi++) {
+    const group = plan.groups[gi] || {};
+    const gp = `execution_plan.groups[${gi}]`;
+    requiredText(group.group_id, `${gp}.group_id`);
+    if (group.group_id && groupIds.has(group.group_id)) errors.push(`${gp}.group_id duplicate`);
+    if (group.group_id) groupIds.add(group.group_id);
+    if (group.max_winners !== 1) errors.push(`${gp}.max_winners must equal 1`);
+    if (!group.promotion_policy || !Array.isArray(group.promotion_policy.promote_on) || !Array.isArray(group.promotion_policy.stop_on)) errors.push(`${gp}.promotion_policy incomplete`);
+    if (!Array.isArray(group.candidates) || !group.candidates.length) {
+      errors.push(`${gp}.candidates missing`);
+      continue;
+    }
+    let previousRank = 0;
+    for (let ci = 0; ci < group.candidates.length; ci++) {
+      const c = group.candidates[ci] || {};
+      const cp = `${gp}.candidates[${ci}]`;
+      requiredText(c.candidate_id, `${cp}.candidate_id`);
+      if (c.candidate_id && candidateIds.has(c.candidate_id)) errors.push(`${cp}.candidate_id duplicate`);
+      if (c.candidate_id) candidateIds.add(c.candidate_id);
+      if (!Number.isInteger(c.rank) || c.rank <= previousRank) errors.push(`${cp}.rank must be strictly increasing`);
+      if (ci === 0 && c.rank !== 1) errors.push(`${cp}.rank must start at 1`);
+      previousRank = Number.isInteger(c.rank) ? c.rank : previousRank;
+      for (const key of ['symbol', 'side', 'broker', 'sleeve', 'reason']) requiredText(c[key], `${cp}.${key}`);
+      if (!Number.isFinite(Number(c.qty)) || Number(c.qty) <= 0) errors.push(`${cp}.qty invalid`);
+      if (!c.order || typeof c.order !== 'object') {
+        errors.push(`${cp}.order missing`);
+      } else {
+        requiredText(c.order.order_type, `${cp}.order.order_type`);
+        requiredText(c.order.time_in_force, `${cp}.order.time_in_force`);
+        if (c.order.order_type === 'LIMIT' && !Number.isFinite(Number(c.order.limit_price))) errors.push(`${cp}.order.limit_price missing for LIMIT`);
+        if (!Number.isFinite(Number(c.order.max_notional)) || Number(c.order.max_notional) <= 0) errors.push(`${cp}.order.max_notional invalid`);
+        if (typeof c.order.extended_hours !== 'boolean') errors.push(`${cp}.order.extended_hours missing`);
+      }
+      if (!c.protection || typeof c.protection !== 'object') {
+        errors.push(`${cp}.protection missing`);
+      } else {
+        const mode = c.protection.mode;
+        if (!['native_bracket', 'native_oco', 'engine_managed', 'none'].includes(mode)) errors.push(`${cp}.protection.mode unsupported`);
+        if (c.side === 'BUY' && mode === 'none') errors.push(`${cp}.new BUY cannot use protection.mode=none`);
+        if (mode === 'native_bracket' && (!Number.isFinite(Number(c.protection.stop_loss)) || !Number.isFinite(Number(c.protection.take_profit)))) errors.push(`${cp}.native_bracket incomplete`);
+        if (mode === 'engine_managed' && (!Number.isFinite(Number(c.protection.stop_loss)) || !c.protection.exit_policy_ref)) errors.push(`${cp}.engine_managed incomplete`);
+      }
+      if (!c.execution || typeof c.execution !== 'object') {
+        errors.push(`${cp}.execution missing`);
+      } else {
+        for (const key of ['window_start', 'window_end', 'timezone']) requiredText(c.execution[key], `${cp}.execution.${key}`);
+        for (const key of ['gate_timeout_sec', 'fill_timeout_sec', 'min_fill_qty', 'gap_up_pct', 'gap_down_pct', 'max_slippage_bps']) {
+          if (!Number.isFinite(Number(c.execution[key]))) errors.push(`${cp}.execution.${key} missing`);
+        }
+        if (typeof c.execution.vwap_weak_skip !== 'boolean') errors.push(`${cp}.execution.vwap_weak_skip missing`);
+      }
+      if (!c.decision_context || typeof c.decision_context !== 'object') errors.push(`${cp}.decision_context missing`);
+    }
+  }
+  const actions = decision.actions || {};
+  for (const actionType of ['UPDATE', 'CANCEL']) {
+    const rows = actions[actionType] || [];
+    if (!Array.isArray(rows)) {
+      errors.push(`actions.${actionType} must be an array`);
+      continue;
+    }
+    for (let i = 0; i < rows.length; i++) {
+      const action = rows[i] || {};
+      const ap = `actions.${actionType}[${i}]`;
+      for (const key of ['run_id', 'call_id', 'candidate_id', 'group_id', 'target_order_id', 'reason']) requiredText(action[key], `${ap}.${key}`);
+      if (!action.parent_candidate_id && !action.parent_engine_order_fingerprint) errors.push(`${ap}.parent reference missing`);
+      if (!action.levels_before || typeof action.levels_before !== 'object') errors.push(`${ap}.levels_before missing`);
+      if (!action.levels_after || typeof action.levels_after !== 'object') errors.push(`${ap}.levels_after missing`);
+      if (typeof action.place_now !== 'boolean') errors.push(`${ap}.place_now missing`);
+    }
+  }
+  return errors;
+}
+
+function rankOneOrdersFromV2(decision) {
+  return decision.execution_plan.groups.map(group => {
+    const c = [...group.candidates].sort((a, b) => a.rank - b.rank)[0];
+    return {
+      symbol: c.symbol, side: c.side, order_type: c.order.order_type, qty: c.qty,
+      limit_price: c.order.limit_price, stop_price: c.order.stop_price,
+      stop_loss: c.protection.stop_loss, take_profit: c.protection.take_profit,
+      reason: c.reason, sleeve: c.sleeve, broker: c.broker,
+      group_id: group.group_id, candidate_id: c.candidate_id, rank: c.rank,
+      protection: c.protection, execution: c.execution, decision_context: c.decision_context,
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -347,10 +466,14 @@ function assertReplaySanity(portfolioId, metrics) {
   return warns;
 }
 
-/** Build the staging object. `decision` = {actions:{CREATE,UPDATE,CANCEL}} (MCP DtxDecide, snake_case
- *  — mapOrder handles it). engineLabel/engineMode carry provenance (MCP path: "…— MCP" / "mcp"). */
+/** Build staging from DtxDecide Contract V2. Rank-1 candidates come exclusively from
+ * execution_plan.groups; actions.UPDATE/CANCEL remain compatibility control actions. */
 function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity, replayErr, engineLabel, engineMode, t0 }) {
-  const create = (decision && decision.actions && decision.actions.CREATE) || [];
+  const contractErrors = validateDecisionV2(decision, { asof });
+  if (contractErrors.length) throw new Error(`DtxDecide Contract V2 rejected: ${contractErrors.join('; ')}`);
+  // Contract V2 execution_plan.groups is authoritative. actions.CREATE is only
+  // the V1 compatibility projection and must never be consumed in parallel.
+  const create = rankOneOrdersFromV2(decision);
   const sanityWarnings = assertReplaySanity(cfg.id, metrics);
   const { map: sleeves, conflicts: sleeveConflicts } = sleeveIndex(decision);
   const untagged = create.filter((o) => !sleeves[o.symbol]).map((o) => o.symbol);
@@ -362,6 +485,28 @@ function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity
     generatedAt: new Date().toISOString(),
     engine: engineLabel,
     engineMode,
+    decisionProvenance: decision ? {
+      contractVersion: decision.contract_version || null,
+      requestId: decision.request_id || null,
+      runId: decision.run_id || null,
+      callId: decision.call_id || null,
+      requestedAsOf: decision.requested_asof || null,
+      expectedDataDate: decision.expected_data_date || null,
+      dataAsOf: decision.data_asof || decision.last_data_date || null,
+      planId: decision.execution_plan?.plan_id || null,
+      planRevision: decision.execution_plan?.revision || null,
+      validFrom: decision.execution_plan?.valid_from || null,
+      validUntil: decision.execution_plan?.valid_until || null,
+    } : null,
+    executionPlan: {
+      planId: decision.execution_plan.plan_id,
+      revision: decision.execution_plan.revision,
+      validFrom: decision.execution_plan.valid_from,
+      validUntil: decision.execution_plan.valid_until,
+      supersedesPlanId: decision.execution_plan.supersedes_plan_id || null,
+      groups: decision.execution_plan.groups,
+      source: 'execution_plan.groups',
+    },
     // MCP is the config source of truth. If a local yaml exists we cite its relative path;
     // otherwise the config lives only server-side (systematic.dailytickers.com).
     config: modeInfo.path ? path.relative(REPO_ROOT, modeInfo.path) : `MCP:${cfg.id}`,
@@ -381,6 +526,9 @@ function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity
     cancels: (decision && decision.actions && decision.actions.CANCEL) || [],
     metrics,
     equity,
+    metricsSource: metrics ? 'mcp_replay' : null,
+    equityResolution: equity ? 'replay' : null,
+    equitySource: equity ? 'DtxReplay (reconstruction combinée à capital fixe)' : null,
     replayError: replayErr,
     metricsSuspect: sanityWarnings.length > 0,
     _sanityWarning: sanityWarnings.length > 0 ? sanityWarnings : null,
@@ -392,16 +540,32 @@ function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity
 /** Write the staging object (pretty JSON, mkdir -p). */
 function writeStaging(out, outPath) {
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  // Des métriques SERVIES par le livre priment sur toute reconstruction. Un livre
+  // Des métriques SERVIES par le livre priment sur toute reconstruction only when
+  // their curve reproduces the served drawdown. Un livre
   // à allocation dynamique ne se reconstitue pas en additionnant des poches
   // rejouées à capital fixe : sur best v2, la reconstruction rendait 39,6 % de
   // CAGR et 20,2 % de drawdown quand le livre sert 70,9 % et 27,2 %. La réingestion
   // nocturne écrasait la correction sans rien signaler, et c'est le RISQUE qu'elle
-  // minorait. Un chiffre servi ne se laisse plus écraser par un chiffre dérivé.
+  // minorait. A stale book curve paired with newer metrics is rejected rather than
+  // being presented as a coherent same-run snapshot.
   try {
     if (fs.existsSync(outPath)) {
       const prev = JSON.parse(fs.readFileSync(outPath, 'utf8'));
-      if (prev && prev.metricsSource === 'book_served_stats' && prev.metrics) {
+      if (prev && prev.rejectedServedSnapshot) out.rejectedServedSnapshot = prev.rejectedServedSnapshot;
+      const values = Array.isArray(prev?.equity?.values) ? prev.equity.values.map(Number).filter(Number.isFinite) : [];
+      let curveMaxDd = null;
+      if (values.length > 1) {
+        let peak = values[0], worst = 0;
+        for (const value of values) {
+          peak = Math.max(peak, value);
+          if (peak > 0) worst = Math.min(worst, (value / peak - 1) * 100);
+        }
+        curveMaxDd = Math.abs(worst);
+      }
+      const servedDd = Number(prev?.metrics?.max_dd_pct);
+      const servedCurveCoherent = Number.isFinite(curveMaxDd) && Number.isFinite(servedDd)
+        && Math.abs(curveMaxDd - Math.abs(servedDd)) <= 0.25;
+      if (prev && prev.metricsSource === 'book_served_stats' && prev.metrics && servedCurveCoherent) {
         out.metrics = prev.metrics;
         out.metricsSource = prev.metricsSource;
         // La courbe ET SA PROVENANCE. Ne préserver que `equity` laissait tomber
@@ -414,6 +578,14 @@ function writeStaging(out, outPath) {
         if (prev.equityResolution) out.equityResolution = prev.equityResolution;
         if (prev.equitySource) out.equitySource = prev.equitySource;
         if (prev.equityVerifiedAt) out.equityVerifiedAt = prev.equityVerifiedAt;
+      } else if (prev && prev.metricsSource === 'book_served_stats' && prev.metrics) {
+        out.rejectedServedSnapshot = {
+          reason: 'book equity curve does not reproduce served max drawdown; fresh MCP replay published instead',
+          served_max_dd_pct: servedDd,
+          curve_max_dd_pct: curveMaxDd == null ? null : Math.round(curveMaxDd * 100) / 100,
+          prior_equity_source: prev.equitySource || null,
+          rejected_at: new Date().toISOString(),
+        };
       }
     }
   } catch (_) { /* staging illisible : on écrit la version fraîche */ }
@@ -532,6 +704,7 @@ if (require.main === module) main();
 module.exports = {
   discoverModes, stagingStatus, writeStagingCompleteness, COMPLETENESS_MARKER, SCRIPTED_MODES,
   // Shared schema surface — reused by tools/dtx-mcp-ingest.js so the MCP path is byte-compatible.
-  buildStaging, writeStaging, stagingPathFor, extractReplayMetrics, assertReplaySanity, mapOrder, sleeveIndex, goLiveFor,
+  buildStaging, writeStaging, stagingPathFor, extractReplayMetrics, assertReplaySanity, mapOrder, sleeveIndex,
+  validateDecisionV2, rankOneOrdersFromV2, goLiveFor,
   DEFAULT_FROM, STAGING_DIR, CONFIG_DIR, REPO_ROOT, PORTFOLIO_TO_MODE,
 };

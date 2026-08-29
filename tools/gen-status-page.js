@@ -178,6 +178,7 @@ function loadDtxStaging(id) {
 // clock that matches the trading session the data belongs to.
 const TODAY_ISO = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date()); // YYYY-MM-DD
 const TODAY_KEY = TODAY_ISO.replace(/-/g, '');            // YYYYMMDD
+const MARKET_CLOSED_DAY = [0, 6].includes(new Date(`${TODAY_ISO}T00:00:00Z`).getUTCDay());
 const TODAY_LABEL = TODAY_ISO.slice(5).replace('-', '/'); // MM/DD (chart label)
 
 // Lazy risk-snapshot loader — graceful no-op when file is missing.
@@ -594,7 +595,11 @@ async function main() {
   const thesisMap = {};
   let dirs = [];
   try {
-    dirs = fs.readdirSync(SCANNER_DIR).filter(d => sharedCfg.RE_SCAN_DIR.test(d)).sort().reverse();
+    const todayCompact = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    dirs = fs.readdirSync(SCANNER_DIR)
+      .filter(d => sharedCfg.RE_SCAN_DIR.test(d))
+      .filter(d => d.slice(0, 8) <= todayCompact)
+      .sort().reverse();
     // Pick the most recent scan dir that has a valid scan
     for (const d of dirs) {
       const jsonP = path.join(SCANNER_DIR, d, 'signals.json');
@@ -940,6 +945,50 @@ async function main() {
     const _dtx = loadDtxStaging(id);
     if ((!frozen || !frozenDtxBlocksEngine) && _dtx && _dtx.metrics && _dtx.equity && (_dtx.equity.dates || []).length >= 2) {
       const met = _dtx.metrics, eq = _dtx.equity;
+      const replayReconstruction = _dtx.metricsSource === 'mcp_replay' && _dtx.equityResolution === 'replay';
+      if (replayReconstruction) {
+        const base = met.committed_capital || eq.values[0] || met.initial_capital || 100000;
+        const curve = eq.dates.map((d, i) => ({
+          date: String(d).slice(0, 10),
+          value: +(Number(eq.values[i]) / base * 100).toFixed(2),
+        })).filter(p => p.date && Number.isFinite(p.value));
+        const engineRet = met.return_pct != null
+          ? met.return_pct
+          : +(curve[curve.length - 1].value - curve[0].value).toFixed(2);
+        m.equityCurve = curve;
+        m.ret = engineRet;
+        m.realized = engineRet;
+        m.unrealized = 0;
+        m.dd = met.max_dd_pct != null ? -Math.abs(met.max_dd_pct) : 0;
+        m.wr = met.win_rate != null ? met.win_rate : 0;
+        m.trades = met.total_trades != null ? met.total_trades : 0;
+        m.avgHold = null;
+        m.pf = null; m.pfLow = null; m.pfHigh = null; m.pfReliable = null;
+        m.r2 = met.r2 != null ? met.r2 : null;
+        m.cagr = met.cagr_pct != null ? met.cagr_pct : null;
+        m.sharpe = met.sharpe != null ? met.sharpe : null;
+        m.dtxBacktest = {
+          ret: engineRet, cagr: met.cagr_pct,
+          dd: met.max_dd_pct != null ? -Math.abs(met.max_dd_pct) : null,
+          sharpe: met.sharpe, r2: met.r2, wr: met.win_rate, trades: met.total_trades,
+          from: met.from, to: met.to,
+          fromYr: String(met.from || '2021').slice(0, 4),
+          toYr: String(met.to || '').slice(0, 4),
+          liveRet: null,
+          reconstruction: true,
+          source: _dtx.equitySource || 'DtxReplay fixed-capital reconstruction',
+          rejectedServedSnapshot: _dtx.rejectedServedSnapshot || null,
+        };
+        m.dtxEngine = true;
+        m.dtxReconstruction = true;
+        m.liveFrom = null;
+        m.liveFromLbl = null;
+        m.liveFromHuman = null;
+        m.frozenRawLastISO = curve[curve.length - 1].date;
+        m.pit = null;
+        m.forward = null;
+        ec = { d: curve.map(p => p.date), v: curve.map(p => p.value) };
+      } else {
       // BASE DE REBASAGE = la valeur de DÉPART DE LA COURBE, pas le capital initial nominal.
       // La courbe du livre (DtxBookEquity) démarre au capital ENGAGÉ (155 000 sur best : les
       // pourcentages des poches somment à 155), tandis que `initial_capital` vaut 100 000. Rebaser
@@ -1051,6 +1100,7 @@ async function main() {
       const _dd = new Map();
       for (const p of m.equityCurve) _dd.set(p.date, p.value);
       ec = { d: [..._dd.keys()], v: [..._dd.values()] };
+      }
     }
 
     // ── SOURCE UNIQUE (2026-07-22, décision owner) : pit-state.json / pit-forward.json RETIRÉS
@@ -1195,6 +1245,13 @@ async function main() {
   function dtxSignalsFor(id, cfg) {
     const stg = loadDtxStaging(id);
     if (!stg) return null; // caller falls back to signalsFor
+    const validFrom = Date.parse(stg.decisionProvenance?.validFrom || '');
+    const validUntil = Date.parse(stg.decisionProvenance?.validUntil || '');
+    const now = Date.now();
+    // Contract V2 is fail-closed: a plan is neither a signal nor an order outside
+    // its exact execution window. Returning [] (not null) also prevents fallback
+    // scanner signals from being substituted for an unavailable engine plan.
+    if (!Number.isFinite(validFrom) || !Number.isFinite(validUntil) || now < validFrom || now > validUntil) return [];
     const cur = curOf(cfg);
     const buys = (stg.orders || []).filter(o => String(o.side || '').toUpperCase() === 'BUY');
     const topN = cfg.topN > 0 ? cfg.topN : buys.length;
@@ -1307,6 +1364,9 @@ async function main() {
     // SCRIPTED modes: Orders to Place come from the dtx engine (decide CREATE); fall back to the
     // JS-scanner signal pool when no dtx staging exists (e.g. hybrid, or dtx not yet run).
     const sig = dtxSignalsFor(id, cfg) || signalsFor(cfg);
+    const signalsHeading = MARKET_CLOSED_DAY || (scanDir && scanDir !== TODAY_KEY)
+      ? 'Last Session Signals'
+      : "Today's Signals";
     // ── Live book vs Sim backtest ──
     // P (when non-null) = the live-book primary stats (from pit-state). H = the stats source
     // for the hero (P when live data exists, else the frozen sim m). When P is set the hero is
@@ -1485,8 +1545,10 @@ ${renderStatusBanner(cfg)}
       ${buildTagline(id, cfg)}
     </div>
     <div class="method-steps" style="margin-top:.85rem">
-      <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div>Each evening, look at the <b>signals section</b> below. It shows the best ${cfg.topN} setup${cfg.topN > 1 ? 's' : ''} from tonight's scan${cfg.filterName === 'breakout_only' ? ' (breakout setups only)' : cfg.filterName === 'mom_bo' ? ' (momentum + breakout setups only)' : cfg.filterName === 'momentum_only' ? ' (momentum setups only)' : cfg.filterName === 'candlestick_only' ? ' (candlestick reversal patterns only — Hammer, Engulfing, Pin Bar with volume spike)' : cfg.filterName === 'no_sq' ? ' (no Short Squeeze plays)' : ''}. These are the ones you can act on tomorrow.</div></div>
-      ${id === 'turbo' ? `
+      <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div>${cfg.assetClass === 'dtx' ? 'DTX Contract V2 is the only source of orders, sizing, levels, execution gates and exits. A plan is actionable only inside its exact <b>validFrom–validUntil</b> window.' : `Each evening, look at the <b>signals section</b> below. It shows the best ${cfg.topN} setup${cfg.topN > 1 ? 's' : ''} from tonight's scan${cfg.filterName === 'breakout_only' ? ' (breakout setups only)' : cfg.filterName === 'mom_bo' ? ' (momentum + breakout setups only)' : cfg.filterName === 'momentum_only' ? ' (momentum setups only)' : cfg.filterName === 'candlestick_only' ? ' (candlestick reversal patterns only — Hammer, Engulfing, Pin Bar with volume spike)' : cfg.filterName === 'no_sq' ? ' (no Short Squeeze plays)' : ''}. These are the ones you can act on tomorrow.`}</div></div>
+${cfg.assetClass === 'dtx' ? `
+      <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div>Within each opportunity group, arm <b>rank 1 only</b>. Submit the exact symbol, quantity, order type and limit from the plan. A LIMIT order is never converted to MARKET.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Apply the candidate's structured protection exactly. For <b>engine_managed</b>, the stop and exit-policy reference must be active before or atomically with the fill when required; otherwise reject the candidate.</div></div>` : id === 'turbo' ? `
       <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>3-Phase Smart Entry (momentum/breakout plays — you must watch at open):</b><br>
         <b>Phase 1 — 9:30–10:15 ET / 15:30–16:15 Paris:</b> strict confirmation. <i>Momentum:</i> wait for a 5-min green candle above the entry. <i>Breakout:</i> price above entry + volume spike. <i>Pullback:</i> price dips below VWAP then reclaims it with a green candle. VWAP = the fair price of the day based on where most volume traded — buying at or below it gives you a better fill.<br>
         <b>Phase 2 — 10:15–11:30 ET / 16:15–17:30 Paris:</b> relaxed. <i>Momentum:</i> price ≤ entry. <i>Breakout:</i> limit at support. <i>Pullback:</i> price ≤ entry and still below VWAP.<br>
@@ -1501,15 +1563,15 @@ ${renderStatusBanner(cfg)}
       <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Once in the trade, ${cfg.maxStopPct > 0 ? `set your <b>stop loss</b> at −${cfg.maxStopPct}% from your entry` : `set your <b>stop loss</b> based on the signal card (${cfg.atrStopMult}× ATR — adapts to volatility)`} and your <b>take profit</b> at TP1.</div></div>` : `
       <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>Before market open</b> (set your orders the evening before, or before 9:25 AM New York / 3:25 PM Paris), place a <b>limit buy order</b> at the entry price shown. Put <b>${alloc}% of your total money</b> into each trade. You can have up to <b>${cfg.portfolioSize} trades open at the same time</b>. The executor uses a <b>3-phase entry window</b> (9:30–12:00 ET / 15:30–18:00 Paris): it tries to fill near entry in Phase 1, relaxes conditions in Phase 2, and places a market order in Phase 3 if price is still close — otherwise skips the signal.</div></div>
       <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>At the same time, set your <b>stop loss</b> and <b>take profit</b> as bracket orders (OCO). The levels are shown on the signal card.${cfg.maxStopPct > 0 ? ` Hard stop at −<b>${cfg.maxStopPct}%</b> from entry — this is your maximum loss per trade, no exceptions.` : cfg.atrStopMult > 0 ? ' Your stop adapts to each stock\'s volatility — wider for volatile stocks, tighter for stable ones.' : ''}</div></div>`}
-      <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>${cfg.partialTP ? `When the price hits <b>TP1</b>: sell <b>${Math.round((cfg.partialTPPct || 0.3) * 100)}%</b> of your shares to lock in profit, and let the remaining ${Math.round((1 - (cfg.partialTPPct || 0.3)) * 100)}% ${cfg.disableTP2 ? 'ride until horizon expires or rotation' : 'run toward TP2'}. ${cfg.breakevenPct > 0 ? 'Move your stop to your entry price (you can\'t lose money on this trade anymore).' : 'Consider manually moving stop to entry to eliminate downside risk on the remaining shares.'}` : 'Hold your full position and let it run. Exit when TP1 is hit, your stop triggers, or after the max hold time below.'}</div></div>
-      ${cfg.vwapGate ? `<div class="step"><span class="step-n" style="background:${cfg.color}">&#x25b6;</span><div><b>VWAP Gate (built into the 3-phase entry):</b> VWAP = the fair price of the day based on where most trading volume happened. The executor already enforces VWAP-aware entries in each phase — buying below or at VWAP gives you a better fill than the crowd. If the stock gaps up hard at open (above VWAP &times; 1.01 and more than 3% above entry), the Phase 1 check will skip it automatically to avoid a gap-up trap.</div></div>` : ''}
-      <div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div>${cfg.trailingStop && cfg.horizon >= 30 ? `<b>Trailing exit (no fixed time limit):</b> ride the position with ${cfg.dailyTrailPct > 0 ? `the <b>${cfg.dailyTrailPct}% daily trailing stop</b>` : `an <b>ATR-based trailing stop</b> (${cfg.atrStopMult}× ATR — adapts to each stock's volatility)`}.${cfg.staleDays > 0 ? ` If the position goes <b>${cfg.staleDays} sessions without making a new high</b> (stale), exit at market — momentum is dead.` : ''} Hard cap at ${cfg.horizon} trading days as a safety net.` : `Close everything after <b>${cfg.horizon} trading days</b> (about ${Math.ceil(cfg.horizon * 7 / 5)} calendar days) — even if the trade hasn't hit TP or stop. This keeps your capital moving.`}</div></div>
-      ${cfg.rotation === 'aggressive' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Rotation:</b> each evening, check if a new signal (score ≥ ${cfg.minScore}) appeared. If your worst open trade is still losing and the new setup is stronger, close the loser and buy the new one instead. Fresh opportunity beats a stale position.</div></div>` : cfg.rotation === 'daily_max1' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Upgrade rule (max once per day):</b> if the scanner finds a new setup that scores at least 5 points higher than your weakest current trade, close the weak one and buy the new one. This keeps your portfolio fresh without turning everything over at once.</div></div>` : ''}
+      <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>${cfg.assetClass === 'dtx' ? 'Any partial fill ends the group search. Cancel or disarm all alternates, preserve <b>max_winners=1</b>, and apply only structured UPDATE/CANCEL actions to their identified target order.' : cfg.partialTP ? `When the price hits <b>TP1</b>: sell <b>${Math.round((cfg.partialTPPct || 0.3) * 100)}%</b> of your shares to lock in profit, and let the remaining ${Math.round((1 - (cfg.partialTPPct || 0.3)) * 100)}% ${cfg.disableTP2 ? 'ride until horizon expires or rotation' : 'run toward TP2'}. ${cfg.breakevenPct > 0 ? 'Move your stop to your entry price (you can\'t lose money on this trade anymore).' : 'Consider manually moving stop to entry to eliminate downside risk on the remaining shares.'}` : 'Hold your full position and let it run. Exit when TP1 is hit, your stop triggers, or after the max hold time below.'}</div></div>
+${cfg.assetClass !== 'dtx' && cfg.vwapGate ? `<div class="step"><span class="step-n" style="background:${cfg.color}">&#x25b6;</span><div><b>VWAP Gate (built into the 3-phase entry):</b> VWAP = the fair price of the day based on where most trading volume happened. The executor already enforces VWAP-aware entries in each phase — buying below or at VWAP gives you a better fill than the crowd. If the stock gaps up hard at open (above VWAP &times; 1.01 and more than 3% above entry), the Phase 1 check will skip it automatically to avoid a gap-up trap.</div></div>` : ''}
+      <div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div>${cfg.assetClass === 'dtx' ? 'Never infer an exit, alternate or promotion from prose. If the plan is expired, incomplete or cannot be protected exactly, emit no order.' : cfg.trailingStop && cfg.horizon >= 30 ? `<b>Trailing exit (no fixed time limit):</b> ride the position with ${cfg.dailyTrailPct > 0 ? `the <b>${cfg.dailyTrailPct}% daily trailing stop</b>` : `an <b>ATR-based trailing stop</b> (${cfg.atrStopMult}× ATR — adapts to each stock's volatility)`}.${cfg.staleDays > 0 ? ` If the position goes <b>${cfg.staleDays} sessions without making a new high</b> (stale), exit at market — momentum is dead.` : ''} Hard cap at ${cfg.horizon} trading days as a safety net.` : `Close everything after <b>${cfg.horizon} trading days</b> (about ${Math.ceil(cfg.horizon * 7 / 5)} calendar days) — even if the trade hasn't hit TP or stop. This keeps your capital moving.`}</div></div>
+${cfg.assetClass !== 'dtx' && cfg.rotation === 'aggressive' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Rotation:</b> each evening, check if a new signal (score ≥ ${cfg.minScore}) appeared. If your worst open trade is still losing and the new setup is stronger, close the loser and buy the new one instead. Fresh opportunity beats a stale position.</div></div>` : cfg.assetClass !== 'dtx' && cfg.rotation === 'daily_max1' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Upgrade rule (max once per day):</b> if the scanner finds a new setup that scores at least 5 points higher than your weakest current trade, close the weak one and buy the new one instead. This keeps your portfolio fresh without turning everything over at once.</div></div>` : ''}
       ${id === 'fortress' ? `<div class="step" style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#6d28d9"><i class="fas fa-shield-halved" style="font-size:.5rem"></i></span><div><b>Capital preservation first:</b> with ${cfg.portfolioSize} slots at ~${Math.round(100 / cfg.portfolioSize * (cfg.positionSizePct || 1))}% each, a single stop-out costs only <b>−${((cfg.maxStopPct || cfg.atrStopMult * 2) * (cfg.positionSizePct || 1) / cfg.portfolioSize).toFixed(1)}% of portfolio</b>. <b>VIX &lt; 15 (calm)</b>: run ${Math.max(1, Math.round(cfg.portfolioSize * 0.6))}–${Math.round(cfg.portfolioSize * 0.7)} positions. <b>VIX 15–${cfg.vixKillThreshold} (elevated)</b>: aim for ${Math.max(1, Math.round(cfg.portfolioSize * 0.8))}+ positions. <b>VIX &gt; ${cfg.vixKillThreshold}</b>: mode pauses — no new entries until VIX drops. Never hold fewer than ${Math.max(1, Math.round(cfg.portfolioSize * 0.4))} position${Math.round(cfg.portfolioSize * 0.4) > 1 ? 's' : ''}. Consider adding defensive ETFs (GLD, TLT) manually during high-VIX regimes.</div></div>` : id === 'secured' ? `<div class="step" style="background:#ecfeff;border:1px solid #a5f3fc;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#0891b2"><i class="fas fa-satellite" style="font-size:.5rem"></i></span><div><b>Orbit = ${cfg.horizon >= 15 ? 'patience' : 'disciplined swing'}.</b> This mode holds up to <b>${cfg.horizon} trading days</b> (~${Math.round(cfg.horizon * 7 / 5)} calendar days)${cfg.maxStopPct > 0 ? ` with a <b>hard −${cfg.maxStopPct}% stop</b>${cfg.atrStopMult > 0 ? ` (or ${cfg.atrStopMult}× ATR, whichever is tighter)` : ''}` : cfg.atrStopMult > 0 ? ` with <b>${cfg.atrStopMult}× ATR stops</b>` : ''}. The scanner picks winners, but very short exits can cut a move early — Orbit gives the trade room to develop while capping downside. <b>Do NOT</b> panic-sell on red days as long as your stop hasn't triggered.</div></div>` : ''}
     </div>
     <div class="method-footer">
-      <span><i class="fas fa-layer-group"></i> ${cfg.portfolioSize} ${cfg.portfolioSize === 1 ? 'trade' : 'trades'} max · ${alloc}% each</span>
-      <span><i class="fas fa-calendar-days"></i> Close after ${cfg.horizon} trading days</span>
+      <span><i class="fas fa-layer-group"></i> ${cfg.assetClass === 'dtx' ? 'DTX grouped plan · one winner per group' : `${cfg.portfolioSize} ${cfg.portfolioSize === 1 ? 'trade' : 'trades'} max · ${alloc}% each`}</span>
+      <span><i class="fas fa-calendar-days"></i> ${cfg.assetClass === 'dtx' ? 'Exact plan validity window' : `Close after ${cfg.horizon} trading days`}</span>
       ${cfg.maxStopPct > 0 ? `<span><i class="fas fa-shield-halved"></i> Hard stop at −${cfg.maxStopPct}%</span>` : ''}
       ${cfg.partialTP ? `<span><i class="fas fa-scissors"></i> Sell ${Math.round((cfg.partialTPPct || 0.3) * 100)}% at TP1</span>` : ''}
     </div>
@@ -1539,7 +1601,7 @@ ${cfg.assetClass === 'dtx' ? `<div class="section-card">
 <div class="section-card${isScripted ? ' hide-section' : ''}">
   <details${sig.length ? ' open' : ''}>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">${sig.length} setup${sig.length === 1 ? '' : 's'}${fallback.length ? ' + ' + fallback.length + ' fallback' : ''}</span>${sig.length ? `<span class="sc-preview">${sig.slice(0,3).map(s => `<b>${s.ticker}</b> <span style="color:var(--muted)">${s.score}</span>`).join(' · ')}</span>` : ''}</span>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> ${signalsHeading} <span class="count">${sig.length} setup${sig.length === 1 ? '' : 's'}${fallback.length ? ' + ' + fallback.length + ' fallback' : ''}</span>${sig.length ? `<span class="sc-preview">${sig.slice(0,3).map(s => `<b>${s.ticker}</b> <span style="color:var(--muted)">${s.score}</span>`).join(' · ')}</span>` : ''}</span>
       ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>` : ''}
     </summary>
     ${_isHighConviction ? `<div style="margin-top:.75rem;padding:.7rem .85rem;background:${cfg.color}0a;border:1px solid ${cfg.color}33;border-radius:var(--r-s);font-size:.82rem;color:var(--ink-1);line-height:1.5"><b><i class="fas fa-bolt" style="margin-right:.3rem;color:${cfg.color}"></i>Système haute-conviction (parité systematic-tss).</b> Bull ne trade qu'un pattern chandelier confirmé par un <b>spike de volume ≥ ${candleVolGate}× la moyenne 20j le jour du signal</b> (volume de clôture, connu au scan) <b>ET</b> score ≥ ${cfg.minScore} <b>ET</b> liquidité ≥ $1M/j. Sur 5 ans : ~1 trade/semaine (1061 trades, parité Go/JS). <b>Les jours calmes sans spike 8× → 0 signal, c'est normal et attendu</b> — ce n'est pas un bug.</div>` : ''}
@@ -1590,24 +1652,26 @@ ${cfg.assetClass === 'dtx' ? `<div class="section-card">
 <div class="perf-hero" style="border-top:3px solid ${cfg.color}">
   <div class="perf-chart-wrap">
     <div class="perf-hero-left">
-      <span class="perf-hero-label"><i class="fas fa-chart-line" style="color:${cfg.color};margin-right:.3rem"></i>Equity Curve${m.dtxEngine ? ' <small style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--muted)">· backtest + live</small>' : ''}</span>
+      <span class="perf-hero-label"><i class="fas fa-chart-line" style="color:${cfg.color};margin-right:.3rem"></i>Equity Curve${m.dtxReconstruction ? ' <small style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--muted)">· reconstructed replay</small>' : m.dtxEngine ? ' <small style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--muted)">· book backtest + live</small>' : ''}</span>
     </div>
     <div class="perf-chart" id="${chartId}"></div>
     ${m.dtxBacktest ? `<div class="bt-ctx">
-      <span class="bt-ctx-tag"><i class="fas fa-clock-rotate-left"></i> Backtest ${m.dtxBacktest.fromYr}→${m.dtxBacktest.toYr}</span>
+      <span class="bt-ctx-tag"><i class="fas fa-clock-rotate-left"></i> ${m.dtxBacktest.reconstruction ? 'Replay reconstruction' : 'Book backtest'} ${m.dtxBacktest.fromYr}→${m.dtxBacktest.toYr}</span>
       <span class="bt-ctx-items">
         <span><b>${m.dtxBacktest.cagr != null ? (m.dtxBacktest.cagr > 0 ? '+' : '') + m.dtxBacktest.cagr + '%' : '—'}</b> CAGR</span>
         <span><b>${m.dtxBacktest.dd != null ? m.dtxBacktest.dd + '%' : '—'}</b> Max DD</span>
         <span><b>${m.dtxBacktest.sharpe != null ? m.dtxBacktest.sharpe : '—'}</b> Sharpe</span>
         <span class="bt-ctx-cum"><b>${m.dtxBacktest.ret != null ? (m.dtxBacktest.ret > 0 ? '+' : '') + m.dtxBacktest.ret + '%' : '—'}</b> cumulative</span>
       </span>
-      <span class="bt-ctx-note">Real engine · ${m.dtxBacktest.trades} trades over the book history (muted/dashed). Live track (solid) begins ${m.liveFromHuman}${m.dtxBacktest.liveRet != null ? ` · ${m.dtxBacktest.liveRet > 0 ? '+' : ''}${m.dtxBacktest.liveRet}% since launch` : ''}.</span>
-      ${m.dtxLiveTrack ? `<span class="bt-ctx-note" title="Série live append-only (data/dtx-live-track.json) : un point réel par soirée de pipeline, jamais interpolé. Drift = return live cumulé vs return du même segment dans le replay moteur complet — indicatif (échantillonnage bi-hebdomadaire du replay).">Live history · ${m.dtxLiveTrack.points} pt${m.dtxLiveTrack.points > 1 ? 's' : ''}${m.dtxLiveTrack.first ? ' since ' + m.dtxLiveTrack.first : ''}${m.dtxLiveTrack.drift ? ` · Drift vs engine ${m.dtxLiveTrack.drift.drift_pp > 0 ? '+' : ''}${m.dtxLiveTrack.drift.drift_pp} pp <b style="color:${m.dtxLiveTrack.drift.status === 'OK' ? '#10b981' : m.dtxLiveTrack.drift.status === 'WATCH' ? '#f59e0b' : '#ef4444'}">[${m.dtxLiveTrack.drift.status}]</b>` : ' · drift: pending engine replay'}</span>` : ''}
+      <span class="bt-ctx-note">${m.dtxBacktest.reconstruction
+        ? `Fixed-capital DtxReplay reconstruction · ${m.dtxBacktest.trades} trades. The served dynamic-book snapshot was rejected because its curve did not reproduce its drawdown; no book/live splice is shown.`
+        : `Served engine book · ${m.dtxBacktest.trades} trades. Live track begins ${m.liveFromHuman}${m.dtxBacktest.liveRet != null ? ` · ${m.dtxBacktest.liveRet > 0 ? '+' : ''}${m.dtxBacktest.liveRet}% since launch` : ''}.`}</span>
+${m.dtxLiveTrack ? `<span class="bt-ctx-note" title="Série live append-only (data/dtx-live-track.json) : un point réel par soirée de pipeline, jamais interpolé. Drift = return live cumulé vs return du même segment dans le replay moteur complet — indicatif (échantillonnage bi-hebdomadaire du replay).">Live history · ${m.dtxLiveTrack.points} pt${m.dtxLiveTrack.points > 1 ? 's' : ''}${m.dtxLiveTrack.first ? ' since ' + m.dtxLiveTrack.first : ''}${m.dtxLiveTrack.drift ? ` · Drift vs engine ${m.dtxLiveTrack.drift.drift_pp > 0 ? '+' : ''}${m.dtxLiveTrack.drift.drift_pp} pp <b style="color:${m.dtxLiveTrack.drift.status === 'OK' ? '#10b981' : m.dtxLiveTrack.drift.status === 'WATCH' ? '#f59e0b' : '#ef4444'}">[${m.dtxLiveTrack.drift.status}]</b>` : ' · drift: pending engine replay'}</span>` : ''}
     </div>` : ''}
   </div>
   <div class="perf-stats">
-    <div class="ps" title="${m.dtxEngine ? 'Cumulative return of the systematic engine book over the displayed backtest curve. The live post-launch track is shown separately under the curve.' : 'Cumulative percent gain of the portfolio since inception. Includes mark-to-market on open positions.'}">
-      <span class="ps-v ${H.ret > 0 ? 'pos' : H.ret < 0 ? 'neg' : 'flat'}" style="color:${cfg.color}">${H.ret > 0 ? '+' : ''}${H.ret}%</span><span class="ps-l">${m.dtxEngine ? `Engine Return <small style="opacity:.7">${m.dtxBacktest ? m.dtxBacktest.fromYr + '→' + m.dtxBacktest.toYr : ''}</small>` : 'Total Return'}${H.unrealized ? ' <small style="opacity:.6">(incl. ' + (H.unrealized > 0 ? '+' : '') + H.unrealized + '% MtM)</small>' : ''}</span>${liveMtm ? `<span class="ps-live" title="Portfolio value RIGHT NOW, including the mark-to-market of open positions. The headline above is the SEALED backtest (closed trades only, immutable) — this live figure moves with open P&amp;L and is shown separately so it never displaces the track record. Caveat: if a position is marked below its stop level, this MtM overstates the loss (it ignores the stop-sell scenario).">Live incl. MtM <b class="${liveMtm.ret > 0 ? 'pos' : liveMtm.ret < 0 ? 'neg' : 'flat'}">${liveMtm.ret > 0 ? '+' : ''}${liveMtm.ret}%</b>${liveMtm.unreal ? ` <span class="ps-live-o">· open ${liveMtm.unreal > 0 ? '+' : ''}${liveMtm.unreal}%</span>` : ''}</span>` : ''}
+    <div class="ps" title="${m.dtxReconstruction ? 'Cumulative return of the displayed fixed-capital DtxReplay reconstruction. It is not the served dynamic book.' : m.dtxEngine ? 'Cumulative return of the systematic engine book over the displayed backtest curve.' : 'Cumulative percent gain of the portfolio since inception. Includes mark-to-market on open positions.'}">
+      <span class="ps-v ${H.ret > 0 ? 'pos' : H.ret < 0 ? 'neg' : 'flat'}" style="color:${cfg.color}">${H.ret > 0 ? '+' : ''}${H.ret}%</span><span class="ps-l">${m.dtxReconstruction ? `Reconstructed Return <small style="opacity:.7">${m.dtxBacktest ? m.dtxBacktest.fromYr + '→' + m.dtxBacktest.toYr : ''}</small>` : m.dtxEngine ? `Engine Return <small style="opacity:.7">${m.dtxBacktest ? m.dtxBacktest.fromYr + '→' + m.dtxBacktest.toYr : ''}</small>` : 'Total Return'}${H.unrealized ? ' <small style="opacity:.6">(incl. ' + (H.unrealized > 0 ? '+' : '') + H.unrealized + '% MtM)</small>' : ''}</span>${liveMtm ? `<span class="ps-live" title="Portfolio value RIGHT NOW, including the mark-to-market of open positions. The headline above is the SEALED backtest (closed trades only, immutable) — this live figure moves with open P&amp;L and is shown separately so it never displaces the track record. Caveat: if a position is marked below its stop level, this MtM overstates the loss (it ignores the stop-sell scenario).">Live incl. MtM <b class="${liveMtm.ret > 0 ? 'pos' : liveMtm.ret < 0 ? 'neg' : 'flat'}">${liveMtm.ret > 0 ? '+' : ''}${liveMtm.ret}%</b>${liveMtm.unreal ? ` <span class="ps-live-o">· open ${liveMtm.unreal > 0 ? '+' : ''}${liveMtm.unreal}%</span>` : ''}</span>` : ''}
     </div>
     <div class="ps" title="Largest peak-to-trough drop on the equity curve. Lower is better; measures worst pain experienced.">
       <span class="ps-v neg">${H.dd}%</span><span class="ps-l">Max Drawdown</span>
@@ -1661,13 +1725,15 @@ ${(() => {
         const openTickers = new Set(pos.filter(p => !p._terminal).map(p => p.ticker));
         const sigFiltered = sig.filter(s => !openTickers.has(s.ticker));
         const slotsAvailable = Math.max(0, cfg.portfolioSize - liveCount);
+        const executionWindowOpen = !MARKET_CLOSED_DAY && scanDir === TODAY_KEY;
 
-        // BUY orders: signals that fit into available slots (max = free slots)
-        const buyOrders = sigFiltered.slice(0, slotsAvailable);
+        // Signals remain visible outside the active session, but must never be
+        // represented as executable orders on weekends or from a future scan.
+        const buyOrders = executionWindowOpen ? sigFiltered.slice(0, slotsAvailable) : [];
 
         // ROTATION candidates (for all rotation modes when portfolio full):
         const rotationCandidates = [];
-        if (cfg.rotation !== 'none' && slotsAvailable === 0 && livePos.length > 0 && sigFiltered.length > 0) {
+        if (executionWindowOpen && cfg.rotation !== 'none' && slotsAvailable === 0 && livePos.length > 0 && sigFiltered.length > 0) {
           const rotLimit = cfg.rotation === 'daily_max1' ? 1 : cfg.rotation === 'daily_max2' ? 2 : cfg.portfolioSize;
           const margin = cfg.rotation === 'aggressive' ? 0 : 5; // daily_max needs +5pt advantage
           const worstPos = [...livePos].sort((a, b) => a.return_pct - b.return_pct)[0];
@@ -1792,7 +1858,9 @@ ${(() => {
         // (each order can push 1-3 <tr> for main+comparison+thesis).
         const totalActions = buyOrders.length + rotationCandidates.length;
         const occupied = liveCount;
-        const statusLine = slotsAvailable > 0
+        const statusLine = !executionWindowOpen
+          ? 'Market closed — signals are read-only until their execution window'
+          : slotsAvailable > 0
           ? `${occupied}/${cfg.portfolioSize} open — <b>${slotsAvailable} slot${slotsAvailable > 1 ? 's' : ''} free</b> — place at next open`
           : `${occupied}/${cfg.portfolioSize} open — portfolio full${rotationCandidates.length ? ' — rotation opportunity' : ''}`;
 
@@ -1815,7 +1883,7 @@ ${(() => {
         // "Portfolio full" empty state UNIQUEMENT si aucun slot libre. Sinon (slots libres + 0 ordre —
         // ex bull 1/3 un jour calme sans signal 8×), on tombe dans le branch principal qui affiche la
         // vraie section "Orders to Place" avec "No new orders" (sinon la section paraît absente).
-        if (totalActions === 0 && watchPool.length === 0 && !recentExecutedRotation && slotsAvailable === 0) {
+        if (executionWindowOpen && totalActions === 0 && watchPool.length === 0 && !recentExecutedRotation && slotsAvailable === 0) {
           return `<div class="section-card" data-section="orders"><div class="sc-head"><h3><i class="fas fa-inbox"></i> Orders to Place</h3><span class="sc-meta">Portfolio full &mdash; no action needed</span></div><p class="empty"><i class="fas fa-check-circle"></i>All slots filled, nothing to place</p></div>`;
         }
         if (totalActions === 0 && watchPool.length === 0 && recentExecutedRotation) {
@@ -1853,16 +1921,16 @@ ${expiringSoon.length ? `<div class="cta-card" data-section="expiring" style="ba
   <div class="sc-head">
     <h3>${totalActions > 0 ? '<i class="fas fa-bolt"></i>' : '<i class="fas fa-coffee" style="color:var(--muted)"></i>'} ${totalActions > 0 ? `${totalActions} Order${totalActions > 1 ? 's' : ''} to Place` : 'No new orders'}</h3>
     <span class="sc-meta">${statusLine}</span>
-    ${totalActions > 0 && cfg.vwapGate ? `<div style="flex:0 0 100%;margin:.35rem 0 0;padding:.4rem .65rem;background:var(--warn-wk);border:1px solid var(--warn);border-radius:var(--r-s);font-size:.7rem;color:var(--warn-ink);display:flex;gap:.4rem;align-items:flex-start" role="note">
+${totalActions > 0 && cfg.vwapGate ? `    <div style="flex:0 0 100%;margin:.35rem 0 0;padding:.4rem .65rem;background:var(--warn-wk);border:1px solid var(--warn);border-radius:var(--r-s);font-size:.7rem;color:var(--warn-ink);display:flex;gap:.4rem;align-items:flex-start" role="note">
       <i class="fas fa-circle-info" style="color:var(--warn-ink);margin-top:.12rem;flex-shrink:0"></i>
       <span><b>VWAP gate active:</b> orders fill only if next open ≤ pivot × 1.01. Gap-up above pivot ⇒ skip (by design).</span>
     </div>` : ''}
   </div>
-  ${recentRotationHTML}
+${recentRotationHTML}
   ${totalActions > 0 ? `<table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
     <tbody>${actionRows.join('')}</tbody>
-  </table>` : `<div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">${timedOut.length ? `Today's only action: see <b>Close Now</b> above.` : (watchRows.length ? `Portfolio full — see <b>On Watch</b> below.` : `No actions today.`)}</div>`}
+  </table>` : `<div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">${!executionWindowOpen ? `Market closed — no order is actionable.` : (timedOut.length ? `Today's only action: see <b>Close Now</b> above.` : (watchRows.length ? `Portfolio full — see <b>On Watch</b> below.` : `No actions today.`))}</div>`}
 </div>
 ${watchRows.length ? `<div class="section-card" data-section="watch">
   <div class="sc-head">
@@ -2139,7 +2207,7 @@ ${pos.length ? `    <span class="sc-meta" title="Moyenne simple par position ouv
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portfolio Live &mdash; DailyTickers</title>
+  <title>${MARKET_CLOSED_DAY ? 'Portfolio · Market Closed' : 'Portfolio Live'} &mdash; DailyTickers</title>
   <meta name="description" content="Today's signals, open positions &amp; live performance — Balanced trading mode updated every weekday.">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
   <link rel="stylesheet" href="/assets/report.css?v=${buildVer}">
@@ -2573,8 +2641,8 @@ details[open] summary::after{transform:rotate(90deg)}
   <div class="hero">
     <div class="hero-inner">
       <div class="hero-left">
-        <h1><span class="live-dot"></span>Portfolio Live <button class="tm-btn-header" id="tmFab" onclick="tmToggle()" title="Time Machine"><i class="fas fa-clock-rotate-left"></i> Time Machine</button></h1>
-        <p>Signals, open positions &amp; performance &mdash; updated every weekday</p>
+        <h1>${MARKET_CLOSED_DAY ? '<i class="fas fa-moon" style="font-size:.82rem;color:var(--muted);margin-right:.35rem"></i>Portfolio · Market Closed' : '<span class="live-dot"></span>Portfolio Live'} <button class="tm-btn-header" id="tmFab" onclick="tmToggle()" title="Time Machine"><i class="fas fa-clock-rotate-left"></i> Time Machine</button></h1>
+        <p>${MARKET_CLOSED_DAY ? 'Last completed session, open positions &amp; performance — future plans remain gated until their execution window' : 'Signals, open positions &amp; performance — updated every weekday'}</p>
         <div class="hero-meta">
           <span class="ts"><i class="fas fa-clock-rotate-left"></i> ${updatedAt}</span>
         </div>
@@ -4126,7 +4194,7 @@ document.addEventListener('DOMContentLoaded',function(){
   // legitimately showing up across modes is a signal of confirmation, not a
   // hidden concentration risk. No cross-mode gating here by design.
   for (const [id, { cfg, trades: mTrades, m: mM }] of Object.entries(modes)) {
-    const sig = signalsFor(cfg);
+    const sig = dtxSignalsFor(id, cfg) || signalsFor(cfg);
     const pos = posFor(cfg, mTrades);
 
     // MtM equity for today: anchor to frozen returnTotal (sweep-authoritative).
@@ -4190,9 +4258,12 @@ document.addEventListener('DOMContentLoaded',function(){
     const openTickers = new Set(activePos.map(p => p.ticker));
     const sigFiltered = sig.filter(s => !openTickers.has(s.ticker));
     const slotsAvailable = Math.max(0, cfg.portfolioSize - activePos.length);
-    const buyOrders = sigFiltered.slice(0, slotsAvailable).map(s => ({ ...s, action: 'BUY' }));
+    const executionWindowOpen = !MARKET_CLOSED_DAY && scanDir === TODAY_KEY;
+    const buyOrders = executionWindowOpen
+      ? sigFiltered.slice(0, slotsAvailable).map(s => ({ ...s, action: 'BUY' }))
+      : [];
     const rotCands = [];
-    if (cfg.rotation !== 'none' && slotsAvailable === 0 && activePos.length > 0 && sigFiltered.length > 0) {
+    if (executionWindowOpen && cfg.rotation !== 'none' && slotsAvailable === 0 && activePos.length > 0 && sigFiltered.length > 0) {
       const rotLimit = cfg.rotation === 'daily_max1' ? 1 : cfg.rotation === 'daily_max2' ? 2 : cfg.portfolioSize;
       const margin = cfg.rotation === 'aggressive' ? 0 : 5;
       const worst = [...activePos].sort((a, b) => a.return_pct - b.return_pct)[0];
@@ -4249,6 +4320,8 @@ document.addEventListener('DOMContentLoaded',function(){
           stale: e.asof !== todayISO,   // le moteur n'a pas tourne ce jour-la : on le DIT
           orders: e.orders || [], updates: e.updates || [], cancels: e.cancels || [],
           metrics: e.metrics || null,
+          decisionProvenance: e.decisionProvenance || null,
+          executionPlan: e.executionPlan || null,
         };
       })() : null,
       // Live-book (pit-state) beside the sim-derived fields above — ADDITIVE, prefixed pit_

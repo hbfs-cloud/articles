@@ -311,7 +311,7 @@ Chaque signal dans les pools a la même shape que les signaux classiques (ticker
 **Règles d'assemblage multi-list :**
 1. Chaque screener alimente directement son pool (Momentum screener → `momentum[]`)
 2. Les candidats passent la validation complète Phase 2 (dilution, earnings, Sharia, scoring)
-3. Le `signals[]` composite est construit APRÈS les pools : pick les meilleurs de chaque pool en respectant la diversification (max 3/secteur, 8 actions US + 2 ETFs US)
+3. Le `signals[]` composite est construit APRÈS les pools : pick les meilleurs de chaque pool en respectant la diversification (max 3/secteur, cible 8 actions US + 2 ETFs US, minimum 6 + 2 sans filler)
 4. Un ticker peut apparaître dans 1 pool + le composite, mais jamais dans 2 pools différents
 5. `scanner-parser.js:loadSignals()` fusionne les pools dans `signals` pour backward compat (sweep.js, gen-api.js, etc.)
 
@@ -352,9 +352,10 @@ Barres = **`QueryData(types=bars_daily)`** (forme array `[[date,o,h,l,c,v],...]`
 ### Phase 2 — Ticker Selection & Validation
 
 #### Selection Rules (`scanner-filters.json`) — rappel compact
-- Score ≥ **90** (seuil risk layer v4)
+- Score éditorial ≥ **80** (`min-composite-score`, source de vérité exécutable)
 - Min **3** signaux de confluence par setup
-- Univers : **8 actions cotées aux États-Unis + 2 ETFs cotés aux États-Unis**
+- Univers cible : **8 actions cotées aux États-Unis + 2 ETFs cotés aux États-Unis** ; minimum publiable
+  **6 actions US + 2 ETFs US**. Ne jamais forcer une dixième ligne qui échoue les gates.
 - Max **3 par secteur** (selon `sector_map`)
 - Max **3 repeats** depuis le scan précédent
 - **Zéro overlap** avec `scanner-positions.json#open_positions`
@@ -426,10 +427,10 @@ Cette validation **n'est PAS optionnelle** : elle tourne dans la Phase 2, imméd
 des résultats du screener TKL. **Aucun ticker TKL n'entre dans `signals.json` sans avoir passé tous les
 checks.**
 
-**Sélection multi-list :** 10 par pool stratégique (momentum, breakout, pullback, pre_squeeze) + 10 composite. Composite = meilleur de chaque pool diversifié (score ≥ **80**, confluence ≥ 3 signaux, 8 actions US + 2 ETFs US). Le seuil 80 est la source active de la checklist pré-flight; un score plus élevé ne transforme pas automatiquement une ligne en ordre exécutable.
+**Sélection multi-list :** jusqu'à 10 par pool stratégique (momentum, breakout, pullback, pre_squeeze) + jusqu'à 10 composite. Composite = meilleur de chaque pool diversifié (score ≥ **80**, confluence ≥ 3 signaux, cible 8 actions US + 2 ETFs US, minimum 6 + 2 sans filler). Le seuil 80 est la source active de la checklist pré-flight; un score plus élevé ne transforme pas automatiquement une ligne en ordre exécutable.
 
 **⚠️ SCORING RULES (hard enforced by validate-scan.js since 2026-06-30) :**
-- **Score max 98** — no perfect scores. Score reflects REALISTIC probability of TP1 hit.
+- **Score max 98** — no perfect scores. Le score classe la conviction technique; ce n'est jamais une probabilité de gain ou d'atteinte de TP1.
 - **R:R computed from TECHNICALS** — TP1 = nearest resistance/supply zone. NEVER reverse-engineer TP from a fixed R:R ratio. Each signal MUST have a unique R:R reflecting its individual technical setup.
 - **Score inflation gate** — if >50% signals score ≥ 95, validation FAILS. In ERO, most signals should score 75-90.
 - **Strategy caps by regime** — ERO: max 1 Pullback (need confidence ≥60%), 0 Breakout, max 4 Momentum. RISK-OFF: 0 Pullback, 0 Breakout, max 2 Momentum.
@@ -474,7 +475,7 @@ Après sélection des 10 candidats, CHAQUE signal passe la checklist v2.0.
 - [ ] `limit-high-beta-ai-infra` : distance_50dma > 2× cap stratégie OU RSI > 72 → REJECT. Max 1 AI infra en RECOVERY/ERO
 - [ ] `earnings-window-strict` : earnings ±3j bourse → REJECT
 - [ ] `dilution-block-toxic-underwriters` : S-1/S-3/424B < 90j + underwriter toxique → REJECT
-- [ ] `diversification-floor` : max 3/secteur (hard), 8 actions US + 2 ETFs US, max 3 repeats
+- [ ] `diversification-floor` : max 3/secteur (hard), cible 8 actions US + 2 ETFs US, minimum 6 + 2 sans filler, max 3 repeats
 - [ ] `high-score-low-rsi-conflict` : score ≥ 93 AND RSI < 55 → REJECT
 - [ ] `rsi-no-mans-land-momentum` : Momentum AND RSI ∈ [40,50] → REJECT (sauf turbo)
 - [ ] `tkl-momentum-quality-gate` : TKL pool AND (prix < $5 OU score < 88) → REJECT
@@ -497,6 +498,7 @@ Après sélection des 10 candidats, CHAQUE signal passe la checklist v2.0.
 - [ ] `trailing-stop-delay` : R/R ≥ 1:2.4 → trailing inactif avant 50% vers TP1
 - [ ] `cyclicals-macro-context-gate` : Materials/Industrials breakout sans tailwind macro → score -= 10
 - [ ] `same-day-strategy-cap` : EARLY RISK-OFF max 1 Pullback, tout régime max 2 même stratégie
+- [ ] `recent-strategy-performance` : aucune stratégie >50% du top. Un overlay temporaire plus strict doit être immuable, hashé sur une cohorte arrivée à horizon, daté et expirant. L’overlay courant plafonne Momentum à 40%; il ne valide pas les remplaçants.
 - [ ] `gap-up-pullback-entry` : RISK-ON > 70 conf + gap-up > 1% → attendre pullback -0.3%
 - [ ] `gap-up-preflight-phase2` : close > entry × 1.02 → ajuster entry au VWAP estimé J+1
 - [ ] `high-atr-sizing-oscillating-regime` : ATR/prix > 4% + oscillation régime → sizing ×0.7

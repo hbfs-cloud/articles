@@ -10,18 +10,17 @@ const SCAN_DATE = '2026-08-31';
 const read = rel => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
 const round = (n, d = 2) => +Number(n).toFixed(d);
 
-const selected = ['BDX', 'RVTY', 'VLO', 'NWSA', 'NDAQ', 'ADP', 'DV', 'EL', 'IGV', 'KRE'];
+const selected = ['BDX', 'RVTY', 'NWSA', 'HTGC', 'PCAR', 'GE', 'ELS', 'IGV', 'KBE'];
 const meta = {
   BDX: ['Becton Dickinson', 'Medical Essentials, Connected Care, BioPharma Systems et Interventional', 'Healthcare', 'US', 'Momentum', false],
   RVTY: ['Revvity', 'Outils de diagnostic et sciences de la vie', 'Healthcare', 'US', 'Momentum', false],
-  VLO: ['Valero Energy', 'Raffinage et carburants renouvelables', 'Energy', 'US', 'Momentum', false],
   NWSA: ['News Corp', 'Information, édition et immobilier numérique', 'Communication Services', 'US', 'Momentum', false],
-  NDAQ: ['Nasdaq', 'Bourses, données et logiciels de marché', 'Financials', 'US', 'Momentum', false],
-  ADP: ['Automatic Data Processing', 'Paie et gestion des ressources humaines', 'Industrials', 'US', 'Momentum', false],
-  DV: ['DoubleVerify', 'Mesure et qualité de la publicité numérique', 'Communication Services', 'US', 'Momentum', false],
-  EL: ['Estée Lauder', 'Cosmétiques et soins premium', 'Consumer Staples', 'US', 'Momentum', false],
+  HTGC: ['Hercules Capital', 'Financement spécialisé des entreprises technologiques et sciences de la vie', 'Financials', 'US', 'Breakout', false],
+  PCAR: ['PACCAR', 'Camions, pièces et financement commercial', 'Industrials', 'US', 'Pullback', false],
+  GE: ['GE Aerospace', 'Moteurs, services et équipements aéronautiques', 'Industrials', 'US', 'Pullback', false],
+  ELS: ['Equity LifeStyle Properties', 'Immobilier résidentiel de loisirs et communautés préfabriquées', 'Real Estate', 'US', 'Pullback', false],
   IGV: ['iShares Expanded Tech-Software ETF', 'Logiciels cotés aux États-Unis', 'ETF-Factor', 'ETF', 'Breakout', false],
-  KRE: ['SPDR S&P Regional Banking ETF', 'Banques régionales américaines', 'ETF-Factor', 'ETF', 'Pullback', false],
+  KBE: ['SPDR S&P Bank ETF', 'Banques américaines diversifiées', 'ETF-Factor', 'ETF', 'Pullback', false],
 };
 const colors = {
   Industrials: ['#365314', '#a3e635'],
@@ -31,12 +30,26 @@ const colors = {
   'Communication Services': ['#155e75', '#38bdf8'],
   Financials: ['#3730a3', '#818cf8'],
   'Consumer Staples': ['#14532d', '#4ade80'],
+  'Real Estate': ['#4a044e', '#e879f9'],
   'ETF-Factor': ['#1f2937', '#60a5fa'],
 };
 
 function results(file) {
   const payload = read(file);
   return (payload.data?.items || []).flatMap(x => x.results || []).concat(payload.results || []);
+}
+
+const screenBySymbol = new Map();
+for (const strategy of ['momentum', 'breakout', 'pullback']) {
+  const payload = read(`scanner/20260831/_data/screen_${strategy}_us.json`);
+  for (const item of payload.data?.items || []) {
+    for (const candidate of item.candidates || []) {
+      screenBySymbol.set(`${strategy}:${candidate.symbol}`, {
+        ...candidate,
+        screen_snapshot_as_of: String(item.as_of || '').slice(0, 10),
+      });
+    }
+  }
 }
 
 const records = new Map();
@@ -82,25 +95,33 @@ function levels(pattern, price, atr, bars, ema20) {
   const tp1 = high + atr * targetAtrMultiple;
   const tp2 = high + atr * (targetAtrMultiple + 0.75);
   const rrWorst = (tp1 - high) / (high - stop);
+  const roundedHigh = round(high);
+  // Never round a target above its governed ATR ceiling.
+  const roundedTp1 = Math.floor(tp1 * 100) / 100;
   return {
-    low: round(low), high: round(high), midpoint: round(midpoint), stop: round(stop),
-    tp1: round(tp1), tp2: round(tp2), rrWorst: round(rrWorst, 2), targetAtrMultiple,
+    low: round(low), high: roundedHigh, midpoint: round(midpoint), stop: round(stop),
+    tp1: roundedTp1, tp2: round(tp2), rrWorst: round(rrWorst, 2), targetAtrMultiple,
+    publishedTp1AtrMultiple: round((roundedTp1 - roundedHigh) / atr, 3),
     stopPct: round((high - stop) / high * 100, 1),
   };
 }
 
 const thesis = {
-  BDX: 'La tendance de fond est haussière et le RSI approche 70. Cette force justifie une surveillance, mais l’entrée est conditionnée à une cassure tenue et non à une poursuite aveugle.',
-  RVTY: 'Le momentum santé est fort mais déjà étendu au-dessus de l’EMA20. Une entrée n’est recevable que si la cassure tient le VWAP sans accélération verticale.',
-  VLO: 'Le raffineur termine près du haut de séance dans une tendance haussière. Le pétrole était stable vendredi; le trade dépend donc de la force propre du titre et d’un maintien au-dessus du VWAP.',
-  NWSA: 'Le titre consolide près de ses plus hauts récents avec une structure de momentum. La zone publiée sert de filtre: une perte du VWAP annule le signal plutôt que d’être moyennée.',
-  NDAQ: 'Nasdaq consolide au-dessus de ses moyennes 20, 50 et 200 jours. Le momentum reste propre, mais l’entrée exige une reprise du haut de zone et du VWAP.',
-  ADP: 'Le titre accélère dans une tendance longue intacte avec un RSI proche de 69. La cassure doit tenir; un gap supérieur à 2% renvoie le plan vers un pullback VWAP.',
-  DV: 'DoubleVerify avance régulièrement au-dessus de ses trois moyennes. La faible volatilité impose une exécution stricte dans la zone et interdit de poursuivre un écart d’ouverture.',
-  EL: 'Estée Lauder progresse dans une tendance forte mais déjà étendue. Le setup reste un satellite: aucune poursuite d’un gap et confirmation VWAP obligatoire.',
+  BDX: 'La tendance reste haussière, mais le titre est déjà à près de 15% de sa moyenne 50 jours. Il ne mérite une entrée que sur cassure tenue dans la zone; un gap sans retour VWAP est refusé.',
+  RVTY: 'Le momentum santé est propre au-dessus des trois moyennes, avec une extension moins forte que BDX. La confirmation attendue est une reprise du haut de zone qui conserve le VWAP.',
+  NWSA: 'La structure est haussière sans l’extension extrême des anciens leaders Momentum. Les dépôts SEC récents concernent des mises à jour d’entreprise, pas une nouvelle publication de résultats; le trade reste soumis à la tenue du VWAP.',
+  HTGC: 'Le titre consolide au-dessus des moyennes 20, 50 et 200 jours. Son émission de 325 M$ de notes senior à 6,300% échéance 2031 est une dette, pas une offre d’actions, mais elle renforce la sensibilité aux taux. La cassure doit tenir; sous le VWAP, le plan reste désarmé.',
+  PCAR: 'Le titre corrige vers ses moyennes tout en restant au-dessus de la moyenne 200 jours. Il faut reprendre l’EMA20 avant d’acheter: le repli seul n’est pas une confirmation.',
+  GE: 'La tendance longue reste positive, mais le recul a cassé les moyennes courtes. Le plan attend une reprise de l’EMA20 et du VWAP; sans cette séquence, aucune entrée.',
+  ELS: 'Le REIT conserve sa moyenne 200 jours mais travaille sous l’EMA20. Une reprise de cette moyenne et du VWAP est obligatoire, particulièrement avec le 10 ans américain à 4,72%.',
   IGV: 'Le logiciel a conservé l’essentiel de son gap après les résultats de la semaine. L’ETF réduit le risque spécifique, mais son extension impose une cassure propre ou un retour VWAP.',
-  KRE: 'Les banques régionales restent au-dessus de leur moyenne 50 jours mais sous leur moyenne 20 jours. Le setup n’est recevable qu’après reprise de l’EMA20 et du VWAP; sous cette séquence, il reste désarmé.',
+  KBE: 'Les banques restent au-dessus de leur moyenne 200 jours mais sous leurs moyennes courtes. L’ETF évite le doublon avec une banque individuelle; il reste désarmé sans reprise de l’EMA20 et du VWAP.',
 };
+
+const selectedEarnings = read('scanner/20260831/_data2/earnings_selected.json');
+const selectedSec = read('scanner/20260831/_data2/sec_selected_evidence.json');
+const finalCorrelation = read('scanner/20260831/_data2/risk_correlation_final.json');
+const finalSizing = read('scanner/20260831/_data2/risk_sizing_final.json');
 
 const setups = selected.map(symbol => {
   const [name, description, sector, region, pattern, sharia] = meta[symbol];
@@ -108,15 +129,23 @@ const setups = selected.map(symbol => {
   if (!rec?.quote || !rec?.tech) throw new Error(`Missing governed enrichment for ${symbol}`);
   const q = rec.quote, t = rec.tech;
   const price = Number(q.price), atr = Number(t.atr);
+  const source = screenBySymbol.get(`${pattern.toLowerCase()}:${symbol}`);
+  if (!source) throw new Error(`Missing archived ${pattern} screen row for ${symbol}`);
+  if (source.screen_snapshot_as_of !== REF || !Number.isFinite(source.estimated_valid_bars) || source.estimated_valid_bars < 1) {
+    throw new Error(`Stale or unbounded screen row for ${symbol}: snapshot=${source.screen_snapshot_as_of}, valid_bars=${source.estimated_valid_bars}`);
+  }
   const L = levels(pattern, price, atr, rec.bars, t.ema20);
-  const score = pattern === 'Pullback'
-    ? round(Math.min(94, Math.max(80, 86 - Math.abs(Number(t.rsi) - 40) * 0.4)), 1)
-    : round(Math.min(94, Number(t.rsi) + (pattern === 'Breakout' ? 20 : 15)), 1);
+  const sec = region === 'ETF' ? null : selectedSec.coverage[symbol];
+  if (region !== 'ETF' && !sec) throw new Error(`Missing exact SEC evidence for ${symbol}`);
+  const score = round(Number(source.score), 1);
+  if (!Number.isFinite(score) || score < 80 || score > 100) {
+    throw new Error(`Governed screener score out of editorial range for ${symbol}: ${source.score}`);
+  }
   const distance50 = q.fiftyDayAverage ? round((price / q.fiftyDayAverage - 1) * 100) : round((price / t.ema50 - 1) * 100);
   const lookthrough = symbol === 'IGV'
     ? { factor: 'us_software', clusters: ['enterprise_software', 'cybersecurity', 'interactive_media'] }
-    : symbol === 'KRE'
-      ? { factor: 'us_regional_banks', clusters: ['regional_banks', 'credit_cycle', 'yield_curve'] }
+    : symbol === 'KBE'
+      ? { factor: 'us_banks', clusters: ['banks', 'credit_cycle', 'yield_curve'] }
       : null;
   return {
     ticker: symbol, name, description, logo_gradient: colors[sector], price: round(price),
@@ -125,16 +154,31 @@ const setups = selected.map(symbol => {
     sector, sharia, extra_badges: region === 'ETF' ? ['ETF US'] : [],
     radar_scores: {
       momentum: Math.max(45, Math.min(92, Math.round(58 + (Number(t.rsi) - 50) * 1.1))),
-      fundamentals: 64, technical: t.ema20 > t.ema50 ? 84 : 68,
-      volume: 76, sentiment: 62, macro: sector === 'Energy' ? 72 : 68,
+      fundamentals: 50,
+      technical: Math.max(40, Math.min(90, 50 + (price > t.ema200 ? 12 : 0) + (t.ema20 > t.ema50 ? 10 : 0) + (t.ema50 > t.ema200 ? 8 : 0))),
+      volume: Math.max(25, Math.min(90, Math.round(50 + ((Number(q.volume) / Number(source.avg_volume || q.volume)) - 1) * 25))),
+      sentiment: 50,
+      macro: 50,
+    },
+    radar_unavailable: ['fundamentals', 'sentiment', 'macro'],
+    selection_evidence: {
+      screen_snapshot_as_of: source.screen_snapshot_as_of,
+      detected_at: source.detected_at,
+      estimated_valid_bars: source.estimated_valid_bars,
+      source_screen_score: round(source.score, 1),
+      avg_daily_dollar_volume: round(Number(source.avg_volume) * price),
+      score_note: 'Score technique exact du screener archivé; ce n’est pas une probabilité de gain.',
     },
     entry_low: L.low, entry_high: L.high,
     entry_display: `${L.low}–${L.high} $; gate min(open, VWAP), pullback VWAP seul si gap >2%`,
     stop: L.stop, tp1: L.tp1, tp2: L.tp2,
-    rr: `1:${L.rrWorst.toFixed(2)}`, rr_entry: L.rrWorst, tp1_atr_multiple: L.targetAtrMultiple,
+    rr: `1:${L.rrWorst.toFixed(2)}`, rr_entry: L.rrWorst, tp1_atr_multiple: L.publishedTp1AtrMultiple,
     execution: {
       status: 'conditional_next_session', observed_vwap: null, observed_at: null,
-      gate: 'No order before the 09:30–09:45 ET window; require price in zone and above observed VWAP.',
+      ...( ['PCAR', 'GE'].includes(symbol) ? { max_intraday_chase_pct: 2 } : {}),
+      gate: ['PCAR', 'GE'].includes(symbol)
+        ? 'No order before 09:30–09:45 ET. Require price in zone and above observed VWAP; reject if price rallied more than 2% from the opening print before entering the zone.'
+        : 'No order before the 09:30–09:45 ET window; require price in zone and above observed VWAP.',
     },
     horizon_days: 10, thesis: thesis[symbol],
     confirmations: [
@@ -146,6 +190,7 @@ const setups = selected.map(symbol => {
     invalidations: [
       `Cassure du stop ${L.stop} $`,
       `Ouverture au-dessus de ${round(L.high * 1.02)} $ sans retour VWAP`,
+      ...(['PCAR', 'GE'].includes(symbol) ? ['Hausse supérieure à 2% depuis l’ouverture avant l’entrée dans la zone: aucune poursuite'] : []),
       'Perte du VWAP avec pression vendeuse croissante',
       symbol === 'IGV'
         ? 'Aucune conservation overnight avant les résultats logiciels des 2–3 septembre sans nouvelle validation'
@@ -154,37 +199,59 @@ const setups = selected.map(symbol => {
     market_cap: region === 'ETF' ? null : Number(q.marketCap) || null,
     extension: { rsi: round(t.rsi, 1), atr: round(atr, 4), distance_50dma_pct: distance50 },
     earnings_clear: region === 'ETF' ? null : true,
-    dilution_clear: region === 'ETF' ? null : true,
-    earnings_source: region === 'ETF' ? 'n_a_etf' : '8k_item_202',
+    dilution_clear: region === 'ETF' ? null : sec.equity_offering_hits.length === 0,
+    earnings_source: region === 'ETF' ? 'n_a_etf' : sec.issuer_filing_regime === 'foreign_private_issuer' ? 'issuer_calendar_verified' : '8k_item_202',
+    earnings_forward_evidence: {
+      checked_at: selectedEarnings.as_of,
+      days_ahead: selectedEarnings.query.days_ahead,
+      result: selectedEarnings.coverage[symbol] || null,
+      event_found: (selectedEarnings.events || []).some(event => event.symbol === symbol),
+      source_artifact: 'scanner/20260831/_data2/earnings_selected.json',
+    },
+    ...(sec ? { issuer_filing_regime: sec.issuer_filing_regime } : {}),
     dilution_scope: region === 'ETF'
       ? 'n_a_etf; component-level event risk disclosed in calendar/look-through'
-      : 'official SEC forms reviewed over 90 days; no S-1, S-3, EFFECT or 424B5 found; provider flags unavailable',
+      : `official SEC/EDGAR filings reviewed over ${selectedSec.dilution_window.days} days; equity offering hits: ${sec.equity_offering_hits.length}; non-equity offerings are classified separately`,
+    ...(sec ? {
+      sec_evidence: {
+        source_artifact: 'scanner/20260831/_data2/sec_selected_evidence.json',
+        checked_at: selectedSec.as_of,
+        pagination_exhausted: selectedSec.pagination_exhausted,
+        latest_earnings_filing: sec.latest_earnings_filing,
+        issuer_calendar_verified: sec.issuer_calendar_verified || false,
+        dilution_window: selectedSec.dilution_window,
+        equity_offering_hits: sec.equity_offering_hits,
+        non_equity_offering_hits: sec.non_equity_offering_hits,
+      },
+    } : {}),
     ...(lookthrough ? { lookthrough } : {}),
   };
 });
 
 const riskGating = {
   systematic_regime_score: 0.79,
-  marketdata_ensemble_status: 'degraded_fallback_rule_based',
-  marketdata_fallback_confidence: 0.25,
-  crisis_prob_5d: 0.15,
-  regime_source: 'systematic DtxRegime is canonical; marketdata probability engine degraded to fallback_rule_based',
-  max_pair_correlation: 0.6861,
-  max_pair_symbols: ['NWSA', 'ADP'],
-  avg_off_diagonal_correlation: 0.2109,
-  correlation_method: 'Pearson log returns on 60 governed daily sessions; local fallback after PortfolioRisk returned 0 common days',
-  sizing: 'MCP balanced inverse-ATR sizing returned 257.75% gross exposure and was rejected; candidates remain conditional and are not a simultaneous portfolio allocation',
-  sizing_endpoint_cash_reserve_pct: -157.75,
-  sizing_endpoint_expected_vol_pct: 39.97,
-  sizing_endpoint_max_correlation: 0.6837,
-  allocation_recommendation_pct: 0,
+  marketdata_model: 'context_conditional',
+  marketdata_engine: 'fallback_rule_based',
+  ensemble_confidence: 0.5,
+  crisis_prob_5d: 0.0829,
+  regime_source: 'systematic DtxRegime is canonical; marketdata context_conditional output used its disclosed fallback_rule_based engine because TLT history was insufficient',
+  max_pair_correlation: round(finalCorrelation.max_pair.correlation, 4),
+  max_pair_symbols: [finalCorrelation.max_pair.symbol_a, finalCorrelation.max_pair.symbol_b],
+  avg_off_diagonal_correlation: finalCorrelation.avg_off_diagonal,
+  correlation_observations: finalCorrelation.n_observations,
+  correlation_method: `${finalCorrelation.method} ${finalCorrelation.returns_type} returns; requested ${finalCorrelation.window_days_requested} sessions`,
+  sizing: `MCP balanced inverse-ATR sizing returned ${finalSizing.gross_exposure_pct}% gross exposure and was rejected; candidates remain conditional and are not a simultaneous portfolio allocation`,
+  sizing_endpoint_cash_reserve_pct: finalSizing.cash_reserve_pct,
+  sizing_endpoint_expected_vol_pct: finalSizing.portfolio_expected_vol_pct,
+  sizing_endpoint_max_correlation: finalSizing.portfolio_max_correlation,
+  allocation_recommendation_pct: finalSizing.allocation_recommendation_pct,
 };
 const avgScore = round(setups.reduce((sum, x) => sum + x.score, 0) / setups.length, 1);
 const data = {
   _comment: `Scanner ${SCAN_DATE}, clôture de référence ${REF}. Univers volontairement limité aux actions et ETF cotés aux États-Unis.`,
   date: SCAN_DATE, session_label: 'Séance du lundi 31 août 2026', url: '/scanner/20260831/',
   regime: 'RISK-ON', regime_score: 0.79, regime_color: '#16a34a',
-  tags: ['us', 'etf', 'technique', 'trade-idea', 'momentum', 'pullback', 'industrials', 'healthcare', 'energy', 'software'],
+  tags: ['us', 'etf', 'technique', 'trade-idea', 'momentum', 'pullback', 'industrials', 'healthcare', 'software'],
   kpis: {
     vix: { value: '14,43', label: 'volatilité contenue', color: '#16a34a' },
     spx: { value: '7 711,76', change_pct: -0.25, color: '#dc2626' },
@@ -192,13 +259,14 @@ const data = {
   },
   alerts: [
     { type: 'warning', title: 'Risk-on, mais largeur plus faible', text: 'Le S&P 500 a cédé 0,25% vendredi et le Russell 2000 1,39%. Le régime systématique reste RISK-ON à 0,79 avec VIX 14,43, mais les entrées du lundi restent conditionnées au VWAP.' },
-    { type: 'warning', title: 'Allocation simultanée interdite', text: 'Le sizing portefeuille a été rejeté: 257,75% d’exposition brute et réserve cash négative. Allocation recommandée du panier complet: 0%. Chaque ligne reste une surveillance conditionnelle indépendante.' },
-    { type: 'info', title: 'Données optionnelles dégradées', text: 'Les flux institutionnels optionnels ont été limités par le fournisseur et le moteur probabiliste fonctionne en fallback à 25% de confiance. Aucun substitut n’a été inventé.' },
+    { type: 'warning', title: 'Allocation simultanée interdite', text: 'Le sizing portefeuille a été rejeté: l’exposition brute proposée dépassait le capital disponible. Allocation recommandée du panier complet: 0%. La corrélation maximale de 0,4998 repose sur seulement 26 observations; elle ne prouve pas une diversification robuste.' },
+    { type: 'warning', title: 'Momentum plafonné', text: 'Momentum compte 30 propositions arrivées à horizon: 22 résolues et 8 jamais remplies. Les 22 résolues affichent un profit factor de 0,59. Le plafond temporaire est de 40%; le panier n’en garde que 3 sur 9.' },
+    { type: 'info', title: 'Données optionnelles limitées', text: 'Les flux institutionnels optionnels ont été limités. Le contrôle secondaire context_conditional a utilisé son fallback rule-based, avec 50% de confiance, faute d’historique TLT suffisant; le régime systématique à 0,79 reste la source canonique.' },
   ],
-  intro: 'Le régime systématique reste RISK-ON à 0,79, mais la séance de vendredi a été plus faible sous la surface: Nasdaq -0,52%, Russell 2000 -1,39%, or -3,43% et bitcoin -3,57%. Le panier du lundi privilégie des entrées conditionnelles, huit actions US et deux ETF US, sans poursuite automatique des gaps.',
-  strategy: 'Momentum seulement sur cassure tenue; pullback seulement après stabilisation et reprise du VWAP. Un gap supérieur à 2% au-dessus de la zone annule l’entrée directe et impose un retour VWAP.',
+  intro: 'Le régime systématique reste RISK-ON à 0,79, mais la séance de vendredi a été plus faible sous la surface: Nasdaq -0,52%, Russell 2000 -1,39%, or -3,43% et bitcoin -3,57%. Le panier du lundi garde sept actions US et deux ETF US, plafonne Momentum après sa mauvaise rétro récente et exige une confirmation VWAP. Une dixième ligne n’a pas été forcée après le rejet d’un ticker mal identifié.',
+  strategy: 'Trois Momentum au maximum, seulement sur cassure tenue. Les Pullback exigent la reprise de l’EMA20 et du VWAP; ils sont mieux orientés dans la dernière rétro, mais leur échantillon reste limité. Un gap supérieur à 2% au-dessus de la zone annule l’entrée directe.',
   regime_prose: 'Le S&P 500 reste au-dessus de ses moyennes 50, 100 et 200 jours; le VIX est sous sa moyenne 14 jours et ne monte pas. En contrepoint, le dollar a gagné 0,52%, les taux 10 ans atteignent 4,72% et les actifs à bêta élevé ont corrigé. Le régime autorise le risque, pas le relâchement des gates.',
-  regime_strategy_weights: { momentum: 0.40, breakout: 0.10, pullback: 0.50, presqueeze: 0 },
+  regime_strategy_weights: { momentum: 0.33, breakout: 0.22, pullback: 0.45, presqueeze: 0 },
   market_snapshot: [
     { label: 'S&P 500', value: '7 711,76', change: '-0,25%', signal: 'tendance longue intacte', dir: 'down' },
     { label: 'Nasdaq', value: '26 402,42', change: '-0,52%', signal: 'logiciels plus résistants', dir: 'down' },
@@ -209,6 +277,7 @@ const data = {
     { label: 'Bitcoin', value: '77 350,80 $', change: '-3,57%', signal: 'bêta élevé sous pression', dir: 'down' },
   ],
   pedagogy: { title: 'Pourquoi un bon score ne suffit pas', content: 'Le score classe les candidats; il ne remplace ni la fenêtre earnings, ni les dépôts SEC, ni le VWAP. Le scan garde donc des zones conditionnelles et accepte de ne rien exécuter si le marché ne confirme pas.' },
+  score_methodology: 'Score technique exact du screener archivé. Ce nombre classe les candidats; il ne mesure pas une probabilité de gain. Les axes sans donnée vérifiée restent neutres à 50 et sont signalés comme indisponibles.',
   macro_calendar: [
     { date: '31 août', event: 'Inflation flash zone euro', impact: 'élevé', dir: 'flat', note: 'Risque dollar et taux avant la séance US' },
     { date: '1 septembre', event: 'ISM manufacturier; discours de Michael Barr', impact: 'moyen / élevé', dir: 'flat', note: '10h00 ET puis signal Fed séparé' },
@@ -217,14 +286,14 @@ const data = {
     { date: '4 septembre', event: 'Rapport emploi américain', impact: 'élevé', dir: 'flat', note: 'Réduire la poursuite avant le chiffre' },
   ],
   sector_rotation: [
-    { sector: 'Banques régionales', perf: 'repli contrôlé', signal: 'reprise EMA20 requise', exposure: 'KRE', dir: 'flat' },
+    { sector: 'Banques', perf: 'repli contrôlé', signal: 'reprise EMA20 requise', exposure: 'KBE', dir: 'flat' },
     { sector: 'Logiciels', perf: 'fort mais étendu', signal: 'gap de jeudi largement conservé', exposure: 'IGV', dir: 'up' },
     { sector: 'Santé', perf: 'sélectif', signal: 'momentum sur dispositifs et diagnostics', exposure: 'BDX, RVTY', dir: 'up' },
-    { sector: 'Énergie', perf: 'résilient', signal: 'pétrole presque stable vendredi', exposure: 'VLO', dir: 'flat' },
-    { sector: 'Services financiers', perf: 'constructif', signal: 'infrastructures de marché', exposure: 'NDAQ', dir: 'up' },
-    { sector: 'Consommation', perf: 'momentum étendu', signal: 'force propre, pas de poursuite du gap', exposure: 'EL', dir: 'up' },
+    { sector: 'Industrie', perf: 'repli dans tendance longue', signal: 'reclaim EMA20 obligatoire', exposure: 'PCAR, GE', dir: 'flat' },
+    { sector: 'Crédit spécialisé', perf: 'constructif mais sensible aux taux', signal: 'cassure tenue requise', exposure: 'HTGC', dir: 'flat' },
+    { sector: 'Immobilier coté', perf: 'sous pression des taux', signal: 'reprise EMA20 obligatoire', exposure: 'ELS', dir: 'flat' },
   ],
-  macro_thesis: 'La structure de tendance reste favorable, mais vendredi a montré une contraction du risque: petites capitalisations, crypto et métaux ont reculé ensemble tandis que le dollar et les taux montaient. Le scanner répond par des facteurs moins concentrés, IGV et KRE comme ETF de contrôle, et des entrées soumises au VWAP.',
+  macro_thesis: 'La structure de tendance reste favorable, mais vendredi a montré une contraction du risque: petites capitalisations, crypto et métaux ont reculé ensemble tandis que le dollar et les taux montaient. Le scanner réduit Momentum à trois lignes, privilégie des reclaims plutôt que des poursuites, garde IGV et KBE comme expositions diversifiées et accepte de publier neuf plans au lieu de forcer un substitut.',
   engine_meta: {
     generated_at: new Date().toISOString(), regime: 'RISK-ON', reference_close: REF,
     freshness: { marketdata_bars: REF, systematic_last_data_date: REF }, risk_gating: riskGating,
@@ -234,14 +303,17 @@ const data = {
 };
 
 const signals = setups.map(s => ({
-  ticker: s.ticker, name: s.name, score: s.score, scoreSource: 'normalized_composite', strategy: s.pattern,
+  ticker: s.ticker, name: s.name, score: s.score, scoreFamily: 'editorial',
+  scoreSource: 'governed_screener_score', strategy: s.pattern,
   price: s.price, entry: s.entry_high, entry_low: s.entry_low, entry_high: s.entry_high,
   stop: s.stop, tp1: s.tp1, tp2: s.tp2, rr: s.rr, rr_entry: s.rr_entry,
   tp1_atr_multiple: s.tp1_atr_multiple, horizon: s.horizon_days, region: s.region,
   sector: s.sector, market_cap: s.market_cap, sharia: s.sharia, extension: s.extension,
   earnings_clear: s.earnings_clear, dilution_clear: s.dilution_clear,
-  earnings_source: s.earnings_source, dilution_scope: s.dilution_scope, thesis: s.thesis,
-  execution: s.execution,
+  earnings_source: s.earnings_source, earnings_forward_evidence: s.earnings_forward_evidence,
+  issuer_filing_regime: s.issuer_filing_regime,
+  dilution_scope: s.dilution_scope, thesis: s.thesis,
+  execution: s.execution, sec_evidence: s.sec_evidence, selection_evidence: s.selection_evidence,
   ...(s.lookthrough ? { lookthrough: s.lookthrough } : {}),
 }));
 const signalsJson = {
@@ -250,14 +322,21 @@ const signalsJson = {
   _pipelineOrder: {
     earnings_screened_at: '2026-08-28T21:51:01.000Z',
     enrichment_started_at: '2026-08-28T21:56:15.000Z', candidates_screened: 60,
-    method: 'Earnings and open-position gates preceded SEC, technical, bars and correlation enrichment; final universe is 8 US stocks plus 2 US-listed ETFs.',
+    method: 'Earnings and open-position gates preceded SEC, technical, bars and correlation enrichment; final universe is 7 US stocks plus 2 US-listed ETFs. No tenth candidate was forced.',
   },
   _memoryImpact: {
-    rules_applied: ['pit-cache-key-end-date', 'tp1-reachability', 'vwap-entry-gate', 'pullback-trend-structure-gate'],
-    notes: 'Memory changed execution discipline and confidence only. It did not reverse a quantitative signal or bypass a hard block.',
+    rules_applied: ['pit-cache-key-end-date', 'tp1-reachability', 'vwap-entry-gate', 'pullback-trend-structure-gate', 'recent-strategy-performance'],
+    notes: 'The immutable audit has 30 horizon-complete Momentum proposals: 22 resolved (PF 0.59, average R -0.243) and 8 no-fills excluded from performance metrics. The cap is 40%; this basket uses 3/9. Pullback and Breakout remain conditional because their mature samples are small.',
   },
   _editorialNote: 'US-only run. Optional flow calls were unavailable after rate limiting; no substitute flow data was fabricated.',
-  exited_factors: [], signals, tkl_pool: [], dtx_pool: [], fortress_pool: [],
+  _scoreMethodology: 'Score technique exact du screener archivé; ce n’est pas une probabilité de gain. La provenance est conservée pour chaque signal.',
+  exited_factors: [],
+  signals,
+  momentum: signals.filter(s => s.strategy === 'Momentum'),
+  breakout: signals.filter(s => s.strategy === 'Breakout'),
+  pullback: signals.filter(s => s.strategy === 'Pullback'),
+  pre_squeeze: signals.filter(s => s.strategy === 'Pre-Squeeze'),
+  tkl_pool: [], dtx_pool: [], fortress_pool: [],
   _tklPoolNote: 'No separately validated TKL candidate for this run.',
   _fortressPoolNote: 'Fortress gate ran fail-closed: no candidate had all four A+ eliminators and Sharia ratios verified from current governed data.',
 };
@@ -273,9 +352,24 @@ const harness = {
   sources: [
     ...(wave1.sources || []), ...(wave2.sources || []), ...(dtx.sources || []),
     {
-      name: 'risk_sizing_final', as_of: '2026-08-28T22:36:01Z', data_through: REF,
+      name: 'risk_sizing_final', as_of: finalSizing.as_of, data_through: REF,
       max_age_h: 24, required: true,
       note: 'marketdata.PortfolioRisk sizing final basket; artifact scanner/20260831/_data2/risk_sizing_final.json',
+    },
+    {
+      name: 'risk_correlation_final', as_of: finalCorrelation.as_of, data_through: REF,
+      max_age_h: 24, required: true,
+      note: 'marketdata.PortfolioRisk correlation final basket; artifact scanner/20260831/_data2/risk_correlation_final.json',
+    },
+    {
+      name: 'earnings_selected', as_of: selectedEarnings.as_of, data_through: REF,
+      max_age_h: 72, required: true,
+      note: 'Exact final-basket forward earnings query, 7 days; artifact scanner/20260831/_data2/earnings_selected.json',
+    },
+    {
+      name: 'sec_selected_evidence', as_of: selectedSec.as_of, data_through: REF,
+      max_age_h: 168, required: true,
+      note: 'Exact final-basket SEC evidence with exhausted pagination and direct EDGAR supplement; artifact scanner/20260831/_data2/sec_selected_evidence.json',
     },
   ],
 };

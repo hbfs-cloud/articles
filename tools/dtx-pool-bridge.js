@@ -170,8 +170,18 @@ function main() {
     catch (_) { skipped.push(`${id} (staging manquant)`); continue; }
     const asof = String(stg.asof || '').slice(0, 10);
     if (stg.engineMode !== 'mcp') { skipped.push(`${id} (engineMode:${stg.engineMode || '—'} ≠ mcp)`); continue; }
-    if (asof !== opts.date && !opts.force) { skipped.push(`${id} (staging STALE asof:${asof} ≠ ${opts.date})`); continue; }
+    if (asof !== opts.date) { skipped.push(`${id} (staging STALE asof:${asof} ≠ ${opts.date})`); continue; }
     if (stg.metricsSuspect === true) { skipped.push(`${id} (metricsSuspect — sanity gate)`); continue; }
+    const validFrom = String(stg.decisionProvenance?.validFrom || '').slice(0, 10);
+    const validUntil = String(stg.decisionProvenance?.validUntil || '').slice(0, 10);
+    if (!validFrom || !validUntil) {
+      skipped.push(`${id} (fenêtre Contract V2 absente)`);
+      continue;
+    }
+    if (validFrom !== opts.date) {
+      skipped.push(`${id} (plan valide le ${validFrom}, pas le ${opts.date})`);
+      continue;
+    }
     const buys = (stg.orders || []).filter((o) => String(o.side || '').toUpperCase() === 'BUY');
     let kept = 0, dropped = 0;
     for (let i = 0; i < buys.length; i++) {

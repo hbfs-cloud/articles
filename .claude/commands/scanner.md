@@ -93,7 +93,8 @@ silencieux, vérifié 2026-08-10) ; sans borne mcap le screener ne rend que des 
 
 ## Phase 2 — Ticker Selection & Validation
 
-Règles (`scanner-filters.json`) : score ≥ 90 · min 3 confluences · 8 actions US + 2 ETFs US ·
+Règles (`scanner-filters.json`) : score éditorial ≥ 80 · min 3 confluences · cible 8 actions US + 2 ETFs US,
+mais minimum publiable 6 actions US + 2 ETFs US sans forcer de remplissage ·
 max 3/secteur · max 3 repeats · zéro overlap positions ouvertes · aucun earnings ±3 séances.
 39 règles (hard blocks / selection filters / advisories) → §Pre-Flight Rule Checklist ; gate par signal →
 §Phase 2b.

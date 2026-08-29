@@ -76,6 +76,13 @@ function normalizeOrder(o) {
     // point-in-time qui l'omet ne permet plus de dire, après coup, sous quelle règle un ordre
     // devait sortir. Ce mappeur est une liste blanche : un champ non listé est perdu en silence.
     sleeve: o.sleeve || null,
+    groupId: o.groupId || null,
+    candidateId: o.candidateId || null,
+    rank: o.rank != null ? Number(o.rank) : null,
+    broker: o.broker || null,
+    protection: o.protection || null,
+    execution: o.execution || null,
+    decisionContext: o.decisionContext || null,
   };
 }
 
@@ -98,6 +105,8 @@ function append(staging, opts = {}) {
     engineMode: staging.engineMode || null,
     provenance: staging._provenance || 'staging',
     engine: staging.engine || null,
+    decisionProvenance: staging.decisionProvenance || null,
+    executionPlan: staging.executionPlan || null,
     currency: staging.currency || null,
     orders: (staging.orders || []).map(normalizeOrder).filter(Boolean),
     updates: (staging.updates || []).map(normalizeOrder).filter(Boolean),
