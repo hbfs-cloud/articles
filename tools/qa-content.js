@@ -249,10 +249,11 @@ function validate(file) {
   const rel = path.relative(ROOT, file);
   const htmlTag = (html.match(/<html[^>]*>/) || [''])[0];
   const lang = (htmlTag.match(/\blang="([^"]+)"/) || [, ''])[1];
+  const isArchiveNotice = /\bdata-archive-notice="true"/.test(htmlTag);
 
   // ── COMMUN : taille ──
   check('taille suffisante (non tronqué)', () => {
-    const min = SIZE_MIN[type] || 10 * 1024;
+    const min = isArchiveNotice ? 3 * 1024 : (SIZE_MIN[type] || 10 * 1024);
     if (size < min) return `${Math.round(size / 1024)}KB < ${Math.round(min / 1024)}KB (${type}) — fichier manifestement coupé`;
   });
 
@@ -260,7 +261,7 @@ function validate(file) {
   // NE PAS transformer ce seuil en objectif : au-delà, ajouter des sections sans faits nouveaux
   // est un défaut (slop L4), pas une qualité. Cf. incident 20260810.
   check('sections attendues présentes (complétude)', () => {
-    const minSec = SECTIONS_MIN[type];
+    const minSec = isArchiveNotice ? 2 : SECTIONS_MIN[type];
     if (!minSec) return;
     const n = (html.match(/<h2\b/g) || []).length;
     if (n < minSec) return `${n} section(s) <h2> < ${minSec} attendues (${type}) — article incomplet`;
@@ -438,6 +439,7 @@ function validate(file) {
     });
     // Trade Idea (requis pour tickers tradables) → warn car tradabilité non détectable structurellement
     warn('section Trade Idea présente', () => {
+      if (isArchiveNotice) return;
       const has = /id="trade"/.test(html) || /class="trade-idea"/.test(html) || /Trade Idea|Idée de Trade|Idée de Trading/i.test(html);
       if (!has) return 'aucune section Trade Idea (requise pour tickers tradables — ignorer si indice/thématique)';
     });

@@ -97,12 +97,13 @@ function quickUpdate(ticker, updates) {
 
 // ─── Archive ──────────────────────────────────────────────────────────────
 
-function archiveIfExists(ticker) {
+function archiveIfExists(ticker, nextDate) {
   const htmlPath = path.join(ROOT, 'analyses', ticker, 'index.html');
   if (!fs.existsSync(htmlPath)) return null;
 
   const content = fs.readFileSync(htmlPath, 'utf8');
   const dateMatch = content.match(/data-date="([^"]+)"/);
+  if (dateMatch && nextDate && dateMatch[1] === nextDate) return null;
   const folderDate = dateMatch
     ? dateMatch[1].replace(/-/g, '')
     : new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -138,7 +139,7 @@ function renderFile(jsonPath, dryRun) {
     return ticker;
   }
 
-  archiveIfExists(ticker);
+  archiveIfExists(ticker, data.meta.date);
 
   try {
     execSync(`node "${path.join(__dirname, 'render-analysis.js')}" "${jsonPath}"`, { stdio: 'inherit', cwd: ROOT });

@@ -83,6 +83,8 @@ function validate(data, schema, loc, rootSchema) {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 const safeEditorialHtml = s => esc(s).replace(/&lt;(\/?)(p|strong|em)&gt;/gi, '<$1$2>');
+const isFrench = d => d?.meta?.lang === 'fr';
+const tx = (d, en, fr) => isFrench(d) ? fr : en;
 function safeUrl(value) {
   const url = String(value || '').trim();
   if (url.startsWith('/') && !url.startsWith('//')) return url;
@@ -219,7 +221,7 @@ function renderChartEmbed(header, meta) {
     <div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
       <div onclick="openChartModal()" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
         <img src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="${t}" style="width:100%;display:block;" loading="eager" fetchpriority="high">
-        <div style="background:#f8fafc;padding:6px 12px;font-size:0.7rem;color:#64748b;"><span><i class="fa-solid fa-chart-line"></i> Click to enlarge</span></div>
+        <div style="background:#f8fafc;padding:6px 12px;font-size:0.7rem;color:#64748b;"><span><i class="fa-solid fa-chart-line"></i> ${meta?.lang === 'fr' ? 'Cliquer pour agrandir' : 'Click to enlarge'}</span></div>
       </div>
     </div>`;
   }
@@ -229,7 +231,7 @@ function renderChartEmbed(header, meta) {
     <div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
       <div onclick="openChartModal()" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
         <img src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="${t} Chart" style="width:100%;display:block;" loading="eager" fetchpriority="high">
-        <div style="background:#f8fafc;padding:6px 12px;font-size:0.7rem;color:#64748b;"><span><i class="fa-solid fa-chart-line"></i> Click to enlarge</span></div>
+        <div style="background:#f8fafc;padding:6px 12px;font-size:0.7rem;color:#64748b;"><span><i class="fa-solid fa-chart-line"></i> ${meta?.lang === 'fr' ? 'Cliquer pour agrandir' : 'Click to enlarge'}</span></div>
       </div>
     </div>`;
 }
@@ -238,7 +240,7 @@ function renderChartEmbed(header, meta) {
 
 function renderHead(d) {
   const { meta, header, verdict } = d;
-  const title = `DailyTickers | ${header.ticker} Analysis — ${header.name} | ${meta.dateDisplay || meta.date}`;
+  const title = `DailyTickers | ${header.ticker} ${meta.lang === 'fr' ? 'Analyse' : 'Analysis'} — ${header.name} | ${meta.dateDisplay || meta.date}`;
   const desc = esc(meta.description || `${header.ticker} analysis: ${(verdict.summary || '').slice(0, 160)}`);
   const ogDesc = esc(meta.ogDescription || `${header.ticker}: ${verdict.bias} setup, score ${verdict.score}/100.`);
   // CHANTIER 2 (og:image auto) : PNG du dossier analyses/{TICKER}/ s'il existe,
@@ -249,13 +251,13 @@ function renderHead(d) {
     ticker: header.ticker,
   }).url;
   return `<!DOCTYPE html>
-<html lang="${meta.lang || 'en'}"${meta.dir === 'rtl' ? ' dir="rtl"' : ''} data-tags="${meta.tags.join(',')}" data-tab="analyses" data-grade="${meta.grade}"${meta.level ? ` data-level="${meta.level}"` : ''}>
+<html lang="${meta.lang || 'en'}"${meta.dir === 'rtl' ? ' dir="rtl"' : ''} data-tags="${meta.tags.join(',')}" data-tab="analyses" data-grade="${meta.grade}" data-date="${meta.date}"${meta.level ? ` data-level="${meta.level}"` : ''}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
     <meta name="description" content="${desc}">
-    <meta property="og:title" content="DailyTickers — ${header.ticker} Analysis">
+    <meta property="og:title" content="DailyTickers — ${header.ticker} ${meta.lang === 'fr' ? 'Analyse' : 'Analysis'}">
     <meta property="og:description" content="${ogDesc}">
     <meta property="og:image" content="${ogImage}">
     <meta property="og:type" content="article">
@@ -290,7 +292,7 @@ function renderBrandBar() {
           <a href="/?tab=series">S&eacute;ries</a>
         </div>
         <div class="brand-actions">
-          <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+          <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
         </div>
       </div>
     </nav>`;
@@ -320,14 +322,14 @@ function renderHeader(d) {
 
   const usableMetric = value => value != null && !['', 'N/A', '$0', '—', '-'].includes(String(value).trim());
   const metrics = [
-    usableMetric(m.marketCap)     && ['Market Cap', m.marketCap],
+    usableMetric(m.marketCap)     && [tx(d, 'Market Cap', 'Capitalisation'), m.marketCap],
     usableMetric(m.volume)        && ['Volume', m.volume],
     usableMetric(m.fwdPE)         && ['Fwd P/E', m.fwdPE],
     m.beta != null   && ['Beta', m.beta],
-    usableMetric(m.range52w)      && ['52W Range', m.range52w],
-    usableMetric(m.shortInterest) && ['Short Interest', m.shortInterest],
+    usableMetric(m.range52w)      && [tx(d, '52W Range', 'Fourchette 52 semaines'), m.range52w],
+    usableMetric(m.shortInterest) && [tx(d, 'Short Interest', 'Positions vendeuses'), m.shortInterest],
     usableMetric(m.divYield)      && ['Div Yield', m.divYield],
-    usableMetric(m.analystTarget) && ['Analyst Target', m.analystTarget],
+    usableMetric(m.analystTarget) && [tx(d, 'Analyst Target', 'Objectif analystes'), m.analystTarget],
     usableMetric(m.pegRatio)      && ['PEG', m.pegRatio],
     usableMetric(m.evEbitda)      && ['EV/EBITDA', m.evEbitda],
   ].filter(Boolean);
@@ -374,7 +376,7 @@ function renderVerdict(d) {
           <div style="flex:1;min-width:200px;">
             <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem;">
               <span style="background:${gradeColor(meta.grade)};color:#fff;padding:0.3rem 0.8rem;border-radius:8px;font-weight:800;font-size:1.2rem;">${meta.grade}</span>
-              <span class="badge badge-${verdict.bias === 'Bullish' ? 'green' : verdict.bias === 'Bearish' ? 'red' : 'blue'}">${verdict.bias}</span>
+              <span class="badge badge-${verdict.bias === 'Bullish' ? 'green' : verdict.bias === 'Bearish' ? 'red' : 'blue'}">${isFrench(d) ? ({ Bullish: 'Haussier', Bearish: 'Baissier', Neutral: 'Neutre' }[verdict.bias] || verdict.bias) : verdict.bias}</span>
               <span class="badge badge-purple">${esc(verdict.confidence || verdict.conviction)}</span>
             </div>
             <p style="font-size:0.95rem;line-height:1.6;color:#334155;">${esc(verdict.summary)}</p>
@@ -382,13 +384,13 @@ function renderVerdict(d) {
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;">
           <div style="background:#f0fdf4;border:1px solid #86efac;padding:1.25rem;border-radius:12px;">
-            <h4 style="color:#16a34a;margin:0 0 0.75rem;font-size:1rem;"><i class="fa-solid fa-thumbs-up"></i> Why Buy</h4>
+            <h4 style="color:#16a34a;margin:0 0 0.75rem;font-size:1rem;"><i class="fa-solid fa-thumbs-up"></i> ${tx(d, 'Why Buy', 'Pourquoi acheter')}</h4>
             <ul style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.5rem;">
 ${(verdict.whyBuy || []).map(p => `              <li style="font-size:0.9rem;line-height:1.5;">${esc(p)}</li>`).join('\n')}
             </ul>
           </div>
           <div style="background:#fef2f2;border:1px solid #fecaca;padding:1.25rem;border-radius:12px;">
-            <h4 style="color:#dc2626;margin:0 0 0.75rem;font-size:1rem;"><i class="fa-solid fa-thumbs-down"></i> Why Avoid</h4>
+            <h4 style="color:#dc2626;margin:0 0 0.75rem;font-size:1rem;"><i class="fa-solid fa-thumbs-down"></i> ${tx(d, 'Why Avoid', 'Pourquoi éviter')}</h4>
             <ul style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.5rem;">
 ${(verdict.whyAvoid || []).map(p => `              <li style="font-size:0.9rem;line-height:1.5;">${esc(p)}</li>`).join('\n')}
             </ul>
@@ -402,7 +404,7 @@ function renderBusiness(d) {
   const b = d.business;
   let html = `
       <div id="business" class="content-card">
-        <h2><i class="fa-solid fa-building"></i> Business Overview</h2>
+        <h2><i class="fa-solid fa-building"></i> ${tx(d, 'Business Overview', 'Activité')}</h2>
         ${safeEditorialHtml(b.overview)}`;
   if (b.segments && b.segments.length) {
     // Colonnes émises seulement si au moins un segment porte la donnée —
@@ -411,7 +413,7 @@ function renderBusiness(d) {
     const hasDesc = b.segments.some(s => s.description);
     html += `\n        <h4 style="margin-top:1rem;">Segments</h4>
         <table class="data-table">
-          <thead><tr><th>Segment</th><th>Revenue</th>${hasPct ? '<th>% Total</th>' : ''}${hasDesc ? '<th>Description</th>' : ''}</tr></thead>
+          <thead><tr><th>Segment</th><th>${tx(d, 'Revenue', 'Revenus')}</th>${hasPct ? `<th>${tx(d, '% Total', '% du total')}</th>` : ''}${hasDesc ? '<th>Description</th>' : ''}</tr></thead>
           <tbody>
 ${b.segments.map(s => `            <tr><td><strong>${esc(s.name)}</strong></td><td>${esc(s.revenue || '')}</td>${hasPct ? `<td>${esc(s.pct || '')}</td>` : ''}${hasDesc ? `<td>${esc(s.description || '')}</td>` : ''}</tr>`).join('\n')}
           </tbody>
@@ -423,13 +425,14 @@ ${b.segments.map(s => `            <tr><td><strong>${esc(s.name)}</strong></td><
 
 function renderNews(d) {
   if (!d.news || !d.news.length) return '';
+  const impactLabel = impact => isFrench(d) ? ({ positive: 'positif', negative: 'négatif', neutral: 'neutre' }[impact] || impact) : impact;
   return `
       <div id="news" class="content-card">
-        <h2><i class="fa-solid fa-newspaper"></i> Recent News</h2>
+        <h2><i class="fa-solid fa-newspaper"></i> ${tx(d, 'Recent News', 'Actualités récentes')}</h2>
 ${d.news.map(n => `        <div style="display:flex;gap:0.75rem;align-items:flex-start;margin-bottom:0.75rem;padding-bottom:0.75rem;border-bottom:1px solid #f1f5f9;">
           <span style="font-size:0.75rem;color:#64748b;white-space:nowrap;min-width:5rem;">${esc(n.date)}</span>
           <div>
-            <div style="font-weight:600;font-size:0.9rem;">${esc(n.title)} <span class="badge ${impactBadge(n.impact)}" style="font-size:0.65rem;">${n.impact}</span></div>
+            <div style="font-weight:600;font-size:0.9rem;">${esc(n.title)} <span class="badge ${impactBadge(n.impact)}" style="font-size:0.65rem;">${esc(impactLabel(n.impact))}</span></div>
 ${n.detail ? `            <div style="font-size:0.82rem;color:#64748b;margin-top:0.25rem;">${esc(n.detail)}</div>` : ''}
 ${n.sourceUrl ? `            <a href="${esc(safeUrl(n.sourceUrl))}" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">${esc(n.source || 'Source')}</span></a>` : ''}
           </div>
@@ -441,9 +444,9 @@ function renderFundamentals(d) {
   const f = d.fundamentals;
   return `
       <div id="fondamentaux" class="content-card">
-        <h2><i class="fa-solid fa-chart-line"></i> Fundamentals</h2>
+        <h2><i class="fa-solid fa-chart-line"></i> ${tx(d, 'Fundamentals', 'Fondamentaux')}</h2>
         <table class="data-table">
-          <thead><tr><th>Metric</th><th>Value</th><th>Signal</th></tr></thead>
+          <thead><tr><th>${tx(d, 'Metric', 'Métrique')}</th><th>${tx(d, 'Value', 'Valeur')}</th><th>Signal</th></tr></thead>
           <tbody>
 ${f.rows.map(r => `            <tr><td>${esc(r.metric)}</td><td><strong>${esc(r.value)}</strong></td><td>${r.signal ? `<span class="badge ${signalBadgeClass(r.signalColor)}">${esc(r.signal)}</span>` : ''}</td></tr>`).join('\n')}
           </tbody>
@@ -456,9 +459,9 @@ function renderEarnings(d) {
   const e = d.earnings;
   return `
       <div id="earnings" class="content-card">
-        <h2><i class="fa-solid fa-chart-bar"></i> Earnings History</h2>
+        <h2><i class="fa-solid fa-chart-bar"></i> ${tx(d, 'Earnings History', 'Historique des résultats')}</h2>
         <table class="data-table">
-          <thead><tr><th>Quarter</th><th>EPS Actual</th><th>EPS Est.</th><th>Surprise</th><th>Revenue</th></tr></thead>
+          <thead><tr><th>${tx(d, 'Quarter', 'Trimestre')}</th><th>${tx(d, 'EPS Actual', 'BPA publié')}</th><th>${tx(d, 'EPS Est.', 'BPA attendu')}</th><th>Surprise</th><th>${tx(d, 'Revenue', 'Revenus')}</th></tr></thead>
           <tbody>
 ${e.quarters.map(q => {
     const hasEstimate = Number.isFinite(q.epsEstimate);
@@ -469,7 +472,7 @@ ${e.quarters.map(q => {
   }).join('\n')}
           </tbody>
         </table>
-${e.beatNote ? `        <div class="pedagogy-box" style="margin-top:1rem;"><p><strong>${esc(e.beatNote)}</strong>${e.nextEarnings ? ` &mdash; Next: ${esc(e.nextEarnings)}` : ''}</p></div>` : ''}
+${e.beatNote ? `        <div class="pedagogy-box" style="margin-top:1rem;"><p><strong>${esc(e.beatNote)}</strong>${e.nextEarnings ? ` &mdash; ${tx(d, 'Next', 'Prochaine publication')} : ${esc(e.nextEarnings)}` : ''}</p></div>` : ''}
 ${sourceRefsHtml(e.sourceRefs)}
       </div>`;
 }
@@ -479,10 +482,10 @@ function renderInsiders(d) {
   const ins = d.insiders;
   let html = `
       <div id="insiders" class="content-card">
-        <h2><i class="fa-solid fa-user-tie"></i> Insiders &amp; Institutions</h2>
+        <h2><i class="fa-solid fa-user-tie"></i> ${tx(d, 'Insiders &amp; Institutions', 'Initiés et institutions')}</h2>
         <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
-          <div class="ticker-metric"><div class="tm-value">${esc(ins.insiderPct || 'N/A')}</div><div class="tm-label">Insider Own.</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(ins.institutionPct || 'N/A')}</div><div class="tm-label">Institution Own.</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(ins.insiderPct || 'N/A')}</div><div class="tm-label">${tx(d, 'Insider Own.', 'Détention initiés')}</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(ins.institutionPct || 'N/A')}</div><div class="tm-label">${tx(d, 'Institution Own.', 'Détention institutions')}</div></div>
         </div>`;
   if (ins.topHolders && ins.topHolders.length) {
     html += `\n        <table class="data-table"><thead><tr><th>Holder</th><th>%</th><th>Role</th></tr></thead><tbody>
@@ -506,9 +509,9 @@ function renderCapitalStructure(d) {
   const cs = d.capitalStructure;
   let html = `
       <div id="capital" class="content-card">
-        <h2><i class="fa-solid fa-money-bill-trend-up"></i> Capital Structure &amp; Dilution</h2>
+        <h2><i class="fa-solid fa-money-bill-trend-up"></i> ${tx(d, 'Capital Structure &amp; Dilution', 'Structure du capital et dilution')}</h2>
         <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
-${metricTile(cs.sharesOutstanding, 'Shares Out.')}${metricTile(cs.sharesAuthorized, 'Authorized')}${cs.dilutionRisk ? `          <div class="ticker-metric"><div class="tm-value"><span class="badge badge-${cs.dilutionRisk === 'low' ? 'green' : cs.dilutionRisk === 'moderate' ? 'blue' : cs.dilutionRisk === 'unknown' ? 'gray' : 'red'}">${esc(cs.dilutionRisk)}</span></div><div class="tm-label">Dilution Risk</div></div>\n` : ''}        </div>`;
+${metricTile(cs.sharesOutstanding, tx(d, 'Shares Out.', 'Actions en circulation'))}${metricTile(cs.sharesAuthorized, tx(d, 'Authorized', 'Actions autorisées'))}${cs.dilutionRisk ? `          <div class="ticker-metric"><div class="tm-value"><span class="badge badge-${cs.dilutionRisk === 'low' ? 'green' : cs.dilutionRisk === 'moderate' ? 'blue' : cs.dilutionRisk === 'unknown' ? 'gray' : 'red'}">${esc(isFrench(d) ? ({ low: 'faible', moderate: 'modéré', high: 'élevé', critical: 'critique', unknown: 'inconnu' }[cs.dilutionRisk] || cs.dilutionRisk) : cs.dilutionRisk)}</span></div><div class="tm-label">${tx(d, 'Dilution Risk', 'Risque de dilution')}</div></div>\n` : ''}        </div>`;
   if (cs.warrants && cs.warrants.length) {
     html += `\n        <h4>Warrants</h4>
         <table class="data-table"><thead><tr><th>Series</th><th>Type</th><th>Strike</th><th>Shares</th><th>Exp.</th><th>Dilution</th><th>Status</th></tr></thead><tbody>
@@ -529,12 +532,12 @@ function renderFilingsReview(d) {
   if (!fr) return '';
   return `
       <div id="filings" class="content-card">
-        <h2><i class="fa-solid fa-file-shield"></i> SEC Filings Review</h2>
+        <h2><i class="fa-solid fa-file-shield"></i> ${tx(d, 'SEC Filings Review', 'Revue des dépôts SEC')}</h2>
         <div class="pedagogy-box"><p>${esc(fr.summary)}</p></div>
-        <table class="data-table"><thead><tr><th>Date</th><th>Form</th><th>Accession</th><th>What the filing changes</th></tr></thead><tbody>
+        <table class="data-table"><thead><tr><th>Date</th><th>Formulaire</th><th>Accession</th><th>${tx(d, 'What the filing changes', 'Conséquence du dépôt')}</th></tr></thead><tbody>
 ${fr.filings.map(f => `          <tr><td>${esc(f.date)}</td><td>${esc(f.form)}</td><td><a href="${esc(safeUrl(f.url))}" target="_blank" rel="noopener">${esc(f.accession)}</a></td><td>${esc(f.finding)}</td></tr>`).join('\n')}
         </tbody></table>
-        <h4 style="margin-top:1rem;">Contrarian checks</h4>
+        <h4 style="margin-top:1rem;">${tx(d, 'Contrarian checks', 'Contrôles contradictoires')}</h4>
         <ul class="check-list negative">${fr.contrarianRisks.map(r => `<li><i class="fa-solid fa-circle-xmark"></i><span>${esc(r)}</span></li>`).join('')}</ul>
       </div>`;
 }
@@ -544,10 +547,10 @@ function renderShortInterest(d) {
   const si = d.shortInterest;
   return `
       <div id="short" class="content-card">
-        <h2><i class="fa-solid fa-arrow-down-up-across-line"></i> Short Interest</h2>
+        <h2><i class="fa-solid fa-arrow-down-up-across-line"></i> ${tx(d, 'Short Interest', 'Positions vendeuses')}</h2>
         <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
           <div class="ticker-metric"><div class="tm-value">${esc(si.siPct || 'N/A')}</div><div class="tm-label">SI % Float</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(si.daysToCover || 'N/A')}</div><div class="tm-label">Days to Cover</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(si.daysToCover || 'N/A')}</div><div class="tm-label">${tx(d, 'Days to Cover', 'Jours à couvrir')}</div></div>
           <div class="ticker-metric"><div class="tm-value">${esc(si.ctb || 'N/A')}</div><div class="tm-label">CTB</div></div>
         </div>
 ${si.trend ? `        <p style="font-size:0.9rem;color:#64748b;">${esc(si.trend)}</p>` : ''}${sourceRefsHtml(si.sourceRefs)}
@@ -559,15 +562,15 @@ function renderOptions(d) {
   const o = d.options;
   return `
       <div id="options" class="content-card">
-        <h2><i class="fa-solid fa-chart-gantt"></i> Options / Derivatives</h2>
+        <h2><i class="fa-solid fa-chart-gantt"></i> ${tx(d, 'Options / Derivatives', 'Options et dérivés')}</h2>
         <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
-          <div class="ticker-metric"><div class="tm-value">${esc(o.callOI || 'N/A')}</div><div class="tm-label">Call OI</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(o.putOI || 'N/A')}</div><div class="tm-label">Put OI</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(o.cpRatio || 'N/A')}</div><div class="tm-label">C/P Ratio</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(o.maxPain || 'N/A')}</div><div class="tm-label">Max Pain</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(o.ivMean || 'N/A')}</div><div class="tm-label">IV Mean</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(o.callOI || 'N/A')}</div><div class="tm-label">${tx(d, 'Call OI', 'OI achats')}</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(o.putOI || 'N/A')}</div><div class="tm-label">${tx(d, 'Put OI', 'OI ventes')}</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(o.cpRatio || 'N/A')}</div><div class="tm-label">${tx(d, 'C/P Ratio', 'Ratio achats/ventes')}</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(o.maxPain || 'N/A')}</div><div class="tm-label">${tx(d, 'Max Pain', 'Douleur maximale')}</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(o.ivMean || 'N/A')}</div><div class="tm-label">${tx(d, 'IV Mean', 'Volatilité implicite')}</div></div>
         </div>
-${o.unusual ? `        <div class="alert-box"><p><strong>Unusual Activity:</strong> ${esc(o.unusual)}</p></div>` : ''}${sourceRefsHtml(o.sourceRefs)}
+${o.unusual ? `        <div class="alert-box"><p><strong>${tx(d, 'Unusual Activity', 'Activité inhabituelle')} :</strong> ${esc(o.unusual)}</p></div>` : ''}${sourceRefsHtml(o.sourceRefs)}
       </div>`;
 }
 
@@ -576,7 +579,7 @@ function renderTechnicals(d) {
   const rv = t.radarValues || {};
   return `
       <div id="technique" class="content-card">
-        <h2><i class="fa-solid fa-chart-area"></i> Technical Analysis</h2>
+        <h2><i class="fa-solid fa-chart-area"></i> ${tx(d, 'Technical Analysis', 'Analyse technique')}</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;margin-bottom:1.5rem;">
 ${t.radarValues && Object.keys(rv).length ? `          <div><div id="radarTech${d.header.ticker.replace(/[^a-zA-Z0-9]/g,'')}" class="echart-box" style="height:320px;"></div></div>` : ''}
           <div>
@@ -595,8 +598,8 @@ ${(t.badges || []).map(b => `              <span class="badge badge-${b.includes
             </div>
           </div>
         </div>
-${t.supports && t.supports.length ? `        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;"><div><strong>Supports:</strong> ${t.supports.map(s => '$' + s.toFixed(2)).join(' / ')}</div><div><strong>Resistances:</strong> ${(t.resistances||[]).map(r => '$' + r.toFixed(2)).join(' / ')}</div></div>` : ''}
-${t.setupNote ? `        <div class="pedagogy-box"><h4><i class="fa-solid fa-lightbulb"></i> Technical Setup</h4><p>${esc(t.setupNote)}</p></div>` : ''}${sourceRefsHtml(t.sourceRefs)}
+${t.supports && t.supports.length ? `        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;"><div><strong>Supports :</strong> ${t.supports.map(s => '$' + s.toFixed(2)).join(' / ')}</div><div><strong>Résistances :</strong> ${(t.resistances||[]).map(r => '$' + r.toFixed(2)).join(' / ')}</div></div>` : ''}
+${t.setupNote ? `        <div class="pedagogy-box"><h4><i class="fa-solid fa-lightbulb"></i> ${tx(d, 'Technical Setup', 'Configuration technique')}</h4><p>${esc(t.setupNote)}</p></div>` : ''}${sourceRefsHtml(t.sourceRefs)}
       </div>`;
 }
 
@@ -605,7 +608,7 @@ function renderPerformance(d) {
   const p = d.performance;
   let html = `
       <div id="performance" class="content-card">
-        <h2><i class="fa-solid fa-trophy"></i> Performance &amp; Benchmarks</h2>
+        <h2><i class="fa-solid fa-trophy"></i> ${tx(d, 'Performance &amp; Benchmarks', 'Performance et références')}</h2>
         <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
           ${p.ytd ? `<div class="ticker-metric"><div class="tm-value">${esc(p.ytd)}</div><div class="tm-label">YTD</div></div>` : ''}
           ${p.oneYear ? `<div class="ticker-metric"><div class="tm-value">${esc(p.oneYear)}</div><div class="tm-label">1Y</div></div>` : ''}
@@ -657,11 +660,11 @@ function renderMacro(d) {
   const mc = d.macro;
   return `
       <div id="macro" class="content-card">
-        <h2><i class="fa-solid fa-globe"></i> Macro Context</h2>
-        <table class="data-table"><thead><tr><th>Indicator</th><th>Value</th><th>Signal</th></tr></thead><tbody>
+        <h2><i class="fa-solid fa-globe"></i> ${tx(d, 'Macro Context', 'Contexte macro')}</h2>
+        <table class="data-table"><thead><tr><th>${tx(d, 'Indicator', 'Indicateur')}</th><th>${tx(d, 'Value', 'Valeur')}</th><th>Signal</th></tr></thead><tbody>
 ${mc.indicators.map(i => `            <tr><td>${esc(i.name)}</td><td><strong>${esc(i.value)}</strong></td><td>${esc(i.signal||'')}</td></tr>`).join('\n')}
           </tbody></table>
-${mc.regime ? `        <p style="margin-top:0.75rem;"><strong>Regime:</strong> <span class="badge badge-${mc.regime === 'risk-on' ? 'green' : mc.regime === 'risk-off' ? 'red' : 'blue'}">${mc.regime}</span></p>` : ''}
+${mc.regime ? `        <p style="margin-top:0.75rem;"><strong>Régime :</strong> <span class="badge badge-${mc.regime === 'risk-on' ? 'green' : mc.regime === 'risk-off' ? 'red' : 'blue'}">${esc(isFrench(d) ? ({ neutral: 'neutre', 'risk-on': 'appétit pour le risque', 'risk-off': 'aversion au risque' }[mc.regime] || mc.regime) : mc.regime)}</span></p>` : ''}
 ${mc.impact ? `        <div class="pedagogy-box"><p>${esc(mc.impact)}</p></div>` : ''}${sourceRefsHtml(mc.sourceRefs)}
       </div>`;
 }
@@ -669,24 +672,26 @@ ${mc.impact ? `        <div class="pedagogy-box"><p>${esc(mc.impact)}</p></div>`
 function renderRisks(d) {
   const r = d.risks;
   const gc = riskGaugeColor(r.riskScore);
+  const riskProfile = isFrench(d) ? ({ High: 'Élevé', Moderate: 'Modéré', Low: 'Faible' }[r.riskProfile] || r.riskProfile) : (r.riskProfile || 'Moderate');
+  const severityLabel = severity => isFrench(d) ? ({ critical: 'Critique', high: 'Élevé', medium: 'Modéré', low: 'Faible' }[severity] || severity) : severity.charAt(0).toUpperCase() + severity.slice(1);
   return `
       <div id="risques" class="content-card">
-        <h2><i class="fa-solid fa-shield-halved"></i> Risk Analysis</h2>
+        <h2><i class="fa-solid fa-shield-halved"></i> ${tx(d, 'Risk Analysis', 'Analyse des risques')}</h2>
         <div class="risk-summary">
           <div id="riskGaugeChart" style="width:100px;height:100px;flex-shrink:0;"></div>
-          <div class="risk-summary-detail"><h3>Risk Profile: ${esc(r.riskProfile || 'Moderate')}</h3><p>${esc(r.riskSummary || '')}</p></div>
+          <div class="risk-summary-detail"><h3>${tx(d, 'Risk Profile', 'Profil de risque')} : ${esc(riskProfile)}</h3><p>${esc(r.riskSummary || '')}</p></div>
         </div>
 ${r.riskRadarValues ? `        <div style="display:flex;justify-content:center;margin:1rem 0;"><div id="riskRadarChart" style="width:320px;height:260px;"></div></div>` : ''}
         <div class="risk-grid">
 ${r.riskCards.map(rc => `          <div class="risk-card ${severityClass(rc.severity)}">
-            <div class="risk-card-header"><div class="risk-card-icon"><i class="fa-solid ${riskIcon(rc.icon)}"></i></div><h4>${esc(rc.title)}</h4><span class="risk-severity">${esc(rc.severity.charAt(0).toUpperCase() + rc.severity.slice(1))}</span></div>
+            <div class="risk-card-header"><div class="risk-card-icon"><i class="fa-solid ${riskIcon(rc.icon)}"></i></div><h4>${esc(rc.title)}</h4><span class="risk-severity">${esc(severityLabel(rc.severity))}</span></div>
             <div class="risk-card-body"><ul>${(rc.points||[]).map(p => `<li>${esc(p)}</li>`).join('')}</ul>
-              <div class="risk-meters"><div class="risk-meter"><div class="risk-meter-label">Probability</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${pct(rc.probability)}%;"></div></div></div><div class="risk-meter"><div class="risk-meter-label">Impact</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${pct(rc.impact)}%;"></div></div></div></div>
+              <div class="risk-meters"><div class="risk-meter"><div class="risk-meter-label">${tx(d, 'Probability', 'Score de scénario')}</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${pct(rc.probability)}%;"></div></div></div><div class="risk-meter"><div class="risk-meter-label">Impact</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${pct(rc.impact)}%;"></div></div></div></div>
             </div>
             ${(rc.verdict || (typeof rc.impact === 'string' ? rc.impact : '')) ? `<div class="risk-verdict"><i class="fa-solid ${severityIcon(rc.severity)}"></i> ${esc(rc.verdict || rc.impact)}</div>` : ''}
           </div>`).join('\n')}
         </div>
-${r.pedagogy ? `        <div class="pedagogy-box"><h4><i class="fa-solid fa-lightbulb"></i> Risk Synthesis</h4><p>${esc(r.pedagogy)}</p></div>` : ''}${sourceRefsHtml(r.sourceRefs)}
+${r.pedagogy ? `        <div class="pedagogy-box"><h4><i class="fa-solid fa-lightbulb"></i> ${tx(d, 'Risk Synthesis', 'Synthèse des risques')}</h4><p>${esc(r.pedagogy)}</p></div>` : ''}${sourceRefsHtml(r.sourceRefs)}
       </div>`;
 }
 
@@ -695,7 +700,7 @@ function renderSocial(d) {
   const soc = d.social;
   return `
       <div id="social" class="content-card">
-        <h2><i class="fa-solid fa-satellite-dish"></i> Social Radar</h2>
+        <h2><i class="fa-solid fa-satellite-dish"></i> ${tx(d, 'Social Radar', 'Radar social')}</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
 ${soc.platforms.map(p => `          <div style="padding:1rem;border:1px solid #e2e8f0;border-radius:12px;text-align:center;">
             <i class="${esc(p.icon)}" style="font-size:1.5rem;color:#64748b;"></i>
@@ -706,8 +711,8 @@ ${soc.platforms.map(p => `          <div style="padding:1rem;border:1px solid #e
           </div>`).join('\n')}
         </div>
 ${soc.pumpDumpScore != null ? `        <div style="margin-top:1.5rem;border-top:1px solid #e2e8f0;padding-top:1rem;">
-          <h4><i class="fa-solid fa-magnifying-glass-dollar"></i> Pump & Dump Score: ${soc.pumpDumpScore}/6</h4>
-          <span class="badge badge-${soc.pumpDumpScore <= 1 ? 'green' : soc.pumpDumpScore <= 3 ? 'purple' : 'red'}" style="font-size:0.85rem;padding:4px 12px;">${soc.pumpDumpScore <= 1 ? 'Clean' : soc.pumpDumpScore <= 3 ? 'Suspect' : 'Alert P&D'}</span>
+          <h4><i class="fa-solid fa-magnifying-glass-dollar"></i> ${tx(d, 'Pump & Dump Score', 'Score de manipulation')} : ${soc.pumpDumpScore}/6</h4>
+          <span class="badge badge-${soc.pumpDumpScore <= 1 ? 'green' : soc.pumpDumpScore <= 3 ? 'purple' : 'red'}" style="font-size:0.85rem;padding:4px 12px;">${soc.pumpDumpScore <= 1 ? tx(d, 'Clean', 'Faible') : soc.pumpDumpScore <= 3 ? 'Suspect' : tx(d, 'Alert P&D', 'Alerte manipulation')}</span>
 ${soc.pumpDumpChecklist && soc.pumpDumpChecklist.length ? `          <div style="margin-top:0.75rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0.5rem;">
 ${soc.pumpDumpChecklist.map(c => `            <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border-radius:8px;background:${c.pass ? '#fef2f2' : '#f0fdf4'};font-size:0.82rem;">
               <i class="fa-solid fa-${c.pass ? 'triangle-exclamation' : 'circle-check'}" style="color:${c.pass ? '#ef4444' : '#22c55e'};"></i>
@@ -723,11 +728,11 @@ function renderCapitalFlow(d) {
   const cf = d.capitalFlow;
   return `
       <div id="capitalflow" class="content-card">
-        <h2><i class="fa-solid fa-water"></i> Capital Flow</h2>
+        <h2><i class="fa-solid fa-water"></i> ${tx(d, 'Capital Flow', 'Flux de capitaux')}</h2>
         <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
-          ${cf.netFlow ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.netFlow)}</div><div class="tm-label">Net Flow</div></div>` : ''}
-          ${cf.institutionalFlow ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.institutionalFlow)}</div><div class="tm-label">Institutional</div></div>` : ''}
-          ${cf.retailFlow ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.retailFlow)}</div><div class="tm-label">Retail</div></div>` : ''}
+          ${cf.netFlow ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.netFlow)}</div><div class="tm-label">${tx(d, 'Net Flow', 'Flux net')}</div></div>` : ''}
+          ${cf.institutionalFlow ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.institutionalFlow)}</div><div class="tm-label">${tx(d, 'Institutional', 'Institutionnels')}</div></div>` : ''}
+          ${cf.retailFlow ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.retailFlow)}</div><div class="tm-label">${tx(d, 'Retail', 'Particuliers')}</div></div>` : ''}
           ${cf.darkPoolPct ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.darkPoolPct)}</div><div class="tm-label">Dark Pool %</div></div>` : ''}
         </div>
         ${cf.signal ? `<div class="pedagogy-box"><p>${esc(cf.signal)}</p></div>` : ''}${sourceRefsHtml(cf.sourceRefs)}
@@ -872,22 +877,22 @@ function renderTradeIdea(d) {
     : t.status === 'rejected' || t.status === 'missed'
     ? `\n        <div style="background:#64748b;color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-circle-pause"></i> ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
     : t.status === 'watch' || t.status === 'wait' || t.status === 'speculative'
-    ? `\n        <div style="background:${t.status === 'watch' ? '#2563eb' : t.status === 'speculative' ? '#7c3aed' : '#d97706'};color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-eye"></i> ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
+    ? `\n        <div style="background:${t.status === 'watch' ? '#2563eb' : t.status === 'speculative' ? '#7c3aed' : '#d97706'};color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-eye"></i> ${isFrench(d) ? ({ watch: 'SURVEILLER', wait: 'ATTENDRE', speculative: 'SPÉCULATIF' }[t.status]) : t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
     : t.status === 'tp1-hit' || t.status === 'tp2-hit'
     ? `\n        <div style="background:#22c55e;color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-check"></i> ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
     : '';
 
   const cards = [
-    { label: 'Entry Zone', value: `$${t.entry.toFixed(2)}`, note: t.entryNote || '', color: '#3b82f6', bg: '#f8fafc', tc: '#0f172a' },
-    { label: 'Stop Loss',  value: `$${t.stop.toFixed(2)}`,  note: t.stopPct || '',  color: '#ef4444', bg: '#fef2f2', tc: '#ef4444' },
-    { label: 'Target 1',   value: `$${t.tp1.toFixed(2)}`,   note: t.tp1Pct || '',   color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' },
+    { label: tx(d, 'Entry Zone', 'Zone d’entrée'), value: `$${t.entry.toFixed(2)}`, note: t.entryNote || '', color: '#3b82f6', bg: '#f8fafc', tc: '#0f172a' },
+    { label: tx(d, 'Stop Loss', 'Stop'),  value: `$${t.stop.toFixed(2)}`,  note: t.stopPct || '',  color: '#ef4444', bg: '#fef2f2', tc: '#ef4444' },
+    { label: tx(d, 'Target 1', 'Objectif 1'),   value: `$${t.tp1.toFixed(2)}`,   note: t.tp1Pct || '',   color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' },
   ];
-  if (t.tp2) cards.push({ label: 'Target 2', value: `$${t.tp2.toFixed(2)}`, note: t.tp2Pct || '', color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' });
-  cards.push({ label: 'Risk/Reward', value: t.rr, note: t.horizon || '', color: '#7c3aed', bg: '#f5f3ff', tc: '#7c3aed' });
+  if (t.tp2) cards.push({ label: tx(d, 'Target 2', 'Objectif 2'), value: `$${t.tp2.toFixed(2)}`, note: t.tp2Pct || '', color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' });
+  cards.push({ label: tx(d, 'Risk/Reward', 'Risque/rendement'), value: t.rr, note: t.horizon || '', color: '#7c3aed', bg: '#f5f3ff', tc: '#7c3aed' });
 
   return `
       <div id="trade" class="content-card">
-        <h2><i class="fa-solid fa-crosshairs"></i> Trade Idea</h2>${statusBanner}
+        <h2><i class="fa-solid fa-crosshairs"></i> ${tx(d, 'Trade Idea', 'Plan de trade')}</h2>${statusBanner}
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;${op}">
 ${cards.map(c => `          <div style="border-left:4px solid ${c.color};padding:1rem;background:${c.bg};border-radius:0 8px 8px 0;">
             <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">${esc(c.label)}</div>
@@ -895,8 +900,8 @@ ${cards.map(c => `          <div style="border-left:4px solid ${c.color};padding
             <div style="font-size:0.78rem;color:#64748b;">${esc(c.note)}</div>
           </div>`).join('\n')}
         </div>
-${t.thesis ? `        <div class="pedagogy-box"${isClosed ? ' style="opacity:0.65;"' : ''}><h4><i class="fa-solid fa-lightbulb"></i> Thesis</h4><p>${esc(t.thesis)}</p></div>` : ''}
-${t.catalysts && t.catalysts.length ? `        <div style="margin-top:1rem;${op}"><h4 style="font-size:0.95rem;margin-bottom:0.5rem;"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Catalysts</h4><ul style="display:flex;flex-direction:column;gap:0.4rem;padding-left:1.2rem;">${t.catalysts.map(c => `<li style="font-size:0.9rem;">${esc(c)}</li>`).join('')}</ul></div>` : ''}
+${t.thesis ? `        <div class="pedagogy-box"${isClosed ? ' style="opacity:0.65;"' : ''}><h4><i class="fa-solid fa-lightbulb"></i> ${tx(d, 'Thesis', 'Thèse')}</h4><p>${esc(t.thesis)}</p></div>` : ''}
+${t.catalysts && t.catalysts.length ? `        <div style="margin-top:1rem;${op}"><h4 style="font-size:0.95rem;margin-bottom:0.5rem;"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> ${tx(d, 'Catalysts', 'Catalyseurs')}</h4><ul style="display:flex;flex-direction:column;gap:0.4rem;padding-left:1.2rem;">${t.catalysts.map(c => `<li style="font-size:0.9rem;">${esc(c)}</li>`).join('')}</ul></div>` : ''}
 ${t.invalidation && t.invalidation.length ? `        <div class="alert-box" style="margin-top:1rem;${op}"><h4 style="margin:0 0 0.5rem;"><i class="fa-solid fa-triangle-exclamation"></i> Invalidation</h4><ul style="margin:0;padding-left:1.2rem;">${t.invalidation.map(i => `<li style="font-size:0.9rem;">${esc(i)}</li>`).join('')}</ul></div>` : ''}
 ${t.forecast ? `        <div class="pedagogy-box" style="margin-top:1rem;"><h4>Price Forecast (${esc(t.forecast.horizon || '10 Days')})</h4><p>Probabilistic range 80%: <strong>[$${t.forecast.ciLow.toFixed(2)} &ndash; $${t.forecast.ciHigh.toFixed(2)}]</strong></p><p style="font-size:0.75rem;color:#64748b;">Quantitative projection only. Exclude earnings windows (&pm;3 days).</p></div>` : ''}
       </div>`;
@@ -907,26 +912,24 @@ function renderGlobalScore(d) {
   const gs = d.globalScore;
   return `
       <div id="score" class="content-card">
-        <h2><i class="fa-solid fa-star"></i> Global Score</h2>
+        <h2><i class="fa-solid fa-star"></i> ${tx(d, 'Global Score', 'Score global')}</h2>
         <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
           <span style="background:${gradeColor(d.meta.grade)};color:#fff;padding:0.5rem 1.2rem;border-radius:10px;font-weight:800;font-size:1.5rem;">${d.meta.grade}</span>
           <span class="badge badge-purple">${esc(gs.profile || '')}</span>
-          <span class="badge badge-${d.verdict.bias === 'Bullish' ? 'green' : d.verdict.bias === 'Bearish' ? 'red' : 'blue'}">${d.verdict.bias}</span>
+          <span class="badge badge-${d.verdict.bias === 'Bullish' ? 'green' : d.verdict.bias === 'Bearish' ? 'red' : 'blue'}">${isFrench(d) ? ({ Bullish: 'Haussier', Bearish: 'Baissier', Neutral: 'Neutre' }[d.verdict.bias] || d.verdict.bias) : d.verdict.bias}</span>
         </div>
-${gs.keyTakeawaysPositive && gs.keyTakeawaysPositive.length ? `        <div style="background:#f0fdf4;border:1px solid #86efac;padding:1rem;border-radius:10px;margin-bottom:1rem;"><h4 style="color:#16a34a;margin:0 0 0.5rem;">Key Takeaways &mdash; Positive</h4><ul style="margin:0;padding-left:1.2rem;">${gs.keyTakeawaysPositive.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div>` : ''}
-${gs.keyTakeawaysNegative && gs.keyTakeawaysNegative.length ? `        <div style="background:#fef2f2;border:1px solid #fecaca;padding:1rem;border-radius:10px;margin-bottom:1rem;"><h4 style="color:#dc2626;margin:0 0 0.5rem;">Key Takeaways &mdash; Risks</h4><ul style="margin:0;padding-left:1.2rem;">${gs.keyTakeawaysNegative.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div>` : ''}
-${gs.mindsetTip ? `        <div class="pedagogy-box"><h4><i class="fa-solid fa-brain"></i> Mindset Tip</h4><p>${esc(gs.mindsetTip)}</p></div>` : ''}
+${gs.keyTakeawaysPositive && gs.keyTakeawaysPositive.length ? `        <div style="background:#f0fdf4;border:1px solid #86efac;padding:1rem;border-radius:10px;margin-bottom:1rem;"><h4 style="color:#16a34a;margin:0 0 0.5rem;">${tx(d, 'Key Takeaways — Positive', 'Points clés — Positifs')}</h4><ul style="margin:0;padding-left:1.2rem;">${gs.keyTakeawaysPositive.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div>` : ''}
+${gs.keyTakeawaysNegative && gs.keyTakeawaysNegative.length ? `        <div style="background:#fef2f2;border:1px solid #fecaca;padding:1rem;border-radius:10px;margin-bottom:1rem;"><h4 style="color:#dc2626;margin:0 0 0.5rem;">${tx(d, 'Key Takeaways — Risks', 'Points clés — Risques')}</h4><ul style="margin:0;padding-left:1.2rem;">${gs.keyTakeawaysNegative.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div>` : ''}
+${gs.mindsetTip ? `        <div class="pedagogy-box"><h4><i class="fa-solid fa-brain"></i> ${tx(d, 'Mindset Tip', 'Règle de discipline')}</h4><p>${esc(gs.mindsetTip)}</p></div>` : ''}
       </div>`;
 }
 
-function renderDisclaimer() {
+function renderDisclaimer(d) {
   return `
       <div id="disclaimer" class="content-card">
-        <h2><i class="fa-solid fa-triangle-exclamation"></i> Disclaimer</h2>
+        <h2><i class="fa-solid fa-triangle-exclamation"></i> ${tx(d, 'Disclaimer', 'Avertissement')}</h2>
         <div class="disclaimer-mega">
-          <p>This analysis is provided for <strong>informational and educational purposes only</strong>. It does not constitute financial advice, investment recommendation, or solicitation to buy or sell any security.</p>
-          <p>Past performance is not indicative of future results. All investments involve risk, including the possible loss of principal. Always conduct your own research and consult a licensed financial advisor before making investment decisions.</p>
-          <p>Data comes from point-in-time market snapshots, company filings, Yahoo Finance, SEC EDGAR, and public market data. Accuracy is not guaranteed.</p>
+          ${isFrench(d) ? '<p>Cette analyse est fournie à des <strong>fins informatives et éducatives uniquement</strong>. Elle ne constitue ni un conseil financier, ni une recommandation, ni une sollicitation à acheter ou vendre un titre.</p><p>Les performances passées ne préjugent pas des résultats futurs. Tout investissement comporte un risque de perte en capital. Faites vos propres recherches et consultez un conseiller agréé avant toute décision.</p><p>Les données proviennent de snapshots de marché datés, des dépôts de la société, de Yahoo Finance, de SEC EDGAR et de sources publiques. Leur exactitude n’est pas garantie.</p>' : '<p>This analysis is provided for <strong>informational and educational purposes only</strong>. It does not constitute financial advice, investment recommendation, or solicitation to buy or sell any security.</p><p>Past performance is not indicative of future results. All investments involve risk, including the possible loss of principal. Always conduct your own research and consult a licensed financial advisor before making investment decisions.</p><p>Data comes from point-in-time market snapshots, company filings, Yahoo Finance, SEC EDGAR, and public market data. Accuracy is not guaranteed.</p>'}
         </div>
       </div>`;
 }
@@ -934,18 +937,18 @@ function renderDisclaimer() {
 function renderFab(d) {
   const items = [
     d.verdict           && { id: 'verdict',      icon: 'fa-gavel',                    label: 'Verdict' },
-    d.business          && { id: 'business',      icon: 'fa-building',                 label: 'Business' },
-    d.news && d.news.length && { id: 'news',      icon: 'fa-newspaper',                label: 'News' },
-    d.fundamentals      && { id: 'fondamentaux',  icon: 'fa-chart-line',               label: 'Fundamentals' },
-    d.earnings && d.earnings.quarters && d.earnings.quarters.length && { id: 'earnings', icon: 'fa-chart-bar', label: 'Earnings' },
-    d.insiders          && { id: 'insiders',      icon: 'fa-user-tie',                 label: 'Insiders' },
+    d.business          && { id: 'business',      icon: 'fa-building',                 label: tx(d, 'Business', 'Activité') },
+    d.news && d.news.length && { id: 'news',      icon: 'fa-newspaper',                label: tx(d, 'News', 'Actualités') },
+    d.fundamentals      && { id: 'fondamentaux',  icon: 'fa-chart-line',               label: tx(d, 'Fundamentals', 'Fondamentaux') },
+    d.earnings && d.earnings.quarters && d.earnings.quarters.length && { id: 'earnings', icon: 'fa-chart-bar', label: tx(d, 'Earnings', 'Résultats') },
+    d.insiders          && { id: 'insiders',      icon: 'fa-user-tie',                 label: tx(d, 'Insiders', 'Initiés') },
     d.capitalStructure  && { id: 'capital',       icon: 'fa-money-bill-trend-up',      label: 'Capital' },
-    d.filingsReview     && { id: 'filings',       icon: 'fa-file-shield',               label: 'SEC Review' },
-    d.technicals        && { id: 'technique',     icon: 'fa-chart-area',               label: 'Technical' },
+    d.filingsReview     && { id: 'filings',       icon: 'fa-file-shield',               label: tx(d, 'SEC Review', 'Dépôts SEC') },
+    d.technicals        && { id: 'technique',     icon: 'fa-chart-area',               label: tx(d, 'Technical', 'Technique') },
     d.performance       && { id: 'performance',   icon: 'fa-trophy',                   label: 'Perf' },
     d.forecast          && { id: 'forecast',      icon: 'fa-chart-line',               label: 'Forecast' },
     d.sectorComparison  && d.sectorComparison.peers && { id: 'peers', icon: 'fa-building', label: 'Sector' },
-    d.risks             && { id: 'risques',       icon: 'fa-shield-halved',            label: 'Risks' },
+    d.risks             && { id: 'risques',       icon: 'fa-shield-halved',            label: tx(d, 'Risks', 'Risques') },
     d.social && d.social.platforms && { id: 'social', icon: 'fa-satellite-dish',       label: 'Social' },
     d.bottomEstimation  && { id: 'bottom-estimation', icon: 'fa-bullseye',            label: 'Bottom' },
     d.manipulations     && { id: 'manipulations', icon: 'fa-magnifying-glass-dollar',  label: 'Integrity' },
@@ -980,20 +983,20 @@ function renderModals(d) {
     </div>
     <div id="historyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
       <div style="background:white;border-radius:16px;padding:2rem;max-width:420px;width:90%;box-shadow:0 25px 50px rgba(0,0,0,0.25);">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;"><h3 style="margin:0;font-size:1.2rem;">History &mdash; ${t}</h3><button onclick="document.getElementById('historyModal').style.display='none'" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#64748b;">&times;</button></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;"><h3 style="margin:0;font-size:1.2rem;">${tx(d, 'History', 'Historique')} &mdash; ${t}</h3><button onclick="document.getElementById('historyModal').style.display='none'" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#64748b;">&times;</button></div>
         <div style="display:flex;flex-direction:column;gap:0.75rem;">
-          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 1rem;border:1px solid #22c55e;border-radius:10px;background:#f0fdf4;"><div style="width:40px;height:40px;border-radius:8px;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-star" style="color:#22c55e;"></i></div><div><div style="font-weight:600;font-size:0.9rem;">${esc(d.meta.dateDisplay || d.meta.date)} <span style="background:#22c55e;color:white;font-size:0.65rem;padding:2px 6px;border-radius:4px;margin-left:6px;">CURRENT</span></div><div style="font-size:0.75rem;color:#64748b;">${t} Analysis (${d.meta.grade})</div></div></div>
-${archives.map(a => `          <a href="archive/${String(a.date).replace(/-/g, '')}/" style="display:flex;align-items:center;gap:1rem;padding:0.75rem 1rem;border:1px solid #e2e8f0;border-radius:10px;text-decoration:none;color:#0f172a;"><div style="width:40px;height:40px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-file-lines" style="color:#64748b;"></i></div><div><div style="font-weight:600;font-size:0.9rem;">${esc(a.dateDisplay || a.date)}</div><div style="font-size:0.75rem;color:#64748b;">${esc(a.note || 'Previous version')}${a.grade ? ` (${a.grade})` : ''}</div></div></a>`).join('\n')}
+          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 1rem;border:1px solid #22c55e;border-radius:10px;background:#f0fdf4;"><div style="width:40px;height:40px;border-radius:8px;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-star" style="color:#22c55e;"></i></div><div><div style="font-weight:600;font-size:0.9rem;">${esc(d.meta.dateDisplay || d.meta.date)} <span style="background:#22c55e;color:white;font-size:0.65rem;padding:2px 6px;border-radius:4px;margin-left:6px;">${tx(d, 'CURRENT', 'ACTUELLE')}</span></div><div style="font-size:0.75rem;color:#64748b;">${t} ${tx(d, 'Analysis', 'Analyse')} (${d.meta.grade})</div></div></div>
+${archives.map(a => `          <a href="/analyses/${t}/archive/${String(a.date).replace(/-/g, '')}/" style="display:flex;align-items:center;gap:1rem;padding:0.75rem 1rem;border:1px solid #e2e8f0;border-radius:10px;text-decoration:none;color:#0f172a;"><div style="width:40px;height:40px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-file-lines" style="color:#64748b;"></i></div><div><div style="font-weight:600;font-size:0.9rem;">${esc(a.dateDisplay || a.date)}</div><div style="font-size:0.75rem;color:#64748b;">${esc(a.note || tx(d, 'Previous version', 'Version précédente'))}${a.grade ? ` (${a.grade})` : ''}</div></div></a>`).join('\n')}
         </div>
       </div>
     </div>`;
 }
 
-function renderFooter() {
+function renderFooter(d) {
   return `
     <footer class="article-footer">
-      &copy; 2026 DailyTickers. Data via institutional market data feeds. Not financial advice.
-      <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+      ${isFrench(d) ? '&copy; 2026 DailyTickers. Données issues de sources de marché institutionnelles. Ceci ne constitue pas un conseil financier.' : '&copy; 2026 DailyTickers. Data via institutional market data feeds. Not financial advice.'}
+      <br><a href="/" title="${tx(d, 'Home', 'Accueil')}"><i class="fas fa-house"></i></a>
     </footer>`;
 }
 
@@ -1072,11 +1075,11 @@ function render(data) {
     renderPredictionMarkets(data),
     renderTradeIdea(data),
     renderGlobalScore(data),
-    renderDisclaimer(),
+    renderDisclaimer(data),
     '\n    </div>',
     renderFab(data),
     renderModals(data),
-    renderFooter(),
+    renderFooter(data),
     renderScripts(data),
     '\n</body>\n</html>',
   ].filter(Boolean).join('\n');

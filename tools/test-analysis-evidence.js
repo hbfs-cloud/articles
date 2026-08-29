@@ -12,7 +12,7 @@ const { stableStringify } = require('./lib/workflow-contract');
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'analysis-evidence-'));
 try {
   fs.mkdirSync(path.join(root, 'data'));
-  const sourceObject = { symbol: 'TEST', values: { price: 100, changePct: 1, entry: 101, stop: 98, tp1: 106, tp2: 110 } };
+  const sourceObject = { symbol: 'TEST', values: { levelsCloseDate: '2026-08-28', price: 100, changePct: 1, entry: 101, stop: 98, tp1: 106, tp2: 110 } };
   const source = JSON.stringify(sourceObject);
   fs.writeFileSync(path.join(root, 'data', 'source.json'), source);
   const analysis = {
@@ -37,8 +37,8 @@ try {
   const manifest = {
     ticker: 'TEST', reference_close: '2026-08-28', analysis_path: 'data/analysis.json',
     analysis_sha256: crypto.createHash('sha256').update(analysisBody).digest('hex'),
-    claims: ['header.price', 'header.changePct', 'tradeIdea.entry', 'tradeIdea.stop', 'tradeIdea.tp1', 'tradeIdea.tp2']
-      .map(p => ({ path: p, value: p === 'header.price' ? 100 : p === 'header.changePct' ? 1 : analysis.tradeIdea[p.split('.')[1]], as_of: '2026-08-28', source_artifact: 'data/source.json', source_sha256: sourceHash, source_pointer: `/values/${p.split('.')[1]}` })),
+    claims: ['meta.levelsCloseDate', 'header.price', 'header.changePct', 'tradeIdea.entry', 'tradeIdea.stop', 'tradeIdea.tp1', 'tradeIdea.tp2']
+      .map(p => ({ path: p, value: p === 'meta.levelsCloseDate' ? '2026-08-28' : p === 'header.price' ? 100 : p === 'header.changePct' ? 1 : analysis.tradeIdea[p.split('.')[1]], as_of: '2026-08-28', source_artifact: 'data/source.json', source_sha256: sourceHash, source_pointer: `/values/${p.split('.')[1]}` })),
   };
   assert.deepStrictEqual(validate(manifest, root), []);
   const bad = structuredClone(manifest); bad.claims[0].value = 999;

@@ -14,6 +14,33 @@ function getGradeColor(grade) {
     }
 }
 
+function analysisCardDate(card) {
+    const match = String(card).match(/report-card-meta[\s\S]*?(\d{1,2})\s+([A-Za-zÀ-ÿ]+)\s+(20\d{2})/i);
+    if (!match) return new Date().toISOString().slice(0, 10);
+    const months = { janvier:1, fevrier:2, février:2, mars:3, avril:4, mai:5, juin:6, juillet:7, aout:8, août:8, septembre:9, octobre:10, novembre:11, decembre:12, décembre:12 };
+    const month = months[match[2].toLowerCase()];
+    return month ? `${match[3]}-${String(month).padStart(2, '0')}-${String(match[1]).padStart(2, '0')}` : new Date().toISOString().slice(0, 10);
+}
+
+function formatFrenchDate(isoDate) {
+    const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    const match = String(isoDate).match(/^(20\d{2})-(\d{2})-(\d{2})$/);
+    return match ? `${Number(match[3])} ${months[Number(match[2]) - 1]} ${match[1]}` : isoDate;
+}
+
+function normalizeFrenchArchiveCard(card, ticker, archiveDate) {
+    const archiveHref = `/analyses/${ticker}/archive/${archiveDate.replace(/-/g, '')}/`;
+    const dateLabel = formatFrenchDate(archiveDate);
+    return String(card)
+        .replace(/data-lang="[^"]*"/i, 'data-lang="fr"')
+        .replace(/title="(?:View chart|Voir le graphique)"/gi, 'title="Voir le graphique"')
+        .replace(/href="\/analyses\/[A-Z0-9.-]+\/(?:archive\/\d{8}\/)?"/gi, `href="${archiveHref}"`)
+        .replace(/(<div class="report-card-meta">\s*)\d{1,2}\s+[A-Za-zÀ-ÿ]+\s+20\d{2}/i, `$1${dateLabel}`)
+        .replace(/<h2([^>]*)>[\s\S]*?<\/h2>/i, `<h2$1>${ticker} — Version archivée du ${dateLabel}</h2>`)
+        .replace(/<p([^>]*)>[\s\S]*?<\/p>/i, `<p$1>Ancienne fiche ${ticker} conservée pour traçabilité ; ne pas utiliser ses niveaux.</p>`)
+        .replace(/>Read Analysis</gi, '>Lire l’analyse<');
+}
+
 const argPath = process.argv[2];
 if (!argPath) {
     console.error("Usage: node add_card_to_index.js <path/to/article/index.html>");
@@ -84,6 +111,7 @@ function detectArticleLangs(articleDir) {
 }
 const articleDir = path.dirname(fullPath);
 const dataLang = detectArticleLangs(articleDir);
+const cardIsFrench = doc.documentElement.getAttribute('lang') === 'fr';
 
 // Extract title and description
 let title = doc.querySelector('title') ? doc.querySelector('title').textContent.split('|')[0].trim() : "";
@@ -378,7 +406,7 @@ if (tab === 'analyses') {
                   padding: 4px 8px;
                   border-radius: 6px;
                   font-size: 0.7rem;
-                " title="View chart">
+                " title="${cardIsFrench ? 'Voir le graphique' : 'View chart'}">
               <i class="fa-solid fa-chart-line"></i>
             </button>
         <div class="ticker-grade-badge grade-${finalGrade ? finalGrade[0].toLowerCase() : 'u'}">${finalGrade || '?'}</div>
@@ -390,7 +418,7 @@ if (tab === 'analyses') {
     <h2 style="font-size: 1.5rem; margin: 0.5rem 0 1rem">${title}</h2>
     <p style="font-size: 0.85rem; color: var(--text-muted)">${desc}</p>
     <div class="actions">
-        <a href="${href}" class="btn-read-primary" style="width: 100%">Read Analysis</a>
+        <a href="${href}" class="btn-read-primary" style="width: 100%">${cardIsFrench ? 'Lire l’analyse' : 'Read Analysis'}</a>
     </div>
 </div>
 `;
@@ -421,22 +449,37 @@ if (tab === 'daily') {
         if (fs.existsSync(archiveFile)) {
             archive = JSON.parse(fs.readFileSync(archiveFile, 'utf8'));
         }
+        const incomingDate = analysisCardDate(cardHtml);
+        const archiveTickerPattern = new RegExp(`analyses/${tickerForDedup}[\/"\\s]`, 'i');
+        archive = archive
+            .filter(entry => !(entry.date === incomingDate && archiveTickerPattern.test(entry.card || '')))
+            .map(entry => archiveTickerPattern.test(entry.card || '')
+                ? { ...entry, card: normalizeFrenchArchiveCard(entry.card, tickerForDedup, entry.date) }
+                : entry);
         const newCards = [];
+        const normalizeCard = value => String(value).replace(/\s+/g, ' ').trim();
+        const incomingCard = normalizeCard(cardHtml);
         for (const c of cards) {
             // Match by: ticker-symbol content, or href containing /analyses/TICKER/
             const tickerPattern = new RegExp(`analyses/${tickerForDedup}[/"\\s]`, 'i');
             const symbolPattern = new RegExp(`ticker-symbol">${tickerForDedup}<`, 'i');
             if (tickerPattern.test(c) || symbolPattern.test(c)) {
-                archive.unshift({ date: new Date().toISOString().slice(0, 10), card: c });
+                const normalizedOld = normalizeCard(c);
+                const alreadyArchived = archive.some(entry => normalizeCard(entry.card) === normalizedOld);
+                if (normalizedOld !== incomingCard && !alreadyArchived && analysisCardDate(c) !== incomingDate) {
+                    const archiveDate = analysisCardDate(c);
+                    const archivedCard = normalizeFrenchArchiveCard(c, tickerForDedup, archiveDate);
+                    archive.unshift({ date: archiveDate, card: archivedCard });
+                }
                 removedCount++;
             } else {
                 newCards.push(c);
             }
         }
         cards = newCards;
+        fs.writeFileSync(archiveFile, JSON.stringify(archive, null, 2));
         if (removedCount > 0) {
-            fs.writeFileSync(archiveFile, JSON.stringify(archive, null, 2));
-            console.log(`Analyses: archived ${removedCount} old card(s) for ${tickerForDedup} → analyses_archive.json`);
+            console.log(`Analyses: replaced ${removedCount} old card(s) for ${tickerForDedup}; archive is content-deduplicated.`);
         }
     }
     cards.unshift(cardHtml.trim());

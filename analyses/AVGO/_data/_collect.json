@@ -1,0 +1,386 @@
+{
+  "contract_version": "1.0",
+  "workflow": "analyse",
+  "plan": "plans/analyse.json",
+  "plan_sha256": "9da81f8554e89f2f066dd420ebc43e5bc976877b4fecca02586a32c315963997",
+  "input_sha256": "240cd9e35e34397d5635a21ca9b3cc0f2b90ab47a506bae117779c2fde8918e9",
+  "resolved_input": {
+    "artifact": "analyses/AVGO/index.html",
+    "refdate": "2026-08-28",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "expected_close": "2026-08-28"
+            }
+          }
+        ]
+      },
+      {
+        "name": "price-fundamentals",
+        "calls": [
+          {
+            "as": "instrument",
+            "server": "marketdata",
+            "tool": "GetInstruments",
+            "args": {
+              "symbols": "AVGO",
+              "bars_depth": 260
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "bars",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "AVGO",
+              "end_date": "2026-08-28",
+              "limit": 260
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true
+            }
+          },
+          {
+            "as": "fundamentals",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "financials,stats,earnings_quarterly,calendar,analyst_actions",
+              "symbols": "AVGO",
+              "end_date": "2026-08-28"
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            }
+          },
+          {
+            "as": "technicals",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "technicals,support_resistance,volume_profile,trading_signals",
+              "symbols": "AVGO",
+              "end_date": "2026-08-28"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "risk-evidence",
+        "calls": [
+          {
+            "as": "sec_evidence",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "sec_filings,flags",
+              "symbols": "AVGO",
+              "end_date": "2026-08-28",
+              "days": 365
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true,
+              "note": "Primary anti-dilution input: offerings, ATM, shelf, warrants and convertibles."
+            }
+          },
+          {
+            "as": "corporate_actions",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "news,flags",
+              "symbols": "AVGO",
+              "end_date": "2026-08-28",
+              "days": 180
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "insiders",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "insider_transactions,institutional_holdings",
+              "symbols": "AVGO",
+              "end_date": "2026-08-28",
+              "days": 365
+            },
+            "freshness": {
+              "max_age_h": 96,
+              "required": true
+            }
+          },
+          {
+            "as": "short_squeeze",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "short_interest,ctb,ftd_threshold,dark_pool",
+              "symbols": "AVGO",
+              "end_date": "2026-08-28",
+              "days": 365
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            }
+          },
+          {
+            "as": "options",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "unusual_options,max_pain",
+              "symbols": "AVGO",
+              "end_date": "2026-08-28"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "context",
+        "detached": true,
+        "calls": [
+          {
+            "as": "sentiment",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "sentiment_overall,sentiment_stocktwits,sentiment_reddit,news",
+              "symbols": "AVGO",
+              "end_date": "2026-08-28",
+              "days": 14
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": false
+            }
+          },
+          {
+            "as": "peers",
+            "server": "marketdata",
+            "tool": "GetReferentialData",
+            "args": {
+              "correlated_with": "AVGO"
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": false
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "analyses/AVGO/index.html",
+  "reference_date": "2026-08-28",
+  "started_at": "2026-08-29T21:47:24.819Z",
+  "finished_at": "2026-08-29T21:48:16.871Z",
+  "failures": 0,
+  "blocked_at_gate": null,
+  "executed_calls": 12,
+  "skipped_calls": 0,
+  "collection_mode": "authenticated_agent_mcp",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 0,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 185,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "e3d51cb442d641f873d8808115c5b3aabb713aacf5788fad8c53dfbd5f740cd5"
+        }
+      ]
+    },
+    {
+      "name": "price-fundamentals",
+      "ms": 0,
+      "calls": [
+        {
+          "as": "instrument",
+          "server": "marketdata",
+          "tool": "GetInstruments",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 10324,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "7e9110237f9b8b31e447feafc8dff9dcc037bcca3ce6b371e2ab9434f9ec5576"
+        },
+        {
+          "as": "bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 539,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "1a61f44d9c96d086a087d600be297d679e399d380477ebb9c5e40c511dbebdb0"
+        },
+        {
+          "as": "fundamentals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 5695,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "c27e60f661706c6572308ec6284e36fc1f84a59ac051e56e5ce8b38ec8c395cb"
+        },
+        {
+          "as": "technicals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 10277,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "1bf905e25f36d6b99c48cf78aba894d8cd68e5f256ff09f9279d11d53f1ab317"
+        }
+      ]
+    },
+    {
+      "name": "risk-evidence",
+      "ms": 0,
+      "calls": [
+        {
+          "as": "sec_evidence",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 5293,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "03e24eebb1a773d0ca190baf0c1f6e594032d9445adcb2434f478653a72413c9"
+        },
+        {
+          "as": "corporate_actions",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 160,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "199f5c8be0a41368d895780896d744b7a5f4c0eff2bf4eb9d94644fec19dcccc"
+        },
+        {
+          "as": "insiders",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 253,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "175042066a8fe5b83f87f2f7576da39b45b83619f727d8913da9197e9a2893b2"
+        },
+        {
+          "as": "short_squeeze",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 5229,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "63031adc4e9f73869e9168af7c6f6d519d987b17b8e51bcf7f997ad49a7442c9"
+        },
+        {
+          "as": "options",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 5252,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "ed5b58421513b2fffdf48bf58341fda48fad71c9f33d9908995225b52a77369e"
+        }
+      ]
+    },
+    {
+      "name": "context",
+      "ms": 0,
+      "calls": [
+        {
+          "as": "sentiment",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": false,
+          "detached": true,
+          "ok": true,
+          "ms": 5216,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "9f755b85e5a8408835330e8b48c9de51f9e27f973738cea9411370ead20b2cb2"
+        },
+        {
+          "as": "peers",
+          "server": "marketdata",
+          "tool": "GetReferentialData",
+          "required": false,
+          "detached": true,
+          "ok": true,
+          "ms": 133,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "e35981682d05619c0713e1189670335544ac6e64c308095e3b0c425eeddf8fa2"
+        }
+      ]
+    }
+  ]
+}

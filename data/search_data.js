@@ -1536,6 +1536,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "AVGO",
+    "exchange": "NASDAQ · Technologie / Semiconducteurs",
+    "name": "AVGO — Broadcom : fondamentaux, résultats, SEC, technique et plan conditionnel avant publication.",
+    "title": "AVGO — Broadcom : fondamentaux, résultats, SEC, technique et plan conditionnel avant publication.",
+    "desc": "AVGO avant ses résultats du 2 septembre : qualité opérationnelle élevée, valorisation exigeante et veto événementiel.",
+    "tags": "us,technologie,semiconducteurs,ia,logiciels",
+    "grade": "B",
+    "href": "/analyses/AVGO/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "S",
     "exchange": "NYSE · Technology",
     "name": "S — fundamentals, SEC filings, technical structure, risks and trade levels.",
@@ -1986,19 +1999,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,ai-chain,hardware,technology",
     "grade": "B",
     "href": "/analyses/AMD/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "AVGO",
-    "exchange": "NASDAQ · Technology",
-    "name": "AVGO — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "title": "AVGO — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "desc": "AVGO: individual ai hardware propagation dossier with official SEC review and actionable trade state.",
-    "tags": "us,equities,ai-chain,hardware,technology",
-    "grade": "B",
-    "href": "/analyses/AVGO/",
     "date": ""
   },
   {

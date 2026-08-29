@@ -163,8 +163,8 @@ function check(file) {
   const retailWarRoom = [d.risks?.pedagogy, d.risks?.riskSummary, trade.thesis, ...(trade.invalidation || [])].join(' ');
   require(/gap/i.test(retailWarRoom), 'retail war room omits gap risk');
   require(/liquid|spread|slippage/i.test(retailWarRoom), 'retail war room omits liquidity, spread or slippage risk');
-  require(/siz|position|notional|risk budget/i.test(retailWarRoom), 'retail war room omits sizing implications');
-  require(/earnings|event|filing|offering|decision|catalyst|guidance/i.test(retailWarRoom), 'retail war room omits event timing');
+  require(/siz|taille|dimension|position|notional|notionnel|risk budget|budget de risque/i.test(retailWarRoom), 'retail war room omits sizing implications');
+  require(/earnings|résultat|publication|événement|event|filing|dépôt|offering|émission|decision|décision|catalyst|catalyseur|guidance|prévision/i.test(retailWarRoom), 'retail war room omits event timing');
   require(/chase|pursu|anticipat|wait|attendre|ne pas/i.test(retailWarRoom), 'retail war room lacks an explicit no-chase instruction');
   require(words(trade.thesis).length >= 45, 'trade thesis too short');
   require(trade.status !== 'pending', 'pending is not a publishable retail trade state');
