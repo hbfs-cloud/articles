@@ -18,6 +18,10 @@ At session start, read:
 Do not duplicate project rules into this file unless they are Codex-specific. `CLAUDE.md` is the source of
 truth for product, editorial, scanner, publication, and data-integrity rules.
 
+Codex must enforce the canonical channel contract on every publishing workflow: web artifacts are French,
+Telegram notifications are French and self-contained, and Substack artifacts are independent English pieces
+with no website reference. Historical English templates or Claude command text never override that contract.
+
 ## Translation Rules
 
 - Treat "Claude", "Claude Code", "agent", and "routines cloud" as applying to Codex when the instruction is

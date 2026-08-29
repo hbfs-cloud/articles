@@ -68,3 +68,12 @@ This policy is authoritative for `/daily`, `/weekly`, `/analyse`, `/aplus`, `/si
   command/user authorizes that side effect. A dry run performs none of them.
 - The fire-and-forget signals workflow may post Telegram after its lean gates. A Substack note is
   opt-in, never a hidden default side effect.
+
+## 5. Publication channels
+
+- Web: French only for every new publication.
+- Telegram: French, concise, actionable, self-contained and derived from the certified run.
+- Substack: English, concise, actionable, self-contained, separately authored from the same certified run,
+  and free of any website URL, backlink, CTA or textual reference to a fuller web version.
+- A channel transformation may simplify wording but may not change a value, condition, ranking, risk or
+  invalidation. Any mismatch blocks all affected outputs.

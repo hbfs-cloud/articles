@@ -8,7 +8,8 @@ workflow contract wins; never revive a fixed ticker list or an unbounded market-
 
 
 ### Objectif
-Briefing matinal quotidien publié à 7h00 couvrant tous les marchés (US, Europe, Asie-Pacifique, Crypto). Langue : anglais intermediate par défaut (sauf demande contraire). Style concis, actionnable, données à jour.
+Briefing matinal quotidien publié à 7h00 couvrant tous les marchés (US, Europe, Asie-Pacifique, Crypto).
+Le livrable web est obligatoirement en français. Style concis, actionnable, données à jour.
 
 ### Référence
 Le daily du **25 février 2026** (`daily/20260225/`) est la référence pour la structure HTML, les classes CSS, les ECharts, et le style visuel d'un briefing semaine.
@@ -17,9 +18,9 @@ Le daily du **25 février 2026** (`daily/20260225/`) est la référence pour la 
 
 #### Balise `<html>` — Attributs Obligatoires
 ```html
-<html lang="en" data-tags="crypto,macro,trade-idea,formation" data-tab="daily">
+<html lang="fr" data-tags="crypto,macro,trade-idea,formation" data-tab="daily">
 ```
-- `lang` : langue (fr, en, ar)
+- `lang` : toujours `fr` pour tout nouveau contenu web
 - `data-tags` : tags pertinents du briefing
 - `data-tab="daily"` : toujours "daily"
 

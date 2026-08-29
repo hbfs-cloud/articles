@@ -2186,7 +2186,7 @@ ${pos.length ? `    <span class="sc-meta" title="Moyenne simple par position ouv
   const showClassLabels = populatedClasses.length > 1;
   function tabButton(id, m) {
     const c = m.cfg.color;
-    return `<button type="button" role="tab" aria-pressed="${id === 'balanced' ? 'true' : 'false'}" aria-label="Switch to ${m.cfg.label} mode" class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" data-mode-status="${m.cfg.status || 'live'}" onclick="switchMode('${id}')" style="--mc:${c}"><span class="mode-dot" style="background:${c}"></span>${m.cfg.label}${renderStatusBadge(m.cfg.status)}${id === 'balanced' ? ' <span class="tab-rec hide-m">★ Rec.</span>' : ''}</button>`;
+    return `<button type="button" role="tab" aria-pressed="${id === 'balanced' ? 'true' : 'false'}" aria-label="Afficher le mode ${m.cfg.label}" class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" data-mode-status="${m.cfg.status || 'live'}" onclick="switchMode('${id}')" style="--mc:${c}"><span class="mode-dot" style="background:${c}"></span>${m.cfg.label}${renderStatusBadge(m.cfg.status)}${id === 'balanced' ? ' <span class="tab-rec hide-m">★ Rec.</span>' : ''}</button>`;
   }
   // All tabs rendered hidden — JS shows only favorites from localStorage.
   // Groupes VISIBLES par type (LLM | Scripted): un label de groupe précède les tabs de chaque groupe.
@@ -2195,7 +2195,7 @@ ${pos.length ? `    <span class="sc-meta" title="Moyenne simple par position ouv
     const label = showClassLabels ? `<span class="mode-class-label" data-class="${ac}"><i class="fas fa-${ASSET_CLASS_ICON[ac] || 'folder'}" style="font-size:.62rem;margin-right:.28rem"></i>${ASSET_CLASS_LABEL[ac]}</span>` : '';
     return label + tabs;
   }).join('');
-  const tabRail = allTabs + `<button type="button" class="mode-tab mode-picker-btn" onclick="openModePicker()" aria-label="Select modes"><i class="fas fa-sliders"></i></button>`;
+  const tabRail = allTabs + `<button type="button" class="mode-tab mode-picker-btn" onclick="openModePicker()" aria-label="Sélectionner les modes"><i class="fas fa-sliders"></i></button>`;
   // Mode picker catalog (JSON for JS)
   const modeCatalog = JSON.stringify(populatedClasses.map(ac => ({
     ac, label: ASSET_CLASS_LABEL[ac], icon: ASSET_CLASS_ICON[ac] || 'folder',
@@ -2203,12 +2203,12 @@ ${pos.length ? `    <span class="sc-meta" title="Moyenne simple par position ouv
   })));
 
   const html = `<!DOCTYPE html>
-<html lang="en" data-tags="technique,formation,trade-idea,us,eu,asia,etf" data-tab="scanner">
+<html lang="fr" data-tags="technique,formation,trade-idea,us,etf" data-tab="scanner">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${MARKET_CLOSED_DAY ? 'Portfolio · Market Closed' : 'Portfolio Live'} &mdash; DailyTickers</title>
-  <meta name="description" content="Today's signals, open positions &amp; live performance — Balanced trading mode updated every weekday.">
+  <title>${MARKET_CLOSED_DAY ? 'Portefeuille · Marché fermé' : 'Portefeuille en direct'} &mdash; DailyTickers</title>
+  <meta name="description" content="Signaux du jour, positions ouvertes et performance en direct du portefeuille.">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
   <link rel="stylesheet" href="/assets/report.css?v=${buildVer}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -2641,7 +2641,7 @@ details[open] summary::after{transform:rotate(90deg)}
   <div class="hero">
     <div class="hero-inner">
       <div class="hero-left">
-        <h1>${MARKET_CLOSED_DAY ? '<i class="fas fa-moon" style="font-size:.82rem;color:var(--muted);margin-right:.35rem"></i>Portfolio · Market Closed' : '<span class="live-dot"></span>Portfolio Live'} <button class="tm-btn-header" id="tmFab" onclick="tmToggle()" title="Time Machine"><i class="fas fa-clock-rotate-left"></i> Time Machine</button></h1>
+        <h1>${MARKET_CLOSED_DAY ? '<i class="fas fa-moon" style="font-size:.82rem;color:var(--muted);margin-right:.35rem"></i>Portefeuille · Marché fermé' : '<span class="live-dot"></span>Portefeuille en direct'} <button class="tm-btn-header" id="tmFab" onclick="tmToggle()" title="Historique"><i class="fas fa-clock-rotate-left"></i> Historique</button></h1>
         <p>${MARKET_CLOSED_DAY ? 'Last completed session, open positions &amp; performance — future plans remain gated until their execution window' : 'Signals, open positions &amp; performance — updated every weekday'}</p>
         <div class="hero-meta">
           <span class="ts"><i class="fas fa-clock-rotate-left"></i> ${updatedAt}</span>
@@ -2660,7 +2660,7 @@ details[open] summary::after{transform:rotate(90deg)}
   <div class="mp-overlay" id="mpOverlay" onclick="if(event.target===this)closeModePicker()">
     <div class="mp-dialog">
       <div class="mp-header">
-        <span class="mp-title"><i class="fas fa-sliders"></i> Select modes</span>
+        <span class="mp-title"><i class="fas fa-sliders"></i> Sélectionner les modes</span>
         <span class="mp-count" id="mpCount">0/6</span>
         <button class="mp-close" onclick="closeModePicker()"><i class="fas fa-xmark"></i></button>
       </div>
@@ -2688,14 +2688,14 @@ details[open] summary::after{transform:rotate(90deg)}
       <a href="https://t.me/+gl06cNSLV2RiZmE0" target="_blank" rel="noopener" class="cta-btn tg-btn">
         <i class="fab fa-telegram"></i>
         <span>
-          <strong>Join on Telegram</strong>
-          <small>Daily News · Portfolio Live · Learning</small>
+          <strong>Rejoindre Telegram</strong>
+          <small>Actualité · Portefeuille · Formation</small>
         </span>
       </a>
       <a href="https://www.youtube.com/@marketwatchxyz" target="_blank" rel="noopener" class="cta-btn yt-btn">
         <i class="fab fa-youtube"></i>
         <span>
-          <strong>Watch on YouTube</strong>
+          <strong>Voir sur YouTube</strong>
           <small>Daily Briefing · Weekly Review · Analysis</small>
         </span>
       </a>

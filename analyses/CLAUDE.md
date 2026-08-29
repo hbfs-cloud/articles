@@ -11,15 +11,15 @@ requests that product change.
 ### Référence
 **L'analyse SHEL (`analyses/SHEL/`)** est la référence principale pour les futures analyses : charte graphique, structure HTML, classes CSS, ECharts (13 charts dont forecast), FAB navigation (IntersectionObserver), Trade Idea (price ladder), Price Forecast section. Toute nouvelle analyse doit suivre ce modèle.
 **Références secondaires** : TARA (`analyses/TARA/`) et CDIO (`analyses/CDIO/`) pour le switcher langue/niveau et les 6 variantes.
-**Langue par défaut : anglais, niveau intermédiaire** (sauf demande contraire).
+**Langue du livrable web : français obligatoire, niveau intermédiaire.**
 
 ### Template HTML Obligatoire (CRITIQUE)
 
 #### Balise `<html>` — Attributs Obligatoires
 ```html
-<html lang="en" data-tags="us,tech,ai,trade-idea,speculative" data-tab="analyses" data-grade="A+" data-level="intermediate">
+<html lang="fr" data-tags="us,tech,ai,trade-idea,speculative" data-tab="analyses" data-grade="A+" data-level="intermediate">
 ```
-- `lang` : langue (fr, en, ar)
+- `lang` : toujours `fr` pour tout nouveau contenu web
 - `data-tags` : tags pertinents (voir taxonomie CLAUDE.md racine)
 - `data-tab="analyses"` : toujours "analyses"
 - `data-grade` : note globale (A+, A, B+, B, C, D)

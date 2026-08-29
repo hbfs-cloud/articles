@@ -33,15 +33,15 @@ on dates, freshness, tools and publication gates.
 
 ### Objectif
 Rapport de niveau institutionnel à destination de retail qui couvre tous les grands marchés US, EU, Asia, sur tous les assets (Stocks, ETF, Gold, Silver, Crypto). Vision globale macro, micro et géopolitique pour la semaine à venir.
-**Langue par défaut : anglais, niveau intermédiaire** (sauf demande contraire).
+**Langue du livrable web : français obligatoire, niveau intermédiaire.**
 
 ### Template HTML Obligatoire (CRITIQUE)
 
 #### Balise `<html>` — Attributs Obligatoires
 ```html
-<html lang="en" dir="ltr" data-level="intermediate" data-tags="us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea" data-tab="weekly">
+<html lang="fr" dir="ltr" data-level="intermediate" data-tags="us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea" data-tab="weekly">
 ```
-- `lang` : langue (fr, en, ar)
+- `lang` : toujours `fr` pour tout nouveau contenu web
 - `dir` : direction texte (ltr ou rtl pour arabe)
 - `data-level` : "intermediate" (par défaut)
 - `data-tags` : tags pertinents du rapport

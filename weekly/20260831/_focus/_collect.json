@@ -1,0 +1,241 @@
+{
+  "contract_version": "1.0",
+  "workflow": "weekly",
+  "plan": "plans/weekly-focus.json",
+  "plan_sha256": "d6f864f8d8f5ae23974d059e85f069956069506b516acd4df91b35370caa2b9b",
+  "input_sha256": "f2ee2b0de68b42310e6411180db0618c1aec115a144066022b02b3816975d8c3",
+  "resolved_input": {
+    "artifact": "weekly/20260831/index.html",
+    "refdate": "2026-08-28",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "expected_close": "2026-08-28"
+            }
+          }
+        ]
+      },
+      {
+        "name": "focus-evidence",
+        "calls": [
+          {
+            "as": "focus_bars",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "DELL,MDB,SNOW,PANW,CRDO,HPE,CIEN,ZS",
+              "end_date": "2026-08-28",
+              "limit": 120,
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 72,
+              "required": true,
+              "expects_close": true
+            }
+          },
+          {
+            "as": "focus_technicals",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "quote,technicals,support_resistance,trading_signals",
+              "symbols": "DELL,MDB,SNOW,PANW,CRDO,HPE,CIEN,ZS",
+              "end_date": "2026-08-28",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "focus_fundamentals",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "financials,stats,earnings_quarterly,analyst_actions",
+              "symbols": "DELL,MDB,SNOW,PANW,CRDO,HPE,CIEN,ZS",
+              "end_date": "2026-08-28",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            }
+          },
+          {
+            "as": "focus_events",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "news,sec_filings,flags",
+              "symbols": "DELL,MDB,SNOW,PANW,CRDO,HPE,CIEN,ZS",
+              "end_date": "2026-08-28",
+              "days": 180,
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "focus_flows",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "insider_transactions,unusual_options,dark_pool,max_pain,short_interest",
+              "symbols": "DELL,MDB,SNOW,PANW,CRDO,HPE,CIEN,ZS",
+              "end_date": "2026-08-28",
+              "days": 90,
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "focus_correlation",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "DELL,MDB,SNOW,PANW,CRDO,HPE,CIEN,ZS",
+              "end_date": "2026-08-28",
+              "adjusted": true,
+              "force_async": true,
+              "days": 90
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "weekly/20260831/index.html",
+  "reference_date": "2026-08-28",
+  "started_at": "2026-08-29T15:58:43.530Z",
+  "finished_at": "2026-08-29T16:00:57.830Z",
+  "failures": 0,
+  "blocked_at_gate": null,
+  "executed_calls": 7,
+  "skipped_calls": 0,
+  "collection_mode": "authenticated_agent_mcp",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 0,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 191,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "330f5aa2ff70405b1c79238a3f1dd34ed6b06b721e9c305d3edc512ebc98c2a3"
+        }
+      ]
+    },
+    {
+      "name": "focus-evidence",
+      "ms": 0,
+      "calls": [
+        {
+          "as": "focus_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 6200,
+          "wait_ms": 6000,
+          "error": null,
+          "output_sha256": "02dd7cb5fa7def90cc2a51a354724405779fef61fd214796a716f519e4330cce"
+        },
+        {
+          "as": "focus_technicals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 91587,
+          "wait_ms": 90000,
+          "error": null,
+          "output_sha256": "e09c4db3092505fb813721828d09d302d05c542fb95ec0b6d61ac668e5edd157"
+        },
+        {
+          "as": "focus_fundamentals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 6200,
+          "wait_ms": 6000,
+          "error": null,
+          "output_sha256": "c0e22f662509ddae4aa88fd81a4f4e6d2945631232e05db7a13a65f0f34c957c"
+        },
+        {
+          "as": "focus_events",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 6236,
+          "wait_ms": 6000,
+          "error": null,
+          "output_sha256": "0e45ba08019627fd096fc93c552247753e0e971446319d8211960dfafa9169ba"
+        },
+        {
+          "as": "focus_flows",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 12448,
+          "wait_ms": 12000,
+          "error": null,
+          "output_sha256": "3169cd9088b68d57f14afd017436c874491c7fb2370c533bdc6365751a22c9ad"
+        },
+        {
+          "as": "focus_correlation",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 6154,
+          "wait_ms": 6000,
+          "error": null,
+          "output_sha256": "3901ab21a9fb544b78af9366253e4f248d9d8c02fd7f19f1005af48983f2915e"
+        }
+      ]
+    }
+  ]
+}

@@ -3,8 +3,8 @@
 /**
  * substack-publish.js — Optional, non-blocking Substack publication step.
  *
- * 1. Converts a published DailyTickers article (HTML) into a Substack draft via
- *    gen-substack-draft.js (in-process module call — falls back to a spawned
+ * 1. Converts a separately authored English artifact into a Substack draft via
+ *    gen-substack-draft.js (French website articles fail closed; in-process module call falls back to a spawned
  *    child process if the module require ever fails, e.g. syntax drift).
  * 2. Always writes the draft locally to data/substack-drafts/<slug>.json —
  *    this step never fails silently and never touches the network to do this.

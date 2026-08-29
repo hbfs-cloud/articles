@@ -53,6 +53,9 @@ compatibility fallback.
    collection. A script failure cannot be waived by prose review.
 7. Never expose a token value in a terminal command, log, message, file, or commit. Use the runner's
    secret environment or masked input.
+8. Enforce the canonical channel contract for every command: website output in French; Telegram in French,
+   concise, actionable and self-contained; Substack in English, concise, actionable and self-contained, with
+   no website reference. All variants remain bound to the same reviewed evidence snapshot.
 
 This skill is the compatibility layer for Codex. It does not make Claude `.claude/commands/*.md`
 files native Codex slash-menu entries.

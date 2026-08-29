@@ -381,7 +381,7 @@ async function generateAIContent(html, url, dateStr, title, meta) {
     series:   `a 5-minute expert series episode. Structure: context, deep analysis, practical application, key insights. Rich visuals.`,
   };
 
-  const prompt = `You are a young, dynamic financial analyst creating an engaging video for DailyTickers — think Bloomberg meets TikTok finance. Your voice is confident, direct, fast-paced. You speak like you're explaining a trade to a sharp friend, not reading a report.
+  const prompt = `You are a young, dynamic financial analyst creating an engaging video for DailyTickers — think Bloomberg meets TikTok finance. Produce every audience-facing field in FRENCH. Your voice is confident, direct, fast-paced. You speak like you're explaining a trade to a sharp friend, not reading a report.
 
 ARTICLE: ${title}
 DATE: ${dateStr}
@@ -417,7 +417,7 @@ Return ONLY valid JSON, no markdown fences, no explanation:
   "config": {
     "seriesTitle": "${title}",
     "date": "${dateStr}",
-    "language": "en",
+    "language": "fr",
     "accentColor": "#2563EB"
   },
   "slides": [
@@ -481,7 +481,8 @@ Return ONLY valid JSON, no markdown fences, no explanation:
 - slide narration: NEVER starts with "This slide", "Here we can see", "In this section"
 - Minimum 7 slides, maximum 10 slides
 - Each narration 25-45 words, total narration sum 450-550 words
-- telegramBullets: 5-10 strings, each starts with emoji, 8-15 words, REAL data from article`;
+- telegramBullets: 5-10 strings, each starts with emoji, 8-15 words, REAL data from article
+- telegramBullets must be in French, concise, actionable and understandable without opening a link`;
 
   try {
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
@@ -552,7 +553,7 @@ function fallbackContent(html, url, dateStr, title, meta) {
   return {
     audioScript,
     telegramBullets,
-    config: { seriesTitle: title, date: dateStr, language: 'en', accentColor: '#3b82f6', totalChapters: slides.length },
+    config: { seriesTitle: title, date: dateStr, language: 'fr', accentColor: '#3b82f6', totalChapters: slides.length },
     slides,
   };
 }
@@ -960,7 +961,7 @@ function convertToGammaDeck(content, { title, dateStr, url, type: artType, meta:
 
   return {
     version: '1',
-    meta: { title, author: 'DailyTickers', company: 'DailyTickers', date: dateStr, language: 'en', tags: [artType, 'finance', 'markets'], description: audioScript?.slice(0, 200) || '' },
+    meta: { title, author: 'DailyTickers', company: 'DailyTickers', date: dateStr, language: 'fr', tags: [artType, 'finance', 'markets'], description: audioScript?.slice(0, 200) || '' },
     branding: { watermark: 'MARKET WATCH', company_url: 'articles.dailytickers.com' },
     theme,
     narration: { voice: 'en-US-AndrewNeural', rate: '+5%', pitch: '+0Hz' },

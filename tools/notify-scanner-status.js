@@ -295,15 +295,15 @@ function buildTelegramMessage(d) {
   // ── BLOC 1 : GESTION POSITIONS EXISTANTES ──
   let manageBlock = '';
   if (closeNow.length || decideSoon.length) {
-    manageBlock += `\n🗂 <b>Open positions — action required</b>\n`;
+    manageBlock += `\n🗂 <b>Positions ouvertes — action requise</b>\n`;
     closeNow.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
-      manageBlock += `  ⛔ <b>${p.ticker}</b>  ${pnl}  now ${(+p.current_price).toFixed(2)}  → <b>CLOSE</b> (horizon reached)\n`;
+      manageBlock += `  ⛔ <b>${p.ticker}</b>  ${pnl}  cours ${(+p.current_price).toFixed(2)}  → <b>CLÔTURER</b> (horizon atteint)\n`;
     });
     decideSoon.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
       const toTp1 = p.tp1 && p.current_price ? (((p.tp1 - p.current_price) / p.current_price) * 100).toFixed(1) : null;
-      manageBlock += `  ⏰ <b>${p.ticker}</b>  ${pnl}${p.tp1 ? `  TP1 ${(+p.tp1).toFixed(2)}${toTp1 ? ` (+${toTp1}%)` : ''}` : ''}  stop ${(+p.stop).toFixed(2)}  → decision in 2 days\n`;
+      manageBlock += `  ⏰ <b>${p.ticker}</b>  ${pnl}${p.tp1 ? `  TP1 ${(+p.tp1).toFixed(2)}${toTp1 ? ` (+${toTp1}%)` : ''}` : ''}  stop ${(+p.stop).toFixed(2)}  → décision sous 2 jours\n`;
     });
   }
 
@@ -311,12 +311,12 @@ function buildTelegramMessage(d) {
   let ordersBlock = '';
   if (d.slotsLeft > 0) {
     const buyPicks = d.picks.slice(0, d.slotsLeft);
-    ordersBlock += `\n📥 <b>New orders — ${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} free (${d.alloc}% each)</b>\n`;
+    ordersBlock += `\n📥 <b>Nouveaux ordres — ${d.slotsLeft} place${d.slotsLeft > 1 ? 's' : ''} libre${d.slotsLeft > 1 ? 's' : ''} (${d.alloc}% chacun)</b>\n`;
     buyPicks.forEach(s => {
-      ordersBlock += `  🟢 <b>${s.symbol}</b>  ${s.strategy}  entry ${s.entry}  stop ${s.stop}  TP1 ${s.tp1}  TP2 ${s.tp2}  R/R ${s.rr}\n`;
+      ordersBlock += `  🟢 <b>${s.symbol}</b>  ${s.strategy}  entrée ${s.entry}  stop ${s.stop}  TP1 ${s.tp1}  TP2 ${s.tp2}  R/R ${s.rr}\n`;
     });
   } else {
-    ordersBlock += `\n✅ <b>Portfolio full</b> — no new orders\n`;
+    ordersBlock += `\n✅ <b>Portefeuille complet</b> — aucun nouvel ordre\n`;
   }
 
   const actions = manageBlock + ordersBlock;
@@ -328,7 +328,7 @@ function buildTelegramMessage(d) {
         const warn = p.left <= 1 ? ' ⚠️' : p.left === 2 ? ' ⏰' : '';
         return `  ${p.ticker.padEnd(6)} ${pnl.padEnd(12)}  ${d.alloc}%  ${p.left}d${warn}`;
       }).join('\n')
-    : '  No open positions';
+    : '  Aucune position ouverte';
 
   // ── SIGNAUX ──
   const picksLines = d.picks.map((s, i) =>
@@ -343,13 +343,13 @@ function buildTelegramMessage(d) {
 <code>${sep}</code>
 ${actions}
 <code>${sep}</code>
-📂 <b>Open positions  (${d.activePos.length}/${d.cfg.portfolioSize})</b>
+📂 <b>Positions ouvertes  (${d.activePos.length}/${d.cfg.portfolioSize})</b>
 <pre>${posLines}</pre>
-⚖️ <b>Portfolio risk</b>
+⚖️ <b>Risque du portefeuille</b>
 <pre>${sign(d.worstPct)}${d.worstPct.toFixed(1)}%  ${bar}  +${d.bestPct.toFixed(1)}%
-            ▲ Now ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%</pre>
+            ▲ Actuel ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%</pre>
 <code>${sep}</code>
-🔗 <a href="${STATUS_URL}">Full status →</a>${d.ytUrl ? `\n📺 <a href="${d.ytUrl}">Watch on YouTube</a>` : ''}`;
+🔗 <a href="${STATUS_URL}">Voir le statut complet →</a>${d.ytUrl ? `\n📺 <a href="${d.ytUrl}">Voir sur YouTube</a>` : ''}`;
 }
 
 // ─── Discord message (Markdown) ───────────────────────────────────────────────

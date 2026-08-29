@@ -2,9 +2,10 @@
 /**
  * gen-substack-draft.js — HTML article → Substack-ready draft converter
  *
- * Converts a published DailyTickers article (daily / weekly / analyses / scanner)
- * into clean Markdown ready to paste or POST to Substack. This tool NEVER publishes
- * anything and never touches the network — pure local file → file conversion.
+ * Converts a separately authored English DailyTickers artifact into clean Markdown
+ * ready to paste or POST to Substack. A French website article is deliberately rejected:
+ * Substack is an independent English deliverable from the same evidence snapshot,
+ * never an automatic translation or a teaser linking back to the website.
  *
  * Output object: { title, subtitle, body_markdown, canonical_url, tags, note }
  *
@@ -182,6 +183,7 @@ function inlineToMd(html, canonical) {
         const label = stripTags(text);
         if (!label) return '';
         if (!href) return label;
+        if (href.startsWith(SITE)) return label;
         return `[${label}](${href})`;
     });
     s = s.replace(/<(strong|b)\b[^>]*>([\s\S]*?)<\/\1>/gi, (m, t, inner) => {
@@ -537,34 +539,27 @@ function slugFromPath(absPath) {
 // ---------------------------------------------------------------------------
 // Notes teaser (<=280 chars, plain text + canonical link)
 // ---------------------------------------------------------------------------
-function buildNote(meta, canonical) {
+function buildNote(meta) {
     const LIMIT = 280;
-    const link = canonical;
     const title = meta.title;
-    // budget for the hook = 280 - title - link - separators (2x "\n\n")
     let base = title + '\n\n';
-    const tail = '\n\n' + link;
-    let budget = LIMIT - base.length - tail.length;
+    let budget = LIMIT - base.length;
     let hook = meta.subtitle || '';
     if (budget < 0) {
-        // title alone too long; truncate title
-        const t = title.slice(0, LIMIT - tail.length - 1).replace(/\s+\S*$/, '') + '…';
-        return t + tail;
+        return title.slice(0, LIMIT - 1).replace(/\s+\S*$/, '') + '…';
     }
     if (hook.length > budget) {
         hook = hook.slice(0, Math.max(0, budget - 1)).replace(/\s+\S*$/, '').trim() + '…';
     }
-    return (hook ? base + hook : title) + tail;
+    return hook ? base + hook : title;
 }
 
 // ---------------------------------------------------------------------------
 // Body footer (back-link + subscribe CTA)
 // ---------------------------------------------------------------------------
-function bodyFooter(canonical) {
+function bodyFooter() {
     return [
         '---',
-        '',
-        `📈 **Read the full analysis — with live charts, data tables, and interactive visuals:** [${canonical}](${canonical})`,
         '',
         '*Subscribe to DailyTickers for daily market briefings, weekly reviews, and institutional-grade ticker analyses.*'
     ].join('\n');
@@ -579,6 +574,9 @@ function convert(absPath) {
     const tab = getAttr(htmlTag, 'data-tab') || 'daily';
     const canonical = canonicalFromPath(absPath);
     const meta = extractMeta(html, tab);
+    if (meta.lang !== 'en') {
+        throw new Error('Substack source must be a separately authored English artifact (lang="en"); French web articles cannot be converted automatically.');
+    }
 
     // Isolate <body>
     let body = firstMatch(html, /<body\b[^>]*>([\s\S]*?)<\/body>/i) || html;
@@ -607,7 +605,7 @@ function convert(absPath) {
                 if (lastText) cap = stripTags(lastText);
             }
             const label = cap ? `Chart: ${cap}` : 'Chart';
-            const tid = tokens.push(`> 📊 **[${label}]** — view the interactive version in the full article.`) - 1;
+            const tid = tokens.push(`> 📊 **[${label}]** — the decision-relevant values are summarized in this section.`) - 1;
             return `\n\n[[TOKEN${tid}]]\n\n`;
         }
         return ''; // empty structural div
@@ -645,14 +643,18 @@ function convert(absPath) {
            .replace(/[ \t]+$/gm, '')
            .trim();
 
-    const body_markdown = md + '\n\n' + bodyFooter(canonical);
-    const note = buildNote(meta, canonical);
+    const body_markdown = md + '\n\n' + bodyFooter();
+    const note = buildNote(meta);
+
+    if (/articles\.dailytickers\.com|\b(?:website|web site|full article|full version)\b/i.test(body_markdown + '\n' + note)) {
+        throw new Error('Substack output contains a forbidden website reference or external full-version CTA.');
+    }
 
     return {
         title: meta.title,
         subtitle: meta.subtitle,
         body_markdown,
-        canonical_url: canonical,
+        canonical_url: null,
         tags: meta.tags,
         note,
         _tab: tab
@@ -687,7 +689,13 @@ function main() {
         process.exit(1);
     }
 
-    const draft = convert(absPath);
+    let draft;
+    try {
+        draft = convert(absPath);
+    } catch (error) {
+        console.error('Substack draft blocked: ' + error.message);
+        process.exit(1);
+    }
     const publicDraft = {
         title: draft.title,
         subtitle: draft.subtitle,

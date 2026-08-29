@@ -403,6 +403,19 @@ window.searchDataPrebuilt = [
     "date": "29 décembre 2025 - 3 janvier 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "L’IA face au test de diffusion et à l’emploi",
+    "desc": "Le régime systématique reste RISK_ON, avec un score de 79 %. Le VIX clôture à 14.43, sous sa moyenne récente, tandis que la volatilité à moyen terme reste plus chère que la volatilité immédiate. Ce n’est pas une structure de panique.",
+    "tags": "us,crypto,commodity,macro,earnings,ai,cloud,cybersecurity,semis,etf",
+    "grade": "",
+    "href": "/weekly/20260831/",
+    "date": "31 août 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",

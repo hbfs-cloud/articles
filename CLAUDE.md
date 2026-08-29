@@ -10,13 +10,31 @@ mobile-first dense, RTL arabe, P&L colorblind-safe, WCAG AA, reduced-motion.
 ## Voix éditoriale (OBLIGATOIRE — tout contenu publié)
 Règle #1 de rédaction, tous supports (site, Substack, Telegram, notes) : **concis, direct, actionnable, et JAMAIS "style IA"**. Un lecteur ne doit pas pouvoir dire « c'est écrit par une IA ».
 
+### Contrat de langue par canal (OBLIGATOIRE, à partir du 29 août 2026)
+
+- **Site web** (`articles.dailytickers.com`) : tout nouveau contenu public est rédigé en **français**, avec
+  `<html lang="fr">`. Une source ou un ancien modèle anglais ne change jamais cette règle.
+- **Telegram** : toute notification publique est en **français**, concise, actionnable et autosuffisante.
+  Elle peut contenir le lien vers l'article web, mais le lecteur doit comprendre le contexte, les faits
+  décisifs, l'action à prendre ou la condition à surveiller et l'invalidation sans ouvrir le lien.
+- **Substack** : tout article ou note est en **anglais**, concis, actionnable et autosuffisant. Le contenu
+  Substack ne contient **aucun lien, renvoi, CTA ni référence au site web** ou à une « version complète »
+  externe. Il est écrit comme un livrable indépendant, jamais comme la traduction automatique ou le teaser
+  tronqué de la page web française.
+- **Harnais commun** : les trois livrables reposent sur le même snapshot certifié et les mêmes faits, niveaux,
+  conditions et invalidations. Chaque texte passe néanmoins son propre contrôle de langue, d'autosuffisance,
+  de cohérence numérique et les revues Senior QA, Contrarian et Retail War Room avant publication.
+
+Ce contrat prévaut sur toute instruction historique indiquant « anglais par défaut » pour le site. Il reste
+applicable à tous les workflows actuels et futurs jusqu'à modification explicite de cette règle générale.
+
 **⇒ Spec complète et reproductible (routines cloud incluses) : [`EDITORIAL_STYLE.md`](EDITORIAL_STYLE.md)** — 2 couches (anti-tics + **empreinte intellectuelle** : catalyseur précis vérifié, flux institutionnels réels, asymétrie non-consensuelle, thèse falsifiable) + recette de recherche MCP à exécuter AVANT d'écrire. Un texte « propre mais vide » (aucune info que seul un analyste qui a creusé pourrait écrire) échoue autant qu'un texte truffé de tics.
 
 - **Bannir les tics IA / marketing** : signposting et formules toutes faites — « Hold one idea… », « Here's the thing », « The bottom line », « That divergence is the whole story », « buckle up », « let's dive in », « it's worth noting », « in a world where », « delve », « tapestry », « game-changer », « navigating the… » (FR : « il est important de noter », « force est de constater », « sans plus attendre »…).
 - **Voix humaine** : un point de vue, du rythme varié (phrases courtes ET longues, fragments), des images concrètes. Éviter la structure ultra-templatée (contexte → 3 points → outlook → conclusion) et les paragraphes trop lisses/homogènes.
 - **Garder les chiffres réels et précis** (niveaux, entries/stops, perfs) — c'est le vrai signal de crédibilité + l'actionnable.
 - **JAMAIS de terme interne/technique dans le contenu publié** (texte, légendes, images) : pas de « MCP », « DailyTickers MCP », « Gateway », « market data service », noms de scripts/pipeline. Décrire la donnée (« options flow & levels », « avg constituent return »), pas l'infra.
-- **Registre selon le support** : site = institutionnel (FT/Economist + terminal, cf `PRODUCT.md`) ; Substack/Telegram = ultra-simple, lisible par un enfant de 10 ans. La concision + l'anti-IA s'appliquent PARTOUT ; seul le niveau de langue change.
+- **Registre selon le support** : site français = institutionnel (FT/Economist + terminal, cf `PRODUCT.md`) ; Substack anglais et Telegram français = ultra-simple, lisible par un enfant de 10 ans. La concision + l'anti-IA s'appliquent PARTOUT ; seul le registre change.
 - **Contrôle** : `node tools/check-ai-tells.js <path> [--strict]` flague les tics avant publication. Zéro finding ≠ garantie humain, mais tout finding = réécrire.
 
 ## Project Overview

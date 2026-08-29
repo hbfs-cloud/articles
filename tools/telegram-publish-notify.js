@@ -104,14 +104,14 @@ if (artPath && !fs.existsSync(path.join(path.join(__dirname, '..'), artPath))) {
 }
 
 const TYPE_MAP = {
-  daily    : { topicId: TOPICS.daily,     section: 'Daily Briefing',  emoji: '📰' },
-  weekly   : { topicId: TOPICS.weekly,    section: 'Weekly Review',   emoji: '📊' },
-  scanner  : { topicId: TOPICS.portfolio, section: 'Portfolio Scan',  emoji: '📈' },
-  retro    : { topicId: TOPICS.portfolio, section: 'Retrospective',   emoji: '🔁' },
-  analysis : { topicId: TOPICS.analysis,  section: 'Stock Analysis',  emoji: '🔍' },
-  series   : { topicId: TOPICS.learning,  section: 'New Series',      emoji: '📚' },
-  tech     : { topicId: TOPICS.learning,  section: 'Tech & Quant',    emoji: '💡' },
-  learning : { topicId: TOPICS.learning,  section: 'Learning',        emoji: '🎓' },
+  daily    : { topicId: TOPICS.daily,     section: 'Briefing quotidien', emoji: '📰' },
+  weekly   : { topicId: TOPICS.weekly,    section: 'Revue hebdomadaire', emoji: '📊' },
+  scanner  : { topicId: TOPICS.portfolio, section: 'Scanner',            emoji: '📈' },
+  retro    : { topicId: TOPICS.portfolio, section: 'Rétrospective',      emoji: '🔁' },
+  analysis : { topicId: TOPICS.analysis,  section: 'Analyse',             emoji: '🔍' },
+  series   : { topicId: TOPICS.learning,  section: 'Nouvelle série',      emoji: '📚' },
+  tech     : { topicId: TOPICS.learning,  section: 'Tech et quant',       emoji: '💡' },
+  learning : { topicId: TOPICS.learning,  section: 'Formation',           emoji: '🎓' },
 };
 
 const meta = TYPE_MAP[type] || TYPE_MAP.daily;
@@ -164,9 +164,9 @@ function buildUrl(relPath) {
 
 function getDateStr(relPath) {
   const m = relPath.match(/(\d{4})(\d{2})(\d{2})/);
-  if (m) return new Date(`${m[1]}-${m[2]}-${m[3]}`).toLocaleDateString('en-US',
+  if (m) return new Date(`${m[1]}-${m[2]}-${m[3]}`).toLocaleDateString('fr-FR',
     { weekday:'long', day:'numeric', month:'long', year:'numeric', timeZone:'UTC' });
-  return new Date().toLocaleDateString('en-US',
+  return new Date().toLocaleDateString('fr-FR',
     { weekday:'long', day:'numeric', month:'long', year:'numeric', timeZone:'UTC' });
 }
 
@@ -254,7 +254,10 @@ ${body}
 ${headings.length ? 'SECTION HEADERS:\n' + headings.join('\n') : ''}
 
 RULES:
-- Write in ENGLISH
+- Write entirely in FRENCH, including the headline, labels, actions and CTA
+- The message must stand alone: include the market context, decisive verified facts, what to do or watch,
+  and the invalidation or principal risk; never make the link necessary to understand the decision
+- Be concise and actionable; do not merely tease the article
 - Use Telegram HTML: <b>bold</b>, <i>italic</i>, <code>numbers</code>, <a href="URL">text</a>
 - Start with an EMOJI relevant to the content, then <b>bold title</b>
 - Use ▸ for bullet points
@@ -262,7 +265,7 @@ RULES:
 - Add context to every number: not just "S&P: <code>6,369</code>" but "S&P 500 <code>−1.67%</code> — fifth weekly loss, correction territory"
 - Show emotion when warranted: "📉 Markets broke down this week" not "Markets declined"
 - Maximum 35 lines total (phone-readable)
-- End with: 🔗 <a href="${url}">Read full ${meta.section.toLowerCase()} →</a>
+- End with: 🔗 <a href="${url}">Lire l'article →</a>
 - DO NOT use markdown (no **, no ##, no ---)
 - DO NOT include "DailyTickers" in the opening line (it's in the topic name already)`;
 
@@ -283,7 +286,7 @@ RULES:
 
     // Ensure the link is in there
     if (!msg.includes(url)) {
-      msg += `\n\n🔗 <a href="${url}">Read full ${meta.section.toLowerCase()} →</a>`;
+      msg += `\n\n🔗 <a href="${url}">Lire l'article →</a>`;
     }
 
     const lineCount = msg.split('\n').length;
@@ -306,7 +309,7 @@ function buildFallbackMessage(html, url) {
   let msg = `${meta.emoji} <b>${title}</b>\n`;
   msg += `<i>${dateStr}</i>\n\n`;
   if (desc) msg += `${desc.slice(0, 280)}${desc.length > 280 ? '…' : ''}\n\n`;
-  msg += `🔗 <a href="${url}">Read on DailyTickers →</a>`;
+  msg += `🔗 <a href="${url}">Lire l'article →</a>`;
   return msg;
 }
 
@@ -356,7 +359,7 @@ function send(text, topicId) {
   if (html) {
     msg = await buildAINotification(html, url);
   } else {
-    msg = `${meta.emoji} <b>New ${meta.section}</b>\n\nNew content published on DailyTickers.\n🔗 <a href="${url}">${url}</a>`;
+    msg = `${meta.emoji} <b>${meta.section}</b>\n\nNouvelle publication disponible.\n🔗 <a href="${url}">Lire l'article →</a>`;
   }
 
   if (DRY_RUN) {

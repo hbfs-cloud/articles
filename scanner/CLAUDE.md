@@ -6,6 +6,7 @@ source contract is `.claude/skills/source-policy.md`. Those files override histo
 
 ## Product
 
+- Every newly published scanner page and status page is in French and declares `<html lang="fr">`.
 - A scan is produced after the US close for the next US trading session.
 - Universe: US-listed stocks and US-listed ETFs only. No EU, APAC, forex or non-US fallback pool.
 - Target: 8 stocks plus 2 US-listed ETFs. Publish as few as 6 stocks plus 2 ETFs instead of weakening a
@@ -62,6 +63,8 @@ source contract is `.claude/skills/source-policy.md`. Those files override histo
 - Use explicit file staging; never `git add -A`. Do not stage `.mcp.json`, token files, `_data` staging,
   request-id files or unrelated user work.
 - Telegram, public publication and push happen after QA and only when the command/user authorizes them.
+- Telegram output is French, concise, actionable and self-contained. Substack output, when separately
+  authorized, is an independent English artifact and contains no website reference.
 
 ## Blocking Checks
 

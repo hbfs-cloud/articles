@@ -62,6 +62,19 @@ Structured output is written before prose or HTML. Run the relevant executable g
 The model may explain or reject a structured candidate. It may not invent or repair a missing ticker,
 price, ATR, target, stop, score, SEC classification, correlation, DTX field or historical outcome.
 
+## H3bis - Channel contract
+
+- Web output is French and declares `<html lang="fr">`.
+- Telegram output is French, concise, actionable and self-contained. A link is optional context, never a
+  substitute for the thesis, decisive facts, action/condition and invalidation in the message itself.
+- Substack output is English, concise, actionable and self-contained. It contains no website URL, backlink,
+  CTA to the website, mention of a full version elsewhere or dependency on the French web article.
+- Channel variants use the same hash-bound source snapshot. Numeric facts, levels and invalidations must agree
+  exactly across variants; translation or condensation never authorizes a new fact.
+
+A language mismatch, non-autosufficient short format, website reference in Substack or cross-channel numeric
+drift is a publication blocker and must be included in the Senior QA, Contrarian and Retail War Room review.
+
 ## H4 - Same-snapshot reviews
 
 Hash governing inputs, then give the identical snapshot to Senior QA, Contrarian and Retail War Room.
