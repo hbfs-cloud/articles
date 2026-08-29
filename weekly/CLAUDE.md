@@ -1,5 +1,9 @@
 # DailyTickers - Weekly Instructions
 
+Operational data/source rules are defined by `.claude/commands/weekly.md` and
+`.claude/skills/source-policy.md`. This file defines presentation; the executable workflow contract wins
+on dates, freshness, tools and publication gates.
+
 ## Article de Référence
 
 **`weekly/20260223/index.html`** est la référence pour le format, la structure HTML, et le style visuel. Tout nouveau weekly DOIT suivre ce modèle.
@@ -20,8 +24,8 @@
 - Reproduire EXACTEMENT le layout de `weekly/20260223/index.html`
 
 ### Qualité minimum
-- Taille HTML > **100KB** (si < 100KB → sections manquantes)
-- **18 sections obligatoires** toutes présentes (voir liste ci-dessous)
+- **18 sections obligatoires** toutes présentes (voir liste ci-dessous), sans remplissage artificiel
+- La taille du fichier n'est pas un objectif de qualité ; chaque section doit apporter un fait ou une décision
 - Données à jour via MCP Gateway (pas de données inventées)
 
 ## 1. RAPPORT HEBDOMADAIRE (Weekly Report)
@@ -131,7 +135,7 @@ Le weekly utilise le FAB flottant comme tous les autres types d'articles. 6 item
 12. **Rotation Sectorielle / Dynamique** - Gagnants vs perdants, flux de capitaux
 13. **Matrice des Risques** - 5-6 risques avec probabilité et impact + signaux faibles / cygnes noirs
 14. **Allocation Tactique** - Donut chart + table avec rationale et changements vs semaine précédente
-15. **Trades de la Semaine** (NOUVEAU) - 3 positions longues swing argumentées (voir détail ci-dessous)
+15. **Trades de la Semaine** - 0 à 3 idées validées; afficher `no_setup` si aucune ne passe
 16. **Leaders Thématiques & Sectoriels** - Top tickers par thème/secteur, saisonnalités, corrélations clés (voir détail ci-dessous)
 17. **Outlook** - 3 scénarios (haussier/central/baissier) avec probabilités + "Ce qu'il faut surveiller"
 18. **Sources** - Toutes les sources organisées par catégorie avec liens
@@ -192,7 +196,8 @@ Table `.data-table` avec colonnes : Pair | Corrélation | Signal
 
 ### Section 15 — Trades de la Semaine (Détail)
 
-Chaque rapport hebdomadaire doit proposer **3 trades en position longue (swing)**, motivés et argumentés.
+Chaque rapport hebdomadaire propose **0 à 3 trades** ayant passé `validate-trade-ideas.js`. Aucun trade
+n'est forcé; `no_setup` est préférable à un plan faible ou incomplet.
 
 #### Format par trade
 - **Titre** : Ticker + Nom + Thème (ex: "NEM — Newmont Corp — Gold Miner")
@@ -209,7 +214,7 @@ Chaque rapport hebdomadaire doit proposer **3 trades en position longue (swing)*
 - Signal technique récent (BUY AmericanBulls, RSI, breakout S/R)
 - Données à jour via MCP Gateway (quote, trading_signals, support_resistance)
 - R/R minimum 1:1.5
-- Diversifiés (pas 3 trades sur le même secteur)
+- Diversifiés (aucune famille >60% lorsque trois idées ou plus)
 
 #### Bilan des Trades S-1
 Si le rapport précédent contenait des trades, **inclure un bilan obligatoire** en début de section :
@@ -251,9 +256,17 @@ Voir section Polymarket dans le CLAUDE.md racine. Intégrer dans : Géopolitique
 - **Tags** : toujours `data-tags` sur `<html>` + `data-tab="weekly"` + `<div id="article-clickable-tags">`
 - **Scripts** : toujours `/assets/core.js` + `/assets/tag-renderer.js` avant `</body>`
 
-### Post-Publication (OBLIGATOIRE — NE JAMAIS SAUTER)
+### Preuves numériques
 
-Après génération du fichier HTML, ces 4 étapes sont **BLOQUANTES**. Si l'une échoue, NE PAS passer à la suivante :
+Toute affirmation numérique visible dans `<main>` porte un identifiant `data-claim` unique. Le fichier
+`_data/claims.json` lie cet identifiant au hash et au JSON Pointer d'un artefact collecté ou calculé de
+façon déterministe. Chaque claim déclare aussi `render` (`scale`, `decimals`, `sign`, `prefix`, `suffix`),
+afin que le texte affiché soit recalculé depuis la valeur source. `validate-content-claims.js` est bloquant.
+
+### Publication (uniquement si l'invocation courante l'autorise)
+
+Par défaut, s'arrêter après QA locale. Si et seulement si l'utilisateur autorise publication/commit/push,
+exécuter ces étapes après tous les gates :
 
 1. **Vérifier la taille** : `wc -c weekly/YYYYMMDD/index.html` — doit être > 100KB (sinon sections manquantes)
 2. **Indexer** : `node tools/add_card.js weekly/YYYYMMDD/index.html` — vérifier que `data/weekly.json` et `data/search_data.js` apparaissent dans `git status`
@@ -269,4 +282,3 @@ Après génération du fichier HTML, ces 4 étapes sont **BLOQUANTES**. Si l'une
 **Si `add_card.js` échoue** : vérifier que le HTML est valide, que le `<html>` a `data-tab="weekly"` et `data-tags`, et que le hero contient un `<h1>`.
 
 ---
-

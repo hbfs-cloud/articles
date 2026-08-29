@@ -1,8 +1,27 @@
 {
-  "artifact": "rotation sectorielle",
+  "artifact": "data/workflow-runs/sector-rotation/$date",
   "waves": [
     {
-      "name": "rotation",
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 1,
+            "required": true
+          },
+          "assert": {
+            "expected_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "governing-bars-and-risk",
       "calls": [
         {
           "as": "bars_sectors",
@@ -12,7 +31,8 @@
             "types": "bars_daily",
             "symbols": "XLK,XLF,XLE,XLV,XLI,XLY,XLP,XLU,XLC,XLRE,XLB",
             "end_date": "$refdate",
-            "limit": 130
+            "limit": 130,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
@@ -28,7 +48,8 @@
             "types": "bars_daily",
             "symbols": "SPY,QQQ,IWM,USO,TLT,GLD",
             "end_date": "$refdate",
-            "limit": 130
+            "limit": 130,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
@@ -37,7 +58,31 @@
           }
         },
         {
-          "as": "rotations",
+          "as": "correlations",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "SPY,QQQ,IWM,GLD,SLV,TLT,USO",
+            "end_date": "$refdate",
+            "days": 90,
+            "adjusted": true,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 48,
+            "required": true,
+            "expects_close": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "optional-server-context",
+      "detached": true,
+      "calls": [
+        {
+          "as": "rotations_context",
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
@@ -45,23 +90,7 @@
           },
           "freshness": {
             "max_age_h": 24,
-            "required": true,
-            "note": "moyenne par industrie — c'est ce qui a révélé le -10% optique du 10/08"
-          }
-        },
-        {
-          "as": "correlations",
-          "server": "marketdata",
-          "tool": "PortfolioRisk",
-          "args": {
-            "action": "correlation",
-            "symbols": "SPY,QQQ,IWM,GLD,SLV,TLT,USO",
-            "lookback_days": 60,
-            "method": "pearson"
-          },
-          "freshness": {
-            "max_age_h": 48,
-            "required": true
+            "required": false
           }
         },
         {
@@ -69,7 +98,8 @@
           "server": "marketdata",
           "tool": "GetReferentialData",
           "args": {
-            "category": "sector"
+            "category": "sector",
+            "region": "US"
           },
           "freshness": {
             "max_age_h": 168,

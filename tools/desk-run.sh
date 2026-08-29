@@ -41,6 +41,9 @@ set -uo pipefail
 # lisait un autre registre — donc un autre quota email.
 cd "$(dirname "$0")/.." || { echo "ÉCHEC: racine du dépôt introuvable" >&2; exit 1; }
 
+# shellcheck source=tools/lib/mcp-auth.sh
+source tools/lib/mcp-auth.sh
+
 T0=$(date +%s)
 log(){ printf '[%3ds] %s\n' "$(( $(date +%s) - T0 ))" "$*"; }
 die(){ echo "ÉCHEC: $*" >&2; exit 1; }
@@ -130,17 +133,40 @@ fi
 # Phase 0 — le plan. Aucun MCP, pure logique : il doit pouvoir tourner même
 # sans jeton, et c'est lui qui dit s'il y a une raison d'en demander un.
 # ─────────────────────────────────────────────────────────────────────────────
-# `${*:-}` et non `"$@"` : sous `set -u`, bash 3.2 (celui de macOS) considère
-# encore "$@" comme non lié quand il n'y a aucun argument.
+# Parse once and forward only the planner's documented filters. Silently
+# ignoring an unknown flag would make the operator believe a narrower run was
+# executed when it was not.
 PLAN_ONLY=0
-case " ${*:-} " in *" --plan-only "*) PLAN_ONLY=1;; esac
+ONLY_ARG=""
+SKIP_ARG=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --plan-only) PLAN_ONLY=1; shift ;;
+    --only)
+      [ $# -ge 2 ] || die "--only requiert une liste CSV"
+      ONLY_ARG="$2"; shift 2 ;;
+    --skip)
+      [ $# -ge 2 ] || die "--skip requiert une liste CSV"
+      SKIP_ARG="$2"; shift 2 ;;
+    *) die "argument inconnu: $1" ;;
+  esac
+done
 
 DAY=$(node -e 'process.stdout.write(new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Paris"}).format(new Date()).replace(/-/g,""))')
 DESK="data/desk/$DAY"
 mkdir -p "$DESK"
 PLAN="$DESK/plan.json"
 
-node tools/desk-plan.js --out "$PLAN"
+write_plan() {
+  local socle="${1:-}"
+  set -- --out "$PLAN"
+  [ -n "$ONLY_ARG" ] && set -- "$@" --only "$ONLY_ARG"
+  [ -n "$SKIP_ARG" ] && set -- "$@" --skip "$SKIP_ARG"
+  [ -n "$socle" ] && set -- "$@" --socle "$socle"
+  node tools/desk-plan.js "$@"
+}
+
+write_plan
 rc=$?
 if [ $rc -eq 10 ]; then log "rien n'est dû aujourd'hui — c'est un résultat, pas une panne."; exit 0; fi
 [ $rc -eq 0 ] || die "desk-plan a échoué (rc=$rc)"
@@ -158,19 +184,13 @@ is_due(){ case " $DUE " in *" $1 "*) return 0;; *) return 1;; esac; }
 log "plan : [$DUE] · clôture $REF · séance $ASOF"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Jetons. Ils viennent de l'ENVIRONNEMENT et de nulle part ailleurs : aucun
-# jeton n'est écrit sur disque, aucun ne passe en argv (visible dans `ps`).
-# Aucun jeton ne se renouvelle lui-même — un run de plus de 60 min doit être
-# segmenté, avec réémission par l'agent.
+# Jetons. Ils viennent de l'environnement secret ou d'une saisie masquée :
+# aucun jeton n'est écrit sur disque, affiché ou passé en argv (visible dans
+# `ps`). Les deux serveurs sont requis par le socle ; continuer sans systematic
+# produirait un harnais incomplet présenté à tort comme exploitable.
 # ─────────────────────────────────────────────────────────────────────────────
-[ -n "${MCP_TOKEN_MARKETDATA:-}${MCP_ACCESS_TOKEN:-}" ] || cat >&2 <<'MSG'
-[desk-run] Aucun jeton marketdata dans l'environnement.
-  L'AGENT en émet un puis relance :
-    GetReadOnlyToken(minutes=60)        → export MCP_TOKEN_MARKETDATA=…
-    DtxMintReadOnlyToken(ttl_minutes)   → export MCP_TOKEN_SYSTEMATIC=…
-MSG
-[ -n "${MCP_TOKEN_MARKETDATA:-}${MCP_ACCESS_TOKEN:-}" ] || exit 3
-[ -n "${MCP_TOKEN_SYSTEMATIC:-}${MCP_ACCESS_TOKEN:-}" ] || log "⚠ pas de jeton systematic : régime dtx et décisions du moteur seront absents du socle."
+mcp_require_token marketdata || exit $?
+mcp_require_token systematic || exit $?
 
 # ── Garde de fraîcheur DU MOTEUR, avant toute sollicitation ─────────────────
 # Le 2026-08-12, GetHealth s'est déclaré frais (`freshness_ok: true`) en étant en retard d'une
@@ -202,7 +222,7 @@ mkdir -p "$SOCLE" "$SOCLE_OV"
 # Lancée en premier parce que c'est la plus lente et la plus instable (63 s à
 # 298 s mesurés), et dans son PROPRE dossier pour ne pas courir après l'index du
 # socle. Personne ne l'attend : elle ne porte aucun chiffre publié.
-( node tools/collect.js --plan plans/socle-overview.json --out "$SOCLE_OV" --quiet --var refdate="$REF" \
+( node tools/collect.js --plan plans/socle-overview.json --out "$SOCLE_OV" --quiet --var date="$DAY" --var refdate="$REF" \
     > "$DESK/O.log" 2>&1; echo $? > "$DESK/O.rc" ) & PO=$!
 
 # ── Chaîne V : scanner ─────────────────────────────────────────────────────
@@ -216,16 +236,23 @@ if is_due scanner; then
 fi
 
 # ── Chaîne S : socle partagé ───────────────────────────────────────────────
-node tools/collect.js --plan plans/socle.json --out "$SOCLE" --quiet --var refdate="$REF" > "$DESK/S.log" 2>&1
+node tools/validate-workflows.js --workflow desk > "$DESK/contracts.log" 2>&1 \
+  || die "contrat desk invalide (voir $DESK/contracts.log)"
+node tools/collect.js --plan plans/socle.json --out "$SOCLE" --quiet --var date="$DAY" --var refdate="$REF" > "$DESK/S.log" 2>&1
 SRC=$?
+[ "$SRC" -eq 0 ] || die "socle incomplet (rc=$SRC, voir $DESK/S.log)"
 [ -f "$SOCLE/_socle.json" ] || die "socle sans index : aucune source partageable. On ne poursuit pas sur des données partielles."
+node tools/check-freshness.js "$SOCLE/harness.json" > "$DESK/S.freshness.log" 2>&1 \
+  || die "socle stale/incomplet (voir $DESK/S.freshness.log)"
+node tools/validate-workflows.js --run-plan plans/socle.json "$SOCLE" >> "$DESK/S.freshness.log" 2>&1 \
+  || die "preuve du run socle invalide (voir $DESK/S.freshness.log)"
 log "S terminée (rc=$SRC) — $(node -e "process.stdout.write(String(Object.keys(require('./$SOCLE/_socle.json').entries).length))") nom(s) de source couverts"
 
 # ── Barrière B3 : socle complet avant toute rédaction ───────────────────────
 # Puis on rejoue le plan AVEC le socle : les produits conditionnés à la donnée
 # (densité de la saison des résultats, événement macro de tier 1) ne pouvaient
 # pas être tranchés avant. Rejouer coûte une seconde et ne rappelle rien.
-node tools/desk-plan.js --socle "$SOCLE" --out "$PLAN" >/dev/null
+write_plan "$SOCLE" >/dev/null
 DUE=$(pj 'process.stdout.write(p.due.map(d=>d.type).join(" "))')
 log "plan réévalué avec le socle : [$DUE]"
 # Le socle peut RETIRER un produit (saison des résultats trop creuse, aucun
@@ -239,13 +266,13 @@ if [ -z "$DUE" ]; then log "plus rien n'est dû après lecture du socle — arr�
 export COLLECT_SOCLE_DIR="$SOCLE:$SOCLE_OV"
 
 # ── Chaînes produits : après S, en parallèle entre elles ────────────────────
-PIDS=""; NAMES=""
+PIDS=""; NAMES=""; BLOCKED=""
 launch(){ # launch <nom> <plan> <out> [--var k=v ...]
   local name="$1" plan="$2" out="$3"; shift 3
   mkdir -p "$out"
-  ( node tools/collect.js --plan "plans/$plan.json" --out "$out" --quiet --var refdate="$REF" "$@" \
+  ( node tools/collect.js --plan "plans/$plan.json" --out "$out" --quiet --var date="$DAY" --var refdate="$REF" "$@" \
       > "$DESK/$name.log" 2>&1; echo $? > "$DESK/$name.rc" ) &
-  PIDS="$PIDS $!"; NAMES="$NAMES $name:$out"
+  PIDS="$PIDS $!"; NAMES="$NAMES $name:$plan:$out"
   log "$name lancé → $out"
 }
 
@@ -263,7 +290,8 @@ if is_due earnings; then
   # figée. La charnière qui les extrait du socle n'existe pas ; on refuse de la
   # remplacer par une recopie du modèle, qui est le transport de données que la
   # doctrine interdit. Le produit sort du plan en le disant.
-  log "⚠ earnings écartée : aucune charnière n'extrait les symboles publiants du socle (voir plan.json → due[].blocker)"
+  BLOCKED="$BLOCKED earnings(charnière-symboles-absente)"
+  log "⛔ earnings refusée : aucune charnière n'extrait les symboles publiants du socle"
 fi
 if is_due squeeze; then
   # Le radar squeeze a besoin de $symbols. La charnière manquait : le produit sortait dû à chaque
@@ -272,19 +300,20 @@ if is_due squeeze; then
   # seuls candidats déclarant la stratégie short_squeeze. Aucune liste figée, aucune recopie.
   SQZ="$DESK/squeeze"; mkdir -p "$SQZ/_univers"
   if node tools/collect.js --plan plans/squeeze-universe.json --out "$SQZ/_univers" --quiet \
-       --var refdate="$REF" > "$DESK/squeeze-univers.log" 2>&1 \
+       --var date="$DAY" --var refdate="$REF" > "$DESK/squeeze-univers.log" 2>&1 \
      && node tools/extract-universe.js --in "$SQZ/_univers" --out "$SQZ/vars.json" \
        --strategy short_squeeze --limit 36 >> "$DESK/squeeze-univers.log" 2>&1; then
     launch squeeze squeeze "$SQZ" --vars-file "$SQZ/vars.json"
   else
     # Un vivier vide n'est pas un échec technique : il peut signifier qu'aucun titre ne présente
     # de tension short exploitable. Dans les deux cas on ne publie pas de radar — on le dit.
-    log "⚠ squeeze écartée : aucun candidat short_squeeze (voir $DESK/squeeze-univers.log)"
+    BLOCKED="$BLOCKED squeeze(vivier-indisponible-ou-vide)"
+    log "⛔ squeeze refusée : collecte ou extraction du vivier non concluante (voir $DESK/squeeze-univers.log)"
   fi
 fi
 if is_due weekly; then
   MON=$(pj 'const w=p.due.find(d=>d.type==="weekly");process.stdout.write(w&&w.vars.monday?w.vars.monday.replace(/-/g,""):"")')
-  [ -n "$MON" ] && launch weekly weekly "weekly/$MON/_data"
+  [ -n "$MON" ] && launch weekly weekly "weekly/$MON/_data" --var date="$MON"
 fi
 if is_due retro; then
   # La rétro a besoin de $symbols, produits depuis les signaux du scan clos. La
@@ -292,13 +321,17 @@ if is_due retro; then
   # modèle, qui est exactement le transport de données que la doctrine interdit.
   if [ -x tools/extract-retro-symbols.js ] || [ -f tools/extract-retro-symbols.js ]; then
     SCAN=$(pj 'const r=p.due.find(d=>d.type==="retro");process.stdout.write(r?r.vars.scan:"")')
+    RETRO_END=$(pj 'const r=p.due.find(d=>d.type==="retro");process.stdout.write(r?r.vars.horizon_end:"")')
+    SCAN_ISO="${SCAN:0:4}-${SCAN:4:2}-${SCAN:6:2}"
     mkdir -p "scanner/$SCAN/retro/_data"
     node tools/extract-retro-symbols.js --scan "scanner/$SCAN" --out "scanner/$SCAN/retro/_data/vars.json" \
       > "$DESK/retro-symbols.log" 2>&1 \
       && launch retro retro "scanner/$SCAN/retro/_data" --vars-file "scanner/$SCAN/retro/_data/vars.json" \
-      || log "⚠ retro écartée : vivier de symboles introuvable"
+           --var scandate="$SCAN" --var startdate="$SCAN_ISO" --var refdate="$RETRO_END" \
+      || { BLOCKED="$BLOCKED retro(vivier-introuvable)"; log "⛔ retro refusée : vivier de symboles introuvable"; }
   else
-    log "⚠ retro écartée : tools/extract-retro-symbols.js manquant (voir plan.json → due[].blocker)"
+    BLOCKED="$BLOCKED retro(extracteur-manquant)"
+    log "⛔ retro refusée : tools/extract-retro-symbols.js manquant"
   fi
 fi
 
@@ -332,18 +365,19 @@ fi
 # weekly dont une source est périmée n'a aucune raison d'empêcher le daily de
 # sortir. Le produit fautif, lui, est retiré du plan.
 # ─────────────────────────────────────────────────────────────────────────────
-OK=""; KO=""
+OK=""; KO="$BLOCKED"
 # Initialisé AVANT le bloc scanner : sous `set -u`, une variable seulement
 # affectée à l'intérieur d'un `if` non pris fait planter la lecture d'après.
 scan_ok=0
 for entry in $NAMES; do
-  name="${entry%%:*}"; out="${entry#*:}"
+  name="${entry%%:*}"; rest="${entry#*:}"; plan="${rest%%:*}"; out="${rest#*:}"
   rc=$(cat "$DESK/$name.rc" 2>/dev/null || echo 1)
   if [ ! -f "$out/harness.json" ]; then KO="$KO $name(pas de harnais)"; continue; fi
-  if node tools/check-freshness.js "$out/harness.json" > "$DESK/$name.freshness.log" 2>&1; then
-    [ "$rc" = "0" ] && OK="$OK $name" || KO="$KO $name(collecte rc=$rc)"
+  if node tools/check-freshness.js "$out/harness.json" > "$DESK/$name.freshness.log" 2>&1 \
+     && node tools/validate-workflows.js --run-plan "plans/$plan.json" "$out" >> "$DESK/$name.freshness.log" 2>&1; then
+    [ "$rc" = "0" ] && OK="$OK $name" || KO="$KO $name(collecte-rc-$rc)"
   else
-    KO="$KO $name(fraîcheur)"
+    KO="$KO $name(preuve-ou-fraîcheur)"
   fi
 done
 if is_due scanner; then
@@ -352,9 +386,12 @@ if is_due scanner; then
   # n'existe pas encore à ce stade. Les deux vagues doivent passer : un
   # enrichissement frais sur un vivier périmé reste un scan périmé.
   scan_ok=1
-  for h in "scanner/$SESSION_C/_data/harness.json" "scanner/$SESSION_C/_data2/harness.json"; do
+  for spec in "plans/scanner-wave1.json:scanner/$SESSION_C/_data" "plans/scanner-wave2.json:scanner/$SESSION_C/_data2"; do
+    plan="${spec%%:*}"; out="${spec#*:}"; h="$out/harness.json"
     [ -f "$h" ] || { KO="$KO scanner(pas de harnais $h)"; scan_ok=0; break; }
-    node tools/check-freshness.js "$h" > "$DESK/scanner.freshness.log" 2>&1 || { KO="$KO scanner(fraîcheur)"; scan_ok=0; break; }
+    node tools/check-freshness.js "$h" > "$DESK/scanner.freshness.log" 2>&1 \
+      && node tools/validate-workflows.js --run-plan "$plan" "$out" >> "$DESK/scanner.freshness.log" 2>&1 \
+      || { KO="$KO scanner(preuve-ou-fraîcheur)"; scan_ok=0; break; }
   done
   [ $scan_ok -eq 1 ] && OK="$OK scanner"
 fi

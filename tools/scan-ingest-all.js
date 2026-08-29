@@ -103,6 +103,10 @@ function main() {
   const bars = readJson('/tmp/scan-plan-bars.json');
   if (!plan) { console.error('⛔ /tmp/scan-plan.json absent — lancer `node tools/scan-plan.js` d\'abord'); process.exit(2); }
   const asof = plan.scanDate;
+  const expectedClose = plan.lastTradingDay;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(expectedClose || ''))) {
+    console.error('⛔ scan plan without lastTradingDay; DTX expected close is unknown'); process.exit(2);
+  }
   const folder = plan.folder;
   const warns = [];
   const written = [];
@@ -172,7 +176,7 @@ function main() {
     const decPath = `/tmp/${id}.decide.json`;
     const repPath = `/tmp/${id}.replay.json`;
     fs.writeFileSync(decPath, JSON.stringify(decBody), 'utf8');
-    const args = ['tools/dtx-mcp-ingest.js', '--portfolio', id, '--decide', decPath, '--asof', asof, '--from', scan.DEFAULT_FROM];
+    const args = ['tools/dtx-mcp-ingest.js', '--portfolio', id, '--decide', decPath, '--asof', asof, '--expected-close', expectedClose, '--from', scan.DEFAULT_FROM];
     if (repBody && (repBody.results || repBody.result?.results)) {
       fs.writeFileSync(repPath, JSON.stringify(repBody), 'utf8');
       const to = String(scan.goLiveFor(id) || asof).slice(0, 10);

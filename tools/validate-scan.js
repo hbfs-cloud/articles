@@ -108,6 +108,44 @@ function loadStrategyOverlay(sourceFile) {
   }
 }
 
+function validateHashBoundArtifact(evidence, ticker, label) {
+  const errors = [];
+  const rel = evidence && evidence.source_artifact;
+  const expectedHash = evidence && evidence.source_sha256;
+  if (!rel || typeof rel !== 'string' || path.isAbsolute(rel) || !/^[a-f0-9]{64}$/.test(String(expectedHash || ''))) {
+    return [`${ticker}: ${label} requires repository-relative source_artifact and source_sha256`];
+  }
+  const abs = path.resolve(ROOT, rel);
+  const relative = path.relative(ROOT, abs);
+  if (!relative || relative.startsWith('..') || path.isAbsolute(relative) || !fs.existsSync(abs) || !fs.statSync(abs).isFile()) {
+    return [`${ticker}: ${label} source artifact is missing or escapes the repository (${rel})`];
+  }
+  const bytes = fs.readFileSync(abs);
+  const actualHash = crypto.createHash('sha256').update(bytes).digest('hex');
+  if (actualHash !== expectedHash) errors.push(`${ticker}: ${label} source hash mismatch`);
+  const escaped = String(ticker).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (!new RegExp(`(?:^|[^A-Z0-9.-])${escaped}(?:$|[^A-Z0-9.-])`, 'i').test(bytes.toString('utf8'))) {
+    errors.push(`${ticker}: ${label} source artifact does not contain the ticker`);
+  }
+  return errors;
+}
+
+function readEvidenceArtifact(evidence) {
+  try { return JSON.parse(fs.readFileSync(path.resolve(ROOT, evidence.source_artifact), 'utf8')); }
+  catch { return null; }
+}
+
+function findTickerRow(value, ticker) {
+  if (Array.isArray(value)) {
+    for (const item of value) { const found = findTickerRow(item, ticker); if (found) return found; }
+    return null;
+  }
+  if (!value || typeof value !== 'object') return null;
+  if (String(value.symbol || value.ticker || '').toUpperCase() === String(ticker).toUpperCase()) return value;
+  for (const child of Object.values(value)) { const found = findTickerRow(child, ticker); if (found) return found; }
+  return null;
+}
+
 function fail(violations) {
   console.error('\n❌ Scan validation FAILED — do NOT publish.\n');
   violations.forEach((v, i) => console.error(`  ${i + 1}. [${v.rule}] ${v.message}`));
@@ -626,6 +664,16 @@ async function main() {
       }
       const evidence = s.selection_evidence || {};
       const adv = Number(evidence.avg_daily_dollar_volume);
+      for (const message of validateHashBoundArtifact(evidence, s.ticker, 'selection evidence')) {
+        violations.push({ rule: 'selection_artifact_evidence', message });
+      }
+      const selectionArtifact = readEvidenceArtifact(evidence);
+      const selectionRow = selectionArtifact && findTickerRow(selectionArtifact, s.ticker);
+      const artifactAdv = selectionRow && Number(selectionRow.last_price) * Number(selectionRow.avg_volume);
+      if (!selectionRow || (!isEtf && Number(selectionRow.market_cap) !== Number(s.market_cap))
+        || !Number.isFinite(artifactAdv) || Math.abs(artifactAdv - adv) > Math.max(1, Math.abs(adv) * 0.01)) {
+        violations.push({ rule: 'selection_semantic_evidence', message: `${s.ticker}: market cap/ADV do not reconcile to the bound screener row.` });
+      }
       if (!Number.isFinite(adv) || adv < minAdv) {
         violations.push({
           rule: 'liquidity_evidence',
@@ -1210,6 +1258,15 @@ async function main() {
           message: `${s.ticker}: exact final-basket earnings evidence is missing, shorter than 7 days, or reports an event.`
         });
       }
+      for (const message of validateHashBoundArtifact(forward, s.ticker, 'earnings evidence')) {
+        violations.push({ rule: 'earnings_artifact_evidence', message });
+      }
+      const earningsArtifact = readEvidenceArtifact(forward);
+      const earningsCoverage = earningsArtifact && earningsArtifact.coverage && earningsArtifact.coverage[s.ticker];
+      const expectedCoverage = isEtf ? 'no issuer earnings (ETF)' : 'no earnings found in next 7 days';
+      if (!earningsArtifact || !earningsArtifact.coverage || earningsCoverage !== expectedCoverage) {
+        violations.push({ rule: 'earnings_semantic_evidence', message: `${s.ticker}: bound earnings artifact does not prove the stated no-event window.` });
+      }
       if (isEtf) continue;
       const sec = s.sec_evidence || {};
       if (sec.pagination_exhausted !== true || !Array.isArray(sec.equity_offering_hits) || !Array.isArray(sec.non_equity_offering_hits)) {
@@ -1217,6 +1274,16 @@ async function main() {
           rule: 'sec_evidence',
           message: `${s.ticker}: accession-level SEC evidence must include exhausted pagination plus separate equity/non-equity offering arrays.`
         });
+      }
+      for (const message of validateHashBoundArtifact(sec, s.ticker, 'SEC evidence')) {
+        violations.push({ rule: 'sec_artifact_evidence', message });
+      }
+      const secArtifact = readEvidenceArtifact(sec);
+      const secCoverage = secArtifact && secArtifact.coverage && secArtifact.coverage[s.ticker];
+      if (!secCoverage || JSON.stringify(secCoverage.latest_earnings_filing || {}) !== JSON.stringify(sec.latest_earnings_filing || {})
+        || JSON.stringify(secCoverage.equity_offering_hits || []) !== JSON.stringify(sec.equity_offering_hits || [])
+        || JSON.stringify(secCoverage.non_equity_offering_hits || []) !== JSON.stringify(sec.non_equity_offering_hits || [])) {
+        violations.push({ rule: 'sec_semantic_evidence', message: `${s.ticker}: SEC classifications/accession do not reconcile to the bound artifact.` });
       }
       if (sec.equity_offering_hits?.length || s.dilution_clear !== true) {
         violations.push({

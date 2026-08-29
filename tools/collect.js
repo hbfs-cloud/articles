@@ -47,6 +47,20 @@
 const fs = require('fs');
 const path = require('path');
 const { callTool, callMany, awaitJob, canCallDirectly, McpAuthError } = require('./lib/mcp-client');
+const { validateDtxDecision, validateDtxReplay } = require('./lib/dtx-content-gates');
+const workflowContract = require('./lib/workflow-contract');
+const { isUSTradingDay, previousUSTradingDay } = require('./lib/market-calendar');
+
+const CURRENT_ONLY_TOOLS = new Set(['GetMarketContext', 'GetEarningsCalendarFiltered', 'GetInsiderActivity', 'OptionsAnalytics']);
+function latestCompletedUSClose(now = new Date()) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(now).filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+  const date = `${parts.year}-${parts.month}-${parts.day}`;
+  const afterClose = Number(parts.hour) > 16 || (Number(parts.hour) === 16 && Number(parts.minute) >= 0);
+  return isUSTradingDay(date) && afterClose ? date : previousUSTradingDay(date);
+}
 
 /**
  * Date la plus récente RÉELLEMENT PRÉSENTE dans une charge utile, bornée à aujourd'hui.
@@ -101,10 +115,46 @@ function maxBarDate(value) {
   return best;
 }
 
+function findScalarByKey(value, key) {
+  if (!value || typeof value !== 'object') return null;
+  if (Object.prototype.hasOwnProperty.call(value, key) && value[key] != null) return value[key];
+  for (const child of Object.values(value)) {
+    const found = findScalarByKey(child, key);
+    if (found != null) return found;
+  }
+  return null;
+}
+
 function semanticFailure(call, value) {
-  if (!call || call.server !== 'systematic' || !value || typeof value !== 'object') return null;
-  const status = value.status || (value.result && value.result.status);
+  if (!call || !value || typeof value !== 'object') return null;
+  if (call.server === 'marketdata' && call.tool === 'GetStatus') {
+    const payload = value.result && typeof value.result === 'object' ? value.result : value;
+    const health = payload.health && typeof payload.health === 'object' ? payload.health : payload;
+    const state = String(health.status || health.state || '').toLowerCase();
+    if (health.ok === false || health.healthy === false || /down|error|unavailable|degraded/.test(state)) {
+      return `marketdata GetStatus unhealthy (${state || 'ok=false'})`;
+    }
+    const expectedClose = call.assert && call.assert.expected_close;
+    if (expectedClose) {
+      const actualClose = String(findScalarByKey(value, 'bar_service_1d_max_last_bar_date') || '');
+      if (!actualClose) return 'marketdata GetStatus missing bar_service_1d_max_last_bar_date';
+      if (actualClose !== expectedClose) {
+        return `marketdata GetStatus close mismatch (expected ${expectedClose}, got ${actualClose})`;
+      }
+    }
+    const coveredClose = call.assert && call.assert.covers_close;
+    if (coveredClose) {
+      const actualClose = String(findScalarByKey(value, 'bar_service_1d_max_last_bar_date') || '');
+      if (!actualClose) return 'marketdata GetStatus missing bar_service_1d_max_last_bar_date';
+      if (actualClose < coveredClose) {
+        return `marketdata GetStatus does not cover historical close (required ${coveredClose}, got ${actualClose})`;
+      }
+    }
+    return null;
+  }
+  if (call.server !== 'systematic') return null;
   const payload = value.result && typeof value.result === 'object' ? value.result : value;
+  const status = payload.status || value.status;
   if (call.tool === 'GetHealth') {
     if (payload.ok === false) return 'systematic GetHealth ok=false';
     if (payload.freshness_ok === false) return 'systematic GetHealth freshness_ok=false';
@@ -112,6 +162,31 @@ function semanticFailure(call, value) {
   }
   if (status === 'stale_data' || status === 'data_date_mismatch') {
     return `systematic ${call.tool} ${status}`;
+  }
+  if (call.tool === 'DtxListConfigs') {
+    const configs = Array.isArray(payload) ? payload
+      : Array.isArray(payload.configs) ? payload.configs
+        : Array.isArray(payload.data) ? payload.data : null;
+    if (!configs || configs.length === 0) return 'systematic DtxListConfigs returned no deployed config';
+    const requiredPortfolio = call.assert && call.assert.contains_portfolio;
+    if (requiredPortfolio && !configs.some(c => c && (c.id === requiredPortfolio || c.file === requiredPortfolio))) {
+      return `systematic DtxListConfigs does not contain required portfolio ${requiredPortfolio}`;
+    }
+  }
+  if (call.tool === 'DtxDecide') {
+    const errors = validateDtxDecision(value, {
+      asof: call.args && call.args.asof,
+      requestId: call.args && call.args.request_id,
+      referenceClose: call.args && call.args.expected_data_date,
+    });
+    if (errors.length) return `systematic DtxDecide contract rejected: ${errors.join('; ')}`;
+  }
+  if (call.tool === 'DtxReplay') {
+    const errors = validateDtxReplay(value, {
+      portfolio: call.args && call.args.portfolio,
+      referenceClose: call.args && call.args.to,
+    });
+    if (errors.length) return `systematic DtxReplay contract rejected: ${errors.join('; ')}`;
   }
   if (payload.behind_expected === true) return `systematic ${call.tool} behind_expected=true`;
   return null;
@@ -135,9 +210,19 @@ const outDir = arg('--out');
 // et surtout pas dans le même index, sinon la seconde écrase la première.
 const socleDirs = (arg('--socle', process.env.COLLECT_SOCLE_DIR || '') || '')
   .split(':').map(s => s.trim()).filter(Boolean);
-const dryRun = has('--dry-run');
+if (has('--dry-run')) {
+  console.error('[collect] --dry-run est ambigu et n\'exécute pas la collecte. Utiliser --plan-only pour inspecter le plan; les workflows gardent --dry-run pour un run local complet sans effets externes.');
+  process.exit(2);
+}
+const planOnly = has('--plan-only');
 const quiet = has('--quiet');
+const allowArchived = has('--allow-archived');
 const tokenStdin = has('--token-stdin');
+const tokenBundleStdin = has('--token-bundle-stdin');
+if (tokenStdin && tokenBundleStdin) {
+  console.error('[collect] choisir --token-stdin OU --token-bundle-stdin, jamais les deux.');
+  process.exit(2);
+}
 const varsFile = arg('--vars-file');
 const cliVars = {};
 if (varsFile) Object.assign(cliVars, JSON.parse(require('fs').readFileSync(varsFile, 'utf8')));
@@ -149,12 +234,12 @@ process.argv.forEach((a, i) => {
 });
 
 /**
- * Lecture du jeton sur stdin — chemin PRÉFÉRÉ.
+ * Lecture d'un jeton serveur unique ou d'un bundle JSON sur stdin.
  * Un jeton passé en argv est visible dans `ps` pour tout utilisateur de la
  * machine ; passé par un préfixe d'environnement il ne l'est pas, mais il reste
  * dans la ligne de commande que la plupart des harnais journalisent. Stdin ne
  * laisse de trace ni dans l'un ni dans l'autre.
- *   printf '%s' "$TOKEN" | node tools/collect.js --plan … --token-stdin
+ * Le secret manager du runner écrit sur stdin ; aucune valeur ne passe en argv.
  */
 function readTokenFromStdin() {
   const fd = 0;
@@ -170,8 +255,23 @@ function readTokenFromStdin() {
   return Buffer.concat(chunks).toString('utf8').trim();
 }
 
+function installTokenBundle(raw) {
+  let bundle;
+  try { bundle = JSON.parse(raw); }
+  catch { throw new Error('--token-bundle-stdin attend un objet JSON valide'); }
+  const allowed = new Set(['marketdata', 'systematic']);
+  for (const [server, config] of Object.entries(bundle || {})) {
+    if (!allowed.has(server)) throw new Error(`serveur inconnu dans le bundle de jetons: ${server}`);
+    const entry = typeof config === 'string' ? { token: config } : config;
+    if (!entry || typeof entry.token !== 'string' || !entry.token.trim()) throw new Error(`jeton ${server} absent du bundle`);
+    const upper = server.toUpperCase();
+    process.env[`MCP_TOKEN_${upper}`] = entry.token.trim();
+    if (entry.expires_at) process.env[`MCP_TOKEN_${upper}_EXPIRES_AT`] = String(entry.expires_at);
+  }
+}
+
 if (!planPath || !outDir) {
-  console.error('Usage: node tools/collect.js --plan <manifeste.json> --out <dossier> [--dry-run]');
+  console.error('Usage: node tools/collect.js --plan <manifeste.json> --out <dossier> [--plan-only]');
   process.exit(2);
 }
 
@@ -200,6 +300,38 @@ function substitute(value, vars) {
     return o;
   }
   return value;
+}
+
+function expandCalls(wave, vars) {
+  const expanded = [];
+  for (const declaration of wave.calls || []) {
+    if (!declaration.foreach) {
+      expanded.push({
+        ...declaration,
+        args: substitute(declaration.args || {}, vars),
+        ...(declaration.assert ? { assert: substitute(declaration.assert, vars) } : {}),
+      });
+      continue;
+    }
+    const cfg = declaration.foreach;
+    const raw = vars[cfg.var];
+    if (raw == null) throw new Error(`${declaration.as}: variable foreach $${cfg.var} absente`);
+    const items = [...new Set(String(raw).split(cfg.separator || ',').map(x => x.trim()).filter(Boolean))];
+    if (!items.length) throw new Error(`${declaration.as}: foreach $${cfg.var} ne contient aucun élément`);
+    if (items.length > cfg.max) throw new Error(`${declaration.as}: foreach contient ${items.length} éléments, maximum explicite ${cfg.max}`);
+    for (const item of items) {
+      const suffix = item.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+      if (!suffix) throw new Error(`${declaration.as}: élément foreach inutilisable`);
+      expanded.push({
+        ...declaration,
+        foreach: undefined,
+        as: `${declaration.as}_${suffix}`,
+        args: substitute(declaration.args || {}, { ...vars, item }),
+        ...(declaration.assert ? { assert: substitute(declaration.assert, { ...vars, item }) } : {}),
+      });
+    }
+  }
+  return expanded;
 }
 
 /** Un appel async renvoie {job_id,status:'pending'} → on poll jusqu'au bout. */
@@ -272,12 +404,19 @@ const SOCLES = socleDirs.map(dir => {
   try { return { dir, index: JSON.parse(fs.readFileSync(path.join(dir, '_socle.json'), 'utf8')) }; }
   catch { console.error(`[collect] socle ${dir} : index absent ou illisible — les appels concernés seront rejoués.`); return null; }
 }).filter(Boolean);
+let runtimeRefdate = null;
+
+function callArgsSha256(c) {
+  return workflowContract.sha256(workflowContract.stableStringify(c.args || {}));
+}
 
 function socleRead(c) {
   for (const { dir, index } of SOCLES) {
+    if (!runtimeRefdate || index.reference_date !== runtimeRefdate) continue;
     const e = index.entries && index.entries[c.as];
     if (!e) continue;
     if (e.server !== c.server || e.tool !== c.tool) continue;
+    if (!e.args_sha256 || e.args_sha256 !== callArgsSha256(c)) continue;
     const ageMin = (Date.now() - Date.parse(e.as_of)) / 60000;
     const maxH = (c.freshness && c.freshness.max_age_h) || 24;
     if (!(ageMin >= 0) || ageMin / 60 > maxH) continue;   // trop vieux POUR CE consommateur
@@ -288,13 +427,47 @@ function socleRead(c) {
 }
 
 (async function main() {
-  const plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));
+  const planBytes = fs.readFileSync(planPath);
+  const plan = JSON.parse(planBytes.toString('utf8'));
+  if (plan.archived === true && !allowArchived) {
+    console.error(`[collect] Plan archivé (${plan.snapshot_date || 'date inconnue'}) : ${planPath}. ` +
+      'Utiliser le plan actif paramétrique; --allow-archived est réservé à une reproduction forensic explicite.');
+    process.exit(2);
+  }
+  const configured = workflowContract.findPlanSpec(planPath);
+  if (configured) {
+    const contractErrors = workflowContract.validatePlan(plan, configured.planSpec);
+    if (contractErrors.length) {
+      console.error(`[collect] Contrat invalide pour ${configured.rel}:`);
+      for (const error of contractErrors) console.error(`  - ${error}`);
+      process.exit(2);
+    }
+  }
   const refdate = cliVars.refdate || plan.reference_date || null;
+  runtimeRefdate = refdate;
   const vars = { ...(plan.vars || {}), ...cliVars, ...(refdate ? { refdate } : {}) };
-  const waves = plan.waves || [];
+  if (configured) {
+    const runtimeErrors = workflowContract.validateRuntimeVariables(configured.planSpec, vars);
+    if (runtimeErrors.length) throw new Error(`Variables runtime invalides: ${runtimeErrors.join('; ')}`);
+  }
+  if (refdate && !/^\d{4}-\d{2}-\d{2}$/.test(refdate)) throw new Error(`refdate illisible: ${refdate}`);
+  if (refdate && refdate > new Date().toISOString().slice(0, 10)) throw new Error(`refdate future interdite: ${refdate}`);
+  const artifact = substitute(plan.artifact || '', vars);
+  const waves = (plan.waves || []).map(wave => ({ ...wave, calls: expandCalls(wave, vars) }));
+  const latestClose = latestCompletedUSClose();
+  const currentOnly = waves.flatMap(wave => wave.calls || []).filter(call => CURRENT_ONLY_TOOLS.has(call.tool));
+  if (refdate && refdate !== latestClose && currentOnly.length) {
+    throw new Error(`refdate historique ${refdate}: outils current-only interdits (${[...new Set(currentOnly.map(call => call.tool))].join(', ')}); derniere cloture complete ${latestClose}`);
+  }
+  const aliases = waves.flatMap(w => (w.calls || []).map(c => c.as));
+  const duplicateAliases = aliases.filter((name, i) => aliases.indexOf(name) !== i);
+  if (duplicateAliases.length) throw new Error(`alias d'appel dupliqué après expansion: ${[...new Set(duplicateAliases)].join(', ')}`);
   const totalCalls = waves.reduce((n, w) => n + (w.calls || []).length, 0);
+  const planSha256 = workflowContract.sha256(planBytes);
+  const inputSha256 = workflowContract.sha256(workflowContract.stableStringify({ artifact, refdate, waves }));
+  const neededServers = [...new Set(waves.flatMap(w => (w.calls || []).map(c => c.server)))];
 
-  if (dryRun) {
+  if (planOnly) {
     log(`[collect] ${path.basename(planPath)} — ${waves.length} vague(s), ${totalCalls} appel(s), date de référence ${refdate || '(aucune)'}`);
     let served = 0;
     for (const w of waves) for (const c of w.calls || []) {
@@ -310,17 +483,26 @@ function socleRead(c) {
   }
 
   if (tokenStdin) {
+    if (neededServers.length !== 1) {
+      console.error('[collect] --token-stdin est réservé à un plan mono-serveur; utiliser --token-bundle-stdin.');
+      process.exit(3);
+    }
     const t = readTokenFromStdin();
     if (!t) { console.error('[collect] --token-stdin demandé mais stdin est vide.'); process.exit(3); }
     process.env.MCP_ACCESS_TOKEN = t;
+    process.env.MCP_ACCESS_TOKEN_SERVER = neededServers[0];
+  }
+  if (tokenBundleStdin) {
+    const raw = readTokenFromStdin();
+    if (!raw) { console.error('[collect] --token-bundle-stdin demandé mais stdin est vide.'); process.exit(3); }
+    installTokenBundle(raw);
   }
 
-  const neededServers = [...new Set(waves.flatMap(w => (w.calls || []).map(c => c.server)))];
   const missing = neededServers.filter(s => !canCallDirectly(s));
   if (missing.length) {
     console.error(
       `[collect] Aucun jeton utilisable pour : ${missing.join(", ")} — collecte directe impossible.\n` +
-      "  L'AGENT doit obtenir un jeton à TTL court et relancer avec MCP_ACCESS_TOKEN positionné.\n" +
+      "  Émettre un jeton TTL par serveur et l'injecter sans afficher sa valeur.\n" +
       "  Le chemin historique (agent → JSON de staging → --ingest) reste disponible et n'est pas cassé."
     );
     process.exit(3);
@@ -328,7 +510,18 @@ function socleRead(c) {
 
   fs.mkdirSync(outDir, { recursive: true });
   const startedAt = new Date().toISOString();
-  const journal = { plan: planPath, artifact: plan.artifact || null, reference_date: refdate, started_at: startedAt, waves: [] };
+  const journal = {
+    contract_version: '1.0',
+    workflow: configured ? configured.workflow : null,
+    plan: path.relative(workflowContract.ROOT, path.resolve(planPath)).replace(/\\/g, '/'),
+    plan_sha256: planSha256,
+    input_sha256: inputSha256,
+    resolved_input: { artifact, refdate, waves },
+    artifact,
+    reference_date: refdate,
+    started_at: startedAt,
+    waves: [],
+  };
   const sources = [];
   let failures = 0;
 
@@ -341,8 +534,9 @@ function socleRead(c) {
   const critiques = waves.filter(w => !w.detached);
   const detachees = waves.filter(w => w.detached);
   for (const wave of [...critiques, ...detachees]) {
+    const failuresBeforeWave = failures;
     const estDetachee = !!wave.detached;
-    const calls = (wave.calls || []).map(c => ({ ...c, args: substitute(c.args || {}, vars) }));
+    const calls = wave.calls || [];
     if (!calls.length) continue;
     const t0 = Date.now();
     log(`[collect] vague « ${wave.name} » — ${calls.length} appel(s) en parallèle`);
@@ -435,6 +629,8 @@ function socleRead(c) {
         as: r.as,
         server: c.server,
         tool: c.tool,
+        required: c.freshness ? c.freshness.required !== false : true,
+        detached: estDetachee,
         ok: r.ok && !semanticError,
         ms: r.ms,
         wait_ms: r.waitMs || 0,
@@ -449,11 +645,14 @@ function socleRead(c) {
         log(`   ✗ ${r.as} — ${semanticError}`);
         failures++; continue;
       }
-      fs.writeFileSync(path.join(outDir, `${r.as}.json`), JSON.stringify(r.value, null, 2));
+      const sourceBody = JSON.stringify(r.value, null, 2);
+      fs.writeFileSync(path.join(outDir, `${r.as}.json`), sourceBody);
+      waveLog.calls[i].output_sha256 = workflowContract.sha256(sourceBody);
       if (!r.fromCache) cacheWrite(c, r.value);
       if (c.freshness) {
         sources.push({
           name: r.as,
+          sha256: workflowContract.sha256(sourceBody),
           as_of: r.asOf || new Date().toISOString(),
           // SÉANCE RÉELLEMENT DÉCRITE par la charge utile — distincte de l'heure de collecte.
           //
@@ -481,10 +680,17 @@ function socleRead(c) {
     }
     journal.waves.push(waveLog);
     log(`[collect] vague « ${wave.name} » terminée en ${waveLog.ms}ms`);
+    if (wave.gate && failures > failuresBeforeWave) {
+      journal.blocked_at_gate = wave.name;
+      log(`[collect] gate « ${wave.name} » refusé — aucune vague aval exécutée`);
+      break;
+    }
   }
 
   journal.finished_at = new Date().toISOString();
   journal.failures = failures;
+  journal.executed_calls = journal.waves.reduce((n, wave) => n + wave.calls.length, 0);
+  journal.skipped_calls = totalCalls - journal.executed_calls;
   fs.writeFileSync(path.join(outDir, '_collect.json'), JSON.stringify(journal, null, 2));
 
   // Index de socle — écrit UNIQUEMENT si le plan se déclare socle. Il ne liste que
@@ -502,6 +708,7 @@ function socleRead(c) {
           file: `${cl.as}.json`, as: cl.as, server: cl.server, tool: cl.tool,
           as_of: (src && src.as_of) || journal.finished_at,
           max_age_h: (decl.freshness && decl.freshness.max_age_h) || null,
+          args_sha256: callArgsSha256(decl),
         };
       }
     }
@@ -511,13 +718,24 @@ function socleRead(c) {
   }
 
   if (sources.length) {
-    const harness = { artifact: plan.artifact || null, reference_close: refdate, sources };
+    const harness = {
+      contract_version: '1.0',
+      workflow: configured ? configured.workflow : null,
+      generated_at: journal.finished_at,
+      artifact,
+      content: artifact.endsWith('/index.html') ? path.dirname(artifact) : artifact,
+      reference_close: refdate,
+      plan: journal.plan,
+      plan_sha256: planSha256,
+      input_sha256: inputSha256,
+      sources,
+    };
     fs.writeFileSync(path.join(outDir, 'harness.json'), JSON.stringify(harness, null, 2));
     log(`[collect] manifeste de fraîcheur écrit — ${sources.length} source(s) datée(s)`);
   }
 
   const wall = Date.parse(journal.finished_at) - Date.parse(startedAt);
-  log(`[collect] ${totalCalls - failures}/${totalCalls} appel(s) en ${wall}ms — ${failures} échec(s)`);
+  log(`[collect] ${journal.executed_calls - failures}/${journal.executed_calls} appel(s) exécuté(s) en ${wall}ms — ${failures} échec(s), ${journal.skipped_calls} non lancé(s)`);
   // --quiet supprime la PROGRESSION, jamais la RAISON D'UN ÉCHEC. Sans cette
   // sortie, un appelant qui redirige vers un fichier récupérait un log VIDE avec
   // un code retour 1 : impossible de savoir quel appel a lâché ni pourquoi.

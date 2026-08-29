@@ -1,94 +1,123 @@
 {
- "artifact": "cohorte A+ — vérification",
- "waves": [
-  {
-   "name": "fondamentaux",
-   "calls": [
+  "artifact": "data/workflow-runs/aplus/$date/verification.json",
+  "waves": [
     {
-     "as": "st0",
-     "server": "marketdata",
-     "tool": "QueryData",
-     "args": {
-      "types": "stats,technicals,calendar",
-      "symbols": "AEG,GRND,AMRX,SFNC,SBLK,FBP,MTG,PFS,HOMB,GTES,NMIH,COGT,WSBC,MFC,ZWS,FRO,BEN,LW,EBC,HESM,GEO,UBSI,LTH,NWSA,MPLX,FBK,WTRG,OMF,AMH,SYF",
-      "end_date": "2026-08-10"
-     },
-     "freshness": {
-      "max_age_h": 24,
-      "required": true
-     }
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "expected_close": "$refdate"
+          }
+        }
+      ]
     },
     {
-     "as": "st1",
-     "server": "marketdata",
-     "tool": "QueryData",
-     "args": {
-      "types": "stats,technicals,calendar",
-      "symbols": "CATY,SON,IR,SCI,RUSHA,SOLV,BUD,JEF,PB,SIG,ESNT,MSGE,CBSH,VIK,SYY,SKYW,SLF,CFG,PNFP,PRU,FSS,SJM,PCAR,FELE,BOKF,AX,PHM,RF,BPOP,HIG",
-      "end_date": "2026-08-10"
-     },
-     "freshness": {
-      "max_age_h": 24,
-      "required": true
-     }
-    },
-    {
-     "as": "st2",
-     "server": "marketdata",
-     "tool": "QueryData",
-     "args": {
-      "types": "stats,technicals,calendar",
-      "symbols": "NIC,CFR,PJT,HWC,DLTR,OZK,AFG,PFGC,PFG,DINO,THG,AN,WAB,HAYW,IRT,CCL,VOD,KN,CZR,TJX,OUST,HON,COKE,UBS,RCL,ECL,AIZ,CTAS,HWM,ADT",
-      "end_date": "2026-08-10"
-     },
-     "freshness": {
-      "max_age_h": 24,
-      "required": true
-     }
-    },
-    {
-     "as": "st3",
-     "server": "marketdata",
-     "tool": "QueryData",
-     "args": {
-      "types": "stats,technicals,calendar",
-      "symbols": "CAG,CHWY,WY,MWA,CPB,KVUE,MOS,GFL,RELX,IP,TAP,SBRA,CNO,KLAR,AS,HLN,PK,RYAN,BP,KVYO,CXT,AOS,EL,THO,ALK,UFPI,FAF,AAP,ONB,BRO",
-      "end_date": "2026-08-10"
-     },
-     "freshness": {
-      "max_age_h": 24,
-      "required": true
-     }
-    },
-    {
-     "as": "st4",
-     "server": "marketdata",
-     "tool": "QueryData",
-     "args": {
-      "types": "stats,technicals,calendar",
-      "symbols": "UL,BALL,MNDY,WRBY,KKR,PAGP,CGNX,DD,TRU,EPR,BNTX,FHN,BXP,DLR,LOAR,MRSH,AWK,AAL,F,DLO,SNX,ILMN,JPM,TFC,UNF,HEI,BIIB,STT,UMBF,V",
-      "end_date": "2026-08-10"
-     },
-     "freshness": {
-      "max_age_h": 24,
-      "required": true
-     }
-    },
-    {
-     "as": "st5",
-     "server": "marketdata",
-     "tool": "QueryData",
-     "args": {
-      "types": "stats,technicals,calendar",
-      "symbols": "NSC,CLH,RNR,MTN,NTES,DK,UNP,BMO,PNC,AON,DDOG,LNG,TIGO,EXPD,CM,MCY,REYN,BNS,WELL",
-      "end_date": "2026-08-10"
-     },
-     "freshness": {
-      "max_age_h": 24,
-      "required": true
-     }
+      "name": "eliminators",
+      "calls": [
+        {
+          "as": "bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "limit": 260,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        },
+        {
+          "as": "fundamentals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "financials,stats,earnings_quarterly,calendar,analyst_actions",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "technicals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "quote,technicals,support_resistance,volume_profile,trading_signals",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "sec_evidence",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "sec_filings,flags",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "days": 365,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "corporate_actions",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "news,flags",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "days": 180,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "insiders",
+          "server": "marketdata",
+          "tool": "GetInsiderActivity",
+          "args": {
+            "symbols": "$symbols",
+            "days": 90,
+            "limit": 100,
+            "include_transactions": true
+          },
+          "freshness": {
+            "max_age_h": 96,
+            "required": true
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

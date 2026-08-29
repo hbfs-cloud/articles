@@ -1,104 +1,90 @@
-# /analyse — Analyse ticker harnachée (bundle MCP complet → valuation → dilution → grading → panel → publish)
+<!-- workflow-contract: analyse -->
+# /analyse - Fiche individuelle harnachee
 
-Produit/actualise `analyses/{TICKER}/` via le pipeline JSON (`data/analyses-data/{TICKER}.json` →
-`tools/publish-analysis.js`) en appliquant le skill **`content-harness`**. Skills compagnons :
-`daily-weekly-analysis-workflows` (§Analyse [TICKER] + encart valorisation), `aplus-setups`, `senior-review`.
+Alias Codex: `$analyse` et `$analysis`. Produit `data/analyses-data/TICKER.json`, puis
+`analyses/TICKER/index.html`, selon `analyses/CLAUDE.md`, `.claude/skills/source-policy.md` et le
+renderer existant.
 
+## Inputs
 
-## ⚡ Phase de collecte — SCRIPTÉE (obligatoire depuis 2026-08-10)
+- Un seul symbole canonique, resolu par le MCP; ne jamais deviner/corriger le ticker.
+- `refdate`: derniere cloture complete utilisee par tous les niveaux.
+- `dry-run`: collecte, JSON, rendu local et QA seulement.
 
-**Ne joue plus les salves MCP à la main.** Émets un jeton, lance la collecte, lis les
-artefacts. Le modèle déclare le besoin ; il ne transporte plus la donnée.
+Si une fiche existe, la lire et conserver son historique. Ne pas remplacer Finviz ou une autre source
+de graphique existante sans demande explicite du user.
+
+## Collecte
 
 ```bash
-# 1. l'AGENT émet le jeton (max 60 min marketdata, 1440 systematic)
-#    GetReadOnlyToken(minutes=60) / DtxMintReadOnlyToken(ttl_minutes=240)
-#    → export MCP_TOKEN_MARKETDATA=… MCP_TOKEN_SYSTEMATIC=…
-# 2. collecte parallèle + gate de fraîcheur en une commande
-bash tools/run-collect.sh analyse <dossier>/_data --var refdate=<derniere_cloture> [--var symbol=X]
+node tools/validate-workflows.js --workflow analyse
+bash tools/run-collect.sh analyse analyses/TICKER/_data \
+  --var symbol=TICKER --var refdate=YYYY-MM-DD
 ```
 
-Ce que ça règle mécaniquement, et qu'on oubliait :
-- `$refdate` est substitué dans TOUS les arguments → le contrat de date devient structurel,
-  plus aucun `end_date` oublié (cause des inversions de signe du weekly du 10/08) ;
-- `harness.json` est un sous-produit de la collecte → une source collectée mais non déclarée
-  devient impossible ;
-- les appels d'une vague partent en parallèle → la règle R2 de `perf-parallel-mcp` est dans le
-  moteur, plus dans un rappel de prompt.
+Le plan couvre instrument, 260 barres, fondamentaux, earnings, analystes, techniques, SEC/flags,
+actions corporate, insiders/institutionnels, short/CTB/FTD/dark pool, options et signaux composites.
+Les sources de contexte optionnelles ne peuvent combler une preuve requise absente.
 
-Une variable référencée par le plan mais non fournie est une **erreur**, pas un vide : un
-`end_date` absent renverrait « le monde d'aujourd'hui » au lieu de la date visée.
+## Verification Primaire
 
-Reste à l'agent, et à lui seul : `RefreshBars` / `DtxRefreshBars` (vraies écritures), la
-sélection, la rédaction, les gates adversariaux, la décision de publier.
-Doctrine complète : skill `llm-script-boundary`.
+1. Ouvrir chaque depot SEC decisionnel et conserver accession, date, URL EDGAR directe, security type,
+   capacite encore ouverte et consequence. Classer dette et equity separement.
+2. Verifier guidance et resultats via 10-Q/10-K/8-K ou IR. Une date earnings non confirmee reste
+   explicitement non confirmee.
+3. Attribuer le mouvement contre secteur/pairs sur la meme fenetre avant de le dire specifique au titre.
+4. Verifier splits et echelle: spot, entree, stop, targets, ATR et moyennes doivent partager la meme
+   echelle ajustee.
+5. Le web est autorise pour SEC/IR et news attribuees. Il ne remplace pas barres, techniques,
+   fondamentaux, options ou flux MCP.
 
-## Arguments
-`$ARGUMENTS`
-- `TICKER` (obligatoire) — tout asset type (stock, etf, crypto, forex, commodity, index).
-- `--update --grade X --reason "…"` → re-grade rapide sans régénération (publish-analysis --update).
-- `dry-run` → JSON + validation sans publication.
+## Calcul Local
 
-## Phase 0 — Preflight (H0)
-`GetStatus()` (HARD STOP si down) ; `get_context(query='analyse {TICKER}', workspace='dailystocks')` ;
-si l'analyse existe → archiver dans `analyses/{TICKER}/archive/{YYYYMMDD}/` ; créer
-`data/analyses-data/{TICKER}.harness.json`.
+- `valuation-multi.js`: seules les methodes dont tous les intrants existent contribuent.
+- `value-quality-board.js`: sortie structuree, aucun chiffre reecrit par le modele.
+- R/R recalcule depuis les niveaux, pourcentages recalcule depuis l'entree.
+- Stop confronte au niveau technique cite dans la prose.
+- Entree actionnable au spot; sinon statut `watch/wait`, jamais faux setup valide.
+- Le grade de dossier n'est pas un label A+. A+ passe exclusivement par
+  `validate-aplus-candidates.js`.
 
-## Phase 1 — Collecte (H1) — le bundle COMPLET, c'est ici que la sous-utilisation se corrige
-**Salve 1 (instrument)** :
-- `GetInstruments(symbols='{TICKER}')` — bundle intégral : quote, technicals (RSI/EMA/ATR/MACD),
-  support/résistance, short interest + CTB + days-to-cover, options OI/max pain/P&C, sentiment
-  multi-sources (social, vidéo, news), capital flow, dark pool, calendrier (earnings/dividendes), profil.
-- `GetSymbolSignals(symbol='{TICKER}')` + `ExplainSymbolMove(symbol='{TICKER}')` (le mouvement récent
-  s'explique, il ne se paraphrase pas).
-- `QueryData(types='financials,stats,earnings_quarterly,analyst_actions,insider_transactions,news,holders', symbols='{TICKER}')`
-  (lots si approval-gated).
-- `GetReferentialData` si référentiel nécessaire (secteur/industrie/indices d'appartenance).
-**Salve 2 (options & positionnement)** :
-- `OptionsAnalytics(action='sentiment', symbol='{TICKER}')` — P/C, IV si disponible (0,01 = donnée
-  bidon, ne pas citer).
-- `ScreenOptions` sur le ticker — flux inhabituels, strikes chargés.
-- `GetInsiderActivity(symbols='{TICKER}', days=30)`.
-- `GetEarningsCalendarFiltered(days_ahead=7)` — print imminent = fenêtre d'exclusion dans le Trade Idea.
-**Salve 3 (risque)** :
-- Anti-dilution OBLIGATOIRE : `QueryData(types='sec_filings,flags', days=180)` + WebSearch
-  `"{TICKER} SEC S-3 prospectus warrants ATM"` (S-3/shelf, warrants ITM, ATM, underwriters agressifs,
-  PIPE, reverse split, serial diluter) → risque = mention rouge Risks + impact Trade Idea (score↓,
-  stop élargi, ou exclusion).
-- `PortfolioRisk(action='correlation')` vs book ouvert si le Trade Idea entre au book.
-- `DtxRegime` + `GetMarketContext(facets='regime')` — le grade vit dans un régime.
+## JSON Et QA
 
-## Phase 2 — Modules déterministes (bloquants, zéro chiffre LLM)
-- Valorisation : financials MCP → fichier → `node tools/lib/valuation-multi.js --in fin.json --ticker {TICKER}`
-  (DCF/Owner Earnings/EV-EBITDA/EBO ; input manquant = méthode `na`, jamais estimée).
-- Board Value/Quality : `node tools/lib/value-quality-board.js --in fundamentals.json` (5 personas).
-- Grading A+ : grille `aplus-setups` — 4 éliminatoires (guidance relevée, ≥5 EPS beats, PE fwd <35x,
-  ext EMA20 ≤3%) + scoring /100. Le grade sort de la grille, pas du feeling.
+Produire un contenu individualise, avec sources proximales et consequences financieres. Puis:
 
-## Phase 3 — Gate fraîcheur + war room (H2-H3)
-`node tools/check-freshness.js data/analyses-data/{TICKER}.harness.json` (quote 24h, financials 168h,
-SEC 168h, régime 6h). War room : Bull (thèse), Bear (le démontage en 30 secondes — dilution, valuation,
-crowding, macro inversée), Retail (entrée actionnable ≤3% du spot, stop, taille, invalidation datée).
-Verdict et grade DOIVENT survivre au Bear.
+Ecrire aussi `data/analyses-evidence/TICKER.json`: SHA-256 du JSON d'analyse et, pour **chaque valeur
+numerique** du JSON, valeur exacte, `as_of`, artefact relatif, SHA-256 et `source_pointer`. Les nombres
+calcules sont d'abord produits dans un artefact JSON de calcul deterministe certifie, puis pointes comme
+les observations MCP. Ce sidecar bloque toute valeur simplement declaree sans liaison semantique.
 
-## Phase 4 — JSON + rendu
-`data/analyses-data/{TICKER}.json` conforme `tools/lib/analysis-schema.json` (meta/header/verdict/
-business/fundamentals/technicals/risks/tradeIdea ; référence : `MATX.json`). Chaque champ = donnée de
-session. Puis `node tools/publish-analysis.js data/analyses-data/{TICKER}.json --dry` pour valider.
+```bash
+node tools/check-freshness.js analyses/TICKER/_data/harness.json
+node tools/validate-workflows.js --run-plan plans/analyse.json analyses/TICKER/_data
+node tools/validate-analysis-evidence.js data/analyses-evidence/TICKER.json
+node tools/check-analysis-editorial-quality.js --strict --pre-review data/analyses-data/TICKER.json
+node tools/publish-analysis.js data/analyses-data/TICKER.json --dry
+node tools/qa-content.js analyses/TICKER/index.html --strict
+node tools/check-ai-tells.js analyses/TICKER/index.html --strict
+```
 
-## Phase 5-6 — QA + Panel (H4-H5, bloquants)
-`qa-content --strict` sur le HTML rendu + `check-ai-tells` + `check-freshness`, puis senior-review
-`type:"analyses"` (panel COMPLET dont Strategist + Value/Quality Board), applyFixes ; BLOCK = ne pas
-publier ; re-QA après fixes.
+Faire ensuite trois revues independantes sur le meme JSON et les memes preuves hachees:
 
-## Phase 7 — Publication (H6)
-`node tools/publish-analysis.js data/analyses-data/{TICKER}.json --commit` (validate → render →
-add_card → commit) puis push `main`. Telegram alias `analysis` en `format:"html"` (verdict, grade,
-niveaux, lien `https://articles.dailytickers.com/analyses/{TICKER}/`). Compte-rendu chat.
+- Senior QA: schema, calculs, source mapping, renderer et regressions.
+- Contrarian: dilution/capacite, valorisation, causalite, risques omis et invalidation.
+- Retail war room: actionnabilite, gap, liquidite/slippage, sizing et no-chase.
 
-## Garde-fous
-- Watchlist (IOVA/ALT/ALLR/EQX…) : toute session daily/weekly les rafraîchit ; /analyse sur un ticker
-  watchlist met à jour grade + carte, avec justification chiffrée de tout changement de note.
-- No Hallucination (leçon ALT/IOVA/ALLR) : 52W, cash, mcap, événements = MCP/WebSearch de session.
-- Pas de faux caveats ; R/R calculé à une entrée actionnable ≤3% du spot.
-- MCP HARD STOP intégral.
+La revue externe AQ-1 finale exige au moins deux reviewers nommes, les 38 checks attestes, zero echec,
+score >=80 et le SHA-256 exact du JSON dans
+`data/analysis-editorial-reviews/YYYYMMDD.json`. Apres creation du manifeste:
+
+```bash
+node tools/check-analysis-editorial-quality.js --strict data/analyses-data/TICKER.json
+```
+
+Toute modification ulterieure du JSON invalide le hash et impose une nouvelle revue.
+
+## Publication
+
+Zero blocker requis. Publier depuis le JSON valide, verifier que le rendu conserve les corrections,
+stager uniquement les fichiers de la fiche/revue/index necessaires, puis commit/push si demande. Aucune
+notification ni publication externe en `dry-run`.

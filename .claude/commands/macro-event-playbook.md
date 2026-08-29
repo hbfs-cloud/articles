@@ -1,10 +1,20 @@
-# /macro-event-playbook — Positionnement avant un événement macro (CPI/Fed/OPEP/jobs) + bilan
+<!-- workflow-contract: macro-event-playbook -->
+# /macro-event-playbook
 
-Exécute le skill **macro-event-playbook** : lis `.claude/skills/macro-event-playbook.md` et suis-le **EXACTEMENT**.
+Prepare conditional reactions around a verified high-priority macro event. Read
+`.claude/skills/source-policy.md` and `.claude/skills/macro-event-playbook.md`.
 
-Bilan dernier événement → prochain événement (economic_events : date/heure/consensus) → état marché avant (VIX, positionnement) → facteurs sensibles (taux/pétrole/USD/cyclique) → **scénarios conditionnels** (si chaud → X ; si froid → Y) + paniers réactifs + **de-risk** → cohérence Strategist → digest.
+```bash
+node tools/validate-workflows.js --workflow macro-event-playbook
+bash tools/run-collect.sh macro data/workflow-runs/macro-event/YYYYMMDD \
+  --var date=YYYYMMDD --var refdate=YYYY-MM-DD
+```
 
-## Arguments
-`$ARGUMENTS` — l'événement ciblé (ex. `CPI lundi`) sinon le prochain priorité haute. `ne poste pas` = montrer sans envoyer.
+The event artifact must prove date/time/consensus; primary official calendars may verify narrative facts
+but cannot replace missing market numbers. Compute cross-asset state from bounded `bars_macro`. Detached
+live rates/currency/commodity/prediction context must be timestamped as current and cannot be relabeled as
+the reference close.
 
-Garde-fous : zéro hallucination (dates/consensus via MCP/WebSearch), on prépare des réactions conditionnelles (pas un pari directionnel déguisé), idées ≠ données desk, format html `<b>`, envoi sur demande.
+Write bull/base/bear conditions and explicit invalidations, not a disguised directional bet. Give the
+same snapshot to Senior QA, Contrarian and Retail War Room, resolve blockers and run local QA. Publication
+and notification remain explicit side effects.

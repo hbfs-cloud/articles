@@ -1,93 +1,102 @@
-# /retro — Rétrospective scanner harnachée (fills réels → notation intègre → leçons → panel → publish)
+<!-- workflow-contract: retro -->
+# /retro - Retrospective point-in-time du scanner
 
-Produit la rétrospective d'un scan (`scanner/YYYYMMDD/retro/` selon template `scanner/CLAUDE.md` §5bis)
-via le skill **`content-harness`**. Skills compagnons : `scanner-pipeline` (§rétrospective), `senior-review`.
-La rétro nourrit `data/scanner-lessons.json` (lessons-engine) — c'est un artefact d'INTÉGRITÉ, pas de com.
+Mesure toutes les propositions publiees dans la plage demandee. Une retrospective de trois semaines
+porte sur chaque scan et chaque ligne de ces semaines, pas sur quelques tickers choisis apres coup.
+Les nouvelles donnees suivent `.claude/skills/source-policy.md`; les artefacts historiques restent la
+source point-in-time de la decision originale.
 
+## Fixer La Cohorte
 
-## ⚡ Phase de collecte — SCRIPTÉE (obligatoire depuis 2026-08-10)
+1. Resoudre `from` et `to` en dates de session explicites.
+2. Enumerer les dossiers scanner dans cette plage depuis le disque/index, puis lire leur
+   `signals.json` ou source structuree canonique.
+3. Conserver toutes les propositions: remplies, non remplies, ouvertes, expirees et invalides.
+4. Enregistrer avant calcul: nombre de scans, propositions par jour, tickers uniques, horizon publie,
+   strategie et regime publie a l'epoque.
+5. Refuser un rapport dont le denominateur ne se reconcilie pas avec les artefacts sources.
 
-**Ne joue plus les salves MCP à la main.** Émets un jeton, lance la collecte, lis les
-artefacts. Le modèle déclare le besoin ; il ne transporte plus la donnée.
+La date de regime vient du scan point-in-time. Un modele de regime recalcule aujourd'hui ne remplace pas
+ce que la selection connaissait alors.
+
+## Collecte Par Lot
+
+Pour chaque lot de 1 a 60 symboles et chaque fenetre complete:
 
 ```bash
-# 1. l'AGENT émet le jeton (max 60 min marketdata, 1440 systematic)
-#    GetReadOnlyToken(minutes=60) / DtxMintReadOnlyToken(ttl_minutes=240)
-#    → export MCP_TOKEN_MARKETDATA=… MCP_TOKEN_SYSTEMATIC=…
-# 2. collecte parallèle + gate de fraîcheur en une commande
-bash tools/run-collect.sh retro <dossier>/_data --var refdate=<derniere_cloture> [--var symbol=X]
+node tools/validate-workflows.js --workflow retro
+bash tools/run-collect.sh retro scanner/SCANDATE/retro/_data \
+  --var scandate=SCANDATE --var startdate=YYYY-MM-DD \
+  --var refdate=YYYY-MM-DD --var symbols=A,B,C
 ```
 
-Ce que ça règle mécaniquement, et qu'on oubliait :
-- `$refdate` est substitué dans TOUS les arguments → le contrat de date devient structurel,
-  plus aucun `end_date` oublié (cause des inversions de signe du weekly du 10/08) ;
-- `harness.json` est un sous-produit de la collecte → une source collectée mais non déclarée
-  devient impossible ;
-- les appels d'une vague partent en parallèle → la règle R2 de `perf-parallel-mcp` est dans le
-  moteur, plus dans un rappel de prompt.
+Apres chaque lot, normaliser et fusionner les barres collectees vers l'unique entree gouvernante:
 
-Une variable référencée par le plan mais non fournie est une **erreur**, pas un vide : un
-`end_date` absent renverrait « le monde d'aujourd'hui » au lieu de la date visée.
+```bash
+node tools/build-intraday-retro-input.js \
+  --in scanner/SCANDATE/retro/_data/bars_intraday.json \
+  --out scanner/retrospective/REFDATE/_data/intraday-bars-15m.json \
+  --reference-close YYYY-MM-DD --append
+```
 
-Reste à l'agent, et à lui seul : `RefreshBars` / `DtxRefreshBars` (vraies écritures), la
-sélection, la rédaction, les gates adversariaux, la décision de publier.
-Doctrine complète : skill `llm-script-boundary`.
+Le calcul refuse toute session qui n'a pas exactement les 26 timestamps 15 minutes RTH, de 09:30 a
+15:45 America/New_York, avec timezone explicite, sans doublon ni trou.
 
-## Arguments
-`$ARGUMENTS`
-- vide → dernier scan dont l'horizon est écoulé et sans rétro.
-- `--date YYYYMMDD` → scan explicite.
-- `dry-run` → analyse sans publication.
+`startdate` couvre la premiere session d'execution possible; `refdate` couvre la derniere session
+de l'horizon publie, calculee en seances. Le plan collecte enveloppe daily, ordre des evenements en 15
+minutes, benchmarks, SEC, evenements et insiders. Les lots utilisent le chemin async/pagine.
+Le preflight historique exige que le service couvre au moins `refdate`; il n'exige pas que la derniere
+date globale du service soit egale a cette ancienne cloture. Les requetes restent bornees exactement et
+le harnais refuse toute barre posterieure.
 
-## Phase 0 — Preflight (H0)
-`date -u` ; `GetStatus()` (HARD STOP si down) ; `get_context(query='retrospective scanner', workspace='dailystocks')` ;
-lire `scanner/YYYYMMDD/{data.json,signals.json}` + `data/scanner-positions.json` + `data/trade-chain.json` ;
-créer `scanner/YYYYMMDD/retro-harness.json`.
+`tools/build-mono-retro.js` est un outil daily forensic archive et refuse l'execution normale. Il ne
+peut jamais produire la retro active ni une note de performance gouvernante.
 
-## Phase 1 — Collecte (H1)
-**Salve 1 (vérité prix, par lot)** :
-- `QueryData(types='quote', symbols=CSV des 10+TKL)` + bars de la fenêtre du scan (`GetInstruments` si
-  QueryData approval-gated) — la rétro se calcule sur des BARRES RÉELLES de la fenêtre, jamais de mémoire.
-- `ExplainSymbolMove` sur chaque gagnant/perdant majeur — l'attribution (news ? secteur ? marché ?) fait
-  partie de la leçon.
-- `GetEarningsCalendarFiltered` rétroactif : un stop-out sur print non anticipé = leçon de process,
-  pas de malchance.
-**Salve 2 (contexte)** :
-- `GetMarketContext(facets='regime')` du jour de la rétro + relire le régime AU MOMENT du scan
-  (dans data.json) — juger les setups dans LEUR régime (règle Regime-Aware Eval).
-- `GetInsiderActivity(symbols=CSV, days=7)` + `QueryData(types='sec_filings,flags')` sur les perdants :
-  dilution/insiders ratés à la sélection = leçon prioritaire.
-- Modes scriptés touchés → `DtxReplay` segment (méthodo drift : replay COMPLET, delta relatif interne,
-  jamais une fenêtre courte isolée).
+## Simulation
 
-## Phase 2 — Fills & stats (déterministe, bloquant)
-- Fills via le MODULE PARTAGÉ scan/rétro (assertion CI) — mêmes règles VWAP/gap que le sweep. JAMAIS de
-  fill « de tête ».
-- Trades clôturés = IMMUABLES (trade-chain SHA-256). La rétro requalifie sa PROPRE notation si besoin,
-  jamais les stats scellées.
-- R multiples, WR, PF recalculés depuis les fills — chaque chiffre du tableau doit se recalculer.
+- Appliquer exactement entry zone, side, stop, TP1/TP2, horizon, session et regles publiees.
+- Les barres daily ne prouvent jamais l'ordre entry/stop/target.
+- Une barre 15 min qui contient plusieurs evenements incompatibles est
+  `ambiguous_intrabar`. Collecter une granularite plus fine si disponible; sinon ne pas inventer
+  l'ordre et ne pas classer le trade comme gain.
+- Un partial/no-fill reste distinct d'un trade resolu.
+- Les splits/actions corporate sont ajustes avant comparaison d'echelle.
+- Les propositions dont l'horizon n'est pas termine restent `open/unresolved`; elles ne rentrent pas
+  dans hit rate, profit factor ou moyenne R.
+- Recalculer R depuis les niveaux originaux, jamais depuis le texte.
 
-## Phase 3 — Gate fraîcheur + war room (H2-H3)
-`node tools/check-freshness.js scanner/YYYYMMDD/retro-harness.json` (bars/quotes 24h, régime 6h).
-War room : Bull défend le process du scan, Bear attaque (survivorship, chance déguisée en skill,
-règle violée ?), Retail demande « qu'est-ce que le prochain scan fait DIFFÉREMMENT ? ». Chaque leçon
-sortante : falsifiable, scoped (régime×setup), avec `next_retro_check`.
+## Denominateurs Et Diagnostics
 
-## Phase 4 — Rédaction + leçons
-Template §5bis. Notation par ligne argumentée prix à l'appui. Leçons → `data/scanner-lessons.json` via
-le format lessons-engine (status, confidence, scope, severity) — les advisory nourrissent la sélection,
-elles n'inversent JAMAIS un signal quantitatif.
+Publier separement:
 
-## Phase 5-6 — QA + Panel (H4-H5, bloquants)
-`qa-content --strict` (ou qa-check selon artefact) + `check-ai-tells` + `check-freshness`, puis
-senior-review `type:"retro"` (QA·Quant·Trader·Editor), applyFixes. BLOCK = pas de publication.
+- toutes les propositions horizon-complete;
+- fills resolus;
+- no-fill;
+- ambigus;
+- ouverts/non matures;
+- resultat par famille, regime, secteur, semaine et repeat/new name;
+- hit rate, moyenne/mediane R, profit factor, drawdown et dependance aux meilleurs trades;
+- sensibilite US stock, US ETF et panier combine;
+- comparaison SPY/QQQ/IWM sur la meme fenetre.
 
-## Phase 7 — Publication (H6)
-add_card si artefact indexé, commit + push `main`, Telegram alias du mode concerné ou `analysis` si
-rétro transverse (`format:"html"`), compte-rendu chat avec les leçons ajoutées/dépréciées.
+Une note globale D ne suffit pas: expliquer si le defaut vient de selection, entree non remplie, target
+hors portee, concentration, evenement/SEC manque ou degradation de famille. Toute policy/overlay issue
+de la retro porte le chemin et SHA-256 exacts de cette evidence, un cutoff, un minimum d'echantillon et
+une date de reexamen.
 
-## Garde-fous
-- Immutable Trades (violation = abort), Sweep pSize History (jamais de batch-reset).
-- Segment Replay Absolute DD non fiable : deltas relatifs uniquement.
-- Une rétro qui ne trouve AUCUNE erreur de process est suspecte — le dire si c'est le cas, mais chercher.
-- MCP HARD STOP intégral.
+## Revue
+
+Executer les gates de fraicheur/run, puis:
+
+- Senior QA: reconciliation des denominateurs, math et immutabilite.
+- Contrarian: lookahead, survivorship, event-order ambiguity, winner dependency et affirmation causale.
+- Retail war room: comparaison avec ce qu'un lecteur pouvait reellement remplir, spread/gap/no-chase.
+
+Zero blocker est requis. Une revue qui ne trouve aucun risque methodologique doit l'expliquer.
+
+## Publication
+
+La sortie par defaut est locale. `--publish` doit etre present ou l'utilisateur doit avoir demande
+explicitement publication/push dans le message courant. Alors seulement conserver les artefacts
+historiques, publier dans un nouveau chemin, stager explicitement, commit/push apres QA, puis notifier
+avec plage exacte, taille de cohorte, verdict et principal correctif.

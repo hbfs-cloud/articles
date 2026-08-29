@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { decideFill } = require('./lib/fill-policy');
 const { isUSTradingDay } = require('./lib/market-calendar');
+const { normalizeIntradayBars, sessionCoverageError } = require('./lib/retro-intraday');
 
 const ROOT = path.join(__dirname, '..');
 const [startCompact, endCompact, referenceClose = endCompact] = process.argv.slice(2);
@@ -19,14 +20,17 @@ const startDate = iso(startCompact);
 const endDate = iso(endCompact);
 const refDate = iso(referenceClose);
 const outputDir = path.join(ROOT, 'scanner', 'retrospective', referenceClose);
-const overridePath = path.join(outputDir, '_data', 'marketdata-overrides.json');
-const openingBarsPath = path.join(outputDir, '_data', 'opening-bars-15m.json');
-const marketdataOverrides = fs.existsSync(overridePath)
-  ? JSON.parse(fs.readFileSync(overridePath, 'utf8')).bars || {}
-  : {};
-const openingSessions = fs.existsSync(openingBarsPath)
-  ? JSON.parse(fs.readFileSync(openingBarsPath, 'utf8')).sessions || {}
-  : {};
+const intradayBarsPath = path.join(outputDir, '_data', 'intraday-bars-15m.json');
+const intradayPayload = fs.existsSync(intradayBarsPath) ? JSON.parse(fs.readFileSync(intradayBarsPath, 'utf8')) : {};
+const intradaySessions = intradayPayload.sessions || {};
+const intradaySources = intradayPayload.source_artifacts || [];
+if (!intradaySources.length || intradaySources.some(source => {
+  const file = path.resolve(ROOT, source.path || '');
+  return path.relative(ROOT, file).startsWith('..') || !fs.existsSync(file) || sha256(file) !== source.sha256 || source.reference_close !== refDate;
+})) {
+  console.error('retro intraday input lacks valid hash-bound source provenance');
+  process.exit(3);
+}
 
 function round(value, digits = 3) {
   return Number(value.toFixed(digits));
@@ -50,27 +54,6 @@ function addTradingDays(dateStr, days, region, ticker) {
   return date.toISOString().slice(0, 10);
 }
 
-function loadBars(ticker) {
-  const flat = path.join(ROOT, 'data', '.price-cache', `${ticker}.json`);
-  const ohlcv = path.join(ROOT, 'data', '.price-cache', `${ticker}_ohlcv.json`);
-  const file = fs.existsSync(flat) ? flat : ohlcv;
-  if (!fs.existsSync(file) && !marketdataOverrides[ticker]) return { file: null, bars: [] };
-  if (!fs.existsSync(file)) return { file: overridePath, bars: marketdataOverrides[ticker] || [] };
-  const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
-  const bars = Array.isArray(raw)
-    ? raw.map(b => [b.date, b.open, b.high, b.low, b.close, b.volume ?? null])
-    : Object.entries(raw).map(([date, b]) => [date, b.open, b.high, b.low, b.close, b.volume ?? null]);
-  const merged = new Map(bars.map(bar => [bar[0], bar]));
-  for (const bar of marketdataOverrides[ticker] || []) merged.set(bar[0], bar);
-  return {
-    file,
-    bars: [...merged.values()]
-      .filter(b => b[0] <= refDate && b.slice(1, 5).every(Number.isFinite))
-      .filter(b => b[2] >= b[3] && b[1] > 0 && b[3] > 0 && b[4] > 0)
-      .sort((a, b) => a[0].localeCompare(b[0]))
-  };
-}
-
 const scanDirs = fs.readdirSync(path.join(ROOT, 'scanner'))
   .filter(d => /^\d{8}$/.test(d) && d >= startCompact && d <= endCompact)
   .filter(d => fs.existsSync(path.join(ROOT, 'scanner', d, 'signals.json')))
@@ -92,20 +75,27 @@ for (const scanDir of scanDirs) {
   }
 }
 
-const barsCache = new Map();
-for (const ticker of new Set(signals.map(s => s.ticker))) {
-  const loaded = loadBars(ticker);
-  barsCache.set(ticker, loaded.bars);
-  if (loaded.file) sourceFiles.push(loaded.file);
+if (fs.existsSync(intradayBarsPath)) sourceFiles.push(intradayBarsPath);
+for (const source of intradaySources) sourceFiles.push(path.resolve(ROOT, source.path));
+
+function expectedSessions(start, end, region, ticker) {
+  const result = [];
+  const cursor = new Date(`${start}T12:00:00Z`);
+  const finish = new Date(`${end}T12:00:00Z`);
+  while (cursor <= finish) {
+    const date = cursor.toISOString().slice(0, 10);
+    const day = cursor.getUTCDay();
+    const isEuropeanListing = region === 'EU' && ticker.includes('.');
+    if (isEuropeanListing ? day !== 0 && day !== 6 : isUSTradingDay(date)) result.push(date);
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return result;
 }
-if (fs.existsSync(overridePath)) sourceFiles.push(overridePath);
-if (fs.existsSync(openingBarsPath)) sourceFiles.push(openingBarsPath);
 
 function evaluate(signal) {
   const horizon = signal.horizon || 10;
   const horizonEnd = addTradingDays(signal.scan_date, horizon, signal.region, signal.ticker);
   const cutoff = horizonEnd < refDate ? horizonEnd : refDate;
-  const bars = (barsCache.get(signal.ticker) || []).filter(b => b[0] >= signal.scan_date && b[0] <= cutoff);
   const base = {
     scan_date: signal.scan_date,
     ticker: signal.ticker,
@@ -123,10 +113,18 @@ function evaluate(signal) {
     horizon,
     horizon_end: horizonEnd
   };
-  if (!bars.length || bars[0][0] !== signal.scan_date) return { ...base, status: 'data_error', reason: 'missing_D0_bar' };
-
-  const opening = openingSessions[signal.scan_date]?.[signal.ticker] || null;
-  if (!opening) return { ...base, status: 'data_error', reason: 'missing_opening_15m_bar' };
+  const requiredSessions = expectedSessions(signal.scan_date, cutoff, signal.region, signal.ticker);
+  const sessions = requiredSessions.map(date => ({
+    date,
+    bars: normalizeIntradayBars(intradaySessions[date]?.[signal.ticker]),
+  }));
+  const missingSessions = sessions.map(session => ({ date: session.date, error: sessionCoverageError(session.bars, session.date) }))
+    .filter(session => session.error);
+  if (missingSessions.length) {
+    return { ...base, status: 'data_error', reason: 'incomplete_intraday_15m_coverage', missing_sessions: missingSessions };
+  }
+  const eventBars = sessions.flatMap(session => session.bars.map(bar => ({ ...bar, date: session.date })));
+  const opening = eventBars[0];
   const openPrice = opening.open;
   const ratio = openPrice / signal.entry;
   if (ratio < 0.5 || ratio > 2) return { ...base, status: 'data_error', reason: 'price_series_mismatch', observed_open: openPrice };
@@ -163,22 +161,32 @@ function evaluate(signal) {
   const risk = fillPrice - signal.stop;
   if (!(risk > 0)) return { ...base, status: 'data_error', reason: 'non_positive_risk', observed_open: openPrice };
   let status = horizonEnd <= refDate ? 'expired' : 'pending';
-  let exitDate = bars.at(-1)[0];
-  let exitPrice = bars.at(-1)[4];
+  let exitDate = eventBars.at(-1).date;
+  let exitPrice = eventBars.at(-1).close;
   let minLow = fillPrice;
   let maxHigh = fillPrice;
   let tp1Date = null;
   let runnerStatus = null;
   let rMultiple = null;
-  let ambiguousBar = false;
 
-  for (const [date, open, high, low] of bars) {
+  for (const bar of eventBars) {
+    const { date, open, high, low } = bar;
     minLow = Math.min(minLow, low);
     maxHigh = Math.max(maxHigh, high);
 
     if (!tp1Date) {
+      if (low <= signal.stop && high >= signal.tp1) {
+        return {
+          ...base,
+          status: 'ambiguous',
+          reason: 'stop_and_tp1_in_same_15m_bar',
+          effective_entry: round(fillPrice, 4),
+          fill_policy: fillPolicy,
+          fill_time: opening.timestamp,
+          ambiguous_timestamp: bar.timestamp,
+        };
+      }
       if (low <= signal.stop) {
-        ambiguousBar = high >= signal.tp1;
         status = 'stopped';
         exitDate = date;
         exitPrice = date > signal.scan_date ? Math.min(signal.stop, open) : signal.stop;
@@ -189,6 +197,17 @@ function evaluate(signal) {
 
       tp1Date = date;
       const tp1R = (signal.tp1 - fillPrice) / risk;
+      if (low <= fillPrice) {
+        return {
+          ...base,
+          status: 'ambiguous',
+          reason: 'tp1_and_breakeven_level_in_same_15m_bar',
+          effective_entry: round(fillPrice, 4),
+          fill_policy: fillPolicy,
+          fill_time: opening.timestamp,
+          ambiguous_timestamp: bar.timestamp,
+        };
+      }
       if (Number.isFinite(signal.tp2) && high >= signal.tp2) {
         status = 'tp2';
         runnerStatus = 'tp2';
@@ -197,19 +216,17 @@ function evaluate(signal) {
         rMultiple = 0.5 * tp1R + 0.5 * ((signal.tp2 - fillPrice) / risk);
         break;
       }
-      if (low <= fillPrice) {
-        status = 'tp1_be';
-        runnerStatus = 'breakeven';
-        exitDate = date;
-        exitPrice = (signal.tp1 + fillPrice) / 2;
-        rMultiple = 0.5 * tp1R;
-        ambiguousBar = true;
-        break;
-      }
       continue;
     }
 
     if (low <= fillPrice) {
+      if (Number.isFinite(signal.tp2) && high >= signal.tp2) {
+        return {
+          ...base, status: 'ambiguous', reason: 'breakeven_and_tp2_in_same_15m_bar',
+          effective_entry: round(fillPrice, 4), fill_policy: fillPolicy, fill_time: opening.timestamp,
+          ambiguous_timestamp: bar.timestamp,
+        };
+      }
       const runnerExit = Math.min(fillPrice, open);
       status = 'tp1_be';
       runnerStatus = runnerExit < fillPrice ? 'gap_below_breakeven' : 'breakeven';
@@ -256,14 +273,14 @@ function evaluate(signal) {
     return_pct: round(((exitPrice - fillPrice) / fillPrice) * 100, 2),
     mae_pct: round(((minLow - fillPrice) / fillPrice) * 100, 2),
     mfe_pct: round(((maxHigh - fillPrice) / fillPrice) * 100, 2),
-    ambiguous_bar: ambiguousBar,
-    observed_bars: bars.length
+    ambiguous_bar: false,
+    observed_bars: eventBars.length
   };
 }
 
 const outcomes = signals.map(evaluate);
 const isWinner = outcome => outcome.status === 'tp2' || outcome.status.startsWith('tp1');
-const filled = outcomes.filter(o => !['no_fill', 'data_error'].includes(o.status));
+const filled = outcomes.filter(o => !['no_fill', 'data_error', 'ambiguous'].includes(o.status));
 const resolved = filled.filter(o => o.status !== 'pending');
 const fullyClosed = resolved.filter(o => o.status !== 'tp1_pending');
 const winners = resolved.filter(isWinner);
@@ -279,7 +296,7 @@ function groupBy(key) {
     groups.get(value).push(o);
   }
   return [...groups.entries()].map(([name, rows]) => {
-    const ok = rows.filter(o => !['no_fill', 'data_error'].includes(o.status));
+    const ok = rows.filter(o => !['no_fill', 'data_error', 'ambiguous'].includes(o.status));
     const done = ok.filter(o => o.status !== 'pending');
     const closed = done.filter(o => o.status !== 'tp1_pending');
     const hits = done.filter(isWinner);
@@ -318,6 +335,7 @@ const summary = {
   pending: filled.length - resolved.length,
   no_fill: outcomes.filter(o => o.status === 'no_fill').length,
   data_error: outcomes.filter(o => o.status === 'data_error').length,
+  ambiguous: outcomes.filter(o => o.status === 'ambiguous').length,
   tp1_or_better: winners.length,
   stopped: stopped.length,
   hit_rate_pct: resolved.length ? round((winners.length / resolved.length) * 100, 1) : null,
@@ -331,7 +349,7 @@ const summary = {
 
 const ranked = resolved.slice().sort((a, b) => b.r_multiple - a.r_multiple);
 const output = {
-  methodology: 'published primary signals[] only; fill must be demonstrated in the first regular 15-minute bar, with the shared 2% chase tolerance; gap-down through stop is no-fill; stop-first daily OHLC; 50% exits at TP1 and the runner moves to breakeven for TP2; overnight stop gaps execute at the open; expiry at scan_date plus N business days; unresolved runners are marked at the reference close',
+  methodology: 'published primary signals[] only; complete regular-session 15-minute coverage is mandatory for every session in the horizon; fill must be demonstrated in the first regular 15-minute bar with the shared 2% chase tolerance; gap-down through stop is no-fill; events are evaluated chronologically on 15-minute bars; bars containing incompatible stop/target events are ambiguous and excluded from performance statistics; 50% exits at TP1 and the runner moves to breakeven for TP2; overnight stop gaps execute at the open; expiry at scan_date plus N trading sessions; unresolved runners are marked at the reference close',
   summary,
   scan_dates: scanDirs.map(iso),
   by_scan: groupBy('scan_date'),
@@ -345,9 +363,9 @@ const output = {
 const snapshot = {
   generated_at: summary.generated_at,
   reference_close: refDate,
-  symbols: [...barsCache.keys()].sort(),
-  bars: Object.fromEntries([...barsCache.entries()].map(([ticker, bars]) => [ticker, bars.filter(b => b[0] >= startDate && b[0] <= refDate)])),
-  sources: sourceFiles.map(file => ({ path: path.relative(ROOT, file), sha256: sha256(file) }))
+  symbols: [...new Set(signals.map(signal => signal.ticker))].sort(),
+  intraday_sessions: intradaySessions,
+  sources: [...new Set(sourceFiles)].map(file => ({ path: path.relative(ROOT, file), sha256: sha256(file) }))
 };
 
 fs.mkdirSync(path.join(outputDir, '_data'), { recursive: true });

@@ -306,6 +306,7 @@ function parseScan(dir) {
       }
       out.push({
         ticker: s.ticker,
+        region: s.region || null,
         strategy: detectStrategy(s.strategy || '', { source }),
         score,
         entry, stop, tp1, tp2,
@@ -1475,6 +1476,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 
   return {
     ticker: setup.ticker,
+    region: setup.region || null,
     strategy: setup.strategy,
     score: setup.score,
     // Le gate de score et le tri des candidats tournent sur CES objets trade (pas sur les setups

@@ -1,110 +1,79 @@
-# /weekly — Revue hebdomadaire harnachée (semaine À VENIR, collecte complète → war room → panel → publish)
+<!-- workflow-contract: weekly -->
+# /weekly - Revue de la semaine a venir
 
-Produit `weekly/YYYYMMDD/index.html` (YYYYMMDD = lundi de la semaine COUVERTE, 18 sections, template
-`weekly/CLAUDE.md`, layout de référence `weekly/20260223/`) via le skill **`content-harness`** intégral.
-Skills compagnons : `daily-weekly-analysis-workflows`, `sector-rotation`, `macro-event-playbook`,
-`perf-parallel-mcp`, `senior-review`.
+Produit `weekly/YYYYMMDD/index.html` selon `weekly/CLAUDE.md`,
+`.claude/skills/source-policy.md` et le layout du dernier weekly valide.
 
+## Contrat De Date
 
-## ⚡ Phase de collecte — SCRIPTÉE (obligatoire depuis 2026-08-10)
+- `date`: lundi de la semaine couverte, format `YYYYMMDD`.
+- `refdate`: derniere cloture US terminee avant la redaction.
+- `focus_symbols`: 1 a 8 noms issus du run courant.
 
-**Ne joue plus les salves MCP à la main.** Émets un jeton, lance la collecte, lis les
-artefacts. Le modèle déclare le besoin ; il ne transporte plus la donnée.
+Une page datee d'un lundi passe qui pretend couvrir la semaine a venir est un bug. Verifier le calendrier
+NYSE et l'anti-doublon avant toute collecte.
+
+## Collecte
 
 ```bash
-# 1. l'AGENT émet le jeton (max 60 min marketdata, 1440 systematic)
-#    GetReadOnlyToken(minutes=60) / DtxMintReadOnlyToken(ttl_minutes=240)
-#    → export MCP_TOKEN_MARKETDATA=… MCP_TOKEN_SYSTEMATIC=…
-# 2. collecte parallèle + gate de fraîcheur en une commande
-bash tools/run-collect.sh weekly <dossier>/_data --var refdate=<derniere_cloture> [--var symbol=X]
+node tools/validate-workflows.js --workflow weekly
+bash tools/run-collect.sh weekly weekly/YYYYMMDD/_data \
+  --var date=YYYYMMDD --var refdate=YYYY-MM-DD
 ```
 
-Ce que ça règle mécaniquement, et qu'on oubliait :
-- `$refdate` est substitué dans TOUS les arguments → le contrat de date devient structurel,
-  plus aucun `end_date` oublié (cause des inversions de signe du weekly du 10/08) ;
-- `harness.json` est un sous-produit de la collecte → une source collectée mais non déclarée
-  devient impossible ;
-- les appels d'une vague partent en parallèle → la règle R2 de `perf-parallel-mcp` est dans le
-  moteur, plus dans un rappel de prompt.
+Classer les noms du snapshot par score source puis ticker et persister `_data/selection.json`. Ne lancer
+le plan focus qu'apres cette decision immutable:
 
-Une variable référencée par le plan mais non fournie est une **erreur**, pas un vide : un
-`end_date` absent renverrait « le monde d'aujourd'hui » au lieu de la date visée.
+```bash
+bash tools/run-collect.sh weekly-focus weekly/YYYYMMDD/_focus \
+  --var date=YYYYMMDD --var refdate=YYYY-MM-DD --var focus_symbols=A,B,C
+```
 
-Reste à l'agent, et à lui seul : `RefreshBars` / `DtxRefreshBars` (vraies écritures), la
-sélection, la rédaction, les gates adversariaux, la décision de publier.
-Doctrine complète : skill `llm-script-boundary`.
+Le socle fournit les clotures cross-asset/sectorielles, regimes, correlations, options, short interest,
+earnings et calendrier macro. Les noms du dossier sont selectionnes seulement apres lecture du socle,
+puis enrichis par le plan focus. Le contexte optionnel ne gouverne aucun chiffre.
 
-## Arguments
-`$ARGUMENTS`
-- vide → prochain lundi (ou lundi courant si on est dimanche/lundi).
-- `--date YYYYMMDD` → lundi explicite.
-- `dry-run` → tout sauf publication.
+Les jetons TTL restent masques. Aucun appel MCP manuel ne remplace un fichier absent du plan.
 
-## Phase 0 — Preflight (H0)
-`date -u` ; `GetStatus()` (HARD STOP si down) ; `get_context(query='weekly review', workspace='dailystocks')` ;
-anti-doublon `ls weekly/` + `grep "YYYYMMDD" data/weekly.json` ; créer `weekly/YYYYMMDD/harness.json`.
+## Methode
 
-## Phase 1 — Collecte (H1)
-**Salve 1 (bilan de la semaine écoulée + régime)** :
-- `GetMarketContext(facets='overview')` async (poll `Jobs`) + `facets='regime'` ensemble 5j.
-- `DtxRegime(asof)` — croisement systematic ; consigner les DEUX scores dans l'article (section régime).
-- `QueryData(types='quote,social_sentiment,capital_flow,trading_signals', symbols='SPY,QQQ,DIA,IWM,GLD,SLV,USO,TLT,EFA,EEM,FXI,BTC-USD,ETH-USD,SOL-USD,XRP-USD')`
-  (petits lots si approval-gated).
-- `OptionsAnalytics(action='sentiment')` — term structure VIX : la pente 9D→6M EST une section du weekly.
-- **`QueryData(types='unusual_options,dark_pool,max_pain', symbols=<noms de la thèse>)` — OBLIGATOIRE.**
-  L'empreinte L2 d'`EDITORIAL_STYLE` exige au moins un flux institutionnel réel ; un weekly sans aucun
-  (intérêt ouvert, dark pool, put-call, max pain) est BLOQUÉ au panel quelle que soit la qualité du reste.
-- ⛔ Toute valeur présentée comme « clôture du <jour> » se demande en `bars_daily` **avec `end_date`**.
-  `indices`/`commodities`/`quote` nus renvoient le dernier prix : lancés un lundi matin ils rapportent du
-  live que l'on étiquette ensuite « clôture de vendredi » (incident 20260810, 4 inversions de signe).
-- `ExplainSymbolMove` sur les 3 mouvements de la semaine qu'on raconte.
+1. Mesurer la semaine ecoulee avec les barres bornees au `refdate`; ne jamais etiqueter un prix live
+   comme cloture.
+2. Classer les focus names avec une decision tracee et un tie-break ticker stable.
+3. Pour chaque nom, verifier structure, earnings, SEC/actions corporate, flux et attribution du mouvement
+   sur la meme fenetre que les pairs.
+4. Separer fait observe, evenement date de la semaine a venir, scenario, probabilite qualitative et niveau
+   d'invalidation.
+5. Utiliser les statistiques de strategie avec leur provenance exacte. Une courbe DtxReplay reconstruite
+   n'est pas une courbe de livre `DtxBookEquity`.
+6. Le web est reserve aux sources SEC/IR, calendriers officiels et news attribuees. Aucun chiffre de marche
+   MCP manquant n'est remplace par une page web.
 
-**Salve 2 (semaine à venir)** :
-- `GetEarningsCalendarFiltered(days_ahead=7, min_expected_move=3)` — le mur de prints de la semaine,
-  avec consensus et fenêtres d'exclusion.
-- `GetInsiderActivity(days=7)` — flux initiés hebdo.
-- `RunScreener`/`RunAutoScreener` — leaders/laggards par secteur pour la section rotation (mcap > $2B
-  dans le DSL, sinon penny stocks).
-- `WatchlistDigest()`.
-- WebSearch : calendrier macro (Fed/BCE/CPI/NFP), géopolitique, Polymarket via `GetMarketContext`.
+## Redaction
 
-**Salve 3 (book & modes)** : `PortfolioRisk(action='correlation')` sur les lignes ouvertes du scanner si
-la section book les montre ; performance des modes = chiffres des générateurs (`data/backtest-results.json`
-frozen_*), JAMAIS retapés à la main ; modes scriptés = `DtxReplay`/staging seulement si section dédiée.
+Le weekly explique une bascule principale et son scenario contraire. Il couvre indices, secteurs,
+taux/commodities, metaux, crypto, catalyseurs d'entreprise et calendrier. La densite vient des faits,
+tableaux et niveaux; aucun seuil de taille de fichier ne justifie de dupliquer ou rembourrer la prose.
 
-## Phase 2 — Gate fraîcheur (H2, bloquant)
-`node tools/check-freshness.js weekly/YYYYMMDD/harness.json`. Budgets standard ; clôtures vendredi
-tolérées 72h le week-end.
+## Gates
 
-## Phase 3 — War room retail (H3)
-La question du weekly : « quelle est LA bascule de la semaine, et qu'est-ce qui l'invaliderait ? »
-Bull/Bear/Retail ; au moins un scénario non-consensuel falsifiable daté ; le plan de la semaine dit
-aussi ce qu'on NE fait PAS (et pourquoi).
+```bash
+node tools/check-freshness.js weekly/YYYYMMDD/_data/harness.json
+node tools/check-freshness.js weekly/YYYYMMDD/_focus/harness.json
+node tools/validate-workflows.js --run-plan plans/weekly.json weekly/YYYYMMDD/_data
+node tools/validate-workflows.js --run-plan plans/weekly-focus.json weekly/YYYYMMDD/_focus
+node tools/validate-content-claims.js weekly/YYYYMMDD/_data/claims.json
+node tools/qa-content.js weekly/YYYYMMDD/index.html --strict
+node tools/check-ai-tells.js weekly/YYYYMMDD/index.html --strict
+```
 
-## Phase 4 — Rédaction
-18 sections, > 100 KB, anglais intermediate par défaut (sauf demande contraire), badge « Latest Report »
+Faire ensuite, sur le meme snapshot hache, une Senior QA, une revue contrarian et une retail war room.
+Les reviewers ne refetchent pas chacun leur version du marche. Zero blocker est requis; toute correction
+fait rejouer les checks affectes.
 
-⛔ **Le seuil de 100 KB se franchit par la DONNÉE, jamais par la prose** (incident 20260810 : BLOCK slop L4,
-13 391 mots sur 40 sections pour ~20 faits, dont 5 sections qui se dupliquent). Cible rédactionnelle :
-**~4 000 mots**. Le volume vient des tableaux, cartes de métriques, blocs de niveaux et graphiques ECharts —
-denses en octets, sobres en mots. Si l'article approche 100 KB en ajoutant des paragraphes, c'est le signe
-qu'il manque des données, pas des mots : retourner en collecte. Deux sections qui disent la même chose sous
-deux titres = coupe immédiate. Un weekly qui n'atteint pas 100 KB avec ~4 000 mots denses doit collecter
-plus (flux institutionnels, niveaux par titre, comparaisons datées), pas écrire plus.
-géré par JS (jamais en dur), FAB, `/assets/report.css`, chiffres horodatés, sources par section.
+## Publication
 
-## Phase 5-6 — QA + Panel (H4-H5, bloquants)
-`qa-content --strict` + `check-ai-tells --strict` + `check-freshness`, puis senior-review
-(`type:"weekly"`, applyFixes) ; BLOCK = pas de publication ; re-QA après fixes.
-
-## Phase 7 — Publication (H6)
-1. `node tools/publish.js --type weekly --path weekly/YYYYMMDD/index.html` — add_card APPEND pour
-   weekly → REMONTER la carte en tête de `data/weekly.json` via l'outil (jamais d'édition JSON à la main).
-2. `data/radar.json` mis à jour (events de la semaine).
-3. Commit + push `main` ; Telegram alias `weekly` en `format:"html"` ; compte-rendu chat.
-
-## Garde-fous
-- Le weekly couvre la semaine À VENIR — un weekly daté du lundi passé est un bug.
-- Prévisions : formulées en zones probabilistes avec niveaux d'invalidation, jamais en certitudes.
-- Perfs des modes : uniquement les frozen stats des générateurs. Écart vu = investiguer, pas maquiller.
-- MCP HARD STOP + interdits du skill `content-harness` (jargon interne, chiffres hors session).
+La sortie par defaut est locale. `--publish` doit etre present ou l'utilisateur doit avoir demande
+explicitement publication/push dans le message courant. Alors seulement indexer une fois, verifier les
+fichiers stages, commit/push apres les gates, puis notifier Telegram en francais avec une synthese
+autosuffisante et le lien. Substack/email reste une autorisation distincte.

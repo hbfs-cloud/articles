@@ -102,6 +102,11 @@ function main() {
         console.error(`❌ ${name}: SÉANCE EN RETARD — la donnée s'arrête au ${s.data_through}, la clôture de référence est le ${ref}. Collectée « fraîche » (${ageH.toFixed(1)}h) mais elle décrit la séance précédente.`);
         continue;
       }
+      if (s.data_through > ref) {
+        errors++;
+        console.error(`❌ ${name}: LOOKAHEAD — la donnée atteint le ${s.data_through}, après la clôture de référence ${ref}. Le run point-in-time est contaminé.`);
+        continue;
+      }
       console.log(`✅ ${name}: ${ageH.toFixed(1)}h (max ${maxH}h) · séance ${s.data_through} = clôture de référence`);
       continue;
     }

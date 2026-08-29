@@ -1,108 +1,51 @@
 {
-  "artifact": "weekly/YYYYMMDD/index.html",
-  "reference_date": "2026-08-07",
+  "artifact": "weekly/$date/index.html",
   "waves": [
     {
-      "name": "marche",
+      "name": "preflight",
+      "gate": true,
       "calls": [
         {
-          "as": "service_health",
+          "as": "status",
           "server": "marketdata",
           "tool": "GetStatus",
           "args": {},
           "freshness": {
-            "max_age_h": 6,
+            "max_age_h": 2,
             "required": true
+          },
+          "assert": {
+            "expected_close": "$refdate"
           }
         },
+        {
+          "as": "dtx_health",
+          "server": "systematic",
+          "tool": "GetHealth",
+          "args": {
+            "expected_close": "$refdate"
+          },
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "week-close",
+      "calls": [
         {
           "as": "regime",
           "server": "marketdata",
           "tool": "GetMarketContext",
           "args": {
             "facets": "regime,prediction_markets",
-            "model": "ensemble",
-            "horizon_days": 5,
+            "horizon_days": 10,
             "limit": 20
           },
           "freshness": {
             "max_age_h": 6,
-            "required": true
-          }
-        },
-        {
-          "as": "bars_indices",
-          "server": "marketdata",
-          "tool": "QueryData",
-          "args": {
-            "types": "bars_daily",
-            "symbols": "SPY,QQQ,IWM,DIA",
-            "end_date": "$refdate",
-            "limit": 15
-          },
-          "freshness": {
-            "max_age_h": 24,
-            "required": true,
-            "expects_close": true
-          }
-        },
-        {
-          "as": "bars_sectors",
-          "server": "marketdata",
-          "tool": "QueryData",
-          "args": {
-            "types": "bars_daily",
-            "symbols": "XLK,XLF,XLE,XLV,XLI,XLY,XLP,XLU,XLC,XLRE",
-            "end_date": "$refdate",
-            "limit": 25
-          },
-          "freshness": {
-            "max_age_h": 24,
-            "required": true,
-            "expects_close": true
-          }
-        },
-        {
-          "as": "bars_crypto",
-          "server": "marketdata",
-          "tool": "QueryData",
-          "args": {
-            "types": "bars_daily",
-            "symbols": "BTC-USD,ETH-USD,SOL-USD,XRP-USD",
-            "end_date": "$refdate",
-            "limit": 15
-          },
-          "freshness": {
-            "max_age_h": 24,
-            "required": true,
-            "expects_close": true
-          }
-        },
-        {
-          "as": "correlations",
-          "server": "marketdata",
-          "tool": "PortfolioRisk",
-          "args": {
-            "action": "correlation",
-            "symbols": "SPY,QQQ,IWM,GLD,SLV,TLT,USO",
-            "lookback_days": 60,
-            "method": "pearson"
-          },
-          "freshness": {
-            "max_age_h": 48,
-            "required": true
-          }
-        },
-        {
-          "as": "earnings_cal",
-          "server": "marketdata",
-          "tool": "GetEarningsCalendarFiltered",
-          "args": {
-            "days_ahead": 7,
-            "min_expected_move_pct": 3
-          },
-          "freshness": {
-            "max_age_h": 24,
             "required": true
           }
         },
@@ -115,27 +58,105 @@
             "expected_data_date": "$refdate"
           },
           "freshness": {
-            "max_age_h": 48,
+            "max_age_h": 6,
             "required": true
+          }
+        },
+        {
+          "as": "bars_indices",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "SPY,QQQ,IWM,DIA,GLD,SLV,TLT,USO",
+            "end_date": "$refdate",
+            "limit": 30
+          },
+          "freshness": {
+            "max_age_h": 72,
+            "required": true,
+            "expects_close": true
+          }
+        },
+        {
+          "as": "bars_sectors",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "XLK,XLB,XLF,XLE,XLV,XLI,XLY,XLP,XLU,XLC,XLRE",
+            "end_date": "$refdate",
+            "limit": 30
+          },
+          "freshness": {
+            "max_age_h": 72,
+            "required": true,
+            "expects_close": true
+          }
+        },
+        {
+          "as": "bars_crypto",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "BTC-USD,ETH-USD,SOL-USD,XRP-USD",
+            "end_date": "$refdate",
+            "limit": 30
+          },
+          "freshness": {
+            "max_age_h": 72,
+            "required": true,
+            "expects_close": true
+          }
+        },
+        {
+          "as": "correlations",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "SPY,QQQ,IWM,GLD,SLV,TLT,USO",
+            "end_date": "$refdate",
+            "days": 90,
+            "adjusted": true,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 72,
+            "required": true,
+            "expects_close": true
           }
         }
       ]
     },
     {
-      "name": "flux",
+      "name": "week-ahead",
       "calls": [
         {
-          "as": "short_interest",
+          "as": "earnings_calendar",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "args": {
+            "days_ahead": 7,
+            "min_expected_move_pct": 3
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "economic_events",
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
-            "types": "short_interest",
-            "symbols": "IWM,SLV,GLD",
-            "days": 365
+            "types": "economic_events",
+            "days": 10
           },
           "freshness": {
-            "max_age_h": 168,
-            "required": false
+            "max_age_h": 24,
+            "required": true
           }
         },
         {
@@ -147,7 +168,45 @@
           },
           "freshness": {
             "max_age_h": 24,
-            "required": false
+            "required": true
+          }
+        },
+        {
+          "as": "short_interest",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "short_interest",
+            "symbols": "IWM,SLV,GLD",
+            "end_date": "$refdate",
+            "days": 365
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "context-only",
+      "detached": true,
+      "deadline_ms": 120000,
+      "calls": [
+        {
+          "as": "overview",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "args": {
+            "facets": "overview",
+            "timeout": 90,
+            "analysis_depth": "standard",
+            "as_of": "$refdate"
+          },
+          "freshness": {
+            "max_age_h": 6,
+            "required": false,
+            "note": "Context only; never governs a number, selection or publication decision."
           }
         }
       ]

@@ -143,18 +143,48 @@ case "$MODE" in
     # clôture. Un autre emplacement se passe explicitement, il ne se devine pas.
     S="${DTX_STAGING_DIR:-$DIR/_dtx}"
     if [ -d "$S" ]; then
+      REF_CLOSE=$(node -e '
+        const fs=require("fs"), path=require("path");
+        for(const dir of process.argv.slice(1)) {
+          try { const h=JSON.parse(fs.readFileSync(path.join(dir,"harness.json"),"utf8")); if(h.reference_close){process.stdout.write(h.reference_close);process.exit(0)} } catch {}
+        }
+        process.exit(1);
+      ' "$S" "$DIR/_data" "$DIR/_data2") || { echo "clôture de référence introuvable dans les harnais scanner" >&2; exit 1; }
       for d in "$S"/decide_*.json; do
         [ -e "$d" ] || continue
         pf=$(basename "$d" .json); pf=${pf#decide_}
         r="$S/replay_${pf}.json"
         if [ -f "$r" ]; then
-          node tools/dtx-mcp-ingest.js --portfolio "$pf" --decide "$d" --replay "$r" --asof "$ASOF" >> /tmp/ds-dtx.log 2>&1
+          node tools/dtx-mcp-ingest.js --portfolio "$pf" --decide "$d" --replay "$r" --asof "$ASOF" --expected-close "$REF_CLOSE" >> /tmp/ds-dtx.log 2>&1 \
+            || { echo "  $pf : ingestion decide/replay invalide" | tee -a /tmp/ds-dtx.log; exit 1; }
+          # DtxReplay is useful for a current decision/replay audit, but its
+          # fixed-capital combined curve is not the dynamic book curve. The
+          # authenticated agent captures DtxBookEquity separately because that
+          # pure tool is not exposed by DtxMintReadOnlyToken. Install it only
+          # after the offline same-vintage CAGR/MaxDD checks pass.
+          book="$S/book_equity_${pf}.json"
+          if [ -f "$book" ]; then
+            node tools/dtx-book-equity-ingest.js --portfolio "$pf" --book-file "$book" --expected-close "$REF_CLOSE" >> /tmp/ds-dtx.log 2>&1 \
+              || { echo "  $pf : DtxBookEquity invalide → publication bloquée" | tee -a /tmp/ds-dtx.log; exit 1; }
+          else
+            node -e '
+              const fs=require("fs"), scan=require("./tools/dtx-scan");
+              const file="data/dtx/"+process.argv[1]+".json";
+              let value=null; try{value=JSON.parse(fs.readFileSync(file,"utf8"));}catch{}
+              const proof=scan.bookSnapshotCoherence(value,{expectedClose:process.argv[2],expectedPortfolio:process.argv[1]});
+              if(!proof.ok){console.error("snapshot DtxBookEquity absent/invalide: "+proof.errors.join("; "));process.exit(1)}
+            ' "$pf" "$REF_CLOSE" >> /tmp/ds-dtx.log 2>&1 \
+              || { echo "  $pf : fournir $book depuis DtxBookEquity avant compute" | tee -a /tmp/ds-dtx.log; exit 1; }
+          fi
         else
-          echo "  $pf : replay absent → ingestion SAUTÉE (decide seul = staging stateless)" | tee -a /tmp/ds-dtx.log
+          echo "  $pf : replay absent → compute refusé (decide seul = staging stateless)" | tee -a /tmp/ds-dtx.log
+          exit 1
         fi
       done
-      node tools/dtx-history-append.js >> /tmp/ds-dtx.log 2>&1
-      node tools/dtx-pool-bridge.js --folder "$DATE" --date "$ASOF" >> /tmp/ds-dtx.log 2>&1
+      node tools/dtx-history-append.js >> /tmp/ds-dtx.log 2>&1 \
+        || { echo "dtx-history-append ÉCHEC" >&2; exit 1; }
+      node tools/dtx-pool-bridge.js --folder "$DATE" --date "$ASOF" >> /tmp/ds-dtx.log 2>&1 \
+        || { echo "dtx-pool-bridge ÉCHEC" >&2; exit 1; }
       log "dtx ingéré"
     fi
 
@@ -179,8 +209,18 @@ case "$MODE" in
     ( node tools/gen-mode-cards.js  > /tmp/ds-cards.log 2>&1; echo $? > /tmp/ds-cards.rc ) &
     ( node tools/daily-synthesis.js > /tmp/ds-synth.log 2>&1; echo $? > /tmp/ds-synth.rc ) &
     wait
-    log "api/cartes/synthèse (rc: $(cat /tmp/ds-api.rc) $(cat /tmp/ds-cards.rc) $(cat /tmp/ds-synth.rc))"
-    node tools/qa-check.js 2>&1 | grep -E "Checks:|❌" | head -5
+    API_RC=$(cat /tmp/ds-api.rc 2>/dev/null || echo 1)
+    CARDS_RC=$(cat /tmp/ds-cards.rc 2>/dev/null || echo 1)
+    SYNTH_RC=$(cat /tmp/ds-synth.rc 2>/dev/null || echo 1)
+    log "api/cartes/synthèse (rc: $API_RC $CARDS_RC $SYNTH_RC)"
+    if [ "$API_RC" != "0" ] || [ "$CARDS_RC" != "0" ] || [ "$SYNTH_RC" != "0" ]; then
+      echo "génération aval incomplète — voir /tmp/ds-{api,cards,synth}.log" >&2
+      exit 1
+    fi
+    node tools/qa-check.js > /tmp/ds-qa.log 2>&1
+    QA_RC=$?
+    grep -E "Checks:|❌" /tmp/ds-qa.log | head -5 || true
+    [ "$QA_RC" -eq 0 ] || { echo "qa-check ÉCHEC — voir /tmp/ds-qa.log" >&2; exit 1; }
     log "CALCUL terminé — rejouable à l'identique si le panel demande une correction"
     ;;
 

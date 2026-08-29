@@ -1,11 +1,123 @@
 {
-  "artifact": "radar squeeze",
+  "artifact": "data/workflow-runs/squeeze/$date/verify",
   "waves": [
-    { "name": "squeeze", "calls": [
-      { "as": "ctb_top", "server": "marketdata", "tool": "QueryData", "args": { "types": "ctb_top" }, "freshness": { "max_age_h": 24, "required": true } },
-      { "as": "si", "server": "marketdata", "tool": "QueryData", "args": { "types": "short_interest,ctb,ftd_threshold", "symbols": "$symbols", "days": 365 }, "freshness": { "max_age_h": 168, "required": true } },
-      { "as": "flow", "server": "marketdata", "tool": "QueryData", "args": { "types": "unusual_options,dark_pool,max_pain", "symbols": "$symbols" }, "freshness": { "max_age_h": 24, "required": false } },
-      { "as": "bars", "server": "marketdata", "tool": "QueryData", "args": { "types": "bars_daily", "symbols": "$symbols", "end_date": "$refdate", "limit": 120 }, "freshness": { "max_age_h": 24, "required": true } }
-    ] }
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 1,
+            "required": true
+          },
+          "assert": {
+            "expected_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "governing-evidence",
+      "calls": [
+        {
+          "as": "ctb_top",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "ctb_top"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "short_evidence",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "short_interest,ctb,ftd_threshold",
+            "symbols": "$symbols",
+            "days": 365,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "limit": 120,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        },
+        {
+          "as": "sec_flags",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "sec_filings,flags",
+            "symbols": "$symbols",
+            "days": 180,
+            "end_date": "$refdate",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "earnings_window",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "args": {
+            "days_ahead": 14,
+            "include_implied_move": true,
+            "symbols": "$symbols"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "optional-flow-context",
+      "detached": true,
+      "calls": [
+        {
+          "as": "flow_context",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "unusual_options,dark_pool,max_pain",
+            "symbols": "$symbols",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false
+          }
+        }
+      ]
+    }
   ]
 }

@@ -1,10 +1,19 @@
-# /sector-rotation — Rotation sectorielle & leaders de force relative (RS) + bilan
+<!-- workflow-contract: sector-rotation -->
+# /sector-rotation
 
-Exécute le skill **sector-rotation** : lis `.claude/skills/sector-rotation.md` et suis-le **EXACTEMENT**.
+Produce a US sector-ETF rotation view from exact-close bars. Read
+`.claude/skills/source-policy.md` and `.claude/skills/sector-rotation.md`.
 
-Bilan rotation précédente → régime (dérivé des données live) → classement secteurs (performance_rotations + fond macro taux/pétrole) → tilt (surpondérer/sous-pondérer) → leaders RS par secteur favorisé (perf_rank, cap ≥ $2B) → cohérence → digest.
+```bash
+node tools/validate-workflows.js --workflow sector-rotation
+bash tools/run-collect.sh rotation data/workflow-runs/sector-rotation/YYYYMMDD \
+  --var date=YYYYMMDD --var refdate=YYYY-MM-DD
+```
 
-## Arguments
-`$ARGUMENTS` — horizon/région (défaut US, vue tactique ~1-4 semaines). `ne poste pas` = montrer sans envoyer.
+Compute every return, relative-strength rank and correlation locally from `bars_sectors`, `bars_bench`
+and `correlations`. `performance_rotations` is detached context: its undeclared aggregation window cannot
+define a weekly/tactical rank. Individual stock leaders require a separately verified scanner/analysis
+snapshot; do not invent them from sector membership.
 
-Garde-fous : zéro hallucination, régime dérivé du live (pas d'un label), compa vs benchmark en total-return, idées ≠ données desk, format html `<b>`, envoi sur demande.
+Hash the snapshot, run Senior QA, Contrarian and Retail War Room, then strict local QA. Publish or notify
+only when the invocation authorizes it. A missing sector close yields no rank, not a fallback quote.

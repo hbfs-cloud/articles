@@ -1,32 +1,11 @@
 {
-  "artifact": "socle partagé de la séance",
+  "artifact": "data/desk/$date/_socle",
   "socle": true,
-  "_pourquoi": [
-    "Recensement des 11 plans : 6 appellent GetStatus à l'identique, 3 le même GetMarketContext(regime),",
-    "3 le même DtxRegime (16,7 s pièce), 2 les mêmes bars_sectors, 2 les mêmes correlations. Un run /desk",
-    "qui produit scanner+daily+signals+weekly rejouait ces appels 2 à 6 fois pour un résultat identique.",
-    "Le socle les collecte UNE fois ; collect.js --socle les sert aux plans produits via le champ 'covers'.",
-    "",
-    "RÈGLE SUPERSET À LA COLLECTE, DÉCOUPE À LA LECTURE : quand deux consommateurs ne diffèrent que par la",
-    "FENÊTRE (limit 12 vs 130) ou par les SYMBOLES (rotation exige XLB que daily n'a pas), on collecte le",
-    "plus large et chacun tronque. Un socle trop étroit = troncature silencieuse chez un consommateur.",
-    "",
-    "RÈGLE INVERSE — UN FILTRE N'EST PAS UNE FENÊTRE : min_expected_move_pct, min_market_cap_usd, un DSL de",
-    "screener encodent un JUGEMENT PRODUIT, pas une plage de données. Élargir un filtre change le sens du",
-    "fichier pour celui qui le lit. C'est pourquoi earnings_7d (move≥4%), earnings_cal (move≥3%) et",
-    "earnings_today (mcap≥10 Md) ne sont PAS couverts ici : chacun paie son appel. Seul earnings_3d, qui ne",
-    "porte aucun filtre, est un vrai sous-ensemble de earnings_all_7d.",
-    "",
-    "FRAÎCHEUR = LE MINIMUM DES CONSOMMATEURS, JAMAIS LE MAXIMUM. regime est à 6 h parce que daily et",
-    "scanner l'exigent, même si un futur consommateur tolérerait 24 h.",
-    "",
-    "CACHE INTERDIT ICI : aucun cache_minutes sur un prix, un régime ou un calendrier — le manifeste de",
-    "fraîcheur cesserait de dire la vérité. Le seul appel caché du socle est overview, isolé dans",
-    "plans/socle-overview.json parce qu'il ne porte AUCUN chiffre publié."
-  ],
+  "note": "Required shared snapshot for desk products. Optional context is isolated in a detached wave and cannot govern publication.",
   "waves": [
     {
-      "name": "socle",
+      "name": "preflight",
+      "gate": true,
       "calls": [
         {
           "as": "status",
@@ -38,30 +17,39 @@
             "service_health"
           ],
           "freshness": {
-            "max_age_h": 6,
+            "max_age_h": 2,
             "required": true
+          },
+          "assert": {
+            "expected_close": "$refdate"
           }
         },
         {
           "as": "dtx_health",
           "server": "systematic",
           "tool": "GetHealth",
-          "args": {},
+          "args": {
+            "expected_close": "$refdate"
+          },
           "covers": [
             "dtx_health"
           ],
           "freshness": {
-            "max_age_h": 6,
+            "max_age_h": 2,
             "required": true
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "governing-snapshot",
+      "calls": [
         {
           "as": "regime",
           "server": "marketdata",
           "tool": "GetMarketContext",
           "args": {
             "facets": "regime,prediction_markets",
-            "model": "ensemble",
             "horizon_days": 5
           },
           "covers": [
@@ -85,7 +73,7 @@
             "regime_systematic"
           ],
           "freshness": {
-            "max_age_h": 48,
+            "max_age_h": 6,
             "required": true
           }
         },
@@ -98,7 +86,7 @@
             "dtx_configs"
           ],
           "freshness": {
-            "max_age_h": 168,
+            "max_age_h": 24,
             "required": true
           }
         },
@@ -174,8 +162,7 @@
           ],
           "freshness": {
             "max_age_h": 24,
-            "required": true,
-            "note": "date macro à VÉRIFIER avant publication — le calendrier donne le jour, pas le consensus"
+            "required": true
           }
         },
         {
@@ -190,10 +177,37 @@
           ],
           "freshness": {
             "max_age_h": 24,
-            "required": true,
-            "note": "aucun filtre : sert aussi de compteur de densité de saison pour le déclencheur earnings"
+            "required": true
           }
         },
+        {
+          "as": "correlations",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "SPY,QQQ,IWM,GLD,SLV,TLT,USO",
+            "end_date": "$refdate",
+            "days": 90,
+            "adjusted": true,
+            "force_async": true
+          },
+          "covers": [
+            "correlations"
+          ],
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "optional-context",
+      "detached": true,
+      "deadline_ms": 120000,
+      "calls": [
         {
           "as": "options_sentiment",
           "server": "marketdata",
@@ -207,24 +221,6 @@
           "freshness": {
             "max_age_h": 24,
             "required": false
-          }
-        },
-        {
-          "as": "correlations",
-          "server": "marketdata",
-          "tool": "PortfolioRisk",
-          "args": {
-            "action": "correlation",
-            "symbols": "SPY,QQQ,IWM,GLD,SLV,TLT,USO",
-            "lookback_days": 60,
-            "method": "pearson"
-          },
-          "covers": [
-            "correlations"
-          ],
-          "freshness": {
-            "max_age_h": 48,
-            "required": true
           }
         },
         {

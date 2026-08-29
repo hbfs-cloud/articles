@@ -1,0 +1,304 @@
+{
+  "version": "1.0",
+  "policy": {
+    "allowed_servers": ["marketdata", "systematic"],
+    "allowed_tools_by_server": {
+      "marketdata": [
+        "ExplainSymbolMove",
+        "GetEarningsCalendarFiltered",
+        "GetInsiderActivity",
+        "GetInstruments",
+        "GetMarketContext",
+        "GetReferentialData",
+        "GetStatus",
+        "GetSymbolSignals",
+        "OptionsAnalytics",
+        "PortfolioRisk",
+        "QueryData",
+        "RunAutoScreener",
+        "RunScreener",
+        "WatchlistDigest"
+      ],
+      "systematic": [
+        "DtxDecide",
+        "DtxListConfigs",
+        "DtxRegime",
+        "DtxReplay",
+        "GetHealth"
+      ]
+    },
+    "allowed_args_by_server_tool": {
+      "marketdata": {
+        "ExplainSymbolMove": ["symbol"],
+        "GetEarningsCalendarFiltered": ["days_ahead", "include_implied_move", "min_expected_move_pct", "min_market_cap_usd", "symbols"],
+        "GetInsiderActivity": ["days", "direction", "include_transactions", "limit", "max_symbols", "maxsize", "page", "pagination_token", "symbols"],
+        "GetInstruments": ["as_of", "asset", "bars_depth", "maxsize", "page", "pagination_token", "region", "symbols", "timeout", "types"],
+        "GetMarketContext": ["analysis_depth", "as_of", "asset", "facets", "horizon_days", "include_history", "limit", "maxsize", "page", "pagination_token", "query", "region", "rotation_long_window", "rotation_short_window", "symbol", "symbols", "timeout", "weeks"],
+        "GetReferentialData": ["as_of", "asset", "category", "correlated_with", "industry", "maxsize", "page", "pagination_token", "region", "sector", "theme", "timeout"],
+        "GetSymbolSignals": ["symbol"],
+        "OptionsAnalytics": ["action", "alpha", "beta", "expiration", "forward", "legs", "nu", "option_strategy", "option_type", "portfolio_name", "positions", "rho", "risk_free_rate", "spot", "strike", "symbol", "time_to_expiry", "volatility"],
+        "PortfolioRisk": ["action", "confidence_level", "constraints", "custom_shocks", "horizon_days", "lookback_days", "method", "mode", "portfolio_value", "positions", "returns", "returns_type", "scenarios", "signals", "symbols", "weights"],
+        "QueryData": ["adjusted", "by_date", "days", "end_date", "execution_mode", "expiries", "force_async", "form_types", "include_partial", "level", "limit", "max_expirations", "moneyness_max", "moneyness_min", "option_type", "pagination_token", "start_date", "symbols", "timeframe", "types"],
+        "RunAutoScreener": ["as_of", "asset", "force_async", "max_debt_to_equity", "max_rsi", "maxsize", "min_avg_volume", "min_bars", "min_market_cap", "min_roe", "page", "pagination_token", "ref_price", "region", "timeframe", "timeout", "top_k"],
+        "RunScreener": ["as_of", "asset", "disk_scan", "enable_backtest", "force_async", "max_debt_to_equity", "max_rsi", "maxsize", "min_avg_volume", "min_bars", "min_market_cap", "min_roe", "page", "pagination_token", "pass_expr", "preset", "ref_price", "region", "score_expr", "timeframe", "timeout", "top_k"],
+        "WatchlistDigest": ["symbols"]
+      },
+      "systematic": {
+        "DtxDecide": ["appel", "asof", "balances", "bars", "consumer_capabilities", "expected_data_date", "orders", "portfolio", "positions", "previous_plan_id", "previous_plan_revision", "request_id", "state"],
+        "DtxListConfigs": [],
+        "DtxRegime": ["asof", "bars", "expected_data_date"],
+        "DtxReplay": ["bars", "equity_full", "from", "portfolio", "to"],
+        "GetHealth": ["expected_close"]
+      }
+    },
+    "forbidden_server_patterns": ["broker", "broker_live", "trading"],
+    "forbidden_tool_aliases": [
+      "GetHealth",
+      "GetMarketOverview",
+      "GetRegimeProbability",
+      "GetCorrelationMatrix",
+      "OptimizeSizing",
+      "CheckJobStatus"
+    ],
+    "web_allowed": [
+      "SEC EDGAR primary filings",
+      "company investor-relations releases and transcripts",
+      "official macro and central-bank calendars",
+      "current news attribution with a named source"
+    ],
+    "web_forbidden_as_fallback": [
+      "prices and returns",
+      "bars and technical indicators",
+      "fundamentals and valuation inputs",
+      "options, short-interest and flow metrics",
+      "screening, scoring, sizing and backtests"
+    ],
+    "publication_gates": [
+      "reference-close freshness",
+      "deterministic numeric validation",
+      "contrarian and retail war-room review",
+      "senior review",
+      "local strict QA"
+    ],
+    "command_contract": {
+      "required_references": [
+        ".claude/skills/source-policy.md"
+      ],
+      "forbidden_patterns": [
+        {
+          "pattern": "mcp__claude",
+          "message": "Claude-only MCP aliases are forbidden in active runbooks"
+        },
+        {
+          "pattern": "min_expected_move(?!_pct)",
+          "message": "use the audited min_expected_move_pct argument"
+        },
+        {
+          "pattern": "GetSymbolSignals\\([^\\n)]*symbols\\s*=",
+          "message": "GetSymbolSignals is mono-symbol"
+        },
+        {
+          "pattern": "MCP_TOKEN_[A-Z_]+\\s*=\\s*['\\\"]?[A-Za-z0-9._-]{16,}",
+          "message": "token-looking values are forbidden in runbooks"
+        }
+      ]
+    }
+  },
+  "workflows": {
+    "daily": {
+      "command": ".claude/commands/daily.md",
+      "codex_skills": ["daily"],
+      "plans": [
+        {
+          "path": "plans/daily.json",
+          "required_variables": ["date", "refdate"],
+          "static_symbol_calls": ["bars_indices", "bars_sectors", "bars_crypto"]
+        },
+        {
+          "path": "plans/daily-focus.json",
+          "required_variables": ["date", "refdate", "focus_symbols"],
+          "variable_constraints": { "focus_symbols": { "type": "csv", "min_items": 1, "max_items": 6 } }
+        }
+      ]
+    },
+    "weekly": {
+      "command": ".claude/commands/weekly.md",
+      "codex_skills": ["weekly"],
+      "plans": [
+        {
+          "path": "plans/weekly.json",
+          "required_variables": ["date", "refdate"],
+          "static_symbol_calls": ["bars_indices", "bars_sectors", "bars_crypto", "correlations", "short_interest"]
+        },
+        {
+          "path": "plans/weekly-focus.json",
+          "required_variables": ["date", "refdate", "focus_symbols"],
+          "variable_constraints": { "focus_symbols": { "type": "csv", "min_items": 1, "max_items": 8 } }
+        }
+      ]
+    },
+    "analyse": {
+      "aliases": ["analysis"],
+      "command": ".claude/commands/analyse.md",
+      "codex_skills": ["analyse", "analysis"],
+      "plans": [
+        {
+          "path": "plans/analyse.json",
+          "required_variables": ["symbol", "refdate"],
+          "variable_constraints": { "symbol": { "type": "csv", "min_items": 1, "max_items": 1, "item_pattern": "^[A-Z][A-Z0-9.-]{0,14}$" } }
+        }
+      ]
+    },
+    "aplus": {
+      "command": ".claude/commands/aplus.md",
+      "codex_skills": ["aplus"],
+      "plans": [
+        {
+          "path": "plans/aplus-screen.json",
+          "required_variables": ["date", "refdate"]
+        },
+        {
+          "path": "plans/aplus-verify.json",
+          "required_variables": ["date", "refdate", "symbols"],
+          "variable_constraints": { "symbols": { "type": "csv", "min_items": 1, "max_items": 10, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" } }
+        },
+        {
+          "path": "plans/aplus-correlation.json",
+          "required_variables": ["date", "refdate", "symbols"],
+          "variable_constraints": { "symbols": { "type": "csv", "min_items": 2, "max_items": 10, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" } }
+        }
+      ]
+    },
+    "signals-desk": {
+      "command": ".claude/commands/signals-desk.md",
+      "codex_skills": ["signals-desk"],
+      "plans": [
+        {
+          "path": "plans/signals-desk.json",
+          "required_variables": ["date", "refdate"],
+          "static_symbol_calls": ["bars_benchmarks"]
+        },
+        {
+          "path": "plans/signals-desk-verify.json",
+          "required_variables": ["date", "refdate", "symbols"],
+          "variable_constraints": { "symbols": { "type": "csv", "min_items": 1, "max_items": 5, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" } }
+        }
+      ]
+    },
+    "signals-desk-fire-and-forget": {
+      "command": ".claude/commands/signals-desk-fire-and-forget.md",
+      "codex_skills": ["signals-desk-fire-and-forget"],
+      "plans": [
+        {
+          "path": "plans/signals-desk.json",
+          "required_variables": ["date", "refdate"],
+          "static_symbol_calls": ["bars_benchmarks"]
+        },
+        {
+          "path": "plans/signals-desk-verify.json",
+          "required_variables": ["date", "refdate", "symbols"],
+          "variable_constraints": { "symbols": { "type": "csv", "min_items": 1, "max_items": 5, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" } }
+        }
+      ]
+    },
+    "desk": {
+      "command": ".claude/commands/desk.md",
+      "codex_skills": ["desk"],
+      "plans": [
+        {
+          "path": "plans/socle.json",
+          "required_variables": ["date", "refdate"],
+          "static_symbol_calls": ["bars_indices", "bars_sectors", "bars_crypto", "correlations"]
+        },
+        {
+          "path": "plans/socle-overview.json",
+          "required_variables": ["date", "refdate"]
+        }
+      ]
+    },
+    "sector-rotation": {
+      "aliases": ["rotation"],
+      "command": ".claude/commands/sector-rotation.md",
+      "codex_skills": ["sector-rotation"],
+      "plans": [
+        {
+          "path": "plans/rotation.json",
+          "required_variables": ["date", "refdate"],
+          "static_symbol_calls": ["bars_sectors", "bars_bench", "correlations"]
+        }
+      ]
+    },
+    "macro-event-playbook": {
+      "aliases": ["macro"],
+      "command": ".claude/commands/macro-event-playbook.md",
+      "codex_skills": ["macro-event-playbook"],
+      "plans": [
+        {
+          "path": "plans/macro.json",
+          "required_variables": ["date", "refdate"],
+          "static_symbol_calls": ["bars_macro"]
+        }
+      ]
+    },
+    "squeeze-radar": {
+      "aliases": ["squeeze"],
+      "command": ".claude/commands/squeeze-radar.md",
+      "codex_skills": ["squeeze-radar"],
+      "plans": [
+        {
+          "path": "plans/squeeze-universe.json",
+          "required_variables": ["date", "refdate"]
+        },
+        {
+          "path": "plans/squeeze.json",
+          "required_variables": ["date", "refdate", "symbols"],
+          "variable_constraints": {
+            "symbols": { "type": "csv", "min_items": 1, "max_items": 36, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" }
+          }
+        }
+      ]
+    },
+    "scanner": {
+      "command": ".claude/commands/scanner.md",
+      "codex_skills": ["scanner"],
+      "plans": [
+        {
+          "path": "plans/scanner-wave1.json",
+          "required_variables": ["date", "refdate"]
+        },
+        {
+          "path": "plans/scanner-wave2.json",
+          "required_variables": ["date", "refdate", "batch1", "batch2", "batch3", "batch4", "batch5"],
+          "variable_constraints": {
+            "batch1": { "type": "csv", "min_items": 1, "max_items": 12, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" },
+            "batch2": { "type": "csv", "min_items": 1, "max_items": 12, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" },
+            "batch3": { "type": "csv", "min_items": 1, "max_items": 12, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" },
+            "batch4": { "type": "csv", "min_items": 1, "max_items": 12, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" },
+            "batch5": { "type": "csv", "min_items": 1, "max_items": 12, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" }
+          }
+        },
+        {
+          "path": "plans/scanner-dtx.json",
+          "required_variables": ["date", "refdate", "asof", "request_id"],
+          "allowed_date_literals": ["2021-01-01"]
+        },
+        {
+          "path": "plans/scanner-dtx-decide-only.json",
+          "required_variables": ["date", "refdate", "asof", "request_id"]
+        }
+      ]
+    },
+    "retro": {
+      "command": ".claude/commands/retro.md",
+      "codex_skills": ["retro"],
+      "plans": [
+        {
+          "path": "plans/retro.json",
+          "required_variables": ["scandate", "startdate", "refdate", "symbols"],
+          "variable_constraints": { "symbols": { "type": "csv", "min_items": 1, "max_items": 60, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" } },
+          "static_symbol_calls": ["bench"]
+        }
+      ]
+    }
+  }
+}

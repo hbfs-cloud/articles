@@ -1,0 +1,64 @@
+{
+  "artifact": "data/workflow-runs/aplus/$date/correlation.json",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "expected_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "basket",
+      "calls": [
+        {
+          "as": "basket_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "limit": 60,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        },
+        {
+          "as": "correlation",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "adjusted": true,
+            "force_async": true,
+            "days": 90
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        }
+      ]
+    }
+  ]
+}

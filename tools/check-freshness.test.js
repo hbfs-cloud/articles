@@ -70,14 +70,15 @@ console.log('\nTest 2: la même source atteignant la clôture passe');
   assert(/séance 2026-08-12 = clôture de référence/.test(r.out), 'le succès ATTESTE la séance, il ne dit pas seulement « frais »');
 }
 
-// ── Test 3 : une source EN AVANCE passe (données du jour même) ───────────────
-console.log('\nTest 3: une source dépassant la clôture de référence ne bloque pas');
+// ── Test 3 : une source EN AVANCE est du lookahead ──────────────────────────
+console.log('\nTest 3: une source dépassant la clôture de référence est bloquante');
 {
   const r = run({
     reference_close: '2026-08-11',
     sources: [src({ name: 'bars_indices', expects_close: true, reference_close: '2026-08-11', data_through: '2026-08-12' })],
   });
-  assert(r.code === 0, 'exit 0 — plus récent que demandé n\'est pas une anomalie', `code=${r.code}`);
+  assert(r.code === 1, 'exit 1 — une preuve point-in-time doit être exacte', `code=${r.code}`);
+  assert(/LOOKAHEAD/.test(r.out), 'la raison nomme explicitement la contamination future');
 }
 
 // ── Test 4 : pas de faux positif sur les sources non déclarées ───────────────

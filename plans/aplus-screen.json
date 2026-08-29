@@ -1,19 +1,93 @@
 {
-  "artifact": "cohorte A+ — screen",
+  "artifact": "data/workflow-runs/aplus/$date/screen.json",
   "waves": [
-    { "name": "screen", "calls": [
-      { "as": "status", "server": "marketdata", "tool": "GetStatus", "args": {}, "freshness": { "max_age_h": 6, "required": true } },
-      { "as": "regime", "server": "marketdata", "tool": "GetMarketContext", "args": { "facets": "regime", "model": "ensemble", "horizon_days": 10 }, "freshness": { "max_age_h": 12, "required": true } },
-      { "as": "screen_core", "server": "marketdata", "tool": "RunScreener",
-        "args": { "pass_expr": "market_cap>3e9 && close*avg_volume>20e6 && ema20>ema50 && ema50>ema200 && rising('ema20',20) && rising('ema50',40) && between(close/ema20-1,-0.02,0.03) && between(rsi14,50,68)", "score_expr": "trend_strength(20)", "region": "US", "asset": "stock", "top_k": 120, "force_async": true, "timeout": 90 },
-        "freshness": { "max_age_h": 24, "required": true } },
-      { "as": "screen_wide", "server": "marketdata", "tool": "RunScreener",
-        "args": { "pass_expr": "market_cap>3e9 && close*avg_volume>20e6 && ema20>ema50 && ema50>ema200 && between(close/ema20-1,-0.045,0.03) && between(rsi14,45,70)", "score_expr": "trend_strength(20)", "region": "US", "asset": "stock", "top_k": 120, "force_async": true, "timeout": 90 },
-        "freshness": { "max_age_h": 24, "required": true } },
-      { "as": "screen_nostack", "server": "marketdata", "tool": "RunScreener",
-        "args": { "pass_expr": "market_cap>3e9 && close*avg_volume>20e6 && between(close/ema20-1,-0.02,0.03) && between(rsi14,50,68) && rising('close',60)", "score_expr": "trend_strength(20)", "region": "US", "asset": "stock", "top_k": 120, "force_async": true, "timeout": 90 },
-        "freshness": { "max_age_h": 24, "required": true } },
-      { "as": "earnings_20d", "server": "marketdata", "tool": "GetEarningsCalendarFiltered", "args": { "days_ahead": 20 }, "freshness": { "max_age_h": 24, "required": true, "note": "exclusion earnings < 10 séances" } }
-    ] }
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "expected_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "universe",
+      "calls": [
+        {
+          "as": "regime",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "args": {
+            "facets": "regime",
+            "horizon_days": 10
+          },
+          "freshness": {
+            "max_age_h": 6,
+            "required": true
+          }
+        },
+        {
+          "as": "screen_pullback",
+          "server": "marketdata",
+          "tool": "RunScreener",
+          "args": {
+            "pass_expr": "market_cap > 3000000000 && avg_volume > 500000 && close > 10 && rsi14 > 45 && rsi14 < 68 && close > ema(close,20) * 0.94 && close < ema(close,20) * 1.03",
+            "score_expr": "trend_strength(20) * 10 + (68 - rsi14)",
+            "region": "US",
+            "asset": "stock",
+            "as_of": "$refdate",
+            "top_k": 120,
+            "force_async": true,
+            "timeout": 90
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "screen_trend",
+          "server": "marketdata",
+          "tool": "RunScreener",
+          "args": {
+            "pass_expr": "market_cap > 3000000000 && avg_volume > 500000 && close > 10 && ema(close,20) > ema(close,50) && rsi14 > 48 && rsi14 < 68 && close < ema(close,20) * 1.03",
+            "score_expr": "trend_strength(20) * 10 + (68 - rsi14)",
+            "region": "US",
+            "asset": "stock",
+            "as_of": "$refdate",
+            "top_k": 120,
+            "force_async": true,
+            "timeout": 90
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "earnings_20d",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "args": {
+            "days_ahead": 20
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "note": "Candidates inside ten trading sessions are ineligible."
+          }
+        }
+      ]
+    }
   ]
 }

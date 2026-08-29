@@ -2,7 +2,8 @@
   "artifact": "scanner/$scandate/retro/index.html",
   "waves": [
     {
-      "name": "resultat",
+      "name": "preflight",
+      "gate": true,
       "calls": [
         {
           "as": "status",
@@ -10,10 +11,18 @@
           "tool": "GetStatus",
           "args": {},
           "freshness": {
-            "max_age_h": 6,
+            "max_age_h": 2,
             "required": true
+          },
+          "assert": {
+          "covers_close": "$refdate"
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "execution-truth",
+      "calls": [
         {
           "as": "bars_positions",
           "server": "marketdata",
@@ -21,14 +30,16 @@
           "args": {
             "types": "bars_daily",
             "symbols": "$symbols",
+            "start_date": "$startdate",
             "end_date": "$refdate",
-            "limit": 40
+            "limit": 80,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
             "required": true,
-            "note": "OHLC réels pour la politique de fill — un stop non traité n'est PAS une sortie",
-            "expects_close": true
+            "expects_close": true,
+            "note": "Daily envelope only; never used to infer intraday event order."
           }
         },
         {
@@ -38,26 +49,15 @@
           "args": {
             "types": "bars_15m",
             "symbols": "$symbols",
-            "limit": 200
+            "start_date": "$startdate",
+            "end_date": "$refdate",
+            "limit": 5000,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
-            "required": false
-          }
-        },
-        {
-          "as": "regime_periode",
-          "server": "marketdata",
-          "tool": "GetMarketContext",
-          "args": {
-            "facets": "regime",
-            "model": "ensemble",
-            "horizon_days": 5,
-            "include_history": true
-          },
-          "freshness": {
-            "max_age_h": 6,
-            "required": true
+            "required": true,
+            "note": "Governing fill/stop/target event ordering over the full measured window."
           }
         },
         {
@@ -67,11 +67,69 @@
           "args": {
             "types": "bars_daily",
             "symbols": "SPY,QQQ,IWM",
+            "start_date": "$startdate",
             "end_date": "$refdate",
-            "limit": 40
+            "limit": 80,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "missed-risks",
+      "calls": [
+        {
+          "as": "sec_evidence",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "sec_filings,flags",
+            "symbols": "$symbols",
+            "start_date": "$startdate",
+            "end_date": "$refdate",
+            "days": 365,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "events",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "calendar,news,analyst_actions",
+            "symbols": "$symbols",
+            "start_date": "$startdate",
+            "end_date": "$refdate",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "insiders",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "insider_transactions",
+            "symbols": "$symbols",
+            "start_date": "$startdate",
+            "end_date": "$refdate",
+            "days": 365,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 96,
             "required": true
           }
         }

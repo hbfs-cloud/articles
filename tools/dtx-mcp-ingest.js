@@ -4,13 +4,10 @@
  * dtx-mcp-ingest.js — ingest a hosted dtx MCP (systematic.dailytickers.com) DtxDecide + DtxReplay
  * payload into the staging JSON that gen-status-page reads (data/dtx/<portfolioId>.json).
  *
- * WHY this exists (the no-token architecture): a `node` SUBPROCESS cannot call the dtx MCP — the MCP
- * is OAuth2 on claude.ai and the repo rule is ZERO token in .env / no hardcoded secrets. Only the
- * AGENT (the 23h routine runs via `claude -p`, which HAS the registered MCP tools) can call
- * DtxDecide / DtxReplay. So the wiring is:
+ * The collector or authenticated agent captures raw DtxDecide/DtxReplay responses without exposing
+ * token values. This offline ingest validates and converts those immutable payloads into staging:
  *
- *   AGENT calls mcp__claude_ai_systematic__DtxDecide / DtxReplay
- *     → writes each raw tool result to a JSON file
+ *   authenticated MCP capture writes each raw tool result to a JSON file
  *       → `node tools/dtx-mcp-ingest.js --portfolio <id> --decide <file> [--replay <file>]`
  *         → writes data/dtx/<id>.json in the EXACT schema the NATIVE path (dtx-scan.js) produces
  *           → gen-status-page.js reads it (orders = rank-1 candidates from V2 groups, metrics = replay).
@@ -45,6 +42,7 @@ const fs = require('fs');
 const path = require('path');
 const scan = require('./dtx-scan');
 const dtxBars = require('./lib/dtx-bars');
+const { validateDtxDecision, validateDtxReplay } = require('./lib/dtx-content-gates');
 
 function parseArgs(argv) {
   const o = {};
@@ -54,6 +52,7 @@ function parseArgs(argv) {
     else if (a === '--decide') o.decide = argv[++i];
     else if (a === '--replay') o.replay = argv[++i];
     else if (a === '--asof') o.asof = argv[++i];
+    else if (a === '--expected-close') o.expectedClose = argv[++i];
     else if (a === '--from') o.from = argv[++i];
     else if (a === '--to') o.to = argv[++i];
     else if (a === '--out') o.out = argv[++i];
@@ -119,15 +118,22 @@ function main() {
   if (!opts.portfolio) { console.error('ERROR: --portfolio <id> required'); process.exit(2); }
   if (!opts.decide) { console.error('ERROR: --decide <file> required (DtxDecide JSON)'); process.exit(2); }
   if (!opts.asof) { console.error('ERROR: --asof YYYY-MM-DD required'); process.exit(2); }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(opts.expectedClose || ''))) { console.error('ERROR: --expected-close YYYY-MM-DD required'); process.exit(2); }
 
   const { modeInfo, cfg } = resolveMode(opts.portfolio, opts);
   const currency = cfg.currency || 'USD';
 
   // 1) decide payload → validated Contract V2 groups. Tolerate the MCP result wrapper.
-  let decide = readJson(opts.decide, 'decide');
-  if (decide && !decide.actions && decide.result && decide.result.actions) decide = decide.result;
-  if (!decide || !decide.actions) {
-    console.error(`ERROR: decide JSON has no .actions (got keys: ${decide ? Object.keys(decide).join(',') : 'null'})`);
+  const decideEnvelope = readJson(opts.decide, 'decide');
+  const decideErrors = validateDtxDecision(decideEnvelope, { asof: opts.asof, referenceClose: opts.expectedClose });
+  if (decideErrors.length) {
+    console.error(`ERROR: DtxDecide Contract V2 rejected: ${decideErrors.join('; ')}`);
+    process.exit(3);
+  }
+  const decide = decideEnvelope && decideEnvelope.result && typeof decideEnvelope.result === 'object'
+    ? decideEnvelope.result : decideEnvelope;
+  if (!decide || !Array.isArray(decide.execution_plan && decide.execution_plan.groups)) {
+    console.error(`ERROR: decide JSON has no Contract V2 execution_plan.groups (got keys: ${decide ? Object.keys(decide).join(',') : 'null'})`);
     process.exit(3);
   }
 
@@ -136,6 +142,8 @@ function main() {
   if (opts.replay) {
     try {
       let rep = readJson(opts.replay, 'replay');
+      const replayErrors = validateDtxReplay(rep, { portfolio: opts.portfolio, referenceClose: opts.expectedClose });
+      if (replayErrors.length) throw new Error(`DtxReplay rejected: ${replayErrors.join('; ')}`);
       if (rep && !rep.results && rep.result && rep.result.results) rep = rep.result;
       if (!rep || !Array.isArray(rep.results)) throw new Error('replay JSON has no results[]');
       const from = opts.from || scan.DEFAULT_FROM;
@@ -143,7 +151,8 @@ function main() {
       ({ metrics, equity } = scan.extractReplayMetrics(rep, from, to));
       if (!metrics) throw new Error('replay results[0] empty');
     } catch (e) {
-      replayErr = e.message;
+      console.error(`ERROR: ${e.message}`);
+      process.exit(4);
     }
   }
 

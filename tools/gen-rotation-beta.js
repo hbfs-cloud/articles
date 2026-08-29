@@ -7,8 +7,8 @@
  *   2. Plus hauts beta par sous-jacent : BTC/ETH/SOL/Gold/Silver/Crude/AI/EURUSD via l'outil
  *      serveur RankBeta (<3s, régression sur le cache DuckDB — pas de sweep client, pas d'usine à gaz).
  *
- * Appelé par /scanner (étape scriptée) : l'AGENT émet le jeton read-only puis exporte
- *   MCP_TOKEN_MARKETDATA=…  (ZÉRO token en .env — cf CLAUDE.md), et lance :
+ * Appelé par /scanner (étape scriptée) : le runner injecte le jeton read-only par
+ * environnement secret (valeur jamais affichée, jamais en .env), puis lance :
  *      node tools/gen-rotation-beta.js
  * Dégradation gracieuse : si le jeton manque, le script sort en 0 avec un mode d'emploi (jamais bloquant).
  *
@@ -52,8 +52,9 @@ function usageAndExit() {
   console.log([
     '[gen-rotation-beta] Aucun jeton marketdata utilisable — étape sautée (non bloquant).',
     'Marche à suivre (agent) :',
-    "  1. GetReadOnlyToken(minutes=60)  → export MCP_TOKEN_MARKETDATA=…",
-    '  2. node tools/gen-rotation-beta.js',
+    '  1. Émettre GetReadOnlyToken(minutes=60) depuis la session authentifiée.',
+    '  2. Injecter sa valeur via un environnement secret non journalisé.',
+    '  3. node tools/gen-rotation-beta.js',
   ].join('\n'));
   process.exit(0);
 }

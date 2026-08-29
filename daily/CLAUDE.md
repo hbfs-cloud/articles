@@ -1,5 +1,9 @@
 # DailyTickers - Daily Instructions
 
+Operational data/source rules are defined by `.claude/commands/daily.md` and
+`.claude/skills/source-policy.md`. This file defines presentation. In case of conflict, the executable
+workflow contract wins; never revive a fixed ticker list or an unbounded market-data call from a template.
+
 ## 2bis. BRIEFING QUOTIDIEN (Daily Briefing)
 
 
@@ -151,7 +155,7 @@ Utiliser ECharts pour les visualisations (bar, radar, gauge, line). Conteneur : 
     - Titre accrocheur, explication claire, exemple concret
     - Format `.pedagogy-box` avec sous-sections
     - ~300-500 mots, niveau beginner accessible
-15. **Idées de Trading** — 2-3 setups swing argumentés
+15. **Idées de Trading** — 0-3 setups swing ayant passé `validate-trade-ideas.js`; ne jamais remplir
     - Format `.trade-idea` (dark card) : ticker, direction, entrée/stop/TP1/TP2, R:R
     - Thèse en 2-3 phrases, catalyseur, horizon
 16. **Ce qu'il faut Surveiller** — Checklist des 5-8 événements/niveaux à suivre
@@ -211,8 +215,8 @@ ForecastVix(horizon=5) → MCP http://ser.tail5d09f.ts.net:8400/mcp/
 - `confidence` = 0.95 fixe → ne pas afficher (non informatif)
 
 ### Directives
-- Données à jour via MCP Gateway (GetMarketOverview, QueryData)
-- WebSearch pour actualités, calendrier économique, géopolitique
+- Données à jour via `GetMarketContext`/`QueryData`, bornées à la clôture de référence
+- Web limité aux calendriers/sources primaires et à l'attribution d'actualité, jamais aux chiffres de marché
 - Chaque chiffre doit être sourcé et daté
 - Ton : professionnel mais accessible, pas de jargon non expliqué
 - Mobile-first : tableaux responsive, grilles adaptatives
@@ -225,9 +229,17 @@ ForecastVix(horizon=5) → MCP http://ser.tail5d09f.ts.net:8400/mcp/
 - **Tags** : toujours `data-tags` sur `<html>` + `data-tab="daily"` + `<div id="article-clickable-tags">`
 - **Scripts** : toujours `/assets/core.js` + `/assets/tag-renderer.js` avant `</body>`
 
-### Post-Publication (OBLIGATOIRE — NE JAMAIS SAUTER)
+### Preuves numériques
 
-Après génération du fichier HTML, ces 4 étapes sont **BLOQUANTES**. Si l'une échoue, NE PAS passer à la suivante :
+Toute affirmation numérique visible dans `<main>` porte un identifiant `data-claim` unique. Le fichier
+`_data/claims.json` lie cet identifiant au hash et au JSON Pointer d'un artefact collecté ou calculé de
+façon déterministe. Chaque claim déclare aussi `render` (`scale`, `decimals`, `sign`, `prefix`, `suffix`),
+afin que le texte affiché soit recalculé depuis la valeur source. `validate-content-claims.js` est bloquant.
+
+### Publication (uniquement si l'invocation courante l'autorise)
+
+Par défaut, s'arrêter après QA locale. Si et seulement si l'utilisateur autorise publication/commit/push,
+exécuter ces étapes après tous les gates :
 
 1. **Vérifier la taille** : `wc -c daily/YYYYMMDD/index.html` — doit être > 30KB (sinon article tronqué/incomplet)
 2. **Indexer** : `node tools/add_card.js daily/YYYYMMDD/index.html` — vérifier que `data/daily.json` et `data/search_data.js` apparaissent dans `git status`
@@ -242,29 +254,23 @@ Après génération du fichier HTML, ces 4 étapes sont **BLOQUANTES**. Si l'une
 
 **Si `add_card.js` échoue** : vérifier que le HTML est valide, que le `<html>` a `data-tab="daily"` et `data-tags`, et que le hero contient un `<h1>`.
 
-5. **Notification** (OBLIGATOIRE, APRÈS le push) — via MCP Notification :
+5. **Notification** (si explicitement autorisée, APRÈS le push) — via MCP Notification :
    ```
    send_message(to: "daily", body: "📊 Daily Briefing — DD mois YYYY\n\n{titre}\n\nhttps://articles.dailytickers.com/daily/YYYYMMDD/")
    ```
    - Utiliser `send_media` si une image de couverture est générée
    - L'alias `daily` résout automatiquement vers le bon topic Telegram + tout autre canal configuré
    - Vérifier la livraison avec `get_delivery_status` si besoin
-   - **Fallback** : si le MCP Notification est down, utiliser `bash tools/publish-with-media.sh --type daily --path daily/YYYYMMDD/index.html`
+   - Si Notification est indisponible, conserver l'échec; aucun fallback d'envoi implicite.
 
 ---
 
 
-## Règle OBLIGATOIRE — Prix crypto en temps réel
+## Règle OBLIGATOIRE — Prix crypto
 
-**Ne JAMAIS inventer ou estimer les prix crypto.** Toujours vérifier via :
-```bash
-# BTC en temps réel
-curl -s "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'BTC: \${float(d[\"lastPrice\"]):,.0f} | 24h: {float(d[\"priceChangePercent\"]):+.2f}%')"
-
-# ETH en temps réel
-curl -s "https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'ETH: \${float(d[\"lastPrice\"]):,.2f} | 24h: {float(d[\"priceChangePercent\"]):+.2f}%')"
-```
-Ou via MCP GetMarketOverview (section market_crypto).
+**Ne JAMAIS inventer ou estimer les prix crypto.** Les chiffres gouvernants viennent exclusivement des
+barres MCP bornees au `refdate`. `GetMarketContext(facets='overview', as_of=refdate)` peut apporter un
+contexte non gouvernant. Une API web ou exchange ne repare jamais une source MCP absente.
 
 **Erreurs interdites :**
 - ❌ "Bitcoin drops below $65K" si BTC est à $67K au moment de la publication

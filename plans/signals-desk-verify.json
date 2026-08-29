@@ -1,0 +1,127 @@
+{
+  "artifact": "data/workflow-runs/signals-desk/$date/verification.json",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "expected_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "candidate-gates",
+      "calls": [
+        {
+          "as": "bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "limit": 120,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        },
+        {
+          "as": "technicals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "quote,technicals,support_resistance,trading_signals",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "sec_evidence",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "sec_filings,flags",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "days": 365,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "events",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "calendar,news,analyst_actions",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "days": 30,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "flows",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "insider_transactions,unusual_options,dark_pool,max_pain,short_interest",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "days": 90,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "correlation",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$symbols",
+            "end_date": "$refdate",
+            "adjusted": true,
+            "force_async": true,
+            "days": 90
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,25 @@
 {
-  "artifact": "scanner/<DATE>/signals.json",
+  "artifact": "scanner/$date/signals.json",
   "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "expected_close": "$refdate"
+          }
+        }
+      ]
+    },
     {
       "name": "enrichissement-gouvernant",
       "calls": [
@@ -12,7 +31,8 @@
             "types": "sec_filings,flags",
             "symbols": "$batch1",
             "end_date": "$refdate",
-            "days": 180
+            "days": 180,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 168,
@@ -28,7 +48,8 @@
             "types": "sec_filings,flags",
             "symbols": "$batch2",
             "end_date": "$refdate",
-            "days": 180
+            "days": 180,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 168,
@@ -43,7 +64,8 @@
             "types": "sec_filings,flags",
             "symbols": "$batch3",
             "end_date": "$refdate",
-            "days": 180
+            "days": 180,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 168,
@@ -58,7 +80,8 @@
             "types": "sec_filings,flags",
             "symbols": "$batch4",
             "end_date": "$refdate",
-            "days": 180
+            "days": 180,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 168,
@@ -73,7 +96,8 @@
             "types": "sec_filings,flags",
             "symbols": "$batch5",
             "end_date": "$refdate",
-            "days": 180
+            "days": 180,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 168,
@@ -92,7 +116,8 @@
           "args": {
             "types": "quote,technicals,support_resistance,trading_signals",
             "symbols": "$batch1",
-            "end_date": "$refdate"
+            "end_date": "$refdate",
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
@@ -106,7 +131,8 @@
           "args": {
             "types": "quote,technicals,support_resistance,trading_signals",
             "symbols": "$batch2",
-            "end_date": "$refdate"
+            "end_date": "$refdate",
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
@@ -120,7 +146,8 @@
           "args": {
             "types": "quote,technicals,support_resistance,trading_signals",
             "symbols": "$batch3",
-            "end_date": "$refdate"
+            "end_date": "$refdate",
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
@@ -134,7 +161,8 @@
           "args": {
             "types": "quote,technicals,support_resistance,trading_signals",
             "symbols": "$batch4",
-            "end_date": "$refdate"
+            "end_date": "$refdate",
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
@@ -148,7 +176,8 @@
           "args": {
             "types": "quote,technicals,support_resistance,trading_signals",
             "symbols": "$batch5",
-            "end_date": "$refdate"
+            "end_date": "$refdate",
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
@@ -168,7 +197,8 @@
             "types": "bars_daily",
             "symbols": "$batch1",
             "end_date": "$refdate",
-            "limit": 120
+            "limit": 120,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
@@ -184,7 +214,8 @@
             "types": "bars_daily",
             "symbols": "$batch2",
             "end_date": "$refdate",
-            "limit": 120
+            "limit": 120,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
@@ -200,7 +231,8 @@
             "types": "bars_daily",
             "symbols": "$batch3",
             "end_date": "$refdate",
-            "limit": 120
+            "limit": 120,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
@@ -216,7 +248,8 @@
             "types": "bars_daily",
             "symbols": "$batch4",
             "end_date": "$refdate",
-            "limit": 120
+            "limit": 120,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
@@ -232,7 +265,8 @@
             "types": "bars_daily",
             "symbols": "$batch5",
             "end_date": "$refdate",
-            "limit": 120
+            "limit": 120,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
@@ -254,7 +288,9 @@
           "args": {
             "types": "insider_transactions,dark_pool,unusual_options,sentiment_overall",
             "symbols": "$batch1",
-            "days": 90
+            "end_date": "$refdate",
+            "days": 90,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 96,
@@ -268,7 +304,9 @@
           "args": {
             "types": "insider_transactions,dark_pool,unusual_options,sentiment_overall",
             "symbols": "$batch2",
-            "days": 90
+            "end_date": "$refdate",
+            "days": 90,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 96,
@@ -282,7 +320,41 @@
           "args": {
             "types": "insider_transactions,dark_pool,unusual_options,sentiment_overall",
             "symbols": "$batch3",
-            "days": 90
+            "end_date": "$refdate",
+            "days": 90,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 96,
+            "required": false
+          }
+        },
+        {
+          "as": "flow_b4",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "insider_transactions,dark_pool,unusual_options,sentiment_overall",
+            "symbols": "$batch4",
+            "end_date": "$refdate",
+            "days": 90,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 96,
+            "required": false
+          }
+        },
+        {
+          "as": "flow_b5",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "insider_transactions,dark_pool,unusual_options,sentiment_overall",
+            "symbols": "$batch5",
+            "end_date": "$refdate",
+            "days": 90,
+            "force_async": true
           },
           "freshness": {
             "max_age_h": 96,

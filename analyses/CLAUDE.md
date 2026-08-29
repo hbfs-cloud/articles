@@ -1,5 +1,10 @@
 # DailyTickers - Analyses Instructions
 
+Operational data/source rules are defined by `.claude/commands/analyse.md` and
+`.claude/skills/source-policy.md`. This file defines presentation. For US stocks/ETFs, the established
+Finviz chart remains mandatory; never replace it with a locally generated chart unless the user explicitly
+requests that product change.
+
 ## 2. ANALYSE INDIVIDUELLE (Ticker Analysis)
 
 
@@ -224,7 +229,9 @@ Utiliser des `.risk-card` pour chaque élément :
 - Verdict : risque de dilution faible / modéré / élevé / critique
 
 ##### Warrants — Analyse Détaillée (OBLIGATOIRE si warrants détectés)
-**Collecte automatique** : `WebSearch "{TICKER} SEC EDGAR warrants"` + `WebSearch "{TICKER} warrants strike price expiration"` + `QueryData types=flags,sec_filings` + vérifier les prospectus S-1/S-3 pour les conditions exactes.
+**Collecte automatique** : `QueryData types=flags,sec_filings`, puis ouverture du prospectus primaire
+S-1/S-3/424B sur SEC EDGAR pour le strike, l'échéance et les conditions exactes. La recherche web sert
+uniquement à localiser le dépôt manquant, jamais à établir les chiffres.
 
 **Tableau obligatoire** pour chaque série de warrants :
 ```html
@@ -415,10 +422,8 @@ Collecter et croiser les données suivantes :
 Collecter via :
 - `QueryData` types=sentiment_stocktwits,sentiment_reddit,sentiment_youtube — sentiment multi-plateforme
 - `QueryData` types=stocktwits_messages — messages récents pour analyse qualitative
-- WebSearch "{TICKER} reddit wallstreetbets mentions" — historique Reddit/WSB, score bullish, upvotes
-- WebSearch "{TICKER} stock Twitter X fintwit" — activité X/Twitter, cashtag $TICKER
-- WebSearch "{TICKER} google trends stock interest" — spikes de recherche Google, corrélation avec le prix
-- WebSearch "{TICKER} stock forum discussion hype" — InvestorsHub, Seeking Alpha, Yahoo Finance forums
+- `QueryData` sentiment_reddit/sentiment_stocktwits/social_sentiment — métriques et historique quantifiés
+- Web qualitatif éventuel — exemples de narration attribués, sans score/upvotes/corrélation inventés
 - Vérifier ChartExchange (`chartexchange.com/symbol/{exchange}-{ticker}/trends/reddit/`) et ApeWisdom (`apewisdom.io/stocks/{TICKER}/`) pour les données Reddit quantitatives
 
 **6 Plateformes à couvrir systématiquement** :
@@ -523,7 +528,7 @@ Critères d'alerte (au moins 3 sur 6 = alerte P&D) :
 
 **Collecte obligatoire** :
 - `QueryData` types=sec_filings symbols={TICKER} days=90 — dépôts SEC récents
-- WebSearch "{TICKER} SEC filing 13D 13G activist investor hostile fund" — recherche de Schedule 13D (activiste) vs 13G (passif)
+- `QueryData(types='sec_filings')` puis dépôt primaire Schedule 13D/13G — distinguer activiste et passif
 - WebSearch "{TICKER} short seller report Hindenburg Citron Muddy Waters Kerrisdale" — rapports de short sellers activistes
 - `QueryData` types=insider_transactions — corrélation avec les dépôts
 
@@ -678,7 +683,8 @@ Pedagogy-box finale combinant les trois sous-sections :
   - Ces fonds accompagnent systématiquement les offres dilutives et revendent immédiatement
   - WebSearch : `"{TICKER} Wainwright" OR "{TICKER} Maxim Group" OR "{TICKER} Dawson James" offering 2025 2026`
 - Fonds connus pour shorter après financement : Hudson Bay Capital, Armistice Capital, Sabby Management, Empery Asset Management
-- **ATM program actif** : vérifier SEC filing via WebSearch `"{TICKER}" site:sec.gov "at-the-market"`
+- **ATM program actif** : vérifier le dépôt primaire SEC (`sec_filings,flags`, puis accession EDGAR) ;
+  une recherche `site:sec.gov` ne sert qu'à retrouver l'accession et ne constitue pas la conclusion.
 - **Reverse split** dans les 12 mois → signal de détresse critique
 - Verdict : présence ou absence de fonds toxiques + niveau de risque de dilution imminente
 
@@ -957,7 +963,7 @@ Ajouter dans `report.css` :
 | Contexte | Placement | Exemple |
 |----------|-----------|---------|
 | **Chiffre clé dans un paragraphe** | Inline, juste après le chiffre | "Revenue $298K `[source-ref]`" |
-| **Tableau de données** | `.source-refs` sous le tableau | Sources: SEC EDGAR, Yahoo Finance |
+| **Tableau de données** | `.source-refs` sous le tableau | Sources: artefact MCP harnaché, SEC/IR primaire |
 | **Fait d'actualité / News** | Inline dans le texte de la news | "Partenariat avec Mitsubishi `[source-ref]`" |
 | **Données techniques** (S/R, volume) | `.source-refs` sous le chart | Sources: DailyTickers Gateway |
 | **SEC Filings** | Inline dans chaque ligne du tableau | Lien vers le filing exact sur SEC.gov |
@@ -968,15 +974,15 @@ Ajouter dans `report.css` :
 
 | Source | URL Pattern | Usage |
 |--------|-------------|-------|
-| **Yahoo Finance** | `finance.yahoo.com/quote/{TICKER}/` | Quote, stats, financials |
+| **Yahoo Finance** | `finance.yahoo.com/quote/{TICKER}/` | Lien de navigation/chart uniquement; jamais preuve numérique gouvernante |
 | **SEC EDGAR** | `sec.gov/cgi-bin/browse-edgar?CIK={TICKER}` | Filings officiels |
-| **Fintel** | `fintel.io/so/us/{ticker}` | 13F, short interest, CTB |
+| **Fintel** | `fintel.io/so/us/{ticker}` | Contexte/navigation; 13F, short interest et CTB gouvernants viennent du MCP |
 | **StockTwits** | `stocktwits.com/symbol/{TICKER}` | Sentiment social |
 | **ChartExchange** | `chartexchange.com/symbol/nasdaq-{ticker}/` | Reddit trends, dark pool |
 | **Finviz** | `finviz.com/quote.ashx?t={TICKER}` | Overview, chart, news |
 | **WhaleWisdom** | `whalewisdom.com/stock/{ticker}` | 13F holdings |
-| **TipRanks** | `tipranks.com/stocks/{ticker}/forecast` | Analyst consensus |
-| **MarketBeat** | `marketbeat.com/stocks/NASDAQ/{TICKER}/` | Insider trades, analysts |
+| **TipRanks** | `tipranks.com/stocks/{ticker}/forecast` | Navigation; consensus gouvernant via MCP |
+| **MarketBeat** | `marketbeat.com/stocks/NASDAQ/{TICKER}/` | Navigation; insiders/analystes gouvernants via MCP |
 | **Reddit WSB** | `reddit.com/r/wallstreetbets/search/?q={TICKER}` | WSB mentions |
 
 #### Directives Sources
@@ -991,4 +997,3 @@ Ajouter dans `report.css` :
 - **Expert** : source-refs abondantes (2-4 par section)
 
 ---
-

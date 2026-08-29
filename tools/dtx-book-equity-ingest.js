@@ -1,206 +1,254 @@
 #!/usr/bin/env node
 'use strict';
+
 /**
- * dtx-book-equity-ingest.js — publie la courbe d'equity DU LIVRE, après l'avoir VÉRIFIÉE.
+ * Ingest a DtxBookEquity artifact into data/dtx/<portfolio>.json.
  *
- * POURQUOI (R6, fermé le 2026-08-12). `portfolio/v1/best/equity.json` publiait les statistiques
- * SERVIES du livre à côté d'une courbe qui n'était pas la sienne : celle du replay de la poche
- * porteuse, sous-échantillonnée aux dates de rebalancement. Un consommateur qui recalculait le
- * drawdown dessus obtenait 17,49 % au lieu de 27,2 %. L'écart était déclaré dans un
- * `curve_warning` — un pansement : un fichier qui publie une courbe ET des statistiques qui ne s'en
- * déduisent pas invite à l'erreur, quel que soit l'avertissement. Le moteur sert désormais la vraie
- * courbe (`DtxBookEquity`, systematic-tss v1.34.1).
+ * The script is intentionally offline. DtxBookEquity is outside the scoped
+ * DtxMintReadOnlyToken surface, so a subprocess must not pretend that a
+ * readonly token can fetch it. The authenticated agent captures the MCP result,
+ * and this script only validates and installs that evidence.
  *
- * CE SCRIPT NE CROIT PAS L'ANNONCE, IL LA VÉRIFIE. Avant d'écrire quoi que ce soit, il recalcule
- * CAGR et max drawdown DEPUIS `equity_values` et les compare aux valeurs servies. Au-delà de la
- * tolérance (±0,05 pt), il REFUSE d'écrire et sort en 1 : une courbe qui ne reproduit pas ses
- * propres statistiques est exactement le défaut qu'on vient de corriger, et elle ne doit pas
- * remplacer le précédent défaut par un nouveau.
- *
- * Convention de CAGR imposée par le moteur (et non devinée) : le dénominateur est
- * `committed_capital` (155 000 sur best — les pourcentages des poches somment à 155), pas
- * `initial_capital`. Le script lit le champ et applique la formule du moteur.
- *
- * ACCÈS. Un subprocess node ne peut pas parler au MCP OAuth2 ; on utilise un jeton LECTURE SEULE
- * éphémère, minté par l'agent via `DtxMintReadOnlyToken` et passé par l'ENVIRONNEMENT — jamais
- * écrit sur disque, jamais commité (règle « ZÉRO TOKEN EN .env »).
- *
- * Usage :
- *   DTX_RO_TOKEN=<jeton> node tools/dtx-book-equity-ingest.js --portfolio best [--dry-run]
+ * Usage:
+ *   node tools/dtx-book-equity-ingest.js --portfolio best \
+ *     --book-file scanner/YYYYMMDD/_dtx/book_equity_best.json \
+ *     --expected-close YYYY-MM-DD [--dry-run]
  */
 
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
+const { bookCurveSha256 } = require('./lib/dtx-book-proof');
 
 const ROOT = path.resolve(__dirname, '..');
-const ENDPOINT = 'https://systematic.dailytickers.com/mcp';
-const TOL = 0.05; // point de pourcentage
+const TOL = 0.05; // percentage point
+const TRADING_DAYS_PER_YEAR = 252;
 
-const argv = process.argv.slice(2);
-const flag = (n) => { const i = argv.indexOf('--' + n); return i >= 0 ? argv[i + 1] : null; };
-const PORTFOLIO = flag('portfolio') || 'best';
-const DRY = argv.includes('--dry-run');
-const TOKEN = process.env.DTX_RO_TOKEN;
-
-function rpc(tool, args) {
-  const body = JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: tool, arguments: args } });
-  return new Promise((resolve, reject) => {
-    const u = new URL(ENDPOINT);
-    const req = https.request({
-      hostname: u.hostname, path: u.pathname, method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'accept': 'application/json, text/event-stream',
-        'authorization': `Bearer ${TOKEN}`,
-        'content-length': Buffer.byteLength(body),
-      },
-    }, (res) => {
-      let raw = '';
-      res.on('data', (c) => { raw += c; });
-      res.on('end', () => {
-        // Le serveur peut répondre en SSE : on récupère la dernière ligne `data:`.
-        let payload = raw.trim();
-        if (payload.startsWith('event:') || payload.includes('\ndata:')) {
-          const lines = payload.split('\n').filter((l) => l.startsWith('data:'));
-          payload = lines.length ? lines[lines.length - 1].slice(5).trim() : payload;
-        }
-        try {
-          const j = JSON.parse(payload);
-          if (j.error) return reject(new Error(`${tool}: ${JSON.stringify(j.error)}`));
-          const c = j.result && j.result.content && j.result.content[0];
-          resolve(c && c.text ? JSON.parse(c.text) : j.result);
-        } catch (e) { reject(new Error(`${tool}: réponse illisible (${res.statusCode}) — ${payload.slice(0, 200)}`)); }
-      });
-    });
-    req.on('error', reject);
-    req.end(body);
-  });
+function parseArgs(argv) {
+  const out = { portfolio: 'best', dryRun: false };
+  for (let i = 2; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === '--portfolio') out.portfolio = argv[++i];
+    else if (arg === '--book-file') out.bookFile = argv[++i];
+    else if (arg === '--expected-close') out.expectedClose = argv[++i];
+    else if (arg === '--out') out.out = argv[++i];
+    else if (arg === '--dry-run') out.dryRun = true;
+    else throw new Error(`unknown argument: ${arg}`);
+  }
+  return out;
 }
 
-/** Max drawdown en % (pic à creux), sur la série telle quelle. */
+function readJson(file, label) {
+  if (!file) throw new Error(`${label} is required`);
+  const absolute = path.resolve(file);
+  let raw;
+  try { raw = fs.readFileSync(absolute); }
+  catch (error) { throw new Error(`${label} unreadable (${file}): ${error.message}`); }
+  let value;
+  try { value = JSON.parse(raw.toString('utf8')); }
+  catch (error) { throw new Error(`${label} invalid JSON (${file}): ${error.message}`); }
+  return {
+    value,
+    absolute,
+    sha256: crypto.createHash('sha256').update(raw).digest('hex'),
+  };
+}
+
+function unwrapBook(payload, portfolio) {
+  let value = payload;
+  if (value && value.result) value = value.result;
+  if (value && value.content && Array.isArray(value.content)) {
+    const text = value.content.find(part => part && part.type === 'text' && typeof part.text === 'string');
+    if (text) {
+      try { value = JSON.parse(text.text); }
+      catch { throw new Error('DtxBookEquity content is not JSON'); }
+    }
+  }
+  const keyed = !!(value && Object.prototype.hasOwnProperty.call(value, portfolio));
+  const directPortfolio = value && (value.portfolio_id || value.portfolio);
+  const book = keyed ? value[portfolio] : value;
+  const meta = (value && value._meta) || (payload && payload._meta) || null;
+  return { book, meta, portfolioBound: keyed || directPortfolio === portfolio, directPortfolio };
+}
+
 function maxDrawdownPct(values) {
-  let peak = -Infinity, worst = 0;
-  for (const v of values) {
-    if (v > peak) peak = v;
-    const dd = (peak - v) / peak * 100;
-    if (dd > worst) worst = dd;
+  let peak = -Infinity;
+  let worst = 0;
+  for (const value of values) {
+    if (value > peak) peak = value;
+    if (peak > 0) worst = Math.max(worst, (peak - value) / peak * 100);
   }
   return worst;
 }
 
-// CONVENTION D'ANNUALISATION — identifiée, pas devinée (2026-08-12).
-// La courbe est une série de SÉANCES, pas de jours calendaires : le moteur annualise sur
-// 252 séances. Départage mesuré sur best (1 405 points, 2 044 jours calendaires, CAGR servi 72,03) :
-//
-//   n/252        → 72,0334   écart 0,0034 pt   ← retenu
-//   (n-1)/252    → 72,0999   écart 0,0699
-//   jours/365,25 → 71,6873   écart 0,3427
-//   jours/365    → 71,6238   écart 0,4062
-//
-// Le candidat retenu est 20× plus proche que le suivant : il n'y a pas d'ambiguïté. On le FIGE
-// plutôt que de tester des variantes jusqu'à ce que l'une passe — un contrôle qui s'ajuste à son
-// résultat ne contrôle plus rien.
-const TRADING_DAYS_PER_YEAR = 252;
-
-/** CAGR % selon la convention DU MOTEUR : (final / committed)^(1/années) - 1, années = n/252. */
 function cagrPct(values, committed) {
-  const final = values[values.length - 1];
   const years = values.length / TRADING_DAYS_PER_YEAR;
   if (!(years > 0) || !(committed > 0)) return null;
-  return (Math.pow(final / committed, 1 / years) - 1) * 100;
+  return (Math.pow(values[values.length - 1] / committed, 1 / years) - 1) * 100;
 }
 
-async function main() {
-  if (!TOKEN) {
-    console.error('❌ DTX_RO_TOKEN absent. Minter un jeton readonly (DtxMintReadOnlyToken) et le passer par l\'environnement.');
-    console.error('   Il ne doit être ni écrit sur disque ni commité.');
-    process.exit(2);
-  }
+function validateAndNormalizeBook(payload, portfolio, expectedClose) {
+  const { book, meta, portfolioBound, directPortfolio } = unwrapBook(payload, portfolio);
+  const errors = [];
+  if (!book || typeof book !== 'object') return { errors: ['book payload missing'] };
+  if (!portfolioBound) errors.push(`book payload is not bound to portfolio ${portfolio}`);
+  if (directPortfolio && directPortfolio !== portfolio) errors.push(`book portfolio ${directPortfolio} != ${portfolio}`);
 
-  const raw = await rpc('DtxBookEquity', { portfolio: PORTFOLIO });
-  const book = raw[PORTFOLIO];
-  if (!book || !Array.isArray(book.equity_values) || !book.equity_values.length) {
-    console.error(`❌ DtxBookEquity n'a pas rendu de courbe pour "${PORTFOLIO}".`);
-    process.exit(1);
+  const dates = Array.isArray(book.equity_dates) ? book.equity_dates.map(String) : [];
+  const values = Array.isArray(book.equity_values) ? book.equity_values.map(Number) : [];
+  if (dates.length < 2 || values.length < 2) errors.push('equity curve must contain at least two points');
+  if (dates.length !== values.length) errors.push(`equity date/value length mismatch (${dates.length}/${values.length})`);
+  if (values.some(value => !Number.isFinite(value) || value <= 0)) errors.push('equity values must be finite positive numbers');
+  for (let i = 0; i < dates.length; i++) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dates[i]) || !Number.isFinite(Date.parse(`${dates[i]}T00:00:00Z`))) {
+      errors.push(`invalid equity date at index ${i}`);
+      break;
+    }
+    if (i && dates[i] <= dates[i - 1]) {
+      errors.push(`equity dates must be strictly increasing (index ${i})`);
+      break;
+    }
   }
-  const dates = book.equity_dates, values = book.equity_values;
-  if (dates.length !== values.length) {
-    console.error(`❌ courbe incohérente : ${dates.length} dates pour ${values.length} valeurs.`);
-    process.exit(1);
-  }
+  if (book.resolution !== 'daily') errors.push(`resolution must be daily (got ${book.resolution || 'missing'})`);
+  if (book.source && book.source !== 'book_served') errors.push(`source must be book_served (got ${book.source})`);
 
-  // ── VÉRIFICATION — c'est le cœur de ce script ────────────────────────────────
-  const ddCalc = maxDrawdownPct(values);
-  const ddServed = Number(book.max_dd_pct);
+  const committed = Number(book.committed_capital);
+  const initial = Number(book.initial_capital);
   const cagrServed = Number(book.cagr_pct);
-  const committed = Number(book.committed_capital) || Number(book.initial_capital);
-  const cagrCalc = cagrPct(values, committed);
-  const cagrErr = cagrCalc == null ? Infinity : Math.abs(cagrCalc - cagrServed);
-
-  console.log(`Vérification de la courbe servie — ${PORTFOLIO} (moteur ${(raw._meta || {}).engine || '?'}, mesurée le ${book.measured_at})`);
-  console.log(`  points            : ${values.length} (${dates[0]} → ${dates[dates.length - 1]}), résolution ${book.resolution}`);
-  console.log(`  capital engagé    : ${committed}`);
-  console.log(`  max drawdown      : servi ${ddServed} | recalculé ${ddCalc.toFixed(4)} | écart ${Math.abs(ddCalc - ddServed).toFixed(4)} pt`);
-  console.log(`  CAGR              : servi ${cagrServed} | recalculé ${cagrCalc == null ? 'n/a' : cagrCalc.toFixed(4)} (n/${TRADING_DAYS_PER_YEAR}) | écart ${cagrErr.toFixed(4)} pt`);
-
-  const ddOk = Math.abs(ddCalc - ddServed) <= TOL;
-  const cagrOk = cagrErr <= TOL;
-  if (!ddOk || !cagrOk) {
-    console.error(`\n⛔ REFUS D'ÉCRIRE — la courbe ne reproduit pas ses propres statistiques (tolérance ${TOL} pt).`);
-    console.error('   Publier une courbe qui ne se recoupe pas avec ses chiffres remplacerait un défaut par un autre.');
-    process.exit(1);
+  const ddServed = Number(book.max_dd_pct);
+  if (!(committed > 0)) errors.push('committed_capital must be positive');
+  if (!(initial > 0)) errors.push('initial_capital must be positive');
+  if (!Number.isFinite(cagrServed)) errors.push('cagr_pct missing');
+  if (!Number.isFinite(ddServed) || ddServed < 0) errors.push('max_dd_pct missing or negative');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(book.measured_at || ''))) errors.push('measured_at must be YYYY-MM-DD');
+  const curveThrough = dates[dates.length - 1] || null;
+  if (curveThrough && book.measured_at < curveThrough) errors.push('measured_at predates the curve');
+  if (expectedClose) {
+    if (curveThrough !== expectedClose) errors.push(`curve through ${curveThrough || 'missing'} != expected close ${expectedClose}`);
+    if (book.measured_at !== expectedClose) errors.push(`measured_at ${book.measured_at || 'missing'} != expected close ${expectedClose}`);
   }
-  console.log(`  ✅ critère d'acceptation satisfait (±${TOL} pt sur les deux).`);
+  if (values.length && committed > 0 && Math.abs(values[0] - committed) > 0.01) {
+    errors.push(`first equity value ${values[0]} does not equal committed capital ${committed}`);
+  }
 
-  // Statistiques du MÊME millésime, pour que courbe et chiffres viennent du même run.
-  const statsAll = await rpc('DtxStats', { portfolio: PORTFOLIO });
-  const row = (statsAll && (statsAll[PORTFOLIO] || (statsAll.stats && statsAll.stats[PORTFOLIO]))) || null;
+  const ddCalculated = values.length ? maxDrawdownPct(values) : null;
+  const cagrCalculated = values.length && committed > 0 ? cagrPct(values, committed) : null;
+  if (Number.isFinite(ddCalculated) && Number.isFinite(ddServed) && Math.abs(ddCalculated - ddServed) > TOL) {
+    errors.push(`curve MaxDD ${ddCalculated.toFixed(4)} does not reproduce served ${ddServed} within ${TOL}pp`);
+  }
+  if (Number.isFinite(cagrCalculated) && Number.isFinite(cagrServed) && Math.abs(cagrCalculated - cagrServed) > TOL) {
+    errors.push(`curve CAGR ${cagrCalculated.toFixed(4)} does not reproduce served ${cagrServed} within ${TOL}pp`);
+  }
 
-  const stagingPath = path.join(ROOT, 'data', 'dtx', `${PORTFOLIO}.json`);
-  if (!fs.existsSync(stagingPath)) { console.error(`❌ staging ${stagingPath} absent.`); process.exit(1); }
-  const staging = JSON.parse(fs.readFileSync(stagingPath, 'utf8'));
-  const prev = staging.metrics || {};
+  return {
+    errors,
+    book,
+    meta,
+    dates,
+    values,
+    committed,
+    initial,
+    cagrServed,
+    ddServed,
+    cagrCalculated,
+    ddCalculated,
+    portfolio,
+    expectedClose: expectedClose || curveThrough,
+  };
+}
 
+function buildBookSnapshot(staging, normalized, evidence) {
+  const {
+    book, meta, dates, values, committed, initial, cagrServed, ddServed,
+    cagrCalculated, ddCalculated,
+  } = normalized;
+  const returnPct = (values[values.length - 1] / committed - 1) * 100;
   const metrics = {
-    ...prev,
+    allocation: book.allocation || evidence.portfolio,
     cagr_pct: cagrServed,
     max_dd_pct: ddServed,
-    sharpe: book.sharpe ?? prev.sharpe ?? null,
-    ...(row ? {
-      total_trades: row.trades ?? prev.total_trades ?? null,
-      win_rate: row.win_rate ?? prev.win_rate ?? null,
-      r2: row.r2 ?? prev.r2 ?? null,
-      dd_p95_bootstrap21_pct: row.dd_p95_boot ?? prev.dd_p95_bootstrap21_pct ?? null,
-      avg_exposure_pct: row.avg_exposure ?? prev.avg_exposure_pct ?? null,
-    } : {}),
+    sharpe: Number.isFinite(Number(book.sharpe)) ? Number(book.sharpe) : null,
+    avg_exposure_pct: Number.isFinite(Number(book.avg_exposure_pct)) ? Number(book.avg_exposure_pct) : null,
+    return_pct: +returnPct.toFixed(4),
     from: dates[0],
     to: dates[dates.length - 1],
-    initial_capital: Number(book.initial_capital) || prev.initial_capital || null,
+    initial_capital: initial,
     committed_capital: committed,
-    // Publié pour qu'un consommateur puisse REFAIRE le calcul et retomber sur les mêmes chiffres,
-    // au lieu de deviner la convention (jours calendaires → 71,69 au lieu de 72,03).
     trading_days_per_year: TRADING_DAYS_PER_YEAR,
-    source: 'statistiques servies du livre (walk interleave, coûts inclus, univers figé) — courbe et chiffres du MÊME run',
-    note: `Vérifié à l'ingestion : recalcul depuis equity_values reproduit CAGR ${cagrServed} et MaxDD ${ddServed} (±${TOL} pt). CAGR au dénominateur committed_capital=${committed}, annualisé sur ${TRADING_DAYS_PER_YEAR} séances (n/${TRADING_DAYS_PER_YEAR}) — convention du moteur, identifiée par départage.`,
-    measured_at: book.measured_at || null,
-    engine_version: (raw._meta || {}).engine || null,
+    measured_at: book.measured_at,
+    engine_version: (meta && meta.engine) || null,
     basis: book.basis || null,
+    source: 'DtxBookEquity same-vintage served book curve and metrics',
+    note: `Verified from equity_values: CAGR ${cagrCalculated.toFixed(4)}%, MaxDD ${ddCalculated.toFixed(4)}%; tolerance ${TOL}pp. No DtxStats fields were merged.`,
   };
 
-  staging.metrics = metrics;
-  staging.metricsSource = 'book_served_stats';
-  staging.equity = { dates, values };
-  staging.equityResolution = book.resolution || 'daily';
-  staging.equitySource = 'DtxBookEquity (courbe du livre, vérifiée à l\'ingestion)';
-  staging.equityVerifiedAt = new Date().toISOString();
-
-  if (DRY) { console.log('\n[DRY-RUN] rien écrit.'); return; }
-  fs.writeFileSync(stagingPath, JSON.stringify(staging, null, 2), 'utf8');
-  console.log(`\n→ ${path.relative(ROOT, stagingPath)} : courbe ${values.length} points + métriques du même millésime.`);
-  if (prev.cagr_pct != null && prev.cagr_pct !== cagrServed) {
-    console.log(`   ⚠️  millésime de statistiques : CAGR ${prev.cagr_pct} → ${cagrServed}, MaxDD ${prev.max_dd_pct} → ${ddServed}`);
-  }
+  return {
+    ...staging,
+    metrics,
+    metricsSource: 'book_served_stats',
+    equity: { dates, values },
+    equityResolution: 'daily',
+    equitySource: 'DtxBookEquity (same-vintage book curve, verified at ingestion)',
+    equityVerifiedAt: evidence.verifiedAt,
+    bookSnapshot: {
+      portfolio: evidence.portfolio,
+      expectedClose: normalized.expectedClose,
+      measuredAt: book.measured_at,
+      curveThrough: dates[dates.length - 1],
+      points: dates.length,
+      sourcePath: evidence.path,
+      sourceSha256: evidence.sha256,
+      curveSha256: bookCurveSha256(dates, values, metrics),
+      sameVintage: true,
+      scope: 'performance_only',
+      decisionIndependent: true,
+    },
+    rejectedServedSnapshot: undefined,
+  };
 }
 
-main().catch((e) => { console.error(`❌ ${e.message}`); process.exit(1); });
+function main(argv = process.argv) {
+  const opts = parseArgs(argv);
+  if (!opts.bookFile) throw new Error('--book-file is required; network fetching is deliberately unsupported');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(opts.expectedClose || ''))) throw new Error('--expected-close YYYY-MM-DD is required');
+  const source = readJson(opts.bookFile, '--book-file');
+  const normalized = validateAndNormalizeBook(source.value, opts.portfolio, opts.expectedClose);
+  if (normalized.errors.length) throw new Error(`DtxBookEquity rejected: ${normalized.errors.join('; ')}`);
+
+  const outPath = path.resolve(opts.out || path.join(ROOT, 'data', 'dtx', `${opts.portfolio}.json`));
+  const stagingSource = readJson(outPath, 'staging');
+  const previousProof = stagingSource.value.bookSnapshot;
+  const verifiedAt = previousProof && previousProof.sourceSha256 === source.sha256 && stagingSource.value.equityVerifiedAt
+    ? stagingSource.value.equityVerifiedAt
+    : new Date().toISOString();
+  const next = buildBookSnapshot(stagingSource.value, normalized, {
+    portfolio: opts.portfolio,
+    path: path.relative(ROOT, source.absolute),
+    sha256: source.sha256,
+    verifiedAt,
+  });
+  const serialized = JSON.stringify(next, (key, value) => value === undefined ? undefined : value, 2) + '\n';
+
+  console.log(`[dtx-book] ${opts.portfolio}: ${normalized.values.length} points ${normalized.dates[0]}..${normalized.dates.at(-1)}`);
+  console.log(`[dtx-book] CAGR ${normalized.cagrServed}% / MaxDD ${normalized.ddServed}% reproduced within ${TOL}pp`);
+  if (opts.dryRun) return next;
+  fs.writeFileSync(outPath, serialized, 'utf8');
+  console.log(`[dtx-book] wrote ${path.relative(ROOT, outPath)} from SHA-256 ${source.sha256}`);
+  return next;
+}
+
+if (require.main === module) {
+  try { main(); }
+  catch (error) { console.error(`[dtx-book] ${error.message}`); process.exit(1); }
+}
+
+module.exports = {
+  TOL,
+  TRADING_DAYS_PER_YEAR,
+  maxDrawdownPct,
+  cagrPct,
+  unwrapBook,
+  validateAndNormalizeBook,
+  buildBookSnapshot,
+  main,
+};

@@ -26,6 +26,10 @@ NO_PUSH=""
 shift 2
 while [ $# -gt 0 ]; do case "$1" in --no-push) NO_PUSH="--no-push";; esac; shift; done
 DIR="scanner/$DATE"
+REF_CLOSE=$(node -e '
+  const fs=require("fs"),path=require("path");
+  for(const d of process.argv.slice(1)){try{const h=JSON.parse(fs.readFileSync(path.join(d,"harness.json")));if(h.reference_close){process.stdout.write(h.reference_close);process.exit(0)}}catch{}}
+  process.exit(1)' "$DIR/_dtx" "$DIR/_data" "$DIR/_data2") || { echo "clôture de référence introuvable" >&2; exit 1; }
 T0=$(date +%s); log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
 fail(){ echo "ÉCHEC: $*" >&2; exit 1; }
 
@@ -41,8 +45,8 @@ if [ -d "$DIR/_dtx" ]; then
     [ -e "$d" ] || continue
     pf=$(basename "$d" .json); pf=${pf#decide_}
     r="$DIR/_dtx/replay_${pf}.json"
-    [ -f "$r" ] && node tools/dtx-mcp-ingest.js --portfolio "$pf" --decide "$d" --replay "$r" --asof "$ASOF" >> /tmp/d-dtx.log 2>&1 \
-      || echo "  $pf : replay manquant, ingestion SAUTÉE (decide seul = staging stateless)" >> /tmp/d-dtx.log
+    [ -f "$r" ] && node tools/dtx-mcp-ingest.js --portfolio "$pf" --decide "$d" --replay "$r" --asof "$ASOF" --expected-close "$REF_CLOSE" >> /tmp/d-dtx.log 2>&1 \
+      || fail "$pf : replay absent ou ingestion DTX invalide"
   done
   node tools/dtx-history-append.js >> /tmp/d-dtx.log 2>&1
   node tools/dtx-pool-bridge.js --folder "$DATE" --date "$ASOF" >> /tmp/d-dtx.log 2>&1

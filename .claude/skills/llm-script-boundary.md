@@ -96,23 +96,26 @@ Trois bénéfices immédiats :
 
 Deux outils, **un par serveur**, et les jetons **ne sont pas interchangeables** (le JWT
 marketdata porte `aud=dailytickers-mcp`, celui de systematic `aud=dtx-mcp`). D'où
-`MCP_TOKEN_MARKETDATA` et `MCP_TOKEN_SYSTEMATIC`.
+Les scripts lisent des jetons TTL par serveur, mais leur **valeur ne doit jamais apparaître dans une
+commande, un log, le chat ou un fichier**. Utiliser l'environnement secret du runner, la saisie masquée
+de `run-collect.sh`, ou `collect.js --token-bundle-stdin` pour un runner non interactif.
 
 | | `GetReadOnlyToken(minutes)` | `DtxMintReadOnlyToken(ttl_minutes)` |
 |---|---|---|
 | Serveur | marketdata | systematic |
 | TTL | 15 min par défaut, **max 60** | 15 min par défaut, **max 1440** |
-| Surface | **38 outils** — QueryData, GetMarketContext, RunScreener, RunAutoScreener, PortfolioRisk, GetInstruments, GetEarningsCalendarFiltered, GetInsiderActivity, RunBacktest, Jobs… | **5 outils** — GetHealth, DtxListConfigs, DtxHowTo, DtxRegime, DtxJobStatus |
+| Surface | Outils autorises par le jeton et l'allowlist locale | Outils exposes par le jeton systematic courant et l'allowlist locale |
 
-### Ce qui reste OBLIGATOIREMENT à l'agent
+### Limites de capacité vérifiées à chaque run
 
 Vérifié en appelant, pas déduit :
 
-- **`RefreshBars` et `DtxRefreshBars`** — refusés au jeton read-only. Le force-refresh
-  imposé par la règle anti-stale de `CLAUDE.md` passe donc **toujours** par l'agent.
-- **`DtxReplay` et `DtxDecide`** — hors de la surface systematic. Le staging dtx des
-  6 modes scriptés **reste un travail d'agent**. C'est la limite la plus structurante
-  pour `/scanner` : sa collecte marketdata se script entièrement, sa partie systematic non.
+- **`RefreshBars`** est refuse au jeton marketdata read-only. **`DtxRefreshBars`** est expose seulement
+  quand l'agent emet `DtxMintReadOnlyToken(scope="refresh")`; le scanner utilise ce scope minimal puis
+  `dtx-refresh-if-stale.js`. Le token et sa valeur ne sont jamais affiches.
+- **`DtxReplay` et `DtxDecide`** — la chaîne scanner les appelle dans sa vague systematic initiale:
+  c'est aussi le test de capacité du jeton courant. Réponse non autorisée, outil absent ou contrat V2
+  incomplet bloque le scanner avant staging; aucun fallback agent ni reconstitution n'est permis.
 - **Toute écriture** — notification, substack, memory, brokers.
 
 ### Aucun jeton ne se renouvelle lui-même

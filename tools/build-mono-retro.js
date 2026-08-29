@@ -6,7 +6,12 @@ const path = require('path');
 const { decideFill } = require('./lib/fill-policy');
 
 function usage() {
-  console.error('Usage: node tools/build-mono-retro.js <scan-date> [horizon-end]');
+  console.error('Usage (forensic daily-only): node tools/build-mono-retro.js <scan-date> [horizon-end] --allow-daily-forensic');
+  process.exit(2);
+}
+
+if (!process.argv.includes('--allow-daily-forensic')) {
+  console.error('REFUSED: build-mono-retro uses daily OHLC and cannot prove intrabar event order. Use the active retro workflow with 15-minute bars.');
   process.exit(2);
 }
 

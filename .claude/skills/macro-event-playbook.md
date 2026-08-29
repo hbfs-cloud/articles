@@ -1,40 +1,25 @@
 ---
 name: macro-event-playbook
-description: Playbook événement/macro MCP-vérifié — positionnement avant CPI/Fed/OPEP/jobs, scénarios (chaud/froid), paniers réactifs (taux/pétrole/or/USD) et consignes de de-risk, + bilan du dernier événement. Trigger keywords : CPI, Fed, FOMC, macro, événement, playbook, OPEP, jobs, NFP, calendrier économique, positionnement, de-risk.
-version: 1.0.0
-user-invocable: true
-argument-hint: "[optionnel : l'événement ciblé, ex. 'CPI lundi'] — sinon le prochain événement priorité haute"
-license: Apache 2.0
+description: Deterministic conditional market playbook around a verified macro event.
+user_invocable: true
 ---
 
-# Macro-Event Playbook — se positionner autour d'un événement + publication
+# Macro Event Playbook
 
-Cadre le **prochain événement macro** (CPI/Fed/OPEP/jobs), ses **scénarios** et les **paniers réactifs**, avec des consignes de taille/de-risk. MCP-vérifié. Ce n'est PAS un stock-picker : c'est du positionnement de facteur.
+`.claude/commands/macro-event-playbook.md` is the operational authority. This workflow prepares reactions;
+it does not predict the release.
 
-## ⛔ Règles non négociables
-- **Zéro hallucination** — dates d'événement, consensus, niveaux via MCP/WebSearch de la session (`feedback_no_hallucination`). Ne jamais inventer un chiffre de consensus.
-- **Idées ≠ données desk** ; **Telegram `format:"html"` `<b>`** ; **envoi sur demande**.
-- **On ne prédit pas l'événement** : on prépare des **réactions conditionnelles** (si chaud → X ; si froid → Y), pas un pari directionnel déguisé.
+## Rules
 
-## ⚡ Exécution (doctrine `perf-parallel-mcp`)
-Le goulot = les appels MCP en série. Isoler le MCP en salves parallèles (R2), batcher `QueryData`
-multi-symboles (R3), preflight `GetStatus` 1× (R4). **Salve 1** (un seul message, tous les tool_use //) :
-`GetMarketContext(facets="overview")` + `QueryData(types="economic_events,indices,rates,commodities,currencies,regime,sentiment")`
-(bilan + prochain événement + état marché + facteurs sensibles) + `GetEarningsCalendarFiltered`. **Salve 2** (//):
-consensus/positionnement manquant → `GetMarketContext(facets="prediction_markets")` + `WebSearch` (chiffre de consensus).
-**Salve 3** (//): pas de validation par titre — positionnement de facteur, pas de stock-picking. Scénarios/de-risk = code local (zéro MCP).
-Fail-closed + MCP HARD STOP conservés (la perf n'assouplit aucun invariant).
+- The governing event artifact must contain the event identity, date, time, timezone and any stated
+  consensus. Unknown fields remain unknown.
+- An official calendar may verify event timing. Search snippets, forecast blogs and memory do not replace
+  a missing consensus or numerical market input.
+- Cross-asset levels and changes come from bounded `bars_macro` with one reference close.
+- Detached live context is explicitly timestamped and cannot be relabeled as the reference close.
+- Write mutually exclusive hotter/in-line/cooler (or event-appropriate) conditions. Each branch states the
+  observable trigger, likely factor transmission, no-chase condition and invalidation.
+- Do not use portfolio positions, accounts or broker tools. “De-risk” remains general factor-risk guidance.
 
-## Étapes
-1. **Bilan** du dernier événement joué : le playbook a-t-il tenu ? (`QueryData types="economic_events,indices,rates,commodities"` autour de la date).
-2. **Prochain événement** : `QueryData types="economic_events"` (priorité, date, heure) + `GetEarningsCalendarFiltered`/`is_near_economic_event` → l'événement dominant + son consensus (via news/WebSearch si absent).
-3. **État du marché avant** : `GetMarketContext(facets="overview")` → régime, VIX (niveau de stress/attente), positionnement (`sentiment`, prediction-markets si dispo).
-4. **Facteurs sensibles** : `QueryData types="rates,commodities,currencies,indices,regime"` → qui bouge sur cet événement (CPI → taux réels/duration/growth ; Fed → USD/financials/duration ; OPEP → énergie/pétrole ; jobs → cyclique).
-5. **Scénarios conditionnels** : rédiger 2-3 branches (chaud / conforme / froid) et le **panier réactif** de chaque (long/short le facteur, ETF proxies), + le **de-risk** (réduire l'exposition au facteur menacé avant le print — cf la leçon `feedback_harness_portfolio_coherence` : ne pas être long en aveugle le facteur que l'événement menace).
-6. **Cohérence** : persona Strategist — le positionnement proposé doit être cohérent avec le régime et honnête sur le risque de gap.
-7. **Sortie digest** : événement + heure → scénarios (si X → faire Y) → de-risk → bilan. « Idées de trading, pas un conseil ».
-
-## Format de sortie (schéma pivot)
-En plus des scénarios et paniers réactifs (inchangés), émettre pour chaque facteur/proxy le méta-objet PIVOT commun au desk : `{ signal: 'bullish'|'bearish'|'neutral', confidence: 0-100, reasoning: string }` (contrat + validateur : `tools/lib/signal-schema.js`). `source='macro'` dans le state partagé du desk (`tools/lib/signals-desk-state.js`). Confidence déterministe : avant un événement à issue binaire, rester prudent (souvent `neutral` + de-risk) — jamais un chiffre inventé pour paraître tranché. Le desk agrège ces pivots (confidence-weighted). Voir signals-desk « Contrat des signaux ».
-
-Voir aussi : `sector-rotation`, `swing-signals`, `mcp-gateway-tools` (economic_events, GetMarketContext).
+Review the prior playbook using its original branches and horizon. Do not score a branch as correct merely
+because one instrument eventually moved in the same direction.

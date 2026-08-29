@@ -43,6 +43,7 @@ const DEFAULT_TRADES_FILE = path.join(__dirname, '..', 'data', 'backtest-trades.
 // too decayed (0.30-0.39) to be worth injecting into the prompt; --decay will deprecate it
 // later, but retrieval doesn't wait for that housekeeping pass.
 const RETRIEVAL_MIN_CONFIDENCE = 0.4;
+const MARKET_TRUTH_MIN_SAMPLE = 20;
 
 const DEFAULT_MAX_RULES = 3;
 const DEFAULT_MAX_RISKS = 3;
@@ -108,6 +109,11 @@ function selectRules(lessonsData, query, caps, asOfDate) {
       ignored.push(rule.id);
       continue;
     }
+    const evidenceN = Number(rule.evidence && rule.evidence.sample_size);
+    if (rule.class === 'market_truth' && (!Number.isFinite(evidenceN) || evidenceN < MARKET_TRUTH_MIN_SAMPLE)) {
+      ignored.push(rule.id);
+      continue;
+    }
 
     const entry = {
       id: rule.id,
@@ -157,34 +163,70 @@ function isClosed(trade) {
   return !!trade.exitDate && trade.status !== 'pending';
 }
 
+const NON_US_SUFFIX_RE = /\.(?:PA|MI|MC|BR|AS|LS|L|DE|F|SW|ST|OL|CO|HE|WA|PR|VI|HK|T|AX|TO|V|SI|BK|KS|KQ|TW|SS|SZ)$/i;
+
+function isUSPrimaryEpisode(trade) {
+  if (trade.source && trade.source !== 'signals') return false;
+  if (trade.region) return ['US', 'ETF'].includes(String(trade.region).toUpperCase());
+  return !NON_US_SUFFIX_RE.test(String(trade.ticker || ''));
+}
+
+function meanFinite(rows, field) {
+  const values = rows.map(row => Number(row[field])).filter(Number.isFinite);
+  if (!values.length) return null;
+  return Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10000) / 10000;
+}
+
 /**
- * The 3 (cap) most recent closed trades matching regime x setup, null-safe on the newer
- * mae_pct/mfe_pct/outcomes/r_multiple fields (older trades predate that sweep.js schema).
+ * The capped most recent US primary-signal episodes matching regime x setup. Multiple modes for the
+ * same ticker/scan are collapsed so one market event cannot occupy several context slots.
  */
 function selectEpisodes(tradesData, query, maxEpisodes) {
   const setupSet = query.setups && query.setups.length ? new Set(query.setups.map(norm)) : null;
 
   const closed = flattenTrades(tradesData, query.mode)
     .filter(isClosed)
+    .filter(isUSPrimaryEpisode)
     .filter(t => norm(t.regime) === norm(query.regime))
     .filter(t => !setupSet || setupSet.has(norm(t.strategy)));
 
-  closed.sort((a, b) => String(b.exitDate || '').localeCompare(String(a.exitDate || '')));
+  const groups = new Map();
+  for (const trade of closed) {
+    const key = `${trade.scanDate || ''}|${trade.ticker || ''}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(trade);
+  }
 
-  return closed.slice(0, maxEpisodes).map(t => ({
-    ticker: t.ticker || null,
-    mode: t.mode || null,
-    strategy: t.strategy || null,
-    regime: t.regime || null,
-    scanDate: t.scanDate || null,
-    exitDate: t.exitDate || null,
-    status: t.status || null,
-    pnlPct: t.pnlPct != null ? t.pnlPct : null,
-    mae_pct: t.mae_pct != null ? t.mae_pct : null,
-    mfe_pct: t.mfe_pct != null ? t.mfe_pct : null,
-    outcomes: t.outcomes || null,
-    r_multiple: t.r_multiple != null ? t.r_multiple : null,
-  }));
+  const episodes = [...groups.values()].map(rows => {
+    rows.sort((a, b) => String(a.mode || '').localeCompare(String(b.mode || '')));
+    const first = rows[0];
+    const modes = [...new Set(rows.map(row => row.mode).filter(Boolean))].sort();
+    const statuses = [...new Set(rows.map(row => row.status).filter(Boolean))].sort();
+    const exits = rows.map(row => row.exitDate).filter(Boolean).sort();
+    return {
+      ticker: first.ticker || null,
+      mode: modes.join(',') || null,
+      variants: rows.length,
+      strategy: first.strategy || null,
+      regime: first.regime || null,
+      scanDate: first.scanDate || null,
+      exitDate: exits[exits.length - 1] || null,
+      status: statuses.join('|') || null,
+      pnlPct: meanFinite(rows, 'pnlPct'),
+      mae_pct: meanFinite(rows, 'mae_pct'),
+      mfe_pct: meanFinite(rows, 'mfe_pct'),
+      outcomes: rows.every(row => JSON.stringify(row.outcomes || null) === JSON.stringify(first.outcomes || null))
+        ? (first.outcomes || null)
+        : null,
+      r_multiple: meanFinite(rows, 'r_multiple'),
+    };
+  });
+
+  episodes.sort((a, b) =>
+    String(b.exitDate || '').localeCompare(String(a.exitDate || '')) ||
+    String(b.scanDate || '').localeCompare(String(a.scanDate || '')) ||
+    String(a.ticker || '').localeCompare(String(b.ticker || '')));
+  return episodes.slice(0, maxEpisodes);
 }
 
 // ── public API ───────────────────────────────────────────────────────────────
@@ -246,7 +288,7 @@ function selfTest() {
       rule: `synthetic rule ${i}`,
       scope: { setups: [], regimes: ['RISK-ON'], modes: [] },
       effect: { action: 'noop', target: {}, params: {} },
-      evidence: { sample_size: 10 + i, wins: 5, losses: 2, expectancy: 0.1, tickers: [], clusters: [] },
+      evidence: { sample_size: 30 + i, wins: 5, losses: 2, expectancy: 0.1, tickers: [], clusters: [] },
       confidence: 0.9,
       confidence_base: 0.9,
       half_life_days: 180,
@@ -255,6 +297,20 @@ function selfTest() {
       expires_at: null,
     });
   }
+  rules.push({
+    id: 'immature-market-truth',
+    class: 'market_truth',
+    status: 'active',
+    severity: 'selection_filter',
+    rule: 'must not steer selection yet',
+    scope: { setups: [], regimes: ['RISK-ON'], modes: [] },
+    evidence: { sample_size: 2, tickers: ['A', 'B'] },
+    confidence: 1,
+    confidence_base: 1,
+    half_life_days: 180,
+    created_at: '2026-06-01',
+    last_validated_at: '2026-07-01',
+  });
   const lessonsData = { rules };
   const tradesData = {
     balanced: Array.from({ length: 10 }, (_, i) => ({
@@ -271,16 +327,31 @@ function selfTest() {
       r_multiple: 0.8,
     })),
   };
+  tradesData.turbo = [{
+    ...tradesData.balanced[0],
+    pnlPct: 0.8,
+    r_multiple: 0.4,
+  }, {
+    ...tradesData.balanced[1],
+    ticker: 'EDP.LS',
+    region: 'EU',
+    pnlPct: 9,
+  }];
 
   const caps = { maxRules: 3, maxRisks: 2, maxEpisodes: 3 };
   const query = { regime: 'RISK-ON', setups: ['momentum'], mode: null };
   const { active_rules, known_risks } = selectRules(lessonsData, query, caps, asOfDate);
   const episodes = selectEpisodes(tradesData, query, caps.maxEpisodes);
+  const allEpisodes = selectEpisodes(tradesData, query, 20);
 
   const failures = [];
   if (active_rules.length !== caps.maxRules) failures.push(`active_rules.length=${active_rules.length}, expected ${caps.maxRules}`);
   if (known_risks.length !== caps.maxRisks) failures.push(`known_risks.length=${known_risks.length}, expected ${caps.maxRisks}`);
+  if (active_rules.some(rule => rule.id === 'immature-market-truth')) failures.push('immature market truth steered selection');
   if (episodes.length !== caps.maxEpisodes) failures.push(`episodes.length=${episodes.length}, expected ${caps.maxEpisodes}`);
+  if (allEpisodes.some(episode => episode.ticker === 'EDP.LS')) failures.push('non-US episode leaked into US scanner context');
+  const duplicate = allEpisodes.find(episode => episode.ticker === 'T0');
+  if (!duplicate || duplicate.variants !== 2 || duplicate.pnlPct !== 1) failures.push('same underlying was not collapsed across modes');
   // sorted by confidence desc
   for (let i = 1; i < active_rules.length; i++) {
     if (active_rules[i - 1].confidence < active_rules[i].confidence) failures.push('active_rules not sorted by confidence desc');

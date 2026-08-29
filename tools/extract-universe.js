@@ -27,7 +27,7 @@ if (!inDir || !outFile) { console.error('Usage: --in <dir> --out <vars.json> [--
 const seen = new Map(); // symbole -> meilleur score vu
 // The production editorial universe is US-listed only. Restrict inputs by source name so a
 // same-day retry cannot absorb a stale screen_eu.json left by an older pipeline version.
-const isUsUniverseSource = f => f === 'autoscreen.json' || /^screen_.+_us\.json$/.test(f);
+const isUsUniverseSource = f => /^autoscreen(?:_etf)?\.json$/.test(f) || /^(?:auto)?screen_.+_us\.json$/.test(f);
 const isForeignListing = sym => /\.(AS|BR|DE|F|L|LS|MC|MI|PA|ST|SW|TO|V)$/.test(sym);
 for (const f of fs.readdirSync(inDir).filter(isUsUniverseSource)) {
   let d; try { d = JSON.parse(fs.readFileSync(path.join(inDir, f), 'utf8')); } catch { continue; }

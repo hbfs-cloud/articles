@@ -1,65 +1,47 @@
 ---
 name: mcp-gateway-tools
-description: MCP market-data tools and data source strategy. Auto-load when user calls QueryData, GetMarketContext, GetInstruments, RunAutoScreener, RunScreener, Jobs, PortfolioRisk, GetEarningsCalendarFiltered, GetStatus, OptionsAnalytics, or any mcp__claude_ai_marketdata__* tool. Includes Yahoo Finance fallback rules and Polymarket integration.
+description: Canonical marketdata MCP capability and fail-closed usage rules for DailyTickers content workflows.
 user_invocable: false
 ---
 
-# MCP Market Data
+# Marketdata MCP
 
-**⚡ Perf (OBLIGATOIRE)** : tout usage en VOLUME de ces outils suit la doctrine **`perf-parallel-mcp`** —
-appels indépendants tirés en **salves parallèles** (un message = N tool_use), `QueryData` **multi-symboles**
-dédupé, preflight `GetStatus` 1×, jobs async lancés en lot PUIS pollés (`Jobs`). Le round-trip en série est
-le goulot, jamais le calcul.
+The executable capability allowlist is `config/workflow-contracts.json`. Read the live tool schema when
+adding a capability, update that allowlist and tests, then use the canonical tool name. Do not preserve a
+deprecated alias in a reusable plan merely because an older HTTP endpoint still accepts it.
 
-Outils `mcp__claude_ai_marketdata__*` (ex-Gateway/DailyTickers — namespaces morts).
+## Transport
 
-**⚠️ Surface v5 consolidée** : les anciens noms ci-dessous (GetMarketOverview, GetRegimeProbability,
-GetCorrelationMatrix, OptimizeSizing, CheckJobStatus/ListJobs, GetHealth/GetVersion, CalculatePortfolioVaR,
-GetPortfolioStressTest, GetPredictionMarkets, GetSeasonality, GetCOTReport) restent des **alias serveur**
-(le HTTP direct marche encore) mais ne sont **plus découvrables via ToolSearch** — toujours utiliser les
-noms canoniques ci-dessous pour que l'agent puisse charger l'outil.
+- Call `GetStatus` once in the first gate wave.
+- Batch independent calls through a plan. Multi-symbol `QueryData` uses `force_async:true`.
+- Poll the returned job ID until terminal state; never create a replacement job because one is slow.
+- Paginate to exhaustion and reject loops, missing pages or partial results.
+- Use a read-only, server-scoped TTL token through secret environment or masked input. Never print it.
+- If bars are behind the requested close, use the authenticated `RefreshBars` capability, poll status and
+  recollect. If systematic is behind, use its authorized refresh capability and poll `GetHealth` against
+  the same expected close. Refresh failure is a stop, not permission to use stale data.
 
-- **QueryData**: 58 types de données (quotes, bars, technicals, sentiment, news, earnings, etc.) — inchangé
-- **GetInstruments**: Analyse complète d'un symbole (`symbols` requis) — inchangé
-- **RunAutoScreener** / **RunScreener** / **RunBacktest** / **ScreenOptions** — inchangés
-- **GetMarketContext(facets=...)** — remplace GetMarketOverview/GetRegimeProbability/GetPredictionMarkets/GetSeasonality/GetCOTReport :
-  - `facets='overview'` (ex-GetMarketOverview) : snapshot global (indices, commodities, crypto, rates, sentiment, news, trending topics, sector variations, economic calendar, earnings calendar) — **async, appelé SEUL (non combinable), poller via `Jobs`**
-  - `facets='regime', model='ensemble', horizon_days=5` (ex-GetRegimeProbability) → probabilités RISK-ON, NEUTRAL, EARLY-RISK-OFF, RISK-OFF, RECOVERY
-  - `facets='prediction_markets'` (ex-GetPredictionMarkets), `facets='cot'` + `symbol` (ex-GetCOTReport), `facets='seasonality'` + `symbol` (ex-GetSeasonality) — ces facets **FAST sont combinables en un seul appel**
-- **`Jobs(job_id=...)` / `Jobs(intent_id=...)`** — remplace CheckJobStatus/ListJobs (poll des jobs async : RunScreener, RunAutoScreener, RunBacktest, GetMarketContext facets='overview')
-- **PortfolioRisk(action=...)** — remplace GetCorrelationMatrix/OptimizeSizing/CalculatePortfolioVaR/GetPortfolioStressTest :
-  - `action='correlation', symbols='AAPL,MSFT'` (CSV, pas un array JSON !), `lookback_days`, `method` — ex-GetCorrelationMatrix
-  - `action='sizing', signals=[JSON], constraints={JSON}, mode` — ex-OptimizeSizing
-  - `action='var'` — ex-CalculatePortfolioVaR ; `action='stress'` — ex-GetPortfolioStressTest
-- **GetStatus** — remplace GetHealth/GetVersion. Lire la FRAÎCHEUR des bars : `bar_service_1d_max_last_bar_date` + `bar_service_1d_ref_lag_sessions`. Si stale (lag > 1-2 séances) → **`RefreshBars`** (fire-and-forget ~4 min, full-univers ; `already_running` = déjà en cours) → **poller `GetStatus`** jusqu'à ce que `max_last_bar_date` avance, PUIS reprendre. Ne jamais publier/screener sur des bars périmés (cf. CLAUDE.md « FORCE-REFRESH avant stop »).
-- **RefreshBars** — force un refresh full-univers des bars daily (RAM + DuckDB), pour récupérer d'un cache figé sans redéploiement. Fire-and-forget (~4 min > cap async) : ne renvoie PAS de job_id, suivre via `GetStatus`.
-- **📅 Contrat de date (anti-« monde d'hier »)** — borner explicitement les calls PIT : `QueryData(end_date=D[, form_types])` + `GetInstruments(as_of=D)` (sec_filings/financials/earnings/insider → jamais un filing POSTÉRIEUR à D, leçons IOVA/INDO). Côté systematic : `DtxDecide/DtxRegime(expected_data_date="YYYY-MM-DD")` REFUSE (`data_date_mismatch`) si les OHLCV n'atteignent pas la date visée. Toujours passer la date de séance en input en live plutôt que d'espérer que le serveur soit à jour.
-- **OptionsAnalytics** — remplace GetOptionsSentiment/CalculateOptionsGreeks/CalculatePortfolioGreeks/CalculateSABRVolatility/AnalyzeOptionsStrategy (vérifier les actions disponibles via sa description au moment de l'appel)
-- **GetEarningsCalendarFiltered**: days_ahead=7, min_expected_move=4 → exclusion_window — inchangé
-- **SUPPRIMÉS sans remplaçant direct** (retirer toute référence, ne plus appeler) : ScreenFundamentals, SaveDiscovery, ValidateDiscovery, GetTopDiscoveries, GetDiscoveryStats
+## Date semantics
 
-## Stratégie Sources de Données (PRIORITÉS)
+- `QueryData` daily bars: `end_date=$refdate` plus `freshness.expects_close:true`.
+- Screeners: `region:"US"`, explicit asset, `as_of:$refdate`, and async execution.
+- `GetMarketContext(facets:"overview")`: requested alone; `as_of` is supported here.
+- Other `GetMarketContext` facets, including `regime`: no fake `as_of`; reproducibility comes from the
+  immutable collected artifact and hash.
+- `GetSymbolSignals` is mono-symbol. Use bounded `foreach`, never a CSV in `symbol`.
+- `GetEarningsCalendarFiltered` uses `min_expected_move_pct` when that filter is needed.
+- Unknown arguments and hard-coded dates in reusable plans are contract failures.
 
-| Donnée | Source primaire | Fallback |
-|--------|----------------|---------|
-| Prix spot / variation | Yahoo Finance (live-tracker.js) | MCP `QueryData` types=quote |
-| Graphique de prix (chart HTML) | Yahoo Finance `query1/v8/finance/chart/` via proxy | MCP `QueryData` types=bars_daily,bars_intraday |
-| Fondamentaux (PE, EPS, market cap…) | Yahoo Finance `query1/v10/finance/quoteSummary/` via proxy | MCP `QueryData` types=financials,stats |
-| **Socials & flows** | **MCP `QueryData` types=social_sentiment,capital_flow** — **TOUJOURS, dans TOUS les articles** | — |
-| Calendrier éco / earnings | `GetMarketContext(facets='overview')` (champs calendar/earnings) | Browser (Google) |
-| Trending / rotation sectorielle | `GetMarketContext(facets='overview')` (champs trending/sectors) | Browser (Google) |
-| Insider transactions | MCP `QueryData` types=insider_transactions | Browser (Google) SEC |
+## Source boundary
 
-**Règles clés** :
-- `social_sentiment` et `capital_flow` → **OBLIGATOIRES** dans chaque QueryData pour les tickers analysés (scanner, analyse, daily watch)
-- `bars_daily` / `bars_intraday` → utiliser Yahoo Finance directement dans le HTML pour les charts ECharts. MCP seulement si Yahoo échoue.
-- `financials` / `stats` → idem, Yahoo `quoteSummary` en primaire. MCP en fallback.
-- Calendriers → toujours commencer par `GetMarketContext(facets='overview')` avant le browser (évite les appels redondants).
+Marketdata owns prices, returns, bars, technicals, fundamentals, valuation inputs, calendars, options,
+short interest, flows, screening, correlations and risk calculations. Yahoo, chart pages, search snippets
+and browser results are not numerical fallbacks. An existing Finviz or other chart may remain a
+presentation asset, but it does not prove a published number.
 
-## Polymarket — Marchés Prédictifs
-Intégrer dans **tous les types d'articles** quand pertinent. Signal **complémentaire**, jamais la base d'une thèse.
-- `Browser: rechercher "polymarket {sujet}" site:polymarket.com`
-- Données clés : probabilité (%), volume ($), tendance vs 7j
-- Toujours mentionner le volume et comparer au consensus institutionnel
-- Format : `<div class="didactic-box">` avec lien `source-ref` vers Polymarket
-- **Où** : Géopolitique, Macro, Crypto, Outlook, Matrice des Risques, Catalyseurs scanner
+Web access is limited by `.claude/skills/source-policy.md`: primary SEC/IR/official macro documents and
+attributed current news. Open the primary document; a search result is discovery only. Missing or stale
+MCP evidence removes the claim or blocks the product.
+
+Broker, account and order MCP tools are outside every content plan, regardless of what the session can
+access.

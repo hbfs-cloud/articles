@@ -28,6 +28,7 @@ const LEDGER = path.join(ROOT, 'data', 'signals-ledger.json');
 const LESSONS = path.join(ROOT, 'data', 'signals-lessons.json');
 const TERMINAL = new Set(['tp2', 'stopped', 'expired', 'skipped']);
 const DEFAULT_HOLD = 10; // séances
+const MIN_MATURE_SAMPLE = 20;
 
 function readJSON(p, fallback) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return fallback; }
@@ -134,22 +135,44 @@ function cmdSweep(nowIso) {
 
 function cmdLessons(nowIso) {
   const ledger = loadLedger();
-  const closed = ledger.signals.filter(s => TERMINAL.has(s.status) && s.outcomeR != null);
+  const unique = new Map();
+  for (const signal of ledger.signals) {
+    if (!TERMINAL.has(signal.status) || signal.outcomeR == null || !signal.closedDate) continue;
+    const id = signal.id || sigId(signal);
+    if (!unique.has(id)) unique.set(id, signal);
+  }
+  const closed = [...unique.values()];
   const agg = (key) => {
     const m = {};
     for (const s of closed) {
       const k = key(s); (m[k] ||= { n: 0, wins: 0, sumR: 0 });
       m[k].n++; if (s.outcomeR > 0) m[k].wins++; m[k].sumR += s.outcomeR;
     }
-    for (const k of Object.keys(m)) { m[k].winRate = +(m[k].wins / m[k].n).toFixed(2); m[k].avgR = +(m[k].sumR / m[k].n).toFixed(2); delete m[k].sumR; }
+    for (const k of Object.keys(m)) {
+      m[k].winRate = +(m[k].wins / m[k].n).toFixed(2);
+      m[k].avgR = +(m[k].sumR / m[k].n).toFixed(2);
+      m[k].mature = m[k].n >= MIN_MATURE_SAMPLE;
+      m[k].policy_use = m[k].mature ? 'eligible_for_reviewed_overlay' : 'advisory_only';
+      delete m[k].sumR;
+    }
     return m;
   };
   const out = {
     generatedAt: nowIso,
+    source: 'data/signals-ledger.json',
+    sourceSha256: require('crypto').createHash('sha256').update(fs.readFileSync(LEDGER)).digest('hex'),
+    minimumMatureSample: MIN_MATURE_SAMPLE,
+    deduplication: 'signal id; terminal with numeric outcomeR and closedDate only',
     n_closed: closed.length,
     byFamilyRegime: agg(s => `${s.family}|${s.regime || 'na'}`),
     byFamily: agg(s => s.family),
-    overall: closed.length ? { n: closed.length, winRate: +(closed.filter(s => s.outcomeR > 0).length / closed.length).toFixed(2), avgR: +(closed.reduce((a, s) => a + s.outcomeR, 0) / closed.length).toFixed(2) } : { n: 0 },
+    overall: closed.length ? {
+      n: closed.length,
+      winRate: +(closed.filter(s => s.outcomeR > 0).length / closed.length).toFixed(2),
+      avgR: +(closed.reduce((a, s) => a + s.outcomeR, 0) / closed.length).toFixed(2),
+      mature: closed.length >= MIN_MATURE_SAMPLE,
+      policy_use: closed.length >= MIN_MATURE_SAMPLE ? 'eligible_for_reviewed_overlay' : 'advisory_only',
+    } : { n: 0, mature: false, policy_use: 'advisory_only' },
   };
   writeJSON(LESSONS, out);
   console.log(JSON.stringify(out));

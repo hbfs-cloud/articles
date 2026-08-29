@@ -2,7 +2,8 @@
   "artifact": "daily/$date/index.html",
   "waves": [
     {
-      "name": "marche",
+      "name": "preflight",
+      "gate": true,
       "calls": [
         {
           "as": "status",
@@ -10,37 +11,41 @@
           "tool": "GetStatus",
           "args": {},
           "freshness": {
-            "max_age_h": 6,
+            "max_age_h": 2,
             "required": true
+          },
+          "assert": {
+            "expected_close": "$refdate"
           }
         },
+        {
+          "as": "dtx_health",
+          "server": "systematic",
+          "tool": "GetHealth",
+          "args": {
+            "expected_close": "$refdate"
+          },
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "market-close",
+      "calls": [
         {
           "as": "regime",
           "server": "marketdata",
           "tool": "GetMarketContext",
           "args": {
             "facets": "regime,prediction_markets",
-            "model": "ensemble",
             "horizon_days": 5
           },
           "freshness": {
             "max_age_h": 6,
             "required": true
-          }
-        },
-        {
-          "as": "overview",
-          "server": "marketdata",
-          "tool": "GetMarketContext",
-          "args": {
-            "facets": "overview",
-            "timeout": 90,
-            "analysis_depth": "standard"
-          },
-          "freshness": {
-            "max_age_h": 6,
-            "required": false,
-            "note": "CONTEXTE, non requis — appel instable (63s→298s→2 timeouts serveur le 11/08). Son absence ne doit jamais bloquer une publication : il ne sert à aucune sélection."
           }
         },
         {
@@ -52,7 +57,7 @@
             "expected_data_date": "$refdate"
           },
           "freshness": {
-            "max_age_h": 48,
+            "max_age_h": 6,
             "required": true
           }
         },
@@ -64,7 +69,7 @@
             "types": "bars_daily",
             "symbols": "SPY,QQQ,IWM,DIA,GLD,SLV,TLT,USO",
             "end_date": "$refdate",
-            "limit": 12
+            "limit": 15
           },
           "freshness": {
             "max_age_h": 24,
@@ -96,14 +101,19 @@
             "types": "bars_daily",
             "symbols": "BTC-USD,ETH-USD,SOL-USD,XRP-USD",
             "end_date": "$refdate",
-            "limit": 12
+            "limit": 15
           },
           "freshness": {
             "max_age_h": 24,
             "required": true,
             "expects_close": true
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "events-flows",
+      "calls": [
         {
           "as": "earnings_today",
           "server": "marketdata",
@@ -139,7 +149,7 @@
           },
           "freshness": {
             "max_age_h": 24,
-            "required": false
+            "required": true
           }
         },
         {
@@ -155,83 +165,28 @@
             "max_age_h": 96,
             "required": true
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "context-only",
+      "detached": true,
+      "deadline_ms": 120000,
+      "calls": [
         {
-          "as": "watchlist_digest",
+          "as": "overview",
           "server": "marketdata",
-          "tool": "WatchlistDigest",
+          "tool": "GetMarketContext",
           "args": {
-            "symbols": "IOVA,ALT,ALLR,EQX,NVDA,CRWD,CRM,GLD,COIN,CIFR"
+            "facets": "overview",
+            "timeout": 90,
+            "analysis_depth": "standard",
+            "as_of": "$refdate"
           },
           "freshness": {
-            "max_age_h": 24,
-            "required": true
-          }
-        },
-        {
-          "as": "institutional_flows",
-          "server": "marketdata",
-          "tool": "QueryData",
-          "args": {
-            "types": "quote,social_sentiment,trading_signals,unusual_options,dark_pool,max_pain,short_interest",
-            "symbols": "SPY,QQQ,NVDA,CRWD,CRM,GLD,COIN,CIFR",
-            "end_date": "$refdate",
-            "days": 5
-          },
-          "freshness": {
-            "max_age_h": 24,
-            "required": true
-          }
-        },
-        {
-          "as": "move_nvda",
-          "server": "marketdata",
-          "tool": "ExplainSymbolMove",
-          "args": {
-            "symbol": "NVDA"
-          },
-          "freshness": {
-            "max_age_h": 24,
-            "required": true
-          }
-        },
-        {
-          "as": "move_crwd",
-          "server": "marketdata",
-          "tool": "ExplainSymbolMove",
-          "args": {
-            "symbol": "CRWD"
-          },
-          "freshness": {
-            "max_age_h": 24,
-            "required": true
-          }
-        },
-        {
-          "as": "move_crm",
-          "server": "marketdata",
-          "tool": "ExplainSymbolMove",
-          "args": {
-            "symbol": "CRM"
-          },
-          "freshness": {
-            "max_age_h": 24,
-            "required": true
-          }
-        },
-        {
-          "as": "correlation_ai_gold",
-          "server": "marketdata",
-          "tool": "PortfolioRisk",
-          "args": {
-            "action": "correlation",
-            "symbols": "NVDA,CRWD,CRM,GLD,COIN,CIFR",
-            "lookback_days": 60,
-            "method": "pearson"
-          },
-          "freshness": {
-            "max_age_h": 24,
-            "required": true
+            "max_age_h": 6,
+            "required": false,
+            "note": "Context only; never governs a number, selection or publication decision."
           }
         }
       ]

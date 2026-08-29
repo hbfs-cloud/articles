@@ -1,42 +1,17 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * dtx-scan.js — staging SCHEMA authority + mode discovery for the SCRIPTED dtx modes.
+ * dtx-scan.js - DTX staging schema, Contract V2 validation and mode discovery.
  *
- * ⚠️ CUT-OVER (2026-07-08): the hosted dtx MCP (systematic.dailytickers.com) is now the SOLE engine
- * ("le MCP fait foi"). The vendored local binaries + data bundle (tools/bin/dtx-*, tools/bin/dtx-data/)
- * have been REMOVED. This file NO LONGER spawns any binary and NO LONGER produces staging on its own.
- *
- * WHY a `node` subprocess can't produce staging anymore (the no-token architecture): the dtx MCP is
- * OAuth2 on claude.ai and the repo rule is ZERO token in .env / no hardcoded secrets. Only the AGENT
- * (Claude Code locally; `claude -p` in the cloud bot) holds `mcp__claude_ai_systematic__*`. So the
- * staging MUST be produced by the AGENT, BEFORE the shell pipeline reads data/dtx/*.json:
- *
- *   AGENT calls mcp__claude_ai_systematic__DtxDecide / DtxReplay (async → poll DtxJobStatus)
- *     → writes each raw tool result to a JSON file
- *       → `node tools/dtx-mcp-ingest.js --portfolio <id> --decide <f> [--replay <f>] --asof <J+1>`
- *         → writes data/dtx/<id>.json (engineMode:"mcp")
- *           → gen-status-page.js reads it (orders = decide CREATE, equity/metrics = replay).
- *
- * This file's remaining jobs:
- *   1. Own the staging SCHEMA (buildStaging / extractReplayMetrics / writeStaging / mapOrder) — the ONE
- *      source of truth, imported by tools/dtx-mcp-ingest.js so the MCP producer stays byte-compatible.
- *   2. Discover modes from config/dtx/portfolio_*.yaml + expose the go-live splice (goLiveFor).
- *   3. As a CLI: `--list` still works; an actual `--mode/--all` scan is a GRACEFUL no-op that points at
- *      the MCP-ingest path (exit 0 — never crashes the pipeline, never falls back to a deleted binary).
- *
- * This is a PARALLEL, STAGING-ONLY concern. It does NOT touch the live JS scanners, sweep.js,
- * signals.json, backtest-trades.json, trade-chain.json, or modes-config.json.
- *
- * Usage:
- *   node tools/dtx-scan.js --list
- *   node tools/dtx-scan.js --mode ep --asof 2026-07-14      # → prints MCP-ingest guidance, exit 0
- *
- * Modes are auto-discovered from config/dtx/portfolio_*.yaml (mode id = portfolio id).
+ * The hosted systematic MCP is the sole engine. Scripted collection uses a
+ * short-lived server-scoped token for DtxDecide/DtxReplay; DtxBookEquity is
+ * captured by the authenticated agent and verified offline. This module never
+ * executes broker orders and never falls back to a local strategy engine.
  */
 
 const fs = require('fs');
 const path = require('path');
+const { bookCurveSha256 } = require('./lib/dtx-book-proof');
 // dtx-bars (→ js-yaml) est chargé PARESSEUSEMENT : seul discoverModes()/le CLI en a besoin.
 // Un require top-level faisait crasher writeStagingCompleteness/stagingStatus dans tout
 // environnement sans node_modules (js-yaml manquant) → le filet Step 4d mourait AVANT d'écrire
@@ -225,6 +200,9 @@ function validateDecisionV2(decision, expected = {}) {
   if (!decision || typeof decision !== 'object') return ['decision missing'];
   if (decision.contract_version !== '2.0') errors.push('contract_version must equal 2.0');
   for (const key of ['request_id', 'run_id', 'call_id']) requiredText(decision[key], key);
+  if (expected.requestId && decision.request_id !== expected.requestId) {
+    errors.push(`request_id=${decision.request_id || 'missing'} != ${expected.requestId}`);
+  }
   if (expected.asof && decision.requested_asof !== expected.asof) {
     errors.push(`requested_asof=${decision.requested_asof || 'missing'} != ${expected.asof}`);
   }
@@ -537,11 +515,68 @@ function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity
   };
 }
 
+/**
+ * A served book snapshot is reusable only when its curve reproduces both
+ * same-vintage headline metrics and its provenance labels describe that exact
+ * curve. DtxStats is a separate measurement campaign and is never accepted as
+ * evidence for DtxBookEquity.
+ */
+function bookSnapshotCoherence(snapshot, expected = {}) {
+  const errors = [];
+  if (!snapshot || snapshot.metricsSource !== 'book_served_stats') return { ok: false, errors: ['not a served book snapshot'] };
+  const dates = snapshot.equity?.dates;
+  const values = snapshot.equity?.values;
+  const metrics = snapshot.metrics || {};
+  const proof = snapshot.bookSnapshot || {};
+  if (!Array.isArray(dates) || !Array.isArray(values) || dates.length < 2 || dates.length !== values.length) {
+    errors.push('book curve missing or length mismatch');
+    return { ok: false, errors };
+  }
+  const numeric = values.map(Number);
+  if (numeric.some(value => !Number.isFinite(value) || value <= 0)) errors.push('book curve contains invalid values');
+  if (snapshot.equityResolution !== 'daily') errors.push('book curve resolution is not daily');
+  if (proof.sameVintage !== true) errors.push('same-vintage proof missing');
+  if (proof.scope !== 'performance_only' || proof.decisionIndependent !== true) errors.push('book/decision scope is ambiguous');
+  if (!proof.portfolio) errors.push('book portfolio proof missing');
+  if (expected.expectedPortfolio && proof.portfolio !== expected.expectedPortfolio) errors.push('book portfolio mismatch');
+  if (proof.expectedClose !== dates[dates.length - 1]) errors.push('proof expected-close mismatch');
+  if (expected.expectedClose && proof.expectedClose !== expected.expectedClose) errors.push('book snapshot is not current for expected close');
+  if (!/^[a-f0-9]{64}$/.test(String(proof.sourceSha256 || ''))) errors.push('source SHA-256 missing');
+  if (!/^[a-f0-9]{64}$/.test(String(proof.curveSha256 || ''))) errors.push('durable curve SHA-256 missing');
+  else if (proof.curveSha256 !== bookCurveSha256(dates, values, metrics)) errors.push('durable curve SHA-256 mismatch');
+  if (proof.points !== dates.length) errors.push('proof point count mismatch');
+  if (proof.curveThrough !== dates[dates.length - 1]) errors.push('proof curve-through mismatch');
+  if (proof.measuredAt !== metrics.measured_at) errors.push('proof/metric vintage mismatch');
+  if (proof.measuredAt !== proof.expectedClose) errors.push('book measurement is not from expected close');
+
+  const committed = Number(metrics.committed_capital);
+  const cagrServed = Number(metrics.cagr_pct);
+  const ddServed = Number(metrics.max_dd_pct);
+  const sessions = Number(metrics.trading_days_per_year);
+  if (!(committed > 0)) errors.push('committed capital missing');
+  if (sessions !== 252) errors.push('trading-days convention must equal 252');
+  let curveMaxDd = null;
+  let curveCagr = null;
+  if (!errors.some(error => error.includes('curve contains')) && numeric.length) {
+    let peak = numeric[0];
+    let worst = 0;
+    for (const value of numeric) {
+      peak = Math.max(peak, value);
+      if (peak > 0) worst = Math.max(worst, (peak - value) / peak * 100);
+    }
+    curveMaxDd = worst;
+    curveCagr = (Math.pow(numeric[numeric.length - 1] / committed, 1 / (numeric.length / sessions)) - 1) * 100;
+    if (!Number.isFinite(ddServed) || Math.abs(curveMaxDd - ddServed) > 0.05) errors.push('book curve/MaxDD mismatch');
+    if (!Number.isFinite(cagrServed) || Math.abs(curveCagr - cagrServed) > 0.05) errors.push('book curve/CAGR mismatch');
+  }
+  return { ok: errors.length === 0, errors, curveMaxDd, curveCagr };
+}
+
 /** Write the staging object (pretty JSON, mkdir -p). */
 function writeStaging(out, outPath) {
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   // Des métriques SERVIES par le livre priment sur toute reconstruction only when
-  // their curve reproduces the served drawdown. Un livre
+  // their curve reproduces both same-vintage headline metrics. Un livre
   // à allocation dynamique ne se reconstitue pas en additionnant des poches
   // rejouées à capital fixe : sur best v2, la reconstruction rendait 39,6 % de
   // CAGR et 20,2 % de drawdown quand le livre sert 70,9 % et 27,2 %. La réingestion
@@ -552,20 +587,11 @@ function writeStaging(out, outPath) {
     if (fs.existsSync(outPath)) {
       const prev = JSON.parse(fs.readFileSync(outPath, 'utf8'));
       if (prev && prev.rejectedServedSnapshot) out.rejectedServedSnapshot = prev.rejectedServedSnapshot;
-      const values = Array.isArray(prev?.equity?.values) ? prev.equity.values.map(Number).filter(Number.isFinite) : [];
-      let curveMaxDd = null;
-      if (values.length > 1) {
-        let peak = values[0], worst = 0;
-        for (const value of values) {
-          peak = Math.max(peak, value);
-          if (peak > 0) worst = Math.min(worst, (value / peak - 1) * 100);
-        }
-        curveMaxDd = Math.abs(worst);
-      }
-      const servedDd = Number(prev?.metrics?.max_dd_pct);
-      const servedCurveCoherent = Number.isFinite(curveMaxDd) && Number.isFinite(servedDd)
-        && Math.abs(curveMaxDd - Math.abs(servedDd)) <= 0.25;
-      if (prev && prev.metricsSource === 'book_served_stats' && prev.metrics && servedCurveCoherent) {
+      const coherence = bookSnapshotCoherence(prev, {
+        expectedPortfolio: out.portfolioId,
+        expectedClose: out.decisionProvenance && out.decisionProvenance.expectedDataDate,
+      });
+      if (prev && prev.metricsSource === 'book_served_stats' && prev.metrics && coherence.ok) {
         out.metrics = prev.metrics;
         out.metricsSource = prev.metricsSource;
         // La courbe ET SA PROVENANCE. Ne préserver que `equity` laissait tomber
@@ -578,11 +604,15 @@ function writeStaging(out, outPath) {
         if (prev.equityResolution) out.equityResolution = prev.equityResolution;
         if (prev.equitySource) out.equitySource = prev.equitySource;
         if (prev.equityVerifiedAt) out.equityVerifiedAt = prev.equityVerifiedAt;
+        if (prev.bookSnapshot) out.bookSnapshot = prev.bookSnapshot;
       } else if (prev && prev.metricsSource === 'book_served_stats' && prev.metrics) {
         out.rejectedServedSnapshot = {
-          reason: 'book equity curve does not reproduce served max drawdown; fresh MCP replay published instead',
-          served_max_dd_pct: servedDd,
-          curve_max_dd_pct: curveMaxDd == null ? null : Math.round(curveMaxDd * 100) / 100,
+          reason: 'book snapshot failed same-vintage curve/metric provenance checks; fresh MCP replay published instead',
+          errors: coherence.errors,
+          served_max_dd_pct: Number(prev?.metrics?.max_dd_pct),
+          curve_max_dd_pct: coherence.curveMaxDd == null ? null : Math.round(coherence.curveMaxDd * 100) / 100,
+          served_cagr_pct: Number(prev?.metrics?.cagr_pct),
+          curve_cagr_pct: coherence.curveCagr == null ? null : Math.round(coherence.curveCagr * 100) / 100,
           prior_equity_source: prev.equitySource || null,
           rejected_at: new Date().toISOString(),
         };
@@ -613,16 +643,47 @@ function stagingPathFor(portfolioId, { asof = null, pit = false } = {}) {
 // ---------------------------------------------------------------------------
 /** Inspect a mode's committed staging. Returns {exists, engineMode, generatedAt, fresh} where
  *  fresh = engineMode:"mcp" AND generatedAt is today (UTC). Never throws. */
-function stagingStatus(portfolioId, todayIso) {
+function stagingSnapshotErrors(snapshot, portfolioId, { todayIso, scanDateIso, expectedClose } = {}) {
+  const errors = [];
+  const today = todayIso || new Date().toISOString().slice(0, 10);
+  const generated = String(snapshot && snapshot.generatedAt || '').slice(0, 10);
+  const provenance = snapshot && snapshot.decisionProvenance || {};
+  if (!snapshot || snapshot.engineMode !== 'mcp') errors.push('engineMode must be mcp');
+  if (generated !== today) errors.push(`generatedAt ${generated || 'missing'} != ${today}`);
+  if (snapshot && snapshot.portfolioId !== portfolioId) errors.push(`portfolioId ${snapshot.portfolioId || 'missing'} != ${portfolioId}`);
+  if (scanDateIso && snapshot && snapshot.asof !== scanDateIso) errors.push(`asof ${snapshot.asof || 'missing'} != ${scanDateIso}`);
+  if (provenance.contractVersion !== '2.0') errors.push('Contract V2 provenance missing');
+  if (scanDateIso && provenance.requestedAsOf !== scanDateIso) errors.push(`requestedAsOf ${provenance.requestedAsOf || 'missing'} != ${scanDateIso}`);
+  if (scanDateIso && !expectedClose) errors.push('certified scanner reference close is missing');
+  if (!provenance.expectedDataDate || provenance.expectedDataDate !== provenance.dataAsOf) errors.push('expectedDataDate/dataAsOf mismatch');
+  if (expectedClose && provenance.expectedDataDate !== expectedClose) errors.push(`expectedDataDate ${provenance.expectedDataDate || 'missing'} != ${expectedClose}`);
+  if (!provenance.requestId || !provenance.runId || !provenance.callId || !provenance.planId) errors.push('decision provenance identifiers missing');
+  return errors;
+}
+
+function stagingStatus(portfolioId, todayIso, expectations = {}) {
   const today = todayIso || new Date().toISOString().slice(0, 10);
   const p = path.join(STAGING_DIR, `${portfolioId}.json`);
   try {
     const j = JSON.parse(fs.readFileSync(p, 'utf8'));
     const gen = String(j.generatedAt || '').slice(0, 10);
-    return { exists: true, engineMode: j.engineMode || null, generatedAt: gen, fresh: j.engineMode === 'mcp' && gen === today };
+    const errors = stagingSnapshotErrors(j, portfolioId, { ...expectations, todayIso: today });
+    return { exists: true, engineMode: j.engineMode || null, generatedAt: gen, fresh: errors.length === 0, errors };
   } catch (_) {
-    return { exists: false, engineMode: null, generatedAt: null, fresh: false };
+    return { exists: false, engineMode: null, generatedAt: null, fresh: false, errors: ['staging missing or invalid'] };
   }
+}
+
+function inferScannerReferenceClose(scanDateIso) {
+  const folder = String(scanDateIso || '').replace(/-/g, '');
+  if (!/^20\d{6}$/.test(folder)) return null;
+  for (const subdir of ['_dtx', '_data', '_data2']) {
+    try {
+      const harness = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scanner', folder, subdir, 'harness.json'), 'utf8'));
+      if (harness.reference_close) return harness.reference_close;
+    } catch (_) { /* try next certified harness */ }
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -635,23 +696,25 @@ function stagingStatus(portfolioId, todayIso) {
 const COMPLETENESS_MARKER = path.join(STAGING_DIR, '_staging-completeness.json');
 function writeStagingCompleteness(scanDateIso, todayIso) {
   const today = todayIso || new Date().toISOString().slice(0, 10);
+  const expectedClose = inferScannerReferenceClose(scanDateIso);
   const modes = {};
   const generated = [];
   const skipped = [];
   for (const id of SCRIPTED_MODES) {
     let s;
-    try { s = stagingStatus(id, today); } catch (_) { s = { exists: false, engineMode: null, generatedAt: null, fresh: false }; }
+    try { s = stagingStatus(id, today, { scanDateIso, expectedClose }); } catch (_) { s = { exists: false, engineMode: null, generatedAt: null, fresh: false, errors: ['status exception'] }; }
     let status;
     if (s.fresh) { status = 'fresh'; generated.push(id); }
     else if (s.exists) { status = 'stale'; skipped.push(id); }
     else { status = 'missing'; skipped.push(id); }
-    modes[id] = { status, engineMode: s.engineMode, generatedAt: s.generatedAt, fresh: !!s.fresh };
+    modes[id] = { status, engineMode: s.engineMode, generatedAt: s.generatedAt, fresh: !!s.fresh, errors: s.errors || [] };
     const icon = s.fresh ? '✅ fresh' : (s.exists ? '⚠️  STALE' : '❌ MISSING');
     console.log(`  [${id}] ${icon} (engineMode:${s.engineMode || '—'}, generatedAt:${s.generatedAt || '—'})`);
   }
   const complete = skipped.length === 0;
   const marker = {
     scanDate: scanDateIso || null,
+    expectedClose,
     generatedAt: new Date().toISOString(),
     engine: 'dtx-mcp',
     modes,
@@ -682,29 +745,30 @@ function main() {
     return;
   }
 
-  // Any actual --mode/--all "scan": the binary is gone. Emit clear guidance and exit 0 (graceful,
-  // non-blocking) — NEVER crash the pipeline and NEVER fall back to a deleted binary.
+  // Any actual --mode/--all "scan": the binary is gone. This compatibility CLI
+  // does not refresh staging; downstream completeness remains a hard blocker.
   const targets = opts.all ? SCRIPTED_MODES : (opts.mode ? [opts.mode] : []);
   console.warn('⚠️  dtx-scan: the local dtx binary + data bundle have been REMOVED (2026-07-08 cut-over).');
   console.warn('⚠️  dtx-scan: this tool no longer produces staging. The hosted dtx MCP is the SOLE engine.');
-  console.warn('⚠️  dtx-scan: staging MUST be produced by the AGENT, BEFORE the shell pipeline, e.g.:');
-  console.warn('⚠️      (agent) DtxReplay + DtxDecide → poll DtxJobStatus → write raw JSON, then:');
-  console.warn('⚠️      node tools/dtx-mcp-ingest.js --portfolio <id> --decide <f> --replay <f> --asof <J+1>');
+  console.warn('⚠️  dtx-scan: use scan-parallel.sh for token-scoped DtxDecide/DtxReplay collection and staging.');
+  console.warn('⚠️  dtx-scan: for a manual authenticated-agent capture, write raw JSON then run:');
+  console.warn('⚠️      node tools/dtx-mcp-ingest.js --portfolio <id> --decide <f> --replay <f> --asof <J+1> --expected-close <REF>');
   if (targets.length) {
     console.warn(`⚠️  dtx-scan: requested mode(s) [${targets.join(', ')}] — the pipeline will READ the`);
-    console.warn('⚠️      committed staging (data/dtx/<id>.json) as-is. Skipping (no regeneration). exit 0.');
+    console.warn('⚠️      committed staging (data/dtx/<id>.json) as-is. Incomplete/stale staging blocks downstream publication.');
   }
-  // exit 0: graceful degrade. If the agent already refreshed staging via MCP, it is used; otherwise
-  // the last committed staging is read by gen-status-page. Either way we never block the scan.
+  // Exit 0 only means this deprecated compatibility command did not execute.
+  // downstream-split and the completeness marker decide whether publication is allowed.
   process.exit(0);
 }
 
 if (require.main === module) main();
 
 module.exports = {
-  discoverModes, stagingStatus, writeStagingCompleteness, COMPLETENESS_MARKER, SCRIPTED_MODES,
+  discoverModes, stagingSnapshotErrors, stagingStatus, writeStagingCompleteness, COMPLETENESS_MARKER, SCRIPTED_MODES,
   // Shared schema surface — reused by tools/dtx-mcp-ingest.js so the MCP path is byte-compatible.
   buildStaging, writeStaging, stagingPathFor, extractReplayMetrics, assertReplaySanity, mapOrder, sleeveIndex,
+  bookSnapshotCoherence,
   validateDecisionV2, rankOneOrdersFromV2, goLiveFor,
   DEFAULT_FROM, STAGING_DIR, CONFIG_DIR, REPO_ROOT, PORTFOLIO_TO_MODE,
 };

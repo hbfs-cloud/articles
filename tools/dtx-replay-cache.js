@@ -3,7 +3,7 @@
 /**
  * dtx-replay-cache — évite de rejouer chaque soir un backtest de 2021 à aujourd'hui.
  *
- *   node tools/dtx-replay-cache.js --dir <staging> --asof YYYY-MM-DD [--max-age-days 7] [--force]
+ *   node tools/dtx-replay-cache.js --dir <staging> --asof YYYY-MM-DD --refdate YYYY-MM-DD [--max-age-days 7] [--force]
  *                                  [--plan plans/scanner-dtx.json]
  *
  * Un DtxReplay coûtait 300 à 348 s par portefeuille (393 s pour la vague complète le
@@ -23,15 +23,16 @@
  * Les DÉCISIONS ne sont JAMAIS mises en cache : elles portent les ordres du jour.
  */
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
+const { validateDtxReplay } = require('./lib/dtx-content-gates');
 const arg = (n, d) => { const i = process.argv.indexOf(n); return i > -1 && process.argv[i+1] ? process.argv[i+1] : d; };
 const has = n => process.argv.includes(n);
 
-const dir = arg('--dir'), asof = arg('--asof');
+const dir = arg('--dir'), asof = arg('--asof'), refdate = arg('--refdate');
 const maxAgeDays = Number(arg('--max-age-days', 7));
 const force = has('--force');
 const planPath = arg('--plan');
 const CACHE = 'data/dtx-replay-cache';
-if (!dir || !asof) { console.error('Usage: --dir <staging> --asof YYYY-MM-DD [--max-age-days 7] [--force] [--plan <plan.json>]'); process.exit(2); }
+if (!dir || !asof) { console.error('Usage: --dir <staging> --asof YYYY-MM-DD [--refdate YYYY-MM-DD] [--max-age-days 7] [--force] [--plan <plan.json>]'); process.exit(2); }
 
 /**
  * Portefeuilles ATTENDUS, lus dans le plan de collecte.
@@ -69,7 +70,25 @@ function configFingerprint() {
   for (const f of ['data/modes-config.json']) {
     try { h.update(fs.readFileSync(f)); } catch { /* absent = ignoré */ }
   }
+  if (planPath) {
+    try { h.update(fs.readFileSync(planPath)); } catch { h.update(`missing:${planPath}`); }
+  }
   return h.digest('hex').slice(0, 16);
+}
+
+function replayProof(file, portfolio, expectedHash) {
+  try {
+    const body = fs.readFileSync(file);
+    const hash = crypto.createHash('sha256').update(body).digest('hex');
+    if (expectedHash && hash !== expectedHash) return { ok: false, why: 'hash mismatch' };
+    const errors = validateDtxReplay(JSON.parse(body.toString('utf8')), {
+      portfolio,
+      referenceClose: refdate || undefined,
+    });
+    return errors.length ? { ok: false, why: errors.join('; ') } : { ok: true, hash };
+  } catch (error) {
+    return { ok: false, why: error.message };
+  }
 }
 
 fs.mkdirSync(CACHE, { recursive: true });
@@ -93,17 +112,29 @@ for (const pf of portfolios) {
   let meta = null;
   try { meta = JSON.parse(fs.readFileSync(cf + '.meta', 'utf8')); } catch { /* pas de cache */ }
   const ageDays = meta ? (Date.parse(asof) - Date.parse(meta.asof)) / 86400000 : Infinity;
-  const ok = !force && meta && meta.fingerprint === fp && ageDays <= maxAgeDays && fs.existsSync(cf);
+  const proof = fs.existsSync(cf) ? replayProof(cf, pf, meta && meta.sha256) : { ok: false, why: 'fichier absent' };
+  const ok = !force && meta && meta.fingerprint === fp && ageDays >= 0 && ageDays <= maxAgeDays && proof.ok;
   if (ok) { fresh.push({ pf, age: Math.round(ageDays) }); }
-  else { stale.push({ pf, why: force ? 'forcé' : !meta ? 'aucun cache' : meta.fingerprint !== fp ? 'config modifiée' : `âge ${Math.round(ageDays)}j > ${maxAgeDays}j` }); }
+  else {
+    const why = force ? 'forcé' : !meta ? 'aucun cache'
+      : meta.fingerprint !== fp ? 'plan/config modifié'
+        : !(ageDays >= 0 && ageDays <= maxAgeDays) ? `âge ${Math.round(ageDays)}j hors fenêtre 0..${maxAgeDays}j`
+          : `preuve invalide: ${proof.why}`;
+    stale.push({ pf, why });
+  }
 }
 
 // Rafraîchir le cache depuis le staging fraîchement collecté
 for (const { pf } of stale) {
   const src = path.join(dir, `replay_${pf}.json`);
   if (!fs.existsSync(src)) continue;
+  const proof = replayProof(src, pf);
+  if (!proof.ok) { console.error(`[replay-cache] refus ${pf}: ${proof.why}`); continue; }
   fs.copyFileSync(src, path.join(CACHE, `${pf}.json`));
-  fs.writeFileSync(path.join(CACHE, `${pf}.json.meta`), JSON.stringify({ asof, fingerprint: fp, cached_at: new Date().toISOString() }, null, 2));
+  fs.writeFileSync(path.join(CACHE, `${pf}.json.meta`), JSON.stringify({
+    asof, reference_close: refdate || null, fingerprint: fp, sha256: proof.hash,
+    cached_at: new Date().toISOString(),
+  }, null, 2));
 }
 // Servir depuis le cache ceux qui restent valides
 let served = 0;

@@ -1,36 +1,48 @@
 {
-  "_doc": "Vague de DÉCOUVERTE du radar squeeze — la pièce qui manquait. plans/squeeze.json exige $symbols pour ses trois QueryData (short interest, flux d'options, barres) et rien ne les produisait : le produit sortait dû à chaque run, puis écarté avec la mention « vivier à fournir ». On ne peut pas partir d'une liste figée — un radar squeeze doit repartir du short interest RÉEL de la période, pas de la watchlist du mois dernier.",
-  "_chaine": "squeeze-universe (ici) → tools/extract-universe.js --strategy short_squeeze → plans/squeeze.json --vars-file",
-  "_pourquoi_le_switcher": "Le DSL de RunScreener expose des indicateurs de prix et de volume (rsi14, atr, obv, vol…), PAS le short interest : aucune expression pass_expr ne peut sélectionner sur le SI. Celui-ci n'existe que par la stratégie `short_squeeze` du chemin switcher (pass_expr vide, données Fintel/ChartExchange) ou par QueryData types=short_interest. On prend donc la passe switcher, et la charnière ne garde que les candidats déclarant cette stratégie — l'union des 7 stratégies coeur ramènerait du momentum sans rapport avec un squeeze.",
-  "artifact": "radar squeeze — vivier",
+  "artifact": "data/workflow-runs/squeeze/$date/universe",
   "waves": [
     {
-      "name": "vivier-squeeze",
+      "name": "preflight",
+      "gate": true,
       "calls": [
         {
-          "as": "screen_squeeze_us",
+          "as": "status",
           "server": "marketdata",
-          "tool": "RunScreener",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 1,
+            "required": true
+          },
+          "assert": {
+            "expected_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "us-universe",
+      "calls": [
+        {
+          "as": "autoscreen_squeeze_us",
+          "server": "marketdata",
+          "tool": "RunAutoScreener",
           "args": {
             "region": "US",
             "asset": "stock",
             "as_of": "$refdate",
-            "min_market_cap": 3e8,
+            "force_async": true,
+            "min_market_cap": 300000000,
             "min_avg_volume": 1000000,
-            "max_rsi": 0,
+            "max_rsi": 100,
             "top_k": 120
           },
-          "freshness": { "max_age_h": 24, "required": true },
-          "cache_minutes": 240,
-          "job_max_ms": 300000
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
         }
       ]
     }
-  ],
-  "_seuils": {
-    "min_market_cap": "3e8 — cap plancher du skill squeeze-radar ($300M). En dessous, le short interest est réel mais le titre ne se négocie pas proprement.",
-    "min_avg_volume": "1e6 actions — un squeeze suppose qu'on puisse entrer ET sortir. Sans plancher de liquidité, le radar remonte des titres où le days-to-cover est élevé simplement parce que rien ne s'échange.",
-    "max_rsi": "0 = plancher qualité DÉSARMÉ, volontairement. Le défaut du serveur (75) exclut les titres surachetés — or un squeeze en cours EST suracheté. Garder 75 reviendrait à filtrer précisément ce qu'on cherche.",
-    "top_k": "120 avant filtrage par stratégie ; la charnière coupe ensuite à sa propre limite. Les seuils de SI (SI/float > ~15-20 %, days-to-cover > ~5) s'appliquent APRÈS, sur les données short_interest de la vague suivante — ils ne sont pas exprimables ici."
-  }
+  ]
 }
