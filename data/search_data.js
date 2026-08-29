@@ -5791,7 +5791,7 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Rétrospective Scanner",
-    "desc": "Un TP1 suivi d'un retour au point mort, un stop et deux sorties à échéance: portefeuille -1,08%, ratio gains/pertes 0,24. Le contrôle SEC d'AMRX était incomplet. Note D provisoire.",
+    "desc": "Un TP1 suivi d'un retour au point mort, deux stops et une sortie à échéance: portefeuille -1,04%, ratio gains/pertes 0,31. Le contrôle SEC d'AMRX était incomplet. Note D provisoire.",
     "tags": "us,retrospective,scanner,momentum,pullback,sec,process",
     "grade": "D",
     "href": "/scanner/20260814/retro/",

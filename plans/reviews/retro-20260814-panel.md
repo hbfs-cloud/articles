@@ -18,8 +18,20 @@ Final review date: 2026-08-29
 ## Corrections required by the panel
 
 - AMRX same-bar ambiguity resolved conservatively: 50% at TP1 and 50% at breakeven on 2026-08-14, for +0.429 R and +0.215% portfolio contribution.
-- Portfolio metrics synchronized to -1.078%, profit factor 0.24 and maximum daily drawdown -1.14%.
+- Initial panel metrics were superseded after the horizon audit: the canonical expiry is 2026-08-28, not 2026-08-27.
+- Corrected metrics: PEB +0.489 R at expiry, M stopped at -1.00 R on 2026-08-28, portfolio -1.041%, profit factor 0.31 and maximum daily drawdown -1.14%.
 - Harness generation timestamps moved after the final deterministic result.
 - Bear case wording changed from one winning trade to one target reached, preserving the distinction between positive expiry and TP1 attainment.
 
 All three reviewers re-opened the corrected artifacts and returned PASS.
+
+## Horizon correction review
+
+After the user reported the truncated range, the panel re-ran against the canonical scanner convention:
+
+- Expiry equals `addBusinessDays(scan_date, horizon)`.
+- The 2026-08-14 scan therefore expires on 2026-08-28.
+- D0 is executable, so the replay observes eleven daily bars from D0 through D+10.
+- Macy's stops on the final session; PEB exits at the final close.
+
+Quantitative review: PASS. Contrarian review: PASS. Editorial/provenance review: PASS.

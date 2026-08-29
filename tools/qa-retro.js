@@ -105,6 +105,17 @@ function dayToScanDate(dayNum, retroCompact) {
   return `${yy}${String(mm).padStart(2, '0')}${String(dayNum).padStart(2, '0')}`;
 }
 
+function addBusinessDays(dateStr, days) {
+  const date = new Date(`${dateStr}T12:00:00Z`);
+  let added = 0;
+  while (added < days) {
+    date.setUTCDate(date.getUTCDate() + 1);
+    const day = date.getUTCDay();
+    if (day !== 0 && day !== 6) added++;
+  }
+  return date.toISOString().slice(0, 10);
+}
+
 function main() {
   const argv = process.argv.slice(2);
   const arg = argv.find(a => !a.startsWith('--'));
@@ -186,6 +197,35 @@ function main() {
       failures.push(`${ticker} (${scanDate}): entrée chassée à +${fill.deviationPct}% (<= ${CHASE_TOLERANCE_PCT}%) sans tag chase — tagger la ligne.`);
     } else if (fill.status === 'filled' && hasChaseTag) {
       warnings.push(`${ticker} (${scanDate}): tag chase mais entrée ${effective} <= publiée ${published} (${fill.deviationPct}%) — tag superflu.`);
+    }
+  }
+
+  // A mono-scan is executable on D0 but expires after N subsequent business
+  // days. This mirrors update-tracking/gen-status-page and prevents a retro
+  // from silently dropping the final session by slicing N bars from D0.
+  if (monoScanDate) {
+    const resultsPath = path.join(dir, 'retro-results.json');
+    const signalsPath = path.join(ROOT, 'scanner', monoScanDate, 'signals.json');
+    try {
+      const results = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+      const signals = JSON.parse(fs.readFileSync(signalsPath, 'utf8'));
+      const scanDate = signals.scanDate;
+      const maxHorizon = Math.max(...(signals.signals || []).map(s => s.horizon || 0));
+      const expectedEnd = addBusinessDays(scanDate, maxHorizon);
+      if (results.summary?.horizon_end !== expectedEnd) {
+        failures.push(`fenêtre: horizon_end=${results.summary?.horizon_end || 'absent'}, attendu ${expectedEnd} (scan_date ${scanDate} + ${maxHorizon} jours ouvrés; D0 exécutable).`);
+      }
+      const signalByTicker = Object.fromEntries((signals.signals || []).map(s => [s.ticker, s]));
+      for (const outcome of results.outcomes || []) {
+        const signal = signalByTicker[outcome.ticker];
+        if (!signal) continue;
+        const tickerEnd = addBusinessDays(scanDate, signal.horizon || maxHorizon);
+        if (outcome.horizon_end !== tickerEnd) {
+          failures.push(`${outcome.ticker}: horizon_end=${outcome.horizon_end || 'absent'}, attendu ${tickerEnd}.`);
+        }
+      }
+    } catch (error) {
+      failures.push(`fenêtre: contrôle horizon impossible (${error.message}).`);
     }
   }
 

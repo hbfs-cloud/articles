@@ -25,7 +25,22 @@ if (!result || !Array.isArray(result.symbols) || !Array.isArray(result.data)) {
 const barsBySymbol = Object.fromEntries(result.symbols.map((symbol, index) => [symbol, result.data[index].bars]));
 const start = signals.scanDate;
 const configuredHorizon = Math.max(...signals.signals.map(s => s.horizon || 0));
-const horizonEnd = process.argv[3] || null;
+const explicitHorizonEnd = process.argv[3] || null;
+
+function addBusinessDays(dateStr, days) {
+  const date = new Date(`${dateStr}T12:00:00Z`);
+  let added = 0;
+  while (added < days) {
+    date.setUTCDate(date.getUTCDate() + 1);
+    const day = date.getUTCDay();
+    if (day !== 0 && day !== 6) added++;
+  }
+  return date.toISOString().slice(0, 10);
+}
+
+// Scanner horizons measure elapsed trading sessions after scan_date. D0 remains
+// executable, but expiry is the close reached after N subsequent business days.
+const horizonEnd = explicitHorizonEnd || addBusinessDays(start, configuredHorizon);
 
 function round(value, digits = 4) {
   return Number(value.toFixed(digits));
@@ -47,8 +62,8 @@ function fillFor(signal, bars) {
 }
 
 const outcomes = signals.signals.map(signal => {
-  const allBars = (barsBySymbol[signal.ticker] || []).filter(b => b[0] >= start && (!horizonEnd || b[0] <= horizonEnd));
-  const bars = allBars.slice(0, signal.horizon || configuredHorizon);
+  const signalHorizonEnd = explicitHorizonEnd || addBusinessDays(start, signal.horizon || configuredHorizon);
+  const bars = (barsBySymbol[signal.ticker] || []).filter(b => b[0] >= start && b[0] <= signalHorizonEnd);
   if (!bars.length) throw new Error(`${signal.ticker}: aucune barre dans la fenetre`);
   const fill = fillFor(signal, bars);
   if (!fill) {
@@ -166,8 +181,7 @@ const filled = outcomes.filter(o => o.status !== 'no_fill');
 const gains = filled.filter(o => o.portfolio_contribution_pct > 0).reduce((sum, o) => sum + o.portfolio_contribution_pct, 0);
 const losses = Math.abs(filled.filter(o => o.portfolio_contribution_pct < 0).reduce((sum, o) => sum + o.portfolio_contribution_pct, 0));
 const curveDates = (barsBySymbol[signals.signals[0].ticker] || [])
-  .filter(b => b[0] >= start && (!horizonEnd || b[0] <= horizonEnd))
-  .slice(0, configuredHorizon)
+  .filter(b => b[0] >= start && b[0] <= horizonEnd)
   .map(b => b[0]);
 const portfolioCurve = curveDates.map(date => {
   let totalR = 0;
@@ -212,7 +226,7 @@ const summary = {
   profit_factor: losses ? round(gains / losses, 2) : null
 };
 
-const output = { methodology: 'published levels; shared fill policy; daily OHLC; stop-first on same-bar ambiguity; published full/half sizing; 50% at TP1 then breakeven stop on remainder', summary, portfolio_curve: portfolioCurve, outcomes };
+const output = { methodology: 'published levels; horizon expiry at scan_date plus N business days; D0 executable; shared fill policy; daily OHLC; stop-first on same-bar ambiguity; published full/half sizing; 50% at TP1 then breakeven stop on remainder', summary, portfolio_curve: portfolioCurve, outcomes };
 const outPath = path.join(scanDir, 'retro', 'retro-results.json');
 fs.writeFileSync(outPath, JSON.stringify(output, null, 2) + '\n');
 console.log(`${outPath}: ${outcomes.length} setups, ${summary.total_r}R, PF ${summary.profit_factor}`);
