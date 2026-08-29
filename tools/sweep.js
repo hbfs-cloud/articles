@@ -28,6 +28,7 @@ const QUICK = process.argv.includes('--quick');
 const VERBOSE = process.argv.includes('--verbose');
 const FULL_SWEEP = process.argv.includes('--full-sweep');
 const FROZEN_ONLY = !FULL_SWEEP;
+const PRIMARY_ONLY = process.argv.includes('--primary-only');
 const { verify: verifyTradeChain, seal: sealTradeChain } = require('./lib/trade-integrity');
 // Shared DATED price cache (point-in-time, source unique de vérité). Fixes the flat-cache
 // pollution bug (data/.price-cache/TICKER.json without a date getting overwritten across days).
@@ -45,6 +46,8 @@ const SHARIA = process.argv.includes('--sharia');
 const BACKFILL_EXCURSIONS = process.argv.includes('--backfill-excursions');
 const FROM_ARG = process.argv.find(a => a.startsWith('--from='));
 const FROM_DATE = FROM_ARG ? FROM_ARG.split('=')[1] : null;
+const TO_ARG = process.argv.find(a => a.startsWith('--to='));
+const TO_DATE = TO_ARG ? TO_ARG.split('=')[1] : null;
 // TKL pool ingestion policy:
 //   off      → published Top 10 only (revert to pre-tkl-pool behavior)
 //   hybrid   → Top 10 + tkl_pool merged into shared candidate pool (gated by per-mode minScore/regime/etc.)
@@ -2267,9 +2270,10 @@ async function main() {
   // 1. Parse all scans
   const scanDirs = fs.readdirSync(SCANNER_DIR)
     .filter(d => /^\d{8}(-\d+)?$/.test(d))
+    .filter(d => fs.existsSync(path.join(SCANNER_DIR, d, 'index.html')))
     .filter(d => {
       const date = d.slice(0, 4) + '-' + d.slice(4, 6) + '-' + d.slice(6, 8);
-      return date >= (FROM_DATE || '2026-02-15');
+      return date >= (FROM_DATE || '2026-02-15') && (!TO_DATE || date <= TO_DATE);
     })
     .sort();
 
@@ -2282,9 +2286,11 @@ async function main() {
   const includeTklPool = TKL_POLICY !== 'off';
   let allSetups = scans.flatMap(s => {
     const list = s.setups.slice();
-    if (includeTklPool) list.push(...(s.tklPool || []));
-    // Asset-class pools (crypto/metals/forex/…/event-driven); equity modes exclude these via excludeSources.
-    list.push(...(s.cryptoPool || []), ...(s.metalsPool || []), ...(s.forexPool || []), ...(s.casablancaPool || []), ...(s.euSmallcapPool || []), ...(s.factorPool || []), ...(s.peadPool || []), ...(s.filingsPool || []), ...(s.gapPool || []), ...(s.dtxPool || []));
+    if (!PRIMARY_ONLY) {
+      if (includeTklPool) list.push(...(s.tklPool || []));
+      // Asset-class pools (crypto/metals/forex/…/event-driven); equity modes exclude these via excludeSources.
+      list.push(...(s.cryptoPool || []), ...(s.metalsPool || []), ...(s.forexPool || []), ...(s.casablancaPool || []), ...(s.euSmallcapPool || []), ...(s.factorPool || []), ...(s.peadPool || []), ...(s.filingsPool || []), ...(s.gapPool || []), ...(s.dtxPool || []));
+    }
     return list.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir, regime: s.regime, regimeScore: s.regimeScore }));
   });
   const tklPoolCount = allSetups.filter(s => s.source === 'tkl_pool').length;

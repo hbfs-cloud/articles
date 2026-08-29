@@ -1,0 +1,42 @@
+{
+  "content": "scanner/retrospective/20260828",
+  "artifact": "scanner/retrospective/20260828/index.html",
+  "generated_at": "2026-08-29T04:06:36Z",
+  "reference_close": "2026-08-28",
+  "period": { "start": "2026-08-10", "end": "2026-08-28" },
+  "coverage": {
+    "published_scans": 12,
+    "primary_setups": 100,
+    "symbols": 76,
+    "missing_final_articles": ["2026-08-18", "2026-08-19", "2026-08-26"]
+  },
+  "sources": [
+    { "name": "published_signals", "path": "scanner/retrospective/20260828/_data/bars-snapshot.json", "type": "manifest_with_sha256", "as_of": "2026-08-29T04:06:35.478Z", "max_age_h": 168, "required": true },
+    { "name": "bars_snapshot", "path": "scanner/retrospective/20260828/_data/bars-snapshot.json", "type": "daily_ohlc", "as_of": "2026-08-29T04:06:35.478Z", "max_age_h": 24, "required": true, "data_through": "2026-08-28", "expects_close": true, "reference_close": "2026-08-28" },
+    { "name": "opening_bars_15m", "path": "scanner/retrospective/20260828/_data/opening-bars-15m.json", "type": "intraday_ohlc", "as_of": "2026-08-29T03:39:18Z", "max_age_h": 24, "required": true, "data_through": "2026-08-28" },
+    { "name": "marketdata_overrides", "path": "scanner/retrospective/20260828/_data/marketdata-overrides.json", "type": "marketdata_query", "as_of": "2026-08-29T03:20:33Z", "max_age_h": 24, "required": true, "data_through": "2026-08-28" },
+    { "name": "benchmarks", "path": "scanner/retrospective/20260828/_data/benchmarks.json", "type": "marketdata_query", "as_of": "2026-08-29T03:43:33Z", "max_age_h": 24, "required": true, "data_through": "2026-08-28" },
+    { "name": "sweep_audit", "path": "scanner/retrospective/20260828/_data/sweep-audit.json", "type": "optimizer_audit", "as_of": "2026-08-29T03:35:00Z", "max_age_h": 24, "required": true },
+    { "name": "sweep_period_raw", "path": "scanner/retrospective/20260828/_data/sweep-period-raw.json", "type": "optimizer_raw", "as_of": "2026-08-29T03:35:00Z", "max_age_h": 24, "required": true },
+    { "name": "sweep_history_raw", "path": "scanner/retrospective/20260828/_data/sweep-history-raw.json", "type": "optimizer_raw", "as_of": "2026-08-29T03:35:00Z", "max_age_h": 24, "required": true },
+    { "name": "retro_results", "path": "scanner/retrospective/20260828/retro-results.json", "type": "derived", "as_of": "2026-08-29T04:06:35.478Z", "max_age_h": 24, "required": true, "generated_at": "2026-08-29T04:06:35.478Z" }
+  ],
+  "derived_artifacts": [
+    {
+      "name": "retro_results",
+      "path": "scanner/retrospective/20260828/retro-results.json",
+      "generated_at": "2026-08-29T04:06:35.478Z",
+      "sha256": "444f9022cd69f1292eb2da3c64e5adbafb6b35901771b5ff0feaa8658df2eba8",
+      "method": "tools/build-period-retro.js",
+      "inputs": ["published_signals", "bars_snapshot", "opening_bars_15m", "marketdata_overrides"]
+    },
+    {
+      "name": "article",
+      "path": "scanner/retrospective/20260828/index.html",
+      "generated_at": "2026-08-29T04:06:36Z",
+      "sha256": "73c612c8006af9f05379ce0731e1692a5b88527c25acf05a7213f0647e768e4d",
+      "method": "tools/render-period-retro.js",
+      "inputs": ["retro_results", "benchmarks", "sweep_audit"]
+    }
+  ]
+}

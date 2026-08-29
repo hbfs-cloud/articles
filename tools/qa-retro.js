@@ -151,7 +151,7 @@ function main() {
   // Deux schémas acceptés : hebdo (colonne « lun. 13 ») et mono-scan (pas de colonne jour).
   const rowRe = monoScanDate
     ? /<tr data-status="(pending|expired|expired_after_tp1|tp1|tp1_be|tp2|stopped|no_fill|chase)"><td><strong>([A-Z.]+)<\/strong>(.*?)<\/td><td>[^<]*<\/td><td>([\d]+(?:[.,]\d+)?)<\/td>/g
-    : /<tr data-status="(pending|tp1|tp2|stopped)"><td>\w+\.\s*(\d{1,2})<\/td><td><strong>([A-Z.]+)<\/strong>(.*?)<\/td><td>[^<]*<\/td><td>([\d]+(?:[.,]\d+)?)<\/td>/g;
+    : /<tr data-status="(pending|expired|tp1|tp2|stopped)"><td>\w+\.\s*(\d{1,2})<\/td><td><strong>([A-Z.]+)<\/strong>(.*?)<\/td><td>[^<]*<\/td><td>([\d]+(?:[.,]\d+)?)<\/td>/g;
   const entriesCache = {};
   const failures = [];
   const warnings = [];

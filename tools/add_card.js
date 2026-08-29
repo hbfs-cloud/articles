@@ -334,7 +334,10 @@ const isRetrospective = tab === 'scanner' && (
     fullPath.includes('/retrospective/')
 );
 if (isRetrospective) {
+    const setupGrade = doc.documentElement.getAttribute('data-setup-grade');
+    if (setupGrade && (!finalGrade || finalGrade === 'N/A')) finalGrade = setupGrade;
     badgeHtml += '<span class="badge badge-amber" style="margin-bottom: 0.4rem; display: inline-block">RÉTROSPECTIVE</span>\n';
+    if (setupGrade) badgeHtml += `<span class="badge" style="margin:0 0 0.4rem 0.35rem;display:inline-block;background:#64748b;color:#fff">NOTE SETUP ${setupGrade}</span>\n`;
 }
 
 const retroStyle = isRetrospective

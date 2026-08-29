@@ -1,6 +1,6 @@
 {
   "_comment": "Synthesized rules accumulated from weekly retrospectives. Updated at end of each scanner/retrospective/YYYYMMDD/ — append-only with conflict resolution. Read by /scanner Phase 0 step 8 and applied during Phase 2 selection.",
-  "_version": "v3.8-20260829",
+  "_version": "v3.9-20260829",
   "_updated": "2026-08-29",
   "_source_retros": [
     "20260220",
@@ -35,7 +35,8 @@
     "20260729",
     "20260730",
     "20260821",
-    "20260814"
+    "20260814",
+    "20260828"
   ],
   "_methodology": "Append-only. Each rule cites the retros that triggered it. Conflict resolution: most recent retro wins.\n\n  Severity levels:\n  - 'hard_block' = encoded in scanner-filters.json + validate-scan.js to refuse publication outright. Scan FAILS validation if violated.\n  - 'selection_filter' = Claude applies the rule when CHOOSING the top 10 candidates at Phase 2. validate-scan.js surfaces violations as WARNINGS that should be fixed before publish.\n  - 'advisory' = Claude biases selection (e.g. weight Pre-Squeeze higher in EARLY RISK-OFF) but a deviation is acceptable with rationale.\n  - 'infrastructure' = always-on execution logic in sweep.js/signal-monitor.js, not a selection rule.\n  - 'deprecated' = rule is no longer active, kept for historical context.\n\n  v2.0 UPGRADE NOTES (20260619 audit):\n  - Promoted regime-score-label-lag from advisory to hard_block (prevented D* grade week)\n  - Promoted rr-min-by-regime from selection_filter to hard_block (100% violation rate with zero enforcement)\n  - Promoted stopped-ticker-cooldown from selection_filter to hard_block (RIO double loss pattern)\n  - Deprecated energy-early-risk-off-sizing (redundant with energy-early-risk-off-block)\n  - Added 12 new rules from audit of 17 retros\n  - All '?' values resolved, all rules have complete field sets",
   "rules": [
@@ -100,7 +101,7 @@
           "20260619"
         ]
       },
-      "confidence": 0.621,
+      "confidence": 0.6186,
       "confidence_base": 0.75,
       "half_life_days": 180,
       "created_at": "2026-03-27",
@@ -261,7 +262,7 @@
           "20260626"
         ]
       },
-      "confidence": 0.6405,
+      "confidence": 0.638,
       "confidence_base": 0.75,
       "half_life_days": 180,
       "created_at": "2026-06-06",
@@ -318,7 +319,7 @@
           "20260619"
         ]
       },
-      "confidence": 0.5346,
+      "confidence": 0.5325,
       "confidence_base": 0.7,
       "half_life_days": 180,
       "created_at": "2026-06-19",
@@ -367,7 +368,7 @@
           "20260612"
         ]
       },
-      "confidence": 0.5204,
+      "confidence": 0.5184,
       "confidence_base": 0.7,
       "half_life_days": 180,
       "created_at": "2026-06-12",
@@ -706,7 +707,7 @@
           "20260612"
         ]
       },
-      "confidence": 0.5469,
+      "confidence": 0.5427,
       "confidence_base": 0.75,
       "half_life_days": 90,
       "created_at": "2026-06-12",
@@ -965,7 +966,7 @@
           "20260626"
         ]
       },
-      "confidence": 0.3546,
+      "confidence": 0.3519,
       "confidence_base": 0.55,
       "half_life_days": 90,
       "created_at": "2026-04-03",
@@ -1254,7 +1255,7 @@
           "20260522"
         ]
       },
-      "confidence": 0.3223,
+      "confidence": 0.3199,
       "confidence_base": 0.5,
       "half_life_days": 90,
       "created_at": "2026-05-15",
@@ -1322,7 +1323,7 @@
           "20260606"
         ]
       },
-      "confidence": 0.3694,
+      "confidence": 0.3666,
       "confidence_base": 0.7,
       "half_life_days": 90,
       "created_at": "2026-05-15",
@@ -1393,9 +1394,9 @@
     {
       "id": "momentum-favored-risk-on",
       "class": "market_truth",
-      "status": "active",
-      "severity": "selection_filter",
-      "rule": "RISK-ON continu >= 2j: Momentum 45%, Breakout 30%. EARLY RISK-OFF: Breakout 40%, Pullback 30%, Momentum 20%. Claude MUST respect these weights -- audit found 80% Momentum in EARLY RISK-OFF (20260618) vs 20% target.",
+      "status": "deprecated",
+      "severity": "advisory",
+      "rule": "Ne plus imposer 45% de Momentum sur le seul label RISK-ON. La breadth et la performance recente par strategie doivent confirmer ce poids; sinon appliquer la regle de divergence breadth et reduire Momentum.",
       "scope": {
         "setups": [],
         "regimes": [
@@ -1421,11 +1422,11 @@
         }
       },
       "evidence": {
-        "sample_size": 6,
-        "wins": 1,
-        "losses": 5,
-        "expectancy": -0.78,
-        "period": "2026-06-30",
+        "sample_size": 29,
+        "wins": 7,
+        "losses": 19,
+        "expectancy": -0.432,
+        "period": "2026-08-10 -> 2026-08-28",
         "tickers": [
           "HON",
           "SE",
@@ -1438,7 +1439,52 @@
           "CLOV",
           "SPYG",
           "DXJ",
-          "SPMO"
+          "SPMO",
+          "PHM",
+          "XLV",
+          "CP",
+          "LUV",
+          "PM",
+          "CZR",
+          "ITX.MC",
+          "KBC.BR",
+          "LMT",
+          "CPER",
+          "EWS",
+          "NSC",
+          "BNY",
+          "RF",
+          "TTE.PA",
+          "SOLV",
+          "FTNT",
+          "INCY",
+          "KO",
+          "XLE",
+          "T",
+          "CPR.MI",
+          "KWEB",
+          "PGE.WA",
+          "CRM",
+          "CLF",
+          "AMP.MI",
+          "FRSH",
+          "LYFT",
+          "COMP",
+          "INFY",
+          "SNAP",
+          "FXI",
+          "OXY",
+          "HL",
+          "MDT",
+          "AUR",
+          "DVN",
+          "NVDA",
+          "BSX",
+          "IGV",
+          "PCG",
+          "SLV",
+          "NU",
+          "SOFI"
         ],
         "clusters": [
           "regime-switch-day1-20260630",
@@ -1450,25 +1496,40 @@
           "biotech",
           "healthcare",
           "etf-momentum",
-          "etf-japan"
+          "etf-japan",
+          "20260806",
+          "20260807",
+          "20260810",
+          "20260811",
+          "20260812",
+          "20260813",
+          "20260814",
+          "20260817",
+          "20260820",
+          "20260821",
+          "20260824",
+          "20260825",
+          "20260826",
+          "20260827"
         ],
         "source_retros": [
           "20260425",
           "20260522",
           "20260619",
-          "20260626"
+          "20260626",
+          "20260828"
         ]
       },
-      "confidence": 0.3282,
-      "confidence_base": 0.45,
+      "confidence": 0.35,
+      "confidence_base": 0.35,
       "half_life_days": 90,
       "created_at": "2026-04-25",
-      "last_validated_at": "2026-07-18",
-      "expires_at": "2026-09-09",
+      "last_validated_at": "2026-08-29",
+      "expires_at": "2026-09-18",
       "invalidation_conditions": [
         "Audit found 80% Momentum allocation in EARLY RISK-OFF (20260618) vs 20% target — weights are advisory-in-practice despite selection_filter severity; needs an enforcement mechanism, not just a Phase 2 guideline."
       ],
-      "notes": "In sustained RISK-ON (2+ days), target 45% Momentum / 30% Breakout. In EARLY RISK-OFF, invert: 40% Breakout, 30% Pullback, 20% Momentum. | Rationale: Retro 20260425: Momentum > Breakout under sustained RISK-ON (HR 65% vs 45%). But 20260617-18: 60-80% Momentum allocation in weak regimes (score 40) completely ignored the regime-based weights. Claude overrides these weights without consequence.",
+      "notes": "Deprecated after the published-only 20260810-20260828 audit: Momentum represented 67/100 ideas but delivered 7 TP1+ on 29 resolved fills, PF 0.38 and -0.432R average. The old 45% target overfit the 20260425 cohort and ignored breadth quality. Use riskon-label-vs-defensive-breadth-divergence instead.",
       "applies_to": [
         "top_10 strategy mix"
       ],
@@ -1476,7 +1537,8 @@
         "20260425",
         "20260522",
         "20260619",
-        "20260626"
+        "20260626",
+        "20260828"
       ]
     },
     {
@@ -1812,7 +1874,7 @@
           "20260529"
         ]
       },
-      "confidence": 0.3473,
+      "confidence": 0.3447,
       "confidence_base": 0.7,
       "half_life_days": 90,
       "created_at": "2026-05-15",
@@ -1925,7 +1987,7 @@
           "20260619"
         ]
       },
-      "confidence": 0.4083,
+      "confidence": 0.4052,
       "confidence_base": 0.7,
       "half_life_days": 90,
       "created_at": "2026-05-29",
@@ -1997,7 +2059,7 @@
           "20260619"
         ]
       },
-      "confidence": 0.5469,
+      "confidence": 0.5427,
       "confidence_base": 0.75,
       "half_life_days": 90,
       "created_at": "2026-05-29",
@@ -2044,7 +2106,7 @@
           "backtest_v8"
         ]
       },
-      "confidence": 0.3637,
+      "confidence": 0.361,
       "confidence_base": 0.7,
       "half_life_days": 90,
       "created_at": "2026-06-04",
@@ -2100,7 +2162,7 @@
         ],
         "notes": "7 losers saved / 1 winner lost = filter precision, not raw strategy WR."
       },
-      "confidence": 0.3637,
+      "confidence": 0.361,
       "confidence_base": 0.7,
       "half_life_days": 90,
       "created_at": "2026-06-04",
@@ -2146,7 +2208,7 @@
           "backtest_v8"
         ]
       },
-      "confidence": 0.3637,
+      "confidence": 0.361,
       "confidence_base": 0.7,
       "half_life_days": 90,
       "created_at": "2026-06-04",
@@ -2193,7 +2255,7 @@
         ],
         "notes": "14/45 (31%) no-fill due to Iran ceasefire rally 20260619."
       },
-      "confidence": 0.3118,
+      "confidence": 0.3082,
       "confidence_base": 0.7,
       "half_life_days": 60,
       "created_at": "2026-06-19",
@@ -2243,7 +2305,7 @@
           "20260619"
         ]
       },
-      "confidence": 0.3118,
+      "confidence": 0.3082,
       "confidence_base": 0.7,
       "half_life_days": 60,
       "created_at": "2026-06-19",
@@ -2357,7 +2419,7 @@
           "20260626"
         ]
       },
-      "confidence": 0.3381,
+      "confidence": 0.3342,
       "confidence_base": 0.7,
       "half_life_days": 60,
       "created_at": "2026-06-26",
@@ -2423,7 +2485,7 @@
           "20260626"
         ]
       },
-      "confidence": 0.3736,
+      "confidence": 0.3693,
       "confidence_base": 0.6,
       "half_life_days": 60,
       "created_at": "2026-06-26",
@@ -2541,7 +2603,7 @@
           "20260710"
         ]
       },
-      "confidence": 0.5243,
+      "confidence": 0.5223,
       "confidence_base": 0.6,
       "half_life_days": 180,
       "created_at": "2026-07-24",
@@ -2789,7 +2851,7 @@
         "mfe_mean_R": 0.48,
         "lines_above_half_R": "3/10"
       },
-      "confidence": 0.2271,
+      "confidence": 0.2262,
       "confidence_base": 0.25,
       "half_life_days": 180,
       "created_at": "2026-08-03",
@@ -2829,7 +2891,7 @@
       "validation": "encoded",
       "status": "active",
       "severity": "hard_block",
-      "confidence": 0.7592,
+      "confidence": 0.7563,
       "evidence": {
         "sample_size": 88,
         "wins": 31,
@@ -3160,7 +3222,7 @@
         ],
         "note": "20260724 : TX/dynamic coupe a 0,00 R le 27/07 apres +1,32% de MFE ; la cible du mode (50,89) a cote le 04/08, six seances plus tard et DANS l'horizon publie de 8 seances (echeance 07/08). 20260730 : FRO/dynamic et FRO/turbo coupes a 0,00 R le 03/08 apres +2,80% de MFE, sur un simple retest intraday de l'entree, pendant que FRO/balanced tient 7 seances et sort a +2,13% (R +0,32) sur le meme achat. 20260722 : CF et AI.PA rendent la totalite de leur MFE (+3,35% et +1,05%) en une seule seance avant fermeture au seuil d'entree. Les 5 lignes finissent a 0,00 R : expectancy nulle par construction, ce que la regle vise est le manque a gagner, pas la perte."
       },
-      "confidence": 0.2369,
+      "confidence": 0.236,
       "confidence_base": 0.25,
       "half_life_days": 180,
       "created_at": "2026-08-14",
@@ -3263,7 +3325,7 @@
       "class": "market_truth",
       "status": "candidate",
       "severity": "advisory",
-      "rule": "Sur la fenetre 06-20/08 en RISK-ON, le sous-book EU sous-performe structurellement le US (PF 0,42 vs ~1,0, WR 33%). Quand le book EU accumule un PF<0,6 sur >=8 lignes reglees dans un meme cycle, plafonner le poids EU (max 2 lignes / scan) et relever le seuil de confluence EU jusqu a ce qu un lot retro le re-valide. Ne jamais inverser un signal quanti EU : reduction de POIDS et hausse de SEUIL uniquement.",
+      "rule": "Constat historique uniquement: sur le lot publie 10-28/08 en RISK-ON, les lignes EU ont sous-performe. Le scanner courant est US-only; ne pas extrapoler cette petite cohorte a une regle de marche generale.",
       "scope": {
         "setups": [
           "momentum",
@@ -3291,11 +3353,11 @@
         }
       },
       "evidence": {
-        "sample_size": 9,
-        "wins": 3,
-        "losses": 6,
-        "expectancy": -0.318,
-        "period": "2026-08-06 -> 2026-08-20",
+        "sample_size": 6,
+        "wins": 1,
+        "losses": 3,
+        "expectancy": -0.44,
+        "period": "2026-08-10 -> 2026-08-28",
         "tickers": [
           "BBVA",
           "ITX.MC",
@@ -3306,15 +3368,23 @@
           "AMP.MI"
         ],
         "source_retros": [
-          "20260821"
+          "20260821",
+          "20260828"
         ],
-        "note": "9 lignes EU reglees/MTM (BBVA,ITX.MC,KBC.BR,TTE.PA,CPR.MI,AMP.MI,PGE.WA) : WR 33%, avgR -0,32, sumR -2,9, PF 0,42. Contraste net avec ETF (avgR +0,16) et defensifs US (KO/OXY/HL/SCHD gagnants). Le drain EU est le poste le plus negatif du cycle par region."
+        "note": "10 propositions EU, 6 resolues: 1 TP1+, 3 stops, hit rate 16,7%, avgR -0,44 et PF 0,27. Echantillon petit, marches et horaires heterogenes; donnees historiques uniquement depuis le passage du scanner en US-only.",
+        "clusters": [
+          "20260806",
+          "20260807",
+          "20260810",
+          "20260811",
+          "20260812"
+        ]
       },
-      "confidence": 0.35,
-      "confidence_base": 0.35,
+      "confidence": 0.4,
+      "confidence_base": 0.4,
       "half_life_days": null,
       "created_at": "2026-08-21",
-      "last_validated_at": "2026-08-21",
+      "last_validated_at": "2026-08-29",
       "expires_at": null,
       "invalidation_conditions": [
         "Si sur 2 lots retro consecutifs le book EU sort un PF>=1,0, le drain n est pas structurel : deprecier."
@@ -3324,7 +3394,8 @@
         "top_10"
       ],
       "from_retros": [
-        "20260821"
+        "20260821",
+        "20260828"
       ]
     },
     {
@@ -3411,7 +3482,11 @@
         "action": "require_targeted_sec_and_insider_coverage",
         "target": {},
         "params": {
-          "required_types": ["sec_filings", "flags", "insider_transactions"],
+          "required_types": [
+            "sec_filings",
+            "flags",
+            "insider_transactions"
+          ],
           "require_every_published_symbol": true,
           "require_all_expected_types": true,
           "require_pagination_exhausted": true,
@@ -3425,9 +3500,18 @@
         "losses": 2,
         "expectancy": -0.271,
         "period": "2026-08-14 -> 2026-08-28",
-        "tickers": ["CLF", "PEB", "M", "AMRX"],
-        "clusters": ["coverage-integrity"],
-        "source_retros": ["20260814"],
+        "tickers": [
+          "CLF",
+          "PEB",
+          "M",
+          "AMRX"
+        ],
+        "clusters": [
+          "coverage-integrity"
+        ],
+        "source_retros": [
+          "20260814"
+        ],
         "note": "Le scan utilisait un appel insiders generique plafonne a 100 noms sur 944, dont la reponse avertissait que zero resultat ne signifiait pas absence. Il a pourtant affirme qu aucun candidat ne portait de programme d emission actif. La requete SEC ciblee de la retro retrouve pour AMRX un 8-K du 10/08 avec item 3.02, trois jours avant la selection, ainsi que trois ventes des 11-12/08 deposees le 13/08 pour environ 6,33 M$. La reponse combinee sec_filings,flags etait elle-meme paginee: les flags ont du etre relances separement. Le trade AMRX a touche TP1 puis le reliquat est compte au point mort selon la convention same-bar conservatrice: cette regle corrige une erreur de preuve, pas une conclusion de performance."
       },
       "confidence": 1,
@@ -3440,8 +3524,13 @@
         "Aucune: une couverture partielle ne peut logiquement prouver une absence. La regle peut seulement etre remplacee par un controle automatique plus strict."
       ],
       "notes": "Hard block d integrite et de provenance. Il ne disqualifie pas automatiquement un ticker avec item 3.02; il impose la lecture et interdit une assurance non etayee.",
-      "applies_to": ["top_10", "tkl_pool"],
-      "from_retros": ["20260814"]
+      "applies_to": [
+        "top_10",
+        "tkl_pool"
+      ],
+      "from_retros": [
+        "20260814"
+      ]
     }
   ],
   "_open_questions": [
