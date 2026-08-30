@@ -1103,9 +1103,9 @@ function render(data) {
     renderSocial(data), renderBottomEstimation(data), renderManipulations(data), renderCapitalFlow(data),
     renderPredictionMarkets(data), renderGlobalScore(data)
   ].filter(Boolean).join('\n');
-  const progressiveDeepDive = Number(data.meta?.version || 0) >= 3
-    ? `\n      <details class="analysis-deep-dive"><summary><i class="fa-solid fa-folder-open"></i> Dossier complet, preuves et scénarios</summary>\n${deepDive}\n      </details>`
-    : deepDive;
+  // The analysis is a reference document: primary facts must remain visible on first visit.
+  // Keep the dossier in the normal document flow; navigation and section headings provide the hierarchy.
+  const progressiveDeepDive = `\n      <div class="analysis-dossier">${deepDive}\n      </div>`;
   return [
     renderHead(data),
     renderBrandBar(),
