@@ -183,8 +183,17 @@ function formatHeaderPrice(price, meta) {
   return '$' + price.toFixed(2);
 }
 
+function finvizChartSrc(ticker, meta) {
+  const date = String(meta?.levelsCloseDate || '').replace(/-/g, '');
+  const local = path.join(ROOT, 'analyses', ticker, 'assets', `finviz-${date}.png`);
+  return date && fs.existsSync(local)
+    ? `/analyses/${encodeURIComponent(ticker)}/assets/finviz-${date}.png`
+    : `https://charts2.finviz.com/chart.ashx?t=${encodeURIComponent(ticker)}&ty=c&ta=1&p=d&s=l`;
+}
+
 function renderChartEmbed(header, meta) {
   const t = header.ticker;
+  const chartSrc = finvizChartSrc(t, meta);
   const assetType = (meta && meta.assetType) || 'stock';
 
   if (assetType === 'crypto') {
@@ -219,9 +228,9 @@ function renderChartEmbed(header, meta) {
   if (assetType === 'index') {
     return `
     <div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
-      <div onclick="openChartModal()" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
-        <img src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="${t}" style="width:100%;display:block;" loading="eager" fetchpriority="high">
-        <div style="background:#f8fafc;padding:6px 12px;font-size:0.7rem;color:#64748b;"><span><i class="fa-solid fa-chart-line"></i> ${meta?.lang === 'fr' ? 'Cliquer pour agrandir' : 'Click to enlarge'}</span></div>
+      <div onclick="openChartModal()" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;max-width:466px;margin:0 auto;">
+        <img src="${chartSrc}" alt="Graphique Finviz ${t}" style="width:100%;display:block;" loading="eager" fetchpriority="high">
+        <div style="background:#f8fafc;padding:6px 12px;font-size:0.7rem;color:#64748b;"><span><i class="fa-solid fa-chart-line"></i> ${meta?.lang === 'fr' ? 'Ouvrir le graphique et ses sources' : 'Open chart and sources'}</span></div>
       </div>
     </div>`;
   }
@@ -229,9 +238,9 @@ function renderChartEmbed(header, meta) {
   // stock + etf: Finviz
   return `
     <div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
-      <div onclick="openChartModal()" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
-        <img src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="${t} Chart" style="width:100%;display:block;" loading="eager" fetchpriority="high">
-        <div style="background:#f8fafc;padding:6px 12px;font-size:0.7rem;color:#64748b;"><span><i class="fa-solid fa-chart-line"></i> ${meta?.lang === 'fr' ? 'Cliquer pour agrandir' : 'Click to enlarge'}</span></div>
+      <div onclick="openChartModal()" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;max-width:466px;margin:0 auto;">
+        <img src="${chartSrc}" alt="Graphique Finviz ${t}" style="width:100%;display:block;" loading="eager" fetchpriority="high">
+        <div style="background:#f8fafc;padding:6px 12px;font-size:0.7rem;color:#64748b;"><span><i class="fa-solid fa-chart-line"></i> ${meta?.lang === 'fr' ? 'Ouvrir le graphique et ses sources' : 'Open chart and sources'}</span></div>
       </div>
     </div>`;
 }
@@ -549,9 +558,9 @@ function renderShortInterest(d) {
       <div id="short" class="content-card">
         <h2><i class="fa-solid fa-arrow-down-up-across-line"></i> ${tx(d, 'Short Interest', 'Positions vendeuses')}</h2>
         <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
-          <div class="ticker-metric"><div class="tm-value">${esc(si.siPct || 'N/A')}</div><div class="tm-label">SI % Float</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(si.siPct || 'N/A')}</div><div class="tm-label">${tx(d, 'Short float', 'Part du flottant vendue')}</div></div>
           <div class="ticker-metric"><div class="tm-value">${esc(si.daysToCover || 'N/A')}</div><div class="tm-label">${tx(d, 'Days to Cover', 'Jours à couvrir')}</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(si.ctb || 'N/A')}</div><div class="tm-label">CTB</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(si.ctb || 'N/A')}</div><div class="tm-label">${tx(d, 'Cost to borrow', 'Coût d’emprunt')}</div></div>
         </div>
 ${si.trend ? `        <p style="font-size:0.9rem;color:#64748b;">${esc(si.trend)}</p>` : ''}${sourceRefsHtml(si.sourceRefs)}
       </div>`;
@@ -564,10 +573,10 @@ function renderOptions(d) {
       <div id="options" class="content-card">
         <h2><i class="fa-solid fa-chart-gantt"></i> ${tx(d, 'Options / Derivatives', 'Options et dérivés')}</h2>
         <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
-          <div class="ticker-metric"><div class="tm-value">${esc(o.callOI || 'N/A')}</div><div class="tm-label">${tx(d, 'Call OI', 'OI achats')}</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(o.putOI || 'N/A')}</div><div class="tm-label">${tx(d, 'Put OI', 'OI ventes')}</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(o.cpRatio || 'N/A')}</div><div class="tm-label">${tx(d, 'C/P Ratio', 'Ratio achats/ventes')}</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(o.maxPain || 'N/A')}</div><div class="tm-label">${tx(d, 'Max Pain', 'Douleur maximale')}</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(o.callOI || 'N/A')}</div><div class="tm-label">${tx(d, 'Call OI', 'Intérêt ouvert calls')}</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(o.putOI || 'N/A')}</div><div class="tm-label">${tx(d, 'Put OI', 'Intérêt ouvert puts')}</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(o.cpRatio || 'N/A')}</div><div class="tm-label">${tx(d, 'Call/put OI ratio', 'Ratio d’intérêt ouvert calls/puts')}</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(o.maxPain || 'N/A')}</div><div class="tm-label">${tx(d, 'Max Pain', 'Cours de paiement théorique minimal')}</div></div>
           <div class="ticker-metric"><div class="tm-value">${esc(o.ivMean || 'N/A')}</div><div class="tm-label">${tx(d, 'IV Mean', 'Volatilité implicite')}</div></div>
         </div>
 ${o.unusual ? `        <div class="alert-box"><p><strong>${tx(d, 'Unusual Activity', 'Activité inhabituelle')} :</strong> ${esc(o.unusual)}</p></div>` : ''}${sourceRefsHtml(o.sourceRefs)}
@@ -652,6 +661,36 @@ function renderSectorComparison(d) {
 ${sc.peers.map(p => `            <tr><td><strong>${esc(p.ticker)}</strong></td><td>${esc(p.name||'')}</td><td>${esc(p.price||'-')}</td><td>${esc(p.pe||'-')}</td><td>${esc(p.ytd||'-')}</td><td>${esc(p.marketCap||'-')}</td></tr>`).join('\n')}
           </tbody></table>
 ${sc.positioning ? `        <div class="pedagogy-box"><p>Positioning: <strong>${esc(sc.positioning)}</strong>${sc.sectorEtf ? ` vs ${esc(sc.sectorEtf)}` : ''}</p></div>` : ''}${sourceRefsHtml(sc.sourceRefs)}
+      </div>`;
+}
+
+function renderBlastRadius(d) {
+  const blast = d.blastRadius;
+  if (!blast || !Array.isArray(blast.groups) || !blast.groups.length) return '';
+  const metric = (value, digits = 2) => Number.isFinite(value) ? Number(value).toFixed(digits) : 'INDISPONIBLE';
+  const returnPct = value => Number.isFinite(value) ? `${value >= 0 ? '+' : ''}${Number(value).toFixed(1)}%` : 'INDISPONIBLE';
+  const relationLabel = value => ({ leader: 'Leader', direct_peer: 'Pair direct', upstream: 'Amont', downstream: 'Aval', second_order: 'Second ordre', sector_proxy: 'ETF / secteur' }[value] || value);
+  const confidenceLabel = value => ({ high: 'Élevée', medium: 'Moyenne', low: 'Faible' }[value] || value);
+  const scenarioLabel = value => ({ bullish: 'Haussier', mixed: 'Mixte', bearish: 'Baissier' }[value] || value);
+  const scenarioColor = value => ({ bullish: 'green', mixed: 'amber', bearish: 'red' }[value] || 'gray');
+  return `
+      <div id="blast-radius" class="content-card">
+        <h2><i class="fa-solid fa-diagram-project"></i> Rayon de propagation : qui bouge avec ${esc(d.header.ticker)} ?</h2>
+        <p>${esc(blast.methodology)}</p>
+        <p style="font-size:0.78rem;color:#64748b;"><strong>Clôture de référence :</strong> ${esc(blast.asOf)} · <strong>Observation :</strong> ${esc(blast.observationTime)} · <strong>Fenêtre :</strong> ${esc(blast.window)}</p>
+${blast.groups.map(group => `        <section style="margin-top:1.35rem;">
+          <h3 style="font-size:1rem;margin-bottom:0.35rem;">${esc(group.name)} <span class="badge badge-${group.order === 1 ? 'blue' : 'gray'}">Ordre ${esc(group.order)}</span></h3>
+          <p style="margin-top:0;color:#475569;">${esc(group.transmission)}</p>
+          <div class="blast-table-wrap"><table class="data-table blast-table"><thead><tr><th>Ticker</th><th>Rôle</th><th>Corr. hors QQQ</th><th>Bêta résiduel</th><th>R² résiduel</th><th>Obs.</th><th>5 séances</th><th>21 séances</th><th>Lecture</th><th>Risque propre</th></tr></thead><tbody>
+${group.symbols.map(symbol => `            <tr><td><strong>${esc(symbol.ticker)}</strong><br><span style="font-size:0.72rem;color:#64748b;">${esc(relationLabel(symbol.relationClass))}</span></td><td>${esc(symbol.role)}<br><span style="font-size:0.72rem;color:#64748b;">Confiance ${esc(confidenceLabel(symbol.confidence).toLowerCase())}</span></td><td>${esc(metric(symbol.correlation, 3))}</td><td>${esc(metric(symbol.beta, 3))}</td><td>${esc(metric(symbol.r2, 3))}</td><td>${esc(Number.isFinite(symbol.observations) ? symbol.observations : 'INDISPONIBLE')}</td><td>${esc(returnPct(symbol.return5d))}</td><td>${esc(returnPct(symbol.return21d))}</td><td>${esc(symbol.readThrough)}</td><td>${esc(symbol.eventRisk)}</td></tr>`).join('\n')}
+          </tbody></table></div>
+        </section>`).join('\n')}
+        <h3 style="font-size:1rem;margin-top:1.5rem;">Scénarios de transmission</h3>
+        <div class="blast-table-wrap"><table class="data-table blast-table blast-scenario-table"><thead><tr><th>Scénario</th><th>Déclencheur</th><th>Premier ordre</th><th>Second ordre</th><th>Confirmation</th><th>Contradiction</th></tr></thead><tbody>
+${blast.scenarios.map(scenario => `          <tr><td><span class="badge badge-${scenarioColor(scenario.scenario)}">${esc(scenarioLabel(scenario.scenario))}</span></td><td>${esc(scenario.trigger)}</td><td>${esc(scenario.firstOrder)}</td><td>${esc(scenario.secondOrder)}</td><td>${esc(scenario.confirmation)}</td><td>${esc(scenario.contradiction)}</td></tr>`).join('\n')}
+        </tbody></table></div>
+        <div class="pedagogy-box"><h4><i class="fa-solid fa-scale-balanced"></i> Contradictions</h4><ul>${blast.contradictions.map(item => `<li>${esc(item)}</li>`).join('')}</ul></div>
+        <div class="pedagogy-box"><h4><i class="fa-solid fa-circle-exclamation"></i> Données manquantes ou non historiques</h4><ul>${blast.missingData.map(item => `<li>${esc(item)}</li>`).join('')}</ul></div>${sourceRefsHtml(blast.sourceRefs)}
       </div>`;
 }
 
@@ -871,7 +910,8 @@ function renderTradeIdea(d) {
   const t = d.tradeIdea;
   const isInvalidated = t.status === 'invalidated' || t.status === 'stopped';
   const isClosed = isInvalidated || t.status === 'rejected' || t.status === 'missed';
-  const op = isClosed ? 'opacity:0.65;' : '';
+  const isDormant = t.status === 'wait';
+  const op = isClosed || isDormant ? 'opacity:0.65;' : '';
   const statusBanner = isInvalidated
     ? `\n        <div style="background:#dc2626;color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-ban"></i> TRADE ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
     : t.status === 'rejected' || t.status === 'missed'
@@ -883,12 +923,12 @@ function renderTradeIdea(d) {
     : '';
 
   const cards = [
-    { label: tx(d, 'Entry Zone', 'Zone d’entrée'), value: `$${t.entry.toFixed(2)}`, note: t.entryNote || '', color: '#3b82f6', bg: '#f8fafc', tc: '#0f172a' },
-    { label: tx(d, 'Stop Loss', 'Stop'),  value: `$${t.stop.toFixed(2)}`,  note: t.stopPct || '',  color: '#ef4444', bg: '#fef2f2', tc: '#ef4444' },
-    { label: tx(d, 'Target 1', 'Objectif 1'),   value: `$${t.tp1.toFixed(2)}`,   note: t.tp1Pct || '',   color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' },
+    { label: isDormant ? tx(d, 'Dormant reference', 'Repère inactif') : tx(d, 'Entry Zone', 'Zone d’entrée'), value: `$${t.entry.toFixed(2)}`, note: t.entryNote || '', color: '#3b82f6', bg: '#f8fafc', tc: '#0f172a' },
+    { label: isDormant ? tx(d, 'Previous low', 'Ancien plus bas') : tx(d, 'Stop Loss', 'Stop'),  value: `$${t.stop.toFixed(2)}`,  note: t.stopPct || '',  color: '#ef4444', bg: '#fef2f2', tc: '#ef4444' },
+    { label: isDormant ? tx(d, 'Previous resistance', 'Ancienne résistance') : tx(d, 'Target 1', 'Objectif 1'),   value: `$${t.tp1.toFixed(2)}`,   note: t.tp1Pct || '',   color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' },
   ];
-  if (t.tp2) cards.push({ label: tx(d, 'Target 2', 'Objectif 2'), value: `$${t.tp2.toFixed(2)}`, note: t.tp2Pct || '', color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' });
-  cards.push({ label: tx(d, 'Risk/Reward', 'Risque/rendement'), value: t.rr, note: t.horizon || '', color: '#7c3aed', bg: '#f5f3ff', tc: '#7c3aed' });
+  if (t.tp2) cards.push({ label: isDormant ? tx(d, 'Previous resistance 2', 'Ancienne résistance 2') : tx(d, 'Target 2', 'Objectif 2'), value: `$${t.tp2.toFixed(2)}`, note: t.tp2Pct || '', color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' });
+  cards.push({ label: isDormant ? tx(d, 'Dormant ratio', 'Ratio inactif') : tx(d, 'Risk/Reward', 'Risque/rendement'), value: t.rr, note: t.horizon || '', color: '#7c3aed', bg: '#f5f3ff', tc: '#7c3aed' });
 
   return `
       <div id="trade" class="content-card">
@@ -929,7 +969,7 @@ function renderDisclaimer(d) {
       <div id="disclaimer" class="content-card">
         <h2><i class="fa-solid fa-triangle-exclamation"></i> ${tx(d, 'Disclaimer', 'Avertissement')}</h2>
         <div class="disclaimer-mega">
-          ${isFrench(d) ? '<p>Cette analyse est fournie à des <strong>fins informatives et éducatives uniquement</strong>. Elle ne constitue ni un conseil financier, ni une recommandation, ni une sollicitation à acheter ou vendre un titre.</p><p>Les performances passées ne préjugent pas des résultats futurs. Tout investissement comporte un risque de perte en capital. Faites vos propres recherches et consultez un conseiller agréé avant toute décision.</p><p>Les données proviennent de snapshots de marché datés, des dépôts de la société, de Yahoo Finance, de SEC EDGAR et de sources publiques. Leur exactitude n’est pas garantie.</p>' : '<p>This analysis is provided for <strong>informational and educational purposes only</strong>. It does not constitute financial advice, investment recommendation, or solicitation to buy or sell any security.</p><p>Past performance is not indicative of future results. All investments involve risk, including the possible loss of principal. Always conduct your own research and consult a licensed financial advisor before making investment decisions.</p><p>Data comes from point-in-time market snapshots, company filings, Yahoo Finance, SEC EDGAR, and public market data. Accuracy is not guaranteed.</p>'}
+          ${isFrench(d) ? '<p>Cette analyse est fournie à des <strong>fins informatives et éducatives uniquement</strong>. Elle ne constitue ni un conseil financier, ni une recommandation, ni une sollicitation à acheter ou vendre un titre.</p><p>Les performances passées ne préjugent pas des résultats futurs. Tout investissement comporte un risque de perte en capital. Faites vos propres recherches et consultez un conseiller agréé avant toute décision.</p><p>Les données proviennent de collectes de marché datées, des dépôts de la société, de Yahoo Finance, de SEC EDGAR et de sources publiques. Leur exactitude n’est pas garantie.</p>' : '<p>This analysis is provided for <strong>informational and educational purposes only</strong>. It does not constitute financial advice, investment recommendation, or solicitation to buy or sell any security.</p><p>Past performance is not indicative of future results. All investments involve risk, including the possible loss of principal. Always conduct your own research and consult a licensed financial advisor before making investment decisions.</p><p>Data comes from point-in-time market snapshots, company filings, Yahoo Finance, SEC EDGAR, and public market data. Accuracy is not guaranteed.</p>'}
         </div>
       </div>`;
 }
@@ -947,7 +987,8 @@ function renderFab(d) {
     d.technicals        && { id: 'technique',     icon: 'fa-chart-area',               label: tx(d, 'Technical', 'Technique') },
     d.performance       && { id: 'performance',   icon: 'fa-trophy',                   label: 'Perf' },
     d.forecast          && { id: 'forecast',      icon: 'fa-chart-line',               label: 'Forecast' },
-    d.sectorComparison  && d.sectorComparison.peers && { id: 'peers', icon: 'fa-building', label: 'Sector' },
+    d.sectorComparison  && d.sectorComparison.peers && { id: 'peers', icon: 'fa-building', label: tx(d, 'Sector', 'Secteur') },
+    d.blastRadius && d.blastRadius.groups && { id: 'blast-radius', icon: 'fa-diagram-project', label: 'Propagation' },
     d.risks             && { id: 'risques',       icon: 'fa-shield-halved',            label: tx(d, 'Risks', 'Risques') },
     d.social && d.social.platforms && { id: 'social', icon: 'fa-satellite-dish',       label: 'Social' },
     d.bottomEstimation  && { id: 'bottom-estimation', icon: 'fa-bullseye',            label: 'Bottom' },
@@ -968,11 +1009,12 @@ ${items.map(s => `        <a href="#${s.id}" class="fnav-item" data-section="${s
 
 function renderModals(d) {
   const t = d.header.ticker;
+  const chartSrc = finvizChartSrc(t, d.meta);
   const archives = d.archiveHistory || [];
   return `
     <div id="chartModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.95);z-index:1000;align-items:center;justify-content:center;padding:1rem;" onclick="if(event.target===this)this.style.display='none'">
-      <div style="max-width:1000px;width:100%;text-align:center;">
-        <img src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="${t}" style="width:100%;border-radius:12px;margin-bottom:1rem;">
+      <div style="max-width:466px;width:100%;text-align:center;">
+        <img src="${chartSrc}" alt="Graphique Finviz ${t}" style="width:100%;border-radius:12px;margin-bottom:1rem;">
         <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
           <a href="https://finviz.com/quote.ashx?t=${t}" target="_blank" rel="noopener" style="color:#60a5fa;font-size:0.85rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Finviz</a>
           <a href="https://www.tradingview.com/chart/?symbol=${t}" target="_blank" rel="noopener" style="color:#60a5fa;font-size:0.85rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i> TradingView</a>
@@ -1036,7 +1078,7 @@ ${d.risks.riskRadarValues ? `    (function(){var el=document.getElementById('ris
     <script>
     function openChartModal(){document.getElementById('chartModal').style.display='flex';}
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){['chartModal','historyModal'].forEach(function(id){var m=document.getElementById(id);if(m)m.style.display='none';});}});
-    (function(){var btn=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),open=false;if(!btn||!menu)return;btn.addEventListener('click',function(){open=!open;menu.classList.toggle('open',open);});menu.querySelectorAll('.fnav-item').forEach(function(a){a.addEventListener('click',function(){open=false;menu.classList.remove('open');});});var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var id=e.target.id;menu.querySelectorAll('.fnav-item').forEach(function(a){a.classList.toggle('active',a.getAttribute('data-section')===id);});}});},{threshold:0.3});document.querySelectorAll('[id]').forEach(function(el){if(menu.querySelector('[data-section="'+el.id+'"]'))obs.observe(el);});})();
+    (function(){var btn=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),open=false;if(!btn||!menu)return;btn.addEventListener('click',function(){open=!open;menu.classList.toggle('open',open);});menu.querySelectorAll('.fnav-item').forEach(function(a){a.addEventListener('click',function(){var target=document.querySelector(a.getAttribute('href'));var details=target&&target.closest('details');if(details)details.open=true;open=false;menu.classList.remove('open');});});var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var id=e.target.id;menu.querySelectorAll('.fnav-item').forEach(function(a){a.classList.toggle('active',a.getAttribute('data-section')===id);});}});},{threshold:0.3});document.querySelectorAll('[id]').forEach(function(el){if(menu.querySelector('[data-section="'+el.id+'"]'))obs.observe(el);});})();
     </script>
     <script src="/assets/core.js"></script>
     <script src="/assets/tag-renderer.js"></script>
@@ -1046,6 +1088,17 @@ ${d.risks.riskRadarValues ? `    (function(){var el=document.getElementById('ris
 // ─── Main render pipeline ───────────────────────────────────────────────────
 
 function render(data) {
+  const deepDive = [
+    renderBusiness(data), renderNews(data), renderFundamentals(data), renderEarnings(data),
+    renderInsiders(data), renderCapitalStructure(data), renderFilingsReview(data), renderShortInterest(data),
+    renderOptions(data), renderTechnicals(data), renderPerformance(data), renderForecast(data),
+    renderSectorComparison(data), renderBlastRadius(data), renderMacro(data), renderRisks(data),
+    renderSocial(data), renderBottomEstimation(data), renderManipulations(data), renderCapitalFlow(data),
+    renderPredictionMarkets(data), renderGlobalScore(data)
+  ].filter(Boolean).join('\n');
+  const progressiveDeepDive = Number(data.meta?.version || 0) >= 3
+    ? `\n      <details class="analysis-deep-dive"><summary><i class="fa-solid fa-folder-open"></i> Dossier complet, preuves et scénarios</summary>\n${deepDive}\n      </details>`
+    : deepDive;
   return [
     renderHead(data),
     renderBrandBar(),
@@ -1053,28 +1106,8 @@ function render(data) {
     renderHeader(data),
     '\n    <div class="container">',
     renderVerdict(data),
-    renderBusiness(data),
-    renderNews(data),
-    renderFundamentals(data),
-    renderEarnings(data),
-    renderInsiders(data),
-    renderCapitalStructure(data),
-    renderFilingsReview(data),
-    renderShortInterest(data),
-    renderOptions(data),
-    renderTechnicals(data),
-    renderPerformance(data),
-    renderForecast(data),
-    renderSectorComparison(data),
-    renderMacro(data),
-    renderRisks(data),
-    renderSocial(data),
-    renderBottomEstimation(data),
-    renderManipulations(data),
-    renderCapitalFlow(data),
-    renderPredictionMarkets(data),
     renderTradeIdea(data),
-    renderGlobalScore(data),
+    progressiveDeepDive,
     renderDisclaimer(data),
     '\n    </div>',
     renderFab(data),

@@ -21,6 +21,9 @@ for (const workflow of Object.values(config.workflows)) {
       asof: '2026-08-31',
       request_id: '123e4567-e89b-42d3-a456-426614174000',
       symbol: 'AAPL',
+      comparison_start_date: '2026-03-01',
+      comparison_symbols: symbols.join(','),
+      documented_client_symbols: 'GOOGL,META,AAPL',
     };
     for (const name of spec.required_variables || []) {
       if (vars[name] != null) continue;

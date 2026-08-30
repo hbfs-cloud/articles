@@ -128,6 +128,8 @@ function validate(manifest, root = ROOT) {
   };
   visitNumericStrings(analysis);
   const required = [...new Set([...numericPaths(analysis), ...numericStringPaths])];
+  const sourceCache = new Map();
+  const sourceValidationCache = new Map();
   for (const dotted of required) {
     const value = get(analysis, dotted);
     if (value == null) continue; // optional schema field absent means no published claim
@@ -146,10 +148,18 @@ function validate(manifest, root = ROOT) {
     const bytes = fs.readFileSync(abs);
     if (abs === analysisPath) { errors.push(`${dotted}: analysis cannot prove itself`); continue; }
     if (hash(bytes) !== claim.source_sha256) errors.push(`${dotted}: source hash mismatch`);
-    let source;
-    try { source = JSON.parse(bytes); } catch { errors.push(`${dotted}: source artifact is not valid JSON`); continue; }
-    const calculationErrors = validateDeterministicCalculation(source, abs, claim.source_sha256, manifest, root);
-    const collectedErrors = calculationErrors === null ? validateCollectedArtifact(abs, claim.source_sha256, manifest.reference_close, root) : calculationErrors;
+    let source = sourceCache.get(abs);
+    if (!source) {
+      try { source = JSON.parse(bytes); sourceCache.set(abs, source); }
+      catch { errors.push(`${dotted}: source artifact is not valid JSON`); continue; }
+    }
+    const validationKey = `${abs}:${claim.source_sha256}`;
+    let collectedErrors = sourceValidationCache.get(validationKey);
+    if (!collectedErrors) {
+      const calculationErrors = validateDeterministicCalculation(source, abs, claim.source_sha256, manifest, root);
+      collectedErrors = calculationErrors === null ? validateCollectedArtifact(abs, claim.source_sha256, manifest.reference_close, root) : calculationErrors;
+      sourceValidationCache.set(validationKey, collectedErrors);
+    }
     if (collectedErrors.length) { errors.push(`${dotted}: source collector provenance invalid: ${collectedErrors.join('; ')}`); continue; }
     if (!new RegExp(`(?:^|[^A-Z0-9.-])${ticker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:$|[^A-Z0-9.-])`, 'i').test(bytes.toString('utf8'))) {
       errors.push(`${dotted}: source artifact does not contain ${ticker}`);

@@ -57,7 +57,7 @@
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
-            "types": "financials,stats,earnings_quarterly,calendar,analyst_actions",
+            "types": "profile,financials,stats,earnings_quarterly,earnings_reactions,earnings_surprises,earnings_yearly,calendar,analyst_actions,analyst_trend,holders,dividends",
             "symbols": "$symbol",
             "end_date": "$refdate"
           },
@@ -71,13 +71,133 @@
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
-            "types": "technicals,support_resistance,volume_profile,trading_signals",
+            "types": "technicals,support_resistance,volume_profile,obv,vwap,trends,trading_signals,correlations",
             "symbols": "$symbol",
             "end_date": "$refdate"
           },
           "freshness": {
             "max_age_h": 24,
             "required": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "blast-radius",
+      "calls": [
+        {
+          "as": "rank_beta",
+          "server": "marketdata",
+          "tool": "RankBeta",
+          "args": {
+            "reference": "$symbol",
+            "as_of": "$refdate",
+            "lookback_days": 180,
+            "min_overlap": 60,
+            "min_correlation": 0.25,
+            "min_dollar_adv": 10000000,
+            "min_price": 2,
+            "top_k": 50,
+            "universe_asset": "stock",
+            "universe_region": "US"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "comparison_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$comparison_symbols",
+            "end_date": "$refdate",
+            "limit": 30,
+            "include_partial": false,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        },
+        {
+          "as": "comparison_client_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$documented_client_symbols",
+            "start_date": "$comparison_start_date",
+            "end_date": "$refdate",
+            "include_partial": false,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "note": "Economically documented clients are explicit inputs; they are not inferred from correlation."
+          }
+        },
+        {
+          "as": "comparison_context",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "metadata,financials,stats,technicals,calendar,earnings_reactions,earnings_surprises,analyst_trend,short_interest,ctb,sec_catalysts",
+            "symbols": "$comparison_symbols",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true,
+            "note": "Current-only context: label observation time and never present it as point-in-time at refdate."
+          }
+        },
+        {
+          "as": "comparison_earnings",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "args": {
+            "symbols": "$comparison_symbols",
+            "days_ahead": 14,
+            "include_implied_move": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "market_regime",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "args": {
+            "facets": "regime",
+            "symbol": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "note": "Current regime context; observation time must be displayed and it is not point-in-time evidence for refdate."
+          }
+        },
+        {
+          "as": "symbol_seasonality",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "args": {
+            "facets": "seasonality",
+            "symbol": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true,
+            "note": "Current calculation; report period, sample and warnings, never backfill a historical as_of."
           }
         }
       ]
@@ -90,7 +210,7 @@
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
-            "types": "sec_filings,flags",
+            "types": "sec_filings,sec_catalysts,insider_coverage,flags",
             "symbols": "$symbol",
             "end_date": "$refdate",
             "days": 365
@@ -121,7 +241,7 @@
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
-            "types": "insider_transactions,institutional_holdings",
+            "types": "insider,insider_transactions,institutional_holdings",
             "symbols": "$symbol",
             "end_date": "$refdate",
             "days": 365
@@ -132,11 +252,25 @@
           }
         },
         {
+          "as": "insider_current",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "insider_ownership",
+            "symbols": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 96,
+            "required": true,
+            "note": "Current projection; never label as point-in-time at refdate."
+          }
+        },
+        {
           "as": "short_squeeze",
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
-            "types": "short_interest,ctb,ftd_threshold,dark_pool",
+            "types": "short_interest,ctb,ctb_history,ftd_threshold,finra_short_volume",
             "symbols": "$symbol",
             "end_date": "$refdate",
             "days": 365
@@ -151,9 +285,38 @@
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
-            "types": "unusual_options,max_pain",
+            "types": "options_chain,vol_surface,options_history,unusual_options,max_pain",
             "symbols": "$symbol",
-            "end_date": "$refdate"
+            "end_date": "$refdate",
+            "max_expirations": 3,
+            "moneyness_min": 0.8,
+            "moneyness_max": 1.2
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "symbol_signals",
+          "server": "marketdata",
+          "tool": "GetSymbolSignals",
+          "args": {
+            "symbol": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "earnings_risk",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "args": {
+            "symbols": "$symbol",
+            "days_ahead": 14,
+            "include_implied_move": true
           },
           "freshness": {
             "max_age_h": 24,
@@ -166,6 +329,19 @@
       "name": "context",
       "detached": true,
       "calls": [
+        {
+          "as": "move_explanation",
+          "server": "marketdata",
+          "tool": "ExplainSymbolMove",
+          "args": {
+            "symbol": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false,
+            "note": "Current explanatory context; an empty catalyst list remains insufficient evidence."
+          }
+        },
         {
           "as": "sentiment",
           "server": "marketdata",
@@ -190,7 +366,8 @@
           },
           "freshness": {
             "max_age_h": 168,
-            "required": false
+            "required": false,
+            "note": "Current-only discovery input; never use as point-in-time evidence."
           }
         }
       ]

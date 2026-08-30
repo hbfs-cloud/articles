@@ -54,7 +54,10 @@ function validate(data, schema, loc) {
   if (schema.type === 'array' && Array.isArray(data) && schema.items) {
     data.forEach((item, i) => errs.push(...validate(item, schema.items, `${loc}[${i}]`)));
   }
-  if (Array.isArray(schema.type) && data !== null && !schema.type.includes(typeof data)) errs.push(`${loc} must be one of ${schema.type.join(', ')}`);
+  const actualType = Array.isArray(data) ? 'array' : data === null ? 'null' : typeof data;
+  const expectedTypes = Array.isArray(schema.type) ? schema.type : schema.type ? [schema.type] : [];
+  const typeMatches = expectedTypes.includes(actualType) || (expectedTypes.includes('integer') && actualType === 'number' && Number.isInteger(data));
+  if (expectedTypes.length && !typeMatches) return [`${loc || '$'} must be ${expectedTypes.join(' or ')}, got ${actualType}`];
   if (schema.type === 'number' && typeof data !== 'number') errs.push(`${loc} must be number`);
   if (schema.type === 'string' && typeof data !== 'string') errs.push(`${loc} must be string`);
   return errs;
@@ -127,11 +130,8 @@ function renderFile(jsonPath, dryRun) {
   if (errors.length) {
     console.error(`[VALIDATION] ${jsonPath}:`);
     errors.forEach(e => console.error(`  - ${e}`));
-    const fatal = errors.filter(e => e.includes('is required'));
-    if (fatal.length) {
-      console.error(`[FATAL] ${fatal.length} required field(s) missing. Aborting.`);
-      return null;
-    }
+    console.error(`[FATAL] ${errors.length} schema validation error(s). Aborting.`);
+    return null;
   }
 
   if (dryRun) {

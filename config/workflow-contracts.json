@@ -12,6 +12,7 @@
         "GetReferentialData",
         "GetStatus",
         "GetSymbolSignals",
+        "RankBeta",
         "OptionsAnalytics",
         "PortfolioRisk",
         "QueryData",
@@ -36,6 +37,7 @@
         "GetMarketContext": ["analysis_depth", "as_of", "asset", "facets", "horizon_days", "include_history", "limit", "maxsize", "page", "pagination_token", "query", "region", "rotation_long_window", "rotation_short_window", "symbol", "symbols", "timeout", "weeks"],
         "GetReferentialData": ["as_of", "asset", "category", "correlated_with", "industry", "maxsize", "page", "pagination_token", "region", "sector", "theme", "timeout"],
         "GetSymbolSignals": ["symbol"],
+        "RankBeta": ["as_of", "direction", "force_async", "lookback_days", "min_correlation", "min_dollar_adv", "min_overlap", "min_price", "reference", "return_type", "top_k", "universe_asset", "universe_region"],
         "OptionsAnalytics": ["action", "alpha", "beta", "expiration", "forward", "legs", "nu", "option_strategy", "option_type", "portfolio_name", "positions", "rho", "risk_free_rate", "spot", "strike", "symbol", "time_to_expiry", "volatility"],
         "PortfolioRisk": ["action", "confidence_level", "constraints", "custom_shocks", "horizon_days", "lookback_days", "method", "mode", "portfolio_value", "positions", "returns", "returns_type", "scenarios", "signals", "symbols", "weights"],
         "QueryData": ["adjusted", "by_date", "days", "end_date", "execution_mode", "expiries", "force_async", "form_types", "include_partial", "level", "limit", "max_expirations", "moneyness_max", "moneyness_min", "option_type", "pagination_token", "start_date", "symbols", "timeframe", "types"],
@@ -144,8 +146,13 @@
       "plans": [
         {
           "path": "plans/analyse.json",
-          "required_variables": ["symbol", "refdate"],
-          "variable_constraints": { "symbol": { "type": "csv", "min_items": 1, "max_items": 1, "item_pattern": "^[A-Z][A-Z0-9.-]{0,14}$" } }
+          "required_variables": ["symbol", "refdate", "comparison_start_date", "comparison_symbols", "documented_client_symbols"],
+          "variable_constraints": {
+            "symbol": { "type": "csv", "min_items": 1, "max_items": 1, "item_pattern": "^[A-Z][A-Z0-9.-]{0,14}$" },
+            "comparison_start_date": { "type": "csv", "min_items": 1, "max_items": 1, "item_pattern": "^20[0-9]{2}-[0-9]{2}-[0-9]{2}$" },
+            "comparison_symbols": { "type": "csv", "min_items": 12, "max_items": 30, "item_pattern": "^[A-Z][A-Z0-9.=-]{0,14}$" },
+            "documented_client_symbols": { "type": "csv", "min_items": 1, "max_items": 10, "item_pattern": "^[A-Z][A-Z0-9.=-]{0,14}$" }
+          }
         }
       ]
     },

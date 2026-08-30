@@ -840,7 +840,9 @@ function initRetentionKit() {
             else if (kind === 'validated')   render('validated', pre + L.validated);
             else if (kind === 'expired')     render('expired', pre + L.expired);
             else if (kind === 'unverified')  warnUnverified(fill(L.unverifiedLast, { date: fmtDate(e.verifiedAt || agg.generatedAt, lang) }));
-            else if (kind === 'pending')     render('pending', fill(L.pending, { date: when }));
+            else if (kind === 'pending')     render('pending', e.status === 'wait' && e.note
+                ? e.note + ' — ' + when + '.'
+                : fill(L.pending, { date: when }));
             else                             render('active', fill(L.active, { date: when }));
         })
         .catch(function() { if (looksTicker) warnUnverified(L.unverifiedDown); });

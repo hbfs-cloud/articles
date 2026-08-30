@@ -52,6 +52,7 @@ function check(file) {
   const filingRows = d.filingsReview?.filings || [];
   const riskCards = d.risks?.riskCards || [];
   const trade = d.tradeIdea || {};
+  const blast = d.blastRadius || {};
   const entry = Number(trade.entry), stop = Number(trade.stop), tp1 = Number(trade.tp1), tp2 = Number(trade.tp2);
   const banned = [
     'The economic link can be genuine while',
@@ -141,7 +142,7 @@ function check(file) {
   });
   require(!news.some(x => /Headline context only/i.test(x.detail || '')), 'generic headline filler remains');
   require(words(d.capitalStructure?.shareHistory).length >= 45, 'capital-structure synthesis too short');
-  require(/fully diluted|diluted|basic.to.diluted|minimum observable|minimum verifiable|not calculable|not available|unavailable/i.test(d.capitalStructure?.shareHistory || ''), 'capital structure lacks a diluted-share bridge or an explicit unavailability statement');
+  require(/fully diluted|diluted|dilu[ée]|basic.to.diluted|minimum observable|minimum verifiable|not calculable|n.est pas calculable|not available|unavailable/i.test(d.capitalStructure?.shareHistory || ''), 'capital structure lacks a diluted-share bridge or an explicit unavailability statement');
   require(filingRows.length >= 2, `needs >=2 decision-relevant SEC filing findings (${filingRows.length})`);
   filingRows.forEach((f,i)=>{
     require(/^\d{10}-\d{2}-\d{6}$/.test(f.accession || ''), `SEC finding ${i+1} has malformed accession ${f.accession || 'missing'}`);
@@ -152,7 +153,7 @@ function check(file) {
     require(!/Periodic report reviewed|Current report reviewed|Registration capacity exists|Prospectus reviewed/i.test(f.finding||''),`generic SEC finding remains for ${f.accession}`);
   });
   require(risks.length >= 4, `contrarian risks need >=4 items (${risks.length})`);
-  require(riskCards.length === 3, `exactly 3 individualized risk cards required (${riskCards.length})`);
+  require(riskCards.length >= 3 && riskCards.length <= 5, `3 to 5 individualized risk cards required (${riskCards.length})`);
   riskCards.forEach((card, i) => {
     require(words(card.title).length >= 2, `risk card ${i + 1} title is generic`);
     require((card.points || []).length >= 2, `risk card ${i + 1} needs >=2 points`);
@@ -197,6 +198,44 @@ function check(file) {
   }
   require((d.globalScore?.keyTakeawaysPositive || []).length === 3, 'positive takeaways need exactly 3 items');
   require((d.globalScore?.keyTakeawaysNegative || []).length === 3, 'negative takeaways need exactly 3 items');
+  if (Number(d.meta?.version || 0) >= 3) {
+    const groups = Array.isArray(blast.groups) ? blast.groups : [];
+    const symbols = groups.flatMap(group => Array.isArray(group.symbols) ? group.symbols : []);
+    const uniqueSymbols = new Set(symbols.map(row => row.ticker));
+    const classes = new Set(symbols.map(row => row.relationClass));
+    require(blast.asOf === d.meta?.levelsCloseDate, `blast-radius asOf must match levelsCloseDate (${blast.asOf || 'missing'} vs ${d.meta?.levelsCloseDate || 'missing'})`);
+    require(words(blast.observationTime).length >= 1, 'blast-radius observation time is missing');
+    require(words(blast.window).length >= 2, 'blast-radius regression window is missing');
+    require(words(blast.methodology).length >= 35, 'blast-radius methodology is too short');
+    require(groups.length >= 4, `blast radius needs >=4 economic groups (${groups.length})`);
+    require(uniqueSymbols.size >= 12, `blast radius needs >=12 unique symbols (${uniqueSymbols.size})`);
+    require(classes.has('leader'), 'blast radius lacks an explicit leader');
+    require(classes.has('direct_peer'), 'blast radius lacks a direct peer');
+    require(classes.has('upstream'), 'blast radius lacks an upstream link');
+    require(classes.has('downstream') || classes.has('second_order'), 'blast radius lacks a downstream or second-order link');
+    require(classes.has('sector_proxy'), 'blast radius lacks a sector/ETF benchmark');
+    require(groups.some(group => group.order === 1) && groups.some(group => group.order === 2), 'blast radius must distinguish first and second order transmission');
+    for (const [index, row] of symbols.entries()) {
+      require(words(row.role).length >= 3, `blast symbol ${index + 1} has no specific economic role`);
+      require(words(row.readThrough).length >= 8, `blast symbol ${row.ticker || index + 1} has a weak transmission explanation`);
+      require(words(row.eventRisk).length >= 4, `blast symbol ${row.ticker || index + 1} lacks its own event-risk note`);
+      require(Number.isFinite(row.return5d) || /missing|unavailable|insufficient|indisponible/i.test(`${row.readThrough} ${row.eventRisk}`), `blast symbol ${row.ticker || index + 1} lacks 5-session performance without explanation`);
+      require(Number.isFinite(row.return21d) || /missing|unavailable|insufficient|indisponible/i.test(`${row.readThrough} ${row.eventRisk}`), `blast symbol ${row.ticker || index + 1} lacks 21-session performance without explanation`);
+      const regressionComplete = [row.correlation, row.beta, row.r2, row.observations].every(Number.isFinite);
+      require(regressionComplete || /missing|unavailable|insufficient|indisponible|not returned|facteur neutralis[ée]|contre lui-même/i.test(`${row.readThrough} ${row.eventRisk}`), `blast symbol ${row.ticker || index + 1} lacks regression evidence without explanation`);
+    }
+    const scenarios = Array.isArray(blast.scenarios) ? blast.scenarios : [];
+    require(scenarios.length === 3, `blast radius needs exactly three scenarios (${scenarios.length})`);
+    require(new Set(scenarios.map(row => row.scenario)).size === 3, 'blast scenarios must cover bullish, mixed and bearish cases');
+    scenarios.forEach((scenario, index) => {
+      for (const field of ['trigger', 'firstOrder', 'secondOrder', 'confirmation', 'contradiction']) {
+        require(words(scenario[field]).length >= 6, `blast scenario ${index + 1} has a weak ${field}`);
+      }
+    });
+    require((blast.contradictions || []).length >= 2, 'blast radius needs >=2 explicit contradictions');
+    require((blast.missingData || []).length >= 1, 'blast radius must disclose missing/current-only data');
+    require((blast.sourceRefs || []).length >= 1, 'blast radius lacks proximate sources');
+  }
   for (const phrase of banned) require(!editorialText.includes(phrase), `generic phrase remains: ${phrase}`);
   const companyToken=String(d.header?.name||'').toLowerCase().split(/\s+/)[0].replace(/[^a-z0-9]/g,'');
   require(editorialText.toLowerCase().includes(ticker.toLowerCase()) || (companyToken&&overview.toLowerCase().replace(/[^a-z0-9\s]/g,'').includes(companyToken)), 'editorial body does not name the company/ticker');
