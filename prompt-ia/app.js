@@ -8,8 +8,8 @@
 
   // ── LANGUAGE DETECTION ──
   var params = new URLSearchParams(location.search);
-  var CURRENT_LANG = params.get('lang') || 'en';
-  if (['fr','en','ar','es','zh'].indexOf(CURRENT_LANG) === -1) CURRENT_LANG = 'en';
+  var CURRENT_LANG = params.get('lang') || 'fr';
+  if (['fr','en','ar','es','zh'].indexOf(CURRENT_LANG) === -1) CURRENT_LANG = 'fr';
 
   var L = LANG.ui[CURRENT_LANG] || LANG.ui.en;
 

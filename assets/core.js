@@ -134,6 +134,101 @@ document.addEventListener("DOMContentLoaded", function() {
     document.body.insertBefore(a, document.body.firstChild);
 });
 
+// Shared series navigation. Existing articles span several HTML generations;
+// normalizing their common .series-bar keeps every chapter usable without
+// rewriting hundreds of editorial files.
+document.addEventListener('DOMContentLoaded', function() {
+    if (!/^\/series\//.test(location.pathname)) return;
+
+    document.querySelectorAll('.series-bar:not(.series-enhanced)').forEach(function(bar, barIndex) {
+        var inner = bar.querySelector('.series-bar-inner');
+        var steps = bar.querySelector('.series-steps');
+        if (!inner || !steps) return;
+        var items = Array.prototype.slice.call(steps.querySelectorAll('.series-step'));
+        if (!items.length) return;
+
+        var currentIndex = items.findIndex(function(item) { return item.classList.contains('current'); });
+        if (currentIndex < 0) currentIndex = 0;
+        items.forEach(function(item, index) {
+            item.classList.toggle('done', index < currentIndex);
+            if (index === currentIndex) item.setAttribute('aria-current', 'step');
+            item.setAttribute('aria-label', 'Partie ' + (index + 1) + ' sur ' + items.length + ' : ' + (item.getAttribute('title') || item.textContent.trim()));
+        });
+
+        var titleNode = inner.querySelector('.series-title');
+        var counterNode = inner.querySelector('.series-counter');
+        var arrows = Array.prototype.slice.call(inner.children).filter(function(node) {
+            return node.classList && node.classList.contains('series-arrow');
+        });
+        var previous = arrows[0] || null;
+        var next = arrows[arrows.length - 1] || null;
+        var title = titleNode ? titleNode.textContent.trim() : 'Série';
+
+        var head = document.createElement('div');
+        head.className = 'series-progress-head';
+        head.innerHTML = '<div><span class="series-eyebrow">Parcours</span><strong></strong></div>' +
+            '<span class="series-position">Partie ' + (currentIndex + 1) + ' sur ' + items.length + '</span>';
+        head.querySelector('strong').textContent = title;
+
+        var progress = document.createElement('div');
+        progress.className = 'series-progress-track';
+        progress.setAttribute('role', 'progressbar');
+        progress.setAttribute('aria-label', 'Progression dans la série');
+        progress.setAttribute('aria-valuemin', '1');
+        progress.setAttribute('aria-valuemax', String(items.length));
+        progress.setAttribute('aria-valuenow', String(currentIndex + 1));
+        progress.innerHTML = '<span style="width:' + (((currentIndex + 1) / items.length) * 100).toFixed(2) + '%"></span>';
+
+        var row = document.createElement('div');
+        row.className = 'series-chapter-row';
+        if (previous) {
+            previous.setAttribute('aria-label', currentIndex > 0 ? 'Partie précédente' : 'Aucune partie précédente');
+            row.appendChild(previous);
+        }
+        row.appendChild(steps);
+        if (next && next !== previous) {
+            next.setAttribute('aria-label', currentIndex < items.length - 1 ? 'Partie suivante' : 'Aucune partie suivante');
+            row.appendChild(next);
+        }
+
+        inner.innerHTML = '';
+        inner.appendChild(head);
+        inner.appendChild(progress);
+        inner.appendChild(row);
+        bar.classList.add('series-enhanced');
+        bar.setAttribute('role', 'navigation');
+        bar.setAttribute('aria-label', title + (barIndex ? ' — navigation de fin' : ' — navigation des chapitres'));
+
+        requestAnimationFrame(function() {
+            var current = steps.querySelector('.series-step.current');
+            if (current) current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
+        });
+    });
+});
+
+// One public follow destination. Historical pages may still contain legacy
+// Telegram, YouTube or RSS anchors; normalize them at runtime as a safety net.
+document.addEventListener('DOMContentLoaded', function() {
+    var substack = 'https://dailytickers.substack.com';
+    document.querySelectorAll('a[href]').forEach(function(link) {
+        var raw = link.getAttribute('href') || '';
+        var legacy = /(?:^https?:\/\/)?(?:www\.)?(?:t\.me|telegram\.me|youtube\.com|youtu\.be)\//i.test(raw)
+            || /^\/?feed\.xml(?:[?#]|$)/i.test(raw);
+        if (!legacy) return;
+        link.href = substack;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.setAttribute('aria-label', 'Suivre DailyTickers sur Substack');
+        link.setAttribute('title', 'DailyTickers sur Substack');
+        link.querySelectorAll('i').forEach(function(icon) { icon.className = 'fa-solid fa-newspaper'; });
+        Array.prototype.slice.call(link.childNodes).forEach(function(node) {
+            if (node.nodeType === Node.TEXT_NODE && /Telegram|YouTube|RSS/i.test(node.textContent)) node.textContent = ' Substack';
+        });
+        link.querySelectorAll('strong').forEach(function(node) { node.textContent = 'Lire sur Substack'; });
+        link.querySelectorAll('small').forEach(function(node) { node.textContent = 'Analyses · Daily · Weekly'; });
+    });
+});
+
 document.addEventListener("DOMContentLoaded", function() {
     const articleTagsString = document.documentElement.dataset.tags;
     const articleDefaultTab = document.documentElement.dataset.tab || "analyses";
@@ -309,20 +404,12 @@ document.addEventListener('DOMContentLoaded', function() {
         var kit = document.createElement('div');
         kit.className = 'retention-kit';
         kit.innerHTML =
-            '<div class="retention-kit-card retention-kit-tg">' +
-                '<div class="rk-icon"><i class="fa-brands fa-telegram"></i></div>' +
-                '<div class="rk-heading">Get every signal live</div>' +
-                '<div class="rk-sub">Free Telegram channel — scanner picks, daily briefings, alerts.</div>' +
-                '<a class="rk-btn rk-btn-tg" href="https://t.me/+gl06cNSLV2RiZmE0" target="_blank" rel="noopener">' +
-                    '<i class="fa-brands fa-telegram"></i> Join on Telegram' +
-                '</a>' +
-            '</div>' +
-            '<div class="retention-kit-card retention-kit-rss">' +
-                '<div class="rk-icon"><i class="fa-solid fa-rss"></i></div>' +
-                '<div class="rk-heading">Follow via RSS</div>' +
-                '<div class="rk-sub">Get articles in your reader.</div>' +
-                '<a class="rk-btn rk-btn-rss" href="/feed.xml" target="_blank" rel="noopener">' +
-                    '<i class="fa-solid fa-rss"></i> Subscribe to RSS' +
+            '<div class="retention-kit-card retention-kit-substack">' +
+                '<div class="rk-icon"><i class="fa-solid fa-newspaper"></i></div>' +
+                '<div class="rk-heading">Retrouvez DailyTickers sur Substack</div>' +
+                '<div class="rk-sub">Analyses, Daily et Weekly dans un seul fil éditorial.</div>' +
+                '<a class="rk-btn" href="https://dailytickers.substack.com" target="_blank" rel="noopener">' +
+                    '<i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir Substack' +
                 '</a>' +
             '</div>';
 

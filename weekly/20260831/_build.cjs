@@ -28,6 +28,7 @@ const sources = {
   technicals: rel("_focus/focus_technicals.json"),
   focusBars: rel("_focus/focus_bars.json"),
   blastBars: rel("_focus/blast_bars.json"),
+  avgoOptions: "analyses/AVGO/_data/options.json",
 };
 const data = Object.fromEntries(
   Object.entries(sources).map(([name, file]) => [name, read(file)]),
@@ -61,6 +62,38 @@ function numericClaim(id, source, pointer, render) {
     source_sha256: hashes[source],
     source_pointer: pointer,
     source_value: value,
+    render: normalizedRender,
+    rendered_text: rendered,
+  });
+  return `<span data-claim="${id}">${rendered}</span>`;
+}
+
+function formulaClaim(id, source, formula, render) {
+  if (formula.operation !== "sum_divide_pct")
+    throw new Error(`Claim ${id}: unsupported formula`);
+  const operands = formula.operand_pointers.map((pointer) => ({
+    pointer,
+    value: Number(pointerGet(data[source], pointer)),
+  }));
+  const denominator = Number(pointerGet(data[source], formula.denominator_pointer));
+  if (!operands.every((item) => Number.isFinite(item.value)) || !Number.isFinite(denominator) || denominator === 0)
+    throw new Error(`Claim ${id}: invalid formula operands`);
+  const value = operands.reduce((sum, item) => sum + item.value, 0) / denominator * 100;
+  const normalizedRender = { ...render, scale: render.scale ?? 1 };
+  const scaled = value * normalizedRender.scale;
+  const rendered = `${normalizedRender.prefix || ""}${scaled.toFixed(normalizedRender.decimals)}${normalizedRender.suffix || ""}`;
+  claims.push({
+    id,
+    source_artifact: sources[source],
+    source_sha256: hashes[source],
+    source_pointer: formula.denominator_pointer,
+    source_value: denominator,
+    formula: {
+      operation: formula.operation,
+      operands,
+      denominator_pointer: formula.denominator_pointer,
+      result: value,
+    },
     render: normalizedRender,
     rendered_text: rendered,
   });
@@ -499,6 +532,30 @@ const allEarnings = [
       !data.earnings.events.some((current) => current.symbol === item.symbol),
   ),
 ];
+const avgoOptionRoot = data.avgoOptions.data.items[0].results.find(
+  (result) => result.data_type === "options_chain",
+).data[0];
+const avgoEventExpiry = "2026-09-04";
+const avgoAtmStrike = 370;
+const avgoCallIndex = avgoOptionRoot.contracts.findIndex(
+  (contract) => contract.expiry === avgoEventExpiry && contract.strike === avgoAtmStrike && contract.option_type === "call",
+);
+const avgoPutIndex = avgoOptionRoot.contracts.findIndex(
+  (contract) => contract.expiry === avgoEventExpiry && contract.strike === avgoAtmStrike && contract.option_type === "put",
+);
+if (avgoCallIndex < 0 || avgoPutIndex < 0)
+  throw new Error("Missing AVGO post-earnings ATM straddle");
+const avgoMoveValue = (
+  avgoOptionRoot.contracts[avgoCallIndex].mid + avgoOptionRoot.contracts[avgoPutIndex].mid
+) / avgoOptionRoot.spot * 100;
+const avgoMove = formulaClaim("avgo_indicative_move", "avgoOptions", {
+  operation: "sum_divide_pct",
+  operand_pointers: [
+    `/data/items/0/results/0/data/0/contracts/${avgoCallIndex}/mid`,
+    `/data/items/0/results/0/data/0/contracts/${avgoPutIndex}/mid`,
+  ],
+  denominator_pointer: "/data/items/0/results/0/data/0/spot",
+}, { decimals: 1, suffix: " %" });
 const earningDay = {
   DELL: "Mardi",
   PANW: "Mardi",
@@ -517,8 +574,10 @@ const earningsRowsHtml = earningsSymbols
       event?.implied_move_status === "available" &&
       event.implied_move_expiration >= event.report_date;
     const move =
-      symbol === "AVGO" || !validMove
-        ? '<span class="badge badge-yellow">NON MESURABLE</span>'
+      symbol === "AVGO"
+        ? `<span class="badge badge-yellow">≈ ${avgoMove} · INDICATIF</span>`
+        : !validMove
+          ? '<span class="badge badge-yellow">NON MESURABLE</span>'
         : earningsMoveClaim(`${symbol.toLowerCase()}_move`, symbol);
     const when = `${earningDay[symbol]} · ${event.report_time === "AMC" ? "après clôture" : "avant ouverture"}`;
     return `<tr class="${symbol === "AVGO" ? "focus-row" : ""}"><td><strong>${symbol}</strong></td><td>${when}</td><td>${descriptions[symbol]}</td><td>${move}</td></tr>`;
@@ -655,7 +714,9 @@ const chartPayload = {
       event?.implied_move_status === "available" &&
       event.implied_move_expiration >= event.report_date &&
       symbol !== "AVGO";
-    return { symbol, value: valid ? event.implied_move_pct : null };
+    return symbol === "AVGO"
+      ? { symbol, value: avgoMoveValue, indicative: true }
+      : { symbol, value: valid ? event.implied_move_pct : null, indicative: false };
   }),
 };
 
@@ -683,7 +744,7 @@ let html = `<!DOCTYPE html>
 
 <section id="verdict" class="decision-board" aria-label="Décision de la semaine">
   <div class="decision-main"><div class="decision-label">Décision prioritaire</div><h2>ATTENDRE AVGO, puis négocier la preuve</h2><p><strong>Aucune poursuite avant publication.</strong> La qualité fondamentale est élevée, mais AVGO cote sous ses moyennes courtes et l’historique montre des écarts d’ouverture violents dans les deux sens.</p><div class="decision-stats"><div class="mini-stat"><strong>${avgoPrice}</strong><span>clôture AVGO</span></div><div class="mini-stat"><strong>${avgoRsi}</strong><span>RSI quotidien</span></div><div class="mini-stat"><strong>${avgoMedianReaction}</strong><span>médiane absolue après résultats</span></div></div></div>
-  <div class="decision-side"><div class="decision-label">Contrôle systématique</div><div class="check-grid"><div class="check-item pass"><i class="fas fa-circle-check"></i><span><strong>Données</strong><br>Dernière clôture complète validée.</span></div><div class="check-item block"><i class="fas fa-circle-xmark"></i><span><strong>Événement</strong><br>Résultats AVGO mercredi après clôture.</span></div><div class="check-item warn"><i class="fas fa-triangle-exclamation"></i><span><strong>Tendance</strong><br>Cours sous les deux moyennes courtes.</span></div><div class="check-item block"><i class="fas fa-circle-xmark"></i><span><strong>Options</strong><br>Amplitude filtrée rejetée; chaîne dédiée avec réserves.</span></div><div class="check-item warn"><i class="fas fa-triangle-exclamation"></i><span><strong>Valorisation</strong><br>${avgoEvRevenue} les revenus.</span></div><div class="check-item pass"><i class="fas fa-circle-check"></i><span><strong>Qualité</strong><br>Quatre dépassements EPS consécutifs.</span></div></div></div>
+  <div class="decision-side"><div class="decision-label">Contrôle systématique</div><div class="check-grid"><div class="check-item pass"><i class="fas fa-circle-check"></i><span><strong>Données</strong><br>Dernière clôture complète validée.</span></div><div class="check-item block"><i class="fas fa-circle-xmark"></i><span><strong>Événement</strong><br>Résultats AVGO mercredi après clôture.</span></div><div class="check-item warn"><i class="fas fa-triangle-exclamation"></i><span><strong>Tendance</strong><br>Cours sous les deux moyennes courtes.</span></div><div class="check-item warn"><i class="fas fa-triangle-exclamation"></i><span><strong>Options</strong><br>Ordre de grandeur disponible; confiance faible.</span></div><div class="check-item warn"><i class="fas fa-triangle-exclamation"></i><span><strong>Valorisation</strong><br>${avgoEvRevenue} les revenus.</span></div><div class="check-item pass"><i class="fas fa-circle-check"></i><span><strong>Qualité</strong><br>Quatre dépassements EPS consécutifs.</span></div></div></div>
 </section>
 
 <section class="content-card" id="semaine"><h2><i class="fas fa-calendar-week"></i> La semaine en une séquence</h2><p class="section-lead">Le marché va tester la chaîne IA par morceaux. Le bon signal n’est pas qu’un seul titre monte, mais que les prévisions deviennent cohérentes du calcul jusqu’au logiciel, puis résistent au choc macro de vendredi.</p><div class="sequence"><div class="sequence-step"><strong>Lundi</strong>Inflation européenne<br>Préparation</div><div class="sequence-step"><strong>Mardi</strong>DELL · PANW · MDB · CRDO<br>Premiers signaux</div><div class="sequence-step systemic"><strong>Mercredi</strong>AVGO · SNOW · HPE<br>Test systémique</div><div class="sequence-step"><strong>Jeudi</strong>CIEN · ZS · ISM services<br>Confirmation</div><div class="sequence-step"><strong>Vendredi</strong>Emploi US<br>Verdict des taux</div></div><div class="chart-panel"><div class="chart-title">Intensité des catalyseurs par séance</div><div id="eventChart" class="chart-host"></div><p class="chart-note">Hauteur qualitative : nombre et portée des événements suivis, pas une probabilité de hausse ou de baisse.</p></div><div class="table-responsive"><table class="data-table"><thead><tr><th>Jour</th><th>Événements</th><th>Ce qu’un investisseur doit faire</th></tr></thead><tbody>${eventRowsHtml}</tbody></table></div></section>
@@ -694,7 +755,7 @@ let html = `<!DOCTYPE html>
 
 <section class="content-card" id="blast"><h2><i class="fas fa-diagram-project"></i> Rayon de surveillance AVGO</h2><p class="section-lead">Cette carte part des liens économiques documentés : calcul et réseau, fabrication, serveurs, puis électricité. Les performances relatives et corrélations brutes ont été contrôlées en revue contrarienne, mais ne sont pas publiées comme preuve de causalité. Chaque titre doit confirmer par ses propres prévisions et son propre prix.</p><div class="chart-panel"><div class="chart-title">Carte économique : où chercher la confirmation</div><div id="blastChart" class="chart-host" style="height:390px"></div><p class="chart-note">Les étages décrivent la proximité dans la chaîne de valeur, pas un ordre garanti de réaction ni une recommandation d’achat.</p></div><div class="tier-list"><div class="tier"><strong>Proximité directe · calcul et réseau</strong><span>NVDA, AMD, MRVL, ANET, CRDO, CIEN</span></div><div class="tier"><strong>Relais industriel · fabrication</strong><span>TSM, MU, KLAC, SOXX</span></div><div class="tier"><strong>Infrastructure · serveurs</strong><span>DELL, HPE</span></div><div class="tier"><strong>Investissement final · électricité</strong><span>CEG, VST, GEV</span></div></div><div class="table-responsive"><table class="data-table"><thead><tr><th>Titre</th><th>Rôle</th><th>Proximité économique</th></tr></thead><tbody>${blastRows}</tbody></table></div><div class="action-callout"><strong>Lecture actionnable :</strong> utiliser MRVL, ANET, CRDO et CIEN comme contrôles indépendants du réseau et des ASIC. DELL/HPE puis CEG/VST/GEV sont des signaux économiques plus éloignés. Leur divergence ne prouve ni n’annule à elle seule la thèse AVGO.</div></section>
 
-<section class="content-card" id="earnings"><h2><i class="fas fa-bolt"></i> Résultats : attentes et contrôles</h2><div class="chart-grid"><div class="chart-panel"><div class="chart-title">Mouvements implicites valides</div><div id="earningsChart" class="chart-host"></div><p class="chart-note">AVGO reste N/D dans le classement standard : l’échéance fournie par le filtre précède les résultats. Une chaîne séparée couvrant l’après-publication existe, mais ses anomalies de cotation interdisent d’en faire une mesure propre de l’événement.</p></div><div class="chart-panel"><div class="chart-title">Contrôle avant toute entrée</div><ul class="checklist"><li>Publication terminée et prévisions disponibles.</li><li>Écart d’ouverture observé en séance régulière avec volume réel.</li><li>Tenue du VWAP et de la zone d’ouverture.</li><li>Pairs de premier ordre cohérents.</li><li>Taux et QQQ non contradictoires.</li><li>Invalidation structurelle et rendement/risque recalculés.</li></ul></div></div><div class="table-responsive"><table class="data-table"><thead><tr><th>Titre</th><th>Publication</th><th>Test économique</th><th>Amplitude implicite</th></tr></thead><tbody>${earningsRowsHtml}</tbody></table></div></section>
+<section class="content-card" id="earnings"><h2><i class="fas fa-bolt"></i> Résultats : attentes et contrôles</h2><div class="chart-grid"><div class="chart-panel"><div class="chart-title">Amplitudes implicites et estimation AVGO</div><div id="earningsChart" class="chart-host"></div><p class="chart-note">AVGO : ordre de grandeur tiré du straddle ATM de la première échéance complète après les résultats. Le filtre standard avait choisi une échéance trop courte. La chaîne dédiée est liquide au strike ATM, mais des spreads hétérogènes et deux anomalies ailleurs dans la surface imposent une confiance faible.</p></div><div class="chart-panel"><div class="chart-title">Contrôle avant toute entrée</div><ul class="checklist"><li>Publication terminée et prévisions disponibles.</li><li>Écart d’ouverture observé en séance régulière avec volume réel.</li><li>Tenue du VWAP et de la zone d’ouverture.</li><li>Pairs de premier ordre cohérents.</li><li>Taux et QQQ non contradictoires.</li><li>Invalidation structurelle et rendement/risque recalculés.</li></ul></div></div><div class="table-responsive"><table class="data-table"><thead><tr><th>Titre</th><th>Publication</th><th>Test économique</th><th>Amplitude implicite</th></tr></thead><tbody>${earningsRowsHtml}</tbody></table></div></section>
 
 <section class="content-card" id="macro"><h2><i class="fas fa-chart-line"></i> Marché, secteurs et volatilité</h2><div class="metrics-grid">${marketCardsHtml}</div><p class="section-lead">Le régime systématique reste <strong>${data.regime.regime === "RISK_ON" ? "APPÉTIT POUR LE RISQUE" : data.regime.regime}</strong> avec un score de ${numericClaim("regime_score", "regime", "/regime_score", { scale: 100, decimals: 0, suffix: " %" })}. Le VIX principal clôture à ${numericClaim("vix_level", "options", "/items/1/level", { decimals: 2 })}, avec une courbe encore en contango. Le risque immédiat n’est pas la panique ; c’est une hausse trop étroite qui échoue sur les résultats ou l’emploi.</p><div class="chart-grid"><div class="chart-panel"><div class="chart-title">Indices et couvertures · base commune</div><div id="marketChart" class="chart-host"></div><p class="chart-note">QQQ et SPY tiennent mieux que les petites capitalisations. GLD et TLT servent de contrôles inter-marchés.</p></div><div class="chart-panel"><div class="chart-title">Rotation sectorielle · semaine passée</div><div id="sectorChart" class="chart-host"></div><p class="chart-note">Une confirmation de l’appétit pour le risque exige plus que la technologie : participation des cycliques et amélioration d’IWM.</p></div></div><div class="chart-panel"><div class="chart-title">Matrice de risque de la semaine</div><div id="riskChart" class="chart-host"></div><p class="chart-note">Position qualitative basée sur probabilité et impact. Ce graphique structure les décisions ; il ne prétend pas fournir des probabilités calibrées.</p></div></section>
 
@@ -708,7 +769,7 @@ let html = `<!DOCTYPE html>
 
 <section class="content-card" id="outlook"><h2><i class="fas fa-compass"></i> Perspective</h2><p>Le scénario central reste une diffusion partielle : de bons chiffres sur certains maillons, mais pas une validation uniforme de toute la chaîne. La conviction ne doit monter qu’avec la cohérence des prévisions, des réactions de prix et des taux.</p><div class="pedagogy-box"><strong>Règle simple :</strong> le résultat dit ce qui s’est passé ; les prévisions disent ce qui peut arriver ; le prix dit ce que le marché accepte déjà de payer.</div></section>
 
-<section class="content-card" id="sources"><h2><i class="fas fa-book"></i> Sources, qualité et limites</h2><p>Instantané observé dimanche, chiffres de marché arrêtés à la dernière clôture US complète. Les prix, résultats, réactions historiques, fondamentaux et techniques viennent de collectes datées et contrôlées. Les barres ajustées alignées servent aussi à une revue statistique contrarienne, jamais à transformer la carte économique en causalité.</p><div class="table-responsive"><table class="data-table"><thead><tr><th>Bloc</th><th>Qualité</th><th>Limite appliquée</th></tr></thead><tbody><tr><td>Barres actions/ETF</td><td><span class="badge badge-green">VALIDÉ</span></td><td>Dernière clôture servie, séance partielle exclue.</td></tr><tr><td>Résultats AVGO</td><td><span class="badge badge-green">VALIDÉ</span></td><td>Date issue du calendrier financier filtré ; fenêtre après clôture.</td></tr><tr><td>Options AVGO</td><td><span class="badge badge-yellow">AVEC RÉSERVE</span></td><td>Amplitude standard rejetée; première chaîne post-résultats disponible mais cotations hétérogènes.</td></tr><tr><td>Rayon de surveillance</td><td><span class="badge badge-blue">DOCUMENTÉ</span></td><td>Liens économiques; aucune chronologie de prix ni causalité affirmée.</td></tr><tr><td>Crypto du week-end</td><td><span class="badge badge-yellow">CONTRÔLE</span></td><td>Ne prédit pas l’ouverture US ; ETF alignés utilisés pour les comparaisons.</td></tr></tbody></table></div><p class="source-meta">Le calendrier couvre huit événements macro pour la semaine. Sources primaires : BLS, Réserve fédérale, ISM et calendrier économique consolidé. Données absentes ou mal formées non remplacées par zéro.</p><div class="source-refs"><a class="source-ref" href="https://www.bls.gov/schedule/news_release/empsit.htm" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i><span class="source-name">BLS · rapport emploi</span></a><a class="source-ref" href="https://www.federalreserve.gov/newsevents/calendar.htm" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i><span class="source-name">Réserve fédérale · calendrier</span></a><a class="source-ref" href="/analyses/AVGO/"><i class="fa-solid fa-file-lines"></i><span class="source-name">Dossier AVGO complet</span></a></div><div class="disclaimer"><strong>Avertissement :</strong> contenu informatif, pas un conseil financier. Les résultats peuvent créer un écart d’ouverture supérieur au risque théorique et rendre un niveau d’invalidation inopérant.</div></section>
+<section class="content-card" id="sources"><h2><i class="fas fa-book"></i> Sources, qualité et limites</h2><p>Instantané observé dimanche, chiffres de marché arrêtés à la dernière clôture US complète. Les prix, résultats, réactions historiques, fondamentaux et techniques viennent de collectes datées et contrôlées. Les barres ajustées alignées servent aussi à une revue statistique contrarienne, jamais à transformer la carte économique en causalité.</p><div class="table-responsive"><table class="data-table"><thead><tr><th>Bloc</th><th>Qualité</th><th>Limite appliquée</th></tr></thead><tbody><tr><td>Barres actions/ETF</td><td><span class="badge badge-green">VALIDÉ</span></td><td>Dernière clôture servie, séance partielle exclue.</td></tr><tr><td>Résultats AVGO</td><td><span class="badge badge-green">VALIDÉ</span></td><td>Date issue du calendrier financier filtré ; fenêtre après clôture.</td></tr><tr><td>Options AVGO</td><td><span class="badge badge-yellow">AVEC RÉSERVE</span></td><td>Straddle ATM post-résultats calculable; surface globale hétérogène, donc estimation indicative.</td></tr><tr><td>Rayon de surveillance</td><td><span class="badge badge-blue">DOCUMENTÉ</span></td><td>Liens économiques; aucune chronologie de prix ni causalité affirmée.</td></tr><tr><td>Crypto du week-end</td><td><span class="badge badge-yellow">CONTRÔLE</span></td><td>Ne prédit pas l’ouverture US ; ETF alignés utilisés pour les comparaisons.</td></tr></tbody></table></div><p class="source-meta">Le calendrier couvre huit événements macro pour la semaine. Sources primaires : BLS, Réserve fédérale, ISM et calendrier économique consolidé. Données absentes ou mal formées non remplacées par zéro.</p><div class="source-refs"><a class="source-ref" href="https://www.bls.gov/schedule/news_release/empsit.htm" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i><span class="source-name">BLS · rapport emploi</span></a><a class="source-ref" href="https://www.federalreserve.gov/newsevents/calendar.htm" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i><span class="source-name">Réserve fédérale · calendrier</span></a><a class="source-ref" href="/analyses/AVGO/"><i class="fa-solid fa-file-lines"></i><span class="source-name">Dossier AVGO complet</span></a></div><div class="disclaimer"><strong>Avertissement :</strong> contenu informatif, pas un conseil financier. Les résultats peuvent créer un écart d’ouverture supérieur au risque théorique et rendre un niveau d’invalidation inopérant.</div></section>
 </main>
 <footer class="article-footer">&copy; 2026 DailyTickers · données arrêtées au 28 août 2026 · contenu informatif.<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a></footer>
 <script>
@@ -726,8 +787,8 @@ mount('qualityRadar',{tooltip:{},radar:{indicator:[{name:'Croissance',max:100},{
 const blastTierNames={1:'Calcul & réseau',2:'Fabrication',3:'Serveurs',4:'Électricité'};
 const blastNodes=[{name:'AVGO',role:'Catalyseur central',itemStyle:{color:'#2563eb'}},...Object.entries(blastTierNames).map(([order,name])=>({name,role:'Proximité économique '+order,itemStyle:{color:palette[+order]}})),...P.blast.filter(x=>x.symbol!=='AVGO').map(x=>({name:x.symbol,role:x.role,itemStyle:{color:palette[x.order]}}))];
 const blastLinks=[...Object.entries(blastTierNames).map(([order,name])=>({source:'AVGO',target:name,value:P.blast.filter(x=>x.order===+order).length})),...P.blast.filter(x=>x.symbol!=='AVGO').map(x=>({source:blastTierNames[x.order],target:x.symbol,value:1}))];
-mount('blastChart',{tooltip:{formatter:p=>p.dataType==='node'?'<strong>'+p.data.name+'</strong><br>'+(p.data.role||'Lien économique'):'Lien économique documenté, non causal'},series:[{type:'sankey',data:blastNodes,links:blastLinks,left:8,right:12,top:12,bottom:12,nodeWidth:16,nodeGap:10,draggable:false,emphasis:{focus:'adjacency'},lineStyle:{color:'source',opacity:.22,curveness:.45},label:{fontSize:11,color:'#334155'}}]});
-mount('earningsChart',{tooltip:{trigger:'axis'},grid:{left:40,right:15,top:22,bottom:45},xAxis:{type:'category',data:P.validMoves.map(x=>x.symbol)},yAxis:{type:'value',axisLabel:{formatter:'{value}%'}},series:[{type:'bar',data:P.validMoves.map(x=>x.value==null?{value:0,itemStyle:{color:'#cbd5e1'},label:{show:true,position:'top',formatter:'N/D'}}:{value:+x.value.toFixed(1),itemStyle:{color:x.symbol==='AVGO'?'#2563eb':'#0f766e'},label:{show:true,position:'top',formatter:p=>p.value+'%'}})}]});
+mount('blastChart',{tooltip:{formatter:p=>p.dataType==='node'?'<strong>'+p.data.name+'</strong><br>'+(p.data.role||'Lien économique'):'Lien économique documenté, non causal'},series:[{type:'sankey',data:blastNodes,links:blastLinks,left:8,right:64,top:12,bottom:12,nodeWidth:16,nodeGap:10,draggable:false,emphasis:{focus:'adjacency'},lineStyle:{color:'source',opacity:.22,curveness:.45},label:{fontSize:11,color:'#334155',distance:6,formatter:'{b}'}}]});
+mount('earningsChart',{tooltip:{trigger:'axis',formatter:items=>items.map(p=>'<strong>'+p.name+'</strong><br>'+(P.validMoves[p.dataIndex].indicative?'Estimation indicative : ≈ ':'Mouvement implicite : ')+p.value+'%').join('')},grid:{left:40,right:15,top:22,bottom:45},xAxis:{type:'category',data:P.validMoves.map(x=>x.symbol)},yAxis:{type:'value',axisLabel:{formatter:'{value}%'}},series:[{type:'bar',data:P.validMoves.map(x=>x.value==null?{value:0,itemStyle:{color:'#cbd5e1'},label:{show:true,position:'top',formatter:'N/D'}}:{value:+x.value.toFixed(1),itemStyle:{color:x.indicative?'#d97706':'#0f766e'},label:{show:true,position:'top',formatter:p=>(P.validMoves[p.dataIndex].indicative?'≈ ':'')+p.value+'%'}})}]});
 const marketSymbols=['SPY','QQQ','IWM','GLD','TLT'];const marketAligned=aligned(marketSymbols);
 mount('marketChart',{tooltip:{trigger:'axis'},legend:{type:'scroll',bottom:0},grid:{left:45,right:15,top:20,bottom:48},xAxis:{type:'time'},yAxis:{type:'value',scale:true,name:'Base 100'},series:marketSymbols.map((s,i)=>({name:s,type:'line',showSymbol:false,data:marketAligned[s],lineStyle:{width:s==='QQQ'?2.4:1.5,color:palette[i]}}))});
 const sectorSymbols=['XLK','XLC','XLF','XLY','XLI','XLE','XLV','XLP','XLU','XLRE'];

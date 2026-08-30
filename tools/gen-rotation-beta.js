@@ -82,7 +82,7 @@ async function rankBeta(cfg) {
   const res = await callTool('marketdata', 'RankBeta', {
     reference: cfg.ref, universe_asset: 'stock', universe_region: 'US',
     min_correlation: cfg.minCorr, min_dollar_adv: 5e6, min_price: 3,
-    lookback_days: 90, top_k: 12, as_of: REFDATE || undefined,
+    min_overlap: 30, lookback_days: 90, top_k: 12, as_of: REFDATE || undefined,
   });
   const item = (res && (res.rows ? res : (res.data && res.data.items && res.data.items[0]))) || {};
   const rows = (item.rows || []).filter(r => Math.abs(r.correlation) >= cfg.minCorr)
@@ -95,7 +95,15 @@ async function rankBeta(cfg) {
       last_price: r.last_price != null ? +Number(r.last_price).toFixed(2) : null,
       sector: r.sector || '', industry: r.industry || '',
     }));
-  return { key: cfg.key, label: cfg.label, reference: cfg.ref, window: item.window || '90d', rows };
+  return {
+    key: cfg.key,
+    label: cfg.label,
+    reference: cfg.ref,
+    window: item.window || '90d',
+    quality: rows.length ? 'usable' : 'insufficient',
+    warning: rows.length ? null : 'Aucun proxy ne satisfait les seuils de corrélation, liquidité et recouvrement.',
+    rows,
+  };
 }
 
 (async () => {
@@ -123,7 +131,18 @@ async function rankBeta(cfg) {
   const references = [];
   for (const cfg of REFERENCES) {
     try { references.push(await rankBeta(cfg)); }
-    catch (e) { console.error(`[gen-rotation-beta] RankBeta ${cfg.ref} KO: ${e.message}`); references.push({ key: cfg.key, label: cfg.label, reference: cfg.ref, window: '90d', rows: [] }); }
+    catch (e) {
+      console.error(`[gen-rotation-beta] RankBeta ${cfg.ref} KO: ${e.message}`);
+      references.push({
+        key: cfg.key,
+        label: cfg.label,
+        reference: cfg.ref,
+        window: '90d',
+        quality: 'insufficient',
+        warning: String(e.message || 'RankBeta indisponible').slice(0, 240),
+        rows: [],
+      });
+    }
   }
 
   const out = {

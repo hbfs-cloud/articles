@@ -2681,22 +2681,15 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="community-cta">
   <div class="community-inner">
     <div class="community-text">
-      <h2 style="font-size:1.2rem;color:#fff;margin:0 0 .5rem">Stay in the loop</h2>
-      <p>New scan every weekday evening. Follow the signals, track positions, and learn systematic trading — all free.</p>
+      <h2 style="font-size:1.2rem;color:#fff;margin:0 0 .5rem">Retrouvez DailyTickers sur Substack</h2>
+      <p>Analyses, Daily et Weekly dans un seul fil éditorial.</p>
     </div>
     <div class="community-links">
-      <a href="https://t.me/+gl06cNSLV2RiZmE0" target="_blank" rel="noopener" class="cta-btn tg-btn">
-        <i class="fab fa-telegram"></i>
+      <a href="https://dailytickers.substack.com" target="_blank" rel="noopener" class="cta-btn tg-btn">
+        <i class="fas fa-newspaper"></i>
         <span>
-          <strong>Rejoindre Telegram</strong>
-          <small>Actualité · Portefeuille · Formation</small>
-        </span>
-      </a>
-      <a href="https://www.youtube.com/@marketwatchxyz" target="_blank" rel="noopener" class="cta-btn yt-btn">
-        <i class="fab fa-youtube"></i>
-        <span>
-          <strong>Voir sur YouTube</strong>
-          <small>Daily Briefing · Weekly Review · Analysis</small>
+          <strong>Lire sur Substack</strong>
+          <small>Analyses · Daily · Weekly</small>
         </span>
       </a>
     </div>
@@ -2707,9 +2700,7 @@ details[open] summary::after{transform:rotate(90deg)}
   &copy; 2026 DailyTickers &middot;
   <a href="/" title="Home"><i class="fas fa-house"></i></a>
   &nbsp;&middot;&nbsp;
-  <a href="https://t.me/+gl06cNSLV2RiZmE0" target="_blank" rel="noopener" style="color:#229ED9"><i class="fab fa-telegram"></i> Telegram</a>
-  &nbsp;&middot;&nbsp;
-  <a href="https://www.youtube.com/@marketwatchxyz" target="_blank" rel="noopener" style="color:var(--muted)"><i class="fab fa-youtube"></i> YouTube</a>
+  <a href="https://dailytickers.substack.com" target="_blank" rel="noopener" style="color:var(--muted)"><i class="fas fa-newspaper"></i> Substack</a>
 </footer>
 
 <!-- Finviz fullscreen dialog -->

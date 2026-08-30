@@ -21,6 +21,16 @@ function renderValue(value, render) {
   return `${render.prefix || ''}${sign}${scaled.toFixed(render.decimals)}${render.suffix || ''}`;
 }
 
+function evaluateFormula(source, formula) {
+  if (!formula || formula.operation !== 'sum_divide_pct' || !Array.isArray(formula.operands)
+    || formula.operands.length < 2 || typeof formula.denominator_pointer !== 'string') return null;
+  const operands = formula.operands.map(item => pointerGet(source, item.pointer));
+  const denominator = pointerGet(source, formula.denominator_pointer);
+  if (!operands.every(value => typeof value === 'number' && Number.isFinite(value))
+    || typeof denominator !== 'number' || !Number.isFinite(denominator) || denominator === 0) return null;
+  return operands.reduce((sum, value) => sum + value, 0) / denominator * 100;
+}
+
 function validate(manifest, root = ROOT) {
   const errors = [];
   if (!manifest || typeof manifest !== 'object') return ['manifest must be an object'];
@@ -74,7 +84,12 @@ function validate(manifest, root = ROOT) {
     try { source = JSON.parse(sourceBytes); } catch { errors.push(`${claim.id}: source is not valid JSON`); continue; }
     const observed = pointerGet(source, claim.source_pointer);
     if (JSON.stringify(observed) !== JSON.stringify(claim.source_value)) errors.push(`${claim.id}: source_value differs from source_pointer`);
-    const expectedText = renderValue(observed, claim.render);
+    const formulaValue = claim.formula ? evaluateFormula(source, claim.formula) : observed;
+    if (claim.formula && (!Number.isFinite(formulaValue)
+      || Math.abs(formulaValue - Number(claim.formula.result)) > 1e-10)) {
+      errors.push(`${claim.id}: formula result differs from source operands`);
+    }
+    const expectedText = renderValue(formulaValue, claim.render);
     if (expectedText == null || expectedText !== claim.rendered_text) errors.push(`${claim.id}: rendered_text is not the deterministic rendering of source_value`);
   }
   return [...new Set(errors)];

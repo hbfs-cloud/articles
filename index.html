@@ -30,7 +30,6 @@
     })(window, document, "script", "dataLayer", "GTM-T5Z595CW");
   </script>
   <!-- End Google Tag Manager -->
-  <link rel="alternate" type="application/rss+xml" title="DailyTickers RSS" href="/feed.xml">
   <link rel="icon" href="/favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -1597,18 +1596,19 @@
   <a class="skip-nav" href="#mainContent">Skip to content</a>
   <!-- Promo Banner -->
   <div id="promoBanner" class="promo-banner">
-    <span>📡 New: 22-retro performance dashboard live — <a href="?tab=scanner#scanner-perf">view scanner equity</a></span>
-    <button class="promo-banner-dismiss" onclick="dismissPromoBanner()" aria-label="Dismiss">×</button>
+    <span>Nouveau : tableau de performance sur 22 rétros — <a href="?tab=scanner#scanner-perf">voir la courbe du scanner</a></span>
+    <button type="button" class="promo-banner-dismiss" onclick="dismissPromoBanner(event)" aria-label="Fermer le bandeau"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
   </div>
   <script>
     (function() {
       if (localStorage.getItem('promoBannerDismissed') === 'true') {
-        document.getElementById('promoBanner').style.display = 'none';
+        document.getElementById('promoBanner').hidden = true;
       }
     })();
-    function dismissPromoBanner() {
+    function dismissPromoBanner(event) {
+      if (event) { event.preventDefault(); event.stopPropagation(); }
       localStorage.setItem('promoBannerDismissed', 'true');
-      document.getElementById('promoBanner').style.display = 'none';
+      document.getElementById('promoBanner').hidden = true;
     }
   </script>
   <!-- End Promo Banner -->
@@ -1745,9 +1745,9 @@
 
   <!-- Value proposition — shown once on first visit -->
   <div id="valueProp" style="display:none;position:relative;background:var(--ink);color:var(--bg);padding:1.1rem 1.5rem 1.1rem 1.5rem;text-align:center;border-bottom:1px solid var(--accent);">
-    <button type="button" aria-label="Dismiss" onclick="document.getElementById('valueProp').style.display='none';try{localStorage.setItem('valueProp-hide','1');}catch(e){}" style="position:absolute;top:8px;right:10px;background:transparent;border:none;color:var(--bg);font-size:1.1rem;cursor:pointer;opacity:0.7;"><i class="fa-solid fa-xmark"></i></button>
-    <div style="font-weight:800;font-size:1.1rem;margin-bottom:0.25rem;letter-spacing:-0.01em;">Institutional market intelligence — daily briefings, weekly outlook &amp; live A+ scanner.</div>
-    <div style="font-size:0.8rem;opacity:0.85;">Five portfolio modes (Turbo → Fortress) · real-time tracking · Sharia-compliant filter · 100% free</div>
+    <button type="button" aria-label="Fermer" onclick="document.getElementById('valueProp').style.display='none';try{localStorage.setItem('valueProp-hide','1');}catch(e){}" style="position:absolute;top:8px;right:10px;background:transparent;border:none;color:var(--bg);font-size:1.1rem;cursor:pointer;opacity:0.7;"><i class="fa-solid fa-xmark"></i></button>
+    <div style="font-weight:800;font-size:1.1rem;margin-bottom:0.25rem;letter-spacing:-0.01em;">Intelligence de marché institutionnelle : briefings quotidiens, perspectives hebdomadaires et scanner A+.</div>
+    <div style="font-size:0.8rem;opacity:0.85;">Cinq modes de portefeuille (Turbo → Fortress) · suivi en temps réel · filtre conforme à la charia · accès gratuit</div>
   </div>
   <script>(function(){try{if(!localStorage.getItem('valueProp-hide')){document.getElementById('valueProp').style.display='block';}}catch(e){}})();</script>
 
@@ -2302,11 +2302,11 @@
       <!-- Mode switcher -->
       <div class="radar-switcher">
         <div class="radar-switcher-group">
-          <button class="radar-mode" data-mode="signals" title="Signal Board"><i class="fas fa-list"></i><span class="rm-label">Signals</span></button>
-          <button class="radar-mode active" data-mode="board" title="Dashboard"><i class="fas fa-th-large"></i><span class="rm-label">Dashboard</span></button>
-          <button class="radar-mode" data-mode="radar" title="Radar"><i class="fas fa-satellite-dish"></i><span class="rm-label">Radar</span></button>
+          <button class="radar-mode" data-mode="signals" title="Liste priorisée"><i class="fas fa-list"></i><span class="rm-label">Signaux</span></button>
+          <button class="radar-mode active" data-mode="board" title="Synthèse par catégorie"><i class="fas fa-th-large"></i><span class="rm-label">Synthèse</span></button>
+          <button class="radar-mode" data-mode="radar" title="Carte d'intensité"><i class="fas fa-satellite-dish"></i><span class="rm-label">Carte</span></button>
         </div>
-        <button class="radar-mode-fs" id="radarFullscreenBtn" title="Fullscreen"><i class="fas fa-expand"></i></button>
+        <button class="radar-mode-fs" id="radarFullscreenBtn" title="Plein écran" aria-label="Afficher le radar en plein écran"><i class="fas fa-expand"></i></button>
       </div>
 
       <!-- Render area -->
@@ -2329,7 +2329,7 @@
       </div>
 
       <!-- ===== PARCOURS GUIDÉS ===== -->
-      <details class="parcours-section" style="margin-bottom:1rem">
+      <details class="parcours-section" style="margin-bottom:1rem" open>
         <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:0.5rem;padding:0.75rem 0;font-size:0.85rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">
           <i class="fa-solid fa-route" style="font-size:0.75rem"></i>
           <span data-i18n="series.parcours">Guided paths</span>
@@ -2615,7 +2615,7 @@
     <a href="/series/quick-start/">Quick Start</a> ·
     <a href="/prompt-ia/">Prompt IA</a> ·
     <a href="/integrations/">Integrations</a> ·
-    <a href="/feed.xml"><i class="fa fa-rss"></i> RSS</a> ·    Not financial advice.
+    <a href="https://dailytickers.substack.com" target="_blank" rel="noopener"><i class="fa-solid fa-newspaper"></i> Substack</a> · Ceci n’est pas un conseil financier.
   </footer>
 
   </div><!-- /.main-content -->
@@ -4122,6 +4122,40 @@
       series: { data: [], page: 0, loaded: false }
     };
 
+    function escapeSeriesHtml(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function(char) {
+        return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[char];
+      });
+    }
+
+    function seriesCatalogCard(item) {
+      const chapters = Array.isArray(item.chapters) ? item.chapters : [];
+      const chapterLinks = chapters.map(function(chapter, index) {
+        return '<li><a href="' + escapeSeriesHtml(chapter.href) + '"' + (index === 0 ? ' class="current"' : '') + '>' +
+          '<span>' + escapeSeriesHtml(chapter.number || index + 1) + '</span>' +
+          '<strong>' + escapeSeriesHtml(chapter.title || ('Partie ' + (index + 1))) + '</strong></a></li>';
+      }).join('');
+      const countLabel = item.chapterCount > 1 ? item.chapterCount + ' parties' : 'Article unique';
+      return '<article class="report-card series-catalog-card" data-lang="' + escapeSeriesHtml(item.lang || 'fr') + '" data-tags="' + escapeSeriesHtml((item.tags || []).join(',')) + '">' +
+        '<div class="series-card-head"><span class="series-card-kind"><i class="fa-solid fa-graduation-cap"></i> Série</span><span class="series-card-count">' + countLabel + '</span></div>' +
+        '<h2>' + escapeSeriesHtml(item.title) + '</h2>' +
+        '<p class="series-card-description">' + escapeSeriesHtml(item.description) + '</p>' +
+        (chapters.length > 1 ? '<div class="series-card-progress"><span style="width:' + (100 / chapters.length).toFixed(2) + '%"></span></div><div class="series-card-chapters" aria-label="Chapitres de ' + escapeSeriesHtml(item.title) + '"><ol>' + chapterLinks + '</ol></div>' : '') +
+        '<a href="' + escapeSeriesHtml(item.href) + '" class="btn-read-primary series-card-cta"><i class="fa-solid fa-play"></i> ' + (chapters.length > 1 ? 'Commencer la série' : 'Lire l’article') + '</a>' +
+      '</article>';
+    }
+
+    function normalizeTabPayload(tab, payload) {
+      if (tab === 'series' && payload && Array.isArray(payload.series)) {
+        return payload.series.map(seriesCatalogCard);
+      }
+      return Array.isArray(payload) ? payload : [];
+    }
+
+    function tabDataUrl(tab) {
+      return '/data/' + (tab === 'series' ? 'series-catalog' : tab) + '.json?v=' + Date.now();
+    }
+
     function renderCards(tab, reset = false) {
       const state = tabState[tab];
       const panel = document.getElementById('tab-' + tab);
@@ -4186,10 +4220,10 @@
         return; // Already fetched
       }
 
-      fetch('/data/' + tab + '.json?v=' + Date.now())
+      fetch(tabDataUrl(tab))
         .then(r => r.json())
         .then(data => {
-          tabState[tab].data = data;
+          tabState[tab].data = normalizeTabPayload(tab, data);
           tabState[tab].loaded = true;
 
           // Render first page
@@ -4242,10 +4276,10 @@
 
       tabs.forEach(function(tab) {
         if (tabState[tab].loaded) return;
-        fetch('/data/' + tab + '.json?v=' + Date.now())
+        fetch(tabDataUrl(tab))
           .then(function(r) { return r.json(); })
           .then(function(data) {
-            tabState[tab].data = data;
+            tabState[tab].data = normalizeTabPayload(tab, data);
             tabState[tab].loaded = true;
             // Only render the active tab immediately
             if (tab === activeTab) {
@@ -4294,7 +4328,7 @@
     var radarAngle = 0, radarAnim = null, blips = [], hoveredBlip = null;
     var canvas, ctx, cw, ch, cx, cy, radius, dpr = 1;
     var radarStylesInjected = false; // prevent duplicate <style> injection
-    function onRadarResize() { if (currentMode==='radar') { sizeCanvas(); buildBlips(); } }
+    function onRadarResize() { if (currentMode==='radar') { sizeCanvas(); buildBlips(); drawRadarCanvas(); } }
 
     // XSS protection: escape HTML entities in user-facing text
     function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
@@ -4303,10 +4337,10 @@
     // (risk→neg, event→warn, opportunity→pos, regime→info). OKLCH is
     // supported in canvas fillStyle/strokeStyle in all current browsers.
     var C = {
-      risk:        { fill:'oklch(52% 0.16 25)',  glow:'oklch(52% 0.16 25 / 0.4)',  bg:'oklch(95% 0.04 25)',  border:'oklch(80% 0.08 25)',  text:'oklch(42% 0.14 25)',  icon:'fa-triangle-exclamation', label:'Risks' },
-      event:       { fill:'oklch(70% 0.14 75)',  glow:'oklch(70% 0.14 75 / 0.4)',  bg:'oklch(96% 0.04 90)',  border:'oklch(82% 0.10 80)',  text:'oklch(42% 0.10 75)',  icon:'fa-calendar-day',         label:'Events' },
-      opportunity: { fill:'oklch(52% 0.12 155)', glow:'oklch(52% 0.12 155 / 0.4)', bg:'oklch(95% 0.04 155)', border:'oklch(80% 0.09 155)', text:'oklch(38% 0.10 155)', icon:'fa-bullseye',             label:'Opportunities' },
-      regime:      { fill:'oklch(52% 0.12 250)', glow:'oklch(52% 0.12 250 / 0.4)', bg:'oklch(95% 0.03 250)', border:'oklch(82% 0.07 250)', text:'oklch(40% 0.10 250)', icon:'fa-gauge-high',           label:'Regime' }
+      risk:        { fill:'oklch(52% 0.16 25)',  glow:'oklch(52% 0.16 25 / 0.4)',  bg:'oklch(95% 0.04 25)',  border:'oklch(80% 0.08 25)',  text:'oklch(42% 0.14 25)',  icon:'fa-triangle-exclamation', label:'Risques' },
+      event:       { fill:'oklch(70% 0.14 75)',  glow:'oklch(70% 0.14 75 / 0.4)',  bg:'oklch(96% 0.04 90)',  border:'oklch(82% 0.10 80)',  text:'oklch(42% 0.10 75)',  icon:'fa-calendar-day',         label:'Événements' },
+      opportunity: { fill:'oklch(52% 0.12 155)', glow:'oklch(52% 0.12 155 / 0.4)', bg:'oklch(95% 0.04 155)', border:'oklch(80% 0.09 155)', text:'oklch(38% 0.10 155)', icon:'fa-bullseye',             label:'Opportunités' },
+      regime:      { fill:'oklch(52% 0.12 250)', glow:'oklch(52% 0.12 250 / 0.4)', bg:'oklch(95% 0.03 250)', border:'oklch(82% 0.07 250)', text:'oklch(40% 0.10 250)', icon:'fa-gauge-high',           label:'Régime' }
     };
 
     function init() {
@@ -4378,6 +4412,15 @@
             data.vix = data.regime.vix || data.vix;
             data.regime = data.regime.label || 'NEUTRAL';
           }
+          if (data.regime && !(data.items || []).some(function(it) { return it.category === 'regime'; })) {
+            data.items = data.items || [];
+            data.items.push({
+              category: 'regime',
+              label: 'Régime ' + String(data.regime).replace(/_/g, '-'),
+              importance: 7,
+              detail: data.vix_zone || 'Le régime donne le cadre; la participation et les catalyseurs déterminent l’exécution.'
+            });
+          }
           // Normalize markets into top-level fields
           if (data.markets) {
             if (data.markets.sp500) data.spx = data.markets.sp500.price;
@@ -4403,7 +4446,7 @@
           var up = document.getElementById('radarUpdated');
           if (up && data.updated) {
             var d = new Date(data.updated);
-            up.textContent = 'Updated: ' + d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+            up.textContent = 'Actualisé : ' + d.toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
           }
           // Set initial mode button
           document.querySelectorAll('.radar-mode').forEach(function(b) {
@@ -4414,7 +4457,7 @@
         .catch(function(e) {
           console.warn('Radar unavailable', e);
           var view = document.getElementById('radarView');
-          if (view) view.innerHTML = '<div style="text-align:center;padding:3rem 1rem;color:#94a3b8;"><i class="fas fa-satellite-dish" style="font-size:2rem;margin-bottom:1rem;display:block;opacity:0.4;"></i><p style="font-size:0.9rem;font-weight:600;">Radar data unavailable</p><p style="font-size:0.8rem;margin-top:0.5rem;">Check your connection and reload.</p></div>';
+          if (view) view.innerHTML = '<div style="text-align:center;padding:3rem 1rem;color:#64748b;"><i class="fas fa-satellite-dish" style="font-size:2rem;margin-bottom:1rem;display:block;opacity:0.4;"></i><p style="font-size:0.9rem;font-weight:700;">Données du radar indisponibles</p><p style="font-size:0.8rem;margin-top:0.5rem;">Vérifiez la connexion puis rechargez la page.</p></div>';
         });
     }
 
@@ -4447,7 +4490,7 @@
       if (RD.updated) {
         var age = (Date.now() - new Date(RD.updated).getTime()) / 3600000;
         var freshColor = age < 6 ? '#10b981' : age < 12 ? '#f59e0b' : '#ef4444';
-        var freshLabel = age < 1 ? Math.round(age*60)+'m ago' : age < 24 ? Math.round(age)+'h ago' : Math.round(age/24)+'d ago';
+        var freshLabel = age < 1 ? 'il y a '+Math.round(age*60)+' min' : age < 24 ? 'il y a '+Math.round(age)+' h' : 'il y a '+Math.round(age/24)+' j';
         parts.push('<span style="'+p+'background:'+freshColor+'18;color:'+freshColor+';border:1px solid '+freshColor+'30;"><i class="fas fa-clock"></i> '+freshLabel+'</span>');
       }
       el.innerHTML = parts.filter(Boolean).join('');
@@ -4456,6 +4499,17 @@
     function render() {
       if (!RD) return;
       var view = document.getElementById('radarView');
+      // Mount shared styles in <head>. Keeping them inside the Signals markup
+      // made Dashboard/Map raw on direct entry and after changing modes.
+      if (!document.getElementById('radar-runtime-styles')) {
+        var staging = document.createElement('div');
+        renderSignals(staging);
+        var sharedStyle = staging.querySelector('style');
+        if (sharedStyle) {
+          sharedStyle.id = 'radar-runtime-styles';
+          document.head.appendChild(sharedStyle);
+        }
+      }
       ({ signals: renderSignals, board: renderBoard, radar: renderRadar }[currentMode] || renderSignals)(view);
     }
 
@@ -4529,12 +4583,14 @@
         h += '.rb-summary{background:var(--surface-2);border:1px solid var(--border-c);border-radius:var(--r-l);padding:1.1rem 1.4rem;margin-bottom:1.25rem;font-size:0.88rem;line-height:1.55;color:var(--ink-2);max-width:960px;margin-left:auto;margin-right:auto}';
         h += '.rb-summary i{color:var(--accent);margin-right:8px}';
         // Radar canvas styles
-        h += '.rr-wrap{display:grid;grid-template-columns:1fr 300px;gap:0;margin:0 auto;border-radius:var(--r-l);overflow:hidden;border:1px solid var(--border-c);background:var(--surface);max-width:960px}';
+        h += '.rr-wrap{display:grid;grid-template-columns:1fr 300px;gap:0;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid var(--border-c);background:var(--surface);max-width:960px}';
         h += '@media(max-width:700px){.rr-wrap{grid-template-columns:1fr}.rr-side{border-left:none;border-top:1px solid var(--border-c);max-height:280px;overflow-y:auto}}';
         h += '.rr-main{position:relative;padding:0.75rem}';
+        h += '.rr-scale{display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.15rem 0 .45rem;color:var(--muted);font-size:.64rem;font-weight:700}';
+        h += '.rr-scale i{width:70px;height:4px;border-radius:2px;background:linear-gradient(90deg,var(--neg),var(--border-c));display:block}';
         h += '.rr-side{border-left:1px solid var(--border-c);background:var(--surface-2);display:flex;flex-direction:column}';
         h += '.rr-side-head{padding:0.85rem 1rem;border-bottom:1px solid var(--border-c);display:flex;align-items:center;gap:0.5rem}';
-        h += '.rr-side-head-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse-dot 2s infinite;box-shadow:0 0 8px var(--accent-wk)}';
+        h += '.rr-side-head-dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}';
         h += '.rr-side-head-label{font-family:var(--sans);font-size:0.75rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-2)}';
         h += '.rr-cat-section{padding:0.65rem 1rem;border-bottom:1px solid var(--border-2)}';
         h += '.rr-cat-head{display:flex;align-items:center;gap:0.45rem;margin-bottom:0.4rem}';
@@ -4556,7 +4612,7 @@
 
       // Summary banner for signals too
       if (RD.summary) {
-        h += '<div style="background:linear-gradient(135deg,#f8fafc,#eff6ff);border:1px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:0.85rem;line-height:1.55;color:#334155;max-width:960px;margin-left:auto;margin-right:auto;"><i class="fas fa-chart-line" style="color:var(--accent);margin-right:8px;"></i>' + esc(RD.summary) + '</div>';
+        h += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid var(--accent);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:0.85rem;line-height:1.55;color:#334155;max-width:960px;margin-left:auto;margin-right:auto;"><i class="fas fa-chart-line" style="color:var(--accent);margin-right:8px;"></i>' + esc(RD.summary) + '</div>';
       }
 
       h += "<div class='rs-list'>";
@@ -4674,6 +4730,7 @@
 
       // Main canvas area
       h += '<div class="rr-main">';
+      h += '<div class="rr-scale"><span>Centre : critique</span><i aria-hidden="true"></i><span>Bord : contexte</span></div>';
       h += '<div id="radarContainer" style="position:relative;width:100%;margin:0 auto;">';
       h += '<canvas id="radarCanvas" style="width:100%;display:block;"></canvas>';
       h += '<div id="radarTooltip" style="display:none;position:absolute;background:#fff;color:#0f172a;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.8rem;max-width:260px;pointer-events:none;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,0.12);line-height:1.4;"></div>';
@@ -4682,7 +4739,7 @@
 
       // Sidebar
       h += '<div class="rr-side">';
-      h += '<div class="rr-side-head"><div class="rr-side-head-dot"></div><span class="rr-side-head-label">Active Signals</span></div>';
+      h += '<div class="rr-side-head"><div class="rr-side-head-dot"></div><span class="rr-side-head-label">Signaux actifs</span></div>';
 
       cats.forEach(function(cat) {
         var c = C[cat];
@@ -4729,9 +4786,9 @@
         if (!canvas) return;
         ctx = canvas.getContext('2d');
         dpr = window.devicePixelRatio || 1;
-        sizeCanvas(); buildBlips(); startAnim();
+        sizeCanvas(); buildBlips(); drawRadarCanvas();
         canvas.addEventListener('mousemove', onCanvasHover);
-        canvas.addEventListener('mouseleave', function() { hoveredBlip = null; hideTooltip(); });
+        canvas.addEventListener('mouseleave', function() { hoveredBlip = null; hideTooltip(); drawRadarCanvas(); });
         canvas.addEventListener('click', onCanvasClick);
         canvas.addEventListener('touchstart', onCanvasTouch, { passive: true });
         window.removeEventListener('resize', onRadarResize);
@@ -4800,10 +4857,6 @@
       });
     }
 
-    function startAnim() {
-      if (radarAnim) return;
-      (function f() { radarAngle+=0.007; if(radarAngle>Math.PI*2) radarAngle-=Math.PI*2; drawRadarCanvas(); radarAnim=requestAnimationFrame(f); })();
-    }
     function stopAnim() { if (radarAnim) { cancelAnimationFrame(radarAnim); radarAnim=null; } }
 
     var frameCount = 0;
@@ -4815,10 +4868,8 @@
       ctx.fillStyle = 'oklch(100% 0 0)';
       ctx.fillRect(0,0,cw,ch);
 
-      // === ZONE RINGS (5 rings) with clear time-proximity labels ===
-      // Sweep + structure use the FT brand azure accent (from the logo).
+      // === ZONE RINGS (5 rings) encoding importance from center to edge ===
       var ACCENT = 'oklch(46% 0.13 237)';
-      var ringLabels = ['IMMINENT','URGENT','NEAR-TERM','WATCH','HORIZON'];
       var ringColors = ['oklch(52% 0.16 25 / 0.12)','oklch(70% 0.14 75 / 0.08)','oklch(52% 0.015 250 / 0.08)','oklch(52% 0.015 250 / 0.06)','oklch(52% 0.015 250 / 0.04)'];
       for (var i=1; i<=5; i++) {
         var r = radius*i/5;
@@ -4831,12 +4882,6 @@
         ctx.strokeStyle = 'oklch(52% 0.015 250 / ' + (0.15 + (5-i)*0.05) + ')';
         ctx.lineWidth = (i===5 ? 1.5 : 1) * dpr;
         ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
-        // Ring labels — clear, readable, positioned on the right
-        var rlsz = 7*dpr;
-        ctx.font = '700 '+rlsz+'px Inter,system-ui,sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillStyle = i<=2 ? 'oklch(40% 0.02 250 / 0.7)' : 'oklch(52% 0.015 250 / 0.55)';
-        ctx.fillText(ringLabels[i-1], cx+r+5*dpr, cy+3*dpr);
       }
 
       // === CROSS LINES — dashed ===
@@ -4851,43 +4896,19 @@
       var qlsz = 13*dpr;
       ctx.font = '800 '+qlsz+'px Inter,system-ui,sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillStyle = 'oklch(52% 0.16 25 / 0.40)';  ctx.fillText('RISKS', cx+radius*0.52, cy-radius*0.82);
-      ctx.fillStyle = 'oklch(70% 0.14 75 / 0.40)';  ctx.fillText('EVENTS', cx+radius*0.52, cy+radius*0.88);
-      ctx.fillStyle = 'oklch(52% 0.12 155 / 0.40)'; ctx.fillText('OPPS', cx-radius*0.52, cy+radius*0.88);
-      ctx.fillStyle = 'oklch(52% 0.12 250 / 0.40)'; ctx.fillText('REGIME', cx-radius*0.52, cy-radius*0.82);
-
-      // === SWEEP CONE — brand azure accent ===
-      if (ctx.createConicGradient) {
-        var g = ctx.createConicGradient(radarAngle - Math.PI/3, cx, cy);
-        g.addColorStop(0, 'oklch(46% 0.13 237 / 0)');
-        g.addColorStop(0.6, 'oklch(46% 0.13 237 / 0)');
-        g.addColorStop(0.88, 'oklch(46% 0.13 237 / 0.04)');
-        g.addColorStop(1, 'oklch(46% 0.13 237 / 0.10)');
-        ctx.fillStyle = g;
-        ctx.beginPath(); ctx.arc(cx,cy,radius,0,Math.PI*2); ctx.fill();
-      }
-
-      // === SWEEP LINE — brand azure accent ===
-      ctx.strokeStyle = ACCENT;
-      ctx.lineWidth = 2*dpr;
-      ctx.shadowColor = ACCENT;
-      ctx.shadowBlur = 8*dpr;
-      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(radarAngle)*radius, cy+Math.sin(radarAngle)*radius); ctx.stroke();
-      ctx.shadowBlur = 0;
+      ctx.fillStyle = 'oklch(52% 0.16 25 / 0.40)';  ctx.fillText('RISQUES', cx+radius*0.52, cy-radius*0.82);
+      ctx.fillStyle = 'oklch(70% 0.14 75 / 0.40)';  ctx.fillText('ÉVÉNEMENTS', cx+radius*0.52, cy+radius*0.88);
+      ctx.fillStyle = 'oklch(52% 0.12 155 / 0.40)'; ctx.fillText('OPPORTUNITÉS', cx-radius*0.52, cy+radius*0.88);
+      ctx.fillStyle = 'oklch(52% 0.12 250 / 0.40)'; ctx.fillText('RÉGIME', cx-radius*0.52, cy-radius*0.82);
 
       // === CENTER DOT ===
-      var centerPulse = 1 + Math.sin(frameCount*0.05)*0.3;
       ctx.fillStyle = 'oklch(46% 0.13 237 / 0.15)';
-      ctx.beginPath(); ctx.arc(cx,cy,8*dpr*centerPulse,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx,cy,8*dpr,0,Math.PI*2); ctx.fill();
       ctx.fillStyle = ACCENT;
       ctx.beginPath(); ctx.arc(cx,cy,4*dpr,0,Math.PI*2); ctx.fill();
 
       // === BLIPS — colored dots, hover-only labels ===
       blips.forEach(function(b) {
-        var ad = ((radarAngle-b.angle)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
-        if (ad < 0.2) b.pulse = 1;
-        if (b.pulse > 0) b.pulse -= 0.012;
-
         var hov = b===hoveredBlip;
         var imp = b.data.importance||5;
 
@@ -4898,10 +4919,10 @@
         }
 
         var sz = b.size * (hov ? 1.6 : 1) * (0.7 + 0.3 * b.freshness);
-        var alpha = (0.65 + b.pulse*0.35) * blinkAlpha * b.freshness;
+        var alpha = 0.75 * blinkAlpha * b.freshness;
 
         // Glow
-        if (b.pulse > 0.05 || hov || b.blink) {
+        if (hov || b.blink) {
           var glowSz = sz + (b.blink ? 8 : hov ? 10 : 5) * dpr;
           ctx.globalAlpha = (hov ? 0.5 : 0.22) * blinkAlpha;
           ctx.fillStyle = b.color.glow;
@@ -4909,19 +4930,11 @@
           ctx.globalAlpha = 1;
         }
 
-        // Pulse ring on sweep
-        if (b.pulse > 0.3) {
-          ctx.globalAlpha = b.pulse * 0.35 * blinkAlpha;
-          ctx.fillStyle = b.color.glow;
-          ctx.beginPath(); ctx.arc(b.x,b.y,sz+4*dpr,0,Math.PI*2); ctx.fill();
-          ctx.globalAlpha = 1;
-        }
-
         // Main blip
         ctx.globalAlpha = alpha;
         ctx.fillStyle = b.color.fill;
         ctx.shadowColor = b.color.fill;
-        ctx.shadowBlur = (b.pulse>0.3 ? 12 : b.blink ? 8 : 4) * dpr;
+        ctx.shadowBlur = (b.blink ? 8 : 4) * dpr;
         ctx.beginPath(); ctx.arc(b.x,b.y,sz,0,Math.PI*2); ctx.fill();
         ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
@@ -4963,13 +4976,13 @@
       blips.forEach(function(b) { var d=Math.hypot(b.x-mx,b.y-my); if(d<b.size+15*dpr&&d<best){hit=b;best=d;} });
       return hit;
     }
-    function onCanvasHover(e) { var b=getBlipAt(e); hoveredBlip=b; canvas.style.cursor=b?'pointer':'default'; b?showTip(e,b.data):hideTooltip(); }
+    function onCanvasHover(e) { var b=getBlipAt(e); hoveredBlip=b; canvas.style.cursor=b?'pointer':'default'; b?showTip(e,b.data):hideTooltip(); drawRadarCanvas(); }
     function onCanvasClick(e) { var b=getBlipAt(e); if(b&&b.data.link) location.href=b.data.link; }
-    function onCanvasTouch(e) { var t=e.touches[0],b=getBlipAt(t); if(b){hoveredBlip=b;showTip(t,b.data);if(b.data.link)setTimeout(function(){location.href=b.data.link;},800);} }
+    function onCanvasTouch(e) { var t=e.touches[0],b=getBlipAt(t); if(b){hoveredBlip=b;showTip(t,b.data);drawRadarCanvas();if(b.data.link)setTimeout(function(){location.href=b.data.link;},800);} }
     function showTip(e,d) {
       var tip=document.getElementById('radarTooltip'), rect=document.getElementById('radarContainer').getBoundingClientRect();
       var cc=C[d.category]||C.regime;
-      tip.innerHTML='<strong style="color:'+cc.fill+';">'+d.label+'</strong>'+(d.detail?'<br><span style="color:var(--ink-2);">'+d.detail+'</span>':'')+(d.date?'<br><span style="font-size:0.68rem;color:var(--muted);"><i class="fas fa-clock"></i> '+d.date+'</span>':'')+(d.link?'<br><span style="font-size:0.7rem;color:var(--accent);font-weight:600;">Click to read <i class="fas fa-arrow-right"></i></span>':'');
+      tip.innerHTML='<strong style="color:'+cc.fill+';">'+d.label+'</strong>'+(d.detail?'<br><span style="color:var(--ink-2);">'+d.detail+'</span>':'')+(d.date?'<br><span style="font-size:0.68rem;color:var(--muted);"><i class="fas fa-clock"></i> '+d.date+'</span>':'')+(d.link?'<br><span style="font-size:0.7rem;color:var(--accent);font-weight:600;">Ouvrir le détail <i class="fas fa-arrow-right"></i></span>':'');
       tip.style.display='block';
       var x=e.clientX-rect.left+15, y=e.clientY-rect.top-10;
       if(x+260>rect.width)x-=280; if(y+120>rect.height)y-=100; if(x<0)x=10;
@@ -5302,7 +5315,7 @@
       }
     };
 
-    var defaultLang = 'en';
+    var defaultLang = 'fr';
 
     function resolve(lang, key) {
       var table = translations[lang] || translations[defaultLang];
@@ -5506,14 +5519,11 @@
       });
     }
 
-    // Init from stored preference — else default to browser language (FR or EN)
-    // so a first-time visitor sees a single language of cards (not FR/EN mixed).
+    // The public website defaults to French. A visitor may still deliberately
+    // select another language from the filter afterwards.
     (function() {
       var stored = localStorage.getItem('mw-lang');
-      if (!stored) {
-        var nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
-        stored = nav.indexOf('fr') === 0 ? 'fr' : 'en';
-      }
+      if (!stored || stored === 'all' || stored === 'en') stored = 'fr';
       setLang(stored);
     })();
   </script>
