@@ -375,9 +375,14 @@ ${renderChartEmbed(header, d.meta)}`;
 
 function renderVerdict(d) {
   const { verdict, meta } = d;
+  const checklist = (verdict.controlChecklist || []).map(item => {
+    const icon = { pass: 'circle-check', warn: 'triangle-exclamation', blocked: 'ban', fail: 'circle-xmark', unknown: 'circle-question' }[item.status] || 'circle-question';
+    return `<div class="decision-check decision-check-${esc(item.status)}"><div class="decision-check-head"><i class="fa-solid fa-${icon}"></i><strong>${esc(item.label)}</strong><span>${esc(item.statusLabel)}</span></div><div class="decision-check-evidence">${esc(item.evidence)}</div><div class="decision-check-action"><b>Conséquence :</b> ${esc(item.action)}</div></div>`;
+  }).join('');
   return `
       <div id="verdict" class="content-card">
         <h2><i class="fa-solid fa-gavel"></i> Verdict Express</h2>
+        ${checklist ? `<div class="decision-cockpit"><div class="decision-cockpit-title"><div><span class="eyebrow-label">DÉCISION PRIORITAIRE</span><h3>ATTENDRE — aucun achat avant les résultats</h3></div><span class="decision-pill decision-pill-blocked"><i class="fa-solid fa-ban"></i> Entrée bloquée</span></div><p class="decision-cockpit-note">La qualité de l’entreprise est élevée, mais le timing est non validé. Les niveaux historiques sont des repères d’audit, pas des ordres.</p><div class="decision-check-grid">${checklist}</div></div>` : ''}
         <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem;">
           <div style="text-align:center;">
             <div id="gaugeScore" class="echart-box" style="width:180px;height:180px;"></div>
@@ -589,6 +594,7 @@ function renderTechnicals(d) {
   return `
       <div id="technique" class="content-card">
         <h2><i class="fa-solid fa-chart-area"></i> ${tx(d, 'Technical Analysis', 'Analyse technique')}</h2>
+        <div class="interpretation-band"><strong>Lecture :</strong> ${esc(t.setupNote || 'La technique ne confirme pas encore une entrée.')} <span class="badge badge-amber">Décision: attendre</span></div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;margin-bottom:1.5rem;">
 ${t.radarValues && Object.keys(rv).length ? `          <div><div id="radarTech${d.header.ticker.replace(/[^a-zA-Z0-9]/g,'')}" class="echart-box" style="height:320px;"></div></div>` : ''}
           <div>
@@ -676,6 +682,7 @@ function renderBlastRadius(d) {
   return `
       <div id="blast-radius" class="content-card">
         <h2><i class="fa-solid fa-diagram-project"></i> Rayon de propagation : qui bouge avec ${esc(d.header.ticker)} ?</h2>
+        <div class="interpretation-band"><strong>À retenir :</strong> Le rayon de propagation décrit des liens économiques et statistiques, pas des ordres. La confirmation utile exige AVGO, les pairs directs et SOXX; un proxy isolé ne suffit pas.</div>
         <p>${esc(blast.methodology)}</p>
         <p style="font-size:0.78rem;color:#64748b;"><strong>Clôture de référence :</strong> ${esc(blast.asOf)} · <strong>Observation :</strong> ${esc(blast.observationTime)} · <strong>Fenêtre :</strong> ${esc(blast.window)}</p>
 ${blast.groups.map(group => `        <section style="margin-top:1.35rem;">

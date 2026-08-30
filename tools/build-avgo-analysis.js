@@ -378,6 +378,16 @@ const analysis = {
   },
   verdict: {
     score, conviction: 'Low', bias: 'Neutral', confidence: `Confiance ${blastOverallConfidence} : ${blastConfidenceCounts.high} relation forte, ${blastConfidenceCounts.medium} moyennes et ${blastConfidenceCounts.low} faibles après neutralisation de QQQ`,
+    controlChecklist: [
+      { label: 'Données de référence', status: 'pass', statusLabel: 'VALIDÉ', evidence: `Clôture complète du ${REF}; observation horodatée ${harness.generated_at}.`, action: 'Les niveaux peuvent être audités, pas exécutés.' },
+      { label: 'Risque événementiel', status: 'blocked', statusLabel: 'BLOQUÉ', evidence: 'Résultats Broadcom le 2 septembre après clôture.', action: 'Aucune nouvelle entrée avant la publication.' },
+      { label: 'Tendance', status: 'warn', statusLabel: 'MITIGÉ', evidence: `Cours sous EMA20 ${px(technical.ema20)} et EMA50 ${px(technical.ema50)}; RSI ${technical.rsi.toFixed(1)}.`, action: 'Attendre une reprise confirmée, pas acheter la faiblesse.' },
+      { label: 'Volume et VWAP', status: 'blocked', statusLabel: 'NON CONFIRMÉ', evidence: 'Les barres régulières post-événement n’existent pas encore.', action: 'Recalculer VWAP, range 15 min et volume après le gap.' },
+      { label: 'Risque / rendement', status: 'warn', statusLabel: 'FAIBLE', evidence: `Le repère historique ne paie que ${rr1.toFixed(2)}R vers le premier objectif.`, action: 'Ne pas conserver ces niveaux comme plan actif.' },
+      { label: 'Valorisation et bilan', status: 'warn', statusLabel: 'EXIGEANT', evidence: '43,1x EV/EBITDA, 24,0x EV/revenus et dette comptable de 64,907 Md$.', action: 'Une simple conformité peut provoquer une compression.' },
+      { label: 'Blast radius', status: blastOverallConfidence === 'élevée' ? 'pass' : 'warn', statusLabel: blastOverallConfidence === 'élevée' ? 'EXPLOITABLE' : 'PARTIEL', evidence: `${blastConfidenceCounts.high} relation(s) forte(s), ${blastConfidenceCounts.medium} moyenne(s), ${blastConfidenceCounts.low} faible(s) après neutralisation de QQQ.`, action: 'Lire les pairs comme confirmation, jamais comme causalité.' },
+      { label: 'SEC / options', status: 'warn', statusLabel: 'PARTIEL', evidence: 'Dépôts SEC principaux vérifiés; chaîne et volatilité événementielle dédiées indisponibles.', action: 'Ne pas inférer une amplitude implicite ni un signal de flux.' }
+    ],
     summary: `Broadcom combine les puces sur mesure et le réseau pour l’IA avec les logiciels hérités de VMware. Le Q2 publié est exceptionnel : 22,187 Md$ de revenus, +48% sur un an, 10,8 Md$ de revenus IA et 10,262 Md$ de flux de trésorerie disponible. Mais le marché paie 43,1x l’EBITDA et 24,0x les revenus, tandis qu’un accord avec Apollo peut exposer Broadcom jusqu’à 29 Md$ si le client des racks IA ne paie pas ses loyers; cette exposition monte avec les déploiements et les recours peuvent la réduire. Un stress mécanique à ${scenarioMultiple}x l’EBITDA TTM donne environ $${scenarioPriceRounded}, soit ${scenarioDownside.toFixed(1)}%, sans constituer une juste valeur. Broadcom publie le 2 septembre après clôture : aucun achat avant l’événement.`,
     whyBuy: [
       'Revenus Q2 FY2026 de 22,187 Md$, en hausse de 48% sur un an.',
