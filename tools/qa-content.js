@@ -553,8 +553,8 @@ function validate(file) {
       });
       if (extras.length) return `${extras.length} attribut(s) style= inline hors conteneur ECharts (règle 8) — ex: ${extras[0].slice(0, 60)}`;
     });
-    warn('FAB (fnav) présent', () => {
-      if (!/class="fnav"|id="floatingNav"|fnav-item/.test(html)) return 'navigation flottante fnav absente';
+    warn('navigation rapide présente', () => {
+      if (!/class="fnav"|id="floatingNav"|fnav-item|src="\/assets\/sidebar\.js"/.test(html)) return 'navigation flottante ou sidebar absente';
     });
   }
 
@@ -571,8 +571,8 @@ function validate(file) {
       if (!/id="outlook"|Outlook|Perspectives/i.test(html)) miss.push('Outlook');
       if (miss.length) return `section(s) clé(s) absente(s): ${miss.join(', ')}`;
     });
-    warn('FAB (fnav) présent', () => {
-      if (!/class="fnav"|id="floatingNav"|fnav-item/.test(html)) return 'navigation flottante fnav absente';
+    warn('navigation rapide présente', () => {
+      if (!/class="fnav"|id="floatingNav"|fnav-item|src="\/assets\/sidebar\.js"/.test(html)) return 'navigation flottante ou sidebar absente';
     });
   }
 

@@ -60,7 +60,7 @@
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
-            "types": "financials,stats,earnings_quarterly,analyst_actions",
+            "types": "financials,stats,earnings_quarterly,earnings_reactions,earnings_surprises,analyst_actions",
             "symbols": "$focus_symbols",
             "end_date": "$refdate",
             "force_async": true
@@ -116,6 +116,24 @@
           },
           "freshness": {
             "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        },
+        {
+          "as": "blast_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$blast_symbols",
+            "end_date": "$refdate",
+            "adjusted": true,
+            "force_async": true,
+            "days": 120
+          },
+          "freshness": {
+            "max_age_h": 72,
             "required": true,
             "expects_close": true
           }

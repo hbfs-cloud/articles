@@ -28,3 +28,7 @@ Stable files such as `_data/fundamentals.json` are current aliases, not historic
 allowed only when the sibling `harness.json` records `generated_at`, `reference_close`, `plan_sha256`,
 the exact source SHA-256 and source `as_of`/`data_through`. Never infer freshness from the alias filename.
 Date or content-address primary evidence and archive every published version separately.
+
+Use SHEL as the chart-coverage reference and TARA as the density/hierarchy reference. Do not expose large
+empty sections for unavailable facets: consolidate them into a compact coverage matrix, keep the first
+viewport decision-complete, and put an interpreted EChart before any dense peer/blast-radius table.

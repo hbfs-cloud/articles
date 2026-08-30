@@ -1,61 +1,72 @@
-# The AI Trade Faces Its Real Diffusion Test
+# Broadcom Is the AI Trade’s Next Systemic Test
 
-The market survived Nvidia's earnings. Now comes the harder question: is AI spending spreading beyond GPUs into servers, networks, data platforms, and cybersecurity?
+Nvidia confirmed that demand for AI compute remains powerful. This week asks a harder question: is that demand spreading into custom chips, networking, servers, cloud consumption, cybersecurity, and power infrastructure?
 
-That question will be answered in stages this week. Dell, Palo Alto Networks, MongoDB, and Credo report Tuesday after the close. Snowflake and HPE follow Wednesday after the close. Ciena reports Thursday before the open, and Zscaler reports Thursday after the close. Friday's US jobs report then decides whether interest rates support or overwhelm the company-level signals.
+Broadcom is the central event. It reports Wednesday after the close, alongside Snowflake and HPE. Dell, Palo Alto Networks, MongoDB, and Credo report Tuesday. Ciena and Zscaler follow Thursday. Friday’s US jobs report can then reprice the entire group through interest rates.
 
-## The setup
+## The decision first
 
-The broad regime is still risk-on. The VIX closed at 14.43, below its recent average, and the volatility curve remains in contango: near-term protection is cheaper than protection several months out. That is a calm structure, not a panic structure.
+Do not buy Broadcom before earnings.
 
-But the rally is narrow. Large-cap indices edged higher last week while small caps fell, and most US sectors finished lower. Technology, communication services, and financials carried the tape. Gold, silver, and oil declined. Long-duration Treasuries rose.
+The company is fundamentally strong, but the stock closed at $368.79, below its short and intermediate trend lines, with a daily RSI of 42.7. Its last eight earnings reactions were split evenly between gains and losses. The median absolute move was 10.9%, and the latest reaction was a 13.0% decline.
 
-In simple terms: the headline indices look healthy, but fewer stocks are doing the lifting. That supports selective risk-taking, not blind market exposure.
+Four consecutive EPS beats did not protect the stock from that drop. A beat is not the signal. Guidance and the post-release price are the signal.
 
-Crypto sent the same message. US-listed Bitcoin and Ether proxies moved only modestly, while the Solana proxy surged. That is dispersion, not a unified crypto risk-on signal. High-beta miners and crypto treasury companies should not be treated as confirmation unless the underlying Bitcoin and Ether proxies strengthen too.
+The standardized options-derived move for Broadcom must be rejected because its supplied expiration falls before earnings. A separate September 4 chain puts the midpoint of the $370 straddle near $29.95, or 8.1% of the stock price. That is only an order of magnitude: the surface contains stale or crossed quotes, and the straddle covers the full period rather than isolating earnings.
 
-## The earnings chain that matters
+## What Broadcom actually tests
 
-This week's companies test four different links in the AI economy.
+Broadcom sits at the intersection of custom AI accelerators, data-center networking, and infrastructure software. Its report can show whether AI spending is broadening beyond general-purpose GPUs.
 
-**Servers and infrastructure: Dell and HPE.** Strong demand is not enough by itself. Investors need evidence that AI server growth can support margins, cash generation, and guidance rather than simply produce expensive revenue.
+The company also carries a specific financing risk. Its conditional Apollo backstop can reach $29 billion if the AI-rack customer defaults. That maximum is distinct from the separate $35 billion initial Apollo-Blackstone financing platform and should not be added to it automatically.
 
-**Connectivity: Credo and Ciena.** More compute requires faster links inside and between data centers. These reports can confirm whether networking demand is expanding with GPU deployments.
+Use the closest economic links as independent checks, not as a predicted order of price reactions:
 
-**Data and cloud consumption: Snowflake and MongoDB.** This is the monetization test. Enterprises can announce AI projects without materially increasing paid data usage. Consumption growth and forward commentary matter more than AI slogans.
+- **Custom compute and networking:** Marvell, Arista, Credo, Ciena, Nvidia, and AMD.
+- **Manufacturing and memory:** TSMC, Micron, KLA, and the semiconductor index.
+- **Servers:** Dell and HPE.
+- **Power conversion:** Constellation, Vistra, and GE Vernova.
 
-**Cybersecurity: Palo Alto Networks and Zscaler.** New AI workloads create new identities, data flows, and attack surfaces. These results show whether security budgets are rising alongside infrastructure budgets.
+This is an economic monitoring map, not a causal model. If Broadcom rises while Marvell, Arista, Credo, and Ciena diverge, diffusion remains unproven. Server and power names are more distant read-throughs, not automatic sympathy trades, and their divergence cannot validate or invalidate Broadcom by itself.
 
-Options already price large reactions: roughly 16.2% for MongoDB, 13.1% for Zscaler, 12.7% for Credo, 12.4% for Snowflake, 11.2% for Dell and HPE, 11.7% for Ciena, and 9.4% for Palo Alto. A good report can still produce a falling stock when expectations are this high.
+## The rest of the earnings chain
 
-## What the charts say before the events
+Tuesday tests whether the AI buildout is already reaching adjacent budgets:
 
-MongoDB, Snowflake, Palo Alto, and Zscaler enter earnings above their short-term trend lines. Dell is only slightly above its own. Credo, HPE, and Ciena are below theirs and need to reclaim them.
+- **Dell:** server demand, margins, and cash conversion.
+- **Credo:** high-speed connectivity inside AI clusters.
+- **MongoDB:** paid application-data consumption.
+- **Palo Alto:** whether security spending expands with new AI workloads.
 
-This is context, not a forecast. Earnings gaps can jump over any pre-event stop. The useful signal comes after the release: does the stock hold its gap, stay above the session's volume-weighted average price, and build a base on real volume?
+Wednesday adds Broadcom, Snowflake, and HPE. Thursday brings Ciena and Zscaler. A healthy cycle requires more than one winner: custom compute, network traffic, servers, data consumption, and security guidance should point in the same direction.
 
-There is also an important filing distinction. Dell's recent share issuance disclosed to the SEC was a one-for-one conversion from Class B to Class C shares, not a new capital raise. Credo's filing is different: its DustPhotonics acquisition included cash, upfront shares, and additional contingent shares. That is a real acquisition-related share consideration and should not be mislabeled as an ATM offering. [Dell filing](https://www.sec.gov/Archives/edgar/data/1571996/000157199626000032/dell-20260611.htm) · [Credo filing](https://www.sec.gov/Archives/edgar/data/1807794/000162828026024892/crdo-20260413.htm)
+## The post-earnings checklist
 
-## The action plan
+Consider a trade only after all of these are observable:
 
-**Before earnings:** do not chase. An options-implied move above 10% means a normal position can become oversized overnight.
+1. Guidance supports the thesis, not just the reported quarter.
+2. The regular-session gap holds on real volume.
+3. Price holds VWAP and the opening range.
+4. Multiple independent peers support the same economic reading.
+5. The US rates and Nasdaq response do not contradict it.
+6. A new structural stop and reward-to-risk can be calculated from post-event trading.
 
-**After earnings:** require three things before considering an entry: guidance that supports the thesis, a gap that holds after the open, and confirmation from related companies. A single winner does not validate the entire AI chain.
+Do not convert a limit plan into a market chase. Do not buy a lagging peer only because Broadcom moved. Do not treat a positive pre-market gap as a completed setup.
 
-**If hardware is strong but cloud or cyber is weak:** treat the AI cycle as capex-heavy and monetization-light. Favor infrastructure selectively and avoid buying a broad software basket.
+## Macro, crypto, and gold
 
-**If all four links confirm:** the trade can broaden beyond Nvidia. The best evidence would be improving small-cap participation and several non-technology sectors joining the advance.
+The broad regime is still risk-on and the VIX closed at 14.43, but market breadth remains fragile. Large-cap technology is doing more work than small caps and several cyclical sectors.
 
-**If the jobs report pushes yields and the dollar higher:** reduce duration exposure even if company results were good. Macro can compress valuation multiples faster than earnings can support them.
+Friday’s jobs report is therefore a second systemic gate. Strong employment that pushes yields and the dollar higher can compress AI valuations even after good company results.
 
-No pre-event trade qualifies this week. Reliable support and resistance levels were incomplete in the collected data, so inventing precise entries, stops, or targets would create false confidence. Cash is an active position until the market supplies a clean post-event structure.
+Crypto and gold are controls, not forecasts. Weekend crypto trading does not mechanically predict the US open. Bitcoin and Ether proxies must confirm before high-beta miners or treasury companies are treated as risk-on evidence. Gold becomes useful confirmation only if it strengthens relative to long-duration bonds when rates move.
 
-## Bottom line
+## Execution verdict
 
-Nvidia proved that demand for AI compute remains powerful. This week tests whether that demand is becoming a full economic chain.
+The base case is partial diffusion, not a clean all-chain breakout.
 
-Dell, HPE, Credo, and Ciena measure infrastructure. Snowflake and MongoDB measure paid data consumption. Palo Alto and Zscaler measure enterprise security spending. Friday's jobs report decides what investors are willing to pay for all of it.
+Broadcom can validate custom AI compute and networking. Dell and HPE test servers. Snowflake and MongoDB test paid data usage. Palo Alto and Zscaler test security budgets. Ciena and Credo test the network layer. Power names come last.
 
-The rule is simple: react to confirmed diffusion, not to the word “AI.”
+Keep cash available before the events. Trade confirmed diffusion after the gap, not the word “AI” before it.
 
-*Informational only, not financial advice. Earnings gaps can exceed planned risk and make stop orders ineffective.*
+_Informational only, not financial advice. Earnings gaps can exceed planned risk and make stop orders ineffective._

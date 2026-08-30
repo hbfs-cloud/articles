@@ -9,8 +9,8 @@ requests that product change.
 
 
 ### Référence
-**L'analyse SHEL (`analyses/SHEL/`)** est la référence principale pour les futures analyses : charte graphique, structure HTML, classes CSS, ECharts (13 charts dont forecast), FAB navigation (IntersectionObserver), Trade Idea (price ladder), Price Forecast section. Toute nouvelle analyse doit suivre ce modèle.
-**Références secondaires** : TARA (`analyses/TARA/`) et CDIO (`analyses/CDIO/`) pour le switcher langue/niveau et les 6 variantes.
+**L'analyse SHEL (`analyses/SHEL/`)** est la référence principale pour la couverture et les ECharts (13 charts dont forecast), la FAB, le price ladder et la section Forecast.
+**L'analyse TARA (`analyses/TARA/`)** est la référence de densité, de hiérarchie et de lecture en deux minutes : hero compact, métriques ordonnées, verdict immédiatement actionnable et aucune grande section vide. CDIO reste la référence secondaire pour les variantes.
 **Langue du livrable web : français obligatoire, niveau intermédiaire.**
 
 ### Template HTML Obligatoire (CRITIQUE)
@@ -124,6 +124,15 @@ Analyse complète d'un ticker, lisible en 2 minutes. Style direct et punchy insp
    - ECharts **Bar Horizontal** — Barres de confluence technique
 
 **Résultat** : ~8-10 charts ECharts par analyse = expérience ultra-visuelle et interactive
+
+### Garde UX anti-régression
+
+- Ne jamais publier une grande `content-card` qui ne contient que `INDISPONIBLE`, `N/A` ou des métriques vides.
+- Regrouper les facets absentes dans une matrice de couverture compacte avec cause, impact et owner éventuel.
+- Les pairs et le blast radius utilisent un EChart lisible avant le détail tabulaire; le tableau exhaustif
+  peut suivre, mais ne doit pas être le premier contact du lecteur.
+- Le verdict initial doit tenir dans le premier viewport desktop et rester compréhensible sans ouvrir un
+  accordéon ni parcourir le dossier complet.
 
 ### Règles AI Forecast (CRITIQUE)
 

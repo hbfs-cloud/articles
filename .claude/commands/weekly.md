@@ -9,6 +9,8 @@ Produit `weekly/YYYYMMDD/index.html` selon `weekly/CLAUDE.md`,
 - `date`: lundi de la semaine couverte, format `YYYYMMDD`.
 - `refdate`: derniere cloture US terminee avant la redaction.
 - `focus_symbols`: 1 a 8 noms issus du run courant.
+- `event_leader`: catalyseur systémique principal, persisté dans la sélection éditoriale.
+- `blast_symbols`: 4 a 16 liens économiques documentés autour de ce catalyseur.
 
 Une page datee d'un lundi passe qui pretend couvrir la semaine a venir est un bug. Verifier le calendrier
 NYSE et l'anti-doublon avant toute collecte.
@@ -21,12 +23,16 @@ bash tools/run-collect.sh weekly weekly/YYYYMMDD/_data \
   --var date=YYYYMMDD --var refdate=YYYY-MM-DD
 ```
 
-Classer les noms du snapshot par score source puis ticker et persister `_data/selection.json`. Ne lancer
-le plan focus qu'apres cette decision immutable:
+Classer les noms du snapshot par score source puis ticker et persister `_data/selection.json`. Fusionner
+le calendrier filtré et `earnings_systemic`: une mégacapitalisation ne peut jamais être éliminée parce que
+son échéance options est absente, antérieure à l'événement ou mal formée. Documenter séparément les
+catalyseurs obligatoires, le classement quantitatif et le panier économique du rayon de propagation. Ne
+lancer le plan focus qu'apres cette decision immutable:
 
 ```bash
 bash tools/run-collect.sh weekly-focus weekly/YYYYMMDD/_focus \
-  --var date=YYYYMMDD --var refdate=YYYY-MM-DD --var focus_symbols=A,B,C
+  --var date=YYYYMMDD --var refdate=YYYY-MM-DD --var focus_symbols=A,B,C \
+  --var blast_symbols=A,D,E,F
 ```
 
 Le socle fournit les clotures cross-asset/sectorielles, regimes, correlations, options, short interest,
@@ -54,6 +60,11 @@ Les jetons TTL restent masques. Aucun appel MCP manuel ne remplace un fichier ab
 Le weekly explique une bascule principale et son scenario contraire. Il couvre indices, secteurs,
 taux/commodities, metaux, crypto, catalyseurs d'entreprise et calendrier. La densite vient des faits,
 tableaux et niveaux; aucun seuil de taille de fichier ne justifie de dupliquer ou rembourrer la prose.
+
+Le rendu doit conserver le standard visuel des Weekly riches: synthèse hiérarchisée puis 6 ECharts
+décisionnels minimum lorsque les données existent (multi-actifs, calendrier, earnings/blast radius,
+rotation, risques et allocation). Chaque graphique porte une interprétation et une invalidation; une
+collection de tableaux ou de paragraphes sans visualisation constitue une régression de publication.
 
 ## Gates
 

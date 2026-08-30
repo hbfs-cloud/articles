@@ -5,9 +5,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "L’IA face au test de diffusion et à l’emploi",
-    "desc": "Le régime systématique reste RISK_ON, avec un score de 79 %. Le VIX clôture à 14.43, sous sa moyenne récente, tandis que la volatilité à moyen terme reste plus chère que la volatilité immédiate. Ce n’est pas une structure de panique.",
-    "tags": "us,crypto,commodity,macro,earnings,ai,cloud,cybersecurity,semis,etf",
+    "title": "AVGO devient le vrai test de diffusion de l’IA",
+    "desc": "Le marché va tester la chaîne IA par morceaux. Le bon signal n’est pas qu’un seul titre monte, mais que les prévisions deviennent cohérentes du calcul jusqu’au logiciel, puis résistent au choc macro de vendredi.",
+    "tags": "us,macro,earnings,ai,semis,cloud,cybersecurity,crypto,gold,etf",
     "grade": "",
     "href": "/weekly/20260831/",
     "date": "31 août 2026"

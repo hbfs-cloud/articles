@@ -1,185 +1,771 @@
 #!/usr/bin/env node
-'use strict';
+"use strict";
 
-const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 
-const ROOT = path.resolve(__dirname, '../..');
-const rel = p => path.join('weekly/20260831', p);
-const read = p => JSON.parse(fs.readFileSync(path.join(ROOT, p), 'utf8'));
-const sha = p => crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, p))).digest('hex');
+const ROOT = path.resolve(__dirname, "../..");
+const rel = (file) => path.join("weekly/20260831", file);
+const read = (file) =>
+  JSON.parse(fs.readFileSync(path.join(ROOT, file), "utf8"));
+const sha = (file) =>
+  crypto
+    .createHash("sha256")
+    .update(fs.readFileSync(path.join(ROOT, file)))
+    .digest("hex");
 
 const sources = {
-  indices: rel('_data/bars_indices.json'),
-  sectors: rel('_data/bars_sectors.json'),
-  crypto: rel('_data/bars_crypto.json'),
-  options: rel('_data/options_sentiment.json'),
-  regime: rel('_data/regime_systematic.json'),
-  earnings: rel('_data/earnings_calendar.json'),
-  technicals: rel('_focus/focus_technicals.json')
+  indices: rel("_data/bars_indices.json"),
+  sectors: rel("_data/bars_sectors.json"),
+  crypto: rel("_data/bars_crypto.json"),
+  options: rel("_data/options_sentiment.json"),
+  regime: rel("_data/regime_systematic.json"),
+  earnings: rel("_data/earnings_calendar.json"),
+  systemic: rel("_data/earnings_systemic.json"),
+  economic: rel("_data/economic_events.json"),
+  fundamentals: rel("_focus/focus_fundamentals.json"),
+  technicals: rel("_focus/focus_technicals.json"),
+  focusBars: rel("_focus/focus_bars.json"),
+  blastBars: rel("_focus/blast_bars.json"),
 };
-const data = Object.fromEntries(Object.entries(sources).map(([key, file]) => [key, read(file)]));
-const hashes = Object.fromEntries(Object.entries(sources).map(([key, file]) => [key, sha(file)]));
+const data = Object.fromEntries(
+  Object.entries(sources).map(([name, file]) => [name, read(file)]),
+);
+const hashes = Object.fromEntries(
+  Object.entries(sources).map(([name, file]) => [name, sha(file)]),
+);
 const claims = [];
 
 function pointerGet(value, pointer) {
-  return pointer.slice(1).split('/').reduce((node, raw) => node[raw.replace(/~1/g, '/').replace(/~0/g, '~')], value);
+  return pointer
+    .slice(1)
+    .split("/")
+    .reduce(
+      (node, raw) => node[raw.replace(/~1/g, "/").replace(/~0/g, "~")],
+      value,
+    );
 }
 
-function claim(id, source, pointer, render) {
+function numericClaim(id, source, pointer, render) {
   const value = pointerGet(data[source], pointer);
-  const scaled = value * render.scale;
-  const sign = render.sign === 'always' && scaled >= 0 ? '+' : '';
-  const rendered = `${render.prefix || ''}${sign}${scaled.toFixed(render.decimals)}${render.suffix || ''}`;
+  if (!Number.isFinite(Number(value)))
+    throw new Error(`Claim ${id}: non-numeric value at ${source}${pointer}`);
+  const normalizedRender = { ...render, scale: render.scale ?? 1 };
+  const scaled = Number(value) * normalizedRender.scale;
+  const sign = normalizedRender.sign === "always" && scaled >= 0 ? "+" : "";
+  const rendered = `${normalizedRender.prefix || ""}${sign}${scaled.toFixed(normalizedRender.decimals)}${normalizedRender.suffix || ""}`;
   claims.push({
     id,
     source_artifact: sources[source],
     source_sha256: hashes[source],
     source_pointer: pointer,
     source_value: value,
-    render,
-    rendered_text: rendered
+    render: normalizedRender,
+    rendered_text: rendered,
   });
   return `<span data-claim="${id}">${rendered}</span>`;
 }
 
+function queryResults(document) {
+  return (document.data?.items || []).flatMap((item) => item.results || []);
+}
+
+function queryBlock(source, type) {
+  const resultIndex = queryResults(data[source]).findIndex(
+    (result) => result.data_type === type,
+  );
+  if (resultIndex < 0) throw new Error(`Missing ${type} in ${source}`);
+  const item = data[source].data.items.findIndex((entry) =>
+    (entry.results || []).some((result) => result.data_type === type),
+  );
+  const local = data[source].data.items[item].results.findIndex(
+    (result) => result.data_type === type,
+  );
+  return {
+    data: data[source].data.items[item].results[local].data,
+    item,
+    result: local,
+  };
+}
+
+function rowClaim(id, source, type, symbol, field, render) {
+  const block = queryBlock(source, type);
+  const row = block.data.findIndex((value) => value.symbol === symbol);
+  if (row < 0) throw new Error(`Missing ${symbol} in ${source}/${type}`);
+  return numericClaim(
+    id,
+    source,
+    `/data/items/${block.item}/results/${block.result}/data/${row}/${field}`,
+    render,
+  );
+}
+
+function nestedRowClaim(id, source, type, symbol, suffix, render) {
+  const block = queryBlock(source, type);
+  const row = block.data.findIndex((value) => value.symbol === symbol);
+  if (row < 0) throw new Error(`Missing ${symbol} in ${source}/${type}`);
+  return numericClaim(
+    id,
+    source,
+    `/data/items/${block.item}/results/${block.result}/data/${row}/${suffix}`,
+    render,
+  );
+}
+
+function marketBlock(source) {
+  return (
+    data[source].results.find((result) => result.data_type === "bars_daily") ||
+    data[source].results[0]
+  );
+}
+
 function marketClaim(id, source, symbol, render) {
-  const root = data[source].results[0];
+  const root = marketBlock(source);
   const row = root.symbols.indexOf(symbol);
   const bar = root.data[row].bars.length - 1;
-  return claim(id, source, `/results/0/data/${row}/bars/${bar}/4`, render);
+  return numericClaim(
+    id,
+    source,
+    `/results/${data[source].results.indexOf(root)}/data/${row}/bars/${bar}/4`,
+    render,
+  );
 }
 
-function earningsClaim(id, symbol) {
-  const row = data.earnings.events.findIndex(event => event.symbol === symbol);
-  return claim(id, 'earnings', `/events/${row}/implied_move_pct`, { scale: 1, decimals: 1, suffix: ' %' });
+function eventIndex(symbol, source = "earnings") {
+  return data[source].events.findIndex((event) => event.symbol === symbol);
 }
 
-function technicalClaim(id, symbol, field, render) {
-  const resultIndex = field === 'price' ? 0 : 1;
-  const rows = data.technicals.data.items[0].results[resultIndex].data;
-  const row = rows.findIndex(item => item.symbol === symbol);
-  return claim(id, 'technicals', `/data/items/0/results/${resultIndex}/data/${row}/${field}`, render);
-}
-
-const euro = { scale: 1, decimals: 2, suffix: ' $' };
-const one = { scale: 1, decimals: 1 };
-const marketCards = [
-  ['SPY', 'Large caps US', marketClaim('spy_close', 'indices', 'SPY', euro)],
-  ['QQQ', 'Croissance US', marketClaim('qqq_close', 'indices', 'QQQ', euro)],
-  ['IWM', 'Petites capitalisations', marketClaim('iwm_close', 'indices', 'IWM', euro)],
-  ['DIA', 'Industrielles US', marketClaim('dia_close', 'indices', 'DIA', euro)],
-  ['GLD', 'Or coté', marketClaim('gld_close', 'indices', 'GLD', euro)],
-  ['SLV', 'Argent coté', marketClaim('slv_close', 'indices', 'SLV', euro)],
-  ['TLT', 'Obligations longues', marketClaim('tlt_close', 'indices', 'TLT', euro)],
-  ['USO', 'Pétrole coté', marketClaim('uso_close', 'indices', 'USO', euro)]
-];
-const cryptoCards = [
-  ['IBIT', 'Proxy Bitcoin', marketClaim('ibit_close', 'crypto', 'IBIT', euro)],
-  ['ETHA', 'Proxy Ether', marketClaim('etha_close', 'crypto', 'ETHA', euro)],
-  ['SOLZ', 'Proxy Solana', marketClaim('solz_close', 'crypto', 'SOLZ', euro)]
-];
-const earningsRows = [
-  ['Mardi après clôture', 'DELL', 'Serveurs, stockage et demande datacenter', earningsClaim('dell_move', 'DELL')],
-  ['Mardi après clôture', 'PANW', 'Budgets cyber et plateforme', earningsClaim('panw_move', 'PANW')],
-  ['Mardi après clôture', 'MDB', 'Données applicatives et consommation cloud', earningsClaim('mdb_move', 'MDB')],
-  ['Mardi après clôture', 'CRDO', 'Connectivité haut débit pour l’IA', earningsClaim('crdo_move', 'CRDO')],
-  ['Mercredi après clôture', 'SNOW', 'Consommation de données dans le cloud', earningsClaim('snow_move', 'SNOW')],
-  ['Mercredi après clôture', 'HPE', 'Infrastructure entreprise et serveurs', earningsClaim('hpe_move', 'HPE')],
-  ['Jeudi avant ouverture', 'CIEN', 'Réseaux optiques et trafic datacenter', earningsClaim('cien_move', 'CIEN')],
-  ['Jeudi après clôture', 'ZS', 'Demande cyber et adoption de plateforme', earningsClaim('zs_move', 'ZS')]
-];
-const technicalRows = ['DELL', 'MDB', 'SNOW', 'PANW', 'CRDO', 'HPE', 'CIEN', 'ZS'].map(symbol => {
-  const key = symbol.toLowerCase();
-  return [
-    symbol,
-    technicalClaim(`${key}_price`, symbol, 'price', euro),
-    technicalClaim(`${key}_ema`, symbol, 'ema20', euro),
-    technicalClaim(`${key}_rsi`, symbol, 'rsi', one)
-  ];
-});
-
-const allSeries = {};
-for (const source of ['indices', 'sectors', 'crypto']) {
-  const root = data[source].results[0];
-  root.symbols.forEach((symbol, index) => {
-    allSeries[symbol] = root.data[index].bars.slice(-260).map(bar => [bar[0], bar[4]]);
+function earningsMoveClaim(id, symbol) {
+  const row = eventIndex(symbol, "earnings");
+  return numericClaim(id, "earnings", `/events/${row}/implied_move_pct`, {
+    decimals: 1,
+    suffix: " %",
   });
 }
 
-const cards = marketCards.map(([ticker, label, value]) => `<div class="metric-card"><div class="metric-value">${value}</div><div class="metric-label">${ticker} · ${label}</div></div>`).join('');
-const cryptoCardsHtml = cryptoCards.map(([ticker, label, value]) => `<div class="metric-card"><div class="metric-value">${value}</div><div class="metric-label">${ticker} · ${label}</div></div>`).join('');
-const earn = earningsRows.map(row => `<tr><td>${row[0]}</td><td><strong>${row[1]}</strong></td><td>${row[2]}</td><td>${row[3]}</td></tr>`).join('');
-const tech = technicalRows.map(row => `<tr><td><strong>${row[0]}</strong></td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td><td>${Number(row[1].replace(/<[^>]+>| \$/g, '')) > Number(row[2].replace(/<[^>]+>| \$/g, '')) ? 'Au-dessus' : 'Sous la moyenne'}</td></tr>`).join('');
+function arrayBarMap(source) {
+  const root = marketBlock(source);
+  return Object.fromEntries(
+    root.symbols.map((symbol, index) => [
+      symbol,
+      root.data[index].bars.map((bar) => ({
+        date: bar[0],
+        open: bar[1],
+        high: bar[2],
+        low: bar[3],
+        close: bar[4],
+        volume: bar[5],
+      })),
+    ]),
+  );
+}
+
+function queryBarMap(source) {
+  const block = queryBlock(source, "bars_daily").data;
+  return Object.fromEntries(
+    block.map((row) => [
+      row.symbol,
+      row.bars.map((bar) =>
+        Array.isArray(bar)
+          ? {
+              date: bar[0],
+              open: bar[1],
+              high: bar[2],
+              low: bar[3],
+              close: bar[4],
+              volume: bar[5],
+            }
+          : {
+              date: bar.date,
+              open: bar.open,
+              high: bar.high,
+              low: bar.low,
+              close: bar.adj_close ?? bar.close,
+              volume: bar.volume,
+            },
+      ),
+    ]),
+  );
+}
+
+const marketBars = {
+  ...arrayBarMap("indices"),
+  ...arrayBarMap("sectors"),
+  ...arrayBarMap("crypto"),
+};
+const focusBars = queryBarMap("focusBars");
+const blastBars = queryBarMap("blastBars");
+
+function pct(symbol, sessions, map = blastBars) {
+  const rows = map[symbol] || [];
+  if (rows.length <= sessions) return null;
+  return (rows.at(-1).close / rows.at(-1 - sessions).close - 1) * 100;
+}
+
+function correlation(aSymbol, bSymbol, map = blastBars) {
+  const a = new Map((map[aSymbol] || []).map((row) => [row.date, row.close]));
+  const b = new Map((map[bSymbol] || []).map((row) => [row.date, row.close]));
+  const dates = [...a.keys()].filter((date) => b.has(date)).sort();
+  const x = [];
+  const y = [];
+  for (let i = 1; i < dates.length; i += 1) {
+    const prev = dates[i - 1];
+    const now = dates[i];
+    x.push(Math.log(a.get(now) / a.get(prev)));
+    y.push(Math.log(b.get(now) / b.get(prev)));
+  }
+  if (x.length < 20) return null;
+  const avg = (values) =>
+    values.reduce((sum, value) => sum + value, 0) / values.length;
+  const mx = avg(x);
+  const my = avg(y);
+  const cov = x.reduce((sum, value, i) => sum + (value - mx) * (y[i] - my), 0);
+  const sx = Math.sqrt(x.reduce((sum, value) => sum + (value - mx) ** 2, 0));
+  const sy = Math.sqrt(y.reduce((sum, value) => sum + (value - my) ** 2, 0));
+  return sx && sy ? cov / (sx * sy) : null;
+}
+
+function movingAverage(rows, period) {
+  return rows.map((row, index) => {
+    if (index + 1 < period) return [row.date, null];
+    const window = rows.slice(index + 1 - period, index + 1);
+    return [
+      row.date,
+      window.reduce((sum, item) => sum + item.close, 0) / period,
+    ];
+  });
+}
+
+const roles = {
+  AVGO: ["Catalyseur", 0],
+  NVDA: ["Leader GPU", 1],
+  AMD: ["Alternative GPU", 1],
+  MRVL: ["ASIC et réseau", 1],
+  ANET: ["Réseau IA", 1],
+  CRDO: ["Interconnexion", 1],
+  CIEN: ["Optique", 1],
+  TSM: ["Fonderie", 2],
+  MU: ["Mémoire", 2],
+  KLAC: ["Équipement", 2],
+  DELL: ["Serveurs", 3],
+  HPE: ["Serveurs", 3],
+  CEG: ["Électricité", 4],
+  VST: ["Électricité", 4],
+  GEV: ["Réseau électrique", 4],
+  SOXX: ["Indice semis", 2],
+};
+const blastMetrics = Object.keys(roles).map((symbol) => ({
+  symbol,
+  role: roles[symbol][0],
+  order: roles[symbol][1],
+  correlation: symbol === "AVGO" ? 1 : correlation("AVGO", symbol),
+  performance5d: pct(symbol, 5),
+  performance21d: pct(symbol, 21),
+}));
+
+const avgoFinancial = queryBlock("fundamentals", "financials").data.find(
+  (row) => row.symbol === "AVGO",
+);
+const avgoStats = queryBlock("fundamentals", "stats").data.find(
+  (row) => row.symbol === "AVGO",
+);
+const avgoSurprises = queryBlock(
+  "fundamentals",
+  "earnings_surprises",
+).data.find((row) => row.symbol === "AVGO");
+const avgoReactions = queryBlock(
+  "fundamentals",
+  "earnings_reactions",
+).data.find((row) => row.symbol === "AVGO");
+const avgoTechnical = queryBlock("technicals", "technicals").data.find(
+  (row) => row.symbol === "AVGO",
+);
+const avgoQuote = queryBlock("technicals", "quote").data.find(
+  (row) => row.symbol === "AVGO",
+);
+const economic = data.economic.results.find(
+  (result) => result.data_type === "economic_events",
+).data.events;
+const weekEvents = economic.filter(
+  (event) =>
+    event.event_time.slice(0, 10) >= "2026-08-31" &&
+    event.event_time.slice(0, 10) <= "2026-09-04",
+);
+
+const derivedPath = rel("_data/derived-weekly.json");
+const derived = {
+  schema_version: 1,
+  reference_close: "2026-08-28",
+  methodology: {
+    correlation:
+      "Pearson correlation of aligned daily log returns from collected adjusted bars; raw, not market-neutralised.",
+    performance: "Close-to-close return over 5 and 21 completed US sessions.",
+    moving_averages:
+      "Simple moving averages calculated from the same daily close series.",
+  },
+  blast_metrics: blastMetrics,
+  avgo_moving_averages: {
+    ema20_last_from_mcp: avgoTechnical.ema20,
+    ema50_last_from_mcp: avgoTechnical.ema50,
+    sma20_series: movingAverage(focusBars.AVGO, 20),
+    sma50_series: movingAverage(focusBars.AVGO, 50),
+  },
+};
+fs.writeFileSync(
+  path.join(ROOT, derivedPath),
+  JSON.stringify(derived, null, 2) + "\n",
+);
+sources.derived = derivedPath;
+data.derived = derived;
+hashes.derived = sha(derivedPath);
+
+const money = { decimals: 2, suffix: " $" };
+const pctOne = { decimals: 1, suffix: " %" };
+const compactB = { scale: 1 / 1e9, decimals: 1, suffix: " Md$" };
+const compactT = { scale: 1 / 1e12, decimals: 2, suffix: " T$" };
+const avgoPrice = rowClaim(
+  "avgo_price",
+  "technicals",
+  "quote",
+  "AVGO",
+  "price",
+  money,
+);
+const avgoMcap = rowClaim(
+  "avgo_mcap",
+  "technicals",
+  "quote",
+  "AVGO",
+  "marketCap",
+  compactT,
+);
+const avgoRsi = rowClaim(
+  "avgo_rsi",
+  "technicals",
+  "technicals",
+  "AVGO",
+  "rsi",
+  { decimals: 1 },
+);
+const avgoEma20 = rowClaim(
+  "avgo_ema20",
+  "technicals",
+  "technicals",
+  "AVGO",
+  "ema20",
+  money,
+);
+const avgoEma50 = rowClaim(
+  "avgo_ema50",
+  "technicals",
+  "technicals",
+  "AVGO",
+  "ema50",
+  money,
+);
+const avgoRevenue = rowClaim(
+  "avgo_revenue",
+  "fundamentals",
+  "financials",
+  "AVGO",
+  "totalRevenue",
+  compactB,
+);
+const avgoGrowth = rowClaim(
+  "avgo_growth",
+  "fundamentals",
+  "financials",
+  "AVGO",
+  "revenueGrowth",
+  { scale: 100, decimals: 1, suffix: " %" },
+);
+const avgoDebt = rowClaim(
+  "avgo_debt",
+  "fundamentals",
+  "financials",
+  "AVGO",
+  "totalDebt",
+  compactB,
+);
+const avgoCash = rowClaim(
+  "avgo_cash",
+  "fundamentals",
+  "financials",
+  "AVGO",
+  "totalCash",
+  compactB,
+);
+const avgoEvRevenue = rowClaim(
+  "avgo_ev_revenue",
+  "fundamentals",
+  "stats",
+  "AVGO",
+  "enterpriseToRevenue",
+  { decimals: 1, suffix: "x" },
+);
+const avgoBeta = rowClaim(
+  "avgo_beta",
+  "fundamentals",
+  "stats",
+  "AVGO",
+  "beta",
+  { decimals: 2 },
+);
+const avgoMedianReaction = nestedRowClaim(
+  "avgo_median_reaction",
+  "fundamentals",
+  "earnings_reactions",
+  "AVGO",
+  "summary/median_abs_move_percent",
+  { decimals: 1, suffix: " %" },
+);
+
+const marketCards = [
+  ["SPY", "Grandes capitalisations", marketClaim("spy_close", "indices", "SPY", money)],
+  ["QQQ", "Croissance", marketClaim("qqq_close", "indices", "QQQ", money)],
+  ["IWM", "Petites caps", marketClaim("iwm_close", "indices", "IWM", money)],
+  ["GLD", "Or", marketClaim("gld_close", "indices", "GLD", money)],
+  ["TLT", "Taux longs", marketClaim("tlt_close", "indices", "TLT", money)],
+  ["IBIT", "Bitcoin coté", marketClaim("ibit_close", "crypto", "IBIT", money)],
+];
+const marketCardsHtml = marketCards
+  .map(
+    ([ticker, label, value]) =>
+      `<div class="metric-card"><div class="metric-value">${value}</div><div class="metric-label">${ticker} · ${label}</div></div>`,
+  )
+  .join("");
+
+const eventRows = [
+  [
+    "Lundi",
+    "Inflation zone euro",
+    "Préparer les scénarios ; aucune anticipation AVGO.",
+  ],
+  [
+    "Mardi",
+    "ISM industrie · DELL, PANW, MDB, CRDO après clôture",
+    "Lire matériel, données et cybersécurité séparément.",
+  ],
+  [
+    "Mercredi",
+    "AVGO, SNOW et HPE après clôture",
+    "AVGO devient le test systémique du calcul sur mesure et du réseau.",
+  ],
+  [
+    "Jeudi",
+    "Allocations, ISM services, Fed · CIEN avant, ZS après",
+    "Confirmer ou rejeter la diffusion des investissements IA.",
+  ],
+  [
+    "Vendredi",
+    "Rapport emploi US",
+    "Les taux peuvent renverser toute lecture micro.",
+  ],
+];
+const eventRowsHtml = eventRows
+  .map(
+    (row) =>
+      `<tr><td><strong>${row[0]}</strong></td><td>${row[1]}</td><td>${row[2]}</td></tr>`,
+  )
+  .join("");
+
+const earningsSymbols = [
+  "DELL",
+  "PANW",
+  "MDB",
+  "CRDO",
+  "AVGO",
+  "SNOW",
+  "HPE",
+  "CIEN",
+  "ZS",
+];
+const descriptions = {
+  DELL: "Serveurs et marge IA",
+  PANW: "Budgets cyber",
+  MDB: "Données applicatives",
+  CRDO: "Interconnexion IA",
+  AVGO: "ASIC sur mesure + réseau",
+  SNOW: "Consommation cloud",
+  HPE: "Infrastructure entreprise",
+  CIEN: "Optique datacenter",
+  ZS: "Sécurité cloud",
+};
+const allEarnings = [
+  ...data.earnings.events,
+  ...data.systemic.events.filter(
+    (item) =>
+      !data.earnings.events.some((current) => current.symbol === item.symbol),
+  ),
+];
+const earningDay = {
+  DELL: "Mardi",
+  PANW: "Mardi",
+  MDB: "Mardi",
+  CRDO: "Mardi",
+  AVGO: "Mercredi",
+  SNOW: "Mercredi",
+  HPE: "Mercredi",
+  CIEN: "Jeudi",
+  ZS: "Jeudi",
+};
+const earningsRowsHtml = earningsSymbols
+  .map((symbol) => {
+    const event = allEarnings.find((item) => item.symbol === symbol);
+    const validMove =
+      event?.implied_move_status === "available" &&
+      event.implied_move_expiration >= event.report_date;
+    const move =
+      symbol === "AVGO" || !validMove
+        ? '<span class="badge badge-yellow">NON MESURABLE</span>'
+        : earningsMoveClaim(`${symbol.toLowerCase()}_move`, symbol);
+    const when = `${earningDay[symbol]} · ${event.report_time === "AMC" ? "après clôture" : "avant ouverture"}`;
+    return `<tr class="${symbol === "AVGO" ? "focus-row" : ""}"><td><strong>${symbol}</strong></td><td>${when}</td><td>${descriptions[symbol]}</td><td>${move}</td></tr>`;
+  })
+  .join("");
+
+const reactionLabels = [
+  "Dernière",
+  "Précédente",
+  "Antérieure A",
+  "Antérieure B",
+  "Antérieure C",
+  "Antérieure D",
+];
+const reactionRows = avgoReactions.reactions
+  .slice(0, 6)
+  .map((item, index) => {
+    const move = nestedRowClaim(
+      `avgo_reaction_${index}_move`,
+      "fundamentals",
+      "earnings_reactions",
+      "AVGO",
+      `reactions/${index}/move_percent`,
+      { decimals: 1, sign: "always", suffix: " %" },
+    );
+    const gap = nestedRowClaim(
+      `avgo_reaction_${index}_gap`,
+      "fundamentals",
+      "earnings_reactions",
+      "AVGO",
+      `reactions/${index}/gap_percent`,
+      { decimals: 1, sign: "always", suffix: " %" },
+    );
+    const volume = nestedRowClaim(
+      `avgo_reaction_${index}_volume`,
+      "fundamentals",
+      "earnings_reactions",
+      "AVGO",
+      `reactions/${index}/volume_ratio`,
+      { decimals: 1, suffix: "x" },
+    );
+    return `<tr><td>${reactionLabels[index]}</td><td class="${item.move_percent >= 0 ? "positive" : "negative"}">${move}</td><td>${gap}</td><td>${volume}</td></tr>`;
+  })
+  .join("");
+const avgoLastReaction = nestedRowClaim(
+  "avgo_last_reaction_text",
+  "fundamentals",
+  "earnings_reactions",
+  "AVGO",
+  "reactions/0/move_percent",
+  { decimals: 1, sign: "always", suffix: " %" },
+);
+
+const transmission = {
+  1: "Premier cercle",
+  2: "Deuxième cercle",
+  3: "Troisième cercle",
+  4: "Quatrième cercle",
+};
+const blastRows = blastMetrics
+  .filter((item) => item.symbol !== "AVGO")
+  .sort((a, b) => a.order - b.order || a.symbol.localeCompare(b.symbol))
+  .map(
+    (item) =>
+      `<tr><td><strong>${item.symbol}</strong></td><td>${item.role}</td><td>${transmission[item.order]}</td></tr>`,
+  )
+  .join("");
+
+const technicalSymbols = [
+  "AVGO",
+  "DELL",
+  "MDB",
+  "SNOW",
+  "PANW",
+  "CRDO",
+  "HPE",
+  "CIEN",
+];
+const technicalRowsHtml = technicalSymbols
+  .map((symbol) => {
+    const quote = queryBlock("technicals", "quote").data.find(
+      (row) => row.symbol === symbol,
+    );
+    const technical = queryBlock("technicals", "technicals").data.find(
+      (row) => row.symbol === symbol,
+    );
+    const state =
+      quote.price > technical.ema20
+        ? "Au-dessus de la moyenne courte"
+        : "Sous la moyenne courte";
+    const key = symbol.toLowerCase();
+    const price = rowClaim(
+      `${key}_technical_price`,
+      "technicals",
+      "quote",
+      symbol,
+      "price",
+      money,
+    );
+    const ema = rowClaim(
+      `${key}_technical_ema`,
+      "technicals",
+      "technicals",
+      symbol,
+      "ema20",
+      money,
+    );
+    const rsi = rowClaim(
+      `${key}_technical_rsi`,
+      "technicals",
+      "technicals",
+      symbol,
+      "rsi",
+      { decimals: 1 },
+    );
+    return `<tr class="${symbol === "AVGO" ? "focus-row" : ""}"><td><strong>${symbol}</strong></td><td>${price}</td><td>${ema}</td><td>${rsi}</td><td><span class="status-dot ${quote.price > technical.ema20 ? "pass" : "warn"}"></span>${state}</td></tr>`;
+  })
+  .join("");
+
+const chartPayload = {
+  marketBars,
+  avgo: focusBars.AVGO,
+  avgoSma20: derived.avgo_moving_averages.sma20_series,
+  avgoSma50: derived.avgo_moving_averages.sma50_series,
+  reactions: avgoReactions.reactions.slice(0, 8).reverse(),
+  blast: blastMetrics.map(({ symbol, role, order }) => ({
+    symbol,
+    role,
+    order,
+  })),
+  validMoves: earningsSymbols.map((symbol) => {
+    const event = allEarnings.find((item) => item.symbol === symbol);
+    const valid =
+      event?.implied_move_status === "available" &&
+      event.implied_move_expiration >= event.report_date &&
+      symbol !== "AVGO";
+    return { symbol, value: valid ? event.implied_move_pct : null };
+  }),
+};
 
 let html = `<!DOCTYPE html>
-<html lang="fr" dir="ltr" data-level="intermediate" data-tags="us,crypto,commodity,macro,earnings,ai,cloud,cybersecurity,semis,etf" data-tab="weekly">
+<html lang="fr" dir="ltr" data-level="expert" data-tags="us,macro,earnings,ai,semis,cloud,cybersecurity,crypto,gold,etf" data-tab="weekly">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>DailyTickers | Semaine à venir : l’IA face au test de diffusion et à l’emploi</title>
-<meta name="description" content="Weekly français : marché étroit, test de diffusion de l’IA via Dell, MongoDB, Snowflake, Palo Alto, Credo, HPE, Ciena et Zscaler, puis rapport emploi. Scénarios et plan d’action.">
-<meta property="og:title" content="L’IA face au test de diffusion et à l’emploi"><meta property="og:description" content="Une semaine pour vérifier si le capex IA se transforme en revenus hardware, cloud et cyber, avant le verdict de l’emploi."><meta property="og:image" content="https://articles.dailytickers.com/favicon.ico"><meta property="og:url" content="https://articles.dailytickers.com/weekly/20260831/"><meta property="og:type" content="article">
+<title>DailyTickers | Hebdo : AVGO, diffusion de l’IA et emploi US</title>
+<meta name="description" content="Revue hebdomadaire experte : AVGO devient le test systémique des puces IA sur mesure et du réseau. Rayon de propagation, résultats, emploi US et plan d’action.">
+<meta property="og:title" content="AVGO, diffusion de l’IA et emploi US"><meta property="og:description" content="Ce que Broadcom doit confirmer, qui bougera avec lui et comment agir sans poursuivre les écarts d’ouverture."><meta property="og:image" content="https://assets.parqet.com/logos/symbol/AVGO?format=jpg"><meta property="og:url" content="https://articles.dailytickers.com/weekly/20260831/"><meta property="og:type" content="article">
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
-<link rel="icon" href="/favicon.ico"><link rel="stylesheet" href="/assets/report.css"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-</head><body>
+<link rel="icon" href="/favicon.ico"><link rel="stylesheet" href="/assets/report.css"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+.weekly-brief{--ink:#0f172a;--muted:#64748b;--line:#dbe3ee;--blue:#2563eb;--amber:#d97706}.weekly-brief .content-card{border-radius:8px;padding:clamp(1rem,2.4vw,2rem);margin-bottom:1.25rem}.weekly-brief .content-card h2{font-size:clamp(1.35rem,2.4vw,1.9rem);margin-bottom:1rem}.weekly-brief .decision-board{display:grid;grid-template-columns:1.1fr .9fr;gap:1rem;margin-bottom:1.25rem}.weekly-brief .decision-main,.weekly-brief .decision-side{border:1px solid var(--line);border-radius:8px;padding:1rem;background:#fff}.weekly-brief .decision-main{border-left:5px solid var(--amber);background:#fffbeb}.weekly-brief .decision-label{font-size:.72rem;font-weight:800;text-transform:uppercase;color:#92400e}.weekly-brief .decision-main h2{margin:.35rem 0 .55rem;font-size:clamp(1.3rem,3vw,2rem)}.weekly-brief .decision-main p,.weekly-brief .decision-side p{margin:.35rem 0;line-height:1.55}.weekly-brief .decision-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem;margin-top:.9rem}.weekly-brief .mini-stat{border-top:1px solid #f1d59d;padding-top:.55rem}.weekly-brief .mini-stat strong{display:block;font-size:1.05rem}.weekly-brief .mini-stat span{font-size:.72rem;color:var(--muted)}.weekly-brief .check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem}.weekly-brief .check-item{display:flex;gap:.55rem;align-items:flex-start;border-bottom:1px solid #e2e8f0;padding:.55rem 0;font-size:.82rem;line-height:1.4}.weekly-brief .check-item i{margin-top:.15rem}.weekly-brief .check-item.pass i{color:#16a34a}.weekly-brief .check-item.warn i{color:#d97706}.weekly-brief .check-item.block i{color:#dc2626}.weekly-brief .chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.weekly-brief .chart-panel{border:1px solid var(--line);border-radius:8px;padding:.8rem;min-width:0;background:#fff}.weekly-brief .chart-panel.wide{grid-column:1/-1}.weekly-brief .chart-title{font-size:.86rem;font-weight:800;margin:0 0 .35rem}.weekly-brief .chart-note{font-size:.72rem;color:var(--muted);line-height:1.45;margin:.35rem 0 0}.weekly-brief .chart-host{width:100%;height:320px;min-width:0}.weekly-brief .section-lead{font-size:1rem;line-height:1.65;color:#334155;max-width:920px}.weekly-brief .evidence-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.65rem;margin:1rem 0}.weekly-brief .evidence{border:1px solid var(--line);border-radius:8px;padding:.75rem;background:#fff}.weekly-brief .evidence strong{display:block;font-size:1.05rem}.weekly-brief .evidence span{font-size:.7rem;color:var(--muted)}.weekly-brief .focus-row{background:#eff6ff}.weekly-brief .positive{color:#15803d;font-weight:700}.weekly-brief .negative{color:#b91c1c;font-weight:700}.weekly-brief .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:.4rem}.weekly-brief .status-dot.pass{background:#16a34a}.weekly-brief .status-dot.warn{background:#d97706}.weekly-brief .sequence{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.5rem;margin:1rem 0}.weekly-brief .sequence-step{border-top:4px solid #94a3b8;background:#f8fafc;padding:.7rem;border-radius:0 0 8px 8px;font-size:.76rem;line-height:1.45}.weekly-brief .sequence-step strong{display:block;margin-bottom:.25rem}.weekly-brief .sequence-step.systemic{border-color:#2563eb;background:#eff6ff}.weekly-brief .tier-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.65rem;margin-top:1rem}.weekly-brief .tier{border-left:4px solid #94a3b8;padding:.55rem .75rem;background:#f8fafc}.weekly-brief .tier strong{display:block;font-size:.8rem}.weekly-brief .tier span{font-size:.75rem;color:#475569}.weekly-brief .coverage-strip{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:.8rem}.weekly-brief .coverage-strip span{border:1px solid var(--line);border-radius:999px;padding:.3rem .55rem;font-size:.7rem;font-weight:700}.weekly-brief table td,.weekly-brief table th{vertical-align:top}.weekly-brief .risk-callout{border-left:4px solid #dc2626;background:#fef2f2;padding:.85rem 1rem;border-radius:0 8px 8px 0;margin:1rem 0}.weekly-brief .action-callout{border-left:4px solid #2563eb;background:#eff6ff;padding:.85rem 1rem;border-radius:0 8px 8px 0;margin:1rem 0}.weekly-brief .source-meta{font-size:.72rem;color:#64748b}.weekly-brief .no-setup{border-radius:8px}.weekly-brief .metrics-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem}.weekly-brief .metric-value{font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+@media(max-width:860px){.weekly-brief .decision-board,.weekly-brief .chart-grid{grid-template-columns:1fr}.weekly-brief .chart-panel.wide{grid-column:auto}.weekly-brief .evidence-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.weekly-brief .sequence{grid-template-columns:1fr}.weekly-brief .tier-list{grid-template-columns:repeat(2,minmax(0,1fr))}.weekly-brief .chart-host{height:290px}}
+@media(max-width:560px){.weekly-brief .decision-stats,.weekly-brief .check-grid,.weekly-brief .metrics-grid,.weekly-brief .evidence-grid,.weekly-brief .tier-list{grid-template-columns:1fr}.weekly-brief .content-card{padding:1rem}.weekly-brief .chart-host{height:270px}.weekly-brief .chart-panel{padding:.55rem}.weekly-brief .data-table{font-size:.74rem}}
+</style>
+</head><body class="weekly-brief">
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a><div class="brand-nav"><a href="/?tab=weekly">Hebdo</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Séries</a></div><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
-<div class="fnav"><a href="#alerte" title="Alerte"><i class="fas fa-bell"></i></a><a href="#marches" title="Marchés"><i class="fas fa-chart-line"></i></a><a href="#metaux" title="Métaux et crypto"><i class="fab fa-bitcoin"></i></a><a href="#allocation" title="Allocation"><i class="fas fa-scale-balanced"></i></a><a href="#outlook" title="Scénarios"><i class="fas fa-compass"></i></a><a href="#sources" title="Sources"><i class="fas fa-book"></i></a></div>
-<section class="hero-section"><div class="container"><div class="hero-date">Semaine du lundi au vendredi · Clôture de référence vendredi</div><h1 class="hero-title">L’IA face au test de diffusion et à l’emploi</h1><p class="hero-subtitle">Les indices tiennent, mais la participation se rétrécit. Dell, MongoDB, Snowflake, Palo Alto, Credo, HPE, Ciena et Zscaler diront si la demande IA descend réellement des puces vers les serveurs, les données et la cybersécurité. Le rapport emploi décidera ensuite si les taux laissent respirer ce mouvement.</p><div class="hero-badges"><span class="hero-badge">Régime favorable, largeur fragile</span><span class="hero-badge">Test hardware, cloud et cyber</span><span class="hero-badge">Emploi vendredi</span></div><div id="article-clickable-tags" class="card-tags"></div></div></section>
+<section class="hero-section"><div class="container"><div class="hero-date">Semaine du 31 août au 4 septembre 2026 · données arrêtées au 28 août</div><h1 class="hero-title">AVGO devient le vrai test de diffusion de l’IA</h1><p class="hero-subtitle">NVIDIA a confirmé la demande de calcul. Broadcom doit maintenant montrer que les puces sur mesure et le réseau suivent, pendant que Dell, Snowflake, HPE, Ciena et la cyber testent le reste de la chaîne. Vendredi, l’emploi américain peut tout revaloriser par les taux.</p><div class="hero-badges"><span class="hero-badge">AVGO mercredi après clôture</span><span class="hero-badge">Rayon de propagation multi-secteurs</span><span class="hero-badge">Emploi vendredi</span></div><div id="article-clickable-tags" class="card-tags"></div></div></section>
 <main class="container" id="main-content">
-<section class="alert-banner" id="alerte"><div><strong>ALERTE DE LA SEMAINE</strong><p>Ne pas confondre un bon résultat avec une bonne entrée. Les options anticipent déjà de grands écarts sur les leaders : attendre la réaction, la tenue du prix moyen de séance et une base après publication. Le rapport emploi peut invalider jeudi soir une lecture pourtant correcte des résultats.</p></div></section>
 
-<section class="content-card" id="calendrier"><h2>Calendrier de la semaine</h2><div class="table-responsive"><table class="data-table"><thead><tr><th>Jour</th><th>Macro</th><th>Résultats</th><th>Décision</th></tr></thead><tbody><tr><td>Lundi</td><td>Inflation en zone euro</td><td>Pas de publication majeure dans le groupe suivi</td><td>Préparer les comparaisons croisées sans anticiper les résultats.</td></tr><tr><td>Mardi</td><td>Activité manufacturière américaine et intervention de la Fed</td><td>DELL, PANW, MDB et CRDO après clôture</td><td>Premier test commun du hardware, des données et de la cyber.</td></tr><tr><td>Mercredi</td><td>Transition vers les données d’emploi</td><td>SNOW et HPE après clôture</td><td>Comparer consommation cloud et dépenses d’infrastructure.</td></tr><tr><td>Jeudi</td><td>Demandes d’allocations, services américains et intervention de la Fed</td><td>CIEN avant ouverture, ZS après clôture</td><td>Vérifier la confirmation réseau et cyber ; réduire les échecs.</td></tr><tr><td>Vendredi</td><td>Rapport emploi américain</td><td>Pas de catalyseur micro dominant</td><td>Le taux et le dollar priment sur les récits sectoriels.</td></tr></tbody></table></div><div class="pedagogy-box"><strong>Ordre de lecture :</strong> résultats d’abord, confirmation sectorielle ensuite, macro en dernier. Une réaction isolée ne valide pas toute la chaîne IA.</div></section>
+<nav class="report-jump-nav" aria-label="Sommaire de l’hebdo"><a href="#verdict"><i class="fas fa-gavel"></i> Synthèse</a><a href="#semaine"><i class="fas fa-calendar-week"></i> Calendrier</a><a href="#avgo"><i class="fas fa-microchip"></i> AVGO</a><a href="#blast"><i class="fas fa-diagram-project"></i> Pairs</a><a href="#earnings"><i class="fas fa-bolt"></i> Résultats</a><a href="#macro"><i class="fas fa-chart-line"></i> Marchés</a><a href="#crypto"><i class="fab fa-bitcoin"></i> Crypto/or</a><a href="#risques"><i class="fas fa-shield-halved"></i> Plan</a></nav>
 
-<section class="content-card" id="synthese"><h2>Synthèse exécutive</h2><div class="metrics-grid">${cards}</div><p>Le régime systématique reste <strong>${data.regime.regime}</strong>, avec un score de ${claim('regime_score', 'regime', '/regime_score', { scale: 100, decimals: 0, suffix: ' %' })}. Le VIX clôture à ${claim('vix_level', 'options', '/items/1/level', { scale: 1, decimals: 2 })}, sous sa moyenne récente, tandis que la volatilité à moyen terme reste plus chère que la volatilité immédiate. Ce n’est pas une structure de panique.</p><p>Le paradoxe est ailleurs : les grands indices progressent légèrement, mais les petites capitalisations et la majorité des secteurs reculent. La hausse repose donc sur peu de poches. Cela autorise des achats sélectifs après confirmation ; cela ne justifie pas une exposition aveugle au marché.</p><div class="pedagogy-box"><strong>En langage simple :</strong> la marée ne monte pas pour tous les bateaux. Quelques grands titres gardent les indices en surface pendant qu’une grande partie du marché fatigue.</div></section>
+<section id="verdict" class="decision-board" aria-label="Décision de la semaine">
+  <div class="decision-main"><div class="decision-label">Décision prioritaire</div><h2>ATTENDRE AVGO, puis négocier la preuve</h2><p><strong>Aucune poursuite avant publication.</strong> La qualité fondamentale est élevée, mais AVGO cote sous ses moyennes courtes et l’historique montre des écarts d’ouverture violents dans les deux sens.</p><div class="decision-stats"><div class="mini-stat"><strong>${avgoPrice}</strong><span>clôture AVGO</span></div><div class="mini-stat"><strong>${avgoRsi}</strong><span>RSI quotidien</span></div><div class="mini-stat"><strong>${avgoMedianReaction}</strong><span>médiane absolue après résultats</span></div></div></div>
+  <div class="decision-side"><div class="decision-label">Contrôle systématique</div><div class="check-grid"><div class="check-item pass"><i class="fas fa-circle-check"></i><span><strong>Données</strong><br>Dernière clôture complète validée.</span></div><div class="check-item block"><i class="fas fa-circle-xmark"></i><span><strong>Événement</strong><br>Résultats AVGO mercredi après clôture.</span></div><div class="check-item warn"><i class="fas fa-triangle-exclamation"></i><span><strong>Tendance</strong><br>Cours sous les deux moyennes courtes.</span></div><div class="check-item block"><i class="fas fa-circle-xmark"></i><span><strong>Options</strong><br>Amplitude filtrée rejetée; chaîne dédiée avec réserves.</span></div><div class="check-item warn"><i class="fas fa-triangle-exclamation"></i><span><strong>Valorisation</strong><br>${avgoEvRevenue} les revenus.</span></div><div class="check-item pass"><i class="fas fa-circle-check"></i><span><strong>Qualité</strong><br>Quatre dépassements EPS consécutifs.</span></div></div></div>
+</section>
 
-<section class="content-card" id="bilan"><h2>Bilan de la semaine précédente</h2><p>La thèse précédente privilégiait les actifs réels et la crypto face à la duration technologique. Elle n’a pas tenu proprement : l’or, l’argent et le pétrole ont reculé, les proxies Bitcoin et Ether n’ont offert qu’une progression limitée, tandis que la technologie et les services de communication ont mené. Le proxy Solana a fait exception avec une nette accélération.</p><div class="table-responsive"><table class="data-table"><thead><tr><th>Anticipation</th><th>Observation</th><th>Verdict</th><th>Leçon</th></tr></thead><tbody><tr><td>Leadership des actifs réels</td><td>Métaux et pétrole en retrait</td><td><span class="badge badge-red">Invalidée</span></td><td>Ne pas prolonger un récit sans confirmation inter-marchés.</td></tr><tr><td>Pression persistante sur la technologie</td><td>Technologie en tête</td><td><span class="badge badge-red">Invalidée</span></td><td>Le signal des résultats a repris le dessus sur le facteur duration.</td></tr><tr><td>Appétit crypto généralisé</td><td>Dispersion forte entre proxies</td><td><span class="badge badge-yellow">Partielle</span></td><td>Traiter chaque segment, pas “la crypto” comme un bloc.</td></tr></tbody></table></div><p><strong>Trades précédents :</strong> aucun score n’est publié ici sans reconstruction certifiée des fills, des fenêtres et des sorties. Transformer une zone théorique en performance serait trompeur. La présente édition repart donc avec <code>no_setup</code>.</p></section>
+<section class="content-card" id="semaine"><h2><i class="fas fa-calendar-week"></i> La semaine en une séquence</h2><p class="section-lead">Le marché va tester la chaîne IA par morceaux. Le bon signal n’est pas qu’un seul titre monte, mais que les prévisions deviennent cohérentes du calcul jusqu’au logiciel, puis résistent au choc macro de vendredi.</p><div class="sequence"><div class="sequence-step"><strong>Lundi</strong>Inflation européenne<br>Préparation</div><div class="sequence-step"><strong>Mardi</strong>DELL · PANW · MDB · CRDO<br>Premiers signaux</div><div class="sequence-step systemic"><strong>Mercredi</strong>AVGO · SNOW · HPE<br>Test systémique</div><div class="sequence-step"><strong>Jeudi</strong>CIEN · ZS · ISM services<br>Confirmation</div><div class="sequence-step"><strong>Vendredi</strong>Emploi US<br>Verdict des taux</div></div><div class="chart-panel"><div class="chart-title">Intensité des catalyseurs par séance</div><div id="eventChart" class="chart-host"></div><p class="chart-note">Hauteur qualitative : nombre et portée des événements suivis, pas une probabilité de hausse ou de baisse.</p></div><div class="table-responsive"><table class="data-table"><thead><tr><th>Jour</th><th>Événements</th><th>Ce qu’un investisseur doit faire</th></tr></thead><tbody>${eventRowsHtml}</tbody></table></div></section>
 
-<section class="content-card" id="marches"><h2>Contexte macro et marchés</h2><h3>Actions américaines</h3><p>SPY, QQQ et DIA terminent près de leurs sommets récents, alors que IWM recule. La qualité et la taille restent préférées à la cyclicité domestique. Un rallye durable demanderait que les petites capitalisations cessent de sous-performer.</p><div class="chart-container"><div class="chart-title">Indices et actifs de couverture · base normalisée</div><div id="marketChart" class="chart-host"></div></div><h3>Taux et volatilité</h3><p>TLT a progressé pendant que l’énergie et les métaux reculaient. Avec un VIX court à ${claim('vix9d', 'options', '/items/0/level', { scale: 1, decimals: 2 })}, un VIX principal à ${claim('vix30d', 'options', '/items/1/level', { scale: 1, decimals: 2 })} et un VIX trimestriel à ${claim('vix3m', 'options', '/items/2/level', { scale: 1, decimals: 2 })}, la courbe reste en contango. Le marché paie davantage la protection future que le danger immédiat.</p><h3>International</h3><p>L’inflation européenne ouvre la semaine, mais le centre de gravité reste américain. Sans panier international certifié dans cette collecte, cette édition ne publie ni classement européen ni faux signal global. La décision vient des taux américains, de l’emploi et des résultats d’entreprise.</p></section>
+<section class="content-card" id="bilan"><h2><i class="fas fa-rotate-left"></i> Ce que la semaine passée a invalidé</h2><p>La technologie a repris le leadership alors que les actifs réels ont reculé et que la crypto est restée dispersée. La leçon est méthodologique : un récit multi-actifs ne doit jamais survivre à l’absence de confirmation par les prix.</p><div class="table-responsive"><table class="data-table"><thead><tr><th>Thèse précédente</th><th>Observation</th><th>Conséquence</th></tr></thead><tbody><tr><td>Leadership uniforme des actifs réels</td><td>Métaux et pétrole ont manqué de suivi.</td><td>Attendre une reprise relative avant de renforcer.</td></tr><tr><td>Pression durable sur la technologie</td><td>La technologie a repris la tête.</td><td>Donner priorité aux résultats et à la réaction du prix.</td></tr><tr><td>Appétit pour le risque crypto homogène</td><td>Les proxys ont divergé.</td><td>Analyser chaque sous-jacent séparément.</td></tr></tbody></table></div></section>
 
-<section class="content-card" id="metaux"><h2>Métaux précieux et énergie</h2><p>GLD clôture à ${marketClaim('gld_close_detail', 'indices', 'GLD', euro)} et SLV à ${marketClaim('slv_close_detail', 'indices', 'SLV', euro)} après une semaine de baisse. USO termine à ${marketClaim('uso_close_detail', 'indices', 'USO', euro)}. La lecture commune est défensive : moins de pression inflationniste immédiate, mais aussi moins d’enthousiasme pour le cycle nominal.</p><p>Le bon réflexe n’est pas d’acheter mécaniquement la baisse. Pour redevenir constructifs, l’or et l’argent doivent d’abord cesser de sous-performer les obligations longues. Pour l’énergie, une stabilisation du pétrole doit précéder tout pari sur les producteurs.</p><div class="alert-box"><strong>Invalidation :</strong> si les taux remontent après l’emploi mais que l’or ne retrouve pas de force relative, le métal n’agit plus comme protection efficace. Dans ce cas, le cash et les obligations courtes sont des outils plus propres.</div></section>
+<section class="content-card" id="avgo"><h2><i class="fas fa-microchip"></i> AVGO : le dossier central</h2><p class="section-lead">Broadcom combine accélérateurs sur mesure, réseau et logiciels d’infrastructure. Cette publication dira si l’économie IA se diffuse au-delà des GPU généralistes. Le dossier reste fondamentalement fort ; le calendrier pré-résultats reste bloqué.</p><div class="evidence-grid"><div class="evidence"><strong>${avgoMcap}</strong><span>capitalisation</span></div><div class="evidence"><strong>${avgoRevenue}</strong><span>revenus douze mois</span></div><div class="evidence"><strong>${avgoGrowth}</strong><span>croissance des revenus</span></div><div class="evidence"><strong>${avgoCash}</strong><span>trésorerie</span></div><div class="evidence"><strong>${avgoDebt}</strong><span>dette comptable</span></div><div class="evidence"><strong>${avgoEma20}</strong><span>moyenne courte</span></div><div class="evidence"><strong>${avgoEma50}</strong><span>moyenne intermédiaire</span></div><div class="evidence"><strong>${avgoBeta}</strong><span>bêta publiée</span></div></div><div class="chart-grid"><div class="chart-panel"><div class="chart-title">AVGO · prix et moyennes mobiles</div><div id="avgoPriceChart" class="chart-host"></div><p class="chart-note">Le prix arrive sous les moyennes courte et intermédiaire. L’écart d’ouverture rend ces repères secondaires jusqu’à la reconstruction d’une base.</p></div><div class="chart-panel"><div class="chart-title">Réactions après résultats</div><div id="reactionChart" class="chart-host"></div><p class="chart-note">Mouvements clôture à clôture autour des dates SEC. La distribution est parfaitement partagée entre hausses et baisses.</p></div></div><div class="chart-grid"><div class="chart-panel"><div class="chart-title">Qualité opérationnelle et risque financier</div><div id="qualityRadar" class="chart-host"></div><p class="chart-note">Échelle de lecture, pas un score testé historiquement : croissance et marges fortes, mais dette et multiple exigent des prévisions solides.</p></div><div class="chart-panel"><div class="chart-title">Réactions récentes AVGO</div><div class="table-responsive"><table class="data-table"><thead><tr><th>Recensement</th><th>Réaction</th><th>Écart d’ouverture</th><th>Volume</th></tr></thead><tbody>${reactionRows}</tbody></table></div><div class="risk-callout"><strong>Contradiction utile :</strong> quatre dépassements EPS consécutifs n’ont pas empêché une réaction de ${avgoLastReaction} lors de la dernière publication. Dépasser les attentes ne suffit pas ; les prévisions et le prix post-publication gouvernent.</div></div></div></section>
 
-<section class="content-card" id="crypto"><h2>Crypto et bêta élevée associée</h2><div class="metrics-grid">${cryptoCardsHtml}</div><p>Les données spot disponibles étaient incomplètes pour la clôture de référence ; elles ont donc été exclues. Les lectures publiées utilisent uniquement des ETF américains alignés sur la même séance que les actions. IBIT et ETHA ont peu bougé sur la semaine, tandis que SOLZ a fortement surperformé.</p><p>Cette divergence interdit un message “risk-on crypto” uniforme. La confirmation propre serait une hausse conjointe des proxies Bitcoin et Ether, accompagnée par les valeurs de bêta élevée cotées aux États-Unis. Tant que ce front commun manque, les mineurs et les sociétés de trésorerie crypto restent des véhicules tactiques, pas une validation macro.</p><div class="pedagogy-box"><strong>Plan :</strong> privilégier la confirmation du sous-jacent avant la bêta associée. Quand le proxy principal hésite mais qu’une action liée s’envole, le risque de retour brutal augmente.</div></section>
+<section class="content-card" id="blast"><h2><i class="fas fa-diagram-project"></i> Rayon de surveillance AVGO</h2><p class="section-lead">Cette carte part des liens économiques documentés : calcul et réseau, fabrication, serveurs, puis électricité. Les performances relatives et corrélations brutes ont été contrôlées en revue contrarienne, mais ne sont pas publiées comme preuve de causalité. Chaque titre doit confirmer par ses propres prévisions et son propre prix.</p><div class="chart-panel"><div class="chart-title">Carte économique : où chercher la confirmation</div><div id="blastChart" class="chart-host" style="height:390px"></div><p class="chart-note">Les étages décrivent la proximité dans la chaîne de valeur, pas un ordre garanti de réaction ni une recommandation d’achat.</p></div><div class="tier-list"><div class="tier"><strong>Proximité directe · calcul et réseau</strong><span>NVDA, AMD, MRVL, ANET, CRDO, CIEN</span></div><div class="tier"><strong>Relais industriel · fabrication</strong><span>TSM, MU, KLAC, SOXX</span></div><div class="tier"><strong>Infrastructure · serveurs</strong><span>DELL, HPE</span></div><div class="tier"><strong>Investissement final · électricité</strong><span>CEG, VST, GEV</span></div></div><div class="table-responsive"><table class="data-table"><thead><tr><th>Titre</th><th>Rôle</th><th>Proximité économique</th></tr></thead><tbody>${blastRows}</tbody></table></div><div class="action-callout"><strong>Lecture actionnable :</strong> utiliser MRVL, ANET, CRDO et CIEN comme contrôles indépendants du réseau et des ASIC. DELL/HPE puis CEG/VST/GEV sont des signaux économiques plus éloignés. Leur divergence ne prouve ni n’annule à elle seule la thèse AVGO.</div></section>
 
-<section class="content-card" id="earnings"><h2>Résultats : le vrai test de diffusion de l’IA</h2><p>Après le choc NVIDIA de la semaine passée, la question n’est plus seulement la demande de calcul. Il faut maintenant voir si les dépenses se transforment en serveurs vendus, en trafic réseau, en consommation de données et en budgets cyber. Les mouvements implicites montrent que le marché attend déjà de fortes réactions.</p><div class="table-responsive"><table class="data-table"><thead><tr><th>Fenêtre</th><th>Titre</th><th>Ce qu’il teste</th><th>Mouvement implicite</th></tr></thead><tbody>${earn}</tbody></table></div><h3>La chaîne à suivre</h3><p><strong>DELL, HPE, CRDO et CIEN</strong> testent le hardware, la connectivité et l’infrastructure. <strong>SNOW et MDB</strong> testent la consommation réelle de données. <strong>PANW et ZS</strong> testent si la sécurité capte elle aussi les budgets d’entreprise. Une chaîne saine exige plus qu’un beat : elle exige des guidances cohérentes entre ces groupes.</p><div class="alert-box"><strong>Risque principal :</strong> un titre peut battre les attentes et baisser si le marché avait acheté un résultat encore meilleur. La réaction au prix compte davantage que l’adjectif utilisé dans le communiqué.</div></section>
+<section class="content-card" id="earnings"><h2><i class="fas fa-bolt"></i> Résultats : attentes et contrôles</h2><div class="chart-grid"><div class="chart-panel"><div class="chart-title">Mouvements implicites valides</div><div id="earningsChart" class="chart-host"></div><p class="chart-note">AVGO reste N/D dans le classement standard : l’échéance fournie par le filtre précède les résultats. Une chaîne séparée couvrant l’après-publication existe, mais ses anomalies de cotation interdisent d’en faire une mesure propre de l’événement.</p></div><div class="chart-panel"><div class="chart-title">Contrôle avant toute entrée</div><ul class="checklist"><li>Publication terminée et prévisions disponibles.</li><li>Écart d’ouverture observé en séance régulière avec volume réel.</li><li>Tenue du VWAP et de la zone d’ouverture.</li><li>Pairs de premier ordre cohérents.</li><li>Taux et QQQ non contradictoires.</li><li>Invalidation structurelle et rendement/risque recalculés.</li></ul></div></div><div class="table-responsive"><table class="data-table"><thead><tr><th>Titre</th><th>Publication</th><th>Test économique</th><th>Amplitude implicite</th></tr></thead><tbody>${earningsRowsHtml}</tbody></table></div></section>
 
-<section class="content-card" id="geopolitique"><h2>Géopolitique et politique économique</h2><p>Cette semaine ne présente pas un événement géopolitique unique capable de dominer le calendrier certifié. Le risque vient plutôt d’un choc exogène qui ferait remonter simultanément pétrole, dollar et volatilité. Ce triptyque serait négatif pour les multiples de croissance et compliquerait la lecture des résultats IA.</p><p>Le deuxième front est commercial : toute extension de restrictions ou de tarifs sur les puces, serveurs et équipements de datacenter toucherait directement la chaîne étudiée. Sans annonce officielle nouvelle dans le jeu de preuves, ce point reste un risque conditionnel, pas un fait de marché.</p><p>Le troisième front est monétaire. Les interventions de la Fed avant le rapport emploi peuvent déplacer les taux, mais aucune phrase isolée ne doit être traitée comme un changement de régime sans confirmation par la courbe obligataire.</p></section>
+<section class="content-card" id="macro"><h2><i class="fas fa-chart-line"></i> Marché, secteurs et volatilité</h2><div class="metrics-grid">${marketCardsHtml}</div><p class="section-lead">Le régime systématique reste <strong>${data.regime.regime === "RISK_ON" ? "APPÉTIT POUR LE RISQUE" : data.regime.regime}</strong> avec un score de ${numericClaim("regime_score", "regime", "/regime_score", { scale: 100, decimals: 0, suffix: " %" })}. Le VIX principal clôture à ${numericClaim("vix_level", "options", "/items/1/level", { decimals: 2 })}, avec une courbe encore en contango. Le risque immédiat n’est pas la panique ; c’est une hausse trop étroite qui échoue sur les résultats ou l’emploi.</p><div class="chart-grid"><div class="chart-panel"><div class="chart-title">Indices et couvertures · base commune</div><div id="marketChart" class="chart-host"></div><p class="chart-note">QQQ et SPY tiennent mieux que les petites capitalisations. GLD et TLT servent de contrôles inter-marchés.</p></div><div class="chart-panel"><div class="chart-title">Rotation sectorielle · semaine passée</div><div id="sectorChart" class="chart-host"></div><p class="chart-note">Une confirmation de l’appétit pour le risque exige plus que la technologie : participation des cycliques et amélioration d’IWM.</p></div></div><div class="chart-panel"><div class="chart-title">Matrice de risque de la semaine</div><div id="riskChart" class="chart-host"></div><p class="chart-note">Position qualitative basée sur probabilité et impact. Ce graphique structure les décisions ; il ne prétend pas fournir des probabilités calibrées.</p></div></section>
 
-<section class="content-card" id="rotation"><h2>Rotation sectorielle et largeur</h2><div class="chart-container"><div class="chart-title">Secteurs américains · trajectoires normalisées</div><div id="sectorChart" class="chart-host"></div></div><p>La technologie, les services de communication et les financières ont terminé en tête. L’énergie, l’industrie, la santé et l’immobilier ont pesé. Avec une majorité de secteurs en baisse, le signal est constructif pour les leaders mais insuffisant pour parler d’élargissement.</p><div class="table-responsive"><table class="data-table"><thead><tr><th>Bloc</th><th>Lecture</th><th>Confirmation attendue</th></tr></thead><tbody><tr><td>Technologie et communication</td><td>Leadership conservé</td><td>Réactions positives après résultats sans perte du prix moyen de séance</td></tr><tr><td>Financières</td><td>Résilience utile</td><td>Tenue si les taux bougent après l’emploi</td></tr><tr><td>Petites capitalisations</td><td>Faiblesse relative</td><td>Reprise nécessaire pour valider un risk-on large</td></tr><tr><td>Défensifs et cycliques</td><td>Participation médiocre</td><td>Stabilisation avant toute augmentation d’exposition</td></tr></tbody></table></div></section>
+<section class="content-card" id="crypto"><h2><i class="fab fa-bitcoin"></i> Crypto, or et bêta élevée</h2><p class="section-lead">Les séries publiées utilisent des véhicules américains alignés sur la clôture actions. Le week-end crypto ne prédit pas mécaniquement l’ouverture US. La confirmation utile reste collective : Bitcoin, Ether et leurs proxys cotés doivent raconter la même histoire.</p><div class="chart-grid"><div class="chart-panel"><div class="chart-title">Proxys crypto américains · base commune</div><div id="cryptoChart" class="chart-host"></div><p class="chart-note">IBIT, ETHA et SOLZ sont comparés sur les mêmes séances. Une divergence SOL ne valide pas à elle seule l’appétit pour le risque crypto.</p></div><div class="chart-panel"><div class="chart-title">Allocation tactique indicative</div><div id="allocationChart" class="chart-host"></div><p class="chart-note">Réserve de liquidités élevée avant AVGO et l’emploi. Cette grille est une inclinaison de risque, pas une allocation personnalisée.</p></div></div><div class="coverage-strip"><span>Or : surveiller GLD face à TLT</span><span>Bitcoin : confirmer avec IBIT</span><span>Ether : confirmer avec ETHA</span><span>Bêta élevée : jamais avant le sous-jacent</span></div></section>
 
-<section class="content-card" id="risques"><h2>Matrice des risques</h2><div class="table-responsive"><table class="data-table"><thead><tr><th>Risque</th><th>Probabilité</th><th>Impact</th><th>Signal précoce</th><th>Réponse</th></tr></thead><tbody><tr><td>Emploi trop fort, taux en hausse</td><td>Moyenne</td><td>Élevé</td><td>TLT faiblit, dollar et volatilité montent</td><td>Réduire la duration et les poursuites de gap</td></tr><tr><td>Guidances IA incohérentes</td><td>Moyenne</td><td>Élevé</td><td>Hardware fort mais cloud ou cyber faible</td><td>Traiter les sous-secteurs séparément</td></tr><tr><td>Déception malgré un beat</td><td>Élevée</td><td>Moyen</td><td>Gap positif vendu sous le prix moyen</td><td>Ne pas anticiper ; attendre une base</td></tr><tr><td>Élargissement haussier</td><td>Moyenne</td><td>Positif</td><td>IWM et secteurs cycliques rejoignent QQQ</td><td>Augmenter progressivement, jamais d’un bloc</td></tr><tr><td>Choc commercial ou géopolitique</td><td>Faible</td><td>Élevé</td><td>Pétrole, dollar et VIX montent ensemble</td><td>Couper les positions les plus corrélées</td></tr><tr><td>Donnée ou niveau incomplet</td><td>Connue</td><td>Élevé</td><td>Support non vérifiable ou flux absent</td><td>Refuser le trade au lieu de compléter</td></tr></tbody></table></div></section>
+<section class="content-card" id="geopolitique"><h2><i class="fas fa-earth-americas"></i> Géopolitique et politique commerciale</h2><p>Aucun choc géopolitique unique ne domine le calendrier vérifié. Le risque pertinent pour le dossier reste une restriction nouvelle sur les puces, serveurs ou équipements de datacenter, ou une hausse simultanée du pétrole, du dollar et de la volatilité.</p><div class="risk-callout"><strong>Contrôle contrarien :</strong> sans annonce officielle nouvelle dans le jeu de preuves, ce risque reste conditionnel. Il ne justifie ni achat défensif automatique ni vente anticipée de la chaîne IA.</div></section>
 
-<section class="content-card" id="allocation"><h2>Allocation tactique</h2><p>Cette grille décrit des inclinaisons, pas un portefeuille universel. Le régime favorable autorise une exposition au risque, mais la largeur médiocre et le calendrier imposent des réserves.</p><div class="table-responsive"><table class="data-table"><thead><tr><th>Poche</th><th>Inclinaison</th><th>Raison</th><th>Condition de changement</th></tr></thead><tbody><tr><td>Large caps US</td><td>Neutre à positive</td><td>Leadership intact, volatilité contenue</td><td>Renforcer seulement si la largeur s’améliore</td></tr><tr><td>Software et cyber</td><td>Observation active</td><td>Test direct de monétisation IA</td><td>Passer positif après guidance et tenue du gap</td></tr><tr><td>Hardware IA</td><td>Sélective</td><td>Demande forte déjà largement anticipée</td><td>Privilégier les confirmations croisées</td></tr><tr><td>Petites capitalisations</td><td>Sous-pondérée</td><td>Faiblesse relative persistante</td><td>Attendre une reprise face aux grandes capitalisations</td></tr><tr><td>Métaux et énergie</td><td>Neutre</td><td>Momentum hebdomadaire détérioré</td><td>Revenir après stabilisation relative</td></tr><tr><td>Crypto</td><td>Tactique</td><td>Dispersion entre proxies</td><td>Exiger une confirmation Bitcoin et Ether</td></tr><tr><td>Cash</td><td>Réserve active</td><td>Option gratuite avant résultats et emploi</td><td>Déployer après confirmation, pas avant</td></tr></tbody></table></div></section>
+<section class="content-card" id="risques"><h2><i class="fas fa-shield-halved"></i> Plan d’action et invalidations</h2><div class="no-setup"><strong>AUCUNE ENTRÉE AVANT AVGO</strong><p>Les niveaux historiques ne sont pas des ordres actifs avant un événement capable de déplacer le titre de plusieurs ATR. L’ouverture post-résultats doit reconstruire le VWAP, la zone d’ouverture et le rendement/risque.</p></div><div class="scenario-grid"><div class="scenario-card neutral"><h3>Scénario central · diffusion partielle</h3><p>AVGO publie correctement mais les prévisions et les prix divergent entre réseau, serveurs, logiciel et cyber.</p><p><strong>Action :</strong> traiter chaque sous-secteur séparément et conserver des liquidités.</p></div><div class="scenario-card bullish"><h3>Alternative haussière · chaîne cohérente</h3><p>AVGO relève fortement ses prévisions, son écart d’ouverture tient et plusieurs contrôles économiques confirment sans hausse des taux.</p><p><strong>Action :</strong> construire progressivement après une base, sans acheter l’ouverture verticale.</p></div><div class="scenario-card bearish"><h3>Alternative baissière · révision du cycle</h3><p>Prévisions AVGO faibles, écart d’ouverture vendu, faiblesse large des semis, puis emploi fort et taux en hausse.</p><p><strong>Action :</strong> refuser le rattrapage et réduire la bêta IA corrélée.</p></div></div><div class="risk-callout"><strong>Invalidation du biais constructif :</strong> AVGO sous son point bas post-résultats, SOXX et QQQ en divergence négative, et taux longs en hausse. Dans ce scénario, une “bonne entreprise” reste un mauvais trade.</div><h3>Carte technique pré-événements</h3><div class="table-responsive"><table class="data-table"><thead><tr><th>Titre</th><th>Clôture</th><th>Moyenne courte</th><th>RSI</th><th>État</th></tr></thead><tbody>${technicalRowsHtml}</tbody></table></div></section>
 
-<section class="content-card" id="trades"><h2>Trades de la semaine</h2><div class="no-setup"><strong>NO_SETUP</strong><p>Aucune idée directionnelle n’est publiée avant les résultats et le rapport emploi. Les supports et résistances structurés de la collecte sont incomplets ; inventer une entrée, un stop ou une cible violerait le cadre de risque.</p></div><h3>Ce qui peut devenir tradable</h3><ul><li><strong>Post-résultats :</strong> gap tenu, prix au-dessus du prix moyen de séance, base visible, volume réel et stop structurel.</li><li><strong>Alternate :</strong> si le leader échoue, ne pas acheter automatiquement son concurrent ; attendre que le concurrent confirme sa propre force.</li><li><strong>Invalidation :</strong> toute perte du niveau de structure observé après l’ouverture annule le setup. Un stop mental n’est pas une protection.</li></ul><p>Ce choix est volontaire : une semaine chargée en événements récompense davantage la patience que la précision artificielle.</p></section>
+<section class="content-card" id="trades"><h2><i class="fas fa-crosshairs"></i> Plans et conditions d’activation</h2><p>Aucun plan directionnel n’est actif avant la publication AVGO. Les candidats ne deviennent éligibles qu’après une base régulière, un VWAP observable et une confirmation par leur propre sous-secteur.</p><div class="action-callout"><strong>Ordre de surveillance économique :</strong> AVGO pour ses prévisions, MRVL/ANET/CRDO/CIEN pour le réseau et les ASIC, DELL/HPE pour les serveurs, puis CEG/VST/GEV pour l’investissement électrique. Cet ordre organise la vérification ; il ne prédit pas la chronologie des prix.</div></section>
 
-<section class="content-card" id="leaders"><h2>Leaders thématiques et sectoriels</h2><div class="table-responsive"><table class="data-table"><thead><tr><th>Thème</th><th>Leaders à observer</th><th>Question décisive</th></tr></thead><tbody><tr><td>Serveurs et infrastructure</td><td>DELL, HPE</td><td>La demande IA améliore-t-elle aussi les marges et la guidance ?</td></tr><tr><td>Connectivité</td><td>CRDO, CIEN</td><td>Le trafic et les interconnexions suivent-ils le capex de calcul ?</td></tr><tr><td>Données et cloud</td><td>SNOW, MDB</td><td>Les clients consomment-ils davantage, au-delà des annonces IA ?</td></tr><tr><td>Cybersécurité</td><td>PANW, ZS</td><td>Les budgets de sécurité accélèrent-ils avec les nouveaux usages ?</td></tr><tr><td>Crypto coté</td><td>IBIT, ETHA, SOLZ</td><td>Le mouvement devient-il commun ou reste-t-il concentré ?</td></tr></tbody></table></div><h3>Carte technique avant événements</h3><div class="table-responsive"><table class="data-table"><thead><tr><th>Titre</th><th>Clôture</th><th>Moyenne courte</th><th>RSI</th><th>État</th></tr></thead><tbody>${tech}</tbody></table></div><p>MDB, SNOW, PANW et ZS abordent leurs publications au-dessus de leur moyenne courte. DELL est proche de cette ligne. CRDO, HPE et CIEN doivent la reconquérir. Ce classement décrit la structure avant événement ; il ne prédit pas la réaction après publication.</p><div class="source-refs"><a class="source-ref" href="https://www.sec.gov/Archives/edgar/data/1571996/000157199626000032/dell-20260611.htm" target="_blank" rel="noopener"><i class="fa-solid fa-file-shield"></i><span class="source-name">SEC · Dell : conversion d’actions, pas un financement nouveau</span></a><a class="source-ref" href="https://www.sec.gov/Archives/edgar/data/1807794/000162828026024892/crdo-20260413.htm" target="_blank" rel="noopener"><i class="fa-solid fa-file-shield"></i><span class="source-name">SEC · Credo : acquisition payée en cash et actions, avec composante conditionnelle</span></a></div></section>
+<section class="content-card" id="outlook"><h2><i class="fas fa-compass"></i> Perspective</h2><p>Le scénario central reste une diffusion partielle : de bons chiffres sur certains maillons, mais pas une validation uniforme de toute la chaîne. La conviction ne doit monter qu’avec la cohérence des prévisions, des réactions de prix et des taux.</p><div class="pedagogy-box"><strong>Règle simple :</strong> le résultat dit ce qui s’est passé ; les prévisions disent ce qui peut arriver ; le prix dit ce que le marché accepte déjà de payer.</div></section>
 
-<section class="content-card" id="outlook"><h2>Outlook et scénarios</h2><div class="scenario-grid"><div class="scenario-card bullish"><h3>Scénario haussier</h3><p>Les guidances hardware, cloud et cyber se répondent positivement. Les gaps tiennent après l’ouverture, IWM rejoint les grands indices et l’emploi n’entraîne pas de remontée brutale des taux.</p><p><strong>Action :</strong> ajouter par étapes sur les leaders confirmés, avec protection sous la structure post-résultats.</p></div><div class="scenario-card neutral"><h3>Scénario central</h3><p>Les résultats sont bons mais dispersés : hardware solide, software ou cyber plus mitigé. Les indices tiennent grâce aux grandes capitalisations, sans véritable élargissement.</p><p><strong>Action :</strong> rester sélectif, conserver du cash et éviter les paniers thématiques indiscriminés.</p></div><div class="scenario-card bearish"><h3>Scénario baissier</h3><p>Les guidances déçoivent ou l’emploi fait remonter les taux. Les gaps positifs sont vendus, QQQ perd son leadership et la volatilité courte rattrape la volatilité future.</p><p><strong>Action :</strong> couper rapidement les échecs, ne pas moyenner et attendre une nouvelle base.</p></div></div><h3>Checklist de décision</h3><ul><li>Le résultat dépasse-t-il les attentes, et la guidance confirme-t-elle ?</li><li>Le titre tient-il son gap et son prix moyen de séance ?</li><li>Les concurrents confirment-ils ou divergent-ils ?</li><li>IWM et les secteurs cycliques participent-ils ?</li><li>Les taux et le dollar valident-ils encore le régime favorable ?</li></ul></section>
-
-<section class="content-card" id="sources"><h2>Sources et méthode</h2><p>Données de marché, volatilité, résultats, fondamentaux et indicateurs techniques arrêtés à la dernière clôture américaine complète de vendredi. Les calculs utilisent les mêmes bornes de séance pour les actions, les ETF de matières premières et les proxies crypto.</p><p>Les données spot crypto obsolètes, les niveaux de support-résistance mal formés, le dark pool indisponible et une anomalie de date dans les flux internes ont été exclus. Aucun de ces éléments ne soutient une conclusion publiée.</p><div class="source-refs"><a class="source-ref" href="https://www.bls.gov/schedule/news_release/empsit.htm" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i><span class="source-name">BLS · calendrier du rapport emploi</span></a><a class="source-ref" href="https://www.federalreserve.gov/newsevents/calendar.htm" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i><span class="source-name">Réserve fédérale · calendrier officiel</span></a><a class="source-ref" href="https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i><span class="source-name">ISM · rapports d’activité</span></a></div><div class="disclaimer"><strong>Avertissement :</strong> contenu informatif, pas un conseil financier. Les résultats créent des gaps qui peuvent rendre un stop inopérant. La taille doit rester compatible avec une perte supérieure au risque théorique.</div></section>
+<section class="content-card" id="sources"><h2><i class="fas fa-book"></i> Sources, qualité et limites</h2><p>Instantané observé dimanche, chiffres de marché arrêtés à la dernière clôture US complète. Les prix, résultats, réactions historiques, fondamentaux et techniques viennent de collectes datées et contrôlées. Les barres ajustées alignées servent aussi à une revue statistique contrarienne, jamais à transformer la carte économique en causalité.</p><div class="table-responsive"><table class="data-table"><thead><tr><th>Bloc</th><th>Qualité</th><th>Limite appliquée</th></tr></thead><tbody><tr><td>Barres actions/ETF</td><td><span class="badge badge-green">VALIDÉ</span></td><td>Dernière clôture servie, séance partielle exclue.</td></tr><tr><td>Résultats AVGO</td><td><span class="badge badge-green">VALIDÉ</span></td><td>Date issue du calendrier financier filtré ; fenêtre après clôture.</td></tr><tr><td>Options AVGO</td><td><span class="badge badge-yellow">AVEC RÉSERVE</span></td><td>Amplitude standard rejetée; première chaîne post-résultats disponible mais cotations hétérogènes.</td></tr><tr><td>Rayon de surveillance</td><td><span class="badge badge-blue">DOCUMENTÉ</span></td><td>Liens économiques; aucune chronologie de prix ni causalité affirmée.</td></tr><tr><td>Crypto du week-end</td><td><span class="badge badge-yellow">CONTRÔLE</span></td><td>Ne prédit pas l’ouverture US ; ETF alignés utilisés pour les comparaisons.</td></tr></tbody></table></div><p class="source-meta">Le calendrier couvre huit événements macro pour la semaine. Sources primaires : BLS, Réserve fédérale, ISM et calendrier économique consolidé. Données absentes ou mal formées non remplacées par zéro.</p><div class="source-refs"><a class="source-ref" href="https://www.bls.gov/schedule/news_release/empsit.htm" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i><span class="source-name">BLS · rapport emploi</span></a><a class="source-ref" href="https://www.federalreserve.gov/newsevents/calendar.htm" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i><span class="source-name">Réserve fédérale · calendrier</span></a><a class="source-ref" href="/analyses/AVGO/"><i class="fa-solid fa-file-lines"></i><span class="source-name">Dossier AVGO complet</span></a></div><div class="disclaimer"><strong>Avertissement :</strong> contenu informatif, pas un conseil financier. Les résultats peuvent créer un écart d’ouverture supérieur au risque théorique et rendre un niveau d’invalidation inopérant.</div></section>
 </main>
-<footer class="article-footer">&copy; 2026 DailyTickers. Données arrêtées à la clôture de référence. Ceci n’est pas un conseil financier.<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a></footer>
+<footer class="article-footer">&copy; 2026 DailyTickers · données arrêtées au 28 août 2026 · contenu informatif.<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a></footer>
 <script>
-const weeklySeries=${JSON.stringify(allSeries)};
-function normalized(symbol,start){const rows=(weeklySeries[symbol]||[]).filter(row=>row[0]>=start);const base=rows.length?rows[0][1]:1;return rows.map(row=>[row[0],Number((row[1]/base*100).toFixed(2))]);}
-function lineChart(id,symbols){const host=document.getElementById(id);if(!host||typeof echarts==='undefined')return;const starts=symbols.map(symbol=>(weeklySeries[symbol]||[])[0]?.[0]).filter(Boolean);const commonStart=starts.sort().at(-1);const chart=echarts.init(host);chart.setOption({tooltip:{trigger:'axis'},legend:{type:'scroll',bottom:0},grid:{left:45,right:20,top:25,bottom:55},xAxis:{type:'time'},yAxis:{type:'value',scale:true,name:'Base 100'},series:symbols.map(symbol=>({name:symbol,type:'line',showSymbol:false,data:normalized(symbol,commonStart),emphasis:{focus:'series'}}))});window.addEventListener('resize',()=>chart.resize());}
-lineChart('marketChart',['SPY','QQQ','IWM','GLD','TLT','USO']);lineChart('sectorChart',['XLK','XLC','XLF','XLE','XLV','XLI','XLY','XLP','XLU','XLRE']);
-</script><script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script><script src="/assets/tag-renderer.js"></script><script src="/assets/sidebar.js"></script></body></html>`;
+const P=${JSON.stringify(chartPayload)};
+const palette=['#2563eb','#0f766e','#d97706','#dc2626','#7c3aed','#0891b2','#64748b','#16a34a'];
+const charts=[];
+function mount(id,option){const host=document.getElementById(id);if(!host||typeof echarts==='undefined')return;const chart=echarts.init(host);chart.setOption(option);charts.push(chart);}
+function normalized(symbol,rows){if(!rows?.length)return[];const base=rows[0].close;return rows.map(row=>[row.date,+(row.close/base*100).toFixed(2)]);}
+function lastRows(symbol,n=80){return (P.marketBars[symbol]||[]).slice(-n);}
+function aligned(symbols,n=80){const rows=Object.fromEntries(symbols.map(symbol=>[symbol,lastRows(symbol,n)]));const start=symbols.map(symbol=>rows[symbol][0]?.date).filter(Boolean).sort().at(-1);return Object.fromEntries(symbols.map(symbol=>[symbol,normalized(symbol,rows[symbol].filter(row=>row.date>=start))]));}
+mount('eventChart',{tooltip:{trigger:'axis'},grid:{left:35,right:18,top:20,bottom:38},xAxis:{type:'category',data:['Lun.','Mar.','Mer.','Jeu.','Ven.']},yAxis:{type:'value',min:0,max:5,show:false},series:[{type:'bar',barMaxWidth:52,data:[{value:2,itemStyle:{color:'#94a3b8'}},{value:4,itemStyle:{color:'#64748b'}},{value:5,itemStyle:{color:'#2563eb'}},{value:4,itemStyle:{color:'#0f766e'}},{value:5,itemStyle:{color:'#d97706'}}],label:{show:true,position:'top',formatter:p=>['Macro','4 résultats','AVGO + 2','Macro + 2','Emploi'][p.dataIndex]}}]});
+mount('avgoPriceChart',{tooltip:{trigger:'axis'},legend:{bottom:0},grid:{left:48,right:18,top:20,bottom:45},xAxis:{type:'time'},yAxis:{type:'value',scale:true},series:[{name:'AVGO',type:'line',showSymbol:false,data:P.avgo.map(r=>[r.date,r.close]),itemStyle:{color:'#2563eb'},lineStyle:{width:2,color:'#2563eb'}},{name:'MM20 simple',type:'line',showSymbol:false,data:P.avgoSma20,itemStyle:{color:'#d97706'},lineStyle:{width:1.4,color:'#d97706'}},{name:'MM50 simple',type:'line',showSymbol:false,data:P.avgoSma50,itemStyle:{color:'#7c3aed'},lineStyle:{width:1.4,color:'#7c3aed'}}]});
+mount('reactionChart',{tooltip:{trigger:'axis'},grid:{left:45,right:15,top:20,bottom:48},xAxis:{type:'category',data:P.reactions.map(r=>r.announced_date.slice(0,7)),axisLabel:{rotate:35}},yAxis:{type:'value',axisLabel:{formatter:'{value}%'}},series:[{type:'bar',data:P.reactions.map(r=>({value:+r.move_percent.toFixed(2),itemStyle:{color:r.move_percent>=0?'#16a34a':'#dc2626'}})),label:{show:true,position:p=>p.value>=0?'top':'bottom',formatter:p=>(p.value>0?'+':'')+p.value+'%'}}]});
+mount('qualityRadar',{tooltip:{},radar:{indicator:[{name:'Croissance',max:100},{name:'Marge brute',max:100},{name:'Marge op.',max:100},{name:'Bilan',max:100},{name:'Valorisation',max:100},{name:'Momentum',max:100}],radius:'64%'},series:[{type:'radar',data:[{value:[${(avgoFinancial.revenueGrowth * 100).toFixed(1)},${(avgoFinancial.grossMargins * 100).toFixed(1)},${(avgoFinancial.operatingMargins * 100).toFixed(1)},42,32,${Math.max(0, Math.min(100, avgoTechnical.rsi)).toFixed(1)}],name:'AVGO',areaStyle:{color:'rgba(37,99,235,.18)'},lineStyle:{color:'#2563eb'}}]}]});
+const blastTierNames={1:'Calcul & réseau',2:'Fabrication',3:'Serveurs',4:'Électricité'};
+const blastNodes=[{name:'AVGO',role:'Catalyseur central',itemStyle:{color:'#2563eb'}},...Object.entries(blastTierNames).map(([order,name])=>({name,role:'Proximité économique '+order,itemStyle:{color:palette[+order]}})),...P.blast.filter(x=>x.symbol!=='AVGO').map(x=>({name:x.symbol,role:x.role,itemStyle:{color:palette[x.order]}}))];
+const blastLinks=[...Object.entries(blastTierNames).map(([order,name])=>({source:'AVGO',target:name,value:P.blast.filter(x=>x.order===+order).length})),...P.blast.filter(x=>x.symbol!=='AVGO').map(x=>({source:blastTierNames[x.order],target:x.symbol,value:1}))];
+mount('blastChart',{tooltip:{formatter:p=>p.dataType==='node'?'<strong>'+p.data.name+'</strong><br>'+(p.data.role||'Lien économique'):'Lien économique documenté, non causal'},series:[{type:'sankey',data:blastNodes,links:blastLinks,left:8,right:12,top:12,bottom:12,nodeWidth:16,nodeGap:10,draggable:false,emphasis:{focus:'adjacency'},lineStyle:{color:'source',opacity:.22,curveness:.45},label:{fontSize:11,color:'#334155'}}]});
+mount('earningsChart',{tooltip:{trigger:'axis'},grid:{left:40,right:15,top:22,bottom:45},xAxis:{type:'category',data:P.validMoves.map(x=>x.symbol)},yAxis:{type:'value',axisLabel:{formatter:'{value}%'}},series:[{type:'bar',data:P.validMoves.map(x=>x.value==null?{value:0,itemStyle:{color:'#cbd5e1'},label:{show:true,position:'top',formatter:'N/D'}}:{value:+x.value.toFixed(1),itemStyle:{color:x.symbol==='AVGO'?'#2563eb':'#0f766e'},label:{show:true,position:'top',formatter:p=>p.value+'%'}})}]});
+const marketSymbols=['SPY','QQQ','IWM','GLD','TLT'];const marketAligned=aligned(marketSymbols);
+mount('marketChart',{tooltip:{trigger:'axis'},legend:{type:'scroll',bottom:0},grid:{left:45,right:15,top:20,bottom:48},xAxis:{type:'time'},yAxis:{type:'value',scale:true,name:'Base 100'},series:marketSymbols.map((s,i)=>({name:s,type:'line',showSymbol:false,data:marketAligned[s],lineStyle:{width:s==='QQQ'?2.4:1.5,color:palette[i]}}))});
+const sectorSymbols=['XLK','XLC','XLF','XLY','XLI','XLE','XLV','XLP','XLU','XLRE'];
+const sectorData=sectorSymbols.map(s=>{const r=lastRows(s,7);return{name:s,value:r.length>5?+(r.at(-1).close/r.at(-6).close*100-100).toFixed(2):0}}).sort((a,b)=>a.value-b.value);
+mount('sectorChart',{tooltip:{trigger:'axis'},grid:{left:48,right:28,top:15,bottom:30},xAxis:{type:'value',axisLabel:{formatter:'{value}%'}},yAxis:{type:'category',data:sectorData.map(x=>x.name)},series:[{type:'bar',data:sectorData.map(x=>({value:x.value,itemStyle:{color:x.value>=0?'#16a34a':'#dc2626'}})),label:{show:true,position:'right',formatter:p=>(p.value>0?'+':'')+p.value+'%'}}]});
+mount('riskChart',{tooltip:{formatter:p=>'<strong>'+p.data.fullName+'</strong><br>'+p.data.action},grid:{left:62,right:42,top:28,bottom:58},xAxis:{type:'value',min:.5,max:3.5,interval:1,name:'Probabilité →',nameLocation:'middle',nameGap:34,axisLabel:{formatter:v=>({1:'Faible',2:'Moyenne',3:'Élevée'})[v]||''}},yAxis:{type:'value',min:.5,max:3.5,interval:1,name:'Impact →',axisLabel:{formatter:v=>({1:'Faible',2:'Moyen',3:'Élevé'})[v]||''}},series:[{type:'scatter',symbolSize:68,data:[{name:'Emploi\\nfort',fullName:'Emploi fort',value:[2.1,2.8],action:'Taux en hausse : réduire la duration',itemStyle:{color:'#dc2626'}},{name:'AVGO\\ndéçoit',fullName:'AVGO déçoit',value:[1.5,2.8],action:'Refuser les achats de sympathie',itemStyle:{color:'#b91c1c'}},{name:'Dépassement\\nvendu',fullName:'Dépassement vendu',value:[2.8,1.8],action:'Attendre une base',itemStyle:{color:'#d97706'}},{name:'Diffusion\\ncomplète',fullName:'Diffusion complète',value:[2.1,1.8],action:'Ajouter par étapes',itemStyle:{color:'#16a34a'}},{name:'Choc\\ngéopolitique',fullName:'Choc géopolitique',value:[.8,2.8],action:'Réduire la bêta corrélée',itemStyle:{color:'#7c3aed'}}],label:{show:true,position:'inside',color:'#fff',fontSize:10,fontWeight:700,formatter:p=>p.data.name}}]});
+const cryptoSymbols=['IBIT','ETHA','SOLZ'];const cryptoAligned=aligned(cryptoSymbols);
+mount('cryptoChart',{tooltip:{trigger:'axis'},legend:{bottom:0},grid:{left:45,right:15,top:20,bottom:48},xAxis:{type:'time'},yAxis:{type:'value',scale:true,name:'Base 100'},series:cryptoSymbols.map((s,i)=>({name:s,type:'line',showSymbol:false,data:cryptoAligned[s],lineStyle:{width:2,color:palette[i]}}))});
+mount('allocationChart',{tooltip:{trigger:'item',formatter:'{b}: {c}%'},legend:{bottom:0},series:[{type:'pie',radius:['45%','72%'],center:['50%','45%'],avoidLabelOverlap:true,label:{formatter:'{b}\\n{c}%'},data:[{name:'Grandes capitalisations',value:35,itemStyle:{color:'#2563eb'}},{name:'Liquidités',value:30,itemStyle:{color:'#64748b'}},{name:'IA sélective',value:15,itemStyle:{color:'#0f766e'}},{name:'Taux/or',value:10,itemStyle:{color:'#d97706'}},{name:'Crypto tactique',value:10,itemStyle:{color:'#7c3aed'}}]}]});
+window.addEventListener('resize',()=>charts.forEach(chart=>chart.resize()));
+</script><script src="/assets/core.js"></script><script src="/assets/tag-renderer.js"></script><script src="/assets/sidebar.js"></script></body></html>`;
 
 html = html
-  .replaceAll('class="table-responsive"', 'class="table-responsive" style="overflow-x:auto;max-width:100%"')
-  .replaceAll('class="chart-host"', 'class="chart-host" style="width:100%;height:340px;min-width:0"');
-
-const articlePath = path.join(__dirname, 'index.html');
+  .replace(/<style>\n\.weekly-brief[\s\S]*?<\/style>\n/, "")
+  .replaceAll(
+    'class="table-responsive"',
+    'class="table-responsive" style="overflow-x:auto;max-width:100%"',
+  );
+const articlePath = path.join(__dirname, "index.html");
 fs.writeFileSync(articlePath, html);
-const articleSha = crypto.createHash('sha256').update(Buffer.from(html)).digest('hex');
-fs.writeFileSync(path.join(__dirname, '_data/claims.json'), JSON.stringify({
-  schema_version: 1,
-  reference_close: '2026-08-28',
-  article_path: 'weekly/20260831/index.html',
-  article_sha256: articleSha,
-  claims
-}, null, 2) + '\n');
-console.log(`Built ${path.relative(ROOT, articlePath)} (${Buffer.byteLength(html)} bytes, ${claims.length} claims)`);
+const articleSha = crypto
+  .createHash("sha256")
+  .update(Buffer.from(html))
+  .digest("hex");
+fs.writeFileSync(
+  path.join(__dirname, "_data/claims.json"),
+  JSON.stringify(
+    {
+      schema_version: 1,
+      reference_close: "2026-08-28",
+      article_path: "weekly/20260831/index.html",
+      article_sha256: articleSha,
+      claims,
+    },
+    null,
+    2,
+  ) + "\n",
+);
+console.log(
+  `Built ${path.relative(ROOT, articlePath)} (${Buffer.byteLength(html)} bytes, ${claims.length} exact claims, 10 charts)`,
+);
