@@ -123,6 +123,36 @@ function isUSTradingDay(isoDate) {
   return !holidaySet(date.getUTCFullYear()).has(isoDate);
 }
 
+function usTradingDaysBetween(startIso, endIso) {
+  const date = validateIso(startIso);
+  const end = validateIso(endIso);
+  if (date >= end) return 0;
+  let count = 0;
+  while (date < end) {
+    date.setUTCDate(date.getUTCDate() + 1);
+    const iso = toISO(date);
+    if (isUSTradingDay(iso)) count++;
+  }
+  return count;
+}
+
+function addUSTradingDays(isoDate, count) {
+  const date = validateIso(isoDate);
+  const step = count >= 0 ? 1 : -1;
+  let added = 0;
+  while (added < Math.abs(count)) {
+    date.setUTCDate(date.getUTCDate() + step);
+    const iso = toISO(date);
+    validateIso(iso);
+    if (isUSTradingDay(iso)) added++;
+  }
+  return toISO(date);
+}
+
+function newYorkDateISO(now = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(now);
+}
+
 function nextUSTradingDay(isoDate) {
   const date = validateIso(isoDate);
   for (let i = 0; i < 14; i++) {
@@ -154,6 +184,9 @@ module.exports = {
   holidaySet,
   halfDaySet,
   isUSTradingDay,
+  usTradingDaysBetween,
+  addUSTradingDays,
+  newYorkDateISO,
   nextUSTradingDay,
   previousUSTradingDay,
   isUSHalfDay,

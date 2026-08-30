@@ -44,7 +44,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <!-- ECharts lazy-loaded on radar/scanner tab -->
-  <script src="/data/search_data.js?v=202608302140"></script>
+  <script src="/data/search_data.js?v=202608302302"></script>
   <style>
     /* Landing Specific Overrides */
     body {
@@ -4131,16 +4131,16 @@
     function seriesCatalogCard(item) {
       const chapters = Array.isArray(item.chapters) ? item.chapters : [];
       const chapterLinks = chapters.map(function(chapter, index) {
-        return '<li><a href="' + escapeSeriesHtml(chapter.href) + '"' + (index === 0 ? ' class="current"' : '') + '>' +
+        return '<li><a href="' + escapeSeriesHtml(chapter.href) + '" title="' + escapeSeriesHtml(chapter.title || ('Partie ' + (index + 1))) + '" aria-label="Partie ' + escapeSeriesHtml(chapter.number || index + 1) + ' : ' + escapeSeriesHtml(chapter.title || ('Partie ' + (index + 1))) + '"' + (index === 0 ? ' class="current"' : '') + '>' +
           '<span>' + escapeSeriesHtml(chapter.number || index + 1) + '</span>' +
           '<strong>' + escapeSeriesHtml(chapter.title || ('Partie ' + (index + 1))) + '</strong></a></li>';
       }).join('');
       const countLabel = item.chapterCount > 1 ? item.chapterCount + ' parties' : 'Article unique';
-      return '<article class="report-card series-catalog-card" data-lang="' + escapeSeriesHtml(item.lang || 'fr') + '" data-tags="' + escapeSeriesHtml((item.tags || []).join(',')) + '">' +
+      return '<article class="report-card series-catalog-card" data-series-parts="' + chapters.length + '" data-lang="' + escapeSeriesHtml(item.lang || 'fr') + '" data-tags="' + escapeSeriesHtml((item.tags || []).join(',')) + '">' +
         '<div class="series-card-head"><span class="series-card-kind"><i class="fa-solid fa-graduation-cap"></i> Série</span><span class="series-card-count">' + countLabel + '</span></div>' +
         '<h2>' + escapeSeriesHtml(item.title) + '</h2>' +
         '<p class="series-card-description">' + escapeSeriesHtml(item.description) + '</p>' +
-        (chapters.length > 1 ? '<div class="series-card-progress"><span style="width:' + (100 / chapters.length).toFixed(2) + '%"></span></div><div class="series-card-chapters" aria-label="Chapitres de ' + escapeSeriesHtml(item.title) + '"><ol>' + chapterLinks + '</ol></div>' : '') +
+        '<div class="series-card-chapters" aria-label="Accès direct aux chapitres de ' + escapeSeriesHtml(item.title) + '"><ol>' + chapterLinks + '</ol></div>' +
         '<a href="' + escapeSeriesHtml(item.href) + '" class="btn-read-primary series-card-cta"><i class="fa-solid fa-play"></i> ' + (chapters.length > 1 ? 'Commencer la série' : 'Lire l’article') + '</a>' +
       '</article>';
     }
@@ -5429,6 +5429,10 @@
           targetLang = uiLang;
         }
         var label = btnLabels[type][targetLang] || btnLabels[type]['en'];
+        if (type === 'series' && card.classList.contains('series-catalog-card') && Number(card.dataset.seriesParts || 0) <= 1) {
+          var singleLabels = { fr: 'Lire l\'article', en: 'Read the article', ar: 'قراءة المقال', es: 'Leer el artículo', zh: '阅读文章' };
+          label = singleLabels[targetLang] || singleLabels.en;
+        }
         btn.textContent = label;
       });
 

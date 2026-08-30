@@ -20,6 +20,12 @@ assert.strictEqual(calendar.isUSHalfDay('2026-07-02'), false, '2026-07-02 is not
 assert.strictEqual(calendar.isUSTradingDay('2027-12-31'), true, 'Saturday New Year 2028 is not observed on Friday');
 assert.strictEqual(calendar.nextUSTradingDay('2026-07-02'), '2026-07-06');
 assert.strictEqual(calendar.previousUSTradingDay('2026-07-06'), '2026-07-02');
+assert.strictEqual(calendar.usTradingDaysBetween('2026-08-12', '2026-08-29'), 12);
+assert.strictEqual(calendar.usTradingDaysBetween('2026-08-27', '2026-08-29'), 1);
+assert.strictEqual(calendar.usTradingDaysBetween('2026-09-04', '2026-09-08'), 1, 'Labor Day must not consume a holding session');
+assert.strictEqual(calendar.addUSTradingDays('2026-09-04', 1), '2026-09-08');
+assert.strictEqual(calendar.addUSTradingDays('2026-09-08', -1), '2026-09-04');
+assert.strictEqual(calendar.newYorkDateISO(new Date('2026-08-31T02:00:00Z')), '2026-08-30');
 assert.throws(() => calendar.isUSTradingDay('2029-01-02'), /verified only through/);
 assert.throws(() => calendar.isUSTradingDay('2026-02-30'), /invalid ISO/);
 

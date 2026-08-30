@@ -835,17 +835,20 @@ p {
     #promoBanner { font-size: 0.78rem !important; padding: 0.5rem 0.75rem !important; }
 }
 
-/* Series index: one clear learning journey per card, chapters always visible. */
+/* Series index: fixed-height cards with compact direct chapter access. */
 #tab-series .grid-cards {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
-    align-items: start;
+    align-items: stretch;
 }
 .series-catalog-card {
     display: grid;
-    gap: 0.8rem;
+    grid-template-rows: 20px 2.75em 4.1em 38px 40px;
+    gap: 0.7rem;
+    height: 300px;
     min-width: 0;
     padding: 1.15rem;
     border-radius: 8px;
+    box-sizing: border-box;
 }
 .series-catalog-card .series-card-head {
     display: flex;
@@ -867,10 +870,14 @@ p {
     color: var(--accent);
 }
 .series-catalog-card h2 {
+    display: -webkit-box;
     margin: 0;
+    overflow: hidden;
     color: var(--text-primary);
     font-size: 1.08rem;
     line-height: 1.25;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 .series-card-description {
     display: -webkit-box;
@@ -883,21 +890,11 @@ p {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
 }
-.series-card-progress {
-    height: 4px;
-    overflow: hidden;
-    background: var(--border-c);
-    border-radius: 2px;
-}
-.series-card-progress span {
-    display: block;
-    height: 100%;
-    background: var(--accent);
-}
 .series-card-chapters {
+    display: flex;
+    align-items: center;
     max-width: 100%;
     overflow-x: auto;
-    padding-bottom: 0.35rem;
     scrollbar-width: thin;
 }
 .series-card-chapters ol {
@@ -909,14 +906,14 @@ p {
     list-style: none;
 }
 .series-card-chapters a {
-    display: grid;
-    grid-template-columns: 22px minmax(0, 110px);
+    display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    min-height: 44px;
-    padding: 0.4rem 0.5rem;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
     border: 1px solid var(--border-c);
-    border-radius: 6px;
+    border-radius: 50%;
     color: var(--text-secondary);
     text-decoration: none;
 }
@@ -929,24 +926,27 @@ p {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: var(--border-c);
+    width: auto;
+    height: auto;
+    background: transparent;
     color: var(--text-secondary);
     font-size: 0.66rem;
     font-weight: 800;
 }
 .series-card-chapters a.current > span {
-    background: var(--accent);
-    color: #fff;
+    background: transparent;
+    color: inherit;
 }
 .series-card-chapters strong {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
     overflow: hidden;
-    font-size: 0.68rem;
-    line-height: 1.2;
-    text-overflow: ellipsis;
+    clip: rect(0, 0, 0, 0);
     white-space: nowrap;
+    border: 0;
 }
 .series-card-cta {
     display: inline-flex;
@@ -955,9 +955,22 @@ p {
     gap: 0.45rem;
     width: 100%;
     min-height: 40px;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 750;
+    text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.series-card-cta:hover,
+.series-card-cta:focus-visible {
+    border-color: var(--accent-2, var(--accent));
+    background: var(--accent-2, var(--accent));
+    color: #fff;
 }
 @media (max-width: 640px) {
     #tab-series .grid-cards { grid-template-columns: minmax(0, 1fr); }
-    .series-catalog-card { padding: 1rem; }
-    .series-card-description { min-height: auto; }
+    .series-catalog-card { height: 292px; padding: 1rem; }
 }

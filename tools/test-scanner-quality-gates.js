@@ -10,6 +10,7 @@ const parser = require('./lib/scanner-parser');
 const { extractAllFromDir } = require('./update-tracking');
 const dtxScan = require('./dtx-scan');
 const { isPlanActive } = require('./lib/dtx-plan-window');
+const { isUSTradingDay, newYorkDateISO } = require('./lib/market-calendar');
 
 const ROOT = path.join(__dirname, '..');
 const read = rel => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
@@ -28,22 +29,22 @@ assert(tracked.every(t => t.horizon_days === 10), 'tracking must not replace H10
 assert(tracked.every(t => t.entry_low && t.entry_high), 'tracking must retain entry zones');
 
 const positions = read('data/scanner-positions.json').open_positions || [];
-const today = new Date().toISOString().slice(0, 10);
+const today = newYorkDateISO();
 assert(!positions.some(p => p.scan_date > today), 'future scans must never become open positions');
 
 const statusHtml = fs.readFileSync(path.join(ROOT, 'scanner/status/index.html'), 'utf8');
 assert(!statusHtml.includes('scanDir=20260831'), 'future scans must never feed status orders');
-const isWeekend = [0, 6].includes(new Date(`${today}T00:00:00Z`).getUTCDay());
-if (isWeekend) {
-  assert(statusHtml.includes('Portfolio · Market Closed'), 'weekend status must be labeled market closed');
-  assert(!/>\s*\d+ Orders? to Place</.test(statusHtml), 'weekend status must not advertise actionable orders');
+const isMarketClosedDay = !isUSTradingDay(today);
+if (isMarketClosedDay) {
+  assert(statusHtml.includes('Portefeuille · Marché fermé'), 'closed-session status must be labeled in the site language');
+  assert(!/>\s*\d+ Orders? to Place</.test(statusHtml), 'closed-session status must not advertise actionable orders');
   const todayKey = today.replace(/-/g, '');
   const snapshot = read(`scanner/status/history/${todayKey}.json`);
   for (const [mode, payload] of Object.entries(snapshot.modes || {})) {
-    assert.strictEqual((payload.orders || []).length, 0, `${mode}: weekend snapshot orders must be empty`);
+    assert.strictEqual((payload.orders || []).length, 0, `${mode}: closed-session snapshot orders must be empty`);
   }
   for (const mode of ['best', 'turbo', 'dynamic', 'balanced', 'fortress']) {
-    assert.strictEqual((read(`portfolio/v1/${mode}/orders.json`).orders || []).length, 0, `${mode}: weekend API orders must be empty`);
+    assert.strictEqual((read(`portfolio/v1/${mode}/orders.json`).orders || []).length, 0, `${mode}: closed-session API orders must be empty`);
   }
 }
 const bestMethod = (statusHtml.split('<div id="p-best"')[1] || '').split('<!-- ══ 2bis.')[0];

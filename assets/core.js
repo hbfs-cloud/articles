@@ -134,99 +134,132 @@ document.addEventListener("DOMContentLoaded", function() {
     document.body.insertBefore(a, document.body.firstChild);
 });
 
-// Shared series navigation. Existing articles span several HTML generations;
-// normalizing their common .series-bar keeps every chapter usable without
-// rewriting hundreds of editorial files.
+// Series pages span several HTML generations. Keep their original visual bar,
+// but repair its links from the published catalog. Horizontal centering is done
+// on the bar itself: scrollIntoView() used to move the whole article to its
+// bottom navigation on load.
 document.addEventListener('DOMContentLoaded', function() {
     if (!/^\/series\//.test(location.pathname)) return;
 
-    document.querySelectorAll('.series-bar:not(.series-enhanced)').forEach(function(bar, barIndex) {
-        var inner = bar.querySelector('.series-bar-inner');
-        var steps = bar.querySelector('.series-steps');
-        if (!inner || !steps) return;
-        var items = Array.prototype.slice.call(steps.querySelectorAll('.series-step'));
-        if (!items.length) return;
-
-        var currentIndex = items.findIndex(function(item) { return item.classList.contains('current'); });
-        if (currentIndex < 0) currentIndex = 0;
-        items.forEach(function(item, index) {
-            item.classList.toggle('done', index < currentIndex);
-            if (index === currentIndex) item.setAttribute('aria-current', 'step');
-            item.setAttribute('aria-label', 'Partie ' + (index + 1) + ' sur ' + items.length + ' : ' + (item.getAttribute('title') || item.textContent.trim()));
-        });
-
-        var titleNode = inner.querySelector('.series-title');
-        var counterNode = inner.querySelector('.series-counter');
-        var arrows = Array.prototype.slice.call(inner.children).filter(function(node) {
-            return node.classList && node.classList.contains('series-arrow');
-        });
-        var previous = arrows[0] || null;
-        var next = arrows[arrows.length - 1] || null;
-        var title = titleNode ? titleNode.textContent.trim() : 'Série';
-
-        var head = document.createElement('div');
-        head.className = 'series-progress-head';
-        head.innerHTML = '<div><span class="series-eyebrow">Parcours</span><strong></strong></div>' +
-            '<span class="series-position">Partie ' + (currentIndex + 1) + ' sur ' + items.length + '</span>';
-        head.querySelector('strong').textContent = title;
-
-        var progress = document.createElement('div');
-        progress.className = 'series-progress-track';
-        progress.setAttribute('role', 'progressbar');
-        progress.setAttribute('aria-label', 'Progression dans la série');
-        progress.setAttribute('aria-valuemin', '1');
-        progress.setAttribute('aria-valuemax', String(items.length));
-        progress.setAttribute('aria-valuenow', String(currentIndex + 1));
-        progress.innerHTML = '<span style="width:' + (((currentIndex + 1) / items.length) * 100).toFixed(2) + '%"></span>';
-
-        var row = document.createElement('div');
-        row.className = 'series-chapter-row';
-        if (previous) {
-            previous.setAttribute('aria-label', currentIndex > 0 ? 'Partie précédente' : 'Aucune partie précédente');
-            row.appendChild(previous);
-        }
-        row.appendChild(steps);
-        if (next && next !== previous) {
-            next.setAttribute('aria-label', currentIndex < items.length - 1 ? 'Partie suivante' : 'Aucune partie suivante');
-            row.appendChild(next);
-        }
-
-        inner.innerHTML = '';
-        inner.appendChild(head);
-        inner.appendChild(progress);
-        inner.appendChild(row);
-        bar.classList.add('series-enhanced');
-        bar.setAttribute('role', 'navigation');
-        bar.setAttribute('aria-label', title + (barIndex ? ' — navigation de fin' : ' — navigation des chapitres'));
-
+    function normalizedPath(value) {
+        var path = String(value || '').split(/[?#]/)[0];
+        return path.replace(/\/+$/, '') + '/';
+    }
+    function centerCurrentStep(steps) {
+        var current = steps && steps.querySelector('.series-step.current');
+        if (!current) return;
         requestAnimationFrame(function() {
-            var current = steps.querySelector('.series-step.current');
-            if (current) current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
+            steps.scrollLeft = Math.max(0, current.offsetLeft - (steps.clientWidth - current.offsetWidth) / 2);
         });
-    });
-});
+    }
+    function annotateExistingBars() {
+        document.querySelectorAll('.series-bar').forEach(function(bar, barIndex) {
+            var steps = bar.querySelector('.series-steps');
+            if (!steps) return;
+            var items = Array.prototype.slice.call(steps.querySelectorAll('.series-step'));
+            var currentIndex = items.findIndex(function(item) { return item.classList.contains('current'); });
+            items.forEach(function(item, index) {
+                item.classList.toggle('done', currentIndex >= 0 && index < currentIndex);
+                if (index === currentIndex) item.setAttribute('aria-current', 'step');
+            });
+            bar.setAttribute('role', 'navigation');
+            bar.setAttribute('aria-label', 'Navigation de la série' + (barIndex ? ' — fin de l’article' : ''));
+            centerCurrentStep(steps);
+        });
+    }
+    function makeNode(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text != null) node.textContent = text;
+        return node;
+    }
+    function normalizeTakeawayLists() {
+        document.querySelectorAll('.takeaway-list li').forEach(function(item) {
+            if (item.classList.contains('takeaway-normalized')) return;
+            var nodes = Array.prototype.slice.call(item.childNodes);
+            var icon = nodes.find(function(node) {
+                return node.nodeType === Node.ELEMENT_NODE && node.matches('i, svg');
+            });
+            if (!icon) return;
 
-// One public follow destination. Historical pages may still contain legacy
-// Telegram, YouTube or RSS anchors; normalize them at runtime as a safety net.
-document.addEventListener('DOMContentLoaded', function() {
-    var substack = 'https://dailytickers.substack.com';
-    document.querySelectorAll('a[href]').forEach(function(link) {
-        var raw = link.getAttribute('href') || '';
-        var legacy = /(?:^https?:\/\/)?(?:www\.)?(?:t\.me|telegram\.me|youtube\.com|youtu\.be)\//i.test(raw)
-            || /^\/?feed\.xml(?:[?#]|$)/i.test(raw);
-        if (!legacy) return;
-        link.href = substack;
-        link.target = '_blank';
-        link.rel = 'noopener';
-        link.setAttribute('aria-label', 'Suivre DailyTickers sur Substack');
-        link.setAttribute('title', 'DailyTickers sur Substack');
-        link.querySelectorAll('i').forEach(function(icon) { icon.className = 'fa-solid fa-newspaper'; });
-        Array.prototype.slice.call(link.childNodes).forEach(function(node) {
-            if (node.nodeType === Node.TEXT_NODE && /Telegram|YouTube|RSS/i.test(node.textContent)) node.textContent = ' Substack';
+            var content = nodes.filter(function(node) { return node !== icon; });
+            var firstMeaningfulIndex = content.findIndex(function(node) {
+                return node.nodeType === Node.ELEMENT_NODE || String(node.textContent || '').trim();
+            });
+            if (firstMeaningfulIndex < 0) return;
+
+            var firstMeaningful = content[firstMeaningfulIndex];
+            var title = firstMeaningful.nodeType === Node.ELEMENT_NODE && firstMeaningful.tagName === 'STRONG'
+                ? firstMeaningful
+                : null;
+            var copy = makeNode('div', 'takeaway-copy' + (title ? '' : ' takeaway-copy-single'));
+            var detail = makeNode('div', 'takeaway-detail');
+            if (title) {
+                title.classList.add('takeaway-title');
+                copy.appendChild(title);
+            }
+            content.forEach(function(node) {
+                if (node !== title) detail.appendChild(node);
+            });
+            if (detail.textContent.trim() || detail.children.length) copy.appendChild(detail);
+            item.appendChild(copy);
+            item.classList.add('takeaway-normalized');
         });
-        link.querySelectorAll('strong').forEach(function(node) { node.textContent = 'Lire sur Substack'; });
-        link.querySelectorAll('small').forEach(function(node) { node.textContent = 'Analyses · Daily · Weekly'; });
-    });
+    }
+    function rebuildBar(bar, series, currentIndex, barIndex) {
+        var chapters = series.chapters || [];
+        var inner = makeNode('div', 'series-bar-inner');
+        var previous = currentIndex > 0 ? makeNode('a', 'series-arrow') : makeNode('span', 'series-arrow disabled');
+        previous.setAttribute('aria-label', currentIndex > 0 ? 'Partie précédente' : 'Aucune partie précédente');
+        if (currentIndex > 0) previous.href = chapters[currentIndex - 1].href;
+        previous.innerHTML = '<i class="fas fa-chevron-left" aria-hidden="true"></i>';
+
+        var title = makeNode('span', 'series-title', series.title || 'Série');
+        var steps = makeNode('div', 'series-steps');
+        chapters.forEach(function(chapter, index) {
+            var step = makeNode('a', 'series-step' + (index < currentIndex ? ' done' : '') + (index === currentIndex ? ' current' : ''));
+            step.href = chapter.href;
+            step.title = chapter.title || ('Partie ' + (index + 1));
+            step.setAttribute('aria-label', 'Partie ' + (index + 1) + ' sur ' + chapters.length + ' : ' + step.title);
+            if (index === currentIndex) step.setAttribute('aria-current', 'step');
+            step.appendChild(makeNode('span', 'series-num', String(chapter.number || index + 1)));
+            step.appendChild(makeNode('span', 'series-label', chapter.title || ('Partie ' + (index + 1))));
+            steps.appendChild(step);
+        });
+
+        var counter = makeNode('span', 'series-counter', (currentIndex + 1) + '/' + chapters.length);
+        var next = currentIndex < chapters.length - 1 ? makeNode('a', 'series-arrow') : makeNode('span', 'series-arrow disabled');
+        next.setAttribute('aria-label', currentIndex < chapters.length - 1 ? 'Partie suivante' : 'Aucune partie suivante');
+        if (currentIndex < chapters.length - 1) next.href = chapters[currentIndex + 1].href;
+        next.innerHTML = '<i class="fas fa-chevron-right" aria-hidden="true"></i>';
+
+        inner.appendChild(previous);
+        inner.appendChild(title);
+        inner.appendChild(steps);
+        inner.appendChild(counter);
+        inner.appendChild(next);
+        bar.innerHTML = '';
+        bar.appendChild(inner);
+        bar.setAttribute('role', 'navigation');
+        bar.setAttribute('aria-label', (series.title || 'Série') + (barIndex ? ' — fin de l’article' : ' — chapitres'));
+        centerCurrentStep(steps);
+    }
+
+    normalizeTakeawayLists();
+    annotateExistingBars();
+    var slug = location.pathname.split('/').filter(Boolean)[1];
+    fetch('/data/series-catalog.json')
+        .then(function(response) { if (!response.ok) throw new Error('catalog ' + response.status); return response.json(); })
+        .then(function(payload) {
+            var series = (payload.series || []).find(function(item) { return item.slug === slug; });
+            if (!series || !Array.isArray(series.chapters) || series.chapters.length < 2) return;
+            var currentPath = normalizedPath(location.pathname);
+            var currentIndex = series.chapters.findIndex(function(chapter) { return normalizedPath(chapter.href) === currentPath; });
+            if (currentIndex < 0) return;
+            var bars = Array.prototype.slice.call(document.querySelectorAll('.series-bar'));
+            bars.forEach(function(bar, barIndex) { rebuildBar(bar, series, currentIndex, barIndex); });
+        })
+        .catch(function(error) { console.warn('[series-nav]', error.message); });
 });
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -408,8 +441,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 '<div class="rk-icon"><i class="fa-solid fa-newspaper"></i></div>' +
                 '<div class="rk-heading">Retrouvez DailyTickers sur Substack</div>' +
                 '<div class="rk-sub">Analyses, Daily et Weekly dans un seul fil éditorial.</div>' +
-                '<a class="rk-btn" href="https://dailytickers.substack.com" target="_blank" rel="noopener">' +
-                    '<i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir Substack' +
+                '<a class="rk-btn rk-btn-substack" href="https://dailytickers.substack.com" target="_blank" rel="noopener">' +
+                    '<i class="fa-solid fa-arrow-up-right-from-square"></i> Lire sur Substack' +
                 '</a>' +
             '</div>';
 

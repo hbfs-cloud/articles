@@ -9,6 +9,13 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const ms = require('./lib/mode-status');
+const {
+  addUSTradingDays,
+  isUSTradingDay,
+  newYorkDateISO,
+  previousUSTradingDay,
+  usTradingDaysBetween,
+} = require('./lib/market-calendar');
 // Halal (shariaOnly) compliance filter — shared with sweep.js so signals/orders on the Fortress
 // "Halal" page never surface a haram ticker that the backtest itself would refuse to hold.
 const { isHaramForHalalMode } = require('./lib/sharia-filter');
@@ -104,28 +111,11 @@ function fetchOHLC(ticker) {
 
 function bizDaysSince(dateStr) {
   if (!dateStr) return 0;
-  const start = new Date(dateStr + 'T00:00:00Z');
-  const now = new Date();
-  let count = 0;
-  const d = new Date(start);
-  d.setUTCDate(d.getUTCDate() + 1);
-  while (d <= now) {
-    const dow = d.getUTCDay();
-    if (dow !== 0 && dow !== 6) count++;
-    d.setUTCDate(d.getUTCDate() + 1);
-  }
-  return count;
+  return usTradingDaysBetween(dateStr, TODAY_ISO);
 }
 
 function addBizDays(dateStr, n) {
-  const d = new Date(dateStr + 'T00:00:00Z');
-  let added = 0;
-  while (added < n) {
-    d.setUTCDate(d.getUTCDate() + 1);
-    const dow = d.getUTCDay();
-    if (dow !== 0 && dow !== 6) added++;
-  }
-  return d.toISOString().slice(0, 10);
+  return addUSTradingDays(dateStr, n);
 }
 
 const ROOT = path.join(__dirname, '..');
@@ -176,9 +166,9 @@ function loadDtxStaging(id) {
 // (UTC toISOString, server-local getMonth/getDate, NY Intl key): a run at 23:26 UTC
 // could show scan 20260702 data while writing history/20260701.json. NY is the only
 // clock that matches the trading session the data belongs to.
-const TODAY_ISO = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date()); // YYYY-MM-DD
+const TODAY_ISO = newYorkDateISO();                       // YYYY-MM-DD
 const TODAY_KEY = TODAY_ISO.replace(/-/g, '');            // YYYYMMDD
-const MARKET_CLOSED_DAY = [0, 6].includes(new Date(`${TODAY_ISO}T00:00:00Z`).getUTCDay());
+const MARKET_CLOSED_DAY = !isUSTradingDay(TODAY_ISO);
 const TODAY_LABEL = TODAY_ISO.slice(5).replace('-', '/'); // MM/DD (chart label)
 
 // Lazy risk-snapshot loader — graceful no-op when file is missing.
@@ -1317,7 +1307,7 @@ async function main() {
         vwap: t.vwap || (lp && lp.vwap) || null,
         // days_remaining MUST reflect THIS mode's horizon (not scanner-positions.json's
         // per-ticker expire_date, which ignored the mode and showed e.g. 22d in a H8 mode).
-        days_remaining: Math.max(0, cfg.horizon - Math.round(Math.round((Date.now() - new Date(t.scanDate)) / 86400000) * 5 / 7)),
+        days_remaining: Math.max(0, cfg.horizon - usTradingDaysBetween(t.scanDate || t.entryDate, todayISO)),
         strategy: t.strategy || '', thesis: thesisMap[t.ticker] || '',
       });
     }
@@ -1337,8 +1327,7 @@ async function main() {
     // Tag mode-expired positions so they don't occupy portfolio slots
     for (const p of positions) {
       if (p._terminal) continue;
-      const age = Math.round((Date.now() - new Date(p.scan_date)) / 86400000);
-      const held = Math.round(age * 5 / 7);
+      const held = usTradingDaysBetween(p.scan_date, todayISO);
       p._expired = held >= cfg.horizon;
     }
     // "Open positions" = genuinely open AND within horizon only. Excluded:
@@ -1497,8 +1486,7 @@ async function main() {
     // Helper: compute biz days from scan_date
     function bizDaysHeld(scanDate) {
       if (!scanDate) return 0;
-      const age = Math.round((Date.now() - new Date(scanDate)) / 86400000);
-      return Math.round(age * 5 / 7);
+      return usTradingDaysBetween(scanDate, TODAY_ISO);
     }
 
     const livePos = pos.filter(p => !p._expired && !p._terminal);
@@ -1517,9 +1505,7 @@ async function main() {
     // the PREVIOUS trading session, the sweep hasn't refreshed — flag it in the header.
     const _frozenLastISO = m.frozenRawLastISO || (m.equityCurve || []).filter(p => p.date).map(p => p.date).sort().slice(-1)[0] || null;
     const _prevSessionISO = (() => {
-      const d = new Date(TODAY_ISO + 'T12:00:00Z');
-      do { d.setUTCDate(d.getUTCDate() - 1); } while (d.getUTCDay() === 0 || d.getUTCDay() === 6);
-      return d.toISOString().slice(0, 10);
+      return previousUSTradingDay(TODAY_ISO);
     })();
     const staleBadge = (_frozenLastISO && _frozenLastISO < _prevSessionISO)
       ? ` <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Stats figées (sweep) — dernier point d'équité: ${_frozenLastISO}">stats as of ${_frozenLastISO.slice(5).replace('-', '/')}</span>`
@@ -1683,7 +1669,7 @@ ${m.dtxLiveTrack ? `<span class="bt-ctx-note" title="Série live append-only (da
       <span class="ps-v"><span class="ps-num">${H.pf == null ? '—' : H.pf + 'x'}</span>${!P && m.pfLow != null && m.pfHigh != null ? `<span class="ps-ci" style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[${m.pfLow}–${m.pfHigh}]</span>` : ''}</span><span class="ps-l">Profit Factor${!P && m.pfReliable === false ? ' <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span>' : ''}</span>
     </div>
     <div class="ps" title="Number of fully-closed trades counted in the stats above. Pending/open positions excluded.">
-      <span class="ps-v">${H.trades}</span><span class="ps-l">Closed Trades</span>
+      <span class="ps-v">${H.trades}</span><span class="ps-l">Trades clôturés</span>
     </div>
     <div class="ps" title="Average number of trading days each closed trade was held.">
       <span class="ps-v">${H.avgHold == null ? '—' : H.avgHold + 'd'}</span><span class="ps-l">Avg Hold</span>
@@ -1754,12 +1740,10 @@ ${(() => {
         // WATCH: signals that could not be placed and don't qualify for rotation.
         // Only shown if portfolio is full and there are remaining signals worth monitoring.
         const scanDateStr = scanDir ? `${scanDir.slice(0, 4)}-${scanDir.slice(4, 6)}-${scanDir.slice(6, 8)}` : null;
-        const scanAge = scanDateStr ? Math.round((Date.now() - new Date(scanDateStr)) / 86400000) : 0;
+        const scanAge = scanDateStr ? usTradingDaysBetween(scanDateStr, TODAY_ISO) : 0;
         const timeoutDays = 2;
         function addBizDays(dateStr, n) {
-          const d = new Date(dateStr + 'T12:00:00Z');
-          let added = 0;
-          while (added < n) { d.setDate(d.getDate() + 1); const dow = d.getUTCDay(); if (dow !== 0 && dow !== 6) added++; }
+          const d = new Date(addUSTradingDays(dateStr, n) + 'T12:00:00Z');
           return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
         }
         const expiryLabel = scanDateStr ? addBizDays(scanDateStr, timeoutDays) : '—';
@@ -1859,7 +1843,7 @@ ${(() => {
         const totalActions = buyOrders.length + rotationCandidates.length;
         const occupied = liveCount;
         const statusLine = !executionWindowOpen
-          ? 'Market closed — signals are read-only until their execution window'
+          ? 'Marché fermé — les signaux restent informatifs jusqu’à leur fenêtre d’exécution'
           : slotsAvailable > 0
           ? `${occupied}/${cfg.portfolioSize} open — <b>${slotsAvailable} slot${slotsAvailable > 1 ? 's' : ''} free</b> — place at next open`
           : `${occupied}/${cfg.portfolioSize} open — portfolio full${rotationCandidates.length ? ' — rotation opportunity' : ''}`;
@@ -1930,7 +1914,7 @@ ${recentRotationHTML}
   ${totalActions > 0 ? `<table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
     <tbody>${actionRows.join('')}</tbody>
-  </table>` : `<div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">${!executionWindowOpen ? `Market closed — no order is actionable.` : (timedOut.length ? `Today's only action: see <b>Close Now</b> above.` : (watchRows.length ? `Portfolio full — see <b>On Watch</b> below.` : `No actions today.`))}</div>`}
+  </table>` : `<div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">${!executionWindowOpen ? `Marché fermé — aucun ordre n’est exécutable.` : (timedOut.length ? `Seule action du jour : voir <b>Clôturer maintenant</b> ci-dessus.` : (watchRows.length ? `Portefeuille complet — voir <b>Surveillance</b> ci-dessous.` : `Aucune action aujourd’hui.`))}</div>`}
 </div>
 ${watchRows.length ? `<div class="section-card" data-section="watch">
   <div class="sc-head">
@@ -3154,7 +3138,7 @@ document.addEventListener('DOMContentLoaded',function(){
     +   '<div class="ps-i"><div class="ps-v" data-bind="stats.dd" data-format="pct2"></div><div class="ps-l">Max Drawdown</div></div>'
     +   '<div class="ps-i"><div class="ps-v" data-bind="stats.wr" data-format="pct1"></div><div class="ps-l">Win Rate</div></div>'
     +   '<div class="ps-i"><div class="ps-v" data-bind="stats.pf" data-format="mult"></div><div class="ps-l">Profit Factor</div></div>'
-    +   '<div class="ps-i"><div class="ps-v" data-bind="stats.trades" data-format="int"></div><div class="ps-l">Closed Trades</div></div>'
+    +   '<div class="ps-i"><div class="ps-v" data-bind="stats.trades" data-format="int"></div><div class="ps-l">Trades clôturés</div></div>'
     +   '<div class="ps-i"><div class="ps-v" data-bind="stats.avgHold" data-format="days"></div><div class="ps-l">Avg Hold</div></div>'
     + '</div></div>'
     // Equity (chart container id is set per-mode after clone)
@@ -4241,7 +4225,7 @@ document.addEventListener('DOMContentLoaded',function(){
       }
     }
     // Compute closeNow (timed out positions) first — they free slots for orders
-    function bizDaysHeldSnap(sd) { if (!sd) return 0; return Math.round(Math.round((Date.now() - new Date(sd)) / 86400000) * 5 / 7); }
+    function bizDaysHeldSnap(sd) { return sd ? usTradingDaysBetween(sd, todayISO) : 0; }
     const timedOutSnap = pos.filter(p => !p._terminal && Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)) <= 0);
     // Compute orders for snapshot — closeNow and terminal positions free their slots
     const closeNowTickers = new Set(timedOutSnap.map(p => p.ticker));
@@ -4380,16 +4364,10 @@ function backfillHistory() {
   try { results = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-results.json'), 'utf8')); } catch (e) { console.error(`[backfillHistory] Cannot read backtest-results: ${e.message}`); return; }
 
   function addBizDaysBF(dateStr, n) {
-    let d = new Date(dateStr + 'T12:00:00Z');
-    let added = 0;
-    while (added < n) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) added++; }
-    return d.toISOString().slice(0, 10);
+    return addUSTradingDays(dateStr, n);
   }
   function bizDaysBetweenBF(from, to) {
-    let d = new Date(from + 'T12:00:00Z'), count = 0;
-    const end = new Date(to + 'T12:00:00Z');
-    while (d < end) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) count++; }
-    return count;
+    return usTradingDaysBetween(from, to);
   }
 
   // Parse signals for a given dateKey (YYYYMMDD) — JSON-first, HTML fallback

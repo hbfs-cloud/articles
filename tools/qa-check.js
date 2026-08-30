@@ -18,7 +18,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { isUSTradingDay } = require('./lib/market-calendar');
+const { isUSTradingDay, newYorkDateISO, usTradingDaysBetween } = require('./lib/market-calendar');
 
 const ROOT = path.resolve(__dirname, '..');
 const STRICT = process.argv.includes('--strict');
@@ -1281,7 +1281,7 @@ warn('scanner/status: per-mode positions match backtest-trades.json (no phantom 
   const mc = readJSON('data/modes-config.json');
   const modes = mc.modes ? mc.modes : mc;
   const issues = [];
-  const todayISO = new Date().toISOString().slice(0, 10);
+  const todayISO = newYorkDateISO();
 
   for (const [modeId, cfg] of Object.entries(modes)) {
     const trades = bt[modeId] || [];
@@ -1323,9 +1323,11 @@ check('scanner/status: latest snapshot positions consistent with backtest-trades
       if (!t.entryDate || t.status === 'skipped') return false;
       if (t.entryDate > dateISO) return false;
       if (!t.exitDate) {
-        // Mirror gen-status-page: trades past their horizon are filtered out
-        const age = Math.round((Date.now() - new Date(t.entryDate)) / 86400000);
-        const held = Math.round(age * 5 / 7);
+        // Snapshot integrity is point-in-time. Using Date.now() here made an immutable
+        // Saturday snapshot lose positions as the wall clock advanced on Sunday/Monday.
+        // Mirror gen-status-page with the snapshot date and the official US calendar.
+        if (t.status !== 'pending') return false;
+        const held = usTradingDaysBetween(t.scanDate || t.entryDate, dateISO);
         return held < horizon;
       }
       return t.exitDate > dateISO;
