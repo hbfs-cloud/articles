@@ -495,9 +495,9 @@ const analysis = {
     squeezeScore: 'Faible', sourceRefs: [shortRef, borrowSource]
   },
   options: {
-    maturity: '31 août 2026', callOI: maxPain.totalCallOI.toLocaleString('fr-FR'), putOI: maxPain.totalPutOI.toLocaleString('fr-FR'), cpRatio: maxPain.callPutRatio.toFixed(2), maxPain: px(maxPain.maxPainStrike), ivMean: 'INDISPONIBLE',
+    maturity: '31 août 2026; prochaine échéance post-résultats: 2 septembre 2026', callOI: maxPain.totalCallOI.toLocaleString('fr-FR'), putOI: maxPain.totalPutOI.toLocaleString('fr-FR'), cpRatio: maxPain.callPutRatio.toFixed(2), maxPain: px(maxPain.maxPainStrike), ivMean: '96,97% (31 août) / 116,61% (2 septembre; 5 contrats)',
     skew: `Ratio volumes puts/calls ${optionRatio.put_call_volume_ratio.toFixed(2)}`,
-    unusual: 'Le composite courant observe les options d’achat et de vente expirant le 31 août, avant les résultats du 2 septembre. Elles ne couvrent pas le saut de cours. La collecte dédiée de chaîne, surface de volatilité, historique et point d’équilibre des options a échoué : aucune volatilité implicite événementielle ni activité inhabituelle n’est affirmée.', sourceRefs: [optionsRef]
+    unusual: 'La chaîne récupérée couvre notamment les échéances du 31 août, du 2 septembre, du 4 septembre et du 11 septembre. La volatilité implicite moyenne est de 96,97% au 31 août et 116,61% au 2 septembre, mais cette dernière échéance ne contient que 5 contrats: indication fragile, pas une amplitude attendue. Volume et open interest restent descriptifs, pas directionnels.', sourceRefs: [optionsRef]
   },
   technicals: {
     rsi14: technical.rsi, macd: technical.macd, macdSignal: technical.signal, ema20: technical.ema20, ema50: technical.ema50, ema200: technical.ema200,
@@ -629,8 +629,8 @@ const analysis = {
     benchmarks: [], alpha: `Sur 21 séances, AVGO affiche ${oneMonth.toFixed(1)}%. Aucun alpha versus QQQ ou SOXX n’est publié sans séries alignées dans le même snapshot.`, sourceRefs: [barsRef]
   },
   capitalFlow: {
-    netFlow: 'N/A', institutionalFlow: 'N/A', retailFlow: 'N/A', darkPoolPct: 'N/A',
-    signal: 'Aucun flux directionnel n’est affirmé. Le volume short FINRA n’est ni un dark pool, ni une preuve d’accumulation.', sourceRefs: [shortRef]
+    netFlow: '-105,1 M$ (28 août)', institutionalFlow: '-105,1 M$ grandes transactions', retailFlow: '-141,7 M$ particuliers', darkPoolPct: 'N/A',
+    signal: 'Le 28 août, les grandes transactions affichent 58,8 M$ d’entrées contre 163,8 M$ de sorties; les particuliers 303,3 M$ contre 444,9 M$. Le 27 août faisait exception avec +65,2 M$ sur les grandes transactions. Cela décrit un flux vendeur récent, pas une prédiction ni un dark pool; le volume short FINRA reste non directionnel.', sourceRefs: [shortRef]
   },
   tradeIdea: {
     entry, entryNote: `Repère dormant : plus haut du 28 août. Ne devient pas un ordre avant une reconstruction post-résultats.`, stop,

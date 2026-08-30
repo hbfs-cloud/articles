@@ -113,6 +113,43 @@ Joins en annexe les payloads complets ou des extraits JSON suffisamment longs po
 - `GetStatus` version `8064b400`: `status=healthy`, DB et SEC healthy, clôture 1d `2026-08-28`, mais `bar_service_status=bootstrapping`, progrès `51.8%`, witnesses QQQ/SPY/VIX seulement `7 bars`.
 - Attendu: séparer disponibilité requête courante, couverture univers et profondeur historique; fournir un verdict exploitable par type/timeframe au lieu d'un healthy global ambigu.
 
+## Nouveaux incidents observés le 30 août 2026
+
+### MDP-018 - `GetSymbolSignals` documentation et appel incohérents
+- Input: `GetSymbolSignals({symbols:"AVGO"})`.
+- Attendu: succès pour la forme documentée multi-symboles, ou schéma imposant `symbol`.
+- Actuel exact: réponse `symbol is required`; le même tool réussit avec `{symbol:"AVGO"}` et retourne opportunity/risk/squeeze.
+- Impact: la fiche peut afficher à tort une absence de signaux et perdre insider/opportunity/risk.
+- Proposition/acceptation: aligner le schéma et l'implémentation; test mono- et multi-symboles; erreur de validation avant exécution si une forme n'est pas supportée.
+
+### MDP-019 - `QueryData` options composite échoue partiellement sans statut par facet
+- Input: `QueryData({symbols:"AVGO",types:"options_chain,vol_surface,implied_probability,unusual_options",limit:200})`.
+- Attendu: chain/surface/unusual complètes; `implied_probability` doit exiger explicitement `level` et rester isolée si absent.
+- Actuel exact: job complété avec chain disponible, mais erreur `implied_probability requires a positive level (the price level to evaluate)` dans le même résultat; l'enveloppe de qualité indique `age_seconds:null`, `event_time:null`, `ingested_at:null`, `quality:null`, `source:null`.
+- Impact: le client peut traiter une réponse partielle comme un échec global ou publier `INDISPONIBLE` pour des facets récupérables.
+- Proposition/acceptation: erreurs par facet typées et enveloppe complète; `level` requis dans le JSON Schema; pagination documentée; test mixed success/failure.
+
+### MDP-020 - `QueryData` options dépend encore d'un spot incohérent hors séance
+- Input: `QueryData({symbols:"AVGO",types:"options_chain,vol_surface,unusual_options",limit:200})` hors séance.
+- Attendu: spot de clôture daté ou last-known explicitement marqué, chaînes et IV calculées avec ce spot; aucune dépendance silencieuse aux barres 1m.
+- Actuel exact: chaîne retournée avec spot observé daté et expirations 31 août, 2, 4 et 11 septembre, mais les valeurs d'IV sont très élevées et hétérogènes; aucun résumé `spot_source/market_state/quality` au niveau de chaque contrat.
+- Impact: impossible de distinguer une vraie IV événementielle d'une valeur calculée sur une quote dégradée; risque de publier une amplitude implicite trompeuse.
+- Proposition/acceptation: exposer `spot`, `spot_observed_at`, `spot_source`, `market_state`, qualité et warnings au niveau de la réponse; test de cohérence spot/expiry/IV hors séance.
+
+### MDP-021 - flux de capitaux récupérable mais non exposé de façon stable au client
+- Input: `GetInstruments({symbols:"AVGO"})`.
+- Attendu: capital_flow dans un type/documentation public, avec date, unités, population et source.
+- Actuel exact: `instrument_comprehensive` contient historique du 24 au 28 août et `latest` du 28 août: grandes transactions `58,8M inflow`, `163,8M outflow`, net `-105,1M`; retail `303,3M inflow`, `444,9M outflow`; la surface dédiée et le schéma client n'offrent pas de route claire.
+- Impact: les fiches publient N/A malgré des données disponibles, ou confondent ce flux avec le volume short FINRA/dark pool.
+- Proposition/acceptation: type `capital_flow` officiellement documenté avec `as_of`, source, définition des catégories et unités; test de non-confusion FINRA.
+
+### MDP-022 - facets macro annoncées mais rejetées par le routeur
+- Input: `GetMarketContext({facets:"regime,commodities,crypto,rates,market_sentiment"})`.
+- Attendu: retour des facets valides et erreur isolée pour une facet inconnue, ou documentation limitant la liste aux valeurs acceptées.
+- Actuel exact: échec global `unknown facet "commodities" — must be one of: overview, regime, prediction_markets, cot, seasonality`.
+- Impact: une demande multi-asset utile pour le blast radius peut être abandonnée avant d'obtenir le régime valide.
+- Proposition/acceptation: réponse partielle par facet avec route vers `overview`, ou schéma strict; tests mixed valid/invalid et documentation `GetHelp` cohérente.
+
 ## Corrections client déjà réalisées, à ne pas attribuer au serveur
 - Le client local n'avait pas réellement l'option `collect.js --ingest` pourtant mentionnée dans son message: ajout d'un ingest mécanique hashé.
 - Le publisher local ignorait les erreurs de schéma non `required` et gérait mal `integer` dans une union: corrigé fail-closed.
