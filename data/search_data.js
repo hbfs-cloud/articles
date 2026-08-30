@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "L’IA face au test de diffusion et à l’emploi",
+    "desc": "Le régime systématique reste RISK_ON, avec un score de 79 %. Le VIX clôture à 14.43, sous sa moyenne récente, tandis que la volatilité à moyen terme reste plus chère que la volatilité immédiate. Ce n’est pas une structure de panique.",
+    "tags": "us,crypto,commodity,macro,earnings,ai,cloud,cybersecurity,semis,etf",
+    "grade": "",
+    "href": "/weekly/20260831/",
+    "date": "31 août 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Les actions reculent, la crypto s'envole : la rotation vers les actifs durs",
     "desc": "Weekly du 17 au 21 août 2026. Les actions refluent (S&P -1,4%, Nasdaq -2,4%) pendant que la santé (+4,3%), l'énergie (+2,8%) et surtout la crypto (Ether +24%, XRP +27%, Bitcoin +16%) s'envolent après le sommet crypto de la Maison-Blanche et le doublement des rachats du Trésor. Le récit d'une baisse de taux a disparu : le marché price une hausse à 56,5% d'ici décembre. Core PCE mercredi 26, Jackson Hole 27-29, NVIDIA le 26. Niveaux, configurations, scénarios.",
     "tags": "us,crypto,commodity,macro,energy,healthcare,technique,trade-idea,etf,semis,gold",
@@ -401,19 +414,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/weekly/20251229/",
     "date": "29 décembre 2025 - 3 janvier 2026"
-  },
-  {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "L’IA face au test de diffusion et à l’emploi",
-    "desc": "Le régime systématique reste RISK_ON, avec un score de 79 %. Le VIX clôture à 14.43, sous sa moyenne récente, tandis que la volatilité à moyen terme reste plus chère que la volatilité immédiate. Ce n’est pas une structure de panique.",
-    "tags": "us,crypto,commodity,macro,earnings,ai,cloud,cybersecurity,semis,etf",
-    "grade": "",
-    "href": "/weekly/20260831/",
-    "date": "31 août 2026"
   },
   {
     "type": "daily",

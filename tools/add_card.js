@@ -494,6 +494,16 @@ if (tab === 'daily') {
     }
     cards.push(cardHtml.trim());
 
+    // Weekly cards must remain newest-first because the homepage renders the
+    // stored order directly.
+    if (tab === 'weekly') {
+        const weeklyDate = card => {
+            const match = String(card).match(/href="\/weekly\/(\d{8})\//);
+            return match ? match[1] : '00000000';
+        };
+        cards.sort((a, b) => weeklyDate(b).localeCompare(weeklyDate(a)));
+    }
+
     // Pour scanner.json : tri chronologique décroissant (LIVE pinned en 0)
     if (tab === 'scanner') {
         function extractCardDate(tile) {
