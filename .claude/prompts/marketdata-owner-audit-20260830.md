@@ -2,6 +2,22 @@
 
 Tu es l'owner senior du MCP `dailytickers-mcp`. Corrige les défauts ci-dessous sans casser les schémas visibles. Pour chaque cas, fournis cause racine, patch, test de non-régression, version déployée et exemple de réponse corrigée. Les observations proviennent d'un run AVGO authentifié, clôture attendue `2026-08-28`, versions vues successivement `c8e6b2e3` puis `8064b400`. Ne demande et n'affiche aucun token.
 
+## Format obligatoire pour chaque ID
+
+Ne réponds pas par une synthèse générale. Pour chaque `MDP-*`, restitue exactement les champs suivants :
+
+1. `input`: appel complet, paramètres, contexte temporel, pagination et état d'authentification non secret.
+2. `expected`: schéma, cardinalité, ordre, temporalité, fraîcheur, qualité et comportement partiel attendus.
+3. `current`: sortie JSON ou erreur exacte observée, avec symbole/facet/page concerné, version serveur et limites connues.
+4. `root_cause`: cause confirmée ou hypothèse explicitement étiquetée, jamais présentée comme un fait non vérifié.
+5. `impact`: conséquences sur l'attribution, le point-in-time, la décision ou la sécurité.
+6. `proposal`: module/fichier, patch précis, évolution de schéma et compatibilité.
+7. `regression_test`: fixture d'entrée, assertions exactes, cas nominal, erreur, partial failure, ETF/symbole récent et pagination si applicable.
+8. `acceptance`: critères mesurables de succès et exemple de réponse corrigée minimale.
+9. `owner_status`: `fixed`, `in_progress`, `blocked` ou `not_reproducible`, version/commit déployé, date et preuve du test.
+
+Joins en annexe les payloads complets ou des extraits JSON suffisamment longs pour vérifier les champs contestés; ne remplace jamais une valeur absente par `0`, une date actuelle ou une hypothèse. Distingue toujours défaut MCP, défaut de client local et défaut de données upstream.
+
 ## Priorité P0 - contrat de données et isolation
 
 ### MDP-001 - `bars_daily` batch non auto-descriptif et `limit` incohérent
