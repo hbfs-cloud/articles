@@ -34,7 +34,9 @@ Le wrapper valide le plan, la cloture, les hashes, les appels executes et la fra
 passent par un environnement secret ou une saisie masquee; leur valeur ne doit jamais apparaitre dans
 une commande, un log, le chat ou un fichier.
 
-Le socle gouverne indices, secteurs, taux/energie, metaux, crypto, regime, earnings et macro. La vague
+Le socle gouverne indices, secteurs, taux/energie, metaux, crypto, regime, earnings et macro. Hors séance,
+`GetOffHoursContext` apporte un verdict courant distinct des barres bornées à `refdate`; il ne remplace
+jamais la clôture certifiée et son horodatage doit rester visible. La vague
 `daily-focus` gouverne toute affirmation chiffre concernant les noms choisis. Le contexte optionnel
 `overview` ne peut gouverner ni chiffre, ni selection, ni niveau.
 

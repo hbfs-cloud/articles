@@ -559,13 +559,18 @@ function socleRead(c) {
       // attend quand même. On propage donc le budget en timeoutMs par appel, ce
       // qui déclenche l'AbortController du client.
       const budget = estDetachee ? (wave.deadline_ms || 45_000) : 0;
-      if (budget) for (const c of toCall) c.timeoutMs = Math.min(c.timeoutMs || budget, budget);
-      const salve = callMany(toCall, {
+      // Ne jamais muter le plan résolu après le calcul de input_sha256. Le journal
+      // conserve ce plan par référence ; ajouter timeoutMs directement sur les
+      // appels rendait ensuite la provenance impossible à vérifier.
+      const callsToRun = budget
+        ? toCall.map(c => ({ ...c, timeoutMs: Math.min(c.timeoutMs || budget, budget) }))
+        : toCall;
+      const salve = callMany(callsToRun, {
         onResult: (r) => log(`   ${r.ok ? '✓' : '✗'} ${r.as} (${r.ms}ms)${r.ok ? '' : ' — ' + r.error}`),
       });
       results = budget
         ? await Promise.race([salve, new Promise(res => setTimeout(() => res(
-            toCall.map(c => ({ as: c.as, ok: false, error: `délai détaché ${budget}ms dépassé`, ms: budget }))), budget))])
+            callsToRun.map(c => ({ as: c.as, ok: false, error: `délai détaché ${budget}ms dépassé`, ms: budget }))), budget))])
         : await salve;
     } catch (e) {
       if (e instanceof McpAuthError) { console.error(`[collect] ${e.message}`); process.exit(3); }
