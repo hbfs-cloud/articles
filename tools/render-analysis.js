@@ -497,7 +497,7 @@ function renderInsiders(d) {
   let html = `
       <div id="insiders" class="content-card">
         <h2><i class="fa-solid fa-user-tie"></i> ${tx(d, 'Insiders &amp; Institutions', 'Initiés et institutions')}</h2>
-        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <div class="metric-strip metric-strip-muted">
           <div class="ticker-metric"><div class="tm-value">${esc(ins.insiderPct || 'N/A')}</div><div class="tm-label">${tx(d, 'Insider Own.', 'Détention initiés')}</div></div>
           <div class="ticker-metric"><div class="tm-value">${esc(ins.institutionPct || 'N/A')}</div><div class="tm-label">${tx(d, 'Institution Own.', 'Détention institutions')}</div></div>
         </div>`;
@@ -524,7 +524,7 @@ function renderCapitalStructure(d) {
   let html = `
       <div id="capital" class="content-card">
         <h2><i class="fa-solid fa-money-bill-trend-up"></i> ${tx(d, 'Capital Structure &amp; Dilution', 'Structure du capital et dilution')}</h2>
-        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <div class="metric-strip metric-strip-muted">
 ${metricTile(cs.sharesOutstanding, tx(d, 'Shares Out.', 'Actions en circulation'))}${metricTile(cs.sharesAuthorized, tx(d, 'Authorized', 'Actions autorisées'))}${cs.dilutionRisk ? `          <div class="ticker-metric"><div class="tm-value"><span class="badge badge-${cs.dilutionRisk === 'low' ? 'green' : cs.dilutionRisk === 'moderate' ? 'blue' : cs.dilutionRisk === 'unknown' ? 'gray' : 'red'}">${esc(isFrench(d) ? ({ low: 'faible', moderate: 'modéré', high: 'élevé', critical: 'critique', unknown: 'inconnu' }[cs.dilutionRisk] || cs.dilutionRisk) : cs.dilutionRisk)}</span></div><div class="tm-label">${tx(d, 'Dilution Risk', 'Risque de dilution')}</div></div>\n` : ''}        </div>`;
   if (cs.warrants && cs.warrants.length) {
     html += `\n        <h4>Warrants</h4>
@@ -577,7 +577,8 @@ function renderOptions(d) {
   return `
       <div id="options" class="content-card">
         <h2><i class="fa-solid fa-chart-gantt"></i> ${tx(d, 'Options / Derivatives', 'Options et dérivés')}</h2>
-        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <div class="data-context-line"><strong>Échéance observée :</strong> ${esc(o.maturity || 'INDISPONIBLE')} <span class="badge badge-amber">Snapshot avant résultats</span></div>
+        <div class="metric-strip metric-strip-muted">
           <div class="ticker-metric"><div class="tm-value">${esc(o.callOI || 'N/A')}</div><div class="tm-label">${tx(d, 'Call OI', 'Intérêt ouvert calls')}</div></div>
           <div class="ticker-metric"><div class="tm-value">${esc(o.putOI || 'N/A')}</div><div class="tm-label">${tx(d, 'Put OI', 'Intérêt ouvert puts')}</div></div>
           <div class="ticker-metric"><div class="tm-value">${esc(o.cpRatio || 'N/A')}</div><div class="tm-label">${tx(d, 'Call/put OI ratio', 'Ratio d’intérêt ouvert calls/puts')}</div></div>
@@ -624,7 +625,7 @@ function renderPerformance(d) {
   let html = `
       <div id="performance" class="content-card">
         <h2><i class="fa-solid fa-trophy"></i> ${tx(d, 'Performance &amp; Benchmarks', 'Performance et références')}</h2>
-        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <div class="metric-strip metric-strip-muted">
           ${p.ytd ? `<div class="ticker-metric"><div class="tm-value">${esc(p.ytd)}</div><div class="tm-label">YTD</div></div>` : ''}
           ${p.oneYear ? `<div class="ticker-metric"><div class="tm-value">${esc(p.oneYear)}</div><div class="tm-label">1Y</div></div>` : ''}
           ${p.threeYear ? `<div class="ticker-metric"><div class="tm-value">${esc(p.threeYear)}</div><div class="tm-label">3Y</div></div>` : ''}
@@ -634,6 +635,8 @@ function renderPerformance(d) {
     html += `\n        <table class="data-table"><thead><tr><th>Benchmark</th><th>Ticker</th><th>YTD</th>${p.benchmarks[0].oneYear ? '<th>1Y</th>' : ''}</tr></thead><tbody>
 ${p.benchmarks.map(b => `            <tr><td>${esc(b.name)}</td><td>${esc(b.ticker||'')}</td><td>${esc(b.ytd)}</td>${b.oneYear ? `<td>${esc(b.oneYear)}</td>` : ''}</tr>`).join('\n')}
           </tbody></table>`;
+  } else {
+    html += `\n        <div class="data-empty-state"><i class="fa-solid fa-chart-line"></i><div><strong>Comparaison non publiée</strong><p>Les séries alignées AVGO / QQQ / SOXX ne sont pas complètes dans ce snapshot. Aucun alpha n’est donc inventé.</p></div></div>`;
   }
   html += sourceRefsHtml(p.sourceRefs);
   html += `\n      </div>`;
@@ -682,7 +685,7 @@ function renderBlastRadius(d) {
   return `
       <div id="blast-radius" class="content-card">
         <h2><i class="fa-solid fa-diagram-project"></i> Rayon de propagation : qui bouge avec ${esc(d.header.ticker)} ?</h2>
-        <div class="interpretation-band"><strong>À retenir :</strong> Le rayon de propagation décrit des liens économiques et statistiques, pas des ordres. La confirmation utile exige AVGO, les pairs directs et SOXX; un proxy isolé ne suffit pas.</div>
+        <div class="interpretation-band"><strong>À retenir :</strong> Le rayon de propagation décrit des liens économiques et statistiques, pas des ordres. La confirmation utile exige AVGO, les pairs directs et SOXX; un proxy isolé ne suffit pas.</div><div id="blastChart" class="echart-box blast-chart" aria-label="Comparaison des corrélations résiduelles des pairs"></div>
         <p>${esc(blast.methodology)}</p>
         <p style="font-size:0.78rem;color:#64748b;"><strong>Clôture de référence :</strong> ${esc(blast.asOf)} · <strong>Observation :</strong> ${esc(blast.observationTime)} · <strong>Fenêtre :</strong> ${esc(blast.window)}</p>
 ${blast.groups.map(group => `        <section style="margin-top:1.35rem;">
@@ -781,7 +784,7 @@ function renderCapitalFlow(d) {
           ${cf.retailFlow ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.retailFlow)}</div><div class="tm-label">${tx(d, 'Retail', 'Particuliers')}</div></div>` : ''}
           ${cf.darkPoolPct ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.darkPoolPct)}</div><div class="tm-label">Dark Pool %</div></div>` : ''}
         </div>
-        ${cf.signal ? `<div class="pedagogy-box"><p>${esc(cf.signal)}</p></div>` : ''}${sourceRefsHtml(cf.sourceRefs)}
+        ${cf.signal ? `<div class="data-empty-state"><i class="fa-solid fa-circle-info"></i><div><strong>Flux directionnels indisponibles</strong><p>${esc(cf.signal)}</p></div></div>` : ''}${sourceRefsHtml(cf.sourceRefs)}
       </div>`;
 }
 
@@ -1075,12 +1078,14 @@ function renderScripts(d) {
   const rv = (d.technicals && d.technicals.radarValues) || {};
   const techRadar = radarAxes(rv);
   const riskRadar = radarAxes(d.risks.riskRadarValues);
+  const blastRows = (d.blastRadius?.groups || []).flatMap(g => (g.symbols || []).map(s => ({ ticker: s.ticker, value: Number.isFinite(s.correlation) ? Math.abs(s.correlation) : null }))).filter(s => s.value !== null).sort((a,b) => b.value - a.value).slice(0, 14);
   return `
     <script>
     (function(){var el=document.getElementById('gaugeScore');if(!el)return;var c=echarts.init(el);c.setOption({series:[{type:'gauge',radius:'90%',axisLine:{lineStyle:{width:12,color:[[0.3,'#ef4444'],[0.5,'#f59e0b'],[0.7,'#3b82f6'],[1,'#22c55e']]}},pointer:{itemStyle:{color:'auto'}},axisTick:{distance:-12,length:6,lineStyle:{color:'#fff',width:1}},splitLine:{distance:-14,length:12,lineStyle:{color:'#fff',width:2}},axisLabel:{color:'auto',distance:16,fontSize:11},detail:{valueAnimation:true,formatter:'{value}',color:'auto',fontSize:28,fontWeight:800,offsetCenter:[0,'70%']},data:[{value:${d.verdict.score}}]}]});window.addEventListener('resize',function(){c.resize();});})();
 ${techRadar ? `    (function(){var el=document.getElementById('radarTech${chartId}');if(!el)return;var c=echarts.init(el);c.setOption({radar:{indicator:${techRadar.indicator},shape:'circle',splitArea:{areaStyle:{color:['rgba(59,130,246,0.02)','rgba(59,130,246,0.04)']}}},series:[{type:'radar',data:[{value:${techRadar.values},name:'${t}',areaStyle:{color:'rgba(59,130,246,0.15)'},lineStyle:{color:'#3b82f6'},itemStyle:{color:'#3b82f6'}}]}]});window.addEventListener('resize',function(){c.resize();});})();` : ''}
     (function(){var el=document.getElementById('riskGaugeChart');if(!el)return;var c=echarts.init(el);c.setOption({series:[{type:'gauge',radius:'90%',center:['50%','60%'],startAngle:200,endAngle:-20,min:0,max:10,axisLine:{lineStyle:{width:10,color:[[0.3,'#22c55e'],[0.5,'#3b82f6'],[0.7,'#f59e0b'],[1,'#ef4444']]}},pointer:{length:'60%',width:4,itemStyle:{color:'auto'}},axisTick:{show:false},splitLine:{show:false},axisLabel:{show:false},detail:{valueAnimation:true,formatter:'{value}/10',color:'auto',fontSize:16,fontWeight:800,offsetCenter:[0,'40%']},data:[{value:${d.risks.riskScore}}]}]});window.addEventListener('resize',function(){c.resize();});})();
 ${d.risks.riskRadarValues ? `    (function(){var el=document.getElementById('riskRadarChart');if(!el)return;var rr=${JSON.stringify(d.risks.riskRadarValues).replace(/<\//g, '<\\/')};var c=echarts.init(el);c.setOption({radar:{indicator:[{name:'Dilution',max:100},{name:'Burn Rate',max:100},{name:'Beta',max:100},{name:'Short Int.',max:100},{name:'Insider Sell',max:100},{name:'Macro Risk',max:100}],shape:'circle',splitArea:{areaStyle:{color:['rgba(239,68,68,0.02)','rgba(239,68,68,0.04)']}}},series:[{type:'radar',data:[{value:[rr.dilution||0,rr.burnRate||0,rr.beta||0,rr.shortInterest||0,rr.insiderSelling||0,rr.macroRisk||0],areaStyle:{color:'rgba(239,68,68,0.15)'},lineStyle:{color:'#ef4444'},itemStyle:{color:'#ef4444'}}]}]});window.addEventListener('resize',function(){c.resize();});})();` : ''}
+    (function(){var el=document.getElementById('blastChart');if(!el)return;var rows=${JSON.stringify(blastRows)};var c=echarts.init(el);c.setOption({grid:{left:42,right:18,top:20,bottom:58},tooltip:{trigger:'axis'},xAxis:{type:'category',data:rows.map(function(x){return x.ticker;}),axisLabel:{rotate:40,fontSize:10}},yAxis:{type:'value',name:'|corr.|',max:1},series:[{type:'bar',data:rows.map(function(x){return x.value;}),itemStyle:{color:'#2563eb'},barMaxWidth:28}]});window.addEventListener('resize',function(){c.resize();});})();
     </script>
     <script>
     function openChartModal(){document.getElementById('chartModal').style.display='flex';}

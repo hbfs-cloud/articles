@@ -495,7 +495,7 @@ const analysis = {
     squeezeScore: 'Faible', sourceRefs: [shortRef, borrowSource]
   },
   options: {
-    callOI: maxPain.totalCallOI.toLocaleString('fr-FR'), putOI: maxPain.totalPutOI.toLocaleString('fr-FR'), cpRatio: maxPain.callPutRatio.toFixed(2), maxPain: px(maxPain.maxPainStrike), ivMean: 'INDISPONIBLE',
+    maturity: '31 août 2026', callOI: maxPain.totalCallOI.toLocaleString('fr-FR'), putOI: maxPain.totalPutOI.toLocaleString('fr-FR'), cpRatio: maxPain.callPutRatio.toFixed(2), maxPain: px(maxPain.maxPainStrike), ivMean: 'INDISPONIBLE',
     skew: `Ratio volumes puts/calls ${optionRatio.put_call_volume_ratio.toFixed(2)}`,
     unusual: 'Le composite courant observe les options d’achat et de vente expirant le 31 août, avant les résultats du 2 septembre. Elles ne couvrent pas le saut de cours. La collecte dédiée de chaîne, surface de volatilité, historique et point d’équilibre des options a échoué : aucune volatilité implicite événementielle ni activité inhabituelle n’est affirmée.', sourceRefs: [optionsRef]
   },
