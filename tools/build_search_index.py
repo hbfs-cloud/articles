@@ -27,7 +27,7 @@ class SimpleHTMLParser(HTMLParser):
                 self.text.append(txt)
 
 def build_index():
-    dirs = ['analyses', 'daily', 'scanner', 'weekly', 'portfolio']
+    dirs = ['analyses', 'daily', 'scanner', 'weekly', 'portfolio', 'series', 'tech', 'prompt-ia', 'rotation']
     index = []
     
     for d in dirs:

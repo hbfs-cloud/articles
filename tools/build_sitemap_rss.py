@@ -3,7 +3,7 @@ import glob
 from bs4 import BeautifulSoup
 
 def build_sitemap():
-    dirs = ['analyses', 'daily', 'scanner', 'weekly', 'portfolio']
+    dirs = ['analyses', 'daily', 'scanner', 'weekly', 'portfolio', 'series', 'tech', 'prompt-ia', 'rotation']
     DOMAIN = "https://articles.dailytickers.com"
     urls = []
     
