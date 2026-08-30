@@ -11,6 +11,7 @@ const SERIES_ROOT = path.join(ROOT, 'series');
 const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'series-catalog.json'), 'utf8'));
 const core = fs.readFileSync(path.join(ROOT, 'assets', 'core.js'), 'utf8');
 const style = fs.readFileSync(path.join(ROOT, 'assets', 'style.css'), 'utf8');
+const indexHtml = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 
 function walkHtml(dir, files = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -31,6 +32,7 @@ assert(!/\.scrollIntoView\s*\(/.test(core), 'series runtime must not change the 
 assert(!core.includes('series-enhanced'), 'removed series-enhanced generation must not return');
 assert(core.includes('normalizeTakeawayLists'), 'shared takeaway alignment normalizer is required');
 assert(/\.series-catalog-card\s*\{[\s\S]*?height:\s*300px/.test(style), 'desktop cards need a stable height');
+assert(/assets\/style\.css\?v=/.test(indexHtml), 'series index stylesheet must be cache-busted');
 
 for (const series of catalog.series) {
   assert(series.slug && Array.isArray(series.chapters) && series.chapters.length > 0, `invalid catalog entry: ${series.slug || 'unknown'}`);
@@ -54,7 +56,8 @@ for (const series of catalog.series) {
 for (const file of allSeriesPages) {
   const html = fs.readFileSync(file, 'utf8');
   const $ = cheerio.load(html);
-  assert(html.includes('/assets/core.js'), `series page bypasses shared UX runtime: ${path.relative(ROOT, file)}`);
+  assert(/\/assets\/core\.js\?v=/.test(html), `series runtime is missing or not cache-busted: ${path.relative(ROOT, file)}`);
+  assert(/\/assets\/report\.css\?v=/.test(html), `series stylesheet is missing or not cache-busted: ${path.relative(ROOT, file)}`);
   assert(!/href=["'][^"']*(?:t\.me|telegram\.me|youtube\.com|youtu\.be|feed\.xml)/i.test(html), `legacy follow link remains: ${path.relative(ROOT, file)}`);
   $('.takeaway-list li').each((_, item) => {
     takeawayItems++;
