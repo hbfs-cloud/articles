@@ -65,6 +65,7 @@ node tools/validate-workflows.js --run-plan plans/weekly-focus.json weekly/YYYYM
 node tools/validate-content-claims.js weekly/YYYYMMDD/_data/claims.json
 node tools/qa-content.js weekly/YYYYMMDD/index.html --strict
 node tools/check-ai-tells.js weekly/YYYYMMDD/index.html --strict
+node tools/validate-content-hierarchy.js weekly/YYYYMMDD/index.html
 ```
 
 Faire ensuite, sur le meme snapshot hache, une Senior QA, une revue contrarian et une retail war room.

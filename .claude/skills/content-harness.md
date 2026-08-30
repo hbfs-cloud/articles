@@ -59,6 +59,18 @@ Structured output is written before prose or HTML. Run the relevant executable g
 - analysis: schema, editorial-quality and renderer checks;
 - daily/weekly/retro: their command-level arithmetic, denominator and content QA checks.
 
+Shared presentation gate for new or regenerated daily/weekly pages:
+
+```bash
+node tools/validate-content-hierarchy.js daily/YYYYMMDD/index.html
+node tools/validate-content-hierarchy.js weekly/YYYYMMDD/index.html
+```
+
+The gate requires a visible decision layer before evidence, explicit statuses and consequences,
+provenance/quality markers, an interpretation or scenario layer, and at least one chart. It rejects
+hiding the primary dossier behind an accordion. It is a presentation gate, not a substitute for
+numeric evidence validation.
+
 The model may explain or reject a structured candidate. It may not invent or repair a missing ticker,
 price, ATR, target, stop, score, SEC classification, correlation, DTX field or historical outcome.
 

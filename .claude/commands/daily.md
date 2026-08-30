@@ -73,6 +73,7 @@ node tools/validate-workflows.js --run-plan plans/daily-focus.json daily/YYYYMMD
 node tools/validate-content-claims.js daily/YYYYMMDD/_data/claims.json
 node tools/qa-content.js daily/YYYYMMDD/index.html --strict
 node tools/check-ai-tells.js daily/YYYYMMDD/index.html --strict
+node tools/validate-content-hierarchy.js daily/YYYYMMDD/index.html
 ```
 
 Puis trois lectures independantes sur les memes artefacts haches, sans refetch:
