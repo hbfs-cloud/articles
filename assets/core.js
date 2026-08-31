@@ -134,12 +134,14 @@ document.addEventListener("DOMContentLoaded", function() {
     document.body.insertBefore(a, document.body.firstChild);
 });
 
-// Series pages span several HTML generations. Keep their original visual bar,
-// but repair its links from the published catalog. Horizontal centering is done
+// Multi-part Series and Tech pages span several HTML generations. Keep their
+// original visual bar, but repair its links from the published catalog. Horizontal centering is done
 // on the bar itself: scrollIntoView() used to move the whole article to its
 // bottom navigation on load.
 document.addEventListener('DOMContentLoaded', function() {
-    if (!/^\/series\//.test(location.pathname)) return;
+    var isSeriesPage = /^\/series\//.test(location.pathname);
+    var isTechPage = /^\/tech\//.test(location.pathname);
+    if (!isSeriesPage && !isTechPage) return;
 
     function normalizedPath(value) {
         var path = String(value || '').split(/[?#]/)[0];
@@ -248,12 +250,18 @@ document.addEventListener('DOMContentLoaded', function() {
     normalizeTakeawayLists();
     annotateExistingBars();
     var slug = location.pathname.split('/').filter(Boolean)[1];
-    fetch('/data/series-catalog.json')
+    var catalogUrl = isSeriesPage ? '/data/series-catalog.json' : '/data/tech-series-catalog.json';
+    fetch(catalogUrl)
         .then(function(response) { if (!response.ok) throw new Error('catalog ' + response.status); return response.json(); })
         .then(function(payload) {
-            var series = (payload.series || []).find(function(item) { return item.slug === slug; });
-            if (!series || !Array.isArray(series.chapters) || series.chapters.length < 2) return;
             var currentPath = normalizedPath(location.pathname);
+            var series = (payload.series || []).find(function(item) {
+                if (isSeriesPage) return item.slug === slug;
+                return Array.isArray(item.chapters) && item.chapters.some(function(chapter) {
+                    return normalizedPath(chapter.href) === currentPath;
+                });
+            });
+            if (!series || !Array.isArray(series.chapters) || !series.chapters.length) return;
             var currentIndex = series.chapters.findIndex(function(chapter) { return normalizedPath(chapter.href) === currentPath; });
             if (currentIndex < 0) return;
             var bars = Array.prototype.slice.call(document.querySelectorAll('.series-bar'));

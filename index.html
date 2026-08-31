@@ -39,12 +39,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="DailyTickers">
-  <link rel="stylesheet" href="assets/style.css?v=20260830-2">
+  <link rel="stylesheet" href="assets/style.css?v=20260831-1">
   <link rel="stylesheet" href="assets/sidebar.css?v=20260309">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <!-- ECharts lazy-loaded on radar/scanner tab -->
-  <script src="/data/search_data.js?v=202608302309"></script>
+  <script src="/data/search_data.js?v=202608310722"></script>
   <style>
     /* Landing Specific Overrides */
     body {
@@ -4145,9 +4145,40 @@
       '</article>';
     }
 
+    function techCatalogCard(cardHtml) {
+      const template = document.createElement('template');
+      template.innerHTML = cardHtml;
+      const source = template.content.querySelector('.report-card');
+      if (!source) return cardHtml;
+      const heading = source.querySelector('h2, h3');
+      const description = source.querySelector('p');
+      const link = source.querySelector('a[href*="/tech/"]');
+      if (!heading || !link) return cardHtml;
+      const href = link.getAttribute('href');
+      const seriesParts = {
+        '/tech/automated-trading/': 6,
+        '/tech/anthropic-ecosystem/part1-foundation/': 5,
+        '/tech/securities-master/part1-foundations/': 6,
+        '/tech/monitoring-trading-stack/': 3,
+        '/tech/claude-code-avance/': 3
+      }[href] || 1;
+      const lang = source.dataset.lang || 'fr';
+      const tags = source.dataset.tags || 'tech';
+      const label = seriesParts > 1 ? seriesParts + ' parties' : 'Guide';
+      return '<article class="report-card tech-catalog-card" data-lang="' + escapeSeriesHtml(lang) + '" data-tags="' + escapeSeriesHtml(tags) + '">' +
+        '<div class="tech-card-head"><span><i class="fa-solid fa-microchip"></i> Tech</span><strong>' + label + '</strong></div>' +
+        '<h2>' + escapeSeriesHtml(heading.textContent.trim()) + '</h2>' +
+        '<p>' + escapeSeriesHtml(description ? description.textContent.trim() : '') + '</p>' +
+        '<div class="actions"><a href="' + escapeSeriesHtml(href) + '" class="btn-read-primary">' + (seriesParts > 1 ? 'Ouvrir le parcours' : 'Lire le guide') + '</a></div>' +
+      '</article>';
+    }
+
     function normalizeTabPayload(tab, payload) {
       if (tab === 'series' && payload && Array.isArray(payload.series)) {
         return payload.series.map(seriesCatalogCard);
+      }
+      if (tab === 'tech' && Array.isArray(payload)) {
+        return payload.map(techCatalogCard);
       }
       return Array.isArray(payload) ? payload : [];
     }
