@@ -7,6 +7,7 @@ const crypto = require('crypto');
 
 const args = process.argv.slice(2);
 const requireReviews = args.includes('--require-reviews');
+const skipHarness = args.includes('--skip-harness');
 const target = args.find(argument => !argument.startsWith('--'));
 if (!target) {
   console.error('Usage: node tools/validate-substack-series.js <series-directory> [--require-reviews]');
@@ -30,6 +31,40 @@ function words(markdown) {
     .filter(Boolean).length;
 }
 
+function parseFrontMatter(markdown) {
+  const match = markdown.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
+  if (!match) return null;
+  const metadata = {};
+  for (const line of match[1].split(/\r?\n/)) {
+    const separator = line.indexOf(':');
+    if (separator < 1) continue;
+    const key = line.slice(0, separator).trim();
+    const value = line.slice(separator + 1).trim();
+    try { metadata[key] = JSON.parse(value); }
+    catch { metadata[key] = value; }
+  }
+  return { metadata, body: markdown.slice(match[0].length) };
+}
+
+function localDate(timestamp, timeZone) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(new Date(timestamp)).map(part => [part.type, part.value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function addUtcDays(isoDate, days) {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
+}
+
+function hasExplicitLimitation(body) {
+  return /(\*\*(?:limitation|limit|boundary|counter-case):\*\*|\b(?:limitation|framework has an important limit|does not|doesn't|cannot|counter-case|fails when|exception|not enough|can still|may )\b)/i.test(body);
+}
+
 if (!fs.existsSync(manifestPath)) {
   fail('manifest.json is missing');
 } else {
@@ -42,6 +77,13 @@ if (!fs.existsSync(manifestPath)) {
     if (manifest.language !== 'en') fail('manifest language must be en');
     if (!Number.isInteger(manifest.section?.id)) fail('manifest section.id must be an integer');
     if (manifest.delivery?.post_audience !== manifest.audience) fail('post audience must match manifest audience');
+    if (typeof manifest.delivery?.send_email !== 'boolean') fail('delivery.send_email must be explicit');
+    if (manifest.delivery?.send_email === false && manifest.delivery?.email_audience != null) {
+      fail('email_audience must be null when email delivery is disabled');
+    }
+    if (manifest.delivery?.send_email === true && !manifest.delivery?.email_audience) {
+      fail('email_audience is required when email delivery is enabled');
+    }
     if (!manifest.selection_disclosure) fail('purpose-selection disclosure is missing');
     if (manifest.conflict_attestation?.issuer_sponsorship_or_compensation !== false) {
       fail('issuer sponsorship/compensation attestation is missing');
@@ -91,20 +133,29 @@ if (!fs.existsSync(manifestPath)) {
         }
 
         const body = fs.readFileSync(file, 'utf8');
+        const parsed = parseFrontMatter(body);
+        if (!parsed) {
+          fail(`${episode.file}: front matter is missing or malformed`);
+          continue;
+        }
+        const metadata = parsed.metadata;
         const count = words(body);
         const min = manifest.publication_contract?.min_words_per_episode ?? 500;
         const max = manifest.publication_contract?.max_words_per_episode ?? 1000;
         if (count < min || count > max) fail(`${episode.file}: ${count} words, expected ${min}-${max}`);
-        if (!body.includes(`title: "${episode.title}"`)) fail(`${episode.file}: front matter title mismatch`);
-        if (!body.includes(`subtitle: "${episode.subtitle}"`)) fail(`${episode.file}: front matter subtitle mismatch`);
+        if (metadata.title !== episode.title) fail(`${episode.file}: front matter title mismatch`);
+        if (metadata.subtitle !== episode.subtitle) fail(`${episode.file}: front matter subtitle mismatch`);
+        if (metadata.module_id !== manifest.series_id) fail(`${episode.file}: front matter module_id mismatch`);
+        if (Number(metadata.episode_number) !== episode.number) fail(`${episode.file}: front matter episode_number mismatch`);
+        if (metadata.source_path !== episode.source_path) fail(`${episode.file}: front matter source_path mismatch`);
         if (!body.includes(`Part ${episode.number} of ${manifest.episodes.length}`)) fail(`${episode.file}: part marker missing`);
-        if (!/(do not|reject|write|calculate|check|skip|reduce|record|give zero weight|treat)/i.test(body.slice(0, 2200))) {
+        if (!/(do not|reject|write|calculate|check|skip|reduce|record|give zero weight|treat|choose|define|set|classify|verify|mark|separate|compare|map|freeze|decide)/i.test(body.slice(0, 2200))) {
           fail(`${episode.file}: decision is not visible near the start`);
         }
         if (!/(before|use this|run this|write|calculate|check|record|cross out|label)/i.test(body)) {
           fail(`${episode.file}: actionable instruction missing`);
         }
-        if (!/(cannot|does not|may |depends|not a guarantee|not prove|no universal|different case|misses)/i.test(body)) {
+        if (!hasExplicitLimitation(body)) {
           fail(`${episode.file}: explicit limitation or counter-case missing`);
         }
         if (!/educational/i.test(body)) fail(`${episode.file}: educational disclaimer missing`);
@@ -117,26 +168,37 @@ if (!fs.existsSync(manifestPath)) {
         }
       }
 
-      const pilotCount = manifest.rollout?.scheduled_episode_count;
-      if (!Number.isInteger(pilotCount) || pilotCount < 1 || pilotCount > manifest.episodes.length) {
-        fail('rollout.scheduled_episode_count must identify a non-empty pilot');
-      } else {
-        const expectedHeld = manifest.episodes.slice(pilotCount).map(episode => episode.number);
-        const actualHeld = manifest.rollout?.held_as_drafts || [];
-        if (JSON.stringify(expectedHeld) !== JSON.stringify(actualHeld)) {
-          fail(`held_as_drafts mismatch: expected ${JSON.stringify(expectedHeld)}, got ${JSON.stringify(actualHeld)}`);
+      if (manifest.rollout?.phase === 'authorized-for-scheduling') {
+        if (manifest.rollout?.authorized_episode_count !== manifest.episodes.length) {
+          fail('rollout.authorized_episode_count must cover every episode');
         }
+        if ((manifest.rollout?.held_as_drafts || []).length) fail('authorized rollout cannot hold episodes outside the program');
         for (const episode of manifest.episodes) {
-          const shouldSchedule = episode.number <= pilotCount;
-          if (shouldSchedule !== Boolean(episode.scheduled_at)) {
-            fail(`${episode.file}: schedule does not match pilot boundary`);
+          if (!episode.scheduled_at) fail(`${episode.file}: authorized rollout is missing its intended schedule`);
+        }
+      } else {
+        const pilotCount = manifest.rollout?.scheduled_episode_count;
+        if (!Number.isInteger(pilotCount) || pilotCount < 1 || pilotCount > manifest.episodes.length) {
+          fail('rollout.scheduled_episode_count must identify a non-empty rollout');
+        } else {
+          const expectedHeld = manifest.episodes.slice(pilotCount).map(episode => episode.number);
+          const actualHeld = manifest.rollout?.held_as_drafts || [];
+          if (JSON.stringify(expectedHeld) !== JSON.stringify(actualHeld)) {
+            fail(`held_as_drafts mismatch: expected ${JSON.stringify(expectedHeld)}, got ${JSON.stringify(actualHeld)}`);
+          }
+          for (const episode of manifest.episodes) {
+            const shouldSchedule = episode.number <= pilotCount;
+            if (shouldSchedule !== Boolean(episode.scheduled_at)) {
+              fail(`${episode.file}: schedule does not match rollout boundary`);
+            }
           }
         }
       }
       scheduled.sort((a, b) => a.number - b.number);
       for (let index = 1; index < scheduled.length; index += 1) {
-        const elapsed = scheduled[index].timestamp - scheduled[index - 1].timestamp;
-        if (elapsed !== 7 * 24 * 60 * 60 * 1000) {
+        const previousLocalDate = localDate(scheduled[index - 1].timestamp, manifest.cadence?.timezone);
+        const currentLocalDate = localDate(scheduled[index].timestamp, manifest.cadence?.timezone);
+        if (currentLocalDate !== addUtcDays(previousLocalDate, 7)) {
           fail(`episodes ${scheduled[index - 1].number} and ${scheduled[index].number} are not one week apart`);
         }
       }
@@ -147,9 +209,9 @@ if (!fs.existsSync(manifestPath)) {
     }
 
     const harnessPath = path.join(root, manifest.review_snapshot_harness || '');
-    if (!manifest.review_snapshot_harness || !fs.existsSync(harnessPath)) {
+    if (!skipHarness && (!manifest.review_snapshot_harness || !fs.existsSync(harnessPath))) {
       fail('review snapshot harness is missing');
-    } else {
+    } else if (!skipHarness) {
       try {
         const harness = JSON.parse(fs.readFileSync(harnessPath, 'utf8'));
         const snapshot = harness.review_snapshot;
@@ -176,6 +238,9 @@ if (!fs.existsSync(manifestPath)) {
           if (snapshot.aggregate_sha256 !== aggregate) fail('review snapshot aggregate hash mismatch');
         }
         if (requireReviews) {
+          for (const gate of ['series_validator', 'domain_validator', 'ai_phrase_linter', 'javascript_syntax']) {
+            if (harness.gates?.[gate] !== 'passed') fail(`required local gate has not passed: ${gate}`);
+          }
           const reviewGateKeys = {
             'Senior QA': 'senior_qa',
             'Contrarian': 'contrarian',

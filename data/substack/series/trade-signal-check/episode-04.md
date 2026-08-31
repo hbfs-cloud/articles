@@ -4,6 +4,9 @@ subtitle: "A stop controls an order. It cannot create a price that never traded.
 series: "The 30-Second Trade Signal Check"
 episode: 4
 language: "en"
+module_id: "trade-signal-check"
+episode_number: 4
+source_path: "series/anatomie-signal-trade/part4-earnings/index.html"
 ---
 
 *Part 4 of 6 in The 30-Second Trade Signal Check.*

@@ -4,6 +4,9 @@ subtitle: "Target distance is not expected payoff. The path and its frequency st
 series: "The 30-Second Trade Signal Check"
 episode: 2
 language: "en"
+module_id: "trade-signal-check"
+episode_number: 2
+source_path: "series/anatomie-signal-trade/part2-risk-reward/index.html"
 ---
 
 *Part 2 of 6 in The 30-Second Trade Signal Check.*
@@ -54,6 +57,8 @@ setup and exit method.
 The `CLF` candidate fails a house rule that demands at least 1.5R at the first sale. That does not prove
 the trade was bad. A separately tested method could reach a different decision. Without path frequencies,
 quoting only 1.65R overstates what the written plan pays first.
+
+Sources: [FINRA: Evaluating Performance](https://www.finra.org/investors/investing/investing-basics/evaluating-performance); [Investor.gov: Understanding Fees](https://www.investor.gov/introduction-investing/getting-started/understanding-fees)
 
 *`CLF` was purpose-selected as a teaching case, not a random sample or evidence of edge. This episode
 audits the written target geometry; it does not validate how the upstream plan was produced. Calculations

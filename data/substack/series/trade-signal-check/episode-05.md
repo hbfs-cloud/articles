@@ -1,15 +1,20 @@
 ---
-title: "Do Not Treat an Unreproducible Number as Fact"
+title: "The Four Tests Behind Any Precise Market Claim"
 subtitle: "A precise percentage needs a source, definition, coverage window and method."
 series: "The 30-Second Trade Signal Check"
 episode: 5
 language: "en"
+module_id: "trade-signal-check"
+episode_number: 5
+source_path: "series/anatomie-signal-trade/part5-donnees-couteau/index.html"
 ---
 
 *Part 5 of 6 in The 30-Second Trade Signal Check.*
 
 "Institutions bought 46% of today's volume" sounds precise. It is not evidence until 46% has a venue,
 time window, denominator and defensible direction.
+
+Precision without reproducible provenance is only decoration, not decision-grade evidence.
 
 Do not use a directional claim as evidence when its source cannot support direction. Treat an opaque
 model score as a score, not as observed buying.
@@ -47,8 +52,8 @@ method, stable definitions and known coverage, then test the model on data not u
 outside reader who cannot inspect the raw records should treat the published value as a model output,
 not an independently verified fact. That output may rank candidates without proving who bought them.
 
-Primary references: FINRA's [organization description](https://www.finra.org/about),
+Sources: FINRA's [organization description](https://www.finra.org/about),
 [Short Sale Volume documentation](https://www.finra.org/finra-data/browse-catalog/short-sale-volume) and
 [explanatory notice](https://www.finra.org/rules-guidance/notices/information-notice-051019).
 
-*This material is educational and is not investment advice.*
+*Educational, not investment advice.*

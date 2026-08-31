@@ -4,6 +4,9 @@ subtitle: "Stop distance sets one sizing ceiling. Gap, liquidity and portfolio l
 series: "The 30-Second Trade Signal Check"
 episode: 1
 language: "en"
+module_id: "trade-signal-check"
+episode_number: 1
+source_path: "series/anatomie-signal-trade/part1-le-cadre/index.html"
 ---
 
 *Part 1 of 6 in The 30-Second Trade Signal Check.*
@@ -58,8 +61,10 @@ stress and margin checks.
 The same `CLF` plan included targets at $13.20 and $13.85. Part 2 checks whether either target paid enough
 for the $0.97 at risk.
 
+Sources: [SEC: Stop, Stop-Limit, and Trailing Stop Orders](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-15); [FINRA: Understanding Risk](https://www.finra.org/investors/investing/investing-basics/risk)
+
 *Case selection: `CLF` was chosen after review to teach sizing arithmetic, not to estimate average signal
-performance. The earliest reachable Git commit records the final plan at 13:05 UTC; that repository-local
+performance. The earliest saved plan version is time-stamped 13:05 UTC inside the case record; that local
 timestamp is not independent proof of when it existed. Its archived Yahoo bar closed at $12.095; $12.25
 was the plan's explicit entry, but the adjustment rule was not recorded. The arithmetic above audits the
 plan levels only. No named issuer sponsored or compensated this series; DailyTickers and its authors may

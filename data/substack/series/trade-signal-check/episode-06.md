@@ -4,6 +4,9 @@ subtitle: "Seven gates that specify a trade or stop it before an order exists."
 series: "The 30-Second Trade Signal Check"
 episode: 6
 language: "en"
+module_id: "trade-signal-check"
+episode_number: 6
+source_path: "series/anatomie-signal-trade/part6-checklist/index.html"
 ---
 
 *Part 6 of 6 in The 30-Second Trade Signal Check.*
@@ -36,8 +39,8 @@ rules or supplies outcome probabilities.
 The source screen's ATR was $0.645, and the final stop distance was 1.50 ATR. The raw screener had generated
 its stop from that multiple, so later chart commentary could not validate the method after the fact.
 
-The earliest reachable Git commit records the final plan at 13:05 UTC on August 13, before the 13:30 UTC
-US open. That is repository-local chronology, not an independently trusted timestamp. The archived
+The earliest saved plan version is time-stamped 13:05 UTC on August 13, before the 13:30 UTC US open.
+That is chronology inside the case record, not an independently trusted timestamp. The archived
 decision bar closed at $12.095, while the raw screen used $12.095 and the final plan used $12.25. No rule
 records that transformation, so gate 7 fails. A later Yahoo reconstruction changed the same close and
 volume; it is excluded from the decision snapshot.
@@ -55,7 +58,9 @@ failure and the evidence needed to resolve it. A vague answer fails.
 Passing the check specifies the trade and confirms that supporting evidence exists. It does not prove the
 setup is profitable, and this purpose-selected case estimates no hit rate or edge.
 
-*Plan source: Git commit `ebb719502b`, blob `0d4aa5fdd`; archived decision bars: commit `f74cfe2cc3`, blob
-`0e99dcdae2`. Outcome and later vendor observations are labelled separately. Yahoo bars are unadjusted.
+Sources: [SEC: Stop, Stop-Limit, and Trailing Stop Orders](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-15)
+
+*The plan and archived decision bars were saved as separate records. Outcome and later vendor observations
+are labelled separately. Yahoo bars are unadjusted.
 No named issuer sponsored or compensated this series; DailyTickers and its authors may hold securities
 discussed. Educational, not investment advice.*

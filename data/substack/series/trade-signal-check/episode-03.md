@@ -4,6 +4,9 @@ subtitle: "Volatility is a check on the stop, not a machine that chooses it for 
 series: "The 30-Second Trade Signal Check"
 episode: 3
 language: "en"
+module_id: "trade-signal-check"
+episode_number: 3
+source_path: "series/anatomie-signal-trade/part3-le-stop/index.html"
 ---
 
 *Part 3 of 6 in The 30-Second Trade Signal Check.*
@@ -30,7 +33,7 @@ The archived Yahoo decision snapshot creates a second warning. Its August 12 bar
 5,831,609 shares. A Yahoo reconstruction collected on August 31 served $12.25 and 13,268,600 shares for
 the same session. The later vendor version is not substituted into the decision record.
 
-A separate arithmetic mean of 14 true ranges from the archived bars was $0.688, not the screen's $0.645.
+The arithmetic mean of 14 true ranges from the archived bars was $0.688, not the screen's $0.645.
 The screen did not expose its ATR convention. The revised final-day close does not change that arithmetic
 calculation ending on August 12, so the exact cause of the ATR difference remains unproven. Use $0.645
 only to reconstruct what the screen did; do not merge it with the later bar version.
@@ -63,8 +66,13 @@ inherit the same multiple.
 No fixed ATR rule guarantees a good stop. Test the chosen method on the same setup and holding period,
 including gaps and slippage. Without that history, label the multiple a heuristic, not a validated exit.
 
-*The source screen, decision bars and final plan are separate Git objects whose earliest reachable local
-commit times precede the August 13 open; those timestamps are not external proof. `CLF` was purpose-selected
+The ATR and adverse-excursion procedure above is the method defined for this case study. The official
+sources below support only the behavior and limits of stop orders; they do not validate that procedure.
+
+Sources: [SEC: Stop, Stop-Limit, and Trailing Stop Orders](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-15); [Investor.gov: Understanding Order Types](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-14)
+
+*The source screen, decision bars and final plan were saved as separate records before the August 13 open.
+Those local timestamps establish order inside this case study, not independent external proof. `CLF` was purpose-selected
 to show a method conflict, not average performance. Yahoo bars are unadjusted. No named issuer sponsored
 or compensated this series; DailyTickers and its authors may hold securities discussed. Educational, not
 investment advice.*
