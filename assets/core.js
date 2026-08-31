@@ -142,6 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var isSeriesPage = /^\/series\//.test(location.pathname);
     var isTechPage = /^\/tech\//.test(location.pathname);
     if (!isSeriesPage && !isTechPage) return;
+    document.body.classList.add(isSeriesPage ? 'content-series' : 'content-tech');
 
     function normalizedPath(value) {
         var path = String(value || '').split(/[?#]/)[0];
@@ -208,6 +209,28 @@ document.addEventListener('DOMContentLoaded', function() {
             item.classList.add('takeaway-normalized');
         });
     }
+    function normalizeArticleShell() {
+        var hero = document.querySelector('.hero-section, .ticker-header');
+        var tagContainers = Array.prototype.slice.call(document.querySelectorAll('#article-clickable-tags'));
+        var primaryTags = tagContainers[0];
+        if (!primaryTags && hero && document.documentElement.dataset.tags) {
+            primaryTags = makeNode('div', 'card-tags');
+            primaryTags.id = 'article-clickable-tags';
+        }
+        if (primaryTags && hero && !hero.contains(primaryTags)) hero.appendChild(primaryTags);
+        tagContainers.slice(1).forEach(function(node) { node.remove(); });
+    }
+    function normalizeWideContent() {
+        document.querySelectorAll('table').forEach(function(table) {
+            if (table.closest('.table-scroll, .article-table-scroll')) return;
+            var wrapper = makeNode('div', 'article-table-scroll');
+            wrapper.tabIndex = 0;
+            wrapper.setAttribute('role', 'region');
+            wrapper.setAttribute('aria-label', 'Tableau de données');
+            table.parentNode.insertBefore(wrapper, table);
+            wrapper.appendChild(table);
+        });
+    }
     function rebuildBar(bar, series, currentIndex, barIndex) {
         var chapters = series.chapters || [];
         var inner = makeNode('div', 'series-bar-inner');
@@ -240,13 +263,18 @@ document.addEventListener('DOMContentLoaded', function() {
         inner.appendChild(steps);
         inner.appendChild(counter);
         inner.appendChild(next);
-        bar.innerHTML = '';
-        bar.appendChild(inner);
+        var existingInner = Array.prototype.slice.call(bar.children).find(function(child) {
+            return child.classList && child.classList.contains('series-bar-inner');
+        });
+        if (existingInner) existingInner.replaceWith(inner);
+        else bar.insertBefore(inner, bar.firstChild);
         bar.setAttribute('role', 'navigation');
         bar.setAttribute('aria-label', (series.title || 'Série') + (barIndex ? ' — fin de l’article' : ' — chapitres'));
         centerCurrentStep(steps);
     }
 
+    normalizeArticleShell();
+    normalizeWideContent();
     normalizeTakeawayLists();
     annotateExistingBars();
     var slug = location.pathname.split('/').filter(Boolean)[1];

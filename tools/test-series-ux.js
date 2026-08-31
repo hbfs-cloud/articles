@@ -10,6 +10,7 @@ const ROOT = path.resolve(__dirname, '..');
 const SERIES_ROOT = path.join(ROOT, 'series');
 const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'series-catalog.json'), 'utf8'));
 const techCatalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'tech-series-catalog.json'), 'utf8'));
+const techIndexCatalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'tech-catalog.json'), 'utf8'));
 const core = fs.readFileSync(path.join(ROOT, 'assets', 'core.js'), 'utf8');
 const style = fs.readFileSync(path.join(ROOT, 'assets', 'style.css'), 'utf8');
 const indexHtml = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
@@ -32,6 +33,7 @@ let takeawayItems = 0;
 assert(Array.isArray(catalog.series) && catalog.series.length > 0, 'series catalog must not be empty');
 assert(!/\.scrollIntoView\s*\(/.test(core), 'series runtime must not change the page vertical scroll position');
 assert(!core.includes('series-enhanced'), 'removed series-enhanced generation must not return');
+assert(!/bar\.innerHTML\s*=/.test(core), 'series navigation rebuild must never delete unrelated trailing article content');
 assert(core.includes('normalizeTakeawayLists'), 'shared takeaway alignment normalizer is required');
 assert(/\.series-catalog-card\s*\{[\s\S]*?height:\s*300px/.test(style), 'desktop cards need a stable height');
 assert(/assets\/style\.css\?v=/.test(indexHtml), 'series index stylesheet must be cache-busted');
@@ -49,6 +51,12 @@ for (const series of catalog.series) {
     const html = fs.readFileSync(file, 'utf8');
     const $ = cheerio.load(html);
     assert(html.includes('/assets/core.js'), `shared runtime missing: ${chapter.href}`);
+    const isRedirect = $('meta[http-equiv="refresh"]').length > 0;
+    if (!isRedirect) {
+      assert($('h1').length > 0, `published series chapter has no primary title: ${chapter.href}`);
+      assert($('.hero-section,.ticker-header').length > 0, `published series chapter has no hero: ${chapter.href}`);
+      assert($('.article-footer,footer').length > 0, `published series chapter has no footer: ${chapter.href}`);
+    }
     if (series.chapters.length > 1) {
       assert($('.series-bar').length > 0, `multi-part series has no navigation host: ${chapter.href}`);
     }
@@ -94,6 +102,9 @@ for (const file of allTechPages) {
   assert(/\/assets\/core\.js\?v=/.test(html), `tech runtime is missing or not cache-busted: ${path.relative(ROOT, file)}`);
   assert(/\/assets\/report\.css\?v=/.test(html), `tech stylesheet is missing or not cache-busted: ${path.relative(ROOT, file)}`);
   const $ = cheerio.load(html);
+  assert($('h1').length > 0, `tech page has no primary title: ${path.relative(ROOT, file)}`);
+  assert($('.hero-section,.ticker-header').length > 0, `tech page has no hero: ${path.relative(ROOT, file)}`);
+  assert($('.article-footer,footer').length > 0, `tech page has no footer: ${path.relative(ROOT, file)}`);
   $('a[href^="/tech/"]').each((_, link) => {
     const href = String($(link).attr('href')).split(/[?#]/)[0];
     const target = path.join(ROOT, href.replace(/^\//, ''), href.endsWith('/') ? 'index.html' : '');
@@ -103,6 +114,15 @@ for (const file of allTechPages) {
 
 assert(core.includes('https://dailytickers.substack.com'), 'Substack must remain the single shared follow destination');
 assert(indexHtml.includes('techCatalogCard'), 'tech index cards must use the normalized renderer');
-assert(/#tab-tech \.report-card\s*\{[\s\S]*?height:\s*286px/.test(style), 'tech index cards need a stable height');
+assert(indexHtml.includes('Parcours techniques'), 'tech index needs the same visible guided-path structure as Series');
+assert(indexHtml.includes("'panel.tech.title': 'Guides techniques'"), 'French tech heading must remain short on mobile');
+assert(indexHtml.includes("tab === 'tech' ? 'tech-catalog'"), 'tech index must load the structured catalog');
+assert(Array.isArray(techIndexCatalog.guides) && techIndexCatalog.guides.length === 36, 'tech index catalog must preserve all 36 guides');
+assert(techIndexCatalog.guides.every(guide => Array.isArray(guide.chapters) && guide.chapters.length > 0), 'every tech card needs a real chapter destination');
+assert(/#tab-tech \.report-card\s*\{[\s\S]*?height:\s*300px/.test(style), 'tech index cards need the same stable height as Series');
+assert(/\.series-steps\s*\{[\s\S]*?scrollbar-width:\s*none/.test(fs.readFileSync(path.join(ROOT, 'assets', 'report.css'), 'utf8')), 'chapter scrollbars must stay visually hidden');
+assert(/\.series-card-chapters\s*\{[\s\S]*?scrollbar-width:\s*none/.test(style), 'catalog chapter scrollbars must stay visually hidden');
+assert(core.includes('normalizeArticleShell'), 'Series and Tech pages need the shared article shell normalizer');
+assert(core.includes('normalizeWideContent'), 'historical tables need a shared responsive wrapper');
 
 console.log(`PASS content UX: ${catalog.series.length} series / ${publishedChapters} chapters / ${allSeriesPages.length} pages; ${techCatalog.series.length} tech series / ${allTechPages.length} tech pages; ${takeawayItems} aligned takeaway rows`);
