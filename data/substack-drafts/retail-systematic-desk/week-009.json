@@ -1,0 +1,17 @@
+{
+  "title": "Preserve Partial Failures in Batches",
+  "subtitle": "One bad symbol must not erase nine valid cells or make the batch look complete.",
+  "body_markdown": "*Part 3 of 3 in Make Data Quality Executable. Lesson 9 of 45 in Build a Retail Systematic Desk, Safely.*\n\nBatching is efficient, but careless clients associate responses by array position or collapse any error into an empty result. Use canonical identity and per-cell status instead. A batch can be completed, partial or failed; the label should reflect what actually happened.\n\n**Input from last Friday:** The accepted freshness gate test report.\n\n**Friday deliverable:** A batch-integrity fixture pack, owned by the desk operator and retained in the review bundle.\n\n## Build this\n\nKey results by instrument id and facet. Include requested and returned ranges, missing intervals, truncation and pagination state. Concatenate pages only when their snapshot identifier matches.\n\n### Minimum record\n\n- `instrument_id`\n- `facet`\n- `requested_range`\n- `returned_range`\n- `pagination_token`\n- `snapshot_id`\n\n## Test it before moving on\n\nRequest one stock, one ETF and one unknown symbol across price and company-only facets. Valid stock data should survive; ETF fundamentals may be not applicable; the unknown identity should be unavailable. Shuffle response order to prove the client does not rely on indexes.\n\n**Operating limit:** The batch-integrity fixture pack is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.\n\n**Further reading for the batch-integrity fixture pack (context, not implementation evidence):** [Investor.gov: Researching Investments](https://www.investor.gov/introduction-investing/getting-started/researching-investments); [Investor.gov: How to Read a 10-K](https://www.investor.gov/introduction-investing/getting-started/researching-investments/how-read-10-k)\n\nEducational, not investment advice.\n\n## Release decision\n\n**GO:** Accept the batch-integrity fixture pack only when the test above passes and its retained output matches the minimum record.\n\n**NO-GO:** Reject any batch whose pages come from different snapshots or whose results cannot be tied to canonical instruments.\n\n**Next Friday:** Carry the accepted batch-integrity fixture pack into Resolve Identity Before You Use a Ticker.",
+  "audience": "everyone",
+  "section_id": 417759,
+  "scheduled_at": "2026-10-30T12:00:00.000Z",
+  "post_audience": "everyone",
+  "send_email": false,
+  "email_audience": null,
+  "release_status": "held_for_review",
+  "tags": [
+    "Systematic Trading",
+    "Trading Systems",
+    "Risk Management"
+  ]
+}

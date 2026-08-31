@@ -1,0 +1,17 @@
+{
+  "title": "Make Freshness a Blocking Field",
+  "subtitle": "Collected now does not mean the underlying market observation is current.",
+  "body_markdown": "*Part 2 of 3 in Make Data Quality Executable. Lesson 8 of 45 in Build a Retail Systematic Desk, Safely.*\n\nA response timestamp only proves when the client received data. Trading requires the event date and the last completed market session. Weekend, holiday and delayed-source behavior make calendar arithmetic unsafe. The decision should compare the served close with the exact close it expected to trade.\n\n**Input from last Friday:** The accepted capability bootstrap report.\n\n**Friday deliverable:** A freshness gate test report, owned by the desk operator and retained in the review bundle.\n\n## Build this\n\nStore requested date, served date, market state, partial-bar policy and age. Resolve the expected session from an exchange calendar. Required bars must be complete and must reach that session; otherwise return stale or data insufficient.\n\n### Minimum record\n\n- `expected_close`\n- `served_close`\n- `include_partial`\n- `market_state`\n- `freshness_ok`\n\n## Test it before moving on\n\nTest a normal weekday, a holiday, a weekend and an upstream response that stops several sessions early while returning HTTP 200. Only the genuinely current dataset may pass.\n\n**Operating limit:** The freshness gate test report is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.\n\n**Further reading for the freshness gate test report (context, not implementation evidence):** [NYSE: Hours and Calendars](https://www.nyse.com/trade/hours-calendars); [Investor.gov: Executing an Order](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order)\n\nEducational, not investment advice.\n\n## Release decision\n\n**GO:** Accept the freshness gate test report only when the test above passes and its retained output matches the minimum record.\n\n**NO-GO:** A healthy transport response with stale market coverage is still a failed trading input.\n\n**Next Friday:** Carry the accepted freshness gate test report into Preserve Partial Failures in Batches.",
+  "audience": "everyone",
+  "section_id": 417759,
+  "scheduled_at": "2026-10-23T12:00:00.000Z",
+  "post_audience": "everyone",
+  "send_email": false,
+  "email_audience": null,
+  "release_status": "held_for_review",
+  "tags": [
+    "Systematic Trading",
+    "Trading Systems",
+    "Risk Management"
+  ]
+}

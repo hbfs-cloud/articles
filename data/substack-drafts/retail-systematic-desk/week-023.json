@@ -1,0 +1,17 @@
+{
+  "title": "Persist State, Validity and Revisions",
+  "subtitle": "A stateful strategy cannot be reconstructed safely from broker positions alone.",
+  "body_markdown": "*Part 2 of 3 in Make Strategy Decisions Machine-Readable. Lesson 23 of 45 in Build a Retail Systematic Desk, Safely.*\n\nStrategy state may include entry dates, trailing references, cooldowns or risk halts. Treat it as an opaque object owned by the decision engine. A revised plan explicitly supersedes the previous one; two plans are never merged by convenience.\n\n**Input from last Friday:** The accepted versioned strategy configuration schema.\n\n**Friday deliverable:** A supersession state record, owned by the desk operator and retained in the review bundle.\n\n## Build this\n\nPersist state per portfolio with plan id, revision, validity and supersession reference. Store it only after a successful decision. Echo it unchanged on the next run and keep broker snapshots as separate evidence.\n\n### Minimum record\n\n- `plan_id`\n- `revision`\n- `state`\n- `valid_from`\n- `valid_until`\n- `supersedes_plan_id`\n\n## Test it before moving on\n\nRestart between two decisions and confirm the same state resumes. Submit an older revision after a newer one and require rejection. Expire a plan and prove it can no longer create an order.\n\n**Operating limit:** The supersession state record is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.\n\n**Further reading for the supersession state record (context, not implementation evidence):** [Investor.gov: Broker-Dealer Record-Keeping Requirements](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements); [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations)\n\nEducational, not investment advice.\n\n## Release decision\n\n**GO:** Accept the supersession state record only when the test above passes and its retained output matches the minimum record.\n\n**NO-GO:** Do not infer missing strategy state from current holdings or an explanatory note.\n\n**Next Friday:** Carry the accepted supersession state record into Use a Complete Machine-Readable Plan.",
+  "audience": "everyone",
+  "section_id": 417759,
+  "scheduled_at": "2027-02-05T13:00:00.000Z",
+  "post_audience": "everyone",
+  "send_email": false,
+  "email_audience": null,
+  "release_status": "held_for_review",
+  "tags": [
+    "Systematic Trading",
+    "Trading Systems",
+    "Risk Management"
+  ]
+}

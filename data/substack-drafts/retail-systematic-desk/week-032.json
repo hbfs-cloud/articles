@@ -1,0 +1,17 @@
+{
+  "title": "Build an Explicit Order State Machine",
+  "subtitle": "Orders move through states; they do not jump from submitted to done.",
+  "body_markdown": "*Part 2 of 3 in Prove Execution in a Simulator. Lesson 32 of 45 in Build a Retail Systematic Desk, Safely.*\n\nNetwork timeouts, pending cancels and partial fills make binary status unsafe. Model allowed transitions and make unexpected transitions errors. A partial fill ends alternate selection and immediately creates a protection obligation for the filled quantity.\n\n**Input from last Friday:** The accepted deterministic broker simulator contract.\n\n**Friday deliverable:** An order-state transition suite, owned by the desk operator and retained in the review bundle.\n\n## Build this\n\nDraw states and transitions for submit, acknowledge, partial fill, fill, cancel request, cancel confirmation, rejection and expiry. Store every transition with source and time.\n\n### Minimum record\n\n- `order_id`\n- `previous_state`\n- `new_state`\n- `filled_qty`\n- `source`\n- `occurred_at`\n\n## Test it before moving on\n\nReplay duplicate acknowledgements, a fill during cancellation and a late response after timeout. The final state must reconcile without creating a second order.\n\n**Operating limit:** The order-state transition suite is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.\n\n**Further reading for the order-state transition suite (context, not implementation evidence):** [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders); [FINRA: Extended-Hours Trading](https://www.finra.org/investors/insights/extended-hours-trading)\n\nEducational, not investment advice.\n\n## Release decision\n\n**GO:** Accept the order-state transition suite only when the test above passes and its retained output matches the minimum record.\n\n**NO-GO:** Never promote an alternate candidate after any fill, including a partial one.\n\n**Next Friday:** Carry the accepted order-state transition suite into Test Restarts, Duplicates and Broken Networks.",
+  "audience": "everyone",
+  "section_id": 417759,
+  "scheduled_at": "2027-04-09T12:00:00.000Z",
+  "post_audience": "everyone",
+  "send_email": false,
+  "email_audience": null,
+  "release_status": "held_for_review",
+  "tags": [
+    "Systematic Trading",
+    "Trading Systems",
+    "Risk Management"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Make Placement Idempotent",
+  "subtitle": "Every retry must reconcile first and remain blocked when broker acceptance is unknown.",
+  "body_markdown": "*Part 2 of 3 in Connect a Broker Without Losing Control. Lesson 38 of 45 in Build a Retail Systematic Desk, Safely.*\n\nIdempotence starts with durable business intent, not only order fields. Scope the intent by portfolio, plan, revision, candidate or group and execution window, then derive a canonical fingerprint. Prefer a broker-supported idempotency key; a local hash never proves that an unseen order was not accepted.\n\n**Input from last Friday:** The accepted broker security and capability preflight.\n\n**Friday deliverable:** A durable intent and deduplication record, owned by the desk operator and retained in the review bundle.\n\n## Build this\n\nPersist intent before the network call, define canonical field ordering and numeric precision, and keep request identity stable for identical retries. Search complete paginated order and execution history. An ambiguous result remains unknown and blocks automatic placement.\n\n### Minimum record\n\n- `portfolio_id`\n- `plan_id`\n- `revision`\n- `candidate_id`\n- `execution_window`\n- `fingerprint`\n- `broker_idempotency_key`\n- `dedup_status`\n\n## Test it before moving on\n\nSubmit the same intent through retries with fields in different JSON order. It should produce one fingerprint and one broker order. A real plan revision should produce a distinct fingerprint.\n\n**Operating limit:** The durable intent and deduplication record is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.\n\n**Further reading for the durable intent and deduplication record (context, not implementation evidence):** [Investor.gov: Broker-Dealer Record-Keeping Requirements](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements); [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations)\n\nEducational, not investment advice.\n\n## Release decision\n\n**GO:** Accept the durable intent and deduplication record only when the test above passes and its retained output matches the minimum record.\n\n**NO-GO:** Do not rely on a user-interface button becoming disabled as the duplicate-order control.\n\n**Next Friday:** Carry the accepted durable intent and deduplication record into Reconcile Intent With Broker Reality.",
+  "audience": "everyone",
+  "section_id": 417759,
+  "scheduled_at": "2027-05-21T12:00:00.000Z",
+  "post_audience": "everyone",
+  "send_email": false,
+  "email_audience": null,
+  "release_status": "held_for_review",
+  "tags": [
+    "Systematic Trading",
+    "Trading Systems",
+    "Risk Management"
+  ]
+}

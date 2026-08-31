@@ -1,0 +1,17 @@
+{
+  "title": "Simulate the Broker Before Connecting One",
+  "subtitle": "The simulator is a contract test for the desk, not a return generator.",
+  "body_markdown": "*Part 1 of 3 in Prove Execution in a Simulator. Lesson 31 of 45 in Build a Retail Systematic Desk, Safely.*\n\nA broker simulator should expose the same order states and capability limits the execution client expects. Its job is to test transitions, rejection handling and protection, not to make fills look favorable. Keep strategy logic outside the adapter.\n\n**Input from last Friday:** The accepted event-and-kill-state runbook.\n\n**Friday deliverable:** A deterministic broker simulator contract, owned by the desk operator and retained in the review bundle.\n\n## Build this\n\nImplement a small capability matrix and deterministic order book. Support accepted, working, partial, filled, canceled, rejected and expired states. Make time and prices injectable for replay.\n\n### Minimum record\n\n- `capabilities`\n- `order_state`\n- `filled_qty`\n- `remaining_qty`\n- `timestamps`\n\n## Test it before moving on\n\nRun the client against two simulated brokers with different capabilities. The plan should be accepted only when required protection and order features are available.\n\n**Operating limit:** The deterministic broker simulator contract is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.\n\n**Further reading for the deterministic broker simulator contract (context, not implementation evidence):** [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders); [FINRA: Extended-Hours Trading](https://www.finra.org/investors/insights/extended-hours-trading)\n\nEducational, not investment advice.\n\n## Release decision\n\n**GO:** Accept the deterministic broker simulator contract only when the test above passes and its retained output matches the minimum record.\n\n**NO-GO:** Do not add a broker workaround that changes the plan without surfacing a rejection.\n\n**Next Friday:** Carry the accepted deterministic broker simulator contract into Build an Explicit Order State Machine.",
+  "audience": "everyone",
+  "section_id": 417759,
+  "scheduled_at": "2027-04-02T12:00:00.000Z",
+  "post_audience": "everyone",
+  "send_email": false,
+  "email_audience": null,
+  "release_status": "held_for_review",
+  "tags": [
+    "Systematic Trading",
+    "Trading Systems",
+    "Risk Management"
+  ]
+}

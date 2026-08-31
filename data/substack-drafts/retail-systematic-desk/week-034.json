@@ -1,0 +1,17 @@
+{
+  "title": "Use an Append-Only Decision Ledger",
+  "subtitle": "Corrections should add records, not rewrite the history they explain.",
+  "body_markdown": "*Part 1 of 3 in Keep an Audit Trail That Survives Incidents. Lesson 34 of 45 in Build a Retail Systematic Desk, Safely.*\n\nA useful ledger records what the system knew, decided and attempted at the time. Later corrections reference the original event and add a new version. A hash chain detects changes only relative to a trusted external checkpoint; it does not make the storage truthful or complete by itself.\n\n**Input from last Friday:** The accepted uncertain-submit recovery test.\n\n**Friday deliverable:** An externally checkpointed decision ledger, owned by the desk operator and retained in the review bundle.\n\n## Build this\n\nWrite events with sequence, timestamp, actor identity, object identifiers and previous-event hash. Retain signed or independently stored root hashes, restrict mutation access, test backup restoration and separate immutable events from derived views.\n\n### Minimum record\n\n- `sequence`\n- `event_type`\n- `actor`\n- `object_id`\n- `payload_hash`\n- `previous_hash`\n- `external_checkpoint`\n- `recorded_at`\n\n## Test it before moving on\n\nAlter a historical event and confirm chain verification fails. Rebuild a dashboard from the unmodified ledger and compare it with the stored projection.\n\n**Operating limit:** The externally checkpointed decision ledger is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.\n\n**Further reading for the externally checkpointed decision ledger (context, not implementation evidence):** [Investor.gov: Broker-Dealer Record-Keeping Requirements](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements); [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations)\n\nEducational, not investment advice.\n\n## Release decision\n\n**GO:** Accept the externally checkpointed decision ledger only when the test above passes and its retained output matches the minimum record.\n\n**NO-GO:** Do not repair a past decision by editing it in place.\n\n**Next Friday:** Carry the accepted externally checkpointed decision ledger into Design Recovery and Supersession.",
+  "audience": "everyone",
+  "section_id": 417759,
+  "scheduled_at": "2027-04-23T12:00:00.000Z",
+  "post_audience": "everyone",
+  "send_email": false,
+  "email_audience": null,
+  "release_status": "held_for_review",
+  "tags": [
+    "Systematic Trading",
+    "Trading Systems",
+    "Risk Management"
+  ]
+}
