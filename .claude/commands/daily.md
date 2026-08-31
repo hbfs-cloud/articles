@@ -8,6 +8,8 @@ Produit `daily/YYYYMMDD/index.html` en respectant `daily/CLAUDE.md`,
 
 - `date`: date editoriale `YYYYMMDD`.
 - `refdate`: derniere cloture US terminee `YYYY-MM-DD`.
+- `crypto_refdate`: derniere bougie quotidienne UTC crypto terminee au moment de la collecte. Elle peut
+  etre anterieure a `refdate` lorsque la seance US est close mais que la bougie crypto UTC est encore ouverte.
 - `focus_symbols`: 1 a 6 noms choisis depuis les sorties du socle du run, jamais depuis une liste
   historique ou la memoire du modele.
 - `dry-run`: aucune indexation, notification, publication, commit ou push.
@@ -19,7 +21,7 @@ Produit `daily/YYYYMMDD/index.html` en respectant `daily/CLAUDE.md`,
 ```bash
 node tools/validate-workflows.js --workflow daily
 bash tools/run-collect.sh daily daily/YYYYMMDD/_data \
-  --var date=YYYYMMDD --var refdate=YYYY-MM-DD
+  --var date=YYYYMMDD --var refdate=YYYY-MM-DD --var crypto_refdate=YYYY-MM-DD
 ```
 
 Lire uniquement ce snapshot, classer les candidats par score source puis ticker, et persister
@@ -34,7 +36,9 @@ Le wrapper valide le plan, la cloture, les hashes, les appels executes et la fra
 passent par un environnement secret ou une saisie masquee; leur valeur ne doit jamais apparaitre dans
 une commande, un log, le chat ou un fichier.
 
-Le socle gouverne indices, secteurs, taux/energie, metaux, crypto, regime, earnings et macro. Hors séance,
+Le socle gouverne indices, secteurs, taux/energie, metaux, crypto, regime, earnings et macro. Le harnais
+certifie `refdate` pour les actifs de séance US et `crypto_refdate` pour les bougies UTC 24/7; une barre
+crypto ouverte reste exclue et le contexte courant ne la transforme jamais en clôture. Hors séance,
 `GetOffHoursContext` apporte un verdict courant distinct des barres bornées à `refdate`; il ne remplace
 jamais la clôture certifiée et son horodatage doit rester visible. La vague
 `daily-focus` gouverne toute affirmation chiffre concernant les noms choisis. Le contexte optionnel

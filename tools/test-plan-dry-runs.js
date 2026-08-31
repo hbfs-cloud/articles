@@ -4,10 +4,12 @@
 const assert = require('assert');
 const { spawnSync } = require('child_process');
 const contract = require('./lib/workflow-contract');
+const { latestCompletedUSClose } = require('./lib/market-calendar');
 
 const config = contract.readConfig();
 const symbols = ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'META', 'AVGO', 'JPM', 'XOM', 'XLK', 'SPY', 'QQQ'];
 const seen = new Set();
+const currentClose = latestCompletedUSClose();
 
 for (const workflow of Object.values(config.workflows)) {
   for (const spec of workflow.plans || []) {
@@ -17,7 +19,8 @@ for (const workflow of Object.values(config.workflows)) {
       date: '20260831',
       scandate: '20260810',
       startdate: '2026-08-10',
-      refdate: '2026-08-28',
+      refdate: currentClose,
+      crypto_refdate: currentClose,
       asof: '2026-08-31',
       request_id: '123e4567-e89b-42d3-a456-426614174000',
       symbol: 'AAPL',

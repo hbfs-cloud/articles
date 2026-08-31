@@ -153,6 +153,16 @@ function newYorkDateISO(now = new Date()) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(now);
 }
 
+function latestCompletedUSClose(now = new Date()) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(now).filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+  const date = `${parts.year}-${parts.month}-${parts.day}`;
+  const afterClose = Number(parts.hour) >= 16;
+  return isUSTradingDay(date) && afterClose ? date : previousUSTradingDay(date);
+}
+
 function nextUSTradingDay(isoDate) {
   const date = validateIso(isoDate);
   for (let i = 0; i < 14; i++) {
@@ -187,6 +197,7 @@ module.exports = {
   usTradingDaysBetween,
   addUSTradingDays,
   newYorkDateISO,
+  latestCompletedUSClose,
   nextUSTradingDay,
   previousUSTradingDay,
   isUSHalfDay,

@@ -49,18 +49,9 @@ const path = require('path');
 const { callTool, callMany, awaitJob, canCallDirectly, McpAuthError } = require('./lib/mcp-client');
 const { validateDtxDecision, validateDtxReplay } = require('./lib/dtx-content-gates');
 const workflowContract = require('./lib/workflow-contract');
-const { isUSTradingDay, previousUSTradingDay } = require('./lib/market-calendar');
+const { latestCompletedUSClose } = require('./lib/market-calendar');
 
 const CURRENT_ONLY_TOOLS = new Set(['GetMarketContext', 'GetEarningsCalendarFiltered', 'GetInsiderActivity', 'OptionsAnalytics']);
-function latestCompletedUSClose(now = new Date()) {
-  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
-  }).formatToParts(now).filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
-  const date = `${parts.year}-${parts.month}-${parts.day}`;
-  const afterClose = Number(parts.hour) > 16 || (Number(parts.hour) === 16 && Number(parts.minute) >= 0);
-  return isUSTradingDay(date) && afterClose ? date : previousUSTradingDay(date);
-}
 
 /**
  * Date la plus récente RÉELLEMENT PRÉSENTE dans une charge utile, bornée à aujourd'hui.
@@ -309,6 +300,7 @@ function expandCalls(wave, vars) {
       expanded.push({
         ...declaration,
         args: substitute(declaration.args || {}, vars),
+        ...(declaration.freshness ? { freshness: substitute(declaration.freshness, vars) } : {}),
         ...(declaration.assert ? { assert: substitute(declaration.assert, vars) } : {}),
       });
       continue;
@@ -327,6 +319,7 @@ function expandCalls(wave, vars) {
         foreach: undefined,
         as: `${declaration.as}_${suffix}`,
         args: substitute(declaration.args || {}, { ...vars, item }),
+        ...(declaration.freshness ? { freshness: substitute(declaration.freshness, { ...vars, item }) } : {}),
         ...(declaration.assert ? { assert: substitute(declaration.assert, { ...vars, item }) } : {}),
       });
     }
@@ -655,6 +648,7 @@ function socleRead(c) {
       waveLog.calls[i].output_sha256 = workflowContract.sha256(sourceBody);
       if (!r.fromCache) cacheWrite(c, r.value);
       if (c.freshness) {
+        const sourceReferenceClose = c.freshness.reference_close || refdate || null;
         sources.push({
           name: r.as,
           sha256: workflowContract.sha256(sourceBody),
@@ -674,12 +668,12 @@ function socleRead(c) {
           // Opt-in : cette source DOIT atteindre la clôture de référence. Réservé aux séries de
           // marché — un calendrier économique porte des dates futures, un screener une date
           // d'exécution : leur imposer la clôture produirait de faux blocages.
-          ...(c.freshness.expects_close ? { expects_close: true, reference_close: refdate || null } : {}),
+          ...(c.freshness.expects_close ? { expects_close: true, reference_close: sourceReferenceClose } : {}),
           // Un socle partagé ne doit PAS devenir un harnais partagé : chaque produit
           // garde SON harness.json, où la source héritée est nommée comme telle.
           // Sinon on ne sait plus, six mois après, quel article s'appuyait sur quoi.
           note: (r.fromSocle ? 'socle partagé — ' : '')
-            + (c.freshness.note || `${c.server}.${c.tool}${refdate ? ` (date de référence ${refdate})` : ''}`),
+            + (c.freshness.note || `${c.server}.${c.tool}${sourceReferenceClose ? ` (date de référence ${sourceReferenceClose})` : ''}`),
         });
       }
     }

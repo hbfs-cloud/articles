@@ -213,7 +213,14 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
     }
     if (call.server === 'marketdata' && call.tool === 'QueryData' && /(^|,)bars_daily(,|$)/.test(String(call.args && call.args.types || ''))) {
       if (!call.freshness || call.freshness.expects_close !== true) errors.push(`${label}: bars_daily must declare freshness.expects_close=true`);
-      if (!call.args || call.args.end_date !== '$refdate') errors.push(`${label}: bars_daily must be bounded by end_date=$refdate`);
+      const closeRef = call.freshness && call.freshness.reference_close || '$refdate';
+      const variable = typeof closeRef === 'string' && closeRef.match(/^\$([A-Za-z_][A-Za-z0-9_]*)$/);
+      if (!variable || !declaredVars.has(variable[1])) {
+        errors.push(`${label}: freshness.reference_close must be a declared runtime date variable`);
+      }
+      if (!call.args || call.args.end_date !== closeRef) {
+        errors.push(`${label}: bars_daily end_date must equal freshness.reference_close (${closeRef})`);
+      }
     }
     if (call.server === 'marketdata' && call.tool === 'QueryData') {
       const symbolVar = typeof call.args?.symbols === 'string' && call.args.symbols.match(/^\$([A-Za-z_][A-Za-z0-9_]*)$/);
