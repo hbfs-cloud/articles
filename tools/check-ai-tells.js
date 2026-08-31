@@ -45,7 +45,11 @@ const PHRASES = [
 const CONNECTORS = ["moreover", "furthermore", "additionally", "consequently", "notably", "par ailleurs", "de plus", "en outre"];
 
 function stripToProse(raw, isHtml) {
-  if (!isHtml) return raw;
+  if (!isHtml) {
+    return raw
+      .replace(/\]\(https?:\/\/[^)]+\)/gi, ']')
+      .replace(/https?:\/\/\S+/gi, ' ');
+  }
   return raw
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
@@ -60,7 +64,9 @@ for (const file of files) {
   const raw = fs.readFileSync(file, 'utf8');
   const isHtml = /\.html?$/i.test(file);
   const prose = stripToProse(raw, isHtml);
-  const lower = prose.toLowerCase();
+  // Preserve the anti-cliche rule without flagging Tapestry, Inc. as its company name.
+  const phraseProse = prose.replace(/\bTapestry(?=\s*(?:\(|,\s*Inc\.?))/g, 'IssuerName');
+  const lower = phraseProse.toLowerCase();
   const words = (prose.match(/\S+/g) || []).length;
 
   const hits = [];
