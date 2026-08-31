@@ -42,6 +42,7 @@ For each portfolio scheduled for the run, call `DtxDecide` with:
   "asof": "<decision date>",
   "expected_data_date": "<expected close>",
   "appel": "evening | intraday | manual",
+  "broker": "alpaca | trading212 | ibkr | saxo",
   "request_id": "<stable UUID for this broker run>",
   "consumer_capabilities": {
     "contract_version": "2.0",
@@ -54,7 +55,8 @@ For each portfolio scheduled for the run, call `DtxDecide` with:
   "balances": {
     "base_currency": "<currency>",
     "cash_by_currency": {},
-    "total_equity": "<real account NAV>"
+    "total_equity": "<real account NAV>",
+    "broker_source": "<same canonical broker as broker>"
   },
   "state": "<opaque previous DTX state>",
   "previous_plan_id": "<currently active plan id if revision>",

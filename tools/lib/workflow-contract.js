@@ -232,11 +232,13 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
     if (call.server === 'systematic' && call.tool === 'DtxDecide') {
       const args = call.args || {};
       if (!['evening', 'intraday', 'manual'].includes(args.appel)) errors.push(`${label}: DtxDecide appel must be explicit`);
+      if (!['alpaca', 'trading212', 'ibkr', 'saxo'].includes(args.broker)) errors.push(`${label}: DtxDecide broker must be explicit and supported`);
       if (args.expected_data_date !== '$refdate') errors.push(`${label}: DtxDecide expected_data_date must equal $refdate`);
       if (args.request_id !== '$request_id') errors.push(`${label}: DtxDecide request_id must equal $request_id`);
       if (args.consumer_capabilities?.contract_version !== '2.0') errors.push(`${label}: DtxDecide Contract V2 capability is required`);
       if (!Array.isArray(args.positions) || !Array.isArray(args.orders)) errors.push(`${label}: DtxDecide positions/orders must be explicit arrays`);
       if (!args.balances || typeof args.balances !== 'object' || !(Number(args.balances.total_equity) > 0)) errors.push(`${label}: DtxDecide balances must include positive total_equity`);
+      if (args.balances?.broker_source !== args.broker) errors.push(`${label}: DtxDecide balances.broker_source must equal broker`);
     }
     if (call.server === 'systematic' && call.tool === 'DtxReplay') {
       if (!call.args || call.args.to !== '$refdate') errors.push(`${label}: DtxReplay to must equal $refdate`);

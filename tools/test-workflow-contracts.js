@@ -49,6 +49,19 @@ const base = {
 const spec = { required_variables: ['date', 'refdate', 'symbols'] };
 assert.deepStrictEqual(contract.validatePlan(base, spec, config.policy), []);
 assert.deepStrictEqual(contract.validateRuntimeVariables(spec, { date: '20260831', refdate: '2026-08-28', symbols: 'AAA,BBB' }), []);
+
+const scannerDtxSpec = config.workflows.scanner.plans.find(item => item.path === 'plans/scanner-dtx-decide-only.json');
+const scannerDtxPlan = JSON.parse(fs.readFileSync(path.join(contract.ROOT, scannerDtxSpec.path), 'utf8'));
+assert.deepStrictEqual(contract.validatePlan(scannerDtxPlan, scannerDtxSpec, config.policy), []);
+const missingDtxBroker = structuredClone(scannerDtxPlan);
+delete missingDtxBroker.waves[2].calls[0].args.broker;
+assert(contract.validatePlan(missingDtxBroker, scannerDtxSpec, config.policy)
+  .some(error => error.includes('broker must be explicit and supported')));
+const mismatchedDtxBroker = structuredClone(scannerDtxPlan);
+mismatchedDtxBroker.waves[2].calls[0].args.balances.broker_source = 'ibkr';
+assert(contract.validatePlan(mismatchedDtxBroker, scannerDtxSpec, config.policy)
+  .some(error => error.includes('balances.broker_source must equal broker')));
+
 assert(contract.validateRuntimeVariables({ ...spec, variable_constraints: { symbols: { type: 'csv', min_items: 1, max_items: 2 } } }, {
   date: '2026-08-31', refdate: '20260828', symbols: 'AAA,AAA,BBB',
 }).length >= 3);

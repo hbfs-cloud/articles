@@ -132,8 +132,9 @@ duplicate hard-coded values that can drift. `validate-scan.js` is the executable
 ## DTX
 
 - Read `DtxListConfigs`; deployed `best` must exist for the public best panel.
-- Call `DtxDecide` with Contract V2 capabilities, exact `expected_data_date`, stable `request_id`, empty
-  content-only positions/orders and explicit notional balances.
+- Call `DtxDecide` with Contract V2 capabilities, exact `expected_data_date`, stable `request_id`, an
+  explicit supported target `broker`, empty content-only positions/orders and balances whose
+  `broker_source` matches that broker.
 - Poll `DtxJobStatus`; never launch a replacement decision merely because a job is slow.
 - Validate `request_id`, contract version, plan/revision, validity window, unique groups/candidates,
   rank order, protection and required execution fields with `tools/dtx-scan.js`.
