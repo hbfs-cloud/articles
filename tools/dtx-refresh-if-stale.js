@@ -12,7 +12,8 @@ function find(value, key) {
 }
 function healthState(value, expectedClose) {
   const last = String(find(value, 'last_data_date') || find(value, 'data_asof') || '').slice(0, 10);
-  const runningValue = find(value, 'running');
+  const prefetch = find(value, 'prefetch');
+  const runningValue = prefetch && typeof prefetch === 'object' ? prefetch.running : null;
   const behindExpected = find(value, 'behind_expected');
   const running = runningValue === true;
   const ok = find(value, 'ok') === true && find(value, 'freshness_ok') === true
