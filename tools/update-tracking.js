@@ -510,10 +510,12 @@ async function main() {
 }
 
 if (require.main === module) {
-  main().catch((err) => {
-    console.error(err);
-    process.exitCode = 1;
-  });
+  // Retired from every publication path. This legacy CLI inferred fills and
+  // positions from Yahoo daily OHLC while explicitly marking them
+  // execution_verified=false. Running it must therefore be a no-op: imports
+  // remain available for parser tests, but public ledgers are never touched.
+  console.error('DISABLED: update-tracking cannot certify broker execution and performs no writes');
+  process.exitCode = 2;
 }
 
 module.exports = { extractAllFromDir };

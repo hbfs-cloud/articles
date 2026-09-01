@@ -1,6 +1,6 @@
 {
   "artifact": "scanner/$date/_dtx",
-  "note": "Decision-only variant; the immutable replay cache supplies the last verified backtest.",
+  "note": "Decision-only variant for DTX Max/us_highvol_tp999_vwap; the immutable replay cache supplies the last verified single-strategy backtest.",
   "waves": [
     {
       "name": "preflight",
@@ -13,19 +13,48 @@
       "name": "catalog",
       "gate": true,
       "calls": [
-        { "as": "dtx_configs", "server": "systematic", "tool": "DtxListConfigs", "args": {}, "assert": { "contains_portfolio": "best" }, "freshness": { "max_age_h": 24, "required": true } }
+        { "as": "dtx_catalog", "server": "systematic", "tool": "DtxCatalog", "args": {}, "assert": { "contains_portfolio": "us_highvol_tp999_vwap", "eligible_portfolio": "us_highvol_tp999_vwap", "minimum_configs": 23 }, "freshness": { "max_age_h": 24, "required": true } },
+        { "as": "dtx_howto_us_highvol_tp999_vwap", "server": "systematic", "tool": "DtxHowTo", "args": { "portfolio": "us_highvol_tp999_vwap" }, "freshness": { "max_age_h": 168, "required": true } }
+      ]
+    },
+    {
+      "name": "decision-input",
+      "gate": true,
+      "calls": [
+        {
+          "as": "validate_us_highvol_tp999_vwap",
+          "server": "systematic",
+          "tool": "DtxValidateDecisionInput",
+          "args": {
+            "portfolio": "us_highvol_tp999_vwap",
+            "asof": "$asof",
+            "appel": "evening",
+            "broker": "alpaca",
+            "expected_data_date": "$refdate",
+            "request_id": "$request_id",
+            "consumer_capabilities": {
+              "contract_version": "2.0",
+              "opportunity_groups": true,
+              "per_candidate_symbol": true,
+              "durable_intraday_execution": true
+            },
+            "positions": [],
+            "orders": [],
+            "balances": { "base_currency": "USD", "cash_by_currency": { "USD": 100000 }, "total_equity": 100000, "broker_source": "alpaca" }
+          },
+          "freshness": { "max_age_h": 24, "required": true }
+        }
       ]
     },
     {
       "name": "decision",
       "calls": [
         {
-          "as": "decide_best",
+          "as": "decide_us_highvol_tp999_vwap",
           "server": "systematic",
           "tool": "DtxDecide",
           "args": {
-            "portfolio": "best",
-            "broker": "alpaca",
+            "portfolio": "us_highvol_tp999_vwap",
             "asof": "$asof",
             "appel": "evening",
             "broker": "alpaca",

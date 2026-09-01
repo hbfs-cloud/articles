@@ -34,6 +34,13 @@ const { verify: verifyTradeChain, seal: sealTradeChain } = require('./lib/trade-
 // pollution bug (data/.price-cache/TICKER.json without a date getting overwritten across days).
 // sweep only touches the PRICE cache via this helper — trade simulation is untouched.
 const priceCacheLib = require('./lib/price-cache');
+const { latestCompletedUSClose } = require('./lib/market-calendar');
+const {
+  buildBarsDailyArgs,
+  classifyBarsDailyCalendar,
+  ingestCertifiedBarsBatch,
+  latestCompletedCryptoUtcDate,
+} = require('./lib/sweep-marketdata');
 const SWEEP_SHARD = +(process.env.SWEEP_SHARD ?? -1);
 const SWEEP_SHARDS = +(process.env.SWEEP_SHARDS ?? 1);
 const SHARD_OUT = process.env.SWEEP_SHARD_OUT || '';
@@ -691,6 +698,10 @@ const priceCache = {};
 // The helper's anti-look-ahead truncation (bar.date <= REF_DATE) is a no-op in this forward
 // path → zero stat regression vs the old flat cache.
 const REF_DATE = priceCacheLib.todayISO();
+const SWEEP_AS_OF_TIMESTAMP = process.env.SWEEP_AS_OF_TIMESTAMP || new Date().toISOString();
+const SWEEP_EXPECTED_US_CLOSE = latestCompletedUSClose(new Date(SWEEP_AS_OF_TIMESTAMP));
+const SWEEP_EXPECTED_CRYPTO_CLOSE = latestCompletedCryptoUtcDate(SWEEP_AS_OF_TIMESTAMP);
+const certifiedCloseProof = new Map();
 const marketForTicker = (t) =>
   isCryptoTicker(t) ? priceCacheLib.MARKETS.CRYPTO : priceCacheLib.MARKETS.US;
 
@@ -789,71 +800,93 @@ function fetchBinanceOHLCV(ticker) {
 // priceCache en quelques appels groupés ; les boucles fetchOHLCV existantes
 // deviennent des no-op (elles retournent tout de suite si le ticker est en cache).
 //
-// Sans jeton, la fonction ne fait rien et le chemin Yahoo historique s'applique
-// à l'identique : aucune régression, seulement l'ancienne lenteur.
+// Toute donnée utilisée comme clôture certifiée passe par le contrat completed_only.
+// Un fallback Yahoo peut encore alimenter une simulation historique, mais n'est
+// jamais promu en preuve de clôture ou en MtM d'une exécution vérifiée.
 const BULK_SIZE = Number(process.env.SWEEP_BULK_SIZE || 20);
-async function prefetchBulkMCP(tickers, label) {
+async function prefetchBulkMCP(tickers, label, options = {}) {
+  const requireCertifiedClose = options.requireCertifiedClose === true || FROZEN_ONLY;
   let mcp;
-  try { mcp = require('./lib/mcp-client'); } catch { return 0; }
-  if (!mcp.canCallDirectly('marketdata')) {
-    console.log('  [bulk] pas de jeton MCP — repli sur la récupération unitaire (lente)');
+  try { mcp = require('./lib/mcp-client'); }
+  catch (error) {
+    if (requireCertifiedClose) throw new Error(`certified Marketdata client unavailable: ${error.message}`);
     return 0;
   }
-  const todo = [...new Set(tickers)].filter(t => t && !priceCache[t] && !isCryptoTicker(t));
+  if (!mcp.canCallDirectly('marketdata')) {
+    if (requireCertifiedClose) throw new Error('Marketdata direct token unavailable; frozen sweep is fail-closed');
+    console.log('  [bulk] pas de jeton MCP — repli recherche non certifié');
+    return 0;
+  }
+  const todo = [...new Set(tickers)].filter(t => t && (requireCertifiedClose || !priceCache[t]));
   if (!todo.length) return 0;
+  const calendarByTicker = new Map(todo.map(ticker => [ticker, classifyBarsDailyCalendar(ticker)]));
+  const unsupportedCalendars = todo.filter(ticker => !calendarByTicker.get(ticker).supported);
   const batches = [];
-  for (let i = 0; i < todo.length; i += BULK_SIZE) batches.push(todo.slice(i, i + BULK_SIZE));
+  for (const spec of [
+    {
+      symbols: todo.filter(ticker => calendarByTicker.get(ticker).assetCalendar === 'us_equity_exchange_sessions'),
+      assetCalendar: 'us_equity_exchange_sessions',
+      expectedCompletedEnd: SWEEP_EXPECTED_US_CLOSE,
+    },
+    {
+      symbols: todo.filter(ticker => calendarByTicker.get(ticker).assetCalendar === 'crypto_24_7_utc'),
+      assetCalendar: 'crypto_24_7_utc',
+      expectedCompletedEnd: SWEEP_EXPECTED_CRYPTO_CLOSE,
+    },
+  ]) {
+    for (let i = 0; i < spec.symbols.length; i += BULK_SIZE) {
+      batches.push({ ...spec, symbols: spec.symbols.slice(i, i + BULK_SIZE) });
+    }
+  }
   console.log(`  [bulk] ${todo.length} tickers en ${batches.length} appel(s) group\u00e9(s)${label ? ' — ' + label : ''}...`);
   const t0 = Date.now();
-  const calls = batches.map(b => ({
-    server: 'marketdata', tool: 'QueryData', as: b[0],
-    args: { types: 'bars_daily', symbols: b.join(','), limit: 140 },
+  const calls = batches.map(batch => ({
+    server: 'marketdata', tool: 'QueryData', as: batch.symbols[0],
+    args: buildBarsDailyArgs(batch.symbols, SWEEP_AS_OF_TIMESTAMP, 140),
   }));
-  let filled = 0, dropped = 0;
+  let filled = 0, dropped = unsupportedCalendars.length;
   try {
-    const results = await mcp.callMany(calls, { concurrency: 4 });
+    const results = calls.length ? await mcp.callMany(calls, { concurrency: 4 }) : [];
     for (let bi = 0; bi < results.length; bi++) {
       const r = results[bi];
-      if (!r || !r.ok) continue;
-      const res = (r.value && r.value.results && r.value.results[0]) || null;
-      if (!res) continue;
-      const syms = res.symbols || batches[bi];
-      const data = res.data || [];
-      // ⛔ APPARIEMENT FAIL-CLOSED — vérifié le 2026-08-11.
-      // Le serveur renvoie `symbols` = la liste DEMANDÉE, mais `data` = seulement
-      // les symboles TROUVÉS. Sur AAPL,ZZZZFAKE,MSFT,QQQFAKE2,SPY il renvoie
-      // 5 symboles et 3 séries. Apparier par index écrirait l'historique de MSFT
-      // sous ZZZZFAKE et celui de SPY sous MSFT — une corruption SILENCIEUSE des
-      // prix, donc des trades simulés faux, sans aucune erreur levée.
-      // Les entrées de `data` ne portent pas de champ `symbol` : on ne peut pas
-      // réapparier. Donc si les longueurs diffèrent, on JETTE le lot entier et on
-      // laisse le chemin unitaire le traiter. Lent, mais juste.
-      if (data.length !== syms.length) {
-        dropped += syms.length;
+      const batch = batches[bi];
+      if (!r || !r.ok) {
+        dropped += batch.symbols.length;
         continue;
       }
-      for (let i = 0; i < data.length; i++) {
-        const sym = syms[i];
-        const bars = (data[i] && data[i].bars) || (Array.isArray(data[i]) ? data[i] : null);
-        if (!sym || !Array.isArray(bars) || !bars.length) continue;
-        const hist = {};
-        for (const b of bars) {
-          // forme tableau [date,o,h,l,c,v] ou objet {date,open,...}
-          if (Array.isArray(b) && b.length >= 6) hist[b[0]] = { open: b[1], high: b[2], low: b[3], close: b[4], volume: b[5] };
-          else if (b && b.date) hist[b.date] = { open: b.open, high: b.high, low: b.low, close: b.close, volume: b.volume };
-        }
-        if (!Object.keys(hist).length) continue;
+      const ingested = ingestCertifiedBarsBatch(r.value, {
+        symbols: batch.symbols,
+        assetCalendar: batch.assetCalendar,
+        expectedCompletedEnd: batch.expectedCompletedEnd,
+      });
+      dropped += ingested.failedSymbols.length;
+      if (ingested.errors.length && requireCertifiedClose) {
+        console.log(`  [bulk] lot ${bi + 1} non certifié: ${ingested.errors.slice(0, 2).join(' | ')}`);
+      }
+      for (const [sym, hist] of Object.entries(ingested.histories)) {
         priceCache[sym] = hist;
+        certifiedCloseProof.set(sym, ingested.proofs[sym]);
         try { saveCachedPrice(sym, hist); } catch { /* le cache disque n'est pas critique */ }
         filled++;
       }
     }
   } catch (e) {
-    console.log(`  [bulk] \u00e9chec (${String(e.message).slice(0, 90)}) — repli unitaire`);
+    if (requireCertifiedClose) throw e;
+    console.log(`  [bulk] \u00e9chec (${String(e.message).slice(0, 90)}) — repli recherche non certifié`);
     return 0;
   }
   console.log(`  [bulk] ${filled}/${todo.length} servis en ${((Date.now() - t0) / 1000).toFixed(1)}s` +
-    (dropped ? ` — ${dropped} écartés (lot incomplet : appariement impossible, repli unitaire)` : ''));
+    (dropped ? ` — ${dropped} sans preuve contractuelle` : ''));
+  if (requireCertifiedClose) {
+    const missing = todo.filter(ticker => !certifiedCloseProof.has(ticker) || !priceCache[ticker]);
+    if (missing.length) {
+      const unsupported = missing.filter(ticker => !calendarByTicker.get(ticker).supported);
+      const unsupportedNote = unsupported.length
+        ? `; ${unsupported.length} foreign-exchange ticker(s) have no audited readiness calendar (${unsupported.slice(0, 8).join(', ')}${unsupported.length > 8 ? ', …' : ''})`
+        : '';
+      throw new Error(`frozen sweep refused: ${missing.length} ticker(s) lack a certified completed close (${missing.slice(0, 8).join(', ')}${missing.length > 8 ? ', …' : ''})${unsupportedNote}`);
+    }
+  }
   return filled;
 }
 
@@ -863,8 +896,12 @@ async function prefetchBulkMCP(tickers, label) {
 // un avec 120 ms de pause était le reliquat des 10 minutes.
 const FETCH_CONCURRENCY = Number(process.env.SWEEP_FETCH_CONCURRENCY || 8);
 async function fetchOHLCVMany(tickers, label) {
-  const list = [...new Set(tickers)].filter(t => t && !priceCache[t]);
+  const list = [...new Set(tickers)].filter(t => t
+    && (!priceCache[t] || (FROZEN_ONLY && !certifiedCloseProof.has(t))));
   if (!list.length) return;
+  if (FROZEN_ONLY) {
+    throw new Error(`frozen sweep refused uncertified Yahoo/Binance fallback for ${list.length} ticker(s): ${list.slice(0, 8).join(', ')}`);
+  }
   console.log(`  [repli] ${list.length} tickers${label ? ' — ' + label : ''}, ${FETCH_CONCURRENCY} en parallèle...`);
   const t0 = Date.now(); let done = 0, cursor = 0;
   async function worker() {
@@ -880,7 +917,8 @@ async function fetchOHLCVMany(tickers, label) {
 }
 
 async function fetchOHLCV(ticker) {
-  if (priceCache[ticker]) return priceCache[ticker];
+  if (priceCache[ticker] && (!FROZEN_ONLY || certifiedCloseProof.has(ticker))) return priceCache[ticker];
+  if (FROZEN_ONLY) throw new Error(`${ticker}: uncertified OHLC fallback is disabled in frozen/release mode`);
   // Try file cache first
   const cached = loadCachedPrice(ticker);
   if (cached) { priceCache[ticker] = cached; return cached; }
@@ -900,18 +938,11 @@ async function fetchOHLCV(ticker) {
           if (!result) return resolve(null);
           const timestamps = result.timestamp || [];
           const q = result.indicators?.quote?.[0] || {};
-          const rmp = result.meta?.regularMarketPrice;
           const history = {};
           for (let i = 0; i < timestamps.length; i++) {
             const dateStr = toDateStr(timestamps[i]);
             if (q.open?.[i] != null && q.high?.[i] != null && q.low?.[i] != null && q.close?.[i] != null) {
               history[dateStr] = { open: q.open[i], high: q.high[i], low: q.low[i], close: q.close[i] };
-            } else if (i === timestamps.length - 1 && rmp != null) {
-              // Last bar may have null OHLC before Yahoo finalizes — use regularMarketPrice
-              const o = q.open?.[i] ?? rmp;
-              const h = q.high?.[i] ?? rmp;
-              const l = q.low?.[i] ?? rmp;
-              history[dateStr] = { open: o, high: h, low: l, close: rmp };
             }
           }
           priceCache[ticker] = history;
@@ -1530,7 +1561,14 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 // sweep.js, gen-status-page.js et gen-api.js calculent EXACTEMENT la même chose.
 // getWeight est pur → réexporté tel quel. computeStatsFromTrades est enveloppé
 // (voir plus bas) dans un wrapper mince qui injecte le priceCache de module.
-const { getWeight, computeStatsFromTrades: _computeStatsFromTradesLib } = require('./lib/mode-stats');
+const {
+  CAPACITY_ACCOUNTING_POLICY,
+  getWeight,
+  computeStatsFromTrades: _computeStatsFromTradesLib,
+  isResolvedTrade,
+  planFrozenAdvance,
+  selectCapacityAcceptedTrades,
+} = require('./lib/mode-stats');
 
 // ─── Stats from a flat closed-trade list (append-only mode) ──────────────────
 // Computes returnTotal, maxDD, winRate, profitFactor, equityCurve from a
@@ -2880,54 +2918,37 @@ async function main() {
     }
   }
 
-  // Load live positions from scanner-positions.json for MtM injection.
-  // These are REAL open positions tracked by update-tracking.js — they must
-  // contribute to returnUnrealized so stats match the status page.
+  // Load broker-verified positions from scanner-positions.json for MtM injection.
+  // A scanner signal or virtual fill is never a position. Even a verified fill
+  // is marked only from a contract-certified completed US close: no live quote,
+  // Yahoo fallback or synthetic OHLC can enter the accounting path.
   const SCANNER_POS_PATH = path.join(ROOT, 'data', 'scanner-positions.json');
   let livePositions = [];
   if (FROZEN_ONLY && fs.existsSync(SCANNER_POS_PATH)) {
     try {
       const spData = JSON.parse(fs.readFileSync(SCANNER_POS_PATH, 'utf8'));
-      livePositions = spData.open_positions || [];
+      const trackedPositions = Array.isArray(spData.open_positions) ? spData.open_positions : [];
+      const unverified = trackedPositions.filter(position => position.execution_verified !== true);
+      livePositions = trackedPositions.filter(position => position.execution_verified === true);
+      if (unverified.length > 0) {
+        console.log(`\nSkipped ${unverified.length} unverified scanner signal(s): no broker fill evidence`);
+      }
       if (livePositions.length > 0) {
-        console.log(`\nLoaded ${livePositions.length} live positions for MtM injection`);
+        console.log(`\nLoaded ${livePositions.length} broker-verified position(s) for certified-close MtM`);
         const liveTickers = [...new Set(livePositions.map(p => p.ticker))];
-        // Force-refresh ALL live position tickers — bypass 12h TTL cache.
-        // Stale cache caused TSM MtM to lag by a full trading day (2026-06-19 incident).
-        console.log(`  Force-refreshing ${liveTickers.length} live tickers (bypass cache TTL)...`);
-        const liveRefetch = [];
-        for (const t of liveTickers) delete priceCache[t];
-        await prefetchBulkMCP(liveTickers, 'live positions');
+        console.log(`  Certifying ${liveTickers.length} completed close(s) via Marketdata MCP...`);
         for (const t of liveTickers) {
           delete priceCache[t];
-          // Purge BOTH the dated snapshot (TTL would otherwise serve a <12h file) and the
-          // legacy flat file, so fetchOHLCV is forced to re-fetch live.
-          try {
-            const dc = priceCacheLib.cacheFile(t, { date: REF_DATE, market: marketForTicker(t) });
-            if (fs.existsSync(dc)) fs.unlinkSync(dc);
-          } catch { /* ignore */ }
-          const fp = path.join(PRICE_CACHE_DIR, `${t}.json`);
-          if (fs.existsSync(fp)) fs.unlinkSync(fp);
-          liveRefetch.push(t);
+          certifiedCloseProof.delete(t);
         }
-        await fetchOHLCVMany(liveRefetch, 'live positions');
-        // Seed priceCache from scanner-positions.json current_price for dates
-        // where Yahoo hasn't delivered a bar yet (entry day = nextBizDay of scan,
-        // which may be today or tomorrow depending on timing).
-        let seeded = 0;
-        for (const p of livePositions) {
-          if (!p.current_price || p.current_price <= 0) continue;
-          if (!priceCache[p.ticker]) priceCache[p.ticker] = {};
-          const entryDay = nextBizDay(p.scan_date);
-          if (!priceCache[p.ticker][entryDay]) {
-            priceCache[p.ticker][entryDay] = {
-              open: p.current_price, high: p.current_price,
-              low: p.current_price, close: p.current_price,
-            };
-            seeded++;
-          }
+        await prefetchBulkMCP(liveTickers, 'broker-verified positions', { requireCertifiedClose: true });
+        const rejected = livePositions.filter(position =>
+          !certifiedCloseProof.has(position.ticker) || !priceCache[position.ticker]);
+        if (rejected.length > 0) {
+          console.log(`  Rejected ${rejected.length} position(s) from MtM: certified completed close unavailable`);
         }
-        if (seeded > 0) console.log(`  Seeded ${seeded} tickers with live price for entry day`);
+        livePositions = livePositions.filter(position =>
+          certifiedCloseProof.has(position.ticker) && priceCache[position.ticker]);
       }
     } catch(e) { console.log('⚠️ Could not load scanner-positions.json:', e.message); }
   }
@@ -2957,6 +2978,16 @@ async function main() {
     ];
     for (const id of orderedModeIds) {
       const cfg = modesConfig.modes[id];
+      // DTX has its own Contract V2 decision/replay sources and no certified broker ledger in
+      // backtest-trades.json. Never run the scanner's simulatePortfolio tracker for it: OHLC
+      // touching a proposed limit is not a broker fill. Preserve legacy rows/results verbatim
+      // until their explicit migration, but do not extend or expose them as forward evidence.
+      if (cfg.assetClass === 'dtx') {
+        frozenTrades[id] = existingTrades[id] || [];
+        if (existingResults[`frozen_${id}`]) output[`frozen_${id}`] = existingResults[`frozen_${id}`];
+        console.log(`  ${id} (${cfg.label}): DTX tracker skipped — broker-certified fills required`);
+        continue;
+      }
       const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleGraceDays || 0}_${cfg.staleRaiseRate ?? 0.001}_${cfg.staleAccel || 'log'}_${cfg.partialTPGain || 0}_${cfg.disableTP2 || false}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}_${cfg.trailMultR ?? 1.5}_${cfg.trailGraceDays ?? 0}`;
       // Config-version-aware immutability: if the current config carries an effectiveFrom (a
       // forward-only change), scans BEFORE it were traded under the prior config — re-sim them
@@ -3238,12 +3269,13 @@ async function main() {
           }
           const todayISO = new Date().toISOString().slice(0, 10);
           for (const p of livePositions) {
+            if (p.execution_verified !== true) continue;
             if (seenTickers.has(p.ticker)) continue;
             const key = `${p.ticker}_${p.scan_date}`;
             const sig = eligible.get(key);
             if (!sig) continue;
             if (mergedKeys.has(key)) continue;
-            if (!priceCache[p.ticker]) continue;
+            if (!priceCache[p.ticker] || !certifiedCloseProof.has(p.ticker)) continue;
             // Skip if mode horizon already expired for this trade
             const modeExpire = dayFnsFor(cfg.calendar).addDays(p.scan_date, cfg.horizon);
             if (modeExpire <= todayISO) continue;
@@ -3267,6 +3299,8 @@ async function main() {
               entryTime: '09:30',
               exitTime: null,
               _injected: true,
+              _executionVerified: true,
+              closeProof: certifiedCloseProof.get(p.ticker),
               configVersion: getConfigVersion(p.scan_date),
             });
           }
@@ -3293,8 +3327,22 @@ async function main() {
         // existing trades and their stats are NEVER recalculated.
         // ═══════════════════════════════════════════════════════════════════
         const existingFrozen = existingResults[`frozen_${id}`];
-        const existingTradeCount = (existingTrades[id] || []).filter(t => t.status !== 'pending' && t.status !== 'sim2_artifact').length;
-        const mergedClosedCount = merged.filter(t => t.status !== 'pending' && t.status !== 'sim2_artifact').length;
+        const existingTradeCount = (existingTrades[id] || []).filter(isResolvedTrade).length;
+        const mergedClosedCount = merged.filter(isResolvedTrade).length;
+        const cfgVersionsForCapacity = Object.fromEntries(
+          configHistory.map(version => [version.id, version.config || {}]),
+        );
+        const needsPitCapacity = cfg.performanceScope === 'simulated_backtest';
+        const capacitySelection = needsPitCapacity
+          ? selectCapacityAcceptedTrades(merged, id, cfgVersionsForCapacity, {
+            portfolioSize: cfg.portfolioSize,
+            positionSizePct: cfg.positionSizePct || 1,
+          })
+          : {
+            accepted: merged, acceptedCount: merged.length, rejectedCount: 0,
+            certified: null, policy: null,
+          };
+        const accountingTrades = capacitySelection.accepted;
 
         // HARD GUARD: closed trade count must never decrease
         if (existingFrozen && mergedClosedCount < existingTradeCount) {
@@ -3306,6 +3354,21 @@ async function main() {
 
         let stats;
         if (existingFrozen) {
+          if (needsPitCapacity && (
+            capacitySelection.certified !== true
+            ||
+            existingFrozen.accountingPolicy !== CAPACITY_ACCOUNTING_POLICY
+            || existingFrozen.accountingCertified !== true
+          )) {
+            // Do not rebaseline from the static config screen. Historical slots
+            // were also changed by the effective regime, VIX/DD/circuit gates and
+            // rotations. Until capacityAt(entryDate) evidence exists, preserve the
+            // raw/derived artifacts byte-for-byte and let public consumers hide them.
+            output[`frozen_${id}`] = existingFrozen;
+            frozenTrades[id] = existingTrades[id] || merged;
+            console.log(`  ${id} (${cfg.label}): ACCOUNTING BLOCKED — PIT capacity evidence missing; static screen finds ${capacitySelection.rejectedCount} overlap(s), no rebaseline performed`);
+            continue;
+          }
           // IMMUTABLE + APPEND-ONLY ADVANCE (fix 21/07/2026). L'historique scellé reste
           // intouchable : les points d'équité pré-gel sont copiés octet pour octet via
           // opts.priorEC (le fast-forward de computeStatsFromTrades ne recalcule RIEN avant
@@ -3315,17 +3378,25 @@ async function main() {
           // 02-03/07, PAS l'append). Sans ce chaînon, les stats hero restaient figées au
           // dernier recalcul (26/06) pendant que backtest-trades continuait d'accumuler des
           // trades clos — « stats as of 06/26 » un mois plus tard.
-          const _priorPts = (existingFrozen.equityCurve || []);
-          const _lastFrozenISO = [..._priorPts].reverse().find(p => p && p.date)?.date || null;
-          const _newClosed = _lastFrozenISO
-            ? merged.filter(t => t.status !== 'pending' && t.status !== 'sim2_artifact' && (t.exitDate || '') > _lastFrozenISO)
-            : [];
-          if (_lastFrozenISO && _newClosed.length > 0) {
-            const advanced = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id, undefined, { priorEC: _priorPts });
+          let _advance;
+          try {
+            _advance = planFrozenAdvance(existingFrozen, accountingTrades);
+          } catch (e) {
+            throw new Error(`${id}: frozen ledger contract rejected: ${e.message}`);
+          }
+          const _priorPts = existingFrozen.equityCurve || [];
+          const _lastFrozenISO = _advance.lastFrozenISO;
+          const _newClosed = _advance.missingClosed;
+          if (_advance.shouldAdvance) {
+            const advanced = computeStatsFromTrades(accountingTrades, cfg.portfolioSize, cfg.positionSizePct || 1, id, cfg.calendar, {
+              priorEC: _advance.priorEC,
+              cfgVersions: cfgVersionsForCapacity,
+            });
             const _prefixIntact = advanced && Array.isArray(advanced.equityCurve)
-              && advanced.equityCurve.length >= _priorPts.length
-              && JSON.stringify(advanced.equityCurve.slice(0, _priorPts.length)) === JSON.stringify(_priorPts);
-            if (_prefixIntact) {
+              && advanced.equityCurve.length >= _advance.priorEC.length
+              && JSON.stringify(advanced.equityCurve.slice(0, _advance.priorEC.length)) === JSON.stringify(_advance.priorEC);
+            const _countsReconciled = advanced && advanced.trades === _advance.resolved.length;
+            if (_prefixIntact && _countsReconciled) {
               output[`frozen_${id}`] = {
                 returnTotal: advanced.returnTotal, returnRealized: advanced.returnRealized,
                 returnUnrealized: advanced.returnUnrealized,
@@ -3333,14 +3404,22 @@ async function main() {
                 profitFactor: advanced.profitFactor, trades: advanced.trades,
                 calmar: advanced.calmar, sharpe: advanced.sharpe, returnDDRatio: advanced.returnDDRatio,
                 equityCurve: advanced.equityCurve,
+                accountingPolicy: existingFrozen.accountingPolicy || null,
+                accountingCertified: existingFrozen.accountingCertified === true,
+                rawTradeRows: merged.length,
+                acceptedTradeRows: capacitySelection.acceptedCount,
+                rejectedCapacityRows: capacitySelection.rejectedCount,
                 in_sample: existingFrozen.in_sample ?? null,
                 out_sample: existingFrozen.out_sample ?? null,
               };
               frozenTrades[id] = merged;
-              console.log(`  ${id} (${cfg.label}): ${merged.length} trades — APPEND-ONLY: ${_newClosed.length} trade(s) scellé(s) intégré(s) après ${_lastFrozenISO}, return ${existingFrozen.returnTotal}% → ${advanced.returnTotal}%, DD ${existingFrozen.maxDD}% → ${advanced.maxDD}%`);
+              const _advanceWhy = _newClosed.length
+                ? `${_newClosed.length} clôture(s) intégrée(s) depuis ${_lastFrozenISO}${_advance.replayTail ? ' (dernier point rejoué)' : ''}`
+                : `MtM de ${_advance.pending.length} position(s) ouverte(s) rafraîchi`;
+              console.log(`  ${id} (${cfg.label}): ${merged.length} trades — APPEND-ONLY: ${_advanceWhy}, return ${existingFrozen.returnTotal}% → ${advanced.returnTotal}%, DD ${existingFrozen.maxDD}% → ${advanced.maxDD}%`);
               continue;
             }
-            console.error(`  ⚠️ ${id}: préfixe d'équité gelé NON reproduit à l'identique — fallback [IMMUTABLE], stats inchangées (à investiguer)`);
+            throw new Error(`${id}: frozen advance failed closed (${!_prefixIntact ? 'immutable prefix drift' : `count ${advanced && advanced.trades} != ${_advance.resolved.length}`})`);
           }
           stats = existingFrozen;
           const tag = toAppend.length > 0 ? `${toAppend.length} new trades appended` : 'unchanged';
@@ -3349,11 +3428,25 @@ async function main() {
           frozenTrades[id] = merged;
           continue;
         }
+        if (needsPitCapacity) {
+          console.log(`  ${id} (${cfg.label}): ACCOUNTING BLOCKED — no certified PIT capacity ledger; frozen hero omitted`);
+          continue;
+        }
         // First-time computation only (no existing frozen stats)
-        stats = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id);
+        stats = computeStatsFromTrades(accountingTrades, cfg.portfolioSize, cfg.positionSizePct || 1, id, cfg.calendar, {
+          cfgVersions: cfgVersionsForCapacity,
+        });
         const isOosSets = (typeof inSampleDates !== 'undefined') ? { inSample: inSampleDates, outSample: outSampleDates } : null;
-        const isStats = isOosSets ? computeStatsFromTrades(merged.filter(t => isOosSets.inSample.has(t.scanDate)), cfg.portfolioSize, cfg.positionSizePct || 1, id) : null;
-        const oosStats = isOosSets ? computeStatsFromTrades(merged.filter(t => isOosSets.outSample.has(t.scanDate)), cfg.portfolioSize, cfg.positionSizePct || 1, id) : null;
+        const isStats = isOosSets ? computeStatsFromTrades(
+          accountingTrades.filter(t => isOosSets.inSample.has(t.scanDate)),
+          cfg.portfolioSize, cfg.positionSizePct || 1, id, cfg.calendar,
+          { cfgVersions: cfgVersionsForCapacity },
+        ) : null;
+        const oosStats = isOosSets ? computeStatsFromTrades(
+          accountingTrades.filter(t => isOosSets.outSample.has(t.scanDate)),
+          cfg.portfolioSize, cfg.positionSizePct || 1, id, cfg.calendar,
+          { cfgVersions: cfgVersionsForCapacity },
+        ) : null;
         if (stats) {
           output[`frozen_${id}`] = {
             returnTotal: stats.returnTotal, returnRealized: stats.returnRealized,

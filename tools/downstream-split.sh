@@ -153,29 +153,24 @@ case "$MODE" in
       for d in "$S"/decide_*.json; do
         [ -e "$d" ] || continue
         pf=$(basename "$d" .json); pf=${pf#decide_}
+        public_mode=$(node -e '
+          const s=require("./tools/dtx-scan"), p=process.argv[1];
+          const m=s.publicModeForPortfolio(p);
+          if(!m || s.dtxPortfolioForMode(m)!==p) process.exit(2);
+          process.stdout.write(m);
+        ' "$pf") || { echo "  $pf : ancien/non configuré, brut ignoré" | tee -a /tmp/ds-dtx.log; continue; }
         r="$S/replay_${pf}.json"
         if [ -f "$r" ]; then
-          node tools/dtx-mcp-ingest.js --portfolio "$pf" --decide "$d" --replay "$r" --asof "$ASOF" --expected-close "$REF_CLOSE" >> /tmp/ds-dtx.log 2>&1 \
+          node tools/dtx-mcp-ingest.js --portfolio "$pf" --decide "$d" --replay "$r" --asof "$REF_CLOSE" --scan-session "$ASOF" --expected-close "$REF_CLOSE" --to "$REF_CLOSE" --out "data/dtx/$public_mode.json" >> /tmp/ds-dtx.log 2>&1 \
             || { echo "  $pf : ingestion decide/replay invalide" | tee -a /tmp/ds-dtx.log; exit 1; }
-          # DtxReplay is useful for a current decision/replay audit, but its
-          # fixed-capital combined curve is not the dynamic book curve. The
-          # authenticated agent captures DtxBookEquity separately because that
-          # pure tool is not exposed by DtxMintReadOnlyToken. Install it only
-          # after the offline same-vintage CAGR/MaxDD checks pass.
-          book="$S/book_equity_${pf}.json"
-          if [ -f "$book" ]; then
-            node tools/dtx-book-equity-ingest.js --portfolio "$pf" --book-file "$book" --expected-close "$REF_CLOSE" >> /tmp/ds-dtx.log 2>&1 \
-              || { echo "  $pf : DtxBookEquity invalide → publication bloquée" | tee -a /tmp/ds-dtx.log; exit 1; }
-          else
-            node -e '
-              const fs=require("fs"), scan=require("./tools/dtx-scan");
-              const file="data/dtx/"+process.argv[1]+".json";
-              let value=null; try{value=JSON.parse(fs.readFileSync(file,"utf8"));}catch{}
-              const proof=scan.bookSnapshotCoherence(value,{expectedClose:process.argv[2],expectedPortfolio:process.argv[1]});
-              if(!proof.ok){console.error("snapshot DtxBookEquity absent/invalide: "+proof.errors.join("; "));process.exit(1)}
-            ' "$pf" "$REF_CLOSE" >> /tmp/ds-dtx.log 2>&1 \
-              || { echo "  $pf : fournir $book depuis DtxBookEquity avant compute" | tee -a /tmp/ds-dtx.log; exit 1; }
-          fi
+          # Le mode public courant est une stratégie simple : sa courbe DtxReplay
+          # est exacte. Un futur book multi-poches reste fail-closed tant qu'un
+          # snapshot DtxBookEquity mapping-aware n'est pas fourni.
+          node -e '
+            const fs=require("fs"); let r=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
+            r=(r.result&&r.result.results)?r.result:r;
+            if(!Array.isArray(r.results)||r.results.length!==1) process.exit(2);
+          ' "$r" || { echo "  $pf : replay multi-poches exige DtxBookEquity certifié" | tee -a /tmp/ds-dtx.log; exit 1; }
         else
           echo "  $pf : replay absent → compute refusé (decide seul = staging stateless)" | tee -a /tmp/ds-dtx.log
           exit 1
@@ -227,7 +222,7 @@ case "$MODE" in
   distribute)
     acquire
     # Irréversible. N'arrive ici qu'APRÈS un verdict de panel favorable.
-    bash tools/publish-daily-card.sh --no-sweep --no-telegram > /tmp/ds-card.log 2>&1 \
+    PUBLISH_SCAN_DATE="$DATE" bash tools/publish-daily-card.sh --no-sweep --no-telegram > /tmp/ds-card.log 2>&1 \
       || { echo "publish-daily-card ÉCHEC" >&2; exit 1; }
     log "DIFFUSION faite (image + push). Telegram : à envoyer par l'AGENT via le MCP notification."
     ;;

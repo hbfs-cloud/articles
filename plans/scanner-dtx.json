@@ -1,6 +1,6 @@
 {
   "artifact": "scanner/$date/_dtx",
-  "note": "The public scanner consumes the deployed best book. DtxListConfigs remains a blocking runtime check so a catalog change cannot pass silently.",
+  "note": "The public #best alias consumes us_highvol_tp999_vwap under the DTX Max label. The unfiltered catalog proves the exhaustive comparison; the selected row must separately prove live eligibility.",
   "waves": [
     {
       "name": "preflight",
@@ -13,19 +13,53 @@
       "name": "catalog",
       "gate": true,
       "calls": [
-        { "as": "dtx_configs", "server": "systematic", "tool": "DtxListConfigs", "args": {}, "assert": { "contains_portfolio": "best" }, "freshness": { "max_age_h": 24, "required": true } }
+        { "as": "dtx_catalog", "server": "systematic", "tool": "DtxCatalog", "args": {}, "assert": { "contains_portfolio": "us_highvol_tp999_vwap", "eligible_portfolio": "us_highvol_tp999_vwap", "minimum_configs": 23 }, "freshness": { "max_age_h": 24, "required": true } },
+        { "as": "dtx_howto_us_highvol_tp999_vwap", "server": "systematic", "tool": "DtxHowTo", "args": { "portfolio": "us_highvol_tp999_vwap" }, "freshness": { "max_age_h": 168, "required": true } }
+      ]
+    },
+    {
+      "name": "decision-input",
+      "gate": true,
+      "calls": [
+        {
+          "as": "validate_us_highvol_tp999_vwap",
+          "server": "systematic",
+          "tool": "DtxValidateDecisionInput",
+          "args": {
+            "portfolio": "us_highvol_tp999_vwap",
+            "asof": "$asof",
+            "appel": "evening",
+            "broker": "alpaca",
+            "expected_data_date": "$refdate",
+            "request_id": "$request_id",
+            "consumer_capabilities": {
+              "contract_version": "2.0",
+              "opportunity_groups": true,
+              "per_candidate_symbol": true,
+              "durable_intraday_execution": true
+            },
+            "positions": [],
+            "orders": [],
+            "balances": {
+              "base_currency": "USD",
+              "cash_by_currency": { "USD": 100000 },
+              "total_equity": 100000,
+              "broker_source": "alpaca"
+            }
+          },
+          "freshness": { "max_age_h": 24, "required": true }
+        }
       ]
     },
     {
       "name": "decision-replay",
       "calls": [
         {
-          "as": "decide_best",
+          "as": "decide_us_highvol_tp999_vwap",
           "server": "systematic",
           "tool": "DtxDecide",
           "args": {
-            "portfolio": "best",
-            "broker": "alpaca",
+            "portfolio": "us_highvol_tp999_vwap",
             "asof": "$asof",
             "appel": "evening",
             "broker": "alpaca",
@@ -45,10 +79,10 @@
           "freshness": { "max_age_h": 24, "required": true }
         },
         {
-          "as": "replay_best",
+          "as": "replay_us_highvol_tp999_vwap",
           "server": "systematic",
           "tool": "DtxReplay",
-          "args": { "portfolio": "best", "from": "2021-01-01", "to": "$refdate", "equity_full": true },
+          "args": { "portfolio": "us_highvol_tp999_vwap", "broker": "alpaca", "from": "2021-01-01", "to": "$refdate", "equity_full": true },
           "job_max_ms": 900000,
           "freshness": { "max_age_h": 168, "required": true }
         }

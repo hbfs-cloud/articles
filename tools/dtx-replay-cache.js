@@ -24,6 +24,7 @@
  */
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const { validateDtxReplay } = require('./lib/dtx-content-gates');
+const scan = require('./dtx-scan');
 const arg = (n, d) => { const i = process.argv.indexOf(n); return i > -1 && process.argv[i+1] ? process.argv[i+1] : d; };
 const has = n => process.argv.includes(n);
 
@@ -104,7 +105,11 @@ const stale = [], fresh = [];
 // attendu mais sans cache ni fichier tombe en « aucun cache » donc en « à rejouer ».
 const found = (fs.existsSync(dir) ? fs.readdirSync(dir) : [])
   .filter(f => f.startsWith('replay_') && f.endsWith('.json'))
-  .map(f => f.slice('replay_'.length, -'.json'.length));
+  .map(f => f.slice('replay_'.length, -'.json'.length))
+  .filter(pf => {
+    const publicMode = scan.publicModeForPortfolio(pf);
+    return publicMode && scan.dtxPortfolioForMode(publicMode) === pf;
+  });
 const portfolios = [...new Set([...found, ...expectedFromPlan(planPath)])];
 
 for (const pf of portfolios) {

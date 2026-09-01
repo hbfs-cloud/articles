@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * scan-plan.js — MANIFESTE des appels MCP du /scanner, groupés en VAGUES PARALLÈLES (node, ZÉRO MCP).
+ * scan-plan.js — LEGACY DISABLED. Helpers retained only for contract regression tests.
  *
  * Généralise `price-cache-ingest.js --list-needed` : au lieu d'émettre une seule liste de tickers, il
  * émet le PLAN COMPLET de ce que l'AGENT doit fetcher, en vagues qu'on tire chacune en UNE salve de
@@ -12,22 +12,26 @@
  * L'agent lit le manifeste, tire les salves, déverse chaque réponse brute dans /tmp/mcp-raw/<key>.json,
  * puis `scan-ingest-all.js` assemble les staging depuis ces bruts.
  *
- * Deux phases :
- *   node tools/scan-plan.js                 → écrit /tmp/scan-plan.json (preflight + context + universes + dtx + static_bars)
- *   node tools/scan-plan.js --resolve-bars  → lit /tmp/mcp-raw/ (réponses des screeners de la 1re phase),
- *                                             dédup les candidats, émet /tmp/scan-plan-bars.json (vague barres)
- *
- * Sortie : par défaut /tmp/scan-plan.json ; --out <f> pour surcharger ; --print pour dump stdout.
+ * This CLI is intentionally fail-closed: its downstream positional ingester did
+ * not validate QueryData terminal cells or completed-bar proofs. Use the audited
+ * plans through tools/collect.js / tools/scan-parallel.sh instead.
  */
 
 const fs = require('fs');
 const path = require('path');
 const scan = require('./dtx-scan');
+const {
+  isUSTradingDay,
+  latestCompletedUSClose,
+  nextUSTradingDay,
+} = require('./lib/market-calendar');
+const { MIN_MARKETDATA_BUILD } = require('./lib/marketdata-bars-contract');
 
 const REPO = path.resolve(__dirname, '..');
 const RAW_DIR = '/tmp/mcp-raw';
-const DTX_MODES = ['best'];
+const DTX_MODES = scan.SCRIPTED_MODES;
 const DTX_CCY = { best: 'USD' };
+const LEGACY_DISABLED_REASON = 'legacy scan-plan/scan-ingest-all pipeline disabled: use audited collect.js workflow plans with per-cell Marketdata validation';
 
 function parseArgs(argv) {
   const o = {};
@@ -35,7 +39,10 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === '--resolve-bars') o.resolveBars = true;
     else if (a === '--out') o.out = argv[++i];
+    else if (a === '--plan') o.plan = argv[++i];
     else if (a === '--asof') o.asof = argv[++i];
+    else if (a === '--refdate') o.refdate = argv[++i];
+    else if (a === '--as-of-timestamp') o.asOfTimestamp = argv[++i];
     else if (a === '--folder') o.folder = argv[++i];
     else if (a === '--print') o.print = true;
     else if (a === '--lot') o.lot = parseInt(argv[++i], 10);
@@ -43,21 +50,103 @@ function parseArgs(argv) {
   return o;
 }
 
-const iso = (d) => d.toISOString().slice(0, 10);
-function addDays(d, n) { const x = new Date(d.getTime()); x.setUTCDate(x.getUTCDate() + n); return x; }
-// dernier jour de trading ≤ ref (roule Sam/Dim → Ven)
-function lastTradingDay(ref) {
-  let d = new Date(ref.getTime());
-  while (d.getUTCDay() === 0 || d.getUTCDay() === 6) d = addDays(d, -1);
-  return d;
-}
-// prochaine séance > ref (Ven → Lun) — convention scanner : dossier = prochaine séance
-function nextTradingDay(ref) {
-  let d = addDays(ref, 1);
-  while (d.getUTCDay() === 0 || d.getUTCDay() === 6) d = addDays(d, 1);
-  return d;
-}
 const folderOf = (isoDate) => isoDate.replace(/-/g, '');
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+/**
+ * The manual planner is a live scanner entry point, not a historical date
+ * calculator. It therefore requires the caller to bind the run to one explicit
+ * collection timestamp and one already-completed US close. Deriving the close
+ * from "today" before 16:00 New York used to select the still-open session and
+ * silently skip the public J+1 folder.
+ */
+function resolvePlanContext(opts = {}, { enforceCurrentTimestamp = true } = {}) {
+  const referenceClose = String(opts.refdate || opts.referenceClose || '');
+  if (!ISO_DATE_RE.test(referenceClose)) {
+    throw new Error('--refdate YYYY-MM-DD is required and must identify the certified completed US close');
+  }
+  if (!isUSTradingDay(referenceClose)) {
+    throw new Error(`--refdate ${referenceClose} is not a US exchange session`);
+  }
+
+  const rawTimestamp = opts.asOfTimestamp || opts.as_of_timestamp;
+  if (!rawTimestamp) throw new Error('--as-of-timestamp ISO is required; implicit Date.now() is forbidden');
+  if (!ISO_TIMESTAMP_RE.test(String(rawTimestamp))) {
+    throw new Error('--as-of-timestamp must include an explicit time and UTC offset');
+  }
+  const asOf = new Date(rawTimestamp);
+  if (!Number.isFinite(asOf.getTime())) throw new Error(`--as-of-timestamp is invalid: ${rawTimestamp}`);
+  const asOfTimestamp = asOf.toISOString();
+
+  const wallNow = opts.now instanceof Date ? opts.now : new Date();
+  if (enforceCurrentTimestamp && Math.abs(wallNow.getTime() - asOf.getTime()) > 15 * 60 * 1000) {
+    throw new Error('--as-of-timestamp must be within 15 minutes of the current run');
+  }
+
+  const completedAtTimestamp = latestCompletedUSClose(asOf);
+  if (referenceClose !== completedAtTimestamp) {
+    throw new Error(
+      `--refdate ${referenceClose} is not the latest completed US close at ${asOfTimestamp} (expected ${completedAtTimestamp})`,
+    );
+  }
+
+  const scanSession = String(opts.asof || opts.scanDate || nextUSTradingDay(referenceClose));
+  const expectedScanSession = nextUSTradingDay(referenceClose);
+  if (scanSession !== expectedScanSession) {
+    throw new Error(`--asof ${scanSession} must equal the next US session after ${referenceClose} (${expectedScanSession})`);
+  }
+  const folder = String(opts.folder || folderOf(scanSession));
+  if (folder !== folderOf(scanSession)) {
+    throw new Error(`--folder ${folder} does not match scanner session ${scanSession}`);
+  }
+  return { referenceClose, scanSession, folder, asOfTimestamp };
+}
+
+function barsFreshness(referenceClose) {
+  return {
+    max_age_h: 24,
+    required: true,
+    expects_close: true,
+    asset_calendar: 'us_equity_exchange_sessions',
+    expected_completed_end: referenceClose,
+  };
+}
+
+function barsQueryParams(symbols, asOfTimestamp, extra = {}) {
+  const allowedExtra = new Set(['interval']);
+  const unsupported = Object.keys(extra).filter(key => !allowedExtra.has(key));
+  if (unsupported.length) {
+    throw new Error(`unsupported bars_daily override(s): ${unsupported.join(', ')}; contract fields are immutable`);
+  }
+  return {
+    ...extra,
+    types: 'bars_daily',
+    symbols: Array.isArray(symbols) ? symbols.join(',') : String(symbols || ''),
+    as_of_timestamp: asOfTimestamp,
+    completion_policy: 'completed_only',
+    limit: 400,
+  };
+}
+
+function barsCall({ key, symbols, scanner, referenceClose, asOfTimestamp, extra = {}, note = '' }) {
+  return {
+    key,
+    tool: 'QueryData',
+    params: barsQueryParams(symbols, asOfTimestamp, extra),
+    scanner,
+    symbols: Array.isArray(symbols) ? symbols : String(symbols || '').split(',').filter(Boolean),
+    freshness: barsFreshness(referenceClose),
+    contract: {
+      minimum_build: MIN_MARKETDATA_BUILD,
+      completion_policy: 'completed_only',
+      asset_calendar: 'us_equity_exchange_sessions',
+      expected_completed_end: referenceClose,
+      terminal_cell_per_symbol: true,
+    },
+    note: `${note}${note ? ' · ' : ''}fail-closed sur toute cellule incomplète ; cellules saines conservées dans le brut`,
+  };
+}
 
 // Découpe une liste en lots de taille `n` (batch QueryData multi-symboles, R3).
 function chunk(arr, n) {
@@ -81,7 +170,7 @@ function staticUniverse(file, key) {
 
 // ── Table des screeners de contexte (Phase 1) — DSL vérifiées, cf scanner-pipeline.md ──
 // JAMAIS `market_cap` en pass_expr (→ 0 candidat silencieux) : post-filtre en code côté agent.
-function contextCalls() {
+function contextCalls(referenceClose = null) {
   const RS = (key, pass, score, extra = {}) => ({
     key, tool: 'RunScreener',
     params: Object.assign({ pass_expr: pass, score_expr: score, region: 'us', force_async: true }, extra),
@@ -91,7 +180,18 @@ function contextCalls() {
   // close/obvz/vwap/bbw/hhv*/llv*/sma*. PAS de `macd` (n'existe pas → screener KO). JAMAIS `market_cap` en
   // pass_expr (→0, killer silencieux) : post-filtrer mcap/ETF/penny EN CODE. top_k modéré = borne le contexte.
   return [
-    { key: 'preflight', tool: 'GetStatus', params: {}, note: 'MCP HARD STOP si down/stale>48h — jamais fabriquer' },
+    {
+      key: 'preflight', tool: 'GetStatus', params: {}, gate: true,
+      assert: referenceClose ? {
+        minimum_build: MIN_MARKETDATA_BUILD,
+        operation_readiness: 'bars_daily_us_equity',
+        asset_calendar: 'us_equity_exchange_sessions',
+        expected_completed_end: referenceClose,
+      } : null,
+      note: referenceClose
+        ? `MCP HARD STOP sauf build ${MIN_MARKETDATA_BUILD} + bars_daily_us_equity ready à la clôture ${referenceClose}`
+        : 'MCP HARD STOP : une clôture de référence explicite manque',
+    },
     RS('rs_momentum', 'rsi14 > 50 and rsi14 < 72 and ema20 > ema50 and ema50 > ema200 and vol > 1500000 and close > 10', 'rsi14', { top_k: 25 }),
     RS('rs_pullback', 'rsi14 > 42 and rsi14 < 60 and ema20 > ema50 and close > ema50 and atrpct < 3 and vol > 1000000 and close > 10', '60 - rsi14', { top_k: 25 }),
     RS('rs_breakout', 'near_breakout(0.03) and rsi14 > 52 and rsi14 < 72 and vol > 1500000 and close > 10', 'rsi14', { top_k: 25 }),
@@ -115,22 +215,27 @@ function stagingUniverseCalls() {
   ];
 }
 
-// ── Vague dtx : 6 modes × {replay, decide, drift} — params exacts via dtx-scan.goLiveFor ──
-function dtxCalls(asof) {
+// ── Vague DTX : l'id public reste stable, chaque appel MCP cible explicitement
+// le portefeuille moteur configuré. Un replay full suffit aussi aux sous-fenêtres.
+function dtxCalls(scanSession, referenceClose) {
   const out = [];
   for (const id of DTX_MODES) {
-    const to = scan.goLiveFor(id) || asof;               // splice backtest↔live
-    const toDate = String(to).slice(0, 10);
+    const portfolio = scan.dtxPortfolioForMode(id);
     const ccy = DTX_CCY[id] || 'USD';
-    out.push({ key: `dtx_${id}_replay`, tool: 'DtxReplay', params: { portfolio: id, from: scan.DEFAULT_FROM, to: toDate }, mode: id, kind: 'replay', note: 'async → DtxJobStatus' });
-    out.push({ key: `dtx_${id}_decide`, tool: 'DtxDecide', params: { portfolio: id, asof, balances: { base_currency: ccy, cash_by_currency: { [ccy]: 100000 }, total_equity: 100000 }, positions: [], orders: [] }, mode: id, kind: 'decide', note: 'async → DtxJobStatus' });
-    out.push({ key: `dtx_${id}_drift`, tool: 'DtxReplay', params: { portfolio: id, from: scan.DEFAULT_FROM, to: asof }, mode: id, kind: 'drift', note: 'drift backtest↔live : replay jusqu\'à J+1' });
+    out.push({ key: `dtx_${id}_replay`, tool: 'DtxReplay', params: { portfolio, broker: 'alpaca', from: scan.DEFAULT_FROM, to: referenceClose, equity_full: true }, mode: id, portfolio, kind: 'replay', note: 'replay exact full-resolution · async → DtxJobStatus' });
+    out.push({ key: `dtx_${id}_decide`, tool: 'DtxDecide', params: {
+      portfolio, broker: 'alpaca', asof: referenceClose, expected_data_date: referenceClose,
+      appel: 'evening', request_id: '$request_id',
+      consumer_capabilities: { contract_version: '2.0', opportunity_groups: true, per_candidate_symbol: true, durable_intraday_execution: true },
+      balances: { base_currency: ccy, cash_by_currency: { [ccy]: 100000 }, total_equity: 100000, broker_source: 'alpaca' },
+      positions: [], orders: [],
+    }, mode: id, portfolio, scanSession, kind: 'decide', note: 'Contract V2 · substituer un UUID stable à $request_id · async → DtxJobStatus' });
   }
   return out;
 }
 
 // ── Vague barres statiques : univers connus (FX/indices/mega-caps/métaux) → lots multi-symboles ──
-function staticBarsCalls(lot) {
+function staticBarsCalls(lot, referenceClose, asOfTimestamp) {
   const specs = [
     { scanner: 'forex', file: 'forex-universe.json', extra: { interval: '1d' } },
     { scanner: 'trendline-indices', file: 'indices-universe.json', extra: { interval: '4h' } },
@@ -141,28 +246,39 @@ function staticBarsCalls(lot) {
   for (const s of specs) {
     const syms = staticUniverse(s.file, 'tickers');
     if (!syms.length) { out.push({ scanner: s.scanner, skipped: true, note: `univers ${s.file} absent/vide — l'agent fournit la liste ou skip fail-closed` }); continue; }
-    chunk(syms, lot).forEach((lotSyms, i) => out.push({
-      key: `bars_${s.scanner}_${String(i).padStart(2, '0')}`, tool: 'QueryData',
-      params: Object.assign({ types: 'bars_daily', symbols: lotSyms.join(','), days: 400 }, s.extra),
-      scanner: s.scanner, symbols: lotSyms,
-      note: 'POSITIONNEL : {symbols:[…ordre exact…], result:<brut>} — data.length===symbols.length',
-    }));
+    chunk(syms, lot).forEach((lotSyms, i) => out.push(barsCall({
+      key: `bars_${s.scanner}_${String(i).padStart(2, '0')}`,
+      symbols: lotSyms,
+      scanner: s.scanner,
+      referenceClose,
+      asOfTimestamp,
+      extra: s.extra,
+      note: 'Chaque cellule et sa ligne sont liées par symbol/instrument_id ; aucune preuve coverage legacy',
+    })));
   }
   return out;
 }
 
 function buildPlan(opts) {
-  const now = new Date();
-  const asof = opts.asof || iso(nextTradingDay(lastTradingDay(now)));
-  const lastTrade = iso(lastTradingDay(now));
-  const folder = opts.folder || folderOf(asof);
+  const context = resolvePlanContext(opts, { enforceCurrentTimestamp: true });
+  const { referenceClose, scanSession, folder, asOfTimestamp } = context;
   const lot = opts.lot || 15;
-  const dtx = dtxCalls(asof);
+  const dtx = dtxCalls(scanSession, referenceClose);
   const dtxBatchSize = opts.dtxBatch || 3;   // l'origine dtx renvoie des 502 sous burst (run 2026-07-22) → petits lots
   const dtxBatches = chunk(dtx, dtxBatchSize);
   return {
-    generatedAt: iso(now),
-    scanDate: asof, folder, lastTradingDay: lastTrade,
+    generatedAt: asOfTimestamp,
+    scanDate: scanSession,
+    folder,
+    referenceClose,
+    lastTradingDay: referenceClose,
+    asOfTimestamp,
+    marketdataContract: {
+      minimumBuild: MIN_MARKETDATA_BUILD,
+      equityReferenceClose: referenceClose,
+      assetCalendar: 'us_equity_exchange_sessions',
+      completionPolicy: 'completed_only',
+    },
     rawDir: RAW_DIR,
     doctrine: 'perf-parallel-mcp — R2: chaque `wave` = UN message, tous les appels en parallèle. R3: bars batchés multi-symboles.',
     execution: {
@@ -172,19 +288,19 @@ function buildPlan(opts) {
     },
     waves: {
       // SALVE 1 : preflight + tout le contexte + tous les univers de screening (aucune dépendance entre eux)
-      wave1_context_universes: [...contextCalls(), ...stagingUniverseCalls()],
+      wave1_context_universes: [...contextCalls(referenceClose), ...stagingUniverseCalls()],
       // SALVE dtx : 6 modes × 3 — MAIS l'origine sature en burst → tirer par LOTS (wave_dtx_batches)
       wave_dtx: dtx,
       wave_dtx_batches: dtxBatches,
       // SALVE 2a : barres des univers STATIQUES (connus d'avance) — batchées
-      wave2_static_bars: staticBarsCalls(lot),
+      wave2_static_bars: staticBarsCalls(lot, referenceClose, asOfTimestamp),
       // SALVE 2b : barres des candidats issus des screeners → résolue par `--resolve-bars` APRÈS wave1
-      wave2_dynamic_bars: { deferred: true, how: 'node tools/scan-plan.js --resolve-bars (lit /tmp/mcp-raw/ des screeners, dédup, émet /tmp/scan-plan-bars.json)' },
+      wave2_dynamic_bars: { deferred: true, how: 'node tools/scan-plan.js --resolve-bars --plan /tmp/scan-plan.json (réutilise exactement refdate/as_of_timestamp du plan initial)' },
     },
     nextSteps: [
-      '1. Tirer wave1_context_universes en UNE salve //. Dumper CHAQUE réponse → /tmp/mcp-raw/<key>.json (Bash), pas d\'inline.',
+      `1. Tirer wave1_context_universes en UNE salve //. HARD STOP si GetStatus ne certifie pas bars_daily_us_equity=${referenceClose} sur build ${MIN_MARKETDATA_BUILD}.`,
       '2. Tirer wave_dtx par LOTS (wave_dtx_batches, ≤3/lot ; attendre le lot avant le suivant ; retry 502 après 60s). Poller DtxJobStatus. Dumper → /tmp/mcp-raw/dtx_*.json.',
-      '3. node tools/scan-plan.js --resolve-bars → /tmp/scan-plan-bars.json ; tirer wave2 (static+dynamic) en salves //',
+      `3. node tools/scan-plan.js --resolve-bars --plan /tmp/scan-plan.json → /tmp/scan-plan-bars.json ; tirer wave2 avec as_of_timestamp=${asOfTimestamp} et completed_only.`,
       '4. node tools/scan-ingest-all.js → assemble tous les /tmp/*-stage.json + ingest dtx',
       '5. publish-daily-card.sh en BACKGROUND ; Skill(signals-desk) avec handoff ; rapport final',
     ],
@@ -207,9 +323,24 @@ function extractTickers(raw) {
 }
 
 function resolveBars(opts) {
-  const plan = readJsonSafe(opts.plan || '/tmp/scan-plan.json') || buildPlan(opts);
+  const planPath = opts.plan || '/tmp/scan-plan.json';
+  const plan = readJsonSafe(planPath);
+  if (!plan) throw new Error(`plan initial absent/illisible: ${planPath}; générer un plan certifié avec --refdate et --as-of-timestamp`);
+  if (!plan.marketdataContract
+      || plan.marketdataContract.minimumBuild !== MIN_MARKETDATA_BUILD
+      || plan.marketdataContract.completionPolicy !== 'completed_only') {
+    throw new Error(`plan initial ${planPath} sans contrat Marketdata ${MIN_MARKETDATA_BUILD} completed_only`);
+  }
+  const context = resolvePlanContext({
+    refdate: plan.referenceClose,
+    asOfTimestamp: plan.asOfTimestamp,
+    asof: plan.scanDate,
+    folder: plan.folder,
+  }, { enforceCurrentTimestamp: false });
+  if (opts.refdate && opts.refdate !== context.referenceClose) throw new Error('--refdate disagrees with the initial plan');
+  if (opts.asOfTimestamp && new Date(opts.asOfTimestamp).toISOString() !== context.asOfTimestamp) throw new Error('--as-of-timestamp disagrees with the initial plan');
   const lot = opts.lot || 15;
-  const screenerKeys = [...contextCalls(), ...stagingUniverseCalls()].filter((c) => /RunScreener|RunAutoScreener/.test(c.tool)).map((c) => c.key);
+  const screenerKeys = [...contextCalls(context.referenceClose), ...stagingUniverseCalls()].filter((c) => /RunScreener|RunAutoScreener/.test(c.tool)).map((c) => c.key);
   const seen = new Set();
   const perScanner = {};
   for (const key of screenerKeys) {
@@ -221,21 +352,31 @@ function resolveBars(opts) {
   }
   // + tickers du price-cache (pending trades + positions + setups) via le lister existant si présent
   const allSyms = [...seen];
-  const lots = chunk(allSyms, lot).map((lotSyms, i) => ({
-    key: `bars_dyn_${String(i).padStart(2, '0')}`, tool: 'QueryData',
-    params: { types: 'bars_daily', symbols: lotSyms.join(','), days: 400 }, symbols: lotSyms,
-    note: 'POSITIONNEL — dédupé cross-scanner (un symbole = un fetch)',
+  const lots = chunk(allSyms, lot).map((lotSyms, i) => barsCall({
+    key: `bars_dyn_${String(i).padStart(2, '0')}`,
+    symbols: lotSyms,
+    scanner: 'dynamic',
+    referenceClose: context.referenceClose,
+    asOfTimestamp: context.asOfTimestamp,
+    note: 'Dédupliqué cross-scanner ; un symbole = une cellule terminale et une ligne identifiée',
   }));
   return {
-    generatedAt: iso(new Date()),
+    generatedAt: new Date().toISOString(),
+    scanDate: context.scanSession,
+    folder: context.folder,
+    referenceClose: context.referenceClose,
+    asOfTimestamp: context.asOfTimestamp,
+    marketdataContract: plan.marketdataContract,
     uniqueTickers: allSyms.length,
     perScanner: Object.fromEntries(Object.entries(perScanner).map(([k, v]) => [k, [...new Set(v)]])),
     wave2_dynamic_bars: lots,
-    note: 'Tirer ces lots en salves //. Puis node tools/scan-ingest-all.js. Chaque scanner lit SES tickers dans perScanner[<scanner>].',
+    note: 'Tirer ces lots en salves //. Refuser le batch à la moindre cellule invalide tout en conservant le brut et ses cellules saines.',
   };
 }
 
 function main() {
+  throw new Error(LEGACY_DISABLED_REASON);
+  /* istanbul ignore next -- legacy implementation kept temporarily for library-level fixtures */
   const opts = parseArgs(process.argv);
   const result = opts.resolveBars ? resolveBars(opts) : buildPlan(opts);
   const outPath = opts.out || (opts.resolveBars ? '/tmp/scan-plan-bars.json' : '/tmp/scan-plan.json');
@@ -249,12 +390,22 @@ function main() {
     console.log(`   scanDate=${result.scanDate} folder=${result.folder} lastTrading=${result.lastTradingDay}`);
     console.log(`   SALVE 1 (context+univers): ${n1} appels // · SALVE dtx: ${nd} jobs // · SALVE 2a (bars statiques): ${ns} lots //`);
     console.log(`   → tirer chaque salve en UN message (tool_use parallèles), bruts → ${RAW_DIR}/<key>.json`);
-    console.log(`   → puis: node tools/scan-plan.js --resolve-bars ; node tools/scan-ingest-all.js`);
+    console.log(`   → puis: node tools/scan-plan.js --resolve-bars --plan ${outPath} ; node tools/scan-ingest-all.js`);
   } else {
     console.log(`📋 scan-plan bars → ${outPath} · ${result.uniqueTickers} tickers uniques · ${result.wave2_dynamic_bars.length} lots //`);
   }
   return result;
 }
 
-if (require.main === module) main();
-module.exports = { buildPlan, resolveBars, contextCalls, stagingUniverseCalls, dtxCalls, chunk, extractTickers };
+if (require.main === module) {
+  try { main(); }
+  catch (error) {
+    console.error(`❌ scan-plan fail-closed: ${error.message}`);
+    process.exit(2);
+  }
+}
+module.exports = {
+  buildPlan, resolveBars, resolvePlanContext, barsQueryParams, barsCall,
+  contextCalls, stagingUniverseCalls, dtxCalls, chunk, extractTickers,
+  LEGACY_DISABLED_REASON,
+};

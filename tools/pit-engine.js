@@ -26,6 +26,7 @@
 //   --verbose                  per-day log
 
 const fs = require('fs');
+const crypto = require('crypto');
 const path = require('path');
 const sweep = require('./sweep.js');
 const ms = require('./lib/mode-status');
@@ -377,17 +378,35 @@ function openPosition(setup, scanDate, entryDate, cfg) {
 }
 
 // ─── History-aware config resolver ───────────────────────────────────────────
-// Returns active config (per mode) for a given date, merged with current defaults
-// to fill any fields the history version omitted (e.g. vwapGate added later).
-function buildHistoryResolver(historyPath, currentModes) {
-  if (!fs.existsSync(historyPath)) {
-    return () => currentModes;
+// A PIT replay must use the snapshot effective on that date. It must never fill
+// an old snapshot with today's behavioural fields: that leaks future gates and
+// capacity into the past.
+function buildHistoryResolverFromData(hist, currentModes) {
+  const sourceVersions = hist && Array.isArray(hist.versions) ? hist.versions : [];
+  for (const version of sourceVersions) {
+    const id = String(version && version.id || '(missing id)');
+    const declared = String(version && version.config_sha256 || '');
+    if (!/^sha256:[0-9a-f]{64}$/.test(declared)) {
+      throw new Error(`${id}: PIT config snapshot missing canonical config_sha256`);
+    }
+    const computed = `sha256:${crypto.createHash('sha256')
+      .update(JSON.stringify(version.config || {})).digest('hex')}`;
+    if (computed !== declared) throw new Error(`${id}: PIT config snapshot hash mismatch`);
   }
-  const hist = JSON.parse(fs.readFileSync(historyPath, 'utf8'));
-  const versions = (hist.versions || [])
-    .map(v => ({ id: v.id, day: v.timestamp.slice(0, 10), config: v.config }))
-    .sort((a, b) => a.day.localeCompare(b.day));
-  if (versions.length === 0) return () => currentModes;
+  const versions = sourceVersions
+    .map((v, index) => ({
+      id: v.id,
+      day: String(v.effectiveFrom || v.timestamp || '').slice(0, 10),
+      timestamp: String(v.timestamp || ''),
+      hash: v.config_sha256 || v.hash || null,
+      config: v.config,
+      index,
+    }))
+    .filter(v => /^\d{4}-\d{2}-\d{2}$/.test(v.day) && v.config && typeof v.config === 'object')
+    .sort((a, b) => a.day.localeCompare(b.day)
+      || a.timestamp.localeCompare(b.timestamp)
+      || a.index - b.index);
+  if (versions.length === 0) throw new Error('PIT config history has no valid effective snapshot');
   return (day) => {
     // Find latest version whose day <= day
     let active = null;
@@ -395,14 +414,27 @@ function buildHistoryResolver(historyPath, currentModes) {
       if (v.day <= day) active = v;
       else break;
     }
-    if (!active) return currentModes;
-    const merged = {};
+    if (!active) throw new Error(`No PIT config snapshot effective on ${day}`);
+    const resolved = {};
     for (const id of Object.keys(currentModes)) {
-      merged[id] = { ...currentModes[id], ...(active.config[id] || {}) };
-      merged[id].__configVersion = active.id;
+      // A missing mode did not exist in this snapshot. Keep it absent so the
+      // caller skips it instead of fabricating past entries with today's config.
+      if (!active.config[id]) continue;
+      resolved[id] = {
+        ...active.config[id],
+        __configVersion: active.id,
+        __configHash: active.hash,
+        __configEffectiveFrom: active.day,
+      };
     }
-    return merged;
+    return resolved;
   };
+}
+
+function buildHistoryResolver(historyPath, currentModes) {
+  if (!fs.existsSync(historyPath)) throw new Error(`PIT config history missing: ${historyPath}`);
+  const hist = JSON.parse(fs.readFileSync(historyPath, 'utf8'));
+  return buildHistoryResolverFromData(hist, currentModes);
 }
 
 // ─── State init / resume ─────────────────────────────────────────────────────
@@ -704,7 +736,10 @@ async function run() {
       ];
       for (const id of modeOrder) {
         const mode = state.modes[id];
-        const cfg = activeCfgByMode[id] || mode.cfg;
+        const cfg = USE_HISTORY ? activeCfgByMode[id] : mode.cfg;
+        // A mode absent from the effective snapshot did not exist yet. Never
+        // backfill it with today's config.
+        if (!cfg) continue;
         const candidates = buildCandidates(scan, mode, day, cfg);
         let slots = (cfg.portfolioSize || 1) - mode.positions.length - mode.pendingEntries.length;
 
@@ -916,6 +951,7 @@ async function run() {
 module.exports = {
   openPosition, stepPosition, computePnl, buildCandidates,
   cooldownDaysForStatus, addBizDays, bizDaysBetween, getAllBizDays, computeATR,
+  buildHistoryResolver, buildHistoryResolverFromData,
 };
 
 if (require.main === module) {

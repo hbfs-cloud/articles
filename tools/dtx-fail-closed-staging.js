@@ -29,8 +29,17 @@ function readJson(file, label) {
 
 function main() {
   const o = args(process.argv);
-  for (const key of ['portfolio', 'asof', 'expected-close', 'decision-error', 'replay', 'request-id']) {
+  for (const key of ['portfolio', 'config-hash', 'asof', 'expected-close', 'decision-error', 'replay', 'request-id']) {
     if (!o[key]) throw new Error(`--${key} required`);
+  }
+  const publicMode = scan.publicModeForPortfolio(o.portfolio) || o.portfolio;
+  const expectedPortfolio = scan.dtxPortfolioForMode(publicMode);
+  const expectedConfigHash = scan.dtxConfigHashForMode(publicMode);
+  if (o.portfolio !== expectedPortfolio) {
+    throw new Error(`portfolio ${o.portfolio} != configured engine ${expectedPortfolio}`);
+  }
+  if (!expectedConfigHash || o['config-hash'] !== expectedConfigHash) {
+    throw new Error(`config hash ${o['config-hash']} != configured ${expectedConfigHash || 'missing'}`);
   }
   const decisionFault = readJson(o['decision-error'], 'decision error');
   const expectedMessage = 'idempotency key reused with different input fingerprint';
@@ -51,8 +60,9 @@ function main() {
   if (sanity.length) throw new Error(`DtxReplay sanity rejected: ${sanity.join('; ')}`);
   const sourceArtifact = path.relative(scan.REPO_ROOT, path.resolve(o['decision-error']));
   const snapshot = {
-    mode: o.portfolio,
-    portfolioId: o.portfolio,
+    mode: publicMode,
+    portfolioId: expectedPortfolio,
+    configHash: o['config-hash'],
     name: o.name || 'DTX Best multi-sleeve',
     asof: o.asof,
     generatedAt: new Date().toISOString(),
@@ -81,11 +91,13 @@ function main() {
     replayError: null, metricsSuspect: false, _sanityWarning: null,
     stateless: true, tookMs: 0,
   };
-  const validation = scan.stagingSnapshotErrors(snapshot, o.portfolio, {
+  const validation = scan.stagingSnapshotErrors(snapshot, expectedPortfolio, {
+    publicModeId: publicMode,
+    expectedConfigHash,
     todayIso: new Date().toISOString().slice(0, 10), scanDateIso: o.asof, expectedClose: o['expected-close'],
   });
   if (validation.length) throw new Error(`fail-closed staging rejected: ${validation.join('; ')}`);
-  const outFile = o.out || scan.stagingPathFor(o.portfolio);
+  const outFile = o.out || scan.stagingPathFor(publicMode);
   scan.writeStaging(snapshot, outFile);
   console.log(`Wrote ${outFile}: fail closed, 0 actionable orders (${decisionFault})`);
 }

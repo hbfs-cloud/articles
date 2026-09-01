@@ -48,6 +48,23 @@ const base = {
 };
 const spec = { required_variables: ['date', 'refdate', 'symbols'] };
 assert.deepStrictEqual(contract.validatePlan(base, spec, config.policy), []);
+const legacyCloseAssertion = structuredClone(base);
+legacyCloseAssertion.waves[0].calls[0].assert = { covers_close: '$refdate' };
+assert(contract.validatePlan(legacyCloseAssertion, spec, config.policy)
+  .some(error => error.includes('unsupported legacy GetStatus assertion')));
+
+const secWithoutReadiness = structuredClone(base);
+secWithoutReadiness.waves[1].calls[0].args = { types: 'sec_filings,flags', symbols: '$symbols' };
+secWithoutReadiness.waves[1].calls[0].freshness = { max_age_h: 168, required: true };
+assert(contract.validatePlan(secWithoutReadiness, spec, config.policy)
+  .some(error => error.includes('must assert GetStatus sec_operation=run_screener_sec_enriched')));
+const secWithReadiness = structuredClone(secWithoutReadiness);
+secWithReadiness.waves[0].calls[0].assert.sec_operation = 'run_screener_sec_enriched';
+assert.deepStrictEqual(contract.validatePlan(secWithReadiness, spec, config.policy), []);
+const secWithWrongReadiness = structuredClone(secWithReadiness);
+secWithWrongReadiness.waves[0].calls[0].assert.sec_operation = 'bars_daily_us_equity';
+assert(contract.validatePlan(secWithWrongReadiness, spec, config.policy)
+  .some(error => error.includes('must assert GetStatus sec_operation=run_screener_sec_enriched')));
 assert.deepStrictEqual(contract.validateRuntimeVariables(spec, { date: '20260831', refdate: '2026-08-28', symbols: 'AAA,BBB' }), []);
 
 const scannerDtxSpec = config.workflows.scanner.plans.find(item => item.path === 'plans/scanner-dtx-decide-only.json');
@@ -200,6 +217,21 @@ try {
     waves: [{ calls: [{ as: 'status', tool: 'GetStatus', ok: true, required: true }] }],
   }));
   assert.deepStrictEqual(contract.validateRun('daily', tmp, config).errors, []);
+  const journal = JSON.parse(fs.readFileSync(path.join(tmp, '_collect.json')));
+  journal.resolved_input = {
+    artifact: 'daily/20260829/index.html',
+    refdate: '2026-08-28',
+    waves: [{ name: 'preflight', calls: [] }],
+  };
+  fs.writeFileSync(path.join(tmp, '_collect.json'), JSON.stringify(journal));
+  assert(
+    contract.validateRun('daily', tmp, config).errors.some(e => e.includes('does not match resolved collection input')),
+    'a declared input hash must bind the resolved input, not merely match between files',
+  );
+  assert(
+    contract.validateRun('daily', tmp, config).errors.some(e => e.includes('missing wave')),
+    'the resolved input must still bind every literal wave/call in the current hashed plan',
+  );
   const broken = JSON.parse(fs.readFileSync(path.join(tmp, 'harness.json')));
   broken.artifact = 'daily/$date/index.html';
   fs.writeFileSync(path.join(tmp, 'harness.json'), JSON.stringify(broken));

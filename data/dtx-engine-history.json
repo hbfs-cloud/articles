@@ -1,6 +1,6 @@
 {
   "_comment": "Registre append-only de la decision du moteur systematic par (mode, date d'as-of) : orders/updates/cancels + metrics, tels que recus. Immuable par couple (mode,date) — une seconde ecriture pour la meme seance est refusee. Ecrit par tools/dtx-history-append.js apres dtx-mcp-ingest. Lu par gen-status-page (Time Machine) et l API.",
-  "_version": "v1-20260807",
+  "_version": "v3-20260901",
   "modes": {
     "best": {
       "2026-08-12": {
@@ -3847,6 +3847,210 @@
           "to": "2026-08-12"
         },
         "recordedAt": "2026-08-29T05:48:39.337Z"
+      },
+      "2026-09-01": {
+        "asof": "2026-09-01",
+        "portfolioId": "us_highvol_tp999_vwap",
+        "configHash": "sha256:0591a7e6ee4b33be82ff244824b45f2c2b17fb57d4ee3f4624820b962d0976e5",
+        "generatedAt": "2026-09-01T09:05:10.772Z",
+        "engineMode": "mcp",
+        "provenance": "staging",
+        "engine": "dtx (systematic-tss) — MCP",
+        "decisionProvenance": {
+          "contractVersion": "2.0",
+          "requestId": "7c4b153c-11fe-4e68-9e17-4920c476143e",
+          "runId": "run-a47cf807304b7a75c0927f86",
+          "callId": "call-5db3639f7a39dbbb469704c0",
+          "requestedAsOf": "2026-08-31",
+          "expectedDataDate": "2026-08-31",
+          "dataAsOf": "2026-08-31",
+          "planId": "plan-5db3639f7a39dbbb469704c0",
+          "planRevision": 1,
+          "validFrom": "2026-09-01T13:30:00Z",
+          "validUntil": "2026-09-01T19:55:00Z"
+        },
+        "executionPlan": {
+          "planId": "plan-5db3639f7a39dbbb469704c0",
+          "revision": 1,
+          "validFrom": "2026-09-01T13:30:00Z",
+          "validUntil": "2026-09-01T19:55:00Z",
+          "supersedesPlanId": null,
+          "groups": [
+            {
+              "group_id": "slot-01",
+              "sleeve": "us_highvol_tp999",
+              "priority": 0,
+              "max_winners": 1,
+              "reserved_notional": 3211.7348999023434,
+              "selection_mode": "sequential",
+              "promotion_policy": {
+                "promote_on": [
+                  "gate_timeout",
+                  "instrument_unavailable",
+                  "symbol_rejected",
+                  "entry_price_invalidated"
+                ],
+                "stop_on": [
+                  "any_fill",
+                  "partial_fill",
+                  "kill_switch",
+                  "risk_rejection",
+                  "insufficient_buying_power",
+                  "market_data_stale",
+                  "session_closed"
+                ]
+              },
+              "candidates": [
+                {
+                  "candidate_id": "plan-5db3639f7a39dbbb469704c0:slot-01:1",
+                  "rank": 1,
+                  "strategy_id": "us_highvol_tp999_vwap",
+                  "sleeve": "us_highvol_tp999",
+                  "broker": "alpaca",
+                  "symbol": "SNDK",
+                  "side": "BUY",
+                  "qty": 2,
+                  "reason": "BUY SNDK @ $1605.87 | Score=86 | Risk=29.0% | Size=$3K (6.4% equity) | MaxCorr=0.00 || ATR=8.2%, DistMA20=6.4%, VolRatio=1.6x, RSI=64.8, Mom=153.1% || Stop=$1140.05 (29.0% below)",
+                  "entry_kind": "EVENING",
+                  "priority": 0,
+                  "order": {
+                    "order_type": "LIMIT",
+                    "limit_price": 1605.8674499511717,
+                    "stop_price": null,
+                    "time_in_force": "DAY",
+                    "extended_hours": false,
+                    "currency": "USD",
+                    "max_notional": 3211.7348999023434
+                  },
+                  "protection": {
+                    "mode": "engine_managed",
+                    "stop_loss": 1140.0540169784458,
+                    "take_profit": null,
+                    "required_before_fill": false,
+                    "post_fill_deadline_sec": 5,
+                    "exit_policy_ref": "us_highvol_tp999_vwap:exit-policy"
+                  },
+                  "execution": {
+                    "window_start": "09:30",
+                    "window_end": "15:55",
+                    "timezone": "America/New_York",
+                    "gate_timeout_sec": 0,
+                    "fill_timeout_sec": 300,
+                    "min_fill_qty": 0,
+                    "vwap_weak_skip": true,
+                    "gap_up_pct": 0,
+                    "gap_down_pct": 0.13,
+                    "max_vix": 30,
+                    "block_dip_below_200dma": true,
+                    "max_slippage_bps": 0
+                  },
+                  "decision_context": {
+                    "held_qty_seen": 0,
+                    "day0_fill_price": null,
+                    "entry_price_used": 1566.699951171875,
+                    "entry_price_source": "signal_close",
+                    "existing_stop_qty_seen": 0,
+                    "existing_stop_price_seen": null,
+                    "place_now": true,
+                    "place_note": ""
+                  }
+                }
+              ]
+            }
+          ],
+          "source": "execution_plan.groups"
+        },
+        "currency": "USD",
+        "orders": [
+          {
+            "symbol": "SNDK",
+            "side": "BUY",
+            "orderType": "LIMIT",
+            "qty": 2,
+            "entry": 1605.8674499511717,
+            "limitPrice": 1605.8674499511717,
+            "stopLoss": 1140.0540169784458,
+            "takeProfit": null,
+            "reason": "BUY SNDK @ $1605.87 | Score=86 | Risk=29.0% | Size=$3K (6.4% equity) | MaxCorr=0.00 || ATR=8.2%, DistMA20=6.4%, VolRatio=1.6x, RSI=64.8, Mom=153.1% || Stop=$1140.05 (29.0% below)",
+            "orderId": null,
+            "sleeve": "us_highvol_tp999",
+            "groupId": "slot-01",
+            "candidateId": "plan-5db3639f7a39dbbb469704c0:slot-01:1",
+            "rank": 1,
+            "broker": "alpaca",
+            "protection": {
+              "mode": "engine_managed",
+              "stop_loss": 1140.0540169784458,
+              "take_profit": null,
+              "required_before_fill": false,
+              "post_fill_deadline_sec": 5,
+              "exit_policy_ref": "us_highvol_tp999_vwap:exit-policy"
+            },
+            "execution": {
+              "window_start": "09:30",
+              "window_end": "15:55",
+              "timezone": "America/New_York",
+              "gate_timeout_sec": 0,
+              "fill_timeout_sec": 300,
+              "min_fill_qty": 0,
+              "vwap_weak_skip": true,
+              "gap_up_pct": 0,
+              "gap_down_pct": 0.13,
+              "max_vix": 30,
+              "block_dip_below_200dma": true,
+              "max_slippage_bps": 0
+            },
+            "decisionContext": {
+              "held_qty_seen": 0,
+              "day0_fill_price": null,
+              "entry_price_used": 1566.699951171875,
+              "entry_price_source": "signal_close",
+              "existing_stop_qty_seen": 0,
+              "existing_stop_price_seen": null,
+              "place_now": true,
+              "place_note": ""
+            }
+          }
+        ],
+        "updates": [],
+        "cancels": [],
+        "metrics": {
+          "replay_scope": "single_strategy",
+          "equity_scope": "equity_full",
+          "equity_resolution": "daily",
+          "allocation": "us_highvol_tp999",
+          "strategy": "highvol-breakout-corr",
+          "initial_capital": 100000,
+          "final_equity": 3688720.26,
+          "total_trades": 561,
+          "winners": 328,
+          "losers": 233,
+          "win_rate": 58.47,
+          "return_pct": 3588.72,
+          "cagr_pct": 89.12,
+          "max_dd_pct": 25,
+          "sharpe": 1.53,
+          "sortino": 4.04,
+          "calmar": 3.56,
+          "r2": 0.94,
+          "profit_factor": 1.88,
+          "avg_exposure_pct": 31.65,
+          "pct_time_invested": 73,
+          "avg_committed_pct": 37.9,
+          "avg_cash_pct": 62.1,
+          "annualized_vol_pct": 48.09,
+          "daily_var_95_pct": 2.41,
+          "daily_cvar_95_pct": 3.9,
+          "ulcer_index": 9.97,
+          "max_underwater_sessions": 267,
+          "from": "2021-01-01",
+          "to": "2026-08-31"
+        },
+        "recordedAt": "2026-09-01T09:18:09.412Z",
+        "_forcedOver": {
+          "recordedAt": "2026-09-01T09:05:04.836Z",
+          "orders": 1
+        }
       }
     },
     "book_honest": {
@@ -4594,5 +4798,5 @@
       }
     }
   },
-  "_updated": "2026-08-29T05:48:39.339Z"
+  "_updated": "2026-09-01T09:18:09.414Z"
 }

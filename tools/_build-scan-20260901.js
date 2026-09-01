@@ -4,6 +4,10 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const {
+  boundaryFromRegistry,
+  isDecisionAtOrAfterBoundary,
+} = require('./lib/public-scanner-history');
 
 const ROOT = path.join(__dirname, '..');
 const DIR = path.join(ROOT, 'scanner', '20260901');
@@ -12,6 +16,24 @@ const SCAN_DATE = '2026-09-01';
 const read = rel => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
 const round = (n, d = 2) => +Number(n).toFixed(d);
 const hash = rel => crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, rel))).digest('hex');
+
+const dtxStage = read('data/dtx/best.json');
+const capacityBoundary = boundaryFromRegistry(read('data/capacity-ledger-v1.json'));
+const dtxExpectedPortfolio = 'us_highvol_tp999_vwap';
+const dtxExpectedConfigHash = 'sha256:0591a7e6ee4b33be82ff244824b45f2c2b17fb57d4ee3f4624820b962d0976e5';
+if (dtxStage.portfolioId !== dtxExpectedPortfolio || dtxStage.configHash !== dtxExpectedConfigHash) {
+  throw new Error(`Unexpected DTX staging identity: ${dtxStage.portfolioId} / ${dtxStage.configHash}`);
+}
+const dtxOrder = dtxStage.orders?.[0];
+const dtxProvenance = dtxStage.decisionProvenance || {};
+const dtxForwardCertified = isDecisionAtOrAfterBoundary(dtxStage, capacityBoundary);
+if (dtxForwardCertified && (!dtxOrder || !dtxProvenance.planId || dtxStage.orders.length !== 1)) {
+  throw new Error('Expected one provenance-bound DTX proposal after the capacity boundary');
+}
+const dtxParisWindow = '15:30–21:55 (Paris)';
+const dtxSummary = dtxForwardCertified
+  ? `DTX Max propose ${dtxOrder.symbol}, ${dtxOrder.qty} actions, limite ${round(dtxOrder.limitPrice).toFixed(2)} $, protection ${round(dtxOrder.stopLoss).toFixed(2)} $, fenêtre ${dtxParisWindow}. C’est une décision séparée, pas un ordre exécuté ni une position; le suivi réel n’a pas commencé.`
+  : `Aucun plan forward DTX Max certifié n’est publié. La décision disponible précède le scellement capacityAt(entry) du ${capacityBoundary.effectiveAt}; elle est retirée du suivi réel. Le replay historique reste une référence distincte.`;
 
 const selected = ['AAPL', 'NVDA', 'WMT', 'AMZN', 'CRWD', 'TSLA', 'IWM', 'XLB'];
 const meta = {
@@ -263,16 +285,16 @@ absPairs.sort((a, b) => Math.abs(b.c) - Math.abs(a.c));
 const maxAbs = absPairs[0];
 
 const data = {
-  _comment: `Scanner du ${SCAN_DATE}, fondé sur la clôture US complète du ${REF}.`,
+  _comment: `Scanner ${SCAN_DATE} fondé sur la clôture US certifiée du ${REF}; les barres ouvertes sont exclues des niveaux publiés.`,
   date: SCAN_DATE, session_label: 'Séance du mardi 1er septembre 2026', url: '/scanner/20260901/',
   regime: 'RISK-ON', regime_score: 0.8, regime_color: '#16a34a',
   tags: ['us', 'etf', 'technique', 'trade-idea', 'risk-on'],
   kpis: { vix: { value: '14,92', label: 'sous sa moyenne 14 jours', color: '#16a34a' }, spx: { value: '7 686,14', change_pct: null, color: '#64748b' }, avg_score: avgScore, dominant_patterns: ['Momentum', 'Breakout', 'Pullback'] },
   alerts: [
-    { type: 'warning', title: 'DTX désarmé', text: 'Aucun ordre DTX actionnable: la décision a été refusée pour réutilisation d’une clé avec une empreinte différente, et le book certifié s’arrête au 27 août au lieu du 31 août. Le panneau reste informatif et vide.' },
+    { type: 'info', title: 'DTX Max séparé du Top 8', text: dtxSummary },
     { type: 'warning', title: 'Résultats à surveiller', text: 'Le balayage large S&P 500 + Nasdaq-100 ne signale aucun des six émetteurs dans les sept prochains jours. La requête étroite n’a cependant pas obtenu les dates fournisseur; toute nouvelle confirmation d’émetteur annule le plan.' },
     { type: 'info', title: 'Corrélations sur historique court', text: `La corrélation absolue maximale vaut ${Math.abs(maxAbs.c).toFixed(2)} entre ${maxAbs.a} et ${maxAbs.b}, sur ${correlation.n_observations} observations. XLB ne dispose que de 29 barres; le sizing reste indicatif.` },
-    { type: 'warning', title: 'Sizing MCP non retenu', text: `L’optimiseur a proposé ${round(100 - sizing.cash_reserve_pct, 1).toFixed(1)}% de capital engagé et ${sizing.portfolio_expected_vol_pct.toFixed(1)}% de volatilité attendue malgré une cible de 12%. Aucune taille proposée n’est publiée comme allocation actionnable.` },
+    { type: 'warning', title: 'Allocation automatique rejetée', text: `L’optimiseur a proposé ${round(100 - sizing.cash_reserve_pct, 1).toFixed(1)}% de capital engagé et ${sizing.portfolio_expected_vol_pct.toFixed(1)}% de volatilité attendue malgré une cible de 12%. Aucune taille proposée n’est publiée comme allocation actionnable.` },
   ],
   intro: 'Le régime systématique reste RISK-ON à 0,80, avec un S&P 500 au-dessus de ses moyennes 50, 100 et 200 jours et un VIX à 14,92. Le panier retient volontairement six actions US et deux ETF US: aucune huitième action n’a été forcée après les rejets SEC, earnings, bruit ATR et concentration.',
   strategy: 'Momentum et Breakout exigent une reprise de la zone au-dessus du VWAP. Les Pullback exigent la reprise de l’EMA20 et du VWAP. Un gap supérieur à 2% au-dessus de la zone sans retour annule l’entrée.',
@@ -288,8 +310,8 @@ const data = {
   score_methodology: 'Scores normalisés par famille source sur une plage 80–92 afin de comparer la conviction éditoriale sans présenter les scores bruts hétérogènes comme des probabilités.',
   macro_calendar: [{ date: '1 septembre', event: 'ISM manufacturier américain', impact: 'élevé', dir: 'flat', note: 'Volatilité possible après 10h00 ET' }, { date: '4 septembre', event: 'Rapport emploi américain', impact: 'élevé', dir: 'flat', note: 'Réduire la poursuite avant la publication' }],
   sector_rotation: [{ sector: 'Technologie', perf: '+3,58% sur 1 semaine', signal: 'leader', exposure: 'AAPL, NVDA', dir: 'up' }, { sector: 'Petites capitalisations', perf: 'diversification', signal: 'cassure conditionnelle', exposure: 'IWM', dir: 'flat' }, { sector: 'Matériaux', perf: '-1,66% sur 1 semaine', signal: 'reprise requise', exposure: 'XLB', dir: 'down' }],
-  macro_thesis: 'Le régime reste constructif mais les plans sont strictement conditionnels. La corrélation sert de garde-fou; le sizing suralloué est rejeté et le défaut DTX interdit toute action systématique.',
-  engine_meta: { generated_at: new Date().toISOString(), regime: 'RISK-ON', reference_close: REF, freshness: { marketdata_bars: REF, systematic_last_data_date: REF }, risk_gating: { systematic_regime_score: 0.8, crisis_prob_5d: 0.0825, max_pair_correlation: round(Math.abs(maxAbs.c), 4), max_abs_pair_correlation: round(Math.abs(maxAbs.c), 4), max_abs_pair_symbols: [maxAbs.a, maxAbs.b], avg_off_diagonal_correlation: correlation.avg_off_diagonal, correlation_observations: correlation.n_observations, correlation_method: 'pearson log returns', sizing_status: sizing ? 'rejected_overallocated' : 'pending', sizing_actionable: false, sizing_cash_reserve_pct: sizing?.cash_reserve_pct ?? null, sizing_expected_vol_pct: sizing?.portfolio_expected_vol_pct ?? null, sizing_target_vol_pct: 12, dtx_actionable_orders: 0, dtx_fault: 'idempotency key reused with different input fingerprint; certified book ends 2026-08-27, expected 2026-08-31' } },
+  macro_thesis: 'Le régime reste constructif mais les huit plans éditoriaux sont strictement conditionnels. La corrélation sert de garde-fou et le sizing suralloué est rejeté. DTX Max est un produit séparé; aucun plan forward non certifié n’entre dans cette allocation scanner.',
+  engine_meta: { generated_at: new Date().toISOString(), regime: 'RISK-ON', reference_close: REF, marketdata_contract_status: 'certified', marketdata_completion_policy: 'completed_only', freshness: { equity_reference_close: REF, crypto_completed_refdate: REF, systematic_last_data_date: REF }, risk_gating: { systematic_regime_score: 0.8, crisis_prob_5d: 0.0825, max_pair_correlation: round(Math.abs(maxAbs.c), 4), max_abs_pair_correlation: round(Math.abs(maxAbs.c), 4), max_abs_pair_symbols: [maxAbs.a, maxAbs.b], avg_off_diagonal_correlation: correlation.avg_off_diagonal, correlation_observations: correlation.n_observations, correlation_method: 'pearson log returns', sizing_status: sizing ? 'rejected_overallocated' : 'pending', sizing_actionable: false, sizing_cash_reserve_pct: sizing?.cash_reserve_pct ?? null, sizing_expected_vol_pct: sizing?.portfolio_expected_vol_pct ?? null, sizing_target_vol_pct: 12, dtx_planned_orders: dtxForwardCertified ? 1 : 0, dtx_actionable_orders: 0, dtx_fault: dtxForwardCertified ? null : 'retired_uncertified_pre_capacity_boundary', dtx_product: 'DTX Max', dtx_valid_from: dtxForwardCertified ? dtxProvenance.validFrom : null, dtx_valid_until: dtxForwardCertified ? dtxProvenance.validUntil : null, dtx_capacity_boundary_effective_at: capacityBoundary.effectiveAt, dtx_forward_tracking: 'not_started' } },
   disclaimer_extra: "Ceci n'est pas un conseil en investissement. Les niveaux sont conditionnels et deviennent caducs si les données, l’événement ou le régime changent.",
   setups, scanDate: '20260901',
 };
@@ -307,7 +329,7 @@ const signalsJson = {
   scanDate: SCAN_DATE, regime: 'RISK-ON', regimeScore: 80, regimeScoreScale: '0-100 (higher = risk-on)',
   _pipelineOrder: { earnings_screened_at: broadEarnings.captured_at, enrichment_started_at: read('scanner/20260901/_data2/harness.json').generated_at, candidates_screened: 31, method: 'Le calendrier large et les positions ouvertes ont été contrôlés avant l’enrichissement technique final.' },
   _memoryImpact: { rules_applied: ['us-only', 'pit-close', 'tp1-reachability', 'vwap-entry-gate', 'sec-primary-classification', 'strategy-concentration'], notes: 'Minimum honnête de six actions et deux ETF; aucune ligne de remplissage.' },
-  _editorialNote: 'US-only. Flux optionnels retirés après surcharge du serveur; aucune donnée de remplacement fabriquée. DTX vide et désarmé avec faute exacte publiée.',
+  _editorialNote: 'US-only. Flux optionnels retirés après surcharge du serveur; aucune donnée de remplacement fabriquée. Le run DTX à six appels reste une preuve de replay; sa décision antérieure au scellement capacityAt(entry) est retirée du forward, sans fill ni position.',
   _scoreMethodology: data.score_methodology, exited_factors: [], signals,
   momentum: signals.filter(s => s.strategy === 'Momentum'), breakout: signals.filter(s => s.strategy === 'Breakout'),
   pullback: signals.filter(s => s.strategy === 'Pullback'), pre_squeeze: [], tkl_pool: [], dtx_pool: [], fortress_pool: [],

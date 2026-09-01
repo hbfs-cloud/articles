@@ -36,17 +36,6 @@ const DEFAULT_FROM = '2021-01-01';
 // dashboard mode id that carries statusSince. Unwired portfolios (crypto/eu_dax/…) fall back
 // to --asof (they are not launched, so there is no live segment to splice against).
 const MODES_CFG = path.join(REPO_ROOT, 'data', 'modes-config.json');
-// dtx MCP v15 cut-over (2026-07-13): the 6 cost-honest strategies. Fresh ids => identity map
-// (dashboard mode id == dtx portfolio id == staging file). Legacy scripted modes are stopped.
-// Un seul portefeuille depuis le 2026-08-12 : « best », panier multi-poches qui
-// remplace et agrège les six précédents. Cette table était restée sur les six
-// supprimés — conséquence : le moteur rendait ses 18 ordres et rien ne les
-// routait vers le mode, dont le panneau restait vide sur la page publiée.
-const PORTFOLIO_TO_MODE = { best: 'best' };
-// Livres multi-poches : leur portefeuille EST le bloc `combined`, pas results[0]
-// qui ne serait que la première poche. « best » en est un — porteur haute
-// volatilité, poche défensive, ETF, explosion de momentum.
-const MULTI_ALLOC_BOOKS = new Set(['best']);
 let _modesCfgCache;
 function loadModesCfg() {
   if (_modesCfgCache !== undefined) return _modesCfgCache;
@@ -54,9 +43,60 @@ function loadModesCfg() {
   catch (_) { _modesCfgCache = null; }
   return _modesCfgCache;
 }
+
+// Public dashboard ids and engine portfolio ids are separate namespaces. The public
+// URL/API/staging/universe remains the mode id (for example `best`), while
+// DtxDecide and DtxReplay use the portfolio selected by that mode's `dtxPortfolio`.
+// Identity is the backwards-compatible default, never a hard-coded special case.
+const DTX_MODE_BINDINGS = (() => {
+  const cfg = loadModesCfg();
+  const modes = (cfg && (cfg.modes || cfg)) || {};
+  return Object.entries(modes)
+    .filter(([, modeCfg]) => modeCfg && modeCfg.assetClass === 'dtx')
+    .map(([modeId, modeCfg]) => ({
+      modeId,
+      portfolioId: String(modeCfg.dtxPortfolio || modeId),
+      active: modeCfg.status !== 'stopped',
+    }));
+})();
+
+const MODE_TO_PORTFOLIO = Object.freeze(Object.fromEntries(
+  DTX_MODE_BINDINGS.map(({ modeId, portfolioId }) => [modeId, portfolioId]),
+));
+const PORTFOLIO_TO_MODE = Object.freeze(DTX_MODE_BINDINGS.reduce((out, { modeId, portfolioId }) => {
+  if (out[portfolioId] && out[portfolioId] !== modeId) {
+    throw new Error(`DTX portfolio ${portfolioId} is mapped to multiple public modes (${out[portfolioId]}, ${modeId})`);
+  }
+  out[portfolioId] = modeId;
+  return out;
+}, {}));
+
+function dtxPortfolioForMode(modeId) {
+  return MODE_TO_PORTFOLIO[String(modeId)] || String(modeId);
+}
+
+function publicModeForPortfolio(portfolioId) {
+  const id = String(portfolioId);
+  if (PORTFOLIO_TO_MODE[id]) return PORTFOLIO_TO_MODE[id];
+  return Object.prototype.hasOwnProperty.call(MODE_TO_PORTFOLIO, id) ? id : null;
+}
+
+/** Exact Contract V2 config hash pinned by the public mode, if that portfolio is wired. */
+function dtxConfigHashForMode(modeOrPortfolioId) {
+  const id = String(modeOrPortfolioId);
+  const modeId = publicModeForPortfolio(id) || id;
+  const cfg = loadModesCfg();
+  const modes = (cfg && (cfg.modes || cfg)) || {};
+  const mode = modes[modeId];
+  if (!mode || mode.assetClass !== 'dtx') return null;
+  return typeof mode.dtxConfigHash === 'string' && mode.dtxConfigHash.trim()
+    ? mode.dtxConfigHash.trim()
+    : null;
+}
+
 /** Go-live (YYYY-MM-DD) for a dtx portfolio id, from the dashboard mode's statusSince. null if unwired. */
 function goLiveFor(portfolioId) {
-  const modeId = PORTFOLIO_TO_MODE[portfolioId];
+  const modeId = publicModeForPortfolio(portfolioId);
   if (!modeId) return null;
   const cfg = loadModesCfg();
   const modes = (cfg && (cfg.modes || cfg)) || {};
@@ -64,8 +104,9 @@ function goLiveFor(portfolioId) {
   return since ? String(since).slice(0, 10) : null;
 }
 
-// The 6 dtx modes wired to the engine (the MCP produces their staging).
-const SCRIPTED_MODES = Object.keys(PORTFOLIO_TO_MODE);
+// Public mode ids whose staging is required by the scanner. Engine portfolio ids are
+// deliberately not used as filenames or `universe` tags.
+const SCRIPTED_MODES = DTX_MODE_BINDINGS.filter(({ active }) => active).map(({ modeId }) => modeId);
 
 // ---------------------------------------------------------------------------
 // arg parsing
@@ -194,6 +235,8 @@ function mapOrder(or, sleeves) {
 
 function validateDecisionV2(decision, expected = {}) {
   const errors = [];
+  const isPositiveFinite = value => value !== null && value !== ''
+    && Number.isFinite(Number(value)) && Number(value) > 0;
   const requiredText = (value, field) => {
     if (typeof value !== 'string' || !value.trim()) errors.push(`${field} missing`);
   };
@@ -205,6 +248,18 @@ function validateDecisionV2(decision, expected = {}) {
   }
   if (expected.asof && decision.requested_asof !== expected.asof) {
     errors.push(`requested_asof=${decision.requested_asof || 'missing'} != ${expected.asof}`);
+  }
+  if (expected.portfolio) {
+    requiredText(decision.strategy_id, 'strategy_id');
+    if (decision.strategy_id && decision.strategy_id !== expected.portfolio) {
+      errors.push(`strategy_id=${decision.strategy_id} != ${expected.portfolio}`);
+    }
+  }
+  if (expected.configHash) {
+    requiredText(decision.config_hash, 'config_hash');
+    if (decision.config_hash && decision.config_hash !== expected.configHash) {
+      errors.push(`config_hash=${decision.config_hash} != ${expected.configHash}`);
+    }
   }
   const plan = decision.execution_plan;
   if (!plan || typeof plan !== 'object') return [...errors, 'execution_plan missing'];
@@ -242,13 +297,19 @@ function validateDecisionV2(decision, expected = {}) {
       if (ci === 0 && c.rank !== 1) errors.push(`${cp}.rank must start at 1`);
       previousRank = Number.isInteger(c.rank) ? c.rank : previousRank;
       for (const key of ['symbol', 'side', 'broker', 'sleeve', 'reason']) requiredText(c[key], `${cp}.${key}`);
+      if (expected.portfolio) {
+        requiredText(c.strategy_id, `${cp}.strategy_id`);
+        if (c.strategy_id && c.strategy_id !== expected.portfolio) {
+          errors.push(`${cp}.strategy_id=${c.strategy_id} != ${expected.portfolio}`);
+        }
+      }
       if (!Number.isFinite(Number(c.qty)) || Number(c.qty) <= 0) errors.push(`${cp}.qty invalid`);
       if (!c.order || typeof c.order !== 'object') {
         errors.push(`${cp}.order missing`);
       } else {
         requiredText(c.order.order_type, `${cp}.order.order_type`);
         requiredText(c.order.time_in_force, `${cp}.order.time_in_force`);
-        if (c.order.order_type === 'LIMIT' && !Number.isFinite(Number(c.order.limit_price))) errors.push(`${cp}.order.limit_price missing for LIMIT`);
+        if (c.order.order_type === 'LIMIT' && !isPositiveFinite(c.order.limit_price)) errors.push(`${cp}.order.limit_price must be positive for LIMIT`);
         if (!Number.isFinite(Number(c.order.max_notional)) || Number(c.order.max_notional) <= 0) errors.push(`${cp}.order.max_notional invalid`);
         if (typeof c.order.extended_hours !== 'boolean') errors.push(`${cp}.order.extended_hours missing`);
       }
@@ -258,8 +319,14 @@ function validateDecisionV2(decision, expected = {}) {
         const mode = c.protection.mode;
         if (!['native_bracket', 'native_oco', 'engine_managed', 'none'].includes(mode)) errors.push(`${cp}.protection.mode unsupported`);
         if (c.side === 'BUY' && mode === 'none') errors.push(`${cp}.new BUY cannot use protection.mode=none`);
-        if (mode === 'native_bracket' && (!Number.isFinite(Number(c.protection.stop_loss)) || !Number.isFinite(Number(c.protection.take_profit)))) errors.push(`${cp}.native_bracket incomplete`);
-        if (mode === 'engine_managed' && (!Number.isFinite(Number(c.protection.stop_loss)) || !c.protection.exit_policy_ref)) errors.push(`${cp}.engine_managed incomplete`);
+        if (mode === 'native_bracket' && (!isPositiveFinite(c.protection.stop_loss) || !isPositiveFinite(c.protection.take_profit))) errors.push(`${cp}.native_bracket incomplete`);
+        if (mode === 'native_oco' && (!isPositiveFinite(c.protection.stop_loss) || !isPositiveFinite(c.protection.take_profit))) errors.push(`${cp}.native_oco incomplete`);
+        if (mode === 'engine_managed' && (!isPositiveFinite(c.protection.stop_loss) || !c.protection.exit_policy_ref)) errors.push(`${cp}.engine_managed incomplete`);
+        if (c.side === 'BUY' && isPositiveFinite(c.protection.stop_loss)
+          && c.order && isPositiveFinite(c.order.limit_price)
+          && Number(c.protection.stop_loss) >= Number(c.order.limit_price)) {
+          errors.push(`${cp}.protection.stop_loss must be below BUY limit_price`);
+        }
       }
       if (!c.execution || typeof c.execution !== 'object') {
         errors.push(`${cp}.execution missing`);
@@ -368,12 +435,26 @@ function extractReplayMetrics(rep, from, to) {
   }
   return {
     metrics: {
+      replay_scope: 'single_strategy',
+      equity_scope: 'equity_full',
+      equity_resolution: 'daily',
       allocation: r.allocation, strategy: r.strategy,
       initial_capital: r.initial_capital,
       final_equity: r.final_equity, total_trades: r.total_trades,
       winners: r.winners, losers: r.losers, win_rate: r.win_rate,
       return_pct: r.return_pct, cagr_pct: r.cagr_pct, max_dd_pct: r.max_dd_pct,
-      sharpe: r.sharpe, r2: r.r2, from, to,
+      sharpe: r.sharpe, sortino: r.sortino, calmar: r.calmar, r2: r.r2,
+      profit_factor: r.profit_factor,
+      avg_exposure_pct: r.avg_exposure_pct,
+      pct_time_invested: r.pct_time_invested,
+      avg_committed_pct: r.avg_committed_pct,
+      avg_cash_pct: r.avg_cash_pct,
+      annualized_vol_pct: r.annualized_vol_pct,
+      daily_var_95_pct: r.daily_var_95_pct,
+      daily_cvar_95_pct: r.daily_cvar_95_pct,
+      ulcer_index: r.ulcer_index,
+      max_underwater_sessions: r.max_underwater_sessions,
+      from, to,
     },
     equity: { dates: r.equity_dates || [], values: r.equity_values || [] },
   };
@@ -446,20 +527,41 @@ function assertReplaySanity(portfolioId, metrics) {
 
 /** Build staging from DtxDecide Contract V2. Rank-1 candidates come exclusively from
  * execution_plan.groups; actions.UPDATE/CANCEL remain compatibility control actions. */
-function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity, replayErr, engineLabel, engineMode, t0 }) {
-  const contractErrors = validateDecisionV2(decision, { asof });
+function buildStaging({ modeInfo, cfg, asof, decisionAsOf = asof, currency, decision, metrics, equity, replayErr, engineLabel, engineMode, t0 }) {
+  const requestedPortfolioId = String(cfg.id);
+  const publicModeId = publicModeForPortfolio(requestedPortfolioId)
+    || publicModeForPortfolio(modeInfo.id)
+    || modeInfo.id;
+  const configuredPortfolioId = dtxPortfolioForMode(publicModeId);
+  // Never relabel a response collected from the public alias as though it came
+  // from the configured engine portfolio. Collectors must call DTX with the
+  // engine id; a stale identity-coupled plan fails before any staging is written.
+  if (requestedPortfolioId !== configuredPortfolioId) {
+    throw new Error(`DTX portfolio mapping mismatch: public mode ${publicModeId} requires ${configuredPortfolioId}, got ${requestedPortfolioId}`);
+  }
+  // `asof` is the PUBLIC scanner session (the day on which the plan is shown).
+  // `decisionAsOf` is the completed market close consumed by DtxDecide. They are
+  // commonly J+1 and J respectively and must never be collapsed into one date.
+  const contractErrors = validateDecisionV2(decision, {
+    asof: decisionAsOf,
+    portfolio: requestedPortfolioId,
+    configHash: dtxConfigHashForMode(publicModeId),
+  });
   if (contractErrors.length) throw new Error(`DtxDecide Contract V2 rejected: ${contractErrors.join('; ')}`);
   // Contract V2 execution_plan.groups is authoritative. actions.CREATE is only
   // the V1 compatibility projection and must never be consumed in parallel.
   const create = rankOneOrdersFromV2(decision);
-  const sanityWarnings = assertReplaySanity(cfg.id, metrics);
+  const sanityWarnings = assertReplaySanity(requestedPortfolioId, metrics);
   const { map: sleeves, conflicts: sleeveConflicts } = sleeveIndex(decision);
-  const untagged = create.filter((o) => !sleeves[o.symbol]).map((o) => o.symbol);
+  const sleeveFor = o => o.sleeve || sleeves[o.symbol] || null;
+  const untagged = create.filter((o) => !sleeveFor(o)).map((o) => o.symbol);
   return {
-    mode: modeInfo.id,
-    portfolioId: cfg.id,
+    mode: publicModeId,
+    portfolioId: requestedPortfolioId,
+    configHash: decision.config_hash || null,
     name: cfg.name,
     asof,
+    decisionAsOf,
     generatedAt: new Date().toISOString(),
     engine: engineLabel,
     engineMode,
@@ -487,7 +589,7 @@ function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity
     },
     // MCP is the config source of truth. If a local yaml exists we cite its relative path;
     // otherwise the config lives only server-side (systematic.dailytickers.com).
-    config: modeInfo.path ? path.relative(REPO_ROOT, modeInfo.path) : `MCP:${cfg.id}`,
+    config: modeInfo.path ? path.relative(REPO_ROOT, modeInfo.path) : `MCP:${requestedPortfolioId}`,
     currency,
     orders: create.map((o) => mapOrder(o, sleeves)),
     // Traçabilité du tag de poche : combien d'ordres n'ont pas pu être rattachés, et pourquoi.
@@ -498,7 +600,7 @@ function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity
       total: create.length,
       untagged,
       conflicts: sleeveConflicts,
-      source: 'DtxDecide.state[<poche>].pm_state.position_open_dates',
+      source: 'execution_plan.groups[].candidates[].sleeve (fallback: DtxDecide.state)',
     },
     updates: (decision && decision.actions && decision.actions.UPDATE) || [],
     cancels: (decision && decision.actions && decision.actions.CANCEL) || [],
@@ -506,7 +608,11 @@ function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity
     equity,
     metricsSource: metrics ? 'mcp_replay' : null,
     equityResolution: equity ? 'replay' : null,
-    equitySource: equity ? 'DtxReplay (reconstruction combinée à capital fixe)' : null,
+    equitySource: equity
+      ? metrics && metrics.replay_scope === 'single_strategy'
+        ? 'DtxReplay (replay exact mono-stratégie)'
+        : 'DtxReplay (reconstruction combinée à capital fixe)'
+      : null,
     replayError: replayErr,
     metricsSuspect: sanityWarnings.length > 0,
     _sanityWarning: sanityWarnings.length > 0 ? sanityWarnings : null,
@@ -586,12 +692,16 @@ function writeStaging(out, outPath) {
   try {
     if (fs.existsSync(outPath)) {
       const prev = JSON.parse(fs.readFileSync(outPath, 'utf8'));
-      if (prev && prev.rejectedServedSnapshot) out.rejectedServedSnapshot = prev.rejectedServedSnapshot;
+      const samePortfolio = prev && prev.portfolioId === out.portfolioId;
+      if (samePortfolio && prev.rejectedServedSnapshot
+        && prev.rejectedServedSnapshot.portfolioId === out.portfolioId) {
+        out.rejectedServedSnapshot = prev.rejectedServedSnapshot;
+      }
       const coherence = bookSnapshotCoherence(prev, {
         expectedPortfolio: out.portfolioId,
         expectedClose: out.decisionProvenance && out.decisionProvenance.expectedDataDate,
       });
-      if (prev && prev.metricsSource === 'book_served_stats' && prev.metrics && coherence.ok) {
+      if (samePortfolio && prev.metricsSource === 'book_served_stats' && prev.metrics && coherence.ok) {
         out.metrics = prev.metrics;
         out.metricsSource = prev.metricsSource;
         // La courbe ET SA PROVENANCE. Ne préserver que `equity` laissait tomber
@@ -605,8 +715,9 @@ function writeStaging(out, outPath) {
         if (prev.equitySource) out.equitySource = prev.equitySource;
         if (prev.equityVerifiedAt) out.equityVerifiedAt = prev.equityVerifiedAt;
         if (prev.bookSnapshot) out.bookSnapshot = prev.bookSnapshot;
-      } else if (prev && prev.metricsSource === 'book_served_stats' && prev.metrics) {
+      } else if (samePortfolio && prev.metricsSource === 'book_served_stats' && prev.metrics) {
         out.rejectedServedSnapshot = {
+          portfolioId: out.portfolioId,
           reason: 'book snapshot failed same-vintage curve/metric provenance checks; fresh MCP replay published instead',
           errors: coherence.errors,
           served_max_dd_pct: Number(prev?.metrics?.max_dd_pct),
@@ -633,7 +744,7 @@ function writeStaging(out, outPath) {
  * Sans {pit} → chemin live, quel que soit l'as-of (zéro régression sur le pipeline nocturne).
  */
 function stagingPathFor(portfolioId, { asof = null, pit = false } = {}) {
-  const id = String(portfolioId);
+  const id = publicModeForPortfolio(portfolioId) || String(portfolioId);
   if (pit && asof) return path.join(STAGING_DIR, `${id}@${String(asof).slice(0, 10)}.json`);
   return path.join(STAGING_DIR, `${id}.json`);
 }
@@ -643,18 +754,38 @@ function stagingPathFor(portfolioId, { asof = null, pit = false } = {}) {
 // ---------------------------------------------------------------------------
 /** Inspect a mode's committed staging. Returns {exists, engineMode, generatedAt, fresh} where
  *  fresh = engineMode:"mcp" AND generatedAt is today (UTC). Never throws. */
-function stagingSnapshotErrors(snapshot, portfolioId, { todayIso, scanDateIso, expectedClose } = {}) {
+function stagingSnapshotErrors(snapshot, portfolioId, {
+  todayIso,
+  scanDateIso,
+  expectedClose,
+  publicModeId: expectedPublicMode,
+  expectedConfigHash,
+} = {}) {
   const errors = [];
+  // `portfolioId` is deliberately the literal engine identity captured in this
+  // snapshot. Do not reinterpret a legacy engine named `best` through today's
+  // public alias: historical validation must remain stable when a public mode is
+  // remapped. Current-mode callers pass publicModeId explicitly.
+  const expectedPortfolioId = String(portfolioId);
+  const publicModeId = expectedPublicMode
+    || publicModeForPortfolio(expectedPortfolioId)
+    || String(snapshot && snapshot.mode || expectedPortfolioId);
+  const configuredHash = expectedConfigHash || dtxConfigHashForMode(publicModeId);
   const today = todayIso || new Date().toISOString().slice(0, 10);
   const generated = String(snapshot && snapshot.generatedAt || '').slice(0, 10);
   const provenance = snapshot && snapshot.decisionProvenance || {};
   if (!snapshot || snapshot.engineMode !== 'mcp') errors.push('engineMode must be mcp');
   if (generated !== today) errors.push(`generatedAt ${generated || 'missing'} != ${today}`);
-  if (snapshot && snapshot.portfolioId !== portfolioId) errors.push(`portfolioId ${snapshot.portfolioId || 'missing'} != ${portfolioId}`);
+  if (snapshot && snapshot.mode !== publicModeId) errors.push(`mode ${snapshot.mode || 'missing'} != ${publicModeId}`);
+  if (snapshot && snapshot.portfolioId !== expectedPortfolioId) errors.push(`portfolioId ${snapshot.portfolioId || 'missing'} != ${expectedPortfolioId}`);
+  if (configuredHash && snapshot && snapshot.configHash !== configuredHash) {
+    errors.push(`configHash ${snapshot.configHash || 'missing'} != ${configuredHash}`);
+  }
   if (scanDateIso && snapshot && snapshot.asof !== scanDateIso) errors.push(`asof ${snapshot.asof || 'missing'} != ${scanDateIso}`);
   if (provenance.contractVersion !== '2.0') errors.push('Contract V2 provenance missing');
-  if (scanDateIso && provenance.requestedAsOf !== scanDateIso) errors.push(`requestedAsOf ${provenance.requestedAsOf || 'missing'} != ${scanDateIso}`);
   if (scanDateIso && !expectedClose) errors.push('certified scanner reference close is missing');
+  if (expectedClose && snapshot && snapshot.decisionAsOf !== expectedClose) errors.push(`decisionAsOf ${snapshot.decisionAsOf || 'missing'} != ${expectedClose}`);
+  if (expectedClose && provenance.requestedAsOf !== expectedClose) errors.push(`requestedAsOf ${provenance.requestedAsOf || 'missing'} != completed close ${expectedClose}`);
   if (!provenance.expectedDataDate || provenance.expectedDataDate !== provenance.dataAsOf) errors.push('expectedDataDate/dataAsOf mismatch');
   if (expectedClose && provenance.expectedDataDate !== expectedClose) errors.push(`expectedDataDate ${provenance.expectedDataDate || 'missing'} != ${expectedClose}`);
   const failClosed = snapshot && snapshot.actionable === false;
@@ -676,11 +807,15 @@ function stagingSnapshotErrors(snapshot, portfolioId, { todayIso, scanDateIso, e
 
 function stagingStatus(portfolioId, todayIso, expectations = {}) {
   const today = todayIso || new Date().toISOString().slice(0, 10);
-  const p = path.join(STAGING_DIR, `${portfolioId}.json`);
+  const publicModeId = publicModeForPortfolio(portfolioId) || String(portfolioId);
+  const expectedPortfolioId = dtxPortfolioForMode(publicModeId);
+  const p = stagingPathFor(publicModeId);
   try {
     const j = JSON.parse(fs.readFileSync(p, 'utf8'));
     const gen = String(j.generatedAt || '').slice(0, 10);
-    const errors = stagingSnapshotErrors(j, portfolioId, { ...expectations, todayIso: today });
+    const errors = stagingSnapshotErrors(j, expectedPortfolioId, {
+      ...expectations, todayIso: today, publicModeId,
+    });
     return { exists: true, engineMode: j.engineMode || null, generatedAt: gen, fresh: errors.length === 0, errors };
   } catch (_) {
     return { exists: false, engineMode: null, generatedAt: null, fresh: false, errors: ['staging missing or invalid'] };
@@ -751,7 +886,8 @@ function main() {
     for (const m of Object.values(modes)) {
       if (m.error) console.log(`  ${String(m.id).padEnd(22)} ERROR: ${m.error}`);
       else {
-        const wired = SCRIPTED_MODES.includes(m.id) ? ' [scripted/wired]' : '';
+        const publicMode = publicModeForPortfolio(m.id);
+        const wired = publicMode ? ` [scripted/wired as ${publicMode}]` : '';
         console.log(`  ${m.id.padEnd(22)} ${m.currency} ${m.initialCapital}  (${m.file})${wired}`);
       }
     }
@@ -783,5 +919,6 @@ module.exports = {
   buildStaging, writeStaging, stagingPathFor, extractReplayMetrics, assertReplaySanity, mapOrder, sleeveIndex,
   bookSnapshotCoherence,
   validateDecisionV2, rankOneOrdersFromV2, goLiveFor,
-  DEFAULT_FROM, STAGING_DIR, CONFIG_DIR, REPO_ROOT, PORTFOLIO_TO_MODE,
+  dtxPortfolioForMode, publicModeForPortfolio, dtxConfigHashForMode,
+  DEFAULT_FROM, STAGING_DIR, CONFIG_DIR, REPO_ROOT, PORTFOLIO_TO_MODE, MODE_TO_PORTFOLIO,
 };

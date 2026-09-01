@@ -18,6 +18,7 @@ cd "$(dirname "$0")/.." || { echo "ÉCHEC: racine du dépôt introuvable" >&2; e
 DATE="${1:?usage: scan-parallel.sh <DATE> <REFDATE> <ASOF>}"; REF="${2:?}"; ASOF="${3:?}"
 DIR="scanner/$DATE"; mkdir -p "$DIR"
 T0=$(date +%s)
+AS_OF_TIMESTAMP=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
 log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
 TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/dailytickers-scanner-${DATE}.XXXXXX")
 trap 'rm -rf "$TMP_ROOT"' EXIT HUP INT TERM
@@ -42,7 +43,7 @@ DTX_REQUEST_ID="$(tr -d '\r\n' < "$REQ_FILE")"
 # ── A : vivier puis enrichissement (seule vraie dépendance) ──────────────────
 (
   node tools/collect.js --plan plans/scanner-wave1.json --out "$DIR/_data" --quiet \
-    --var date="$DATE" --var refdate="$REF" > "$A_LOG" 2>&1 || { { echo "A1 ÉCHEC — vivier"; grep -E "✗|ÉCHEC" "$A_LOG"; } > "$A_STATUS"; exit 1; }
+    --var date="$DATE" --var refdate="$REF" --var as_of_timestamp="$AS_OF_TIMESTAMP" > "$A_LOG" 2>&1 || { { echo "A1 ÉCHEC — vivier"; grep -E "✗|ÉCHEC" "$A_LOG"; } > "$A_STATUS"; exit 1; }
   node tools/check-freshness.js "$DIR/_data/harness.json" >> "$A_LOG" 2>&1 \
     && node tools/validate-workflows.js --run-plan plans/scanner-wave1.json "$DIR/_data" >> "$A_LOG" 2>&1 \
     || { echo "A1 ÉCHEC — contrat/fraîcheur" > "$A_STATUS"; exit 1; }
@@ -53,7 +54,7 @@ DTX_REQUEST_ID="$(tr -d '\r\n' < "$REQ_FILE")"
   # deux lots dilution sur cinq perdus (MCP capricieux, 429, job en timeout)
   # devenaient un scan réputé complet, sur lequel on publiait.
   node tools/collect.js --plan plans/scanner-wave2.json --out "$DIR/_data2" --quiet \
-    --vars-file "$DIR/_data/vars.json" --var date="$DATE" --var refdate="$REF" >> "$A_LOG" 2>&1 \
+    --vars-file "$DIR/_data/vars.json" --var date="$DATE" --var refdate="$REF" --var as_of_timestamp="$AS_OF_TIMESTAMP" >> "$A_LOG" 2>&1 \
     || { { echo "A3 ÉCHEC — enrichissement incomplet"; grep -E "✗|ÉCHEC" "$A_LOG"; } > "$A_STATUS"; exit 1; }
   node tools/check-freshness.js "$DIR/_data2/harness.json" >> "$A_LOG" 2>&1 \
     && node tools/validate-workflows.js --run-plan plans/scanner-wave2.json "$DIR/_data2" >> "$A_LOG" 2>&1 \
@@ -96,7 +97,7 @@ DTX_REQUEST_ID="$(tr -d '\r\n' < "$REQ_FILE")"
 # ── C : suivi + sweep (ne portent que sur des trades déjà scellés) ───────────
 (
   C_RC=0
-  node tools/update-tracking.js > "$C_LOG" 2>&1 || C_RC=$?
+  echo "Legacy OHLC tracking disabled: no broker-certified ledger, no synthetic fills" > "$C_LOG"
   # --quick : 1m27 contre 6m47 en complet, pour des stats frozen_* IDENTIQUES
   # (A/B du 2026-08-11, 14/14). 362 des 403 trades sont scellés et immuables par
   # règle projet — les re-simuler chaque soir ne change rien. Le sweep COMPLET

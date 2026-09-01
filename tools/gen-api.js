@@ -11,7 +11,17 @@
 const fs = require('fs');
 const path = require('path');
 const ms = require('./lib/mode-status');
-const { isPlanActive } = require('./lib/dtx-plan-window');
+const { inspectPlanWindow, isPlanActive } = require('./lib/dtx-plan-window');
+const {
+  publicStatusReason,
+  sanitizePublicMetadata,
+  sanitizePublicRegimeProbability,
+} = require('./lib/public-sanitize');
+const {
+  boundaryFromRegistry,
+  decisionTimestamp,
+  isDecisionAtOrAfterBoundary,
+} = require('./lib/public-scanner-history');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'portfolio', 'v1');
@@ -38,6 +48,17 @@ if (fs.existsSync(MODES_CFG_PATH)) {
   const mc = JSON.parse(fs.readFileSync(MODES_CFG_PATH, 'utf8'));
   modesConfigMeta = { configVersion: mc._version || null, regime: mc._regime || null };
   modesConfigFull = mc;
+}
+
+// A DTX decision is publishable as a forward proposal only after the exact
+// capacityAt(entry) genesis timestamp. Missing or malformed boundary evidence
+// fails closed for plans while leaving reference replay metrics available.
+const CAPACITY_REGISTRY_PATH = path.join(ROOT, 'data', 'capacity-ledger-v1.json');
+let dtxCapacityBoundary = null;
+try {
+  dtxCapacityBoundary = boundaryFromRegistry(JSON.parse(fs.readFileSync(CAPACITY_REGISTRY_PATH, 'utf8')));
+} catch (error) {
+  console.warn(`  [warn] DTX planning disabled: ${error.message}`);
 }
 
 // Load risk snapshot (VaR / stress / regime-prob / correlations).
@@ -105,13 +126,49 @@ function getRiskFor(modeId) {
 }
 function getGlobalRegime() {
   if (!riskSnap.regimeProbability) return { status: 'pending', reason: 'no regime probability in snapshot' };
-  return { status: 'ok', ...riskSnap.regimeProbability };
+  return { status: 'ok', ...sanitizePublicRegimeProbability(riskSnap.regimeProbability) };
 }
 
 function getStatusFor(modeId) {
   const m = (modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[modeId]) || {};
   const state = ms.isValidState(m.status) ? m.status : ms.DEFAULT_STATE;
-  return ms.statusBlock(state, m.statusSince || null, m.statusReason || null, m.statusNextReviewAt || null);
+  const status = ms.statusBlock(state, m.statusSince || null, publicStatusReason(m), m.statusNextReviewAt || null);
+  if (m.assetClass === 'dtx') {
+    status.tradingMode = 'forward_execution';
+    status.performanceScope = 'forward_execution';
+    status.execution_verified = m.forwardTracking?.executionVerified === true;
+  } else if (m.performanceScope === 'simulated_backtest') {
+    status.tradingMode = 'simulated';
+    status.performanceScope = 'simulated_backtest';
+    status.execution_verified = false;
+  }
+  return status;
+}
+
+function dtxPortfolioForMode(modeId) {
+  const cfg = (modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[modeId]) || {};
+  return String(cfg.dtxPortfolio || modeId);
+}
+
+const _mappedDtxStaging = new Map();
+function loadMappedDtxStaging(modeId) {
+  if (_mappedDtxStaging.has(modeId)) return _mappedDtxStaging.get(modeId);
+  const cfg = (modesConfigFull?.modes || {})[modeId] || {};
+  if (cfg.assetClass !== 'dtx') return null;
+  let staging = null;
+  try {
+    const file = path.join(ROOT, 'data', 'dtx', `${modeId}.json`);
+    if (fs.existsSync(file)) staging = JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch (_) { staging = null; }
+  const expectedPortfolio = dtxPortfolioForMode(modeId);
+  const expectedConfigHash = cfg.dtxConfigHash || null;
+  if (!staging
+      || staging.mode !== modeId
+      || staging.portfolioId !== expectedPortfolio
+      || !expectedConfigHash
+      || staging.configHash !== expectedConfigHash) staging = null;
+  _mappedDtxStaging.set(modeId, staging);
+  return staging;
 }
 
 function write(filename, content) {
@@ -170,11 +227,28 @@ console.log(`  Source: ${path.relative(ROOT, latestFile)} (${snap.date})${orders
 // les champs que le moteur ne produit pas (score éditorial, tp2, R/R, filtre Sharia) restent null
 // plutôt que d'être fabriqués, et les champs propres au moteur (qty, orderType, limitPrice)
 // sont exposés tels quels. Un registre marqué stale ne publie rien.
-function engineOrdersFrom(mode) {
-  const ed = mode && mode.engine_decision;
+function engineDecisionMatchesPortfolio(engineDecision, expectedPortfolio, expectedConfigHash = null) {
+  if (!engineDecision) return false;
+  if (engineDecision.stale === true) return false;
+  const explicit = engineDecision.portfolioId || engineDecision.portfolio || null;
+  if (!expectedPortfolio || explicit !== expectedPortfolio) return false;
+  if (!expectedConfigHash || engineDecision.configHash !== expectedConfigHash) return false;
+  const groups = engineDecision.executionPlan && Array.isArray(engineDecision.executionPlan.groups)
+    ? engineDecision.executionPlan.groups : [];
+  const candidates = groups.flatMap(group => Array.isArray(group.candidates) ? group.candidates : []);
+  // Contract V2 plans identify the portfolio on every candidate. An archive with
+  // no identity proof (or only partial identity proof) is not allowed to populate
+  // current public orders/metrics. One missing id must not disappear in a filtered Set.
+  return candidates.length > 0 && candidates.every(candidate =>
+    candidate && (candidate.strategy_id || candidate.strategyId) === expectedPortfolio);
+}
+
+function engineOrdersFrom(mode, expectedPortfolio, expectedConfigHash = null, requireActive = true, decisionOverride = null) {
+  const ed = decisionOverride || (mode && mode.engine_decision);
   if (!ed) return null;
+  if (!engineDecisionMatchesPortfolio(ed, expectedPortfolio, expectedConfigHash)) return [];
   const provenance = ed.decisionProvenance || {};
-  if (!isPlanActive(provenance, ed.executionPlan)) return [];
+  if (requireActive && !isPlanActive(provenance, ed.executionPlan)) return [];
   const raw = Array.isArray(ed.orders) ? ed.orders : [];
   if (!raw.length) return [];
   return raw.map(o => ({
@@ -215,6 +289,64 @@ function engineOrdersFrom(mode) {
     broker_symbols: getBrokerSymbols(o.symbol),
   }));
 }
+
+function dtxPlanningGateFor(mode, modeId) {
+  const modeCfg = (((modesConfigFull && modesConfigFull.modes) || {})[modeId] || {});
+  if (modeCfg.assetClass !== 'dtx') {
+    return { eligible: false, status: 'not_applicable', reasonCode: 'not_dtx', decision: null };
+  }
+  const staging = loadMappedDtxStaging(modeId);
+  const snapshotDecision = mode && mode.engine_decision;
+  const decision = staging || snapshotDecision || null;
+  if (!decision) {
+    return { eligible: false, status: 'unavailable', reasonCode: 'decision_unavailable', decision: null };
+  }
+  if (!dtxCapacityBoundary) {
+    return { eligible: false, status: 'unavailable', reasonCode: 'capacity_boundary_unavailable', decision };
+  }
+  if (decision.asof !== snap.date) {
+    return {
+      eligible: false,
+      status: 'unavailable',
+      reasonCode: 'decision_session_mismatch',
+      decision,
+      boundaryEffectiveAt: dtxCapacityBoundary.effectiveAt,
+    };
+  }
+  if (!isDecisionAtOrAfterBoundary(decision, dtxCapacityBoundary)) {
+    return {
+      eligible: false,
+      status: 'retired_uncertified',
+      reasonCode: decisionTimestamp(decision) === null
+        ? 'decision_timestamp_unavailable'
+        : 'decision_precedes_capacity_boundary',
+      decision,
+      boundaryEffectiveAt: dtxCapacityBoundary.effectiveAt,
+      decisionRecordedAt: decision.generatedAt || decision.recordedAt || decision.capturedAt || decision.updatedAt || null,
+    };
+  }
+  return {
+    eligible: true,
+    status: 'certified_forward_proposal',
+    reasonCode: null,
+    decision,
+    boundaryEffectiveAt: dtxCapacityBoundary.effectiveAt,
+    decisionRecordedAt: decision.generatedAt || decision.recordedAt || decision.capturedAt || decision.updatedAt || null,
+  };
+}
+
+function publicDtxPlanningCertification(mode, modeId) {
+  const gate = dtxPlanningGateFor(mode, modeId);
+  return {
+    status: gate.status,
+    reasonCode: gate.reasonCode,
+    capacityAtEntryCertified: gate.eligible,
+    boundaryEffectiveAt: gate.boundaryEffectiveAt || dtxCapacityBoundary?.effectiveAt || null,
+    decisionRecordedAt: gate.decisionRecordedAt || null,
+    execution_verified: false,
+    fill_verified: false,
+  };
+}
 // Liste d'ordres retenue pour un mode : chemin moteur s'il existe, sinon chemin scanner.
 // ⚠️ `engineOrdersFrom` rend `[]` (pas `null`) quand un mode porte un `engine_decision` sans ordre.
 // Le repli `eng !== null ? eng : mode.orders` ne se déclenchait alors PAS, et un mode NON-moteur à
@@ -223,9 +355,38 @@ function engineOrdersFrom(mode) {
 // tient qu'à une convention non vérifiée. On tranche sur la config, qui fait autorité : le chemin
 // moteur n'est emprunté que par un mode réellement déclaré assetClass:"dtx".
 function rawOrdersFor(mode, modeId) {
-  const isEngineMode = (((modesConfigFull && modesConfigFull.modes) || {})[modeId] || {}).assetClass === 'dtx';
-  if (isEngineMode) return engineOrdersFrom(mode) || [];
+  const modeCfg = (((modesConfigFull && modesConfigFull.modes) || {})[modeId] || {});
+  const isEngineMode = modeCfg.assetClass === 'dtx';
+  if (isEngineMode) return engineOrdersFrom(mode, dtxPortfolioForMode(modeId), modeCfg.dtxConfigHash || null) || [];
   return mode.orders || [];
+}
+
+// The public plan remains inspectable before its window opens. It is deliberately
+// separate from `orders`: every executor must re-check the signed validity interval
+// at use time, so a static JSON build can neither open a plan early nor strand it
+// when the interval starts after publication.
+function plannedOrdersFor(mode, modeId) {
+  const modeCfg = (((modesConfigFull && modesConfigFull.modes) || {})[modeId] || {});
+  if (modeCfg.assetClass !== 'dtx') return [];
+  const gate = dtxPlanningGateFor(mode, modeId);
+  if (!gate.eligible) return [];
+  const engineDecision = gate.decision;
+  if (!engineDecision || !inspectPlanWindow(
+    engineDecision.decisionProvenance || {},
+    engineDecision.executionPlan || {},
+  ).valid) return [];
+  return (engineOrdersFrom(mode, dtxPortfolioForMode(modeId), modeCfg.dtxConfigHash || null, false, engineDecision) || []).map(order => ({
+    ...order,
+    order_state: 'planned',
+    execution_verified: false,
+    fill_verified: false,
+    actionability: {
+      policy: 'validate_at_execution',
+      validFrom: order.validFrom || null,
+      validUntil: order.validUntil || null,
+      note: 'Planned decision only; validate the current time and full execution contract before placement.',
+    },
+  }));
 }
 
 // ─── T2: coherence guard (equity.json ⇄ frozen source of truth) ──────────────
@@ -314,29 +475,95 @@ function writeMode(mode, prefix) {
   const p = prefix ? `${prefix}/` : '';
   const status = getStatusFor(prefix || 'balanced');
   const modeId = prefix || 'balanced';
+  const _modeCfgFull = (modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[modeId]) || {};
+  const isEngineMode = _modeCfgFull.assetClass === 'dtx';
+  const publicConfig = isEngineMode ? {
+    ...(mode.config || {}),
+    vwapGate: _modeCfgFull.vwapGate === true,
+    entryModel: _modeCfgFull.entryModel || null,
+    signalOrigin: _modeCfgFull.signalOrigin || null,
+    dtxPortfolio: _modeCfgFull.dtxPortfolio || null,
+    dtxConfigHash: _modeCfgFull.dtxConfigHash || null,
+    dtxLifecycle: _modeCfgFull.dtxLifecycle || null,
+    dtxEligibleForLive: _modeCfgFull.dtxEligibleForLive === true,
+  } : (mode.config || {});
+  const _performanceScope = isEngineMode
+    ? 'forward_execution'
+    : (_modeCfgFull.performanceScope || 'unspecified');
+  const _isSimulated = _performanceScope === 'simulated_backtest';
+  const _simulationCertified = _isSimulated
+    && mode.stats?.accountingCertified === true
+    && mode.stats?.status === 'reference_only';
+  const _capacityBoundary = _isSimulated && mode.stats?.capacityBoundary?.forwardCertified === true
+    ? sanitizePublicMetadata(mode.stats.capacityBoundary)
+    : null;
+  const _forwardTracking = isEngineMode ? (_modeCfgFull.forwardTracking || {}) : null;
+  const _dtxPortfolio = dtxPortfolioForMode(modeId);
+  const _dtxConfigHash = _modeCfgFull.dtxConfigHash || null;
+  const _sinceISO = (_modeCfgFull.statusSince || '').slice(0, 10) || null;
+  const publicStats = isEngineMode ? {
+    scope: 'forward_execution',
+    status: _forwardTracking.status || 'not_started',
+    since: _forwardTracking.since || _sinceISO || null,
+    realized: null,
+    unrealized: null,
+    ret: null,
+    dd: null,
+    wr: null,
+    pf: null,
+    trades: Number.isFinite(Number(_forwardTracking.executedTrades))
+      ? Number(_forwardTracking.executedTrades)
+      : 0,
+  } : _isSimulated ? {
+    scope: 'simulated_backtest',
+    status: _simulationCertified ? 'reference_only' : 'unavailable',
+    execution_verified: false,
+    accountingCertified: _simulationCertified,
+    capacityBoundary: _capacityBoundary,
+    accountingErrors: Array.isArray(mode.stats?.accountingErrors) ? mode.stats.accountingErrors : ['sealed capacity-at-entry ledger unavailable'],
+    ret: _simulationCertified ? mode.stats?.ret ?? null : null,
+    realized: _simulationCertified ? mode.stats?.realized ?? null : null,
+    unrealized: _simulationCertified ? mode.stats?.unrealized ?? null : null,
+    dd: _simulationCertified ? mode.stats?.dd ?? null : null,
+    wr: _simulationCertified ? mode.stats?.wr ?? null : null,
+    pf: _simulationCertified ? mode.stats?.pf ?? null : null,
+    trades: _simulationCertified ? mode.stats?.trades ?? null : null,
+    avgHold: _simulationCertified ? mode.stats?.avgHold ?? null : null,
+    r2: null, cagr: null, sharpe: null,
+  } : { ...(mode.stats || {}), scope: _performanceScope };
+  const publicEquity = isEngineMode
+    ? { d: [], v: [], scope: 'forward_execution', status: _forwardTracking.status || 'not_started' }
+    : _isSimulated && !_simulationCertified
+      ? { d: [], v: [], scope: 'simulated_backtest', status: 'unavailable' }
+      : { ...(mode.equity || {}), scope: _performanceScope };
 
   // Stopped/liquidated modes hold nothing: terminalize any pending trade so trades.json's open
   // count matches positions.json (0). posFor() already empties positions upstream; this keeps the
   // two endpoints consistent when a mode is stopped while still present in the current snapshot.
   const isTerminalMode = status.state === 'stopped' || status.state === 'liquidated';
-  const _sinceISO = (((modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[modeId]) || {}).statusSince || '').slice(0, 10) || null;
   // Trade History (trades.json / all.json#closedTrades) = CLOSED trades ONLY. A genuinely-open
   // trade (status 'pending' or no exitDate) is surfaced via positions.json / all.json#positions —
   // it must NOT also appear in the closed-trade ledger (that produced the "open leaks into Trade
   // History" bug). Terminal modes (stopped/liquidated) hold nothing → liquidatePending() realizes
   // any still-open trade so the closed ledger and positions (0) stay consistent.
   const _isOpenTrade = t => t.status === 'pending' || !t.exitDate;
-  const closedTradesSrc = isTerminalMode
+  const closedTradesSrc = isEngineMode || _isSimulated
+    ? []
+    : isTerminalMode
     ? (mode.closedTrades || []).map(t => liquidatePending(t, _sinceISO))
     : (mode.closedTrades || []).filter(t => !_isOpenTrade(t));
 
-  const positions = mode.positions || [];
-  const equity = mode.equity || {};
+  const positions = isEngineMode || _isSimulated ? [] : (mode.positions || []);
+  const equity = publicEquity;
 
   // High-conviction candlestick gate (Bull): signals require a >= Nx volume spike on the signal
   // day's close (parity systematic-tss). Surface the condition in the API so consumers understand
   // why a quiet day yields 0 signals — and never auto-place an unconfirmed candlestick order.
-  const _modeCfgFull = (modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[modeId]) || {};
+  const _dtxApiContext = isEngineMode ? {
+    enginePortfolio: _dtxPortfolio,
+    engineConfigHash: _dtxConfigHash,
+    forwardTracking: _modeCfgFull.forwardTracking || null,
+  } : {};
   const _highConviction = _modeCfgFull.preSignal === true;
   let _candleVolGate = 8.0;
   try { const _sf = require(path.join(ROOT, 'data', 'scanner-filters.json')); if (_sf.candlestick?.min_vol_ratio_trading) _candleVolGate = _sf.candlestick.min_vol_ratio_trading; } catch (_) {}
@@ -348,7 +575,10 @@ function writeMode(mode, prefix) {
   write(`${p}signals.json`, {
     updatedAt: now, date: snap.date, scanDate: scanDir, mode: prefix || 'balanced',
     status,
+    ..._dtxApiContext,
     ...(_entryCondition ? { entry_condition: _entryCondition } : {}),
+    performanceScope: _performanceScope,
+    execution_verified: (_isSimulated || isEngineMode) ? false : undefined,
     signals: (mode.signals || []).map(s => ({
       ticker: s.ticker, score: s.score, strategy: s.strategy,
       entry: parsePrice(s.entry), stop: parsePrice(s.stop),
@@ -356,8 +586,9 @@ function writeMode(mode, prefix) {
       sharia: s.sharia != null ? s.sharia : null,
       ...(_highConviction ? { signal_state: (s.pattern && s.pattern.volRatio >= _candleVolGate) ? 'confirmed_volume_spike' : 'pending_volume_confirmation' } : {}),
       thesis: s.thesis || '',
-      brokers: getBrokersFor(s.ticker),
-      broker_symbols: getBrokerSymbols(s.ticker),
+      ...((_isSimulated || isEngineMode) ? { signal_scope: 'idea', execution_verified: false } : {
+        brokers: getBrokersFor(s.ticker), broker_symbols: getBrokerSymbols(s.ticker),
+      }),
     }))
   });
 
@@ -368,7 +599,10 @@ function writeMode(mode, prefix) {
   write(`${p}positions.json`, {
     updatedAt: now, date: snap.date, mode: prefix || 'balanced',
     status,
-    allocPct,
+    ..._dtxApiContext,
+    allocPct: isEngineMode ? null : allocPct,
+    performanceScope: _performanceScope,
+    execution_verified: (_isSimulated || isEngineMode) ? false : undefined,
     positions: positions.map(p => {
       const entry = p.entry || 0;
       const stop = p.stop || 0;
@@ -392,6 +626,9 @@ function writeMode(mode, prefix) {
   write(`${p}trades.json`, {
     updatedAt: now, mode: prefix || 'balanced',
     status,
+    ..._dtxApiContext,
+    performanceScope: _performanceScope,
+    execution_verified: (_isSimulated || isEngineMode) ? false : undefined,
     configVersion: modesConfigMeta.configVersion,
     regime: modesConfigMeta.regime,
     trades: closedTradesSrc.map(t => ({
@@ -427,7 +664,9 @@ function writeMode(mode, prefix) {
       samplePeriodDays = Number.isFinite(_d) ? _d : null;
     } catch {}
   }
-  const tradesN = ((mode.stats || {}).trades) || 0;
+  const tradesN = isEngineMode || _isSimulated
+    ? (Number(publicStats.trades) || 0)
+    : (((mode.stats || {}).trades) || 0);
   // ⚠️ `reliability` décrit l'ÉCHANTILLON SUIVI du mode (ses trades clôturés), pas la fenêtre de
   // backtest. Pour un mode moteur (assetClass:"dtx") la courbe publiée EST la courbe de replay du
   // moteur (2020-12-31 → 2026-08-12) : en tirer le sample period affichait 2 050 jours d'échantillon
@@ -443,7 +682,38 @@ function writeMode(mode, prefix) {
       : null;
   }
   const oosWarn = (mode.stats || {}).oosWarn || null;
-  const reliability = {
+  const reliability = isEngineMode ? {
+    scope: 'forward_execution',
+    status: _forwardTracking.status || 'not_started',
+    sample_period_days: samplePeriodDays,
+    sample_period_start: samplePeriodStart,
+    sample_period_end: samplePeriodEnd,
+    closed_trades: tradesN,
+    statistically_reliable: false,
+    pf_reliable: null,
+    pf_low: null,
+    pf_high: null,
+    out_of_sample_warning: null,
+    warnings: ['Aucune exécution certifiée : aucune performance réelle n’est encore calculable.'],
+  } : _isSimulated ? {
+    scope: 'simulated_backtest',
+    status: _simulationCertified ? 'reference_only' : 'unavailable',
+    execution_verified: false,
+    sample_period_days: null,
+    sample_period_start: null,
+    sample_period_end: null,
+    closed_trades: _simulationCertified ? tradesN : null,
+    statistically_reliable: false,
+    pf_reliable: null,
+    pf_low: null,
+    pf_high: null,
+    out_of_sample_warning: _simulationCertified ? oosWarn : null,
+    warnings: _simulationCertified
+      ? ['Simulation non broker; métriques issues uniquement du ledger PIT scellé.']
+      : [_capacityBoundary
+        ? `Historique antérieur retiré; suivi de capacité forward certifié depuis ${_capacityBoundary.effectiveAt}. Aucune performance n'est encore publiée.`
+        : 'Métriques masquées : frontière de capacité point-in-time scellée indisponible.'],
+  } : {
     sample_period_days: samplePeriodDays,
     sample_period_start: samplePeriodStart,
     sample_period_end: samplePeriodEnd,
@@ -474,20 +744,55 @@ function writeMode(mode, prefix) {
   // 7 points de DD, en contradiction frontale avec la source qui fait foi — et un consommateur
   // n'avait aucun moyen de voir laquelle des deux il lisait. On lit désormais le staging, et le
   // label NOMME la provenance au lieu de proclamer une autorité.
-  const _staged = (() => {
-    try {
-      const f = path.join(ROOT, 'data', 'dtx', `${modeId}.json`);
-      return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null;
-    } catch { return null; }
-  })();
+  const _staged = isEngineMode ? loadMappedDtxStaging(modeId) : null;
+  const _dtxPlanningGate = isEngineMode ? dtxPlanningGateFor(mode, modeId) : null;
+  const _engineDecision = engineDecisionMatchesPortfolio(mode.engine_decision, _dtxPortfolio, _dtxConfigHash)
+    ? mode.engine_decision : null;
   const _served = _staged && _staged.metricsSource === 'book_served_stats' && _staged.metrics
     ? _staged.metrics : null;
-  const _engMetrics = (_staged && _staged.metrics) || ((mode.engine_decision || {}).metrics) || null;
+  const _engMetrics = (_staged && _staged.metrics) || ((_engineDecision || {}).metrics) || null;
   const _metricsSource = (_staged && _staged.metricsSource) || (_served ? 'book_served_stats' : 'engine_history');
-  const _apiDecisionProvenance = (mode.engine_decision && mode.engine_decision.decisionProvenance)
-    || (_staged && _staged.decisionProvenance)
-    || null;
-  const _isReplayReconstruction = _metricsSource === 'mcp_replay' && _staged?.equityResolution === 'replay';
+  const _apiDecisionProvenance = _dtxPlanningGate?.eligible
+    ? (_dtxPlanningGate.decision?.decisionProvenance || null)
+    : null;
+  const _isReplay = _metricsSource === 'mcp_replay' && _staged?.equityResolution === 'replay';
+  const _isExactSingleStrategyReplay = _isReplay && _engMetrics?.replay_scope === 'single_strategy';
+  const _isReplayReconstruction = _isReplay && !_isExactSingleStrategyReplay;
+  const _publicMetricsSource = _served
+    ? 'served_reference_stats'
+    : _isExactSingleStrategyReplay
+      ? 'exact_reference_replay'
+      : _isReplayReconstruction
+        ? 'fixed_capital_reference_reconstruction'
+        : (_engMetrics ? 'reference_metrics' : null);
+  let _referenceReliability = null;
+  if (isEngineMode) {
+    const refStart = _engMetrics?.from ?? null;
+    const refEnd = _engMetrics?.to ?? null;
+    const refStartMs = Date.parse(refStart || '');
+    const refEndMs = Date.parse(refEnd || '');
+    const refDays = Number.isFinite(refStartMs) && Number.isFinite(refEndMs) && refEndMs >= refStartMs
+      ? Math.round((refEndMs - refStartMs) / 86400000)
+      : null;
+    const refTrades = _engMetrics?.total_trades != null && Number.isFinite(Number(_engMetrics.total_trades))
+      ? Number(_engMetrics.total_trades)
+      : null;
+    _referenceReliability = {
+      scope: 'reference_backtest',
+      sample_period_days: refDays,
+      sample_period_start: refStart,
+      sample_period_end: refEnd,
+      closed_trades: refTrades,
+      statistically_reliable: refTrades == null ? null : refTrades >= 30,
+      pf_reliable: null,
+      pf_low: null,
+      pf_high: null,
+      out_of_sample_warning: null,
+      warnings: _engMetrics
+        ? ['Reference backtest only; forward execution tracking is reported separately.']
+        : ['Reference backtest unavailable; no forward execution statistics are inferred.'],
+    };
+  }
   // La courbe publiée est-elle bien celle du livre ? Comparaison de longueur avec le staging —
   // une métadonnée qui décrit un autre objet que celui servi est pire que pas de métadonnée.
   const _stagedPts = (_staged && _staged.equity && (_staged.equity.dates||[]).length) || 0;
@@ -509,26 +814,48 @@ function writeMode(mode, prefix) {
       d.push(date);
       v.push(+(value / base * 100).toFixed(2));
     }
-    return d.length >= 2 ? { d, v, rebasedTo: 100, source: 'data/dtx staging equity' } : null;
+    return d.length >= 2 ? { d, v, rebasedTo: 100, source: 'Courbe quotidienne du replay de référence' } : null;
   })();
   const _engineBacktest = _engMetrics ? {
+    portfolio: _dtxPortfolio,
     source: _served
-      ? 'systematic-tss (dtx) — statistiques SERVIES du livre (data/dtx staging, metricsSource=book_served_stats)'
+      ? 'Statistiques de référence servies du portefeuille'
+      : _isExactSingleStrategyReplay
+        ? `Replay exact de référence de la stratégie « ${_engMetrics.strategy || _dtxPortfolio} »`
       : _isReplayReconstruction
-        ? 'systematic-tss (dtx) — reconstruction DtxReplay à capital fixe; ce ne sont pas les statistiques du livre dynamique servi'
-        : `systematic-tss (dtx) — métriques de replay « ${_engMetrics.strategy || 'n/a'} »`,
-    metrics_source: _metricsSource,
+        ? 'Reconstruction de référence à capital fixe; distincte des statistiques du portefeuille dynamique'
+        : `Métriques du replay de référence « ${_engMetrics.strategy || 'n/a'} »`,
+    metrics_source: _publicMetricsSource,
+    reliability: _referenceReliability,
     book_strategy: _engMetrics.strategy ?? null,
-    as_of: (_staged && _staged.asof) || (mode.engine_decision || {}).asof || null,
+    as_of: (_staged && (_staged.decisionAsOf || _staged.asof)) || (_engineDecision || {}).asof || null,
+    scan_session: (_staged && _staged.asof) || null,
+    decision_as_of: (_staged && _staged.decisionAsOf) || _apiDecisionProvenance?.requestedAsOf || null,
+    data_as_of: _apiDecisionProvenance?.dataAsOf || null,
     from: _engMetrics.from ?? null, to: _engMetrics.to ?? null,
     return_pct: _engMetrics.return_pct ?? null,
     cagr_pct: _engMetrics.cagr_pct ?? null,
     max_dd_pct: _engMetrics.max_dd_pct ?? null,
     dd_p95_bootstrap21_pct: _engMetrics.dd_p95_bootstrap21_pct ?? null,
     sharpe: _engMetrics.sharpe ?? null,
+    sortino: _engMetrics.sortino ?? null,
+    calmar: _engMetrics.calmar ?? null,
     r2: _engMetrics.r2 ?? null,
     win_rate: _engMetrics.win_rate ?? null,
+    profit_factor: _engMetrics.profit_factor ?? null,
     total_trades: _engMetrics.total_trades ?? null,
+    avg_exposure_pct: _engMetrics.avg_exposure_pct ?? null,
+    pct_time_invested: _engMetrics.pct_time_invested ?? null,
+    avg_committed_pct: _engMetrics.avg_committed_pct ?? null,
+    avg_cash_pct: _engMetrics.avg_cash_pct ?? null,
+    annualized_vol_pct: _engMetrics.annualized_vol_pct ?? null,
+    daily_var_95_pct: _engMetrics.daily_var_95_pct ?? null,
+    daily_cvar_95_pct: _engMetrics.daily_cvar_95_pct ?? null,
+    ulcer_index: _engMetrics.ulcer_index ?? null,
+    max_underwater_sessions: _engMetrics.max_underwater_sessions ?? null,
+    replay_scope: _engMetrics.replay_scope ?? null,
+    equity_scope: _engMetrics.equity_scope ?? null,
+    equity_resolution: _engMetrics.equity_resolution ?? null,
     ...(_engineBacktestCurve ? { equityCurve: _engineBacktestCurve } : {}),
     // COURBE DU LIVRE (R6, fermé le 2026-08-12). Le moteur sert désormais la vraie courbe
     // (`DtxBookEquity`), ingérée par tools/dtx-book-equity-ingest.js qui REFUSE de l'écrire si
@@ -545,7 +872,13 @@ function writeMode(mode, prefix) {
     // note expliquant comment y recalculer le CAGR — une notice de lecture pour une courbe absente.
     // On exige donc que la courbe publiée ait la MÊME LONGUEUR que celle du staging : c'est le seul
     // moyen de savoir qu'on décrit bien le même objet.
-    curve_resolution: _curveIsBook ? 'daily' : _isReplayReconstruction ? 'decimated fixed-capital DtxReplay reconstruction' : 'live track since launch (backtest curve served separately)',
+    curve_resolution: _curveIsBook
+      ? 'daily'
+      : _isExactSingleStrategyReplay
+        ? 'daily'
+        : _isReplayReconstruction
+          ? 'reconstruction de référence à capital fixe, série décimée'
+          : 'live track since launch (backtest curve served separately)',
     ..._curveIsBook ? {
       curve_is_book: true,
       curve_source: 'DtxBookEquity (systematic-tss) — même run que les statistiques ci-dessus',
@@ -564,32 +897,39 @@ function writeMode(mode, prefix) {
       // Filet : si l'ingestion de la courbe du livre n'a pas tourné, on retombe sur la courbe de
       // poche — et on le DIT, avec le chiffre exact qu'un consommateur obtiendrait.
       curve_is_book: false,
-      curve_warning: _isReplayReconstruction
-        ? 'This curve and the headline metrics are the same fixed-capital DtxReplay reconstruction. It is decimated, so a drawdown recomputed from visible points can understate the paired replay max_dd_pct. It is not the served dynamic-book curve.'
-        : 'This public curve is not a verified served-book curve; do not infer book-level drawdown from it.',
+      curve_warning: _isExactSingleStrategyReplay
+          ? 'Courbe quotidienne complète du replay de référence; ce n’est pas une courbe d’exécution réelle.'
+        : _isReplayReconstruction
+          ? 'Cette courbe et les métriques proviennent de la même reconstruction à capital fixe. La série est décimée: un drawdown recalculé sur les seuls points visibles peut sous-estimer le drawdown du replay.'
+        : 'Cette courbe publique n’est pas une courbe de portefeuille servi certifiée; ne pas en déduire un drawdown de portefeuille.',
       ...(_staged?.rejectedServedSnapshot ? { rejected_served_snapshot: _staged.rejectedServedSnapshot } : {}),
     },
   } : null;
   write(`${p}equity.json`, {
     updatedAt: now, mode: prefix || 'balanced',
     status,
-    config: mode.config || {}, stats: mode.stats || {},
+    ..._dtxApiContext,
+    performanceScope: _performanceScope,
+    execution_verified: (_isSimulated || isEngineMode) ? false : undefined,
+    config: publicConfig, stats: publicStats,
     reliability,
     ...(_engineBacktest ? { engineBacktest: _engineBacktest } : {}),
-    equityCurve: equity || {},
+    equityCurve: publicEquity,
   });
 
   // T2 coherence guard — cross-check the just-written equity.json against the frozen seal.
   // Only for the real per-mode pass (prefix truthy); the root copy (= balanced) is byte-identical
   // and already verified in the loop, so skipping it avoids double-counting.
-  if (prefix) verifyEquityCoherence(modeId, mode.stats || {}, equity || {});
+  if (prefix && !isEngineMode && !_isSimulated) verifyEquityCoherence(modeId, mode.stats || {}, equity || {});
 
   // 5. orders.json — orders only valid on scan date
   // Modes that do not accept new entries (paused, stopped, pausing, liquidated, draft) emit empty orders.
   const ordersAllowed = status.acceptsNewEntries;
-  const isEngineMode = _modeCfgFull.assetClass === 'dtx';
-  const modeOrders = (!ordersAllowed || (!isEngineMode && ordersStale)) ? [] : rawOrdersFor(mode, modeId).map(o => o.source === 'engine' ? ({
-    ...o, allocPct,
+  // A DTX CREATE decision is a proposed plan, not broker execution evidence.
+  // Keep it exclusively under `plannedOrders`; `orders` remains reserved for
+  // action records whose execution semantics cannot be mistaken for a fill.
+  const modeOrders = (_isSimulated || isEngineMode || !ordersAllowed || (!isEngineMode && ordersStale)) ? [] : rawOrdersFor(mode, modeId).map(o => o.source === 'engine' ? ({
+    ...o,
   }) : ({
     ticker: o.ticker, action: o.action || 'BUY', score: o.score, strategy: o.strategy,
     entry: parsePrice(o.entry), stop: parsePrice(o.stop), tp1: parsePrice(o.tp1), tp2: parsePrice(o.tp2), rr: o.rr,
@@ -598,11 +938,19 @@ function writeMode(mode, prefix) {
     thesis: o.thesis || '',
     broker_symbols: getBrokerSymbols(o.ticker),
   }));
+  const plannedOrders = isEngineMode && ordersAllowed ? plannedOrdersFor(mode, modeId) : [];
   write(`${p}orders.json`, {
     updatedAt: now, date: snap.date, scanDate: scanDir, mode: prefix || 'balanced',
     status,
-    allocPct,
-    ...(isEngineMode ? { decisionProvenance: _apiDecisionProvenance } : {}),
+    allocPct: isEngineMode ? null : allocPct,
+    ..._dtxApiContext,
+    performanceScope: _performanceScope,
+    execution_verified: (_isSimulated || isEngineMode) ? false : undefined,
+    ...(isEngineMode ? {
+      planningCertification: publicDtxPlanningCertification(mode, modeId),
+      decisionProvenance: sanitizePublicMetadata(_apiDecisionProvenance),
+    } : {}),
+    ...(isEngineMode ? { plannedOrders } : {}),
     orders: modeOrders
   });
 
@@ -610,13 +958,16 @@ function writeMode(mode, prefix) {
   write(`${p}actions.json`, {
     updatedAt: now, date: snap.date, mode: prefix || 'balanced',
     status,
-    closeNow: (mode.closeNow || []).map(p => ({
+    ..._dtxApiContext,
+    performanceScope: _performanceScope,
+    execution_verified: (_isSimulated || isEngineMode) ? false : undefined,
+    closeNow: ((_isSimulated || isEngineMode) ? [] : (mode.closeNow || [])).map(p => ({
       ticker: p.ticker, scanDate: p.scan_date, entry: p.entry,
       currentPrice: p.current_price, returnPct: p.return_pct,
       daysHeld: p.days_held, horizon: p.horizon,
       broker_symbols: getBrokerSymbols(p.ticker),
     })),
-    expiresTomorrow: (mode.expiresTomorrow || []).map(p => ({
+    expiresTomorrow: ((_isSimulated || isEngineMode) ? [] : (mode.expiresTomorrow || [])).map(p => ({
       ticker: p.ticker, entry: p.entry, returnPct: p.return_pct,
       stop: p.stop, daysHeld: p.days_held, horizon: p.horizon,
       broker_symbols: getBrokerSymbols(p.ticker),
@@ -627,18 +978,23 @@ function writeMode(mode, prefix) {
   write(`${p}all.json`, {
     updatedAt: now, date: snap.date, scanDate: scanDir, mode: prefix || 'balanced',
     status,
-    config: mode.config || {}, stats: mode.stats || {},
-    equityCurve: equity || {},
+    ..._dtxApiContext,
+    performanceScope: _performanceScope,
+    execution_verified: (_isSimulated || isEngineMode) ? false : undefined,
+    config: publicConfig, stats: publicStats,
+    equityCurve: publicEquity,
     signals: (mode.signals || []).map(s => ({
       ticker: s.ticker, score: s.score, strategy: s.strategy,
       entry: parsePrice(s.entry), stop: parsePrice(s.stop),
       tp1: parsePrice(s.tp1), tp2: parsePrice(s.tp2), rr: s.rr,
       sharia: s.sharia != null ? s.sharia : null,
       thesis: s.thesis || '',
-      brokers: getBrokersFor(s.ticker),
-      broker_symbols: getBrokerSymbols(s.ticker),
+      ...((_isSimulated || isEngineMode) ? { signal_scope: 'idea', execution_verified: false } : {
+        brokers: getBrokersFor(s.ticker), broker_symbols: getBrokerSymbols(s.ticker),
+      }),
     })),
     orders: modeOrders,
+    ...(isEngineMode ? { plannedOrders } : {}),
     positions: positions.map(p => {
       const entry = p.entry || 0;
       const stop = p.stop || 0;
@@ -655,13 +1011,13 @@ function writeMode(mode, prefix) {
         broker_symbols: getBrokerSymbols(p.ticker),
       };
     }),
-    closeNow: (mode.closeNow || []).map(p => ({
+    closeNow: ((_isSimulated || isEngineMode) ? [] : (mode.closeNow || [])).map(p => ({
       ticker: p.ticker, scanDate: p.scan_date, entry: p.entry,
       currentPrice: p.current_price, returnPct: p.return_pct,
       daysHeld: p.days_held, horizon: p.horizon,
       broker_symbols: getBrokerSymbols(p.ticker),
     })),
-    expiresTomorrow: (mode.expiresTomorrow || []).map(p => ({
+    expiresTomorrow: ((_isSimulated || isEngineMode) ? [] : (mode.expiresTomorrow || [])).map(p => ({
       ticker: p.ticker, entry: p.entry, returnPct: p.return_pct,
       stop: p.stop, daysHeld: p.days_held, horizon: p.horizon,
       broker_symbols: getBrokerSymbols(p.ticker),
@@ -677,13 +1033,13 @@ function writeMode(mode, prefix) {
       replayStatus: t.replayStatus || null,
       configVersion: t.configVersion || null
     })),
-    risk: getRiskFor(prefix || 'balanced'),
+    risk: (isEngineMode || _isSimulated) ? null : getRiskFor(prefix || 'balanced'),
   });
 
   // 8. risk.json — VaR, stress scenarios, regime probability, correlations.
   // Standalone endpoint so consumers can poll risk independently.
   // mode.stats.ret = percentage points (e.g. 32.86 = +32.86%)
-  const modeReturnTotal = (mode.stats || {}).ret;
+  const modeReturnTotal = publicStats.ret;
   let benchField = null;
   if (benchSpy && benchSpy.stats) {
     // benchSpy.stats.returnTotal is decimal fraction (e.g. 0.045 = 4.5%)
@@ -702,7 +1058,7 @@ function writeMode(mode, prefix) {
   }
   // Note for mono-position modes: pairwise correlation requires ≥ 2 symbols.
   const _ps = ((mode.config || {}).portfolioSize) || 1;
-  const riskPayload = getRiskFor(prefix || 'balanced');
+  const riskPayload = isEngineMode || _isSimulated ? null : getRiskFor(prefix || 'balanced');
   const riskNotes = [];
   if (_ps === 1) {
     riskNotes.push('Single-position mode — pairwise correlation N/A (requires ≥ 2 symbols). VaR is per-position only.');
@@ -716,9 +1072,14 @@ function writeMode(mode, prefix) {
     status,
     configVersion: modesConfigMeta.configVersion,
     regime: modesConfigMeta.regime,
+    scope: _performanceScope,
     risk: riskPayload,
-    notes: riskNotes,
-    bench: benchField,
+    notes: isEngineMode
+      ? ['Aucune exécution certifiée : risque réalisé et comparaison au marché indisponibles.']
+      : _isSimulated
+        ? ['Simulation non broker : aucun risque de position réelle n’est publié.']
+      : riskNotes,
+    bench: isEngineMode || _isSimulated ? null : benchField,
   });
 }
 
@@ -890,7 +1251,25 @@ const streaksByMode = {};
 for (const id of MODE_IDS) {
   const mode = snap.modes[id];
   if (!mode) continue;
-  streaksByMode[id] = computeStreaks(mode.closedTrades || []);
+  const cfg = (modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[id]) || {};
+  const unverifiedScope = cfg.assetClass === 'dtx'
+    ? 'forward_execution'
+    : cfg.performanceScope === 'simulated_backtest'
+      ? 'simulated_backtest'
+      : null;
+  streaksByMode[id] = unverifiedScope ? {
+    scope: unverifiedScope,
+    status: cfg.assetClass === 'dtx' ? (cfg.forwardTracking?.status || 'not_started') : 'unavailable',
+    execution_verified: false,
+    currentStreak: null,
+    bestStreak: null,
+    bestStreakStart: null,
+    bestStreakEnd: null,
+    totalWins: null,
+    totalLosses: null,
+    totalTrades: null,
+    winRate: null,
+  } : computeStreaks(mode.closedTrades || []);
   // Also write a per-mode streaks endpoint
   write(`${id}/winning-streaks.json`, {
     updatedAt: now,
@@ -913,43 +1292,94 @@ count++;
 write('modes.json', {
   updatedAt: now, date: snap.date,
   configVersion: modesConfigMeta.configVersion,
-  regime: modesConfigMeta.regime,
+  regime: getGlobalRegime().currentState || null,
+  configurationRegime: modesConfigMeta.regime,
   modes: MODE_IDS.filter(id => snap.modes[id]).map(id => {
     const m = snap.modes[id];
     const r = getRiskFor(id);
+    const cfg = (modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[id]) || {};
+    const isDtx = cfg.assetClass === 'dtx';
+    const isSimulated = cfg.performanceScope === 'simulated_backtest';
+    const displayCfg = isDtx ? cfg : (m.config || {});
+    const simulationCertified = isSimulated
+      && m.stats?.accountingCertified === true
+      && m.stats?.status === 'reference_only';
+    const capacityBoundary = isSimulated && m.stats?.capacityBoundary?.forwardCertified === true
+      ? sanitizePublicMetadata(m.stats.capacityBoundary)
+      : null;
+    const forward = cfg.forwardTracking || {};
+    const performanceScope = isDtx ? 'forward_execution' : (cfg.performanceScope || 'unspecified');
+    const modeStatus = getStatusFor(id);
+    const summaryStats = isDtx ? {
+      scope: 'forward_execution',
+      status: forward.status || 'not_started',
+      since: forward.since || null,
+      realized: null,
+      unrealized: null,
+      ret: null,
+      dd: null,
+      wr: null,
+      pf: null,
+      trades: Number.isFinite(Number(forward.executedTrades)) ? Number(forward.executedTrades) : 0,
+    } : isSimulated ? {
+      scope: 'simulated_backtest', status: simulationCertified ? 'reference_only' : 'unavailable',
+      execution_verified: false, accountingCertified: simulationCertified,
+      capacityBoundary,
+      ret: simulationCertified ? m.stats?.ret ?? null : null,
+      realized: simulationCertified ? m.stats?.realized ?? null : null,
+      unrealized: simulationCertified ? m.stats?.unrealized ?? null : null,
+      dd: simulationCertified ? m.stats?.dd ?? null : null,
+      wr: simulationCertified ? m.stats?.wr ?? null : null,
+      pf: simulationCertified ? m.stats?.pf ?? null : null,
+      trades: simulationCertified ? m.stats?.trades ?? null : null,
+      cagr: null, sharpe: null,
+    } : { ...(m.stats || {}), scope: performanceScope };
     return {
       id,
-      label: m.config?.label || id,
-      color: m.config?.color || '#888',
-      status: getStatusFor(id),
-      stats: m.stats || {},
-      positionCount: (m.positions || []).length,
-      orderCount: rawOrdersFor(m, id).length,
-      portfolioSize: m.config?.portfolioSize || 1,
-      maxStopPct: m.config?.maxStopPct || 0,
-      atrStopMult: m.config?.atrStopMult || 0,
-      dailyTrailPct: m.config?.dailyTrailPct || 0,
-      breakevenPct: m.config?.breakevenPct || 0,
-      partialTP: m.config?.partialTP || false,
-      trailingStop: m.config?.trailingStop || false,
-      rotation: m.config?.rotation || 'none',
-      vwapGate: m.config?.vwapGate || false,
-      minScore: m.config?.minScore ?? 85,
-      horizon: m.config?.horizon || 10,
-      slotsAvailable: (m.config?.portfolioSize || 1) - (m.positions || []).length,
+      label: displayCfg.label || id,
+      color: displayCfg.color || '#888',
+      status: modeStatus,
+      tradingMode: isSimulated ? 'simulated' : (isDtx ? 'forward_execution' : 'live'),
+      execution_verified: isSimulated ? false : (m.execution_verified === true),
+      stats: summaryStats,
+      ...(isDtx ? {
+        enginePortfolio: dtxPortfolioForMode(id),
+        statsScope: 'forward_execution',
+        forwardTracking: cfg.forwardTracking || null,
+      } : { statsScope: performanceScope }),
+      positionCount: isDtx ? (cfg.forwardTracking?.openPositions ?? null) : isSimulated ? 0 : (m.positions || []).length,
+      orderCount: (isSimulated || isDtx) ? 0 : rawOrdersFor(m, id).length,
+      ...(isDtx ? { plannedOrderCount: modeStatus.acceptsNewEntries ? plannedOrdersFor(m, id).length : 0 } : {}),
+      portfolioSize: displayCfg.portfolioSize || 1,
+      maxStopPct: displayCfg.maxStopPct || 0,
+      atrStopMult: displayCfg.atrStopMult || 0,
+      dailyTrailPct: displayCfg.dailyTrailPct || 0,
+      breakevenPct: displayCfg.breakevenPct || 0,
+      partialTP: cfg.partialTP === true,
+      partialTPPct: cfg.partialTPPct ?? 0.5,
+      partialTPGain: cfg.partialTPGain ?? 0,
+      disableTP2: cfg.disableTP2 === true,
+      trailingStop: displayCfg.trailingStop || false,
+      rotation: displayCfg.rotation || 'none',
+      vwapGate: displayCfg.vwapGate === true,
+      entryModel: displayCfg.entryModel || null,
+      signalOrigin: displayCfg.signalOrigin || null,
+      minScore: displayCfg.minScore ?? 85,
+      horizon: displayCfg.horizon || 10,
+      slotsAvailable: isDtx || isSimulated ? null : (displayCfg.portfolioSize || 1) - (m.positions || []).length,
       // Risk-layer-v1 fields propagated from modes-config
-      ddBreakerPct: m.config?.ddBreakerPct || 0,
-      sectorCapMax: m.config?.sectorCapMax || 0,
-      sizingMethod: m.config?.sizingMethod || null,
-      vixKillThreshold: m.config?.vixKillThreshold || 0,
+      ddBreakerPct: displayCfg.ddBreakerPct || 0,
+      sectorCapMax: displayCfg.sectorCapMax || 0,
+      sizingMethod: displayCfg.sizingMethod || null,
+      vixKillThreshold: displayCfg.vixKillThreshold || 0,
       // Risk snapshot summary (null when refresh-risk-metrics.js hasn't run yet)
-      risk: r ? {
+      risk: (isDtx || isSimulated) ? null : (r ? {
         var95_5d: r.var95_5d, var99_5d: r.var99_5d,
         expectedShortfall95_5d: r.expectedShortfall95_5d,
         maxPairwiseCorrelation: r.maxPairwiseCorrelation,
         regimeState: r.regimeProbability?.currentState || null,
         asOf: r.asOf,
-      } : null,
+      } : null),
     };
   })
 });
@@ -959,7 +1389,8 @@ count++;
 write('regime.json', {
   updatedAt: now,
   configVersion: modesConfigMeta.configVersion,
-  regimeLabel: modesConfigMeta.regime,
+  regimeLabel: getGlobalRegime().currentState || null,
+  configurationRegimeLabel: modesConfigMeta.regime,
   regimeProbability: getGlobalRegime(),
 });
 count++;
@@ -973,7 +1404,18 @@ let recentTransitions = [];
 if (fs.existsSync(STATUS_HISTORY_PATH)) {
   try {
     const sh = JSON.parse(fs.readFileSync(STATUS_HISTORY_PATH, 'utf8'));
-    recentTransitions = (sh.transitions || []).slice(-20).reverse();
+    recentTransitions = (sh.transitions || [])
+      .filter(transition => allModeIds.includes(transition.modeId || transition.mode))
+      .slice(-20)
+      .reverse()
+      .map(transition => {
+        const modeId = transition.modeId || transition.mode;
+        const cfg = (modesConfigFull?.modes || {})[modeId] || {};
+        return sanitizePublicMetadata({
+          ...transition,
+          reason: publicStatusReason(cfg),
+        });
+      });
   } catch (e) {
     console.log('  [warn] modes-status-history.json unreadable, skipping recentTransitions');
   }
@@ -995,7 +1437,22 @@ if (fs.existsSync(CFG_HIST_PATH)) {
     versions: (hist.versions || []).map(v => ({
       id: v.id,
       timestamp: v.timestamp,
+      effectiveFrom: v.effectiveFrom,
+      date: v.date,
       regime: v.regime || null,
+      hash: v.hash,
+      config_sha256: v.config_sha256,
+      config_sha256_serialization: v.config_sha256_serialization,
+      source_commit: v.source_commit,
+      source_worktree_sha256: v.source_worktree_sha256,
+      generated_from: v.generated_from,
+      lineage_commits: v.lineage_commits,
+      productIdentity: v.productIdentity,
+      tradeLineage: v.tradeLineage,
+      retiredAt: v.retiredAt,
+      changes: v.changes,
+      reason: v.reason,
+      comment: v.comment,
       config: v.config,
     }))
   });

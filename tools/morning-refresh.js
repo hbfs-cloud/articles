@@ -4,18 +4,17 @@
 /**
  * morning-refresh.js — 7am ET recalibration
  *
- * Re-runs tracking + frozen sweep + API regen so portfolio JSON reflects
- * overnight price action before the market opens. Does NOT run the full
+ * Re-runs the certified frozen sweep + API regen before the market opens.
+ * It never infers executions from a public quote feed. Does NOT run the full
  * grid search (--frozen-only keeps it fast, ~30-60s total).
  *
  * Cron (via Discord bot):
  *   every weekday at 07:00 articles morning refresh
  *
  * Steps:
- *   1. update-tracking.js — refresh Yahoo OHLC on open trades
- *   2. sweep.js --frozen-only — re-price closed trades with new data
- *   3. gen-status-page.js — snapshot status dashboard
- *   4. gen-api.js — refresh public portfolio/v1/*.json
+ *   1. sweep.js --frozen-only — certified completed-close refresh
+ *   2. gen-status-page.js — snapshot status dashboard
+ *   3. gen-api.js — refresh public portfolio/v1/*.json
  *
  * No git commit here — that's explicit via /publish-daily-card.sh in evening.
  * This is a pure read/compute refresh of public state.
@@ -61,12 +60,12 @@ log('=== Morning Recalibration ===');
 log(`Date: ${new Date().toISOString()}`);
 log(`Log:  ${LOG_FILE}`);
 
-// Steps 1-2 are critical — step 2 reads the output of step 1. Abort if either fails.
-run('node', ['tools/update-tracking.js'], 'Step 1/4 — Tracking refresh (Yahoo OHLC)', { critical: true });
-run('node', ['tools/sweep.js', '--frozen-only'], 'Step 2/4 — Frozen sweep (closed trades re-price)', { critical: true });
-// Steps 3-4 are non-critical regenerators — allow one to fail without killing the other.
-run('node', ['tools/gen-status-page.js'], 'Step 3/4 — Status page snapshot');
-run('node', ['tools/gen-api.js'], 'Step 4/4 — Public JSON API regen');
+// Completed-close certification is critical; a missing Marketdata proof stops
+// the refresh before any public generator can publish stale/fabricated marks.
+run('node', ['tools/sweep.js', '--frozen-only'], 'Step 1/3 — Certified frozen sweep', { critical: true });
+// Regenerators are independent presentation steps once the certified input exists.
+run('node', ['tools/gen-status-page.js'], 'Step 2/3 — Status page snapshot');
+run('node', ['tools/gen-api.js'], 'Step 3/3 — Public JSON API regen');
 
 if (failedSteps.length) {
   log(`\n⚠️  Morning refresh completed with ${failedSteps.length} failed step(s): ${failedSteps.join(', ')}`);

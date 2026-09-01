@@ -7,6 +7,7 @@ for script in \
   tools/run-collect.sh \
   tools/scan-parallel.sh \
   tools/desk-run.sh \
+  tools/publish-daily-card.sh \
   tools/downstream-split.sh; do
   bash -n "$script"
 done
@@ -18,6 +19,15 @@ node tools/test-socle-reuse.js
 node tools/test-extract-universe.js
 node tools/test-mcp-client.js
 node tools/test-market-calendar.js
+node tools/test-marketdata-bars-contract.js
+node tools/test-marketdata-querydata-contract.js
+node tools/test-publish-contract.js
+node tools/test-frozen-mode-accounting.js
+node tools/test-capacity-ledger.js
+node tools/test-public-sanitize.js
+node tools/test-public-history-quarantine.js
+node tools/test-mode-cards.js
+node tools/test-pit-config-history.js
 node tools/check-freshness.test.js
 node tools/test-evidence-gates.js
 node tools/test-trade-idea-gates.js

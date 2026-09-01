@@ -21,10 +21,31 @@ const {
 const { isHaramForHalalMode } = require('./lib/sharia-filter');
 const dlt = require('./lib/dtx-live-track');
 const dxh = require('./lib/dtx-engine-history');
+const {
+  PERFORMANCE_SCOPE: DTX_FORWARD_SCOPE,
+  buildDtxForwardSnapshotFields,
+  buildDtxReferenceSnapshot,
+} = require('./lib/dtx-forward-snapshot');
+const { computeRollingEquityWindowStats } = require('./lib/equity-window-stats');
 // Comptabilité POINT-IN-TIME partagée (UNIQUE, verbatim depuis sweep.js). Réutilisée pour
 // calculer courbe/stats des modes FRAIS (non scellés) depuis LEURS propres trades — jamais
 // depuis pit-state/modeEquityHistory (décision owner 2026-07-22 : SOURCE UNIQUE = sweep frozen).
-const { computeStatsFromTrades: libStatsFromTrades } = require('./lib/mode-stats');
+const {
+  capacityCertificationErrors,
+  configHistoryCoverageErrors,
+  computeStatsFromTrades: libStatsFromTrades,
+} = require('./lib/mode-stats');
+const { modeBoundaryStatus } = require('./lib/capacity-ledger');
+const {
+  sanitizePublicMetadata,
+  sanitizePublicRegimeProbability,
+} = require('./lib/public-sanitize');
+const {
+  boundaryFromRegistry,
+  isDecisionAtOrAfterBoundary,
+  publicProposedPlanEntry,
+  quarantineHistoryDirectory,
+} = require('./lib/public-scanner-history');
 
 function fmtDateFR(iso) {
   if (!iso) return '';
@@ -76,37 +97,15 @@ function renderStatusBanner(cfg) {
   </div>`;
 }
 
-const tkLogo = t => `<img src="https://assets.parqet.com/logos/symbol/${t}?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'">`;
+const htmlText = value => String(value == null ? '' : value)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const tkLogo = t => `<img src="https://assets.parqet.com/logos/symbol/${encodeURIComponent(t)}?format=jpg" alt="" class="tk-logo" loading="lazy" decoding="async" onerror="this.style.display='none'">`;
 
 function fetchOHLC(ticker) {
-  return new Promise((resolve) => {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=30d`;
-    const opts = { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 };
-    https.get(url, opts, (res) => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(data);
-          const result = j?.chart?.result?.[0];
-          if (!result) return resolve({ bars: {}, lastPrice: null });
-          const ts = result.timestamp || [];
-          const q = result.indicators?.quote?.[0] || {};
-          const bars = {};
-          let lastOHLC = null;
-          for (let i = 0; i < ts.length; i++) {
-            if (q.close?.[i] != null) {
-              const dateStr = new Date(ts[i] * 1000).toISOString().slice(0, 10);
-              bars[dateStr] = q.close[i];
-              lastOHLC = { open: q.open?.[i] || 0, high: q.high?.[i] || 0, low: q.low?.[i] || 0, close: q.close[i] };
-            }
-          }
-          const vwap = lastOHLC ? +((lastOHLC.high + lastOHLC.low + lastOHLC.close) / 3).toFixed(2) : null;
-          resolve({ bars, lastPrice: result.meta?.regularMarketPrice ?? null, vwap, ohlc: lastOHLC });
-        } catch { resolve({ bars: {}, lastPrice: null }); }
-      });
-    }).on('error', () => resolve({ bars: {}, lastPrice: null })).on('timeout', () => resolve({ bars: {}, lastPrice: null }));
-  });
+  // Public generation never reaches Yahoo/live OHLC. A missing certified MCP
+  // close remains missing; signal ideas cannot manufacture a fill or position.
+  return Promise.resolve({ bars: {}, lastPrice: null, vwap: null, ohlc: null, unavailable: true, ticker });
 }
 
 function bizDaysSince(dateStr) {
@@ -139,22 +138,39 @@ const OUT = path.join(ROOT, 'scanner/status/index.html');
 // absent by design — LLM/MCP-driven, never dtx.
 // dtx MCP v15 cut-over (2026-07-13): dashboard reduced to the 6 cost-honest viable strategies.
 // Legacy scanner scriptings are status=stopped (hidden). Each live mode id maps to its v15 staging.
-// Un seul portefeuille depuis le 2026-08-12 : « best », panier multi-poches qui
-// remplace et agrège les six précédents. Cette table était restée sur les six
-// supprimés — loadDtxStaging('best') rendait null et le panneau du mode
-// s'affichait VIDE sur la page publiée, alors que le staging portait 4 577
-// trades et sa courbe d'equity. Une table figée qui survit à son référentiel
-// ne lève aucune erreur : elle rend juste du néant.
-const DTX_STAGING_MAP = { best: 'best' };
+// La clé de staging est la clé PUBLIQUE du mode (`best.json` reste lisible pour
+// les anciens liens/API). Le portefeuille moteur est une identité distincte,
+// portée par modes-config.dtxPortfolio et par staging.portfolioId. Ne jamais
+// lire data/dtx/<portefeuille-moteur>.json ici : dtx-mcp-ingest normalise exprès
+// le fichier sous l'id public.
+const DTX_STAGING_MAP = (() => {
+  try {
+    const cfg = JSON.parse(fs.readFileSync(MODES_CFG, 'utf8'));
+    return Object.fromEntries(Object.entries(cfg.modes || {})
+      .filter(([, mode]) => mode && mode.assetClass === 'dtx')
+      .map(([id, mode]) => [id, {
+        file: id,
+        portfolioId: String(mode.dtxPortfolio || id),
+        configHash: String(mode.dtxConfigHash || ''),
+      }]));
+  } catch (_) { return {}; }
+})();
 const _dtxStagingCache = {};
 function loadDtxStaging(id) {
-  const f = DTX_STAGING_MAP[id];
-  if (!f) return null;
+  const binding = DTX_STAGING_MAP[id];
+  if (!binding) return null;
+  const f = binding.file;
   if (f in _dtxStagingCache) return _dtxStagingCache[f];
   let data = null;
   try {
     const p = path.join(ROOT, 'data', 'dtx', `${f}.json`);
-    if (fs.existsSync(p)) data = JSON.parse(fs.readFileSync(p, 'utf8'));
+    if (fs.existsSync(p)) {
+      data = JSON.parse(fs.readFileSync(p, 'utf8'));
+      if (!data || data.portfolioId !== binding.portfolioId || !binding.configHash || data.configHash !== binding.configHash) {
+        console.error(`  [dtx] staging ${f}.json rejeté : portfolioId=${data && data.portfolioId ? data.portfolioId : 'absent'}, configHash=${data && data.configHash ? data.configHash : 'absent'} ; attendus=${binding.portfolioId}, ${binding.configHash || 'hash non configuré'}`);
+        data = null;
+      }
+    }
   } catch (_) { data = null; }
   _dtxStagingCache[f] = data;
   return data;
@@ -182,11 +198,11 @@ function loadRiskSnapshot() {
 }
 function getRiskFor(modeId) {
   const snap = loadRiskSnapshot();
-  return (snap.modes || {})[modeId] || null;
+  return sanitizePublicMetadata((snap.modes || {})[modeId] || null);
 }
 function getGlobalRegimeProb() {
   const snap = loadRiskSnapshot();
-  return snap.regimeProbability || null;
+  return sanitizePublicRegimeProbability(snap.regimeProbability || null);
 }
 
 function computeMetrics(trades, portfolioSize, positionSizePct) {
@@ -437,6 +453,18 @@ function emitRetroHeartbeat() {
 async function main() {
   let config;
   try { config = JSON.parse(fs.readFileSync(MODES_CFG)); } catch (e) { console.error(`[gen-status-page] Cannot read modes-config: ${e.message}`); process.exit(1); }
+  let configHistory = { versions: [] };
+  try { configHistory = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config-history.json'), 'utf8')); } catch (_) { }
+  let capacityRegistry = null;
+  try { capacityRegistry = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'capacity-ledger-v1.json'), 'utf8')); } catch (_) { }
+  if (!capacityRegistry) {
+    throw new Error('capacity-ledger-v1.json absent: impossible de certifier la frontière de l’historique public');
+  }
+  const publicHistoryBoundary = boundaryFromRegistry(capacityRegistry);
+  const legacyModeIds = Object.entries(config.modes || {})
+    .filter(([, mode]) => mode && mode.performanceScope === 'simulated_backtest')
+    .map(([id]) => id);
+  const legacyConfigHistoryErrors = configHistoryCoverageErrors(configHistory, config, legacyModeIds);
   let allTrades = {};
   try { allTrades = JSON.parse(fs.readFileSync(TRADES)); } catch (_) { }
   let results = {};
@@ -504,28 +532,13 @@ async function main() {
   } catch (_) {}
 
   // ── SPY benchmark (indexed to 100 at inception) ──
-  const spyRaw = await new Promise(resolve => {
-    const url = 'https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=6mo';
-    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 10000 }, res => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(data);
-          const r = j?.chart?.result?.[0];
-          const ts = r?.timestamp || [], cl = r?.indicators?.quote?.[0]?.close || [];
-          const bars = {};
-          for (let i = 0; i < ts.length; i++) {
-            if (cl[i] != null) {
-              const ds = new Date(ts[i] * 1000).toISOString().slice(0, 10);
-              bars[ds.slice(5).replace('-', '/')] = cl[i];
-            }
-          }
-          resolve(bars);
-        } catch { resolve({}); }
-      });
-    }).on('error', () => resolve({})).on('timeout', function() { this.destroy(); resolve({}); });
-  });
+  const spyRaw = (() => {
+    try {
+      const benchmark = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'bench-spy.json'), 'utf8'));
+      return Object.fromEntries(Object.entries(benchmark.closes || {})
+        .map(([date, close]) => [date.slice(5).replace('-', '/'), close]));
+    } catch (_) { return {}; }
+  })();
   const spyKeys = Object.keys(spyRaw).sort();
   const spyBaseKey = spyKeys.find(k => k >= '02/26') || spyKeys[0];
   const spyBase = spyBaseKey ? spyRaw[spyBaseKey] : null;
@@ -673,7 +686,11 @@ async function main() {
   // Modes — mark premature expirations as "pending" (not enough data yet, not real exits)
   const modes = {};
   for (const [id, cfg] of Object.entries(config.modes)) {
-    const raw = allTrades[id] || [];
+    // Un mode DTX ne possède pas de ledger dans backtest-trades.json. Les lignes
+    // historiques `best` qui s'y trouvent sont des simulations du pont scanner,
+    // pas des fills broker. Les réutiliser après un changement de portefeuille
+    // mélangerait deux stratégies et fabriquerait positions, P&L et win rate.
+    const raw = cfg.assetClass === 'dtx' ? [] : (allTrades[id] || []);
     // Tag premature expirations — compute horizon expiry date for MtM capping.
     // Override sweep's stale exit values with live data so the row reflects today's
     // reality (current price, actual hold days, today's date).
@@ -712,7 +729,9 @@ async function main() {
     // Keep the realized/unrealized split coherent: when frozen ret is applied, realized
     // is by definition ret (sweep covers closed period only), unrealized = 0.
     const frozenKey = `frozen_${id}`;
-    const frozen = results[frozenKey];
+    // Même séparation pour frozen_best : c'est le résultat du simulateur scanner
+    // retiré, jamais le track record de la stratégie moteur courante.
+    const frozen = cfg.assetClass === 'dtx' ? null : results[frozenKey];
     const frozenDtxBlocksEngine = !!(frozen
       && cfg.assetClass === 'dtx'
       && (
@@ -937,6 +956,7 @@ async function main() {
       const met = _dtx.metrics, eq = _dtx.equity;
       const replayReconstruction = _dtx.metricsSource === 'mcp_replay' && _dtx.equityResolution === 'replay';
       if (replayReconstruction) {
+        const exactSingleStrategyReplay = met.replay_scope === 'single_strategy';
         const base = met.committed_capital || eq.values[0] || met.initial_capital || 100000;
         const curve = eq.dates.map((d, i) => ({
           date: String(d).slice(0, 10),
@@ -953,7 +973,8 @@ async function main() {
         m.wr = met.win_rate != null ? met.win_rate : 0;
         m.trades = met.total_trades != null ? met.total_trades : 0;
         m.avgHold = null;
-        m.pf = null; m.pfLow = null; m.pfHigh = null; m.pfReliable = null;
+        m.pf = met.profit_factor != null ? met.profit_factor : null;
+        m.pfLow = null; m.pfHigh = null; m.pfReliable = null;
         m.r2 = met.r2 != null ? met.r2 : null;
         m.cagr = met.cagr_pct != null ? met.cagr_pct : null;
         m.sharpe = met.sharpe != null ? met.sharpe : null;
@@ -965,12 +986,16 @@ async function main() {
           fromYr: String(met.from || '2021').slice(0, 4),
           toYr: String(met.to || '').slice(0, 4),
           liveRet: null,
-          reconstruction: true,
-          source: _dtx.equitySource || 'DtxReplay fixed-capital reconstruction',
+          reconstruction: !exactSingleStrategyReplay,
+          exactSingleStrategy: exactSingleStrategyReplay,
+          source: _dtx.equitySource || (exactSingleStrategyReplay
+            ? 'DtxReplay exact single-strategy reference'
+            : 'DtxReplay fixed-capital reconstruction'),
           rejectedServedSnapshot: _dtx.rejectedServedSnapshot || null,
         };
         m.dtxEngine = true;
-        m.dtxReconstruction = true;
+        m.dtxReference = true;
+        m.dtxReconstruction = !exactSingleStrategyReplay;
         m.liveFrom = null;
         m.liveFromLbl = null;
         m.liveFromHuman = null;
@@ -1104,6 +1129,40 @@ async function main() {
       const _frozenMeaningful = (m.trades || 0) >= 10 || Math.abs(m.ret || 0) >= 5;
       if (!_frozenMeaningful) { m.pit = null; m.forward = null; }
     }
+    if (cfg.performanceScope === 'simulated_backtest') {
+      const boundaryStatus = modeBoundaryStatus(capacityRegistry, id, { configHistory });
+      const accountingErrors = [
+        ...capacityCertificationErrors(frozen, { configHistory, modeId: id }),
+        ...legacyConfigHistoryErrors,
+      ];
+      m.accountingErrors = [...new Set(accountingErrors)];
+      m.capacityBoundary = {
+        schema: 'capacity_at_entry_v1',
+        forwardCertified: boundaryStatus.forwardCertified,
+        boundarySession: boundaryStatus.boundarySession,
+        effectiveAt: boundaryStatus.effectiveAt,
+        historyStatus: boundaryStatus.historyStatus,
+        trackingStatus: boundaryStatus.trackingStatus,
+        historicalStatsPublishable: false,
+        historicalCurvesPublishable: false,
+      };
+      // A forward genesis certifies operations only after its exact timestamp.
+      // It cannot turn the retired pre-boundary frozen artifact into evidence.
+      m.accountingCertified = !boundaryStatus.forwardCertified && m.accountingErrors.length === 0;
+      if (boundaryStatus.forwardCertified || !m.accountingCertified) {
+        // The flat legacy ledger overbooks historical slots and the repository
+        // lacks a sealed capacity-at-entry/risk-state ledger. Do not leak the
+        // known-invalid +99/+59 heroes through charts, snapshots or API inputs.
+        m.performanceSuppressed = true;
+        for (const key of ['ret', 'realized', 'unrealized', 'dd', 'wr', 'pf', 'pfLow', 'pfHigh', 'r2', 'cagr', 'sharpe', 'avgHold']) m[key] = null;
+        m.trades = null;
+        m.oosWarn = null;
+        m.equityCurve = [];
+        m.pit = null;
+        m.forward = null;
+        ec = { d: [], v: [] };
+      }
+    }
     modes[id] = { cfg, trades, m, ec };
   }
   // Default mode for API/telegram = balanced
@@ -1145,29 +1204,47 @@ async function main() {
     etf_momentum: s => /^(ETFMomentum|etf_momentum)$/i.test(s),
     trendline_breakout: s => /^(TrendlineBreakout|trendline_breakout)$/i.test(s),
   };
-  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout', candlestick_only: 'Candlestick only', adaptive_fractal: 'Adaptive Fractal', hybrid_af: 'Hybrid-AF', highvol_breakout: 'HighVol Breakout', momentum_rotation: 'Momentum Rotation', etf_momentum: 'ETF Momentum', trendline_breakout: 'Trendline Breakout', fortress_pm: 'Fortress A+', pead_drift: 'PEAD Drift', filings_catalyst: 'Insider & Catalyst', gap_and_go: 'Gap & Go', dtx_engine: 'Engine orders' }[f] || f; }
+  function filterLabel(f) { return { all: 'Toutes les stratégies', no_sq: 'Hors Short Squeeze', momentum_only: 'Momentum seul', breakout_only: 'Cassures seules', no_sq_pb: 'Hors SQ/Pullback', mom_bo: 'Momentum + cassures', candlestick_only: 'Chandeliers seuls', adaptive_fractal: 'Fractale adaptative', hybrid_af: 'Hybride AF', highvol_breakout: 'Cassures haute volatilité', momentum_rotation: 'Rotation momentum', etf_momentum: 'Momentum ETF', trendline_breakout: 'Cassures de tendance', fortress_pm: 'Fortress A+', pead_drift: 'Dérive PEAD', filings_catalyst: 'Initiés et catalyseurs', gap_and_go: 'Gap & Go', dtx_engine: 'Ordres du moteur' }[f] || f; }
+
+  const GOAL_LABEL_FR = {
+    'Maximum Short-Term Alpha': 'Alpha maximal à court terme',
+    'Maximum Return': 'Rendement maximal',
+    'Risk-Adjusted Growth': 'Croissance ajustée du risque',
+    'Maximum Capital Preservation': 'Préservation maximale du capital',
+  };
+  const RISK_LABEL_FR = {
+    Extreme: 'extrême', High: 'élevé', Medium: 'modéré', 'Ultra-Low': 'très faible',
+  };
+  function goalLabelFR(value) { return GOAL_LABEL_FR[value] || value || ''; }
+  function riskLabelFR(value) { return RISK_LABEL_FR[value] || String(value || '').toLocaleLowerCase('fr-FR'); }
 
   // Generate config-aware tagline (overrides stale hardcoded taglines in modes-config.json)
   function buildTagline(id, cfg) {
+    if (cfg.assetClass === 'dtx') {
+      const ref = cfg.referenceStats || {};
+      const stress = cfg.stressReference || {};
+      return `Stratégie de croissance agressive · jusqu’à ${cfg.portfolioSize} positions · ` +
+        `risque extrême · baisse historique maximale ${ref.maxDdPct ?? '—'} % · stress p95 ${stress.ddP95Pct ?? '—'} %`;
+    }
     const parts = [];
     parts.push(`${cfg.label || id}`);
-    parts.push(`H${cfg.horizon}`);
+    parts.push(`horizon ${cfg.horizon} séances`);
     parts.push(`${filterLabel(cfg.filterName)}`);
-    if (cfg.atrStopMult > 0) parts.push(`${cfg.atrStopMult}× ATR stop`);
-    if (cfg.maxStopPct > 0) parts.push(`maxStop ${cfg.maxStopPct}%`);
-    if (cfg.partialTP && cfg.partialTPPct) parts.push(`partial TP ${Math.round(cfg.partialTPPct * 100)}%${cfg.partialTPGain ? ' at +' + cfg.partialTPGain + '%' : ''}`);
-    if (cfg.disableTP2) parts.push('TP2 disabled (ride momentum)');
-    if (cfg.staleDays > 0) parts.push(`stale exit ${cfg.staleDays}d`);
-    if (cfg.dailyTrailPct > 0) parts.push(`trail ${cfg.dailyTrailPct}%`);
-    if (cfg.trailingStop && !cfg.dailyTrailPct) parts.push('ATR trailing stop');
-    if (cfg.breakevenPct > 0) parts.push(`BE lock at +${cfg.breakevenPct}%`);
-    if (cfg.circuitBreakerStops) parts.push(`circuit breaker ${cfg.circuitBreakerStops}SL/${cfg.circuitBreakerWindow}d→${cfg.circuitBreakerPause}d pause`);
-    parts.push(`Risk layer: DD breaker ${cfg.ddBreakerPct}%`);
-    if (cfg.vixKillThreshold) parts.push(`VIX kill ${cfg.vixKillThreshold}`);
-    if (cfg.sizingMethod === 'inverse_atr') parts.push('inverse-ATR sizing');
-    if (cfg.positionSizePct && cfg.positionSizePct < 1) parts.push(`half-sized (${Math.round(cfg.positionSizePct * 100)}%)`);
-    if (cfg.sectorCapMax > 0) parts.push(`sector cap ${cfg.sectorCapMax}`);
-    if (cfg.correlationCap > 0) parts.push(`correlation ${cfg.correlationCap}`);
+    if (cfg.atrStopMult > 0) parts.push(`stop ${cfg.atrStopMult}× ATR`);
+    if (cfg.maxStopPct > 0) parts.push(`stop plafonné à −${cfg.maxStopPct}%`);
+    if (cfg.partialTP && cfg.partialTPPct) parts.push(`sortie partielle de ${Math.round(cfg.partialTPPct * 100)}%${cfg.partialTPGain ? ' à +' + cfg.partialTPGain + '%' : ''}`);
+    if (cfg.disableTP2) parts.push('TP2 désactivé');
+    if (cfg.staleDays > 0) parts.push(`sortie après ${cfg.staleDays} séances sans nouveau sommet`);
+    if (cfg.dailyTrailPct > 0) parts.push(`stop suiveur ${cfg.dailyTrailPct}%`);
+    if (cfg.trailingStop && !cfg.dailyTrailPct) parts.push('stop suiveur ATR');
+    if (cfg.breakevenPct > 0) parts.push(`protection au point mort à +${cfg.breakevenPct}%`);
+    if (cfg.circuitBreakerStops) parts.push(`coupe-circuit après ${cfg.circuitBreakerStops} stops sur ${cfg.circuitBreakerWindow} séances, pause ${cfg.circuitBreakerPause} séances`);
+    parts.push(`coupe-circuit drawdown ${cfg.ddBreakerPct}%`);
+    if (cfg.vixKillThreshold) parts.push(`arrêt si VIX ≥ ${cfg.vixKillThreshold}`);
+    if (cfg.sizingMethod === 'inverse_atr') parts.push('taille inversement proportionnelle à l’ATR');
+    if (cfg.positionSizePct && cfg.positionSizePct < 1) parts.push(`taille réduite à ${Math.round(cfg.positionSizePct * 100)}%`);
+    if (cfg.sectorCapMax > 0) parts.push(`plafond sectoriel ${cfg.sectorCapMax}`);
+    if (cfg.correlationCap > 0) parts.push(`corrélation maximale ${cfg.correlationCap}`);
     return parts.join(', ').replace(/,\s*\./g, '.'); // fix "Label., " edge case
   }
 
@@ -1235,6 +1312,7 @@ async function main() {
   function dtxSignalsFor(id, cfg) {
     const stg = loadDtxStaging(id);
     if (!stg) return null; // caller falls back to signalsFor
+    if (!isDecisionAtOrAfterBoundary(stg, publicHistoryBoundary)) return [];
     const validFrom = Date.parse(stg.decisionProvenance?.validFrom || '');
     const validUntil = Date.parse(stg.decisionProvenance?.validUntil || '');
     const now = Date.now();
@@ -1278,6 +1356,10 @@ async function main() {
   function posFor(cfg, trades) {
     // Stopped/liquidated modes hold nothing — never surface stale positions.
     if (cfg.status === 'stopped' || cfg.status === 'liquidated') return [];
+    // Le dépôt ne contient aucun ledger d'exécution DTX certifié. Les anciennes
+    // lignes backtest-trades étaient une simulation de pont et ne doivent jamais
+    // être présentées comme des positions du portefeuille moteur.
+    if (cfg.assetClass === 'dtx') return [];
     const liveLookup = {};
     for (const p of livePositions) { liveLookup[p.ticker] = p; }
     const todayISO = TODAY_ISO; // canonical NY trading day (gates "closed today")
@@ -1350,12 +1432,24 @@ async function main() {
 
   // ── Panel builder ──
   function panel(id, cfg, m, trades, ec, chartId, active) {
+    const simulatedScope = cfg.performanceScope === 'simulated_backtest';
+    const capacityCertified = !simulatedScope || m.accountingCertified === true;
+    const performanceScope = cfg.assetClass === 'dtx'
+      ? DTX_FORWARD_SCOPE
+      : (cfg.performanceScope || 'unspecified');
+    const recentSimWindow = simulatedScope && capacityCertified && Array.isArray(m.equityCurve) && m.equityCurve.length
+      ? computeRollingEquityWindowStats(
+        m.equityCurve,
+        m.equityCurve.filter(point => point && point.date).map(point => point.date).sort().at(-1),
+        92,
+      )
+      : null;
     // SCRIPTED modes: Orders to Place come from the dtx engine (decide CREATE); fall back to the
     // JS-scanner signal pool when no dtx staging exists (e.g. hybrid, or dtx not yet run).
     const sig = dtxSignalsFor(id, cfg) || signalsFor(cfg);
     const signalsHeading = MARKET_CLOSED_DAY || (scanDir && scanDir !== TODAY_KEY)
-      ? 'Last Session Signals'
-      : "Today's Signals";
+      ? 'Signaux de la dernière séance'
+      : 'Signaux du jour';
     // ── Live book vs Sim backtest ──
     // P (when non-null) = the live-book primary stats (from pit-state). H = the stats source
     // for the hero (P when live data exists, else the frozen sim m). When P is set the hero is
@@ -1442,9 +1536,56 @@ async function main() {
     // on the SIGNAL DAY's close (absCandleVolRatio, known at scan time — NOT intraday J+1) become
     // tradeable. Quiet days legitimately yield 0 signals (parity with systematic-tss trading config).
     const _isHighConviction = cfg.preSignal === true;
-    const _sigStatusLabel = _isHighConviction ? 'CONFIRMÉ 8×' : (_sigAge <= 1 ? 'LIVE' : _sigAge <= 2 ? 'VALID' : 'EXPIRED');
-    const _sigStatusCls = _isHighConviction ? 'pos' : (_sigAge <= 1 ? 'pos' : _sigAge <= 2 ? 'am' : 'neg');
-    const pos = posFor(cfg, trades);
+    // A scanner candidate is not a fill. In simulated/backtest panels, the old
+    // LIVE badge looked like broker-execution evidence, so label it as an idea.
+    const _sigStatusLabel = simulatedScope
+      ? 'SIGNAL'
+      : (_isHighConviction ? 'CONFIRMÉ 8×' : (_sigAge <= 1 ? 'LIVE' : _sigAge <= 2 ? 'VALID' : 'EXPIRED'));
+    const _sigStatusCls = simulatedScope
+      ? 'am'
+      : (_isHighConviction ? 'pos' : (_sigAge <= 1 ? 'pos' : _sigAge <= 2 ? 'am' : 'neg'));
+    const pos = simulatedScope ? [] : posFor(cfg, trades);
+    const dtxStagingRaw = cfg.assetClass === 'dtx' ? loadDtxStaging(id) : null;
+    const dtxStaging = dtxStagingRaw && isDecisionAtOrAfterBoundary(dtxStagingRaw, publicHistoryBoundary)
+      ? dtxStagingRaw : null;
+    const dtxDecisionRetired = Boolean(dtxStagingRaw && !dtxStaging);
+    const dtxProvenance = (dtxStaging && dtxStaging.decisionProvenance) || {};
+    const dtxPlan = (dtxStaging && dtxStaging.executionPlan) || null;
+    const dtxPlanCandidates = dtxPlan
+      ? (dtxPlan.groups || []).flatMap(group => (group.candidates || [])
+        .filter(candidate => Number(candidate.rank) === 1)
+        .map(candidate => ({ ...candidate, _groupId: group.group_id || null })))
+      : [];
+    const dtxPlanFrom = Date.parse(dtxProvenance.validFrom || '');
+    const dtxPlanUntil = Date.parse(dtxProvenance.validUntil || '');
+    const dtxPlanNow = Date.now();
+    const dtxPlanState = !dtxStaging || dtxStaging.actionable === false || !dtxPlan
+      ? 'unavailable'
+      : dtxPlanNow < dtxPlanFrom
+        ? 'scheduled'
+        : dtxPlanNow <= dtxPlanUntil
+          ? 'active'
+          : 'expired';
+    const dtxPlanStateLabel = dtxDecisionRetired ? 'NON EXÉCUTÉ' : ({
+      unavailable: 'indisponible', scheduled: 'programmé', active: 'actif', expired: 'expiré',
+    }[dtxPlanState]);
+    const dtxPlanStateColor = dtxDecisionRetired ? 'var(--warn-ink)' : ({
+      unavailable: 'var(--neg)', scheduled: 'var(--warn-ink)', active: 'var(--pos)', expired: 'var(--muted)',
+    }[dtxPlanState]);
+    const fmtPlanTime = value => {
+      const date = new Date(value || '');
+      if (Number.isNaN(date.getTime())) return '—';
+      return date.toLocaleString('fr-FR', {
+        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+        timeZone: 'Europe/Paris', hour12: false,
+      }).replace(',', '');
+    };
+    const fmtPlanPrice = value => {
+      const n = Number(value);
+      return Number.isFinite(n)
+        ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
+        : '—';
+    };
     const alloc = Math.round(100 / cfg.portfolioSize * (cfg.positionSizePct || 1));
     const liveCount = pos.filter(p => !p._expired && !p._terminal).length;
     const terminalCount = pos.filter(p => p._terminal).length;
@@ -1514,65 +1655,81 @@ async function main() {
     // flags the status-change date so a flat-looking recent window isn't mistaken for "stuck".
     const _promo = promotionMarker(cfg, ec);
     const promoBadge = _promo
-      ? ` <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Statut ${cfg.status || 'live'} depuis ${_promo.iso}">live depuis ${_promo.lbl}</span>`
+      ? ` <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Statut ${cfg.status || 'live'} depuis ${_promo.iso}">${simulatedScope ? 'simulation suivie' : 'live'} depuis ${_promo.lbl}</span>`
       : '';
 
-    return `<div id="p-${id}" class="mode-panel" data-mode-status="${cfg.status || 'live'}" data-psize="${cfg.portfolioSize || 1}" data-asset-class="${cfg.assetClass || 'equity'}"${isCasablanca ? ' data-market="casablanca" data-nolive="1"' : ''} style="${active ? '' : 'display:none'}">
+    return `<div id="p-${id}" class="mode-panel" data-mode-status="${cfg.status || 'live'}" data-performance-scope="${htmlText(performanceScope)}" data-execution-verified="false" data-psize="${cfg.portfolioSize || 1}" data-asset-class="${cfg.assetClass || 'equity'}"${isCasablanca ? ' data-market="casablanca" data-nolive="1"' : ''} style="${active ? '' : 'display:none'}">
 ${renderStatusBanner(cfg)}
-<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> ${cfg.label} Dashboard${staleBadge}${promoBadge}</h2>
+<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> ${cfg.label} — Tableau de bord${simulatedScope ? ' <span class="pill am" style="font-size:.6rem;vertical-align:middle">simulation, aucune exécution broker certifiée</span>' : ''}${staleBadge}${promoBadge}</h2>
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-book-open" style="color:${cfg.color};font-size:.78rem"></i> How to trade this mode</span>
-      <span style="font-size:.72rem;color:var(--muted);margin-left:.5rem">${cfg.goal}${cfg.riskProfile ? ' · ' + cfg.riskProfile + ' risk' : ''}</span>
+      <span class="sc-sum-title"><i class="fas fa-book-open" style="color:${cfg.color};font-size:.78rem"></i> ${cfg.assetClass === 'dtx' ? 'Comment lire et exécuter ce mode' : simulatedScope ? 'Comment fonctionne ce mode simulé' : 'Comment utiliser ce mode'}</span>
+      <span style="font-size:.72rem;color:var(--muted);margin-left:.5rem">${goalLabelFR(cfg.goal)}${cfg.riskProfile ? ' · risque ' + riskLabelFR(cfg.riskProfile) : ''}</span>
     </summary>
     <div style="margin-top:.75rem;padding:.7rem .85rem;background:${cfg.color}0a;border:1px solid ${cfg.color}33;border-radius:var(--r-s);font-size:.82rem;color:var(--ink-2)">
       ${buildTagline(id, cfg)}
     </div>
     <div class="method-steps" style="margin-top:.85rem">
-      <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div>${cfg.assetClass === 'dtx' ? 'DTX Contract V2 is the only source of orders, sizing, levels, execution gates and exits. A plan is actionable only inside its exact <b>validFrom–validUntil</b> window.' : `Each evening, look at the <b>signals section</b> below. It shows the best ${cfg.topN} setup${cfg.topN > 1 ? 's' : ''} from tonight's scan${cfg.filterName === 'breakout_only' ? ' (breakout setups only)' : cfg.filterName === 'mom_bo' ? ' (momentum + breakout setups only)' : cfg.filterName === 'momentum_only' ? ' (momentum setups only)' : cfg.filterName === 'candlestick_only' ? ' (candlestick reversal patterns only — Hammer, Engulfing, Pin Bar with volume spike)' : cfg.filterName === 'no_sq' ? ' (no Short Squeeze plays)' : ''}. These are the ones you can act on tomorrow.`}</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div>${cfg.assetClass === 'dtx' ? 'Le plan du soir est l’unique source des symboles, quantités, prix, protections et horaires. Il reste visible avant l’ouverture, mais ne peut être exécuté que pendant la fenêtre indiquée.' : simulatedScope ? `Chaque soir, le modèle retient jusqu’à <b>${cfg.topN} idée${cfg.topN > 1 ? 's' : ''}</b> dans le scan selon le filtre « ${filterLabel(cfg.filterName)} ». Cette sélection sert à observer la stratégie ; elle ne crée ni ordre ni position.` : `Chaque soir, consultez les <b>signaux</b> ci-dessous. Le mode retient jusqu’à ${cfg.topN} configuration${cfg.topN > 1 ? 's' : ''} selon le filtre « ${filterLabel(cfg.filterName)} » pour la séance suivante.`}</div></div>
 ${cfg.assetClass === 'dtx' ? `
-      <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div>Within each opportunity group, arm <b>rank 1 only</b>. Submit the exact symbol, quantity, order type and limit from the plan. A LIMIT order is never converted to MARKET.</div></div>
-      <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Apply the candidate's structured protection exactly. For <b>engine_managed</b>, the stop and exit-policy reference must be active before or atomically with the fill when required; otherwise reject the candidate.</div></div>` : id === 'turbo' ? `
-      <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>3-Phase Smart Entry (momentum/breakout plays — you must watch at open):</b><br>
-        <b>Phase 1 — 9:30–10:15 ET / 15:30–16:15 Paris:</b> strict confirmation. <i>Momentum:</i> wait for a 5-min green candle above the entry. <i>Breakout:</i> price above entry + volume spike. <i>Pullback:</i> price dips below VWAP then reclaims it with a green candle. VWAP = the fair price of the day based on where most volume traded — buying at or below it gives you a better fill.<br>
-        <b>Phase 2 — 10:15–11:30 ET / 16:15–17:30 Paris:</b> relaxed. <i>Momentum:</i> price ≤ entry. <i>Breakout:</i> limit at support. <i>Pullback:</i> price ≤ entry and still below VWAP.<br>
-        <b>Phase 3 — 11:30–12:00 ET / 17:30–18:00 Paris:</b> deadline. Market order if price is near entry — otherwise skip and move to next signal. Do <b>NOT</b> chase a stock up more than 3% above entry.
-      </div></div>
-      <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>${cfg.maxStopPct > 0 ? `Set a <b>hard stop at −${cfg.maxStopPct}%</b> immediately.` : `Your stop adapts to each stock's volatility (${cfg.atrStopMult}× ATR) — see signal card for exact levels.`} When price hits TP1: <b>sell ${Math.round((cfg.partialTPPct || 0.3) * 100)}%</b> to lock profit, move stop to breakeven, and trail the rest toward TP2.${cfg.staleDays > 0 ? ` If no movement after ${cfg.staleDays} days, <b>exit at market</b> — stale momentum = dead trade.` : ''}</div></div>` : id === 'dynamic' ? `
-      <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>3-Phase Smart Entry (watch the first 90 minutes after open):</b><br>
-        <b>Phase 1 — 9:30–10:15 ET / 15:30–16:15 Paris:</b> wait for a 5-min green candle above the entry + volume to confirm the move is real. <i>Pullback setup:</i> price dips to VWAP and reclaims it.<br>
-        <b>Phase 2 — 10:15–11:30 ET / 16:15–17:30 Paris:</b> price must still be at or below your entry (no chasing). Limit order at support.<br>
-        <b>Phase 3 — 11:30–12:00 ET / 17:30–18:00 Paris:</b> last chance — market order if price is near entry, otherwise skip. If the stock spikes +10% in the first hour, consider taking partial profit early.
-      </div></div>
-      <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Once in the trade, ${cfg.maxStopPct > 0 ? `set your <b>stop loss</b> at −${cfg.maxStopPct}% from your entry` : `set your <b>stop loss</b> based on the signal card (${cfg.atrStopMult}× ATR — adapts to volatility)`} and your <b>take profit</b> at TP1.</div></div>` : `
+      <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div>Dans chaque groupe, utiliser <b>uniquement le rang 1</b> et recopier exactement le symbole, la quantité, le type et le prix limite. Un ordre à cours limité ne devient jamais un ordre au marché.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>La <b>protection affichée</b> doit être installée avec l’ordre, ou immédiatement après si le plan l’autorise. Si le stop ne peut pas être reproduit exactement, ne rien exécuter.</div></div>` : simulatedScope ? `
+      <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>Méthode de simulation, pas une procédure broker :</b> le moteur historique travaille sur des barres quotidiennes et ses règles de toucher de prix. Il ne prouve ni bougie 5 minutes, ni VWAP intraday, ni quantité réellement exécutée.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>${cfg.maxStopPct > 0 ? `La simulation applique un plafond de stop à −${cfg.maxStopPct}%.` : cfg.atrStopMult > 0 ? `La simulation calcule un stop à ${cfg.atrStopMult}× ATR.` : 'La simulation applique le stop stocké avec le signal.'} ${cfg.partialTP ? `À TP1, elle sort ${Math.round((cfg.partialTPPct || 0.5) * 100)}% de la position simulée${cfg.partialTPGain ? ` selon le seuil +${cfg.partialTPGain}%` : ''}, puis traite le solde selon l’horizon et les règles de sortie configurées.` : 'Aucune vente partielle : la position simulée entière sort à TP1, au stop ou à l’horizon.'}</div></div>` : `
       <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>Before market open</b> (set your orders the evening before, or before 9:25 AM New York / 3:25 PM Paris), place a <b>limit buy order</b> at the entry price shown. Put <b>${alloc}% of your total money</b> into each trade. You can have up to <b>${cfg.portfolioSize} trades open at the same time</b>. The executor uses a <b>3-phase entry window</b> (9:30–12:00 ET / 15:30–18:00 Paris): it tries to fill near entry in Phase 1, relaxes conditions in Phase 2, and places a market order in Phase 3 if price is still close — otherwise skips the signal.</div></div>
       <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>At the same time, set your <b>stop loss</b> and <b>take profit</b> as bracket orders (OCO). The levels are shown on the signal card.${cfg.maxStopPct > 0 ? ` Hard stop at −<b>${cfg.maxStopPct}%</b> from entry — this is your maximum loss per trade, no exceptions.` : cfg.atrStopMult > 0 ? ' Your stop adapts to each stock\'s volatility — wider for volatile stocks, tighter for stable ones.' : ''}</div></div>`}
-      <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>${cfg.assetClass === 'dtx' ? 'Any partial fill ends the group search. Cancel or disarm all alternates, preserve <b>max_winners=1</b>, and apply only structured UPDATE/CANCEL actions to their identified target order.' : cfg.partialTP ? `When the price hits <b>TP1</b>: sell <b>${Math.round((cfg.partialTPPct || 0.3) * 100)}%</b> of your shares to lock in profit, and let the remaining ${Math.round((1 - (cfg.partialTPPct || 0.3)) * 100)}% ${cfg.disableTP2 ? 'ride until horizon expires or rotation' : 'run toward TP2'}. ${cfg.breakevenPct > 0 ? 'Move your stop to your entry price (you can\'t lose money on this trade anymore).' : 'Consider manually moving stop to entry to eliminate downside risk on the remaining shares.'}` : 'Hold your full position and let it run. Exit when TP1 is hit, your stop triggers, or after the max hold time below.'}</div></div>
-${cfg.assetClass !== 'dtx' && cfg.vwapGate ? `<div class="step"><span class="step-n" style="background:${cfg.color}">&#x25b6;</span><div><b>VWAP Gate (built into the 3-phase entry):</b> VWAP = the fair price of the day based on where most trading volume happened. The executor already enforces VWAP-aware entries in each phase — buying below or at VWAP gives you a better fill than the crowd. If the stock gaps up hard at open (above VWAP &times; 1.01 and more than 3% above entry), the Phase 1 check will skip it automatically to avoid a gap-up trap.</div></div>` : ''}
-      <div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div>${cfg.assetClass === 'dtx' ? 'Never infer an exit, alternate or promotion from prose. If the plan is expired, incomplete or cannot be protected exactly, emit no order.' : cfg.trailingStop && cfg.horizon >= 30 ? `<b>Trailing exit (no fixed time limit):</b> ride the position with ${cfg.dailyTrailPct > 0 ? `the <b>${cfg.dailyTrailPct}% daily trailing stop</b>` : `an <b>ATR-based trailing stop</b> (${cfg.atrStopMult}× ATR — adapts to each stock's volatility)`}.${cfg.staleDays > 0 ? ` If the position goes <b>${cfg.staleDays} sessions without making a new high</b> (stale), exit at market — momentum is dead.` : ''} Hard cap at ${cfg.horizon} trading days as a safety net.` : `Close everything after <b>${cfg.horizon} trading days</b> (about ${Math.ceil(cfg.horizon * 7 / 5)} calendar days) — even if the trade hasn't hit TP or stop. This keeps your capital moving.`}</div></div>
-${cfg.assetClass !== 'dtx' && cfg.rotation === 'aggressive' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Rotation:</b> each evening, check if a new signal (score ≥ ${cfg.minScore}) appeared. If your worst open trade is still losing and the new setup is stronger, close the loser and buy the new one instead. Fresh opportunity beats a stale position.</div></div>` : cfg.assetClass !== 'dtx' && cfg.rotation === 'daily_max1' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Upgrade rule (max once per day):</b> if the scanner finds a new setup that scores at least 5 points higher than your weakest current trade, close the weak one and buy the new one instead. This keeps your portfolio fresh without turning everything over at once.</div></div>` : ''}
-      ${id === 'fortress' ? `<div class="step" style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#6d28d9"><i class="fas fa-shield-halved" style="font-size:.5rem"></i></span><div><b>Capital preservation first:</b> with ${cfg.portfolioSize} slots at ~${Math.round(100 / cfg.portfolioSize * (cfg.positionSizePct || 1))}% each, a single stop-out costs only <b>−${((cfg.maxStopPct || cfg.atrStopMult * 2) * (cfg.positionSizePct || 1) / cfg.portfolioSize).toFixed(1)}% of portfolio</b>. <b>VIX &lt; 15 (calm)</b>: run ${Math.max(1, Math.round(cfg.portfolioSize * 0.6))}–${Math.round(cfg.portfolioSize * 0.7)} positions. <b>VIX 15–${cfg.vixKillThreshold} (elevated)</b>: aim for ${Math.max(1, Math.round(cfg.portfolioSize * 0.8))}+ positions. <b>VIX &gt; ${cfg.vixKillThreshold}</b>: mode pauses — no new entries until VIX drops. Never hold fewer than ${Math.max(1, Math.round(cfg.portfolioSize * 0.4))} position${Math.round(cfg.portfolioSize * 0.4) > 1 ? 's' : ''}. Consider adding defensive ETFs (GLD, TLT) manually during high-VIX regimes.</div></div>` : id === 'secured' ? `<div class="step" style="background:#ecfeff;border:1px solid #a5f3fc;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#0891b2"><i class="fas fa-satellite" style="font-size:.5rem"></i></span><div><b>Orbit = ${cfg.horizon >= 15 ? 'patience' : 'disciplined swing'}.</b> This mode holds up to <b>${cfg.horizon} trading days</b> (~${Math.round(cfg.horizon * 7 / 5)} calendar days)${cfg.maxStopPct > 0 ? ` with a <b>hard −${cfg.maxStopPct}% stop</b>${cfg.atrStopMult > 0 ? ` (or ${cfg.atrStopMult}× ATR, whichever is tighter)` : ''}` : cfg.atrStopMult > 0 ? ` with <b>${cfg.atrStopMult}× ATR stops</b>` : ''}. The scanner picks winners, but very short exits can cut a move early — Orbit gives the trade room to develop while capping downside. <b>Do NOT</b> panic-sell on red days as long as your stop hasn't triggered.</div></div>` : ''}
+      <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>${cfg.assetClass === 'dtx' ? 'Dès qu’une quantité, même partielle, est exécutée dans un groupe, annuler ses candidats de remplacement. Un groupe ne peut produire qu’une seule position.' : simulatedScope ? 'Les cartes ci-dessous sont des idées simulées. Elles ne constituent ni un ordre, ni une position, ni une preuve d’exécution.' : cfg.partialTP ? `When the price hits <b>TP1</b>: sell <b>${Math.round((cfg.partialTPPct || 0.3) * 100)}%</b> of your shares to lock in profit, and let the remaining ${Math.round((1 - (cfg.partialTPPct || 0.3)) * 100)}% ${cfg.disableTP2 ? 'ride until horizon expires or rotation' : 'run toward TP2'}. ${cfg.breakevenPct > 0 ? 'Move your stop to your entry price (you can\'t lose money on this trade anymore).' : 'Consider manually moving stop to entry to eliminate downside risk on the remaining shares.'}` : 'Hold your full position and let it run. Exit when TP1 is hit, your stop triggers, or after the max hold time below.'}</div></div>
+${cfg.assetClass !== 'dtx' && cfg.vwapGate ? `<div class="step"><span class="step-n" style="background:${cfg.color}">&#x25b6;</span><div><b>Filtre VWAP :</b> ${simulatedScope ? 'paramètre du modèle de simulation ; aucune exécution intraday n’est déduite d’une barre quotidienne.' : 'le moteur d’exécution applique ce filtre pendant la fenêtre indiquée et abandonne le signal si les conditions ne sont pas réunies.'}</div></div>` : ''}
+      <div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div>${cfg.assetClass === 'dtx' ? 'Plan expiré, incomplet ou protection impossible à reproduire exactement : <b>aucun ordre</b>. Aucune valeur manquante n’est remplacée ou devinée.' : simulatedScope ? `Le modèle clôture la ligne simulée après <b>${cfg.horizon} séances</b> au plus, selon les règles de sortie configurées. Cela ne déclenche aucune action sur un compte réel.` : cfg.trailingStop && cfg.horizon >= 30 ? `<b>Trailing exit (no fixed time limit):</b> ride the position with ${cfg.dailyTrailPct > 0 ? `the <b>${cfg.dailyTrailPct}% daily trailing stop</b>` : `an <b>ATR-based trailing stop</b> (${cfg.atrStopMult}× ATR — adapts to each stock's volatility)`}.${cfg.staleDays > 0 ? ` If the position goes <b>${cfg.staleDays} sessions without making a new high</b> (stale), exit at market — momentum is dead trade.` : ''} Hard cap at ${cfg.horizon} trading days as a safety net.` : `Close everything after <b>${cfg.horizon} trading days</b> (about ${Math.ceil(cfg.horizon * 7 / 5)} calendar days) — even if the trade hasn't hit TP or stop. This keeps your capital moving.`}</div></div>
+${!simulatedScope && cfg.assetClass !== 'dtx' && cfg.rotation === 'aggressive' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Rotation:</b> each evening, check if a new signal (score ≥ ${cfg.minScore}) appeared. If your worst open trade is still losing and the new setup is stronger, close the loser and buy the new one instead. Fresh opportunity beats a stale position.</div></div>` : !simulatedScope && cfg.assetClass !== 'dtx' && cfg.rotation === 'daily_max1' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Upgrade rule (max once per day):</b> if the scanner finds a new setup that scores at least 5 points higher than your weakest current trade, close the weak one and buy the new one instead. This keeps your portfolio fresh without turning everything over at once.</div></div>` : ''}
+      ${id === 'secured' ? `<div class="step" style="background:#ecfeff;border:1px solid #a5f3fc;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#0891b2"><i class="fas fa-satellite" style="font-size:.5rem"></i></span><div><b>Orbit = ${cfg.horizon >= 15 ? 'patience' : 'disciplined swing'}.</b> This mode holds up to <b>${cfg.horizon} trading days</b> (~${Math.round(cfg.horizon * 7 / 5)} calendar days)${cfg.maxStopPct > 0 ? ` with a <b>hard −${cfg.maxStopPct}% stop</b>${cfg.atrStopMult > 0 ? ` (or ${cfg.atrStopMult}× ATR, whichever is tighter)` : ''}` : cfg.atrStopMult > 0 ? ` with <b>${cfg.atrStopMult}× ATR stops</b>` : ''}. The scanner picks winners, but very short exits can cut a move early — Orbit gives the trade room to develop while capping downside. <b>Do NOT</b> panic-sell on red days as long as your stop hasn't triggered.</div></div>` : ''}
     </div>
     <div class="method-footer">
-      <span><i class="fas fa-layer-group"></i> ${cfg.assetClass === 'dtx' ? 'DTX grouped plan · one winner per group' : `${cfg.portfolioSize} ${cfg.portfolioSize === 1 ? 'trade' : 'trades'} max · ${alloc}% each`}</span>
-      <span><i class="fas fa-calendar-days"></i> ${cfg.assetClass === 'dtx' ? 'Exact plan validity window' : `Close after ${cfg.horizon} trading days`}</span>
-      ${cfg.maxStopPct > 0 ? `<span><i class="fas fa-shield-halved"></i> Hard stop at −${cfg.maxStopPct}%</span>` : ''}
-      ${cfg.partialTP ? `<span><i class="fas fa-scissors"></i> Sell ${Math.round((cfg.partialTPPct || 0.3) * 100)}% at TP1</span>` : ''}
+      <span><i class="fas fa-layer-group"></i> ${cfg.assetClass === 'dtx' ? 'Un seul candidat retenu par groupe' : simulatedScope ? `${cfg.portfolioSize} ligne${cfg.portfolioSize > 1 ? 's' : ''} simulée${cfg.portfolioSize > 1 ? 's' : ''} max · aucune exécution broker` : `${cfg.portfolioSize} ${cfg.portfolioSize === 1 ? 'trade' : 'trades'} max · ${alloc}% each`}</span>
+      <span><i class="fas fa-calendar-days"></i> ${cfg.assetClass === 'dtx' ? 'Fenêtre exacte obligatoire' : simulatedScope ? `Horizon simulé : ${cfg.horizon} séances` : `Close after ${cfg.horizon} trading days`}</span>
+      ${cfg.maxStopPct > 0 ? `<span><i class="fas fa-shield-halved"></i> Stop maximal${simulatedScope ? ' simulé' : ''} : −${cfg.maxStopPct}%</span>` : ''}
+      ${cfg.partialTP ? `<span><i class="fas fa-scissors"></i> ${simulatedScope ? 'Sortie simulée' : 'Sell'} ${Math.round((cfg.partialTPPct || 0.3) * 100)}% ${simulatedScope ? 'à' : 'at'} TP1</span>` : ''}
     </div>
   </details>
 </div>
 
-<!-- ══ 2bis. DÉCISIONS DU MOTEUR — modes scriptés uniquement ══ -->
-<!-- Ce que le moteur systematic a dit CHAQUE JOUR, historisé et point-in-time. Le staging
-     data/dtx/<mode>.json est un instantané écrasé à chaque ingestion : sans ce registre, les
-     ordres d'hier sont perdus. Source : data/dtx-engine-history.json, publié en
-     /scanner/status/engine-history.json. Immuable par (mode, date). -->
+${cfg.assetClass === 'dtx' ? `<div class="section-card dtx-plan-card" data-section="dtx-plan" data-valid-from="${htmlText(dtxProvenance.validFrom || '')}" data-valid-until="${htmlText(dtxProvenance.validUntil || '')}" style="border-left:3px solid ${cfg.color}">
+  <div class="sc-head" style="align-items:flex-start">
+    <div>
+      <h3><i class="fas fa-calendar-check" style="color:${cfg.color}"></i> ${dtxDecisionRetired ? 'Aucun plan certifié' : 'Plan programmé'}
+        ${dtxDecisionRetired
+          ? '<span class="pill am" style="margin-left:.35rem;font-size:.62rem">NON EXÉCUTÉ</span>'
+          : `<span class="pill dtx-plan-state" style="margin-left:.35rem;background:${dtxPlanStateColor}18;color:${dtxPlanStateColor};border:1px solid ${dtxPlanStateColor};font-size:.62rem">${dtxPlanStateLabel}</span>`}
+      </h3>
+      <div style="margin-top:.35rem;font-size:.75rem;color:var(--ink-2)">${dtxDecisionRetired ? 'La proposition disponible est antérieure à la frontière certifiée et a été retirée.' : `Décision calculée après la clôture du ${htmlText(dtxProvenance.requestedAsOf || '—')} · ${dtxPlanCandidates.length} candidat${dtxPlanCandidates.length === 1 ? '' : 's'} prioritaire${dtxPlanCandidates.length === 1 ? '' : 's'}`}</div>
+    </div>
+    <span class="sc-meta">${dtxDecisionRetired ? 'historique non certifié retiré' : (dtxPlan ? `${fmtPlanTime(dtxProvenance.validFrom)} → ${fmtPlanTime(dtxProvenance.validUntil)} (Paris)` : 'aucune fenêtre valide')}</span>
+  </div>
+  <div class="dtx-plan-candidates">
+    ${dtxPlanCandidates.length ? dtxPlanCandidates.map(candidate => {
+      const order = candidate.order || {};
+      const protection = candidate.protection || {};
+      const symbol = htmlText(candidate.symbol || '—');
+      const type = String(order.order_type || '').toUpperCase() === 'LIMIT' ? 'Limite' : htmlText(order.order_type || '—');
+      return `<article class="dtx-candidate" aria-label="Proposition ${symbol}, non exécutée">
+        <div class="dtx-candidate-main"><span class="dtx-candidate-rank">Priorité 1</span><strong>${symbol}</strong><span>Quantité : ${Number(candidate.qty) || '—'} titre${Number(candidate.qty) === 1 ? '' : 's'}</span></div>
+        <dl><div><dt>Type</dt><dd>${type}</dd></div><div><dt>Prix limite</dt><dd>${fmtPlanPrice(order.limit_price)}</dd></div><div><dt>Protection</dt><dd>${fmtPlanPrice(protection.stop_loss)}</dd></div></dl>
+        <p><i class="fas fa-circle-info"></i> Proposition non exécutée. Vérifier l’état de la fenêtre au moment d’agir.</p>
+      </article>`;
+    }).join('') : `<p class="empty"><i class="fas fa-shield-halved"></i>${dtxDecisionRetired ? 'Aucun candidat public : proposition pré-frontière retirée.' : 'Aucun candidat complet et protégé.'}</p>`}
+  </div>
+  <div class="dtx-plan-note">
+    <b>${dtxDecisionRetired ? 'Aucune action n’est autorisée.' : 'Ce plan n’est pas une position ouverte.'}</b> ${dtxDecisionRetired ? 'Une proposition non certifiée ne peut être ni restaurée, ni exécutée.' : 'Il devient utilisable uniquement pendant les horaires affichés ; hors fenêtre, aucune action n’est autorisée.'}
+  </div>
+</div>` : ''}
+
+<!-- ══ 2bis. PLANS PROPOSÉS — archive point-in-time, jamais une preuve d'exécution ══ -->
 ${cfg.assetClass === 'dtx' ? `<div class="section-card">
   <details>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Décisions du moteur <span class="count" id="engHistCount-${id}">—</span></span>
+      <span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Plans proposés <span class="count" id="engHistCount-${id}">—</span> <span class="pill am" style="margin-left:.25rem">NON EXÉCUTÉ</span></span>
     </summary>
     <div style="margin-top:.7rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
       <label style="font-size:.74rem;color:var(--muted)">Séance</label>
@@ -1584,15 +1741,15 @@ ${cfg.assetClass === 'dtx' ? `<div class="section-card">
 </div>` : ''}
 <!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <!-- Modes scriptés: 'Today's Signals' est redondant avec 'Orders to Place' (les signaux SONT les ordres) → masqué -->
-<div class="section-card${isScripted ? ' hide-section' : ''}">
+<div class="section-card${isScripted ? ' hide-section' : ''}" data-section="signals">
   <details${sig.length ? ' open' : ''}>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> ${signalsHeading} <span class="count">${sig.length} setup${sig.length === 1 ? '' : 's'}${fallback.length ? ' + ' + fallback.length + ' fallback' : ''}</span>${sig.length ? `<span class="sc-preview">${sig.slice(0,3).map(s => `<b>${s.ticker}</b> <span style="color:var(--muted)">${s.score}</span>`).join(' · ')}</span>` : ''}</span>
-      ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>` : ''}
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> ${signalsHeading} <span class="count">${sig.length} signal${sig.length === 1 ? '' : 'aux'}${fallback.length ? ' + ' + fallback.length + ' en repli' : ''}</span>${sig.length ? `<span class="sc-preview">${sig.slice(0,3).map(s => `<b>${s.ticker}</b> <span style="color:var(--muted)">${s.score}</span>`).join(' · ')}</span>` : ''}</span>
+      ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link" onclick="event.stopPropagation()">Voir le scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>` : ''}
     </summary>
     ${_isHighConviction ? `<div style="margin-top:.75rem;padding:.7rem .85rem;background:${cfg.color}0a;border:1px solid ${cfg.color}33;border-radius:var(--r-s);font-size:.82rem;color:var(--ink-1);line-height:1.5"><b><i class="fas fa-bolt" style="margin-right:.3rem;color:${cfg.color}"></i>Système haute-conviction (parité systematic-tss).</b> Bull ne trade qu'un pattern chandelier confirmé par un <b>spike de volume ≥ ${candleVolGate}× la moyenne 20j le jour du signal</b> (volume de clôture, connu au scan) <b>ET</b> score ≥ ${cfg.minScore} <b>ET</b> liquidité ≥ $1M/j. Sur 5 ans : ~1 trade/semaine (1061 trades, parité Go/JS). <b>Les jours calmes sans spike 8× → 0 signal, c'est normal et attendu</b> — ce n'est pas un bug.</div>` : ''}
     ${sig.length ? `<table class="t" style="margin-top:.75rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
+      <thead><tr><th>Symbole</th><th>Score</th><th>Signal</th><th>Entrée</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>État</th></tr></thead>
       <tbody>${sig.map((s, i) => {
       const bg = s.score >= 90 ? 'var(--pos)' : s.score >= 85 ? 'var(--accent)' : 'var(--warn)';
       // Candlestick scores are on their own scale (can exceed 100): render as-is,
@@ -1602,7 +1759,7 @@ ${cfg.assetClass === 'dtx' ? `<div class="section-card">
         : s.sharia === false ? '<span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span>' : '';
       const _ohlc = signalOhlc[s.ticker] || {};
       return `<tr data-sig-ticker="${s.ticker}"${isCasablanca ? ' data-market="casablanca"' : ''} data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="primary" data-sig-open="${_ohlc.open || ''}" data-sig-high="${_ohlc.high || ''}" data-sig-low="${_ohlc.low || ''}" data-sig-price="${_ohlc.price || ''}"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}"${_candleTitle}>${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}"${_sigStatusLabel === 'LIVE' ? ' style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)"' : ''}>${_sigStatusLabel}</span></td></tr>`;
-    }).join('')}${fallback.length ? `<tr><td colspan="8" style="text-align:center;padding:.45rem;background:var(--surface-2);font-size:.68rem;color:var(--muted);font-weight:600;border-top:1px dashed var(--border)"><i class="fas fa-arrow-down" style="margin-right:.3rem"></i>Fallback candidates (if signal above skipped by VWAP gate)</td></tr>${fallback.map((s, i) => {
+    }).join('')}${fallback.length ? `<tr><td colspan="8" style="text-align:center;padding:.45rem;background:var(--surface-2);font-size:.68rem;color:var(--muted);font-weight:600;border-top:1px dashed var(--border)"><i class="fas fa-arrow-down" style="margin-right:.3rem"></i>Candidats de repli si le filtre VWAP écarte le signal principal</td></tr>${fallback.map((s, i) => {
       const bg = s.score >= 90 ? 'var(--pos)' : s.score >= 85 ? 'var(--accent)' : 'var(--warn)';
       const _candleTitle = /candlestick/i.test(s.strategy || '') ? ' title="échelle candlestick (non /100)"' : '';
       const shariaTag = s.sharia === true ? '<span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span>' : s.sharia === false ? '<span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span>' : '';
@@ -1613,7 +1770,7 @@ ${cfg.assetClass === 'dtx' ? `<div class="section-card">
       // Contextual empty state: explain WHY 0 signals (vs generic "no signals today")
       const total = (signals || []).length;
       if (total === 0) {
-        return `<p class="empty"><i class="fas fa-inbox"></i>No signals published today.</p>`;
+        return `<p class="empty"><i class="fas fa-inbox"></i>Aucun signal publié aujourd’hui.</p>`;
       }
       // Summarise which strategies the scanner actually produced today
       const todayStrategies = [...new Set(signals.map(s => s.strategy || 'unknown'))];
@@ -1623,56 +1780,75 @@ ${cfg.assetClass === 'dtx' ? `<div class="section-card">
       const afterScore = afterFilter.filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore);
       let reason;
       if (afterFilter.length === 0) {
-        reason = `Filter <b>${filterLabel(cfg.filterName)}</b> excluded all ${total} signal${total > 1 ? 's' : ''} today — available strateg${todayStrategies.length > 1 ? 'ies' : 'y'}: ${todayStrategies.map(s => '<b>' + s + '</b>').join(', ')}.`;
+        reason = `Le filtre <b>${filterLabel(cfg.filterName)}</b> a écarté les ${total} signaux publiés aujourd’hui. Configurations disponibles : ${todayStrategies.map(s => '<b>' + s + '</b>').join(', ')}.`;
       } else if (afterScore.length === 0) {
-        reason = `${afterFilter.length} signal${afterFilter.length > 1 ? 's' : ''} matched filter <b>${filterLabel(cfg.filterName)}</b> but none reached minScore <b>${cfg.minScore}</b>.`;
+        reason = `${afterFilter.length} signal${afterFilter.length > 1 ? 'aux correspondent' : ' correspond'} au filtre <b>${filterLabel(cfg.filterName)}</b>, mais aucun n’atteint le score minimal de <b>${cfg.minScore}</b>.`;
       } else {
-        reason = `No new signals for this mode today.`;
+        reason = 'Aucun nouveau signal pour ce mode aujourd’hui.';
       }
-      return `<p class="empty"><i class="fas fa-inbox"></i>${reason} Existing positions remain active.</p>`;
+      return `<p class="empty"><i class="fas fa-inbox"></i>${reason} ${simulatedScope ? 'Les idées simulées précédentes ne constituent pas des positions.' : 'Les positions existantes restent actives.'}</p>`;
     })()}
   </details>
 </div>
 
 <!-- ══ 3. PERF + STATS (equity curve) ══ -->
-<div class="perf-hero" style="border-top:3px solid ${cfg.color}">
+${m.performanceSuppressed ? `<div class="section-card" data-section="performance-unavailable" data-accounting-certified="false" data-forward-capacity-certified="${m.capacityBoundary?.forwardCertified === true}" data-history-status="${htmlText(m.capacityBoundary?.historyStatus || 'unavailable')}"${m.capacityBoundary?.effectiveAt ? ` data-boundary-effective-at="${htmlText(m.capacityBoundary.effectiveAt)}"` : ''} style="border-left:4px solid var(--warn);background:var(--warn-wk)">
+  <div class="sc-head" style="align-items:flex-start">
+    <div><h3><i class="fas fa-triangle-exclamation" style="color:var(--warn-ink)"></i> ${m.capacityBoundary?.forwardCertified ? 'Suivi point-in-time remis à zéro' : 'Métriques historiques indisponibles'}</h3>
+    <p style="margin:.45rem 0 0;color:var(--ink-2);line-height:1.5">${m.capacityBoundary?.forwardCertified
+      ? `Le nouveau registre de capacité est scellé depuis le ${fmtDateFR(m.capacityBoundary.boundarySession)} à ${htmlText(m.capacityBoundary.effectiveAt.slice(11, 16))} UTC, avec zéro position héritée. Toute décision antérieure — y compris celles de la même séance — reste retirée et non certifiée. Le suivi repart sans rendement ni courbe inventés.`
+      : 'L’ancien ledger mélange des candidats qui se chevauchent au-delà des slots réellement disponibles. Rendement, drawdown, taux de réussite, profit factor, courbe, CAGR, Sharpe et historique de trades restent masqués faute de frontière forward scellée.'}</p></div>
+    <span class="pill am">${m.capacityBoundary?.forwardCertified ? 'forward certifié · historique retiré' : 'indisponible · fail-closed'}</span>
+  </div>
+  <p style="margin:.55rem 0 0;font-size:.72rem;color:var(--muted)">Simulation, non broker. Les signaux visibles restent des idées ; seuls les futurs candidats appendus avec config, capacité, risque, régime, ordre et preuve d’entrée compteront.</p>
+</div>` : `<div class="perf-hero" style="border-top:3px solid ${cfg.color}">
   <div class="perf-chart-wrap">
     <div class="perf-hero-left">
-      <span class="perf-hero-label"><i class="fas fa-chart-line" style="color:${cfg.color};margin-right:.3rem"></i>Equity Curve${m.dtxReconstruction ? ' <small style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--muted)">· reconstructed replay</small>' : m.dtxEngine ? ' <small style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--muted)">· book backtest + live</small>' : ''}</span>
+      <span class="perf-hero-label"><i class="fas fa-chart-line" style="color:${cfg.color};margin-right:.3rem"></i>${m.dtxReference ? 'Courbe de référence' : simulatedScope ? 'Courbe simulée' : 'Equity Curve'}${m.dtxReconstruction ? ' <small style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--muted)">· reconstruction de replay</small>' : m.dtxReference ? ' <small style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--muted)">· replay DTX certifié</small>' : simulatedScope ? ' <small style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--muted)">· simulatePortfolio/backtest, pas un compte broker</small>' : m.dtxEngine ? ' <small style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--muted)">· book backtest + live</small>' : ''}</span>
     </div>
-    <div class="perf-chart" id="${chartId}"></div>
+    <div class="perf-chart" id="${chartId}" role="img" aria-label="${m.dtxReference ? `Courbe de la simulation historique ${htmlText(cfg.label)}` : `Courbe de performance ${htmlText(cfg.label)}`}"></div>
     ${m.dtxBacktest ? `<div class="bt-ctx">
-      <span class="bt-ctx-tag"><i class="fas fa-clock-rotate-left"></i> ${m.dtxBacktest.reconstruction ? 'Replay reconstruction' : 'Book backtest'} ${m.dtxBacktest.fromYr}→${m.dtxBacktest.toYr}</span>
+      <span class="bt-ctx-tag"><i class="fas fa-clock-rotate-left"></i> ${m.dtxBacktest.exactSingleStrategy ? 'Backtest DTX certifié' : m.dtxBacktest.reconstruction ? 'Reconstruction de replay' : 'Backtest du book'} ${m.dtxBacktest.fromYr}→${m.dtxBacktest.toYr}</span>
       <span class="bt-ctx-items">
         <span><b>${m.dtxBacktest.cagr != null ? (m.dtxBacktest.cagr > 0 ? '+' : '') + m.dtxBacktest.cagr + '%' : '—'}</b> CAGR</span>
         <span><b>${m.dtxBacktest.dd != null ? m.dtxBacktest.dd + '%' : '—'}</b> Max DD</span>
         <span><b>${m.dtxBacktest.sharpe != null ? m.dtxBacktest.sharpe : '—'}</b> Sharpe</span>
         <span class="bt-ctx-cum"><b>${m.dtxBacktest.ret != null ? (m.dtxBacktest.ret > 0 ? '+' : '') + m.dtxBacktest.ret + '%' : '—'}</b> cumulative</span>
       </span>
-      <span class="bt-ctx-note">${m.dtxBacktest.reconstruction
-        ? `Fixed-capital DtxReplay reconstruction · ${m.dtxBacktest.trades} trades. The served dynamic-book snapshot was rejected because its curve did not reproduce its drawdown; no book/live splice is shown.`
-        : `Served engine book · ${m.dtxBacktest.trades} trades. Live track begins ${m.liveFromHuman}${m.dtxBacktest.liveRet != null ? ` · ${m.dtxBacktest.liveRet > 0 ? '+' : ''}${m.dtxBacktest.liveRet}% since launch` : ''}.`}</span>
+      <span class="bt-ctx-note">${m.dtxBacktest.exactSingleStrategy
+        ? `Replay exact de ${cfg.label} · ${m.dtxBacktest.trades} opérations historiques. Cette simulation n’est pas un suivi réel.`
+        : m.dtxBacktest.reconstruction
+          ? `Reconstruction DtxReplay à capital fixe · ${m.dtxBacktest.trades} trades. Aucune jonction artificielle avec un suivi live n’est affichée.`
+          : `Book moteur servi · ${m.dtxBacktest.trades} trades. Suivi live depuis ${m.liveFromHuman}${m.dtxBacktest.liveRet != null ? ` · ${m.dtxBacktest.liveRet > 0 ? '+' : ''}${m.dtxBacktest.liveRet}% depuis le lancement` : ''}.`}</span>
 ${m.dtxLiveTrack ? `<span class="bt-ctx-note" title="Série live append-only (data/dtx-live-track.json) : un point réel par soirée de pipeline, jamais interpolé. Drift = return live cumulé vs return du même segment dans le replay moteur complet — indicatif (échantillonnage bi-hebdomadaire du replay).">Live history · ${m.dtxLiveTrack.points} pt${m.dtxLiveTrack.points > 1 ? 's' : ''}${m.dtxLiveTrack.first ? ' since ' + m.dtxLiveTrack.first : ''}${m.dtxLiveTrack.drift ? ` · Drift vs engine ${m.dtxLiveTrack.drift.drift_pp > 0 ? '+' : ''}${m.dtxLiveTrack.drift.drift_pp} pp <b style="color:${m.dtxLiveTrack.drift.status === 'OK' ? '#10b981' : m.dtxLiveTrack.drift.status === 'WATCH' ? '#f59e0b' : '#ef4444'}">[${m.dtxLiveTrack.drift.status}]</b>` : ' · drift: pending engine replay'}</span>` : ''}
     </div>` : ''}
   </div>
+  ${simulatedScope && m.oosWarn ? `<div class="sim-window" data-warning="out-of-sample" style="margin:.2rem 1rem .75rem;padding:.55rem .7rem;background:var(--neg-wk);border:1px solid var(--neg);border-radius:var(--r-s);font-size:.72rem;color:var(--ink-2)"><b><i class="fas fa-triangle-exclamation" style="color:var(--neg);margin-right:.3rem"></i>Dégradation hors échantillon</b> · IS WR ${m.oosWarn.isWR}% / PF ${m.oosWarn.isPF}× → OOS WR ${m.oosWarn.oosWR}% / PF ${m.oosWarn.oosPF}× (n=${m.oosWarn.oosTrades}). Simulation multi-config, non broker.</div>` : ''}
+  ${recentSimWindow ? `<div class="sim-window" data-performance-scope="simulated_backtest" data-window-from="${recentSimWindow.from}" data-window-to="${recentSimWindow.to}" style="display:flex;align-items:center;gap:.65rem;flex-wrap:wrap;margin:.2rem 1rem .75rem;padding:.55rem .7rem;background:var(--warn-wk);border:1px solid var(--warn);border-radius:var(--r-s);font-size:.72rem;color:var(--ink-2)">
+    <b><i class="fas fa-calendar-days" style="color:var(--warn-ink);margin-right:.3rem"></i>90 jours simulés</b>
+    <span>${recentSimWindow.from.slice(8, 10)}/${recentSimWindow.from.slice(5, 7)}→${recentSimWindow.to.slice(8, 10)}/${recentSimWindow.to.slice(5, 7)}</span>
+    <span>Rendement <b class="${recentSimWindow.ret >= 0 ? 'pos' : 'neg'}">${recentSimWindow.ret > 0 ? '+' : ''}${recentSimWindow.ret.toFixed(2)}%</b></span>
+    <span>Max DD <b class="neg">${recentSimWindow.dd.toFixed(2)}%</b></span>
+    <span style="color:var(--muted)">${recentSimWindow.sessions} séances · simulation, pas un compte broker</span>
+  </div>` : ''}
   <div class="perf-stats">
-    <div class="ps" title="${m.dtxReconstruction ? 'Cumulative return of the displayed fixed-capital DtxReplay reconstruction. It is not the served dynamic book.' : m.dtxEngine ? 'Cumulative return of the systematic engine book over the displayed backtest curve.' : 'Cumulative percent gain of the portfolio since inception. Includes mark-to-market on open positions.'}">
-      <span class="ps-v ${H.ret > 0 ? 'pos' : H.ret < 0 ? 'neg' : 'flat'}" style="color:${cfg.color}">${H.ret > 0 ? '+' : ''}${H.ret}%</span><span class="ps-l">${m.dtxReconstruction ? `Reconstructed Return <small style="opacity:.7">${m.dtxBacktest ? m.dtxBacktest.fromYr + '→' + m.dtxBacktest.toYr : ''}</small>` : m.dtxEngine ? `Engine Return <small style="opacity:.7">${m.dtxBacktest ? m.dtxBacktest.fromYr + '→' + m.dtxBacktest.toYr : ''}</small>` : 'Total Return'}${H.unrealized ? ' <small style="opacity:.6">(incl. ' + (H.unrealized > 0 ? '+' : '') + H.unrealized + '% MtM)</small>' : ''}</span>${liveMtm ? `<span class="ps-live" title="Portfolio value RIGHT NOW, including the mark-to-market of open positions. The headline above is the SEALED backtest (closed trades only, immutable) — this live figure moves with open P&amp;L and is shown separately so it never displaces the track record. Caveat: if a position is marked below its stop level, this MtM overstates the loss (it ignores the stop-sell scenario).">Live incl. MtM <b class="${liveMtm.ret > 0 ? 'pos' : liveMtm.ret < 0 ? 'neg' : 'flat'}">${liveMtm.ret > 0 ? '+' : ''}${liveMtm.ret}%</b>${liveMtm.unreal ? ` <span class="ps-live-o">· open ${liveMtm.unreal > 0 ? '+' : ''}${liveMtm.unreal}%</span>` : ''}</span>` : ''}
+    <div class="ps" title="${m.dtxReference ? 'Rendement cumulé du backtest de référence DTX affiché. Il ne s’agit pas de la performance live depuis le lancement public.' : 'Cumulative percent gain of the portfolio since inception. Includes mark-to-market on open positions.'}">
+      <span class="ps-v ${H.ret > 0 ? 'pos' : H.ret < 0 ? 'neg' : 'flat'}" style="color:${cfg.color}">${H.ret > 0 ? '+' : ''}${H.ret}%</span><span class="ps-l">${m.dtxReference ? `Rendement historique <small style="opacity:.7">${m.dtxBacktest ? m.dtxBacktest.fromYr + '→' + m.dtxBacktest.toYr : ''}</small>` : simulatedScope ? 'Rendement simulé' : m.dtxEngine ? `Engine Return <small style="opacity:.7">${m.dtxBacktest ? m.dtxBacktest.fromYr + '→' + m.dtxBacktest.toYr : ''}</small>` : 'Total Return'}${H.unrealized ? ' <small style="opacity:.6">(incl. ' + (H.unrealized > 0 ? '+' : '') + H.unrealized + '% MtM)</small>' : ''}</span>${liveMtm ? `<span class="ps-live" title="Portfolio value RIGHT NOW, including the mark-to-market of open positions. The headline above is the SEALED backtest (closed trades only, immutable) — this live figure moves with open P&amp;L and is shown separately so it never displaces the track record. Caveat: if a position is marked below its stop level, this MtM overstates the loss (it ignores the stop-sell scenario).">Live incl. MtM <b class="${liveMtm.ret > 0 ? 'pos' : liveMtm.ret < 0 ? 'neg' : 'flat'}">${liveMtm.ret > 0 ? '+' : ''}${liveMtm.ret}%</b>${liveMtm.unreal ? ` <span class="ps-live-o">· open ${liveMtm.unreal > 0 ? '+' : ''}${liveMtm.unreal}%</span>` : ''}</span>` : ''}
     </div>
     <div class="ps" title="Largest peak-to-trough drop on the equity curve. Lower is better; measures worst pain experienced.">
-      <span class="ps-v neg">${H.dd}%</span><span class="ps-l">Max Drawdown</span>
+      <span class="ps-v neg">${H.dd}%</span><span class="ps-l">${m.dtxReference ? 'Baisse maximale' : 'Max Drawdown'}</span>
     </div>
     <div class="ps" title="Share of resolved trades that ended profitable. 50% with high R:R is normal for momentum strategies.">
-      <span class="ps-v">${H.wr}%</span><span class="ps-l">Win Rate</span>
+      <span class="ps-v">${H.wr}%</span><span class="ps-l">${m.dtxReference ? 'Taux de réussite' : 'Win Rate'}</span>
     </div>
     <div class="ps" title="Sum of winning P&amp;L divided by sum of losing P&amp;L. >1 = profitable. >2 = robust. >5 = small-sample inflated.${!P && m.pfLow != null && m.pfHigh != null ? ` 90% bootstrap CI: [${m.pfLow}x — ${m.pfHigh}x] over ${m.trades} trades.` : (!P && m.pfReliable === false ? ` Sample ${m.trades}<50 trades — point estimate only, treat as fragile.` : '')}">
-      <span class="ps-v"><span class="ps-num">${H.pf == null ? '—' : H.pf + 'x'}</span>${!P && m.pfLow != null && m.pfHigh != null ? `<span class="ps-ci" style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[${m.pfLow}–${m.pfHigh}]</span>` : ''}</span><span class="ps-l">Profit Factor${!P && m.pfReliable === false ? ' <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span>' : ''}</span>
+      <span class="ps-v"><span class="ps-num">${H.pf == null ? '—' : H.pf + 'x'}</span>${!P && m.pfLow != null && m.pfHigh != null ? `<span class="ps-ci" style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[${m.pfLow}–${m.pfHigh}]</span>` : ''}</span><span class="ps-l">${m.dtxReference ? 'Facteur de profit' : 'Profit Factor'}${!P && m.pfReliable === false ? ' <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span>' : ''}</span>
     </div>
     <div class="ps" title="Number of fully-closed trades counted in the stats above. Pending/open positions excluded.">
       <span class="ps-v">${H.trades}</span><span class="ps-l">Trades clôturés</span>
     </div>
     <div class="ps" title="Average number of trading days each closed trade was held.">
-      <span class="ps-v">${H.avgHold == null ? '—' : H.avgHold + 'd'}</span><span class="ps-l">Avg Hold</span>
+      <span class="ps-v">${H.avgHold == null ? '—' : H.avgHold + 'd'}</span><span class="ps-l">${m.dtxReference ? 'Durée moyenne' : 'Avg Hold'}</span>
     </div>
     <div class="ps" title="R-squared: how closely the equity curve follows a straight line. 1.0 = perfect linear growth, 0 = random.">
       <span class="ps-v">${H.r2 != null ? H.r2.toFixed(3) : '—'}</span><span class="ps-l">R²</span>
@@ -1684,10 +1860,10 @@ ${m.dtxLiveTrack ? `<span class="bt-ctx-note" title="Série live append-only (da
       <span class="ps-v">${H.sharpe != null ? H.sharpe : '—'}</span><span class="ps-l">Sharpe</span>
     </div>
   </div>
-</div>
+</div>`}
 
 <!-- ══ 4. CLOSE NOW ══ -->
-${timedOut.length ? `<div class="cta-card cta-close" data-section="closenow">
+${!simulatedScope && timedOut.length ? `<div class="cta-card cta-close" data-section="closenow">
   <div class="cta-header">
     <span class="cta-icon"><i class="fas fa-ban"></i></span>
     <div>
@@ -1707,6 +1883,8 @@ ${timedOut.length ? `<div class="cta-card cta-close" data-section="closenow">
 
 <!-- ══ 5. ORDERS CTA ══ -->
 ${(() => {
+        if (cfg.assetClass === 'dtx') return '';
+        if (simulatedScope) return `<div class="section-card" data-section="simulation-ideas" data-actionable="false"><div class="sc-head"><h3><i class="fas fa-flask"></i> Idées simulées</h3><span class="sc-meta">aucun ordre à placer</span></div><p class="empty"><i class="fas fa-circle-info"></i>Ces candidats servent à observer le modèle. Aucune action BUY, CLOSE ou ROTATE n’est publiée sans exécution certifiée.</p></div>`;
         const alloc = Math.round(100 / cfg.portfolioSize * (cfg.positionSizePct || 1));
         const openTickers = new Set(pos.filter(p => !p._terminal).map(p => p.ticker));
         const sigFiltered = sig.filter(s => !openTickers.has(s.ticker));
@@ -1770,7 +1948,7 @@ ${(() => {
           const vwapCell = s.vwapRef ? price(s.vwapRef) : '—';
           actionRows.push(`<tr>
       <td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${sht}</td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}','${s.universe||''}')"></td>
+      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="Graphique ${s.ticker}" class="fv-thumb" loading="lazy" decoding="async" onclick="fvOpen('${s.ticker}','${s.universe||''}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}"${_candleTitle}>${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
       <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">${vwapCell}</td>
@@ -1789,7 +1967,7 @@ ${(() => {
           const rotVwapCell = s.vwapRef ? price(s.vwapRef) : '—';
           actionRows.push(`<tr style="background:var(--warn-wk)">
       <td>${tkLogo(s.ticker)}<b>${s.ticker}</b></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}','${s.universe||''}')"></td>
+      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="Graphique ${s.ticker}" class="fv-thumb" loading="lazy" decoding="async" onclick="fvOpen('${s.ticker}','${s.universe||''}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
       <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">${rotVwapCell}</td>
@@ -1928,10 +2106,20 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
 </div>` : ''}`;
       })()}
 
-<!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
-<div class="section-card" id="sec-pos-${id}">
+${cfg.assetClass === 'dtx' ? `<div class="section-card" id="sec-forward-${id}" data-section="forward-tracking">
   <div class="sc-head">
-    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">${liveCount}/${cfg.portfolioSize}${terminalCount ? ' + ' + terminalCount + ' closed today' : ''}${pos.length > liveCount + terminalCount ? ' + ' + (pos.length - liveCount - terminalCount) + ' expired' : ''}</span></h3>
+    <h3><i class="fas fa-satellite-dish" style="color:${cfg.color}"></i> Suivi réel <span class="count">non démarré</span></h3>
+    <span class="sc-meta">depuis le 1er septembre 2026</span>
+  </div>
+  <div style="margin-top:.55rem;padding:.75rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;line-height:1.5;color:var(--ink-2)">
+    <b>Aucune exécution certifiée.</b> Rendement, risque, taux de réussite et positions restent donc affichés par « — ». ${dtxDecisionRetired ? 'Aucun plan certifié n’est disponible pour cette frontière forward.' : 'Le plan programmé ci-dessus est une proposition, pas une performance réelle.'}
+  </div>
+</div>` : ''}
+
+<!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
+<div class="section-card${cfg.assetClass === 'dtx' || (simulatedScope && m.performanceSuppressed) ? ' hide-section' : ''}" id="sec-pos-${id}" data-section="positions">
+  <div class="sc-head">
+    <h3><i class="fas fa-folder-open"></i> ${cfg.assetClass === 'dtx' ? 'Positions exécutées' : simulatedScope ? 'Positions simulées ouvertes' : 'Open Positions'} <span class="count">${cfg.assetClass === 'dtx' ? 'aucune certifiée' : `${liveCount}/${cfg.portfolioSize}${terminalCount ? ' + ' + terminalCount + ' closed today' : ''}${pos.length > liveCount + terminalCount ? ' + ' + (pos.length - liveCount - terminalCount) + ' expired' : ''}`}</span></h3>
 ${pos.length ? `    <span class="sc-meta" title="Moyenne simple par position ouverte (non pondérée portefeuille)">avg/pos: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b></span>` : ''}
   </div>
   ${pos.length ? `
@@ -1995,15 +2183,15 @@ ${pos.length ? `    <span class="sc-meta" title="Moyenne simple par position ouv
           const rowStyle = isTerminal ? ' style="opacity:.45;background:var(--surface-2);filter:grayscale(1)"' : isExpired ? ' style="opacity:.6;background:var(--neg-wk)"' : '';
           const posCols = 10; // columns in Open Positions table
           const posVwap = p.vwap ? price(p.vwap) : '—';
-          return `<tr${rowStyle}><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}','${p.universe||''}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">${price(p.entry || 0)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">${price(p.current_price || 0)}</td><td class="${rc}" data-format="pct"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">${price(p.stop || 0)}</td><td class="pos hide-m">${p.tp2 ? price(p.tp2) : (p.tp1 ? price(p.tp1) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
+          return `<tr${rowStyle}><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="Graphique ${p.ticker}" class="fv-thumb" loading="lazy" decoding="async" onclick="fvOpen('${p.ticker}','${p.universe||''}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">${price(p.entry || 0)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">${price(p.current_price || 0)}</td><td class="${rc}" data-format="pct"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">${price(p.stop || 0)}</td><td class="pos hide-m">${p.tp2 ? price(p.tp2) : (p.tp1 ? price(p.tp1) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
         }).join('')}</tbody>
   </table>` : `<p class="empty"><i class="fas fa-inbox"></i>
-    <span><b>No active positions</b><br><span style="font-size:.72rem;color:var(--muted)">${cfg.portfolioSize === 1 ? 'Single-slot mode — entries open only when a signal passes minScore (' + (cfg.minScore ?? 85) + ') and entry-gate (VWAP/ATR).' : 'All ' + cfg.portfolioSize + ' slots empty — either no signal cleared minScore (' + (cfg.minScore ?? 85) + ') today or stale exits closed prior holds.'}</span></span>
+    <span><b>${cfg.assetClass === 'dtx' ? 'Aucune position exécutée certifiée' : 'No active positions'}</b><br><span style="font-size:.72rem;color:var(--muted)">${cfg.assetClass === 'dtx' ? 'Les décisions et ordres programmés ne deviennent des positions qu’après confirmation du ledger broker.' : cfg.portfolioSize === 1 ? 'Single-slot mode — entries open only when a signal passes minScore (' + (cfg.minScore ?? 85) + ') and entry-gate (VWAP/ATR).' : 'All ' + cfg.portfolioSize + ' slots empty — either no signal cleared minScore (' + (cfg.minScore ?? 85) + ') today or stale exits closed prior holds.'}</span></span>
   </p>`}
 </div>
 
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
-<div class="section-card" id="sec-hist-${id}">
+<div class="section-card${cfg.assetClass === 'dtx' || m.performanceSuppressed ? ' hide-section' : ''}" id="sec-hist-${id}" data-section="trade-history">
   <details>
     <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Trade History <span class="count">${histClosedCount} closed</span></span></summary>
   <div class="th-scroll">
@@ -2137,7 +2325,7 @@ ${pos.length ? `    <span class="sc-meta" title="Moyenne simple par position ouv
   // Regroupement par TYPE de mode (demande user): modes LLM/quality (pilotés RunScreener+quality/
   // fortress-pm) vs modes scriptés (pilotés par des scanners JS locaux). PAS par classe d'actif.
   const ASSET_CLASS_ORDER = ['llm', 'engine', 'scripted'];
-  const ASSET_CLASS_LABEL = { llm: 'LLM', engine: 'Engine', scripted: 'Scripted' };
+  const ASSET_CLASS_LABEL = { llm: 'Sélection éditoriale', engine: 'Stratégies moteur', scripted: 'Stratégies à règles' };
   const ASSET_CLASS_ICON = { llm: 'brain', engine: 'gears', scripted: 'code' };
   // 2026-08-12 : le tri se faisait sur une LISTE DE NOMS (turbo/dynamic/balanced/secured/
   // fortress/aplus) qui ne nommait pas `best` — le mode moteur tombait donc par défaut dans
@@ -2168,21 +2356,26 @@ ${pos.length ? `    <span class="sc-meta" title="Moyenne simple par position ouv
   // equity-only present-day view stays a clean single rail.
   const populatedClasses = ASSET_CLASS_ORDER.filter(ac => assetBuckets[ac].length > 0);
   const showClassLabels = populatedClasses.length > 1;
+  const assetClassLabel = ac => ac === 'llm'
+    && assetBuckets.llm.length > 0
+    && assetBuckets.llm.every(([, mode]) => mode.cfg.performanceScope === 'simulated_backtest')
+    ? 'Simulations éditoriales'
+    : ASSET_CLASS_LABEL[ac];
   function tabButton(id, m) {
     const c = m.cfg.color;
-    return `<button type="button" role="tab" aria-pressed="${id === 'balanced' ? 'true' : 'false'}" aria-label="Afficher le mode ${m.cfg.label}" class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" data-mode-status="${m.cfg.status || 'live'}" onclick="switchMode('${id}')" style="--mc:${c}"><span class="mode-dot" style="background:${c}"></span>${m.cfg.label}${renderStatusBadge(m.cfg.status)}${id === 'balanced' ? ' <span class="tab-rec hide-m">★ Rec.</span>' : ''}</button>`;
+    return `<button type="button" role="tab" aria-selected="${id === 'balanced' ? 'true' : 'false'}" aria-controls="p-${id}" aria-label="Afficher le mode ${m.cfg.label}" class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" data-mode-status="${m.cfg.status || 'live'}" onclick="switchMode('${id}')" style="--mc:${c}"><span class="mode-dot" style="background:${c}"></span>${m.cfg.label}${renderStatusBadge(m.cfg.status)}${id === 'balanced' ? ' <span class="tab-rec hide-m">★ Rec.</span>' : ''}</button>`;
   }
   // All tabs rendered hidden — JS shows only favorites from localStorage.
   // Groupes VISIBLES par type (LLM | Scripted): un label de groupe précède les tabs de chaque groupe.
   const allTabs = populatedClasses.map(ac => {
     const tabs = assetBuckets[ac].map(([id, m]) => tabButton(id, m)).join('');
-    const label = showClassLabels ? `<span class="mode-class-label" data-class="${ac}"><i class="fas fa-${ASSET_CLASS_ICON[ac] || 'folder'}" style="font-size:.62rem;margin-right:.28rem"></i>${ASSET_CLASS_LABEL[ac]}</span>` : '';
+    const label = showClassLabels ? `<span class="mode-class-label" data-class="${ac}"><i class="fas fa-${ASSET_CLASS_ICON[ac] || 'folder'}" style="font-size:.62rem;margin-right:.28rem"></i>${assetClassLabel(ac)}</span>` : '';
     return label + tabs;
   }).join('');
   const tabRail = allTabs + `<button type="button" class="mode-tab mode-picker-btn" onclick="openModePicker()" aria-label="Sélectionner les modes"><i class="fas fa-sliders"></i></button>`;
   // Mode picker catalog (JSON for JS)
   const modeCatalog = JSON.stringify(populatedClasses.map(ac => ({
-    ac, label: ASSET_CLASS_LABEL[ac], icon: ASSET_CLASS_ICON[ac] || 'folder',
+    ac, label: assetClassLabel(ac), icon: ASSET_CLASS_ICON[ac] || 'folder',
     modes: assetBuckets[ac].map(([id, m]) => ({ id, label: m.cfg.label, color: m.cfg.color, status: m.cfg.status || 'live' }))
   })));
 
@@ -2191,8 +2384,8 @@ ${pos.length ? `    <span class="sc-meta" title="Moyenne simple par position ouv
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${MARKET_CLOSED_DAY ? 'Portefeuille · Marché fermé' : 'Portefeuille en direct'} &mdash; DailyTickers</title>
-  <meta name="description" content="Signaux du jour, positions ouvertes et performance en direct du portefeuille.">
+  <title>Suivi des stratégies &mdash; DailyTickers</title>
+  <meta name="description" content="Décisions, suivi réel et simulations historiques des stratégies DailyTickers.">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
   <link rel="stylesheet" href="/assets/report.css?v=${buildVer}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -2362,6 +2555,21 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);margin
 
 /* ── Section cards ── */
 .section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-l);padding:1.4rem 1.6rem;margin-bottom:1.35rem}
+.dtx-plan-candidates{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:.75rem;margin-top:.65rem}
+.dtx-candidate{min-width:0;padding:.9rem;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);display:grid;gap:.7rem}
+.dtx-candidate-main{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;color:var(--ink-2);font-size:.78rem}
+.dtx-candidate-main strong{font-family:var(--mono);font-size:1.12rem;color:var(--ink)}
+.dtx-candidate-rank{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);background:var(--accent-wk);padding:.18rem .42rem;border-radius:var(--r-s)}
+.dtx-candidate dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;margin:0}
+.dtx-candidate dl div{min-width:0}
+.dtx-candidate dt{font-size:.6rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700}
+.dtx-candidate dd{margin:.2rem 0 0;font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--ink);overflow-wrap:anywhere}
+.dtx-candidate p,.dtx-plan-note{margin:0;font-size:.72rem;line-height:1.5;color:var(--ink-2)}
+.dtx-candidate p i{color:var(--muted);margin-right:.25rem}
+.dtx-plan-note{margin-top:.75rem;padding:.65rem .8rem;background:var(--warn-wk);border:1px solid var(--warn);border-radius:var(--r-s)}
+.mode-panel[data-asset-class="dtx"] [id^="engHistBody-"]{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.mode-panel[data-asset-class="dtx"] .perf-hero{min-width:0}
+.mode-panel[data-asset-class="dtx"] .perf-chart-wrap,.mode-panel[data-asset-class="dtx"] .perf-stats{min-width:0}
 /* Trade History: borne la hauteur + scroll interne (sinon des centaines de trades → page géante) */
 .th-scroll{max-height:540px;overflow-y:auto;overflow-x:auto;margin-top:.4rem;border:1px solid var(--border);border-radius:var(--r-s)}
 .th-scroll table{margin-top:0!important}
@@ -2484,6 +2692,8 @@ details[open] summary::after{transform:rotate(90deg)}
   .t .hide-m{display:none}
   .perf-stats{grid-template-columns:repeat(3,1fr)}
   .w{padding:0 .75rem 2rem}
+  .dtx-candidate dl{grid-template-columns:1fr}
+  .dtx-candidate dd{font-size:.74rem}
 }
 
 /* ── Thesis subtitle row ── */
@@ -2625,8 +2835,8 @@ details[open] summary::after{transform:rotate(90deg)}
   <div class="hero">
     <div class="hero-inner">
       <div class="hero-left">
-        <h1>${MARKET_CLOSED_DAY ? '<i class="fas fa-moon" style="font-size:.82rem;color:var(--muted);margin-right:.35rem"></i>Portefeuille · Marché fermé' : '<span class="live-dot"></span>Portefeuille en direct'} <button class="tm-btn-header" id="tmFab" onclick="tmToggle()" title="Historique"><i class="fas fa-clock-rotate-left"></i> Historique</button></h1>
-        <p>${MARKET_CLOSED_DAY ? 'Last completed session, open positions &amp; performance — future plans remain gated until their execution window' : 'Signals, open positions &amp; performance — updated every weekday'}</p>
+        <h1><i class="fas fa-chart-line" style="font-size:.9rem;color:var(--accent);margin-right:.25rem"></i>Suivi des stratégies <button class="tm-btn-header" id="tmFab" onclick="tmToggle()" title="Historique"><i class="fas fa-clock-rotate-left"></i> Historique</button></h1>
+        <p>Décisions du jour, suivi réel et simulations historiques clairement séparés.</p>
         <div class="hero-meta">
           <span class="ts"><i class="fas fa-clock-rotate-left"></i> ${updatedAt}</span>
         </div>
@@ -2641,15 +2851,15 @@ details[open] summary::after{transform:rotate(90deg)}
     ${tabRail}
   </div>
   <!-- Mode picker modal -->
-  <div class="mp-overlay" id="mpOverlay" onclick="if(event.target===this)closeModePicker()">
-    <div class="mp-dialog">
+  <div class="mp-overlay" id="mpOverlay" onclick="if(event.target===this)closeModePicker()" role="presentation">
+    <div class="mp-dialog" role="dialog" aria-modal="true" aria-labelledby="mpTitle" tabindex="-1">
       <div class="mp-header">
-        <span class="mp-title"><i class="fas fa-sliders"></i> Sélectionner les modes</span>
-        <span class="mp-count" id="mpCount">0/6</span>
-        <button class="mp-close" onclick="closeModePicker()"><i class="fas fa-xmark"></i></button>
+        <span class="mp-title" id="mpTitle"><i class="fas fa-sliders"></i> Sélectionner les modes</span>
+        <span class="mp-count" id="mpCount">0/${Object.keys(modes).length}</span>
+        <button type="button" class="mp-close" onclick="closeModePicker()" aria-label="Fermer"><i class="fas fa-xmark" aria-hidden="true"></i></button>
       </div>
       <div id="mpBody"></div>
-      <button class="mp-save" id="mpSave" onclick="saveModePicker()">Apply</button>
+      <button type="button" class="mp-save" id="mpSave" onclick="saveModePicker()">Appliquer</button>
     </div>
   </div>
 
@@ -2658,7 +2868,7 @@ details[open] summary::after{transform:rotate(90deg)}
   <h2 class="sr-only">Disclaimer</h2>
   <div class="disc">
     <i class="fas fa-circle-info"></i>
-    Past performance &ne; future results &nbsp;&middot;&nbsp; Educational only &nbsp;&middot;&nbsp; Not financial advice
+    Les performances passées ne préjugent pas des résultats futurs &nbsp;&middot;&nbsp; Contenu éducatif &nbsp;&middot;&nbsp; Pas un conseil financier
   </div>
 </div>
 
@@ -2710,7 +2920,7 @@ function fvClose(){
   document.getElementById('fvDialog').classList.remove('open');
   document.body.style.overflow='';
 }
-document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){fvClose();var mp=document.getElementById('mpOverlay');if(mp&&mp.classList.contains('open'))closeModePicker();}});
 </script>
 
 <script src="/assets/core.js?v=${buildVer}"></script>
@@ -2953,7 +3163,9 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!favs.includes(activeMode)&&favs.length&&typeof window.switchMode==='function'){window.switchMode(favs[0],{silent:true})}
   }
   (function(){applyFavs(getFavs())})();
+  var mpReturnFocus=null;
   window.openModePicker=function(){
+    mpReturnFocus=document.activeElement;
     var favs=getFavs();var body=document.getElementById('mpBody');body.innerHTML='';
     var STATUS_BG={live:'#059669',test:'#3b82f6',deploying:'#f59e0b',pausing:'#f59e0b',stopped:'#6b7280',draft:'#9ca3af',paused:'#6b7280',liquidated:'#dc2626'};
     MODE_CATALOG.forEach(function(g){
@@ -2969,16 +3181,17 @@ document.addEventListener('DOMContentLoaded',function(){
       body.appendChild(grp);
     });
     updatePickerCount();
-    document.getElementById('mpOverlay').classList.add('open');
+    var overlay=document.getElementById('mpOverlay');overlay.classList.add('open');
+    var dialog=overlay.querySelector('.mp-dialog');if(dialog)dialog.focus();
   };
-  window.closeModePicker=function(){document.getElementById('mpOverlay').classList.remove('open')};
+  window.closeModePicker=function(){document.getElementById('mpOverlay').classList.remove('open');if(mpReturnFocus&&mpReturnFocus.focus)mpReturnFocus.focus()};
   window.updatePickerCount=function(){
     var checks=document.querySelectorAll('#mpBody input[type=checkbox]');
     var n=0;checks.forEach(function(c){if(c.checked)n++});
     document.getElementById('mpCount').textContent=n+'/'+MAX_FAVS;
     var save=document.getElementById('mpSave');
     save.disabled=n<1||n>MAX_FAVS;
-    save.textContent=n>MAX_FAVS?'Max '+MAX_FAVS+' modes':'Apply ('+n+' selected)';
+    save.textContent=n>MAX_FAVS?'Maximum '+MAX_FAVS+' modes':'Appliquer ('+n+' sélectionné'+(n>1?'s':'')+')';
     checks.forEach(function(c){if(!c.checked)c.disabled=n>=MAX_FAVS});
   };
   window.saveModePicker=function(){
@@ -2986,6 +3199,20 @@ document.addEventListener('DOMContentLoaded',function(){
     if(sel.length<1||sel.length>MAX_FAVS)return;
     setFavs(sel);applyFavs(sel);closeModePicker();
   };
+  function refreshDtxPlanStates(){
+    var now=Date.now();
+    document.querySelectorAll('.dtx-plan-card').forEach(function(card){
+      var from=Date.parse(card.dataset.validFrom||'');
+      var until=Date.parse(card.dataset.validUntil||'');
+      var state=!Number.isFinite(from)||!Number.isFinite(until)?'indisponible':now<from?'programmé':now<=until?'actif':'expiré';
+      var color=state==='actif'?'var(--pos)':state==='programmé'?'var(--warn-ink)':state==='expiré'?'var(--muted)':'var(--neg)';
+      card.dataset.planState=state;
+      var badge=card.querySelector('.dtx-plan-state');
+      if(badge){badge.textContent=state;badge.style.color=color;badge.style.borderColor=color;}
+    });
+  }
+  refreshDtxPlanStates();
+  setInterval(refreshDtxPlanStates,60000);
   var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => {
     // ONE portfolio curve per mode — mirror panel()'s sealed-primary invariant. The sealed
     // sweep is the curve whenever the mode has a real sealed track record; pit-live is the curve
@@ -3023,7 +3250,7 @@ document.addEventListener('DOMContentLoaded',function(){
     document.querySelectorAll('.mode-tab').forEach(function(t){
       var on=t.dataset.mode===id;
       t.classList.toggle('active',on);
-      t.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if(t.hasAttribute('role'))t.setAttribute('aria-selected', on ? 'true' : 'false');
       // Scroll active tab horizontally inside .mode-tabs only (avoid window-level scroll
       // that would shift the whole panel on mobile when picking fortress/tkl).
       if(on){try{
@@ -3071,7 +3298,7 @@ document.addEventListener('DOMContentLoaded',function(){
       document.querySelectorAll(modeId ? '#p-'+modeId : '.mode-panel').forEach(function(p){
         var id = p.id.replace('p-',''), mCfg = cfg.modes[id]||{};
         if(!mCfg.breakevenPct) return;
-        var posCard = Array.from(p.querySelectorAll('.section-card')).find(function(c){return c.querySelector('h3')?.textContent.includes('Open Positions')});
+        var posCard = p.querySelector('.section-card[data-section="positions"]');
         var posTable = posCard?.querySelector('table');
         if(!posTable) return;
         var raised = [];
@@ -3331,6 +3558,18 @@ document.addEventListener('DOMContentLoaded',function(){
   function tmRenderInto(tmr, d, mCfg, modeId) {
     if (!d) { tmr.innerHTML = '<div class="empty">No snapshot for this date.</div>'; return; }
     var color = mCfg.color || '#94a3b8';
+    var isDtx = mCfg && mCfg.assetClass === 'dtx';
+    // Legacy DTX snapshots may carry replay fields in the generic slots. The
+    // static-template renderer must apply the same forward-only gate as tmUpdateLive.
+    var safeD = isDtx ? Object.assign({}, d, {
+      stats: d.stats && d.stats.scope === 'forward_execution'
+        ? d.stats
+        : {scope:'forward_execution',status:'unavailable',ret:null,dd:null,wr:null,pf:null,trades:null,avgHold:null},
+      equity: d.equity && d.equity.scope === 'forward_execution'
+        ? d.equity
+        : {d:[],v:[],scope:'forward_execution',status:'unavailable'},
+      signals: [], positions: [], orders: [], closeNow: [], expiresTomorrow: [], closedTrades: [],
+    }) : d;
     tmr.innerHTML = '';
     var clone = getModeTpl().content.cloneNode(true);
     var equityTarget = clone.querySelector('.tm-equity-target');
@@ -3338,7 +3577,15 @@ document.addEventListener('DOMContentLoaded',function(){
     clone.querySelectorAll('[data-color]').forEach(function (el) {
       el.style.borderLeft = '3px solid ' + color;
     });
-    var enriched = enrichForBinding(d, mCfg);
+    if(isDtx){
+      var statLabels=clone.querySelectorAll('.tm-stats .ps-l');
+      if(statLabels.length){statLabels[0].textContent='Rendement réel';statLabels[1].textContent='Drawdown réel';}
+      var equityLabel=clone.querySelector('.tm-equity .perf-hero-label');
+      if(equityLabel)equityLabel.innerHTML='<i class="fas fa-satellite-dish"></i> Courbe forward';
+      var positionHeading=clone.querySelector('.tm-positions h3');
+      if(positionHeading)positionHeading.firstChild.textContent='Positions exécutées ';
+    }
+    var enriched = enrichForBinding(safeD, mCfg);
     if (window.ModePanelBinder && window.ModePanelBinder.bind) {
       window.ModePanelBinder.bind(clone, enriched);
     } else {
@@ -3346,9 +3593,9 @@ document.addEventListener('DOMContentLoaded',function(){
     }
     tmr.appendChild(clone);
     // Equity chart (post-bind, since the canvas now exists in DOM)
-    if (d.equity && d.equity.d && d.equity.d.length > 0) {
+    if (safeD.equity && safeD.equity.d && safeD.equity.d.length > 0) {
       var el = document.getElementById('tm-eq-' + modeId);
-      if (el) mk('tm-eq-' + modeId, d.equity.d, d.equity.v, color);
+      if (el) mk('tm-eq-' + modeId, safeD.equity.d, safeD.equity.v, color);
     }
     // Update scenario-bar fills using enriched _positions data
     var sb = clone.querySelector ? null : null;
@@ -3375,15 +3622,50 @@ document.addEventListener('DOMContentLoaded',function(){
   // Stash the SSR perf-stats (Live-book hero for pit-primary modes) once, so "Back to live"
   // restores it exactly after Time Machine overwrote it with a historical (sim) snapshot.
   var _tmStatsCache = {};
+  var _tmHeroLabelCache = {};
   function _tmCaptureStats(modeId){
     if(_tmStatsCache[modeId]!=null) return;
     var panel=document.getElementById('p-'+modeId);
     var ps=panel?panel.querySelector('.perf-hero .perf-stats'):null;
     if(ps) _tmStatsCache[modeId]=ps.innerHTML;
+    var label=panel?panel.querySelector('.perf-hero .perf-hero-label'):null;
+    if(label) _tmHeroLabelCache[modeId]=label.innerHTML;
   }
-  function _fmtPct2(v){var n=Number(v||0);return (n>0?'+':'')+n.toFixed(2)+'%';}
+  function _tmSnapshotApplicability(modeId,dateStr,d,mCfg){
+    if(!mCfg||mCfg.assetClass!=='dtx') return {ok:true};
+    var iso=dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8);
+    var since=mCfg.forwardTracking&&mCfg.forwardTracking.since;
+    if(since&&iso<since) return {ok:false,reason:'prelaunch',since:since};
+    var expected=mCfg.dtxPortfolio||null;
+    var actual=(d&&d.config&&d.config.dtxPortfolio)||
+      (d&&d.engine_decision&&(d.engine_decision.portfolioId||d.engine_decision.strategyId))||null;
+    if(expected&&actual!==expected) return {ok:false,reason:'identity',since:since};
+    var expectedHash=mCfg.dtxConfigHash||null;
+    var actualHash=(d&&d.config&&d.config.dtxConfigHash)||
+      (d&&d.engine_decision&&d.engine_decision.configHash)||null;
+    if(expectedHash&&actualHash!==expectedHash) return {ok:false,reason:'config_hash',since:since};
+    return {ok:true};
+  }
+  function _tmRenderNotApplicable(modeId,applicability){
+    var panel=document.getElementById('p-'+modeId);
+    var grid=panel?panel.querySelector('.lp-grid'):null;
+    if(grid){
+      var start=applicability.since||'la date de lancement';
+      grid.innerHTML='<div class="section-card" style="grid-column:1/-1;padding:1.5rem;text-align:center">'+
+        '<div style="font-size:1.7rem;margin-bottom:.55rem" aria-hidden="true">↪</div>'+
+        '<h3 style="margin:0 0 .45rem">DTX Max non applicable à cette date</h3>'+
+        '<p style="margin:0;color:var(--muted);line-height:1.55">Le suivi DTX Max commence le '+start+'. Les snapshots antérieurs appartiennent à l’ancien portefeuille Best et ne sont jamais relabellisés.</p>'+
+        '</div>';
+    }
+    var ps=panel?panel.querySelector('.perf-hero .perf-stats'):null;
+    if(ps) ps.innerHTML='<div style="padding:.55rem;color:var(--muted)">Aucune métrique DTX Max pour cette date.</div>';
+    var chartEl=document.getElementById('chart-'+modeId);
+    if(chartEl&&window.echarts){var existing=window.echarts.getInstanceByDom(chartEl);if(existing)existing.dispose();}
+  }
+  function _fmtPct2(v){if(v==null||v==='')return '—';var n=Number(v);if(!isFinite(n))return '—';return (n>0?'+':'')+n.toFixed(2)+'%';}
+  function _fmtMetric(v,digits,suffix){if(v==null||v==='')return '—';var n=Number(v);if(!isFinite(n))return '—';return n.toFixed(digits)+(suffix||'');}
   function _scoreBg(s){return s>=90?'var(--pos)':s>=85?'var(--accent)':'var(--warn)';}
-  function _tkLogo(t){return t?'<img src="https://assets.parqet.com/logos/symbol/'+t+'?format=jpg" alt="" class="tk-logo" onerror="this.style.display=\\'none\\'">':'';}
+  function _tkLogo(t){return t?'<img src="https://assets.parqet.com/logos/symbol/'+encodeURIComponent(t)+'?format=jpg" alt="" class="tk-logo" loading="lazy" decoding="async" onerror="this.style.display=\\'none\\'">':'';}
   function tmUpdateLive(modeId, d, mCfg){
     var panel=document.getElementById('p-'+modeId);
     if(!panel||!d) return;
@@ -3392,9 +3674,14 @@ document.addEventListener('DOMContentLoaded',function(){
     var _tmCur=(panel.dataset.market==='casablanca')?'MAD':'USD';
     var _tmSym=(_tmCur==='MAD')?'MAD':'$';
     var _tmPx=function(v){var n=Number(v||0);if(!isFinite(n)||n===0)return '—';return _tmCur==='MAD'?n.toFixed(2)+' MAD':'$'+n.toFixed(2);};
-    var stats=d.stats||{};
+    var isDtx=mCfg&&mCfg.assetClass==='dtx';
+    // Old DTX snapshots stored replay metrics in the generic forward fields. They
+    // are untrusted here unless the snapshot explicitly declares forward_execution.
+    var stats=isDtx
+      ? ((d.stats&&d.stats.scope==='forward_execution')?d.stats:{scope:'forward_execution',status:'unavailable'})
+      : (d.stats||{});
     // ── Close Now: render from snapshot (create container if missing) ──
-    var closeNow=(d.closeNow||[]);
+    var closeNow=isDtx?[]:(d.closeNow||[]);
     var closeSec=panel.querySelector('[data-section="closenow"]');
     if(closeNow.length){
       var closeHTML='<div class="cta-card cta-close" data-section="closenow"><div class="cta-header"><span class="cta-icon"><i class="fas fa-ban"></i></span><div><h3>Close Now <span class="cta-badge">'+closeNow.length+' position'+(closeNow.length>1?'s':'')+'</span></h3><p class="cta-sub">Horizon expired — exit at market open</p></div></div><table class="t"><thead><tr><th>Ticker</th><th>Bought</th><th class="hide-m">Entry '+_tmSym+'</th><th class="hide-m">Current '+_tmSym+'</th><th>P&L</th><th>Held</th><th>Action</th></tr></thead><tbody>'+closeNow.map(function(p){var rc=(p.return_pct||0)>=0?'pos':'neg';return '<tr><td>'+_tkLogo(p.ticker)+'<b>'+p.ticker+'</b></td><td class="m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">'+_tmPx(p.entry)+'</td><td class="hide-m">'+_tmPx(p.current_price)+'</td><td class="'+rc+'"><b>'+_fmtPct2(p.return_pct)+'</b></td><td class="am">'+(p.days_held||'—')+'d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr>';}).join('')+'</tbody></table></div>';
@@ -3409,7 +3696,7 @@ document.addEventListener('DOMContentLoaded',function(){
       ordersSec.querySelectorAll('.cta-card').forEach(function(c){
         if(/JUST EXECUTED/i.test(c.textContent||'')) c.style.display='none';
       });
-      var orders=(d.orders||[]);
+      var orders=isDtx?[]:(d.orders||[]);
       var oTable=ordersSec.querySelector('table');
       if(orders.length){
         var tableHTML='<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead><tbody>'+orders.map(function(o){var bg=_scoreBg(o.score||0);return '<tr><td>'+_tkLogo(o.ticker)+'<b>'+o.ticker+'</b></td><td class="hide-m">—</td><td class="hide-m"><span class="pill-score" style="background:'+bg+'">'+(o.score||0)+'</span></td><td class="m hide-m">'+(o.strategy||'')+'</td><td>'+(o.entry||'')+'</td><td class="hide-m">—</td><td class="neg">'+(o.stop||'')+'</td><td class="pos">'+(o.tp1||'')+' / '+(o.tp2||'')+'</td><td class="am hide-m">'+(o.rr||'')+'</td><td class="hide-m">—</td><td><span class="pill pos">BUY</span></td></tr>';}).join('')+'</tbody></table>';
@@ -3424,23 +3711,27 @@ document.addEventListener('DOMContentLoaded',function(){
 
     // ── On Watch: render from snapshot signals not in positions ──
     var watchSec=panel.querySelector('[data-section="watch"]');
-    var expTmrw=(d.expiresTomorrow||[]);
+    var expTmrw=isDtx?[]:(d.expiresTomorrow||[]);
     if(expTmrw.length){
       var watchHTML='<div class="section-card" data-section="watch"><div class="sc-head"><h3><i class="fas fa-eye"></i> On Watch <span class="count">'+expTmrw.length+'</span></h3><span class="sc-meta">portfolio full — signals on standby</span></div><table class="t"><thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead><tbody>'+expTmrw.map(function(s){var bg=_scoreBg(s.score||0);return '<tr><td>'+_tkLogo(s.ticker)+'<b>'+s.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+(s.score||0)+'</span></td><td class="m hide-m">'+(s.strategy||'')+'</td><td>'+(s.entry||'')+'</td><td class="neg">'+(s.stop||'')+'</td><td class="pos">'+(s.tp1||'')+' / '+(s.tp2||'')+'</td><td class="am hide-m">'+(s.rr||'')+'</td><td><span class="pill">WATCH</span></td></tr>';}).join('')+'</tbody></table></div>';
       if(watchSec){watchSec.outerHTML=watchHTML;}
       else{var posSec=Array.from(panel.querySelectorAll('.section-card')).find(function(s){var h=s.querySelector('h3');return h&&/open positions/i.test(h.textContent);});if(posSec)posSec.insertAdjacentHTML('beforebegin',watchHTML);}
     } else if(watchSec){watchSec.style.display='none';}
+    var heroLabel=panel.querySelector('.perf-hero .perf-hero-label');
+    if(isDtx&&heroLabel){
+      heroLabel.innerHTML='<i class="fas fa-satellite-dish" style="color:'+(mCfg.color||'#7c3aed')+';margin-right:.3rem"></i>Suivi réel <small style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--muted)">· aucune exécution certifiée</small>';
+    }
     var psList=panel.querySelectorAll('.perf-hero .perf-stats .ps .ps-v');
     if(psList.length>=6){
       psList[0].textContent=_fmtPct2(stats.ret);
       psList[1].textContent=_fmtPct2(stats.dd);
-      psList[2].textContent=Number(stats.wr||0).toFixed(1)+'%';
+      psList[2].textContent=_fmtMetric(stats.wr,1,'%');
       // PF: update only the number span so the SSR bootstrap-CI ([low–high]) survives.
       var _pfNum=psList[3].querySelector('.ps-num');
-      if(_pfNum){_pfNum.textContent=Number(stats.pf||0).toFixed(2)+'x';}
-      else{psList[3].textContent=Number(stats.pf||0).toFixed(2)+'x';}
-      psList[4].textContent=String(stats.trades||0);
-      psList[5].textContent=Number(stats.avgHold||0).toFixed(1)+'d';
+      if(_pfNum){_pfNum.textContent=_fmtMetric(stats.pf,2,'x');}
+      else{psList[3].textContent=_fmtMetric(stats.pf,2,'x');}
+      psList[4].textContent=(stats.trades==null||(isDtx&&stats.status==='not_started'))?'—':String(stats.trades);
+      psList[5].textContent=_fmtMetric(stats.avgHold,1,'d');
       if(psList.length>=9){
         psList[6].textContent=stats.r2!=null?Number(stats.r2).toFixed(3):'—';
         psList[7].textContent=stats.cagr!=null?(stats.cagr>0?'+':'')+Number(stats.cagr).toFixed(1)+'%':'—';
@@ -3451,23 +3742,26 @@ document.addEventListener('DOMContentLoaded',function(){
     if(chartEl && window.echarts){
       var existing=window.echarts.getInstanceByDom(chartEl);
       if(existing) existing.dispose();
+      chartEl.innerHTML='';
       // Prefer the stats.ret-based cumulative curve (modeCharts) sliced to the
       // snapshot date — keeps Time Machine continuous with the live chart.
       // Fall back to the snapshot's own equity (legacy MtM) if slicing fails.
-      var src=modeCharts[modeId];
+      var src=isDtx?null:modeCharts[modeId];
       var sliced=null;
       if(src && tmActiveDateLabel){
         var idx=src.d.indexOf(tmActiveDateLabel);
         if(idx>=0) sliced={d:src.d.slice(0,idx+1), v:src.v.slice(0,idx+1)};
       }
-      var dArr = sliced ? sliced.d : (d.equity && d.equity.d ? d.equity.d : []);
-      var vArr = sliced ? sliced.v : (d.equity && d.equity.v ? d.equity.v : []);
+      var trustedEquity=!isDtx||(d.equity&&d.equity.scope==='forward_execution');
+      var dArr = trustedEquity?(sliced ? sliced.d : (d.equity && d.equity.d ? d.equity.d : [])):[];
+      var vArr = trustedEquity?(sliced ? sliced.v : (d.equity && d.equity.v ? d.equity.v : [])):[];
       if(dArr.length) mk('chart-'+modeId, dArr, vArr, mCfg.color||'#94a3b8');
+      else if(isDtx) chartEl.innerHTML='<div style="height:100%;display:grid;place-items:center;text-align:center;padding:1rem;color:var(--muted);font-size:.78rem;line-height:1.5"><span><b style="color:var(--ink-2)">Courbe forward non démarrée</b><br>Aucun fill broker certifié pour cette date.</span></div>';
     }
-    var sigSec=Array.from(panel.querySelectorAll('.section-card')).find(function(s){var h=s.querySelector('h3, .sc-sum-title');return h && /today.s signals/i.test(h.textContent);});
+    var sigSec=panel.querySelector('[data-section="signals"]');
     if(sigSec){
       var sigBody=sigSec.querySelector('tbody');
-      var sig=(d.signals||[]);
+      var sig=isDtx?[]:(d.signals||[]);
       if(sigBody){
         sigBody.innerHTML = sig.length ? sig.map(function(s){
           var bg=_scoreBg(s.score||0);
@@ -3475,10 +3769,12 @@ document.addEventListener('DOMContentLoaded',function(){
         }).join('') : '<tr><td colspan="7" class="empty">No matching signals' + (d.config && d.config.filterName && d.config.filterName !== 'all' ? ' — filter: ' + ({all:'All',no_sq:'No Short Squeeze',momentum_only:'Momentum only',breakout_only:'Breakout only',no_sq_pb:'No SQ/PB',mom_bo:'Momentum + Breakout',candlestick_only:'Candlestick only',adaptive_fractal:'Adaptive Fractal',hybrid_af:'Hybrid-AF',highvol_breakout:'HighVol Breakout',momentum_rotation:'Momentum Rotation',etf_momentum:'ETF Momentum',trendline_breakout:'Trendline Breakout',fortress_pm:'Fortress A+'}[d.config.filterName] || d.config.filterName) : '') + '</td></tr>';
       }
     }
-    var posSec=Array.from(panel.querySelectorAll('.section-card')).find(function(s){var h=s.querySelector('h3');return h && /open positions/i.test(h.textContent);});
+    var posSec=panel.querySelector('[data-section="positions"]');
     if(posSec){
+      var posHeading=posSec.querySelector('h3');
+      if(isDtx&&posHeading){var posIcon=posHeading.querySelector('i');var posCountNode=posHeading.querySelector('.count');posHeading.childNodes.forEach(function(n){if(n.nodeType===3)n.textContent=' ';});if(posIcon)posIcon.insertAdjacentText('afterend',' Positions exécutées ');if(posCountNode)posCountNode.textContent='aucune certifiée';}
       var posBody=posSec.querySelector('tbody');
-      var pos=(d.positions||[]);
+      var pos=isDtx?[]:(d.positions||[]);
       // _inTM = we are actually viewing a historical snapshot (Time Machine). tmActiveDateLabel
       // is set by tmLoadIdx before this runs and cleared by tmShowLive. On the LIVE view it is
       // null → we must NEVER wipe the baked SSR positions just because a live source came back
@@ -3496,11 +3792,11 @@ document.addEventListener('DOMContentLoaded',function(){
           }).join('');
         } else if(_inTM){
           // Genuine empty historical snapshot → show empty state (correct for that date).
-          posBody.innerHTML = '<tr><td colspan="8" class="empty">No active positions</td></tr>';
+          posBody.innerHTML = '<tr><td colspan="8" class="empty">'+(isDtx?'Aucune position exécutée certifiée':'No active positions')+'</td></tr>';
         }
         // else: live view + empty snapshot → keep the baked SSR rows untouched.
       }
-      if(pos.length||_inTM){var posCount=posSec.querySelector('.count'); if(posCount) posCount.textContent=pos.length+'/'+(mCfg.portfolioSize||'?');}
+      if(pos.length||_inTM){var posCount=posSec.querySelector('.count'); if(posCount) posCount.textContent=isDtx?'aucune certifiée':pos.length+'/'+(mCfg.portfolioSize||'?');}
       // Keep the scenario bar consistent with the rendered positions so it can never be left
       // orphaned (a stale gradient bar hovering over an empty "No active positions" table).
       var _scen=posSec.querySelector('.scenario-bar-wrap');
@@ -3531,10 +3827,10 @@ document.addEventListener('DOMContentLoaded',function(){
         // else: live view + empty snapshot → leave the SSR scenario bar as baked.
       }
     }
-    var hSec=Array.from(panel.querySelectorAll('.section-card')).find(function(s){var h=s.querySelector('h3, .sc-sum-title');return h && /trade history/i.test(h.textContent);});
+    var hSec=panel.querySelector('[data-section="trade-history"]');
     if(hSec){
       var hBody=hSec.querySelector('tbody');
-      var ct=(d.closedTrades||[]).slice().sort(function(a,b){return (b.scanDate||'').localeCompare(a.scanDate||'');});
+      var ct=(isDtx?[]:(d.closedTrades||[])).slice().sort(function(a,b){return (b.scanDate||'').localeCompare(a.scanDate||'');});
       if(hBody){
         hBody.innerHTML = ct.length ? ct.map(function(t){
           var pnl=t.pnlPct||0;
@@ -3542,15 +3838,14 @@ document.addEventListener('DOMContentLoaded',function(){
           var st=(t.status||'').toUpperCase();
           var stCls=/TP/.test(st)?'pos':/SL/.test(st)?'neg':'m';
           return '<tr><td>'+_tkLogo(t.ticker)+'<b>'+t.ticker+'</b></td><td class="m hide-m">'+(t.entryDate?t.entryDate.slice(5):'—')+'</td><td class="m hide-m">'+(t.exitDate?t.exitDate.slice(5):'—')+'</td><td class="hide-m">'+_tmPx(t.actualEntry)+'</td><td class="hide-m">'+_tmPx(t.exitPrice)+'</td><td class="'+rc+'"><b>'+_fmtPct2(pnl)+'</b></td><td class="m hide-m">'+(t.holdDays||0)+'d</td><td><span class="pill '+stCls+'">'+st+'</span></td></tr>';
-        }).join('') : '<tr><td colspan="8" class="empty">No closed trades</td></tr>';
+        }).join('') : '<tr><td colspan="8" class="empty">'+(isDtx?'Aucune exécution clôturée certifiée':'No closed trades')+'</td></tr>';
       }
       var hCount=hSec.querySelector('.count'); if(hCount) hCount.textContent=ct.length+' closed';
     }
   }
 
-  // ── Décisions du moteur (modes scriptés) ────────────────────────────────────
-  // Lit le registre publié et rend la séance choisie. Point-in-time : on n'affiche QUE la
-  // décision de la date sélectionnée. Si la Time Machine est active, on s'y aligne.
+  // ── Plans proposés archivés ─────────────────────────────────────────────────
+  // Une proposition reste non exécutée, même quand sa fenêtre était valide.
   var _engHist = null, _engHistLoading = false;
   function engHistLoad(cb){
     if(_engHist) return cb(_engHist);
@@ -3585,17 +3880,18 @@ document.addEventListener('DOMContentLoaded',function(){
     var meta=document.getElementById('engHistMeta-'+modeId);
     if(!sel||!body||!_engHist) return;
     var e=((_engHist.modes||{})[modeId]||{})[sel.value];
-    if(!e){ body.innerHTML='<div style="font-size:.78rem;color:var(--muted)">Aucune décision enregistrée pour cette séance.</div>'; if(meta)meta.textContent=''; return; }
-    // La provenance est AFFICHÉE : une entrée reconstruite depuis le pool publié n'a pas la
-    // même richesse qu'une décision brute du moteur, et le lecteur doit le savoir.
-    var prov = e.provenance==='staging' ? 'décision brute du moteur' : (e.provenance==='dtx_pool' ? 'reconstruite depuis le pool publié' : '—');
-    if(meta) meta.textContent = prov + (e.engineMode?(' · moteur '+e.engineMode):'') + ' · ' + (e.orders||[]).length + ' ordre(s)' + (e.updates?(' · '+e.updates+' maj'):'') + (e.cancels?(' · '+e.cancels+' annul.'):'');
-    var o=e.orders||[];
-    if(!o.length){ body.innerHTML='<div style="font-size:.78rem;color:var(--muted)">Le moteur n’a émis aucun ordre ce jour-là.</div>'; return; }
-    body.innerHTML='<table class="t"><thead><tr><th>Symbole</th><th>Sens</th><th>Type</th><th>Qté</th><th>Limite</th><th>Stop</th><th>Motif</th></tr></thead><tbody>'+
-      o.map(function(x){
+    if(!e){ body.innerHTML='<div style="font-size:.78rem;color:var(--muted)">Aucun plan proposé pour cette séance.</div>'; if(meta)meta.textContent='NON EXÉCUTÉ'; return; }
+    var plans=e.plans||[];
+    var retired=e.historyStatus==='retired_uncertified';
+    if(meta) meta.textContent = retired
+      ? 'Historique non certifié retiré · NON EXÉCUTÉ'
+      : plans.length+' plan'+(plans.length>1?'s':'')+' proposé'+(plans.length>1?'s':'')+' · NON EXÉCUTÉ'+(e.planUpdates?(' · '+e.planUpdates+' révision'+(e.planUpdates>1?'s':'')):'')+(e.planWithdrawals?(' · '+e.planWithdrawals+' retrait'+(e.planWithdrawals>1?'s':'')):'');
+    if(!plans.length){ body.innerHTML='<div style="font-size:.78rem;color:var(--muted)"><span class="pill am">NON EXÉCUTÉ</span> '+(retired?'Proposition antérieure à la frontière certifiée : détail retiré.':'Aucun plan proposé ce jour-là.')+'</div>'; return; }
+    var esc=function(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')};
+    body.innerHTML='<table class="t"><thead><tr><th>Symbole</th><th>Sens</th><th>Type</th><th>Qté</th><th>Limite</th><th>Stop</th><th>Motif</th><th>État</th></tr></thead><tbody>'+
+      plans.map(function(x){
         var f=function(v){return v==null?'—':(typeof v==='number'?v.toFixed(2):v)};
-        return '<tr><td><b>'+(x.symbol||'—')+'</b></td><td>'+(x.side||'—')+'</td><td>'+(x.orderType||'—')+'</td><td>'+f(x.qty)+'</td><td>'+f(x.limitPrice)+'</td><td>'+f(x.stopLoss)+'</td><td style="font-size:.7rem;color:var(--muted)">'+((x.reason||'').slice(0,80))+'</td></tr>';
+        return '<tr><td><b>'+esc(x.symbol||'—')+'</b></td><td>'+esc(x.side||'—')+'</td><td>'+esc(x.proposalType||'—')+'</td><td>'+esc(f(x.quantity))+'</td><td>'+esc(f(x.limitPrice))+'</td><td>'+esc(f(x.stopLoss))+'</td><td style="font-size:.7rem;color:var(--muted)">'+esc((x.rationale||'').slice(0,80))+'</td><td><span class="pill am">NON EXÉCUTÉ</span></td></tr>';
       }).join('')+'</tbody></table>';
   }
   window.engHistRender=engHistRender; window.engHistInit=engHistInit;
@@ -3615,12 +3911,17 @@ document.addEventListener('DOMContentLoaded',function(){
       var _ps=panel.querySelector('.perf-hero .perf-stats');
       if(_ps){ _ps.innerHTML=_tmStatsCache[activeMode]; delete _tmStatsCache[activeMode]; }
     }
+    if(panel && _tmHeroLabelCache[activeMode]!=null){
+      var _heroLabel=panel.querySelector('.perf-hero .perf-hero-label');
+      if(_heroLabel){_heroLabel.innerHTML=_tmHeroLabelCache[activeMode];delete _tmHeroLabelCache[activeMode];}
+    }
     // Always redraw the chart from modeCharts (single portfolio equity curve) —
     // independent of the legacy lp-grid path.
     var chartEl=document.getElementById('chart-'+activeMode);
     if(chartEl && window.echarts){
       var existing=window.echarts.getInstanceByDom(chartEl);
       if(existing) existing.dispose();
+      chartEl.innerHTML='';
       var dflt=modeCharts[activeMode];
       if(dflt) mk('chart-'+activeMode, dflt.d, dflt.v, dflt.c, dflt.s, dflt.sD, dflt.sV, dflt.lf);
     }
@@ -3640,17 +3941,25 @@ document.addEventListener('DOMContentLoaded',function(){
       var d=snap.modes[activeMode];
       if(!d){
         banner.className='tm-banner show';
-        banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> No data for '+activeMode+' on '+dateStr;
+        banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> Aucune donnée pour '+activeMode+' le '+dateStr;
         return;
       }
       var mCfg=tmModesCfg.modes?tmModesCfg.modes[activeMode]:{};
+      var applicability=_tmSnapshotApplicability(activeMode,dateStr,d,mCfg);
+      if(!applicability.ok){
+        _tmRenderNotApplicable(activeMode,applicability);
+        banner.className='tm-banner show';
+        var unavailableDate=dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8);
+        banner.innerHTML='<i class="fas fa-circle-info"></i> DTX Max n’existait pas le <b>'+unavailableDate+'</b> — l’ancien Best reste une identité historique distincte. <a onclick="window.tmGoLive()">Retour au direct</a>';
+        return;
+      }
       tmUpdateLive(activeMode, d, mCfg);
       banner.className='tm-banner show';
       var formatted=dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8);
-      banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing snapshot from <b>'+formatted+'</b> &mdash; <a onclick="window.tmGoLive()">Back to live</a>';
+      banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Instantané du <b>'+formatted+'</b> &mdash; <a onclick="window.tmGoLive()">Retour au direct</a>';
     }).catch(function(){
       banner.className='tm-banner show';
-      banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> Snapshot not available for '+dateStr;
+      banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> Instantané indisponible pour le '+dateStr;
     });
   }
   window.tmGoLive=function(){
@@ -3672,21 +3981,25 @@ document.addEventListener('DOMContentLoaded',function(){
 
 <div class="tm-panel" id="tmPanel">
   <div class="tm-panel-head">
-    <span class="tm-panel-title"><i class="fas fa-clock-rotate-left"></i> Time Machine</span>
-    <button class="tm-panel-close" onclick="tmToggle()" aria-label="Close"><i class="fas fa-xmark"></i></button>
+    <span class="tm-panel-title"><i class="fas fa-clock-rotate-left"></i> Historique</span>
+    <button class="tm-panel-close" onclick="tmToggle()" aria-label="Fermer"><i class="fas fa-xmark"></i></button>
   </div>
   <div class="tm-date-display" id="tmDateLabel"></div>
   <div class="tm-slider-row">
-    <button class="tm-btn" id="tmBtnPrev" onclick="tmNav(-1)" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
+    <button class="tm-btn" id="tmBtnPrev" onclick="tmNav(-1)" aria-label="Séance précédente"><i class="fas fa-chevron-left"></i></button>
     <input type="range" id="timeSlider" class="tm-slider" min="0" max="0" value="0">
-    <button class="tm-btn" id="tmBtnNext" onclick="tmNav(1)" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
+    <button class="tm-btn" id="tmBtnNext" onclick="tmNav(1)" aria-label="Séance suivante"><i class="fas fa-chevron-right"></i></button>
   </div>
   <div class="tm-range-labels"><span id="tmFirstDate"></span><span id="tmLastDate"></span></div>
-  <button class="tm-live-btn" id="tmLiveBtn" onclick="tmGoLive()"><i class="fas fa-satellite-dish"></i> Back to Live</button>
+  <button class="tm-live-btn" id="tmLiveBtn" onclick="tmGoLive()"><i class="fas fa-satellite-dish"></i> Retour au direct</button>
 </div>
 <script>
 // ── Signal Live Tracker v2 — fill detection + virtual P&L + execution summary ──
 (function(){
+  // A public signal is not a fill. The simulator may run only inside a panel
+  // explicitly backed by execution evidence; otherwise it must not fetch live
+  // OHLC or manufacture positions/trades from price touches.
+  if(!document.querySelector('.mode-panel[data-execution-verified="true"]'))return;
   var PROXIES=['https://api.allorigins.win/get?url=','https://api.codetabs.com/v1/proxy?quest='];
   var INTERVAL=30000;
   var _cache={};var _cacheTs=0;var CACHE_TTL=300000;
@@ -3707,6 +4020,7 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 
   function fetchQuotes(tickers,cb){
+    if(!tickers.length)return cb({});
     if(Date.now()-_cacheTs<CACHE_TTL&&Object.keys(_cache).length){return cb(_cache)}
     var mktOpen=isNYSEOpen();
     // Try LiveEngine prices first (Webull-fed or WebSocket)
@@ -3759,6 +4073,10 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!rows.length)return;
     var tickers=[],seen={},baked={},noLive={};
     rows.forEach(function(r){
+      var ownerPanel=r.closest('.mode-panel');
+      // A DTX decision/limit is not a broker fill. Do not even request OHLC for it:
+      // the generic signal simulator must never manufacture DTX execution evidence.
+      if(!ownerPanel||ownerPanel.dataset.executionVerified!=='true')return;
       var t=r.dataset.sigTicker;
       if(!seen[t]){
         seen[t]=1;
@@ -3776,6 +4094,8 @@ document.addEventListener('DOMContentLoaded',function(){
       Object.keys(noLive).forEach(function(t){quotes[t]=baked[t]||null});
       var panels={};
       rows.forEach(function(row){
+        var ownerPanel=row.closest('.mode-panel');
+        if(!ownerPanel||ownerPanel.dataset.executionVerified!=='true')return;
         var tk=row.dataset.sigTicker,entry=+row.dataset.sigEntry,stop=+row.dataset.sigStop,tp1=+row.dataset.sigTp1,tp2=+row.dataset.sigTp2||0,vwap=+row.dataset.sigVwap||0,rank=row.dataset.sigRank;
         var _rcur=row.dataset.market==='casablanca'?'MAD':'USD';
         var _rpx=function(n){return _rcur==='MAD'?Number(n||0).toFixed(2)+' MAD':'$'+Number(n||0).toFixed(2);};
@@ -3848,7 +4168,7 @@ document.addEventListener('DOMContentLoaded',function(){
           var sumEl=panel.querySelector('.sig-exec-sum');
           if(!sumEl){var sig=panel.querySelector('tr[data-sig-ticker]');if(!sig)return;var tbl=sig.closest('table');if(!tbl)return;sumEl=document.createElement('div');sumEl.className='sig-exec-sum';sumEl.style.cssText='display:flex;gap:.65rem;flex-wrap:wrap;align-items:center;padding:.55rem .85rem;margin-bottom:.65rem;background:var(--surface);border-radius:var(--r);border:1px solid var(--border);font-size:.73rem';tbl.parentNode.insertBefore(sumEl,tbl)}
           var nc=d.pnlSum>=0?'var(--pos)':'var(--neg)';
-          var h='<span style="font-weight:700;color:var(--ink-2)">⚡ Live Execution Sim</span>';
+          var h='<span style="font-weight:700;color:var(--ink-2)">⚡ Simulation d’exécution</span>';
           h+=' <span style="background:#e0e7ff;padding:.15rem .4rem;border-radius:4px;font-weight:600;color:#3730a3">'+d.filled+'/'+d.n+' filled</span>';
           if(d.filled>0){
             h+=' <span style="color:'+nc+';font-weight:700;font-size:.78rem">'+(d.pnlSum>=0?'+':'')+d.pnlSum.toFixed(2)+'% net</span>';
@@ -3982,6 +4302,9 @@ document.addEventListener('DOMContentLoaded',function(){
     var modeId=activeTab.dataset.mode;
     var panel=document.getElementById('p-'+modeId);
     if(!panel)return;
+    // Price marks may update a broker-certified position, but can never create
+    // one. Unverified simulation panels are deliberately inert.
+    if(panel.dataset.executionVerified!=='true')return;
     // Casablanca (BVC) panel: Yahoo returns the wrong instrument for MAD tickers (SNA=Snap-on,
     // SLF=Sun Life). Skip the live MtM fetch entirely — the static BVC (MAD) prices stand.
     if(panel.dataset.market==='casablanca'||panel.dataset.nolive==='1')return;
@@ -4134,9 +4457,14 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   }
 
-  fs.writeFileSync(OUT, html);
-  console.log(`\u2705 ${OUT} generated (${(html.length / 1024).toFixed(0)}KB, ${'scripts embarqu\u00e9s v\u00e9rifi\u00e9s'})`);
+  const cleanHtml = html.replace(/[ \t]+$/gm, '');
+  fs.writeFileSync(OUT, cleanHtml);
+  console.log(`\u2705 ${OUT} generated (${(cleanHtml.length / 1024).toFixed(0)}KB, ${'scripts embarqu\u00e9s v\u00e9rifi\u00e9s'})`);
   for (const [id, m] of Object.entries(modes)) {
+    if (m.m.performanceSuppressed) {
+      console.log(`   ${m.cfg.label}: métriques historiques masquées [${m.m.capacityBoundary?.forwardCertified ? `genesis forward ${m.m.capacityBoundary.effectiveAt}` : 'frontière PIT absente'}]`);
+      continue;
+    }
     console.log(`   ${m.cfg.label}: ${m.m.ret > 0 ? '+' : ''}${m.m.ret}%, DD ${m.m.dd}%, WR ${m.m.wr}%, PF ${m.m.pf == null ? '—' : m.m.pf + 'x'}, ${m.m.trades} trades${m.m.dtxEngine ? ' [dtx]' : ''}`);
   }
 
@@ -4270,40 +4598,67 @@ document.addEventListener('DOMContentLoaded',function(){
       }
     }
 
-    snapshot.modes[id] = {
+    const isDtxSnapshot = cfg.assetClass === 'dtx';
+    const isSimulatedSnapshot = cfg.performanceScope === 'simulated_backtest';
+    const ordinarySnapshotFields = isSimulatedSnapshot ? {
+      stats: {
+        scope: 'simulated_backtest', status: mM.performanceSuppressed ? 'unavailable' : 'reference_only',
+        execution_verified: false, accountingCertified: mM.accountingCertified === true,
+        accountingErrors: mM.accountingErrors || [],
+        capacityBoundary: mM.capacityBoundary || null,
+        ret: mM.performanceSuppressed ? null : mM.ret,
+        realized: mM.performanceSuppressed ? null : mM.realized,
+        unrealized: mM.performanceSuppressed ? null : mM.unrealized,
+        dd: mM.performanceSuppressed ? null : mM.dd,
+        wr: mM.performanceSuppressed ? null : mM.wr,
+        pf: mM.performanceSuppressed ? null : mM.pf,
+        trades: mM.performanceSuppressed ? null : mM.trades,
+        avgHold: mM.performanceSuppressed ? null : mM.avgHold,
+        r2: null, cagr: null, sharpe: null,
+      },
+      equity: mM.performanceSuppressed ? { d: [], v: [] } : ec,
+      signals: sig.map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s._entry, stop: s._stop, tp1: s._tp1, tp2: s._tp2, rr: s.rr, thesis: s.thesis || '', sharia: s.sharia, signal_scope: 'idea', execution_verified: false })),
+      positions: [], orders: [], recentRotation: null, closeNow: [], expiresTomorrow: [],
+      closedTrades: [], pit_stats: null, pit_equity: null,
+    } : {
       stats: { ret: mM.ret, realized: mM.realized, unrealized: mM.unrealized, dd: mM.dd, wr: mM.wr, pf: mM.pf, pfLow: mM.pfLow, pfHigh: mM.pfHigh, pfReliable: mM.pfReliable, trades: mM.trades, avgHold: mM.avgHold, oosWarn: mM.oosWarn || null, r2: mM.r2 ?? null, cagr: mM.cagr ?? null, sharpe: mM.sharpe ?? null },
       equity: ec,
       signals: sig.map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s._entry, stop: s._stop, tp1: s._tp1, tp2: s._tp2, rr: s.rr, thesis: s.thesis || '', sharia: s.sharia })),
       positions: pos.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, score: p.score || 0, stop: p.stop, tp1: p.tp1, tp2: p.tp2, days_remaining: p.days_remaining, strategy: p.strategy, thesis: p.thesis || '', replacedFrom: (recentRotation && recentRotation.ticker === p.ticker) ? recentRotation.replaces : null, _terminal: p._terminal || false, _terminalStatus: p._terminalStatus || null })),
-      orders: [...buyOrders, ...rotCands],
-      recentRotation,
+      orders: [...buyOrders, ...rotCands], recentRotation,
       closeNow: timedOutSnap.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       expiresTomorrow: pos.filter(p => { if (p._terminal) return false; const left = Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)); return left === 1; }).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       closedTrades: mTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, exitDate: t.exitDate || null, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
-      config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore ?? 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1, ddBreakerPct: cfg.ddBreakerPct || 0, sectorCapMax: cfg.sectorCapMax || 0, sizingMethod: cfg.sizingMethod || null, targetRiskPct: cfg.targetRiskPct || 0, vixKillThreshold: cfg.vixKillThreshold || 0, correlationCap: cfg.correlationCap || 0, crossModeDedup: cfg.crossModeDedup || false, label: cfg.label || id },
-      risk: getRiskFor(id),
-      // Decision du MOTEUR systematic pour cette seance — ADDITIF, prefixe engine_, jamais
-      // en remplacement des champs sim ci-dessus. Lu depuis le registre append-only
-      // data/dtx-engine-history.json en mode POINT-IN-TIME (asOf) : on ne rend que ce qui
-      // etait connu a la date du snapshot, jamais une seance posterieure. null pour les
-      // modes non pilotes par le moteur.
-      engine_decision: (cfg.assetClass === 'dtx') ? (() => {
-        const e = dxh.asOf(id, todayISO, _dxhStore);
-        if (!e) return null;
-        return {
-          asof: e.asof, provenance: e.provenance || null, engineMode: e.engineMode || null,
-          stale: e.asof !== todayISO,   // le moteur n'a pas tourne ce jour-la : on le DIT
-          orders: e.orders || [], updates: e.updates || [], cancels: e.cancels || [],
-          metrics: e.metrics || null,
-          decisionProvenance: e.decisionProvenance || null,
-          executionPlan: e.executionPlan || null,
-        };
-      })() : null,
-      // Live-book (pit-state) beside the sim-derived fields above — ADDITIVE, prefixed pit_
-      // so the existing snapshot schema (stats/equity = sim) is never broken. null when the
-      // mode has no meaningful live data yet.
       pit_stats: (mM.pit && mM.pit.hasData) ? { ret: mM.pit.ret, dd: mM.pit.dd, wr: mM.pit.wr, pf: mM.pit.pf, trades: mM.pit.trades, avgHold: mM.pit.avgHold, realized: mM.pit.realized, unrealized: mM.pit.unrealized, r2: mM.pit.r2 ?? null, cagr: mM.pit.cagr ?? null, sharpe: mM.pit.sharpe ?? null } : null,
       pit_equity: (mM.pit && mM.pit.hasData) ? mM.pit.ec : null,
+    };
+    const publicSnapshotFields = isDtxSnapshot
+      ? buildDtxForwardSnapshotFields(cfg)
+      : ordinarySnapshotFields;
+
+    snapshot.modes[id] = {
+      ...publicSnapshotFields,
+      config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore ?? 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct ?? 0.5, partialTPGain: cfg.partialTPGain ?? 0, disableTP2: cfg.disableTP2 === true, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1, ddBreakerPct: cfg.ddBreakerPct || 0, sectorCapMax: cfg.sectorCapMax || 0, sizingMethod: cfg.sizingMethod || null, targetRiskPct: cfg.targetRiskPct || 0, vixKillThreshold: cfg.vixKillThreshold || 0, correlationCap: cfg.correlationCap || 0, crossModeDedup: cfg.crossModeDedup || false, label: cfg.label || id, assetClass: cfg.assetClass || null, performanceScope: isDtxSnapshot ? DTX_FORWARD_SCOPE : (cfg.performanceScope || null), dtxPortfolio: cfg.dtxPortfolio || null, dtxConfigHash: cfg.dtxConfigHash || null, forwardTracking: cfg.forwardTracking || null },
+      execution_verified: cfg.executionVerified === true,
+      tradingMode: isSimulatedSnapshot ? 'simulated' : (isDtxSnapshot ? 'forward_execution' : 'unverified'),
+      // A pre-boundary risk snapshot can describe positions that the certified
+      // forward genesis explicitly did not inherit. Simulated modes therefore
+      // publish no portfolio risk until a post-boundary capacity record exists.
+      risk: (isDtxSnapshot || isSimulatedSnapshot) ? null : getRiskFor(id),
+      // Backtest/replay evidence is explicitly namespaced. Time Machine never
+      // reads this object into the forward hero.
+      reference: isDtxSnapshot ? buildDtxReferenceSnapshot(cfg, mM, ec) : null,
+      // Plans proposés pour cette séance, séparés du suivi forward. Cette vue
+      // publique est une allow-list : aucune métrique de replay, identité de
+      // corrélation ou structure d'exécution brute n'y est recopiée.
+      engine_decision: (cfg.assetClass === 'dtx') ? (() => {
+        const e = dxh.asOf(id, todayISO, _dxhStore, cfg.dtxPortfolio || id, cfg.dtxConfigHash || null);
+        if (!e) return null;
+        return publicProposedPlanEntry(e, {
+          stale: e.asof !== todayISO,
+          boundary: publicHistoryBoundary,
+        });
+      })() : null,
     };
   }
   // Attach the global (market-wide) regime probability once per snapshot.
@@ -4318,44 +4673,54 @@ document.addEventListener('DOMContentLoaded',function(){
   if (_dxhStore) {
     const _pub = { _version: dxh.VERSION, _updated: _dxhStore._updated || null, modes: {} };
     for (const [mId, byDate] of Object.entries(_dxhStore.modes || {})) {
+      const modeCfg = (config.modes || {})[mId] || null;
+      // Public registry is an allow-list, not a dump of every retired engine
+      // identity ever retained privately. Only current configured DTX aliases
+      // may be emitted; portfolio/config identity is checked again per row.
+      if (!modeCfg || modeCfg.assetClass !== 'dtx') continue;
       _pub.modes[mId] = {};
+      const expectedPortfolio = modeCfg && modeCfg.assetClass === 'dtx'
+        ? String(modeCfg.dtxPortfolio || mId) : null;
+      const expectedConfigHash = modeCfg && modeCfg.assetClass === 'dtx'
+        ? String(modeCfg.dtxConfigHash || '') : null;
       for (const [d, e] of Object.entries(byDate)) {
-        _pub.modes[mId][d] = {
-          asof: e.asof, provenance: e.provenance || null, engineMode: e.engineMode || null,
-          orders: (e.orders || []).map(o => ({ symbol: o.symbol, side: o.side, orderType: o.orderType,
-            qty: o.qty, entry: o.entry, limitPrice: o.limitPrice, stopLoss: o.stopLoss,
-            takeProfit: o.takeProfit, reason: o.reason })),
-          updates: (e.updates || []).length, cancels: (e.cancels || []).length,
-          metrics: e.metrics ? { win_rate: e.metrics.win_rate ?? null, total_trades: e.metrics.total_trades ?? null,
-            final_equity: e.metrics.final_equity ?? null } : null,
-        };
+        // Un alias public peut changer de moteur sans réécrire l'historique. Ne publions
+        // jamais les décisions de l'ancien portefeuille sous le nouveau nom.
+        if (expectedPortfolio && e.portfolioId !== expectedPortfolio) continue;
+        if (expectedConfigHash && e.configHash !== expectedConfigHash) continue;
+        _pub.modes[mId][d] = publicProposedPlanEntry(e, { boundary: publicHistoryBoundary });
       }
+      if (!Object.keys(_pub.modes[mId]).length) delete _pub.modes[mId];
     }
     fs.writeFileSync(path.join(ROOT, 'scanner/status/engine-history.json'), JSON.stringify(_pub));
     const _n = Object.values(_pub.modes).reduce((a, m) => a + Object.keys(m).length, 0);
     console.log(`  [engine] registre publie : ${Object.keys(_pub.modes).length} modes, ${_n} seances`);
   }
-  const existingDates = fs.readdirSync(historyDir).filter(f => /^\d{8}\.json$/.test(f)).map(f => f.replace('.json', '')).sort();
-  fs.writeFileSync(path.join(historyDir, 'dates.json'), JSON.stringify(existingDates));
-  console.log(`   Snapshot: history/${todayKey}.json (${existingDates.length} dates)`);
+  const quarantine = quarantineHistoryDirectory({ historyDir, boundary: publicHistoryBoundary });
+  fs.writeFileSync(path.join(historyDir, 'dates.json'), JSON.stringify(quarantine.publishedDates));
+  console.log(`   Snapshot: history/${todayKey}.json (${quarantine.publishedDates.length} dates publiques)`);
+  console.log(`   Historique quarantiné: ${quarantine.quarantined} snapshots avant ${quarantine.boundary} (${quarantine.changed} réécrits)`);
 
   // ── Page Track Record publique (tech/track-record/index.html) ───────────────
-  // Doit tourner APRÈS ce script : elle relit les artefacts qu'on vient d'écrire
-  // (snapshot du jour) + le registre scellé (backtest-results.json frozen_*) +
-  // portfolio/v1/<mode>/equity.json. Elle ne RECOPIE que des chiffres scellés —
-  // aucun recalcul, aucun carnet live en primaire (invariant SEALED-PRIMARY).
-  // Non bloquant : un échec ici ne doit pas invalider le status page déjà écrit.
-  try {
-    const { generate: genTrackRecord } = require('./gen-track-record.js');
-    const tr = genTrackRecord();
-    console.log(`   Track record: ${tr.path} (${tr.modes} carnets, ${tr.sealed} scellés)`);
-  } catch (e) {
-    console.error(`  [warn] track record non régénéré : ${e.message}`);
-  }
+  // Doit tourner APRÈS ce script : elle relit le snapshot du jour, les artefacts
+  // frozen et les endpoints portfolio/v1. Une simulation n'est recopiée qu'avec
+  // ledger capacityAt(entry) certifié ; DTX reste dans son scope forward_execution.
+  // Une erreur est bloquante afin qu'une ancienne page ne survive pas au nouveau status.
+  const { generate: genTrackRecord } = require('./gen-track-record.js');
+  const tr = genTrackRecord();
+  console.log(`   Track record: ${tr.path} (${tr.modes} carnets, ${tr.sealed} certifiés)`);
 }
 
 // ─── Backfill: regenerate all history snapshots with current configs ──────────
 function backfillHistory() {
+  // FAIL CLOSED: this legacy routine reads the current config and final trade outcomes,
+  // then rewrites past snapshots. Filtering only on scanDate leaks exits/P&L that were
+  // not known on the snapshot date and relabels history with later configurations.
+  // A safe replacement must resolve configVersion at each date and consume a genuine
+  // point-in-time ledger. Until then, preserving existing snapshots is safer than a
+  // plausible-looking but look-ahead-contaminated rebuild.
+  throw new Error('history backfill disabled: point-in-time config and ledger evidence are required');
+
   const historyDir = path.join(ROOT, 'scanner', 'status', 'history');
   const SCANNER_DIR_BF = path.join(ROOT, 'scanner');
   let allTrades = {}, modesCfg = {}, results = {};
@@ -4424,6 +4789,35 @@ function backfillHistory() {
 
     const newModes = {};
     for (const [id, cfg] of Object.entries(modesCfg)) {
+      if (cfg.assetClass === 'dtx') {
+        // Defensive branch for any future point-in-time backfill implementation:
+        // never relabel the legacy Best replay as DTX forward performance.
+        const prior = (existing.modes || {})[id] || {};
+        const identityMatches = prior.config
+          && prior.config.dtxPortfolio === (cfg.dtxPortfolio || id)
+          && prior.config.dtxConfigHash === cfg.dtxConfigHash;
+        newModes[id] = {
+          ...buildDtxForwardSnapshotFields(cfg),
+          config: {
+            portfolioSize: cfg.portfolioSize,
+            horizon: cfg.horizon,
+            filterName: cfg.filterName,
+            rotation: cfg.rotation,
+            color: cfg.color,
+            label: cfg.label || id,
+            assetClass: 'dtx',
+            performanceScope: DTX_FORWARD_SCOPE,
+            dtxPortfolio: cfg.dtxPortfolio || id,
+            dtxConfigHash: cfg.dtxConfigHash || null,
+            forwardTracking: cfg.forwardTracking || null,
+          },
+          reference: identityMatches && prior.reference && prior.reference.scope === 'reference_backtest'
+            ? prior.reference : null,
+          engine_decision: identityMatches ? (prior.engine_decision || null) : null,
+          risk: prior.risk || null,
+        };
+        continue;
+      }
       const modeTrades = (allTrades[id] || []).filter(t => (t.scanDate || '') <= dateISO);
       if (!modeTrades.length) continue;
 
@@ -4517,7 +4911,7 @@ function backfillHistory() {
         expiresTomorrow: activePos.filter(p => p.days_remaining === 1).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysBetweenBF(p.scan_date, dateISO), horizon: cfg.horizon })),
         signals: filteredSignals,
         closedTrades: modeTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, exitDate: t.exitDate || null, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
-        config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore ?? 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1 },
+        config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore ?? 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct ?? 0.5, partialTPGain: cfg.partialTPGain ?? 0, disableTP2: cfg.disableTP2 === true, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1, label: cfg.label || id, assetClass: cfg.assetClass || null, performanceScope: cfg.performanceScope || null, dtxPortfolio: cfg.dtxPortfolio || null, forwardTracking: cfg.forwardTracking || null },
       };
     }
 

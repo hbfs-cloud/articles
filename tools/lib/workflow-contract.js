@@ -9,6 +9,17 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const CONFIG_PATH = path.join(ROOT, 'config', 'workflow-contracts.json');
 const ISO_DATE_RE = /\b20\d{2}-\d{2}-\d{2}\b/g;
 const UNRESOLVED_RE = /\$[A-Za-z_][A-Za-z0-9_]*|<[^>]+>|YYYYMMDD/;
+const SEC_READINESS_OPERATION = 'run_screener_sec_enriched';
+const SEC_QUERY_TYPES = new Set([
+  'sec_filings',
+  'sec_catalysts',
+  'insider',
+  'insider_transactions',
+  'insider_coverage',
+  'insider_ownership',
+  'institutional_holdings',
+  'flags',
+]);
 
 function readConfig(file = CONFIG_PATH) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -27,9 +38,74 @@ function stableStringify(value) {
   return JSON.stringify(value);
 }
 
+function compareResolvedTemplate(template, actual, label, errors) {
+  if (typeof template === 'string') {
+    if (UNRESOLVED_RE.test(template)) return;
+    if (actual !== template) errors.push(`${label} changed after collection`);
+    return;
+  }
+  if (Array.isArray(template)) {
+    if (!Array.isArray(actual) || actual.length !== template.length) {
+      errors.push(`${label} changed after collection`);
+      return;
+    }
+    template.forEach((value, index) => compareResolvedTemplate(value, actual[index], `${label}[${index}]`, errors));
+    return;
+  }
+  if (template && typeof template === 'object') {
+    if (!actual || typeof actual !== 'object' || Array.isArray(actual)) {
+      errors.push(`${label} changed after collection`);
+      return;
+    }
+    for (const [key, value] of Object.entries(template)) {
+      if (!Object.prototype.hasOwnProperty.call(actual, key)) {
+        errors.push(`${label}.${key} is missing from resolved collection input`);
+        continue;
+      }
+      compareResolvedTemplate(value, actual[key], `${label}.${key}`, errors);
+    }
+    return;
+  }
+  if (actual !== template) errors.push(`${label} changed after collection`);
+}
+
+function validateResolvedPlanBindings(plan, resolvedInput) {
+  const errors = [];
+  if (!resolvedInput || !Array.isArray(resolvedInput.waves)) return errors;
+  for (const wave of plan.waves || []) {
+    const resolvedWave = resolvedInput.waves.find(item => item && item.name === wave.name);
+    if (!resolvedWave) {
+      errors.push(`resolved collection input is missing wave ${wave.name || '?'}`);
+      continue;
+    }
+    for (const call of wave.calls || []) {
+      if (!call.as || UNRESOLVED_RE.test(call.as)) continue;
+      const resolvedCall = (resolvedWave.calls || []).find(item => item && item.as === call.as);
+      if (!resolvedCall) {
+        errors.push(`resolved collection input is missing call ${wave.name}.${call.as}`);
+        continue;
+      }
+      for (const field of ['server', 'tool', 'args', 'assert', 'freshness']) {
+        if (!Object.prototype.hasOwnProperty.call(call, field)) continue;
+        compareResolvedTemplate(call[field], resolvedCall[field], `${wave.name}.${call.as}.${field}`, errors);
+      }
+    }
+  }
+  return errors;
+}
+
 function allCalls(plan) {
   return (plan.waves || []).flatMap((wave, waveIndex) =>
     (wave.calls || []).map(call => ({ wave, waveIndex, call })));
+}
+
+function queryDataTypes(call) {
+  if (!call || call.server !== 'marketdata' || call.tool !== 'QueryData') return [];
+  return String(call.args && call.args.types || '').split(',').map(value => value.trim()).filter(Boolean);
+}
+
+function consumesSecData(call) {
+  return queryDataTypes(call).some(type => SEC_QUERY_TYPES.has(type));
 }
 
 function collectVariables(value, out = new Set()) {
@@ -124,13 +200,18 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
   const seen = new Set();
   const hasMarketdata = calls.some(({ call }) => call.server === 'marketdata');
   const hasSystematic = calls.some(({ call }) => call.server === 'systematic');
+  const hasSecQueryData = calls.some(({ call }) => consumesSecData(call));
   const gateCalls = firstWave ? (firstWave.calls || []) : [];
   if (hasMarketdata && !gateCalls.some(c => c.server === 'marketdata' && c.tool === 'GetStatus')) {
     errors.push('marketdata plans must start with GetStatus in the gate wave');
   }
   if (hasMarketdata && !gateCalls.some(c => c.server === 'marketdata' && c.tool === 'GetStatus' && c.assert
-    && (c.assert.equity_reference_close === equityRef || c.assert.expected_close === equityRef || c.assert.covers_close === equityRef))) {
+    && c.assert.equity_reference_close === equityRef)) {
     errors.push(`marketdata plans must assert GetStatus equity_reference_close=${equityRef} in the gate wave`);
+  }
+  if (hasSecQueryData && !gateCalls.some(c => c.server === 'marketdata' && c.tool === 'GetStatus' && c.assert
+    && c.assert.sec_operation === SEC_READINESS_OPERATION)) {
+    errors.push(`marketdata plans consuming SEC QueryData must assert GetStatus sec_operation=${SEC_READINESS_OPERATION} in the gate wave`);
   }
   if (hasSystematic && !gateCalls.some(c => c.server === 'systematic' && c.tool === 'GetHealth' && c.args && c.args.expected_close === equityRef)) {
     errors.push(`systematic plans must start with GetHealth(expected_close=${equityRef}) in the gate wave`);
@@ -141,6 +222,12 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
     if (!call.as || typeof call.as !== 'string') errors.push('every call needs a stable as');
     else if (seen.has(call.as)) errors.push(`duplicate call alias: ${call.as}`);
     else seen.add(call.as);
+
+    if (call.server === 'marketdata' && call.tool === 'GetStatus') {
+      const legacy = ['covers_close', 'expected_close']
+        .filter(key => Object.prototype.hasOwnProperty.call(call.assert || {}, key));
+      if (legacy.length) errors.push(`${label}: unsupported legacy GetStatus assertion(s): ${legacy.join(', ')}; use equity_reference_close`);
+    }
 
     if (!allowedServers.has(call.server)) errors.push(`${label}: server ${call.server || '(missing)'} is not allowed for content workflows`);
     if (!call.tool || typeof call.tool !== 'string') errors.push(`${label}: tool is required`);
@@ -258,6 +345,17 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
       if (!args.balances || typeof args.balances !== 'object' || !(Number(args.balances.total_equity) > 0)) errors.push(`${label}: DtxDecide balances must include positive total_equity`);
       if (args.balances?.broker_source !== args.broker) errors.push(`${label}: DtxDecide balances.broker_source must equal broker`);
     }
+    if (call.server === 'systematic' && call.tool === 'DtxValidateDecisionInput') {
+      const args = call.args || {};
+      if (!['alpaca', 'trading212', 'ibkr', 'saxo'].includes(args.broker)) errors.push(`${label}: DtxValidateDecisionInput broker must be explicit and supported`);
+      if (!['evening', 'intraday', 'manual'].includes(args.appel)) errors.push(`${label}: DtxValidateDecisionInput appel must be explicit`);
+      if (args.expected_data_date !== equityRef) errors.push(`${label}: DtxValidateDecisionInput expected_data_date must equal ${equityRef}`);
+      if (args.request_id !== '$request_id') errors.push(`${label}: DtxValidateDecisionInput request_id must equal $request_id`);
+      if (args.consumer_capabilities?.contract_version !== '2.0') errors.push(`${label}: DtxValidateDecisionInput Contract V2 capability is required`);
+      if (!Array.isArray(args.positions) || !Array.isArray(args.orders)) errors.push(`${label}: DtxValidateDecisionInput positions/orders must be explicit arrays`);
+      if (!args.balances || typeof args.balances !== 'object' || !(Number(args.balances.total_equity) > 0)) errors.push(`${label}: DtxValidateDecisionInput balances must include positive total_equity`);
+      if (args.balances?.broker_source !== args.broker) errors.push(`${label}: DtxValidateDecisionInput balances.broker_source must equal broker`);
+    }
     if (call.server === 'systematic' && call.tool === 'DtxReplay') {
       if (!call.args || call.args.to !== equityRef) errors.push(`${label}: DtxReplay to must equal ${equityRef}`);
       if (call.args.equity_full !== true) errors.push(`${label}: DtxReplay must request equity_full=true`);
@@ -280,6 +378,44 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
       const constraint = spec.variable_constraints[call.foreach.var];
       if (constraint && constraint.max_items && call.foreach.max > constraint.max_items) {
         errors.push(`${label}: foreach.max exceeds ${call.foreach.var} max_items=${constraint.max_items}`);
+      }
+    }
+  }
+
+  // Contract V2 preflight is a structural requirement, not a convention in a
+  // runbook. Every executable decision must be preceded by the unfiltered
+  // machine catalogue, the selected strategy guide and a validator call using
+  // the exact same broker snapshot. This keeps a mechanically green plan from
+  // silently omitting a live-eligibility or consumer-capability gate.
+  const decisionFields = [
+    'portfolio', 'asof', 'appel', 'broker', 'expected_data_date', 'request_id',
+    'consumer_capabilities', 'positions', 'orders', 'balances', 'state', 'bars',
+    'market_snapshot_id',
+  ];
+  for (const decisionEntry of calls.filter(({ call }) => call.server === 'systematic' && call.tool === 'DtxDecide')) {
+    const decision = decisionEntry.call;
+    const portfolio = decision.args && decision.args.portfolio;
+    const catalogEntry = calls.find(({ call }) => call.server === 'systematic' && call.tool === 'DtxCatalog');
+    if (!catalogEntry) errors.push(`${decision.as}: DtxCatalog is required before DtxDecide`);
+    else {
+      if (Object.keys(catalogEntry.call.args || {}).length !== 0) errors.push(`${catalogEntry.call.as}: DtxCatalog must be unfiltered for exhaustive comparison`);
+      if (catalogEntry.waveIndex >= decisionEntry.waveIndex || catalogEntry.wave.gate !== true) errors.push(`${catalogEntry.call.as}: DtxCatalog must run in an earlier gate wave`);
+      if (catalogEntry.call.assert?.contains_portfolio !== portfolio || catalogEntry.call.assert?.eligible_portfolio !== portfolio) {
+        errors.push(`${catalogEntry.call.as}: catalog must assert presence and live eligibility of ${portfolio}`);
+      }
+    }
+    const howToEntry = calls.find(({ call }) => call.server === 'systematic' && call.tool === 'DtxHowTo' && call.args?.portfolio === portfolio);
+    if (!howToEntry || howToEntry.waveIndex >= decisionEntry.waveIndex || howToEntry.wave.gate !== true) {
+      errors.push(`${decision.as}: DtxHowTo(${portfolio}) is required in an earlier gate wave`);
+    }
+    const validateEntry = calls.find(({ call }) => call.server === 'systematic' && call.tool === 'DtxValidateDecisionInput' && call.args?.portfolio === portfolio);
+    if (!validateEntry || validateEntry.waveIndex >= decisionEntry.waveIndex || validateEntry.wave.gate !== true) {
+      errors.push(`${decision.as}: DtxValidateDecisionInput(${portfolio}) is required in an earlier gate wave`);
+    } else {
+      const decisionSnapshot = Object.fromEntries(decisionFields.filter(key => Object.hasOwn(decision.args || {}, key)).map(key => [key, decision.args[key]]));
+      const validateSnapshot = Object.fromEntries(decisionFields.filter(key => Object.hasOwn(validateEntry.call.args || {}, key)).map(key => [key, validateEntry.call.args[key]]));
+      if (stableStringify(validateSnapshot) !== stableStringify(decisionSnapshot)) {
+        errors.push(`${validateEntry.call.as}: validated broker snapshot must exactly match ${decision.as}`);
       }
     }
   }
@@ -417,6 +553,20 @@ function validateRun(workflow, outDir, config = readConfig()) {
   if (harness.contract_version !== '1.0') errors.push('harness contract_version must be 1.0');
   if (!harness.plan_sha256 || !journal.plan_sha256 || harness.plan_sha256 !== journal.plan_sha256) errors.push('plan hash missing or inconsistent');
   if (!harness.input_sha256 || !journal.input_sha256 || harness.input_sha256 !== journal.input_sha256) errors.push('input hash missing or inconsistent');
+  if (journal.resolved_input && Array.isArray(journal.resolved_input.waves)) {
+    const resolvedArtifact = journal.resolved_input.artifact || journal.artifact;
+    const resolvedRefdate = journal.resolved_input.refdate
+      || journal.resolved_input.equity_reference_close
+      || journal.reference_date;
+    const resolvedInputHash = sha256(stableStringify({
+      artifact: resolvedArtifact,
+      refdate: resolvedRefdate,
+      waves: journal.resolved_input.waves,
+    }));
+    if (resolvedInputHash !== journal.input_sha256) {
+      errors.push('input hash does not match resolved collection input');
+    }
+  }
   if (!harness.artifact || UNRESOLVED_RE.test(harness.artifact)) errors.push(`artifact is unresolved: ${harness.artifact || '(missing)'}`);
   if (!harness.reference_close) errors.push('reference_close is missing');
   if (journal.failures !== 0) errors.push(`collection journal reports ${journal.failures} failure(s)`);
@@ -444,7 +594,14 @@ function validateRun(workflow, outDir, config = readConfig()) {
   }
   const planPath = journal.plan && path.resolve(ROOT, journal.plan);
   if (!planPath || !fs.existsSync(planPath)) errors.push(`journal plan is unavailable: ${journal.plan || '(missing)'}`);
-  else if (sha256(fs.readFileSync(planPath)) !== harness.plan_sha256) errors.push('plan changed after collection');
+  else {
+    const planBytes = fs.readFileSync(planPath);
+    if (sha256(planBytes) !== harness.plan_sha256) errors.push('plan changed after collection');
+    else if (journal.resolved_input) {
+      try { errors.push(...validateResolvedPlanBindings(JSON.parse(planBytes.toString('utf8')), journal.resolved_input)); }
+      catch (error) { errors.push(`resolved plan binding validation failed: ${error.message}`); }
+    }
+  }
   const owner = journal.plan && findPlanSpec(journal.plan, config);
   const canonical = report.workflow || workflow;
   if (!owner || (owner.workflow !== canonical && !(owner.workflow === 'signals-desk' && canonical === 'signals-desk-fire-and-forget'))) {
