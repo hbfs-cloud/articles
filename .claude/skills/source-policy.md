@@ -28,7 +28,8 @@ This policy is authoritative for `/daily`, `/weekly`, `/analyse`, `/aplus`, `/si
 ## 2. Runtime contract
 
 1. Run `node tools/validate-workflows.js --workflow <name>` before collection.
-2. Pass `date` and the exact last close as `refdate`; reusable plans never carry literal dates.
+2. Pass `date` and the exact equity close as `refdate` (or `equity_reference_close` in a multi-calendar
+   workflow). Crypto uses the separate `crypto_completed_refdate`; reusable plans never carry literal dates.
 3. The first plan wave is `gate:true`: `GetStatus`, plus
    `GetHealth(expected_close=$refdate)` whenever systematic is used.
 4. Required sources fail closed. A detached wave is context-only and may never govern a number,
@@ -54,10 +55,32 @@ This policy is authoritative for `/daily`, `/weekly`, `/analyse`, `/aplus`, `/si
   named by a candidate must be mapped. Optional/detached sources cannot govern a decision.
 - Dynamic story names use runtime variables (`focus_symbols`, `symbols`, scanner batches). Yesterday's
   tickers never live in a reusable plan.
-- A dated close is backed by `bars_daily(end_date=$refdate)` with `expects_close:true`.
+- A dated close is backed by `bars_daily(as_of_timestamp=$as_of_timestamp,
+  completion_policy="completed_only")`, with an explicit asset calendar and completed-end reference.
 - Published R/R, ATR distance and actionability are recomputed by code from published levels.
 
-## 4. Security and side effects
+## 4. Marketdata completed-bar contract (minimum build `0424cf4b`)
+
+1. Call `bars_daily` with the run `as_of_timestamp` and `completion_policy="completed_only"`.
+2. Keep `equity_reference_close` and `crypto_completed_refdate` distinct. Never compare a crypto UTC
+   close with the US exchange-session date.
+3. Gate each symbol on `served_completed_end == expected_completed_end` for its declared
+   `asset_calendar`. The global maximum daily date is not a close proof.
+4. `requested_end_state="current_bar_open"` is not stale. A returned partial bar has `complete=false`
+   and can never satisfy a completed-close gate.
+5. Honor `retry_at` / `next_complete_available_at`; do not poll every 30 seconds before the announced
+   completion time.
+6. `RefreshBars.last_bar_after` may name an open bar. Only `last_completed_bar_after` together with
+   `last_bar_complete=true` certifies a close.
+7. Every QueryData cell terminates exactly once: `completed` with `symbol`/`instrument_id` and its data
+   row; `not_applicable` with `not_applicable_reason`; or `failed`/`unavailable` with a rejection reason
+   or structured error. `completed_without_data` fails closed.
+8. A failed cell blocks the governing source but does not erase healthy cells from the persisted batch.
+9. Read `operation_readiness.bars_daily_us_equity`, `bars_daily_crypto_utc`, and the relevant SEC
+   readiness operation independently. Never infer readiness from the global maximum daily date.
+10. A live/partial bar never substitutes for a certified close, and missing numerical data never becomes zero.
+
+## 5. Security and side effects
 
 - Content workflows may call only `marketdata` and `systematic`. Broker, trading and account tools are
   forbidden even if exposed in the session.
@@ -69,7 +92,7 @@ This policy is authoritative for `/daily`, `/weekly`, `/analyse`, `/aplus`, `/si
 - The fire-and-forget signals workflow may post Telegram after its lean gates. A Substack note is
   opt-in, never a hidden default side effect.
 
-## 5. Publication channels
+## 6. Publication channels
 
 - Web: French only for every new publication.
 - Telegram: French, concise, actionable, self-contained and derived from the certified run.

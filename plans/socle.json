@@ -20,9 +20,11 @@
             "max_age_h": 2,
             "required": true
           },
-          "assert": {
-            "expected_close": "$refdate"
-          }
+        "assert": {
+          "equity_reference_close": "$refdate",
+          "crypto_completed_refdate": "$crypto_completed_refdate",
+          "sec_operation": "run_screener_sec_enriched"
+        }
         },
         {
           "as": "dtx_health",
@@ -97,8 +99,9 @@
           "args": {
             "types": "bars_daily",
             "symbols": "SPY,QQQ,IWM,DIA,GLD,SLV,TLT,USO",
-            "end_date": "$refdate",
-            "limit": 130
+            "limit": 130,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
           },
           "covers": [
             "bars_indices",
@@ -108,7 +111,9 @@
           "freshness": {
             "max_age_h": 24,
             "required": true,
-            "expects_close": true
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
           }
         },
         {
@@ -118,8 +123,9 @@
           "args": {
             "types": "bars_daily",
             "symbols": "XLK,XLF,XLE,XLV,XLI,XLY,XLP,XLU,XLC,XLRE,XLB",
-            "end_date": "$refdate",
-            "limit": 130
+            "limit": 130,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
           },
           "covers": [
             "bars_sectors"
@@ -127,7 +133,9 @@
           "freshness": {
             "max_age_h": 24,
             "required": true,
-            "expects_close": true
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
           }
         },
         {
@@ -137,8 +145,9 @@
           "args": {
             "types": "bars_daily",
             "symbols": "BTC-USD,ETH-USD,SOL-USD,XRP-USD",
-            "end_date": "$refdate",
-            "limit": 130
+            "limit": 130,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
           },
           "covers": [
             "bars_crypto"
@@ -146,7 +155,9 @@
           "freshness": {
             "max_age_h": 24,
             "required": true,
-            "expects_close": true
+            "expects_close": true,
+            "asset_calendar": "crypto_24_7_utc",
+            "expected_completed_end": "$crypto_completed_refdate"
           }
         },
         {
@@ -187,10 +198,11 @@
           "args": {
             "types": "bars_daily",
             "symbols": "SPY,QQQ,IWM,GLD,SLV,TLT,USO",
-            "end_date": "$refdate",
             "days": 90,
             "adjusted": true,
-            "force_async": true
+            "force_async": true,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
           },
           "covers": [
             "correlations"
@@ -198,7 +210,9 @@
           "freshness": {
             "max_age_h": 24,
             "required": true,
-            "expects_close": true
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
           }
         }
       ]

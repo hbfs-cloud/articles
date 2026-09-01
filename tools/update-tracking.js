@@ -321,8 +321,19 @@ async function main() {
   }
 
   // Capital allocation
-  const entered = open;
-  const pending = allTrades.filter(t => t.status === 'pending');
+  // Capital is a portfolio exposure, not a row count. The raw tracking set can
+  // contain the same ticker in several historical scanner modes; counting each
+  // row made five displayed positions look like 100% deployed capital.
+  const uniqueLatestByTicker = trades => {
+    const byTicker = new Map();
+    for (const trade of [...trades].sort((a, b) => String(b.scan_date || '').localeCompare(String(a.scan_date || '')))) {
+      if (trade.ticker && !byTicker.has(trade.ticker)) byTicker.set(trade.ticker, trade);
+    }
+    return [...byTicker.values()];
+  };
+  const entered = uniqueLatestByTicker(open);
+  const enteredTickers = new Set(entered.map(t => t.ticker));
+  const pending = uniqueLatestByTicker(allTrades.filter(t => t.status === 'pending' && !enteredTickers.has(t.ticker)));
   const workingCapitalPct = +Math.min(100, +(entered.length * FRACTION * 100).toFixed(1));
   const pendingOrdersPct = +Math.min(100 - workingCapitalPct, +(pending.length * FRACTION * 100).toFixed(1));
   const availableCashPct = +Math.max(0, 100 - workingCapitalPct - pendingOrdersPct).toFixed(1);
@@ -479,6 +490,17 @@ async function main() {
       if (pruned > 0) console.log(`\n🧹 Pruned ${pruned} orphan positions (not open in any mode)`);
     } catch (e) { console.warn('⚠️ Could not cross-reference backtest-trades:', e.message); }
   }
+
+  // The public card operates a five-position book. Reconcile allocation to the
+  // same filtered/deduplicated positions that are actually published, and cap
+  // pending orders to the remaining slots. This keeps the capital panel and
+  // the visible position list in one scope.
+  const MAX_PUBLIC_POSITIONS = 5;
+  const publishedWorkingSlots = Math.min(MAX_PUBLIC_POSITIONS, activePositions.length);
+  const publishedPendingSlots = Math.min(Math.max(0, MAX_PUBLIC_POSITIONS - publishedWorkingSlots), pending.length);
+  metrics.working_capital_pct = +(publishedWorkingSlots * FRACTION * 100).toFixed(1);
+  metrics.pending_orders_pct = +(publishedPendingSlots * FRACTION * 100).toFixed(1);
+  metrics.available_cash_pct = +Math.max(0, 100 - metrics.working_capital_pct - metrics.pending_orders_pct).toFixed(1);
 
   fs.writeFileSync(METRICS_FILE, JSON.stringify(metrics, null, 2));
   fs.writeFileSync(POSITIONS_FILE, JSON.stringify({ updated_at: metrics.updated_at, open_positions: activePositions }, null, 2));

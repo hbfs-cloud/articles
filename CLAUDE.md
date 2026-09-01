@@ -158,7 +158,12 @@ Si le MCP DailyTickers **bloque** (auth expirée, timeout, erreur réseau) ou **
 
 ### 🔄 Données STALE ≠ hard stop d'emblée — FORCE-REFRESH d'abord
 Si les données sont **vieilles** (bars en retard, `sessions_behind` > seuil, `max_last_bar_date` ancien, staging dtx périmé) mais le MCP répond, NE PAS hard-stopper tout de suite : **forcer le rafraîchissement** puis re-vérifier.
-- **marketdata** : `GetStatus` expose `bar_service_1d_max_last_bar_date` + `bar_service_1d_ref_lag_sessions`. Si stale (lag > 1-2 séances de marché), appeler **`RefreshBars`** (fire-and-forget ~4 min, full-univers) → **poller `GetStatus`** jusqu'à ce que `max_last_bar_date` avance / `ref_lag_sessions` retombe → puis reprendre. `already_running` = un refresh est déjà en cours, poller.
+- **marketdata** (build minimal `0424cf4b`) : certifier séparément
+  `operation_readiness.bars_daily_us_equity`, `bars_daily_crypto_utc` et SEC. Comparer
+  `served_completed_end` à `expected_completed_end` selon `asset_calendar`; ne jamais utiliser le maximum
+  daily global comme preuve. Pour `RefreshBars`, `last_bar_after` peut être ouvert : exiger
+  `last_completed_bar_after` et `last_bar_complete=true`. Respecter `retry_at` /
+  `next_complete_available_at` au lieu de poller avant l'heure annoncée.
 - **systematic (dtx)** : `GetHealth` / `DtxDecide` renvoient `data_asof`/`last_data_date`/`sessions_behind` (et un statut `stale_data` sans actions si trop en retard). Si stale, appeler **`DtxRefreshBars`** (fire-and-forget ~4 min) → **poller `GetHealth`** (`prefetch.running` repasse false, `last_data_date` avance) → puis re-`DtxDecide`.
 - **Seulement si** le force-refresh échoue / ne rattrape pas (données toujours stale après refresh) → appliquer le HARD STOP ci-dessus. NE JAMAIS publier/backtester sur des bars périmés « faute de mieux ».
 

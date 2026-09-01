@@ -15,7 +15,7 @@
             "required": true
           },
           "assert": {
-          "covers_close": "$refdate"
+            "covers_close": "$refdate"
           }
         }
       ]
@@ -31,15 +31,18 @@
             "types": "bars_daily",
             "symbols": "$symbols",
             "start_date": "$startdate",
-            "end_date": "$refdate",
             "limit": 80,
-            "force_async": true
+            "force_async": true,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
           },
           "freshness": {
             "max_age_h": 24,
             "required": true,
             "expects_close": true,
-            "note": "Daily envelope only; never used to infer intraday event order."
+            "note": "Daily envelope only; never used to infer intraday event order.",
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
           }
         },
         {
@@ -68,14 +71,17 @@
             "types": "bars_daily",
             "symbols": "SPY,QQQ,IWM",
             "start_date": "$startdate",
-            "end_date": "$refdate",
             "limit": 80,
-            "force_async": true
+            "force_async": true,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
           },
           "freshness": {
             "max_age_h": 24,
             "required": true,
-            "expects_close": true
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
           }
         }
       ]

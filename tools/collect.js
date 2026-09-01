@@ -23,7 +23,7 @@
  * ── Format du manifeste ─────────────────────────────────────────────────────
  * {
  *   "artifact": "weekly/20260810/index.html",
- *   "reference_date": "2026-08-07",        // contrat de date, propagé en end_date
+ *   "reference_date": "2026-08-07",        // alias historique de la clôture equity
  *   "waves": [
  *     { "name": "marche",
  *       "calls": [
@@ -31,8 +31,11 @@
  *           "args": { "facets": "regime,prediction_markets" },
  *           "freshness": { "max_age_h": 6, "required": true } },
  *         { "as": "bars_indices", "server": "marketdata", "tool": "QueryData",
- *           "args": { "types": "bars_daily", "symbols": "SPY,QQQ,IWM", "end_date": "$refdate" },
- *           "freshness": { "max_age_h": 24, "required": true } }
+ *           "args": { "types": "bars_daily", "symbols": "SPY,QQQ,IWM",
+ *                     "as_of_timestamp": "$as_of_timestamp", "completion_policy": "completed_only" },
+ *           "freshness": { "max_age_h": 24, "required": true, "expects_close": true,
+ *                          "asset_calendar": "us_equity_exchange_sessions",
+ *                          "expected_completed_end": "$refdate" } }
  *       ] },
  *     { "name": "par-ticker",
  *       "from": "bars_indices",              // vague dépendante : barrière avant exécution
@@ -40,8 +43,8 @@
  *   ]
  * }
  *
- * `$refdate` dans n'importe quel argument est remplacé par reference_date : le
- * contrat de date devient structurel au lieu d'être rappelé dans un prompt.
+ * `$as_of_timestamp` est injecté une seule fois par run. Les références de clôture
+ * equity et crypto restent séparées et le contrat de date devient structurel.
  */
 
 const fs = require('fs');
@@ -49,6 +52,7 @@ const path = require('path');
 const { callTool, callMany, awaitJob, canCallDirectly, McpAuthError } = require('./lib/mcp-client');
 const { validateDtxDecision, validateDtxReplay } = require('./lib/dtx-content-gates');
 const workflowContract = require('./lib/workflow-contract');
+const marketdataBarsContract = require('./lib/marketdata-bars-contract');
 const { latestCompletedUSClose } = require('./lib/market-calendar');
 
 const CURRENT_ONLY_TOOLS = new Set(['GetMarketContext', 'GetEarningsCalendarFiltered', 'GetInsiderActivity', 'OptionsAnalytics']);
@@ -121,21 +125,26 @@ function semanticFailure(call, value) {
   if (call.server === 'marketdata' && call.tool === 'GetStatus') {
     const payload = value.result && typeof value.result === 'object' ? value.result : value;
     const readiness = findScalarByKey(payload, 'operation_readiness');
-    const usEquity = readiness && typeof readiness === 'object' ? readiness.bars_daily_us_equity : null;
     const intraday = readiness && typeof readiness === 'object' ? readiness.bars_intraday_15m : null;
-    const expectedClose = call.assert && call.assert.expected_close;
+    const expectedClose = call.assert && (call.assert.equity_reference_close || call.assert.expected_close);
     const coveredClose = call.assert && call.assert.covers_close;
+    const cryptoCompletedRefdate = call.assert && call.assert.crypto_completed_refdate;
+    const secOperation = call.assert && call.assert.sec_operation;
     const expectedIntradayClose = call.assert && call.assert.expected_intraday_close;
-    if (usEquity && typeof usEquity === 'object' && (expectedClose || coveredClose)) {
-      const operationState = String(usEquity.status || '').toLowerCase();
-      if (operationState !== 'ready') return `marketdata US equity daily not ready (${operationState || 'missing status'})`;
-      const actualClose = String(usEquity.served_completed_end || '');
-      if (!actualClose) return 'marketdata GetStatus missing US equity served_completed_end';
-      if (expectedClose && actualClose !== expectedClose) {
-        return `marketdata GetStatus close mismatch (expected ${expectedClose}, got ${actualClose})`;
+    if (expectedClose || cryptoCompletedRefdate || secOperation) {
+      const check = marketdataBarsContract.validateOperationReadiness(value, {
+        equityReferenceClose: expectedClose,
+        equityCoversClose: coveredClose,
+        cryptoCompletedRefdate,
+        secOperation,
+        minimumBuild: marketdataBarsContract.MIN_MARKETDATA_BUILD,
+      });
+      if (check.errors.length) {
+        return `marketdata operation readiness rejected: ${check.errors.join('; ')}${check.retryAt ? `; retry_at=${check.retryAt}` : ''}`;
       }
-      if (coveredClose && actualClose < coveredClose) {
-        return `marketdata GetStatus does not cover historical close (required ${coveredClose}, got ${actualClose})`;
+      if (coveredClose) {
+        const served = String(readiness?.bars_daily_us_equity?.served_completed_end || '');
+        if (served < coveredClose) return `marketdata GetStatus does not cover historical close (required ${coveredClose}, got ${served || 'missing'})`;
       }
       if (expectedIntradayClose) {
         const intradayState = String(intraday && intraday.status || '').toLowerCase();
@@ -152,23 +161,20 @@ function semanticFailure(call, value) {
     if (health.ok === false || health.healthy === false || /down|error|unavailable|degraded/.test(state)) {
       return `marketdata GetStatus unhealthy (${state || 'ok=false'})`;
     }
-    if (expectedClose) {
-      const actualClose = String(findScalarByKey(value, 'bar_service_1d_max_last_bar_date') || '');
-      if (!actualClose) return 'marketdata GetStatus missing bar_service_1d_max_last_bar_date';
-      if (actualClose !== expectedClose) {
-        return `marketdata GetStatus close mismatch (expected ${expectedClose}, got ${actualClose})`;
-      }
-    }
-    if (coveredClose) {
-      const actualClose = String(findScalarByKey(value, 'bar_service_1d_max_last_bar_date') || '');
-      if (!actualClose) return 'marketdata GetStatus missing bar_service_1d_max_last_bar_date';
-      if (actualClose < coveredClose) {
-        return `marketdata GetStatus does not cover historical close (required ${coveredClose}, got ${actualClose})`;
-      }
-    }
     return null;
   }
   if (call.server === 'marketdata' && call.tool === 'QueryData') {
+    if (/(^|,)bars_daily(,|$)/.test(String(call.args?.types || ''))) {
+      const check = marketdataBarsContract.validateQueryData(value, {
+        symbols: call.args?.symbols,
+        assetCalendar: call.freshness?.asset_calendar,
+        expectedCompletedEnd: call.freshness?.expected_completed_end,
+      });
+      if (check.errors.length) {
+        return `marketdata QueryData close contract rejected: ${check.errors.slice(0, 8).join('; ')}${check.retryAt ? `; retry_at=${check.retryAt}` : ''}`;
+      }
+      return null;
+    }
     const failures = [];
     const visit = node => {
       if (!node || typeof node !== 'object') return;
@@ -477,15 +483,26 @@ function socleRead(c) {
       process.exit(2);
     }
   }
-  const refdate = cliVars.refdate || plan.reference_date || null;
+  const collectionTimestamp = new Date().toISOString();
+  const equityReferenceClose = cliVars.equity_reference_close || cliVars.refdate || plan.reference_date || null;
+  const cryptoCompletedRefdate = cliVars.crypto_completed_refdate || cliVars.crypto_refdate || null;
+  const refdate = equityReferenceClose;
   runtimeRefdate = refdate;
-  const vars = { ...(plan.vars || {}), ...cliVars, ...(refdate ? { refdate } : {}) };
+  const vars = {
+    ...(plan.vars || {}),
+    ...cliVars,
+    as_of_timestamp: collectionTimestamp,
+    ...(equityReferenceClose ? { refdate: equityReferenceClose, equity_reference_close: equityReferenceClose } : {}),
+    ...(cryptoCompletedRefdate ? { crypto_refdate: cryptoCompletedRefdate, crypto_completed_refdate: cryptoCompletedRefdate } : {}),
+  };
   if (configured) {
     const runtimeErrors = workflowContract.validateRuntimeVariables(configured.planSpec, vars);
     if (runtimeErrors.length) throw new Error(`Variables runtime invalides: ${runtimeErrors.join('; ')}`);
   }
   if (refdate && !/^\d{4}-\d{2}-\d{2}$/.test(refdate)) throw new Error(`refdate illisible: ${refdate}`);
   if (refdate && refdate > new Date().toISOString().slice(0, 10)) throw new Error(`refdate future interdite: ${refdate}`);
+  if (cryptoCompletedRefdate && !/^\d{4}-\d{2}-\d{2}$/.test(cryptoCompletedRefdate)) throw new Error(`crypto_completed_refdate illisible: ${cryptoCompletedRefdate}`);
+  if (cryptoCompletedRefdate && cryptoCompletedRefdate > new Date().toISOString().slice(0, 10)) throw new Error(`crypto_completed_refdate future interdite: ${cryptoCompletedRefdate}`);
   const artifact = substitute(plan.artifact || '', vars);
   const waves = (plan.waves || []).map(wave => ({ ...wave, calls: expandCalls(wave, vars) }));
   const latestClose = latestCompletedUSClose();
@@ -543,16 +560,18 @@ function socleRead(c) {
   }
 
   fs.mkdirSync(outDir, { recursive: true });
-  const startedAt = new Date().toISOString();
+  const startedAt = collectionTimestamp;
   const journal = {
     contract_version: '1.0',
     workflow: configured ? configured.workflow : null,
     plan: path.relative(workflowContract.ROOT, path.resolve(planPath)).replace(/\\/g, '/'),
     plan_sha256: planSha256,
     input_sha256: inputSha256,
-    resolved_input: { artifact, refdate, waves },
+    resolved_input: { artifact, equity_reference_close: equityReferenceClose, crypto_completed_refdate: cryptoCompletedRefdate, as_of_timestamp: collectionTimestamp, waves },
     artifact,
-    reference_date: refdate,
+    reference_date: equityReferenceClose,
+    equity_reference_close: equityReferenceClose,
+    crypto_completed_refdate: cryptoCompletedRefdate,
     started_at: startedAt,
     waves: [],
   };
@@ -679,17 +698,29 @@ function socleRead(c) {
         if (estDetachee) { log(`   ~ ${r.as} indisponible — vague détachée, non bloquant`); continue; }
         failures++; continue;
       }
-      if (semanticError) {
-        if (estDetachee) { log(`   ~ ${r.as} refusé — ${semanticError} (vague détachée, non bloquant)`); continue; }
-        log(`   ✗ ${r.as} — ${semanticError}`);
-        failures++; continue;
-      }
+      // Persist the complete response before applying semantic gates. A failed
+      // QueryData cell must fail closed, but must never erase the healthy cells
+      // returned in the same batch.
       const sourceBody = JSON.stringify(r.value, null, 2);
       fs.writeFileSync(path.join(outDir, `${r.as}.json`), sourceBody);
       waveLog.calls[i].output_sha256 = workflowContract.sha256(sourceBody);
+      if (semanticError) {
+        waveLog.calls[i].artifact_preserved = true;
+        if (estDetachee) { log(`   ~ ${r.as} refusé — ${semanticError} (réponse conservée, vague détachée)`); continue; }
+        log(`   ✗ ${r.as} — ${semanticError}`);
+        failures++; continue;
+      }
       if (!r.fromCache) cacheWrite(c, r.value);
       if (c.freshness) {
-        const sourceReferenceClose = c.freshness.reference_close || refdate || null;
+        const sourceReferenceClose = c.freshness.expected_completed_end || c.freshness.reference_close || equityReferenceClose || null;
+        const barsProof = c.server === 'marketdata' && c.tool === 'QueryData'
+          && /(^|,)bars_daily(,|$)/.test(String(c.args?.types || ''))
+          ? marketdataBarsContract.validateQueryData(r.value, {
+              symbols: c.args?.symbols,
+              assetCalendar: c.freshness?.asset_calendar,
+              expectedCompletedEnd: sourceReferenceClose,
+            })
+          : null;
         sources.push({
           name: r.as,
           sha256: workflowContract.sha256(sourceBody),
@@ -703,13 +734,18 @@ function socleRead(c) {
           // se présentant comme celui du jour, et rien dans le harnais ne l'aurait dit : l'âge de
           // la collecte et la date du contenu sont deux grandeurs différentes, et seule la
           // première était mesurée.
-          data_through: c.freshness.expects_close ? maxBarDate(r.value) : maxObservedDate(r.value),
+          data_through: c.freshness.expects_close ? barsProof?.completedDataThrough || null : maxObservedDate(r.value),
           max_age_h: c.freshness.max_age_h,
           required: c.freshness.required !== false,
           // Opt-in : cette source DOIT atteindre la clôture de référence. Réservé aux séries de
           // marché — un calendrier économique porte des dates futures, un screener une date
           // d'exécution : leur imposer la clôture produirait de faux blocages.
-          ...(c.freshness.expects_close ? { expects_close: true, reference_close: sourceReferenceClose } : {}),
+          ...(c.freshness.expects_close ? {
+            expects_close: true,
+            reference_close: sourceReferenceClose,
+            asset_calendar: c.freshness.asset_calendar,
+            completion_policy: c.args.completion_policy,
+          } : {}),
           // Un socle partagé ne doit PAS devenir un harnais partagé : chaque produit
           // garde SON harness.json, où la source héritée est nommée comme telle.
           // Sinon on ne sait plus, six mois après, quel article s'appuyait sur quoi.
@@ -765,6 +801,9 @@ function socleRead(c) {
       artifact,
       content: artifact.endsWith('/index.html') ? path.dirname(artifact) : artifact,
       reference_close: refdate,
+      equity_reference_close: equityReferenceClose,
+      crypto_completed_refdate: cryptoCompletedRefdate,
+      marketdata_min_build: marketdataBarsContract.MIN_MARKETDATA_BUILD,
       plan: journal.plan,
       plan_sha256: planSha256,
       input_sha256: inputSha256,

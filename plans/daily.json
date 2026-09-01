@@ -15,7 +15,9 @@
             "required": true
           },
           "assert": {
-            "expected_close": "$refdate"
+            "equity_reference_close": "$equity_reference_close",
+            "crypto_completed_refdate": "$crypto_completed_refdate",
+            "sec_operation": "run_screener_sec_enriched"
           }
         },
         {
@@ -23,7 +25,7 @@
           "server": "systematic",
           "tool": "GetHealth",
           "args": {
-            "expected_close": "$refdate"
+            "expected_close": "$equity_reference_close"
           },
           "freshness": {
             "max_age_h": 2,
@@ -53,8 +55,8 @@
           "server": "systematic",
           "tool": "DtxRegime",
           "args": {
-            "asof": "$refdate",
-            "expected_data_date": "$refdate"
+            "asof": "$equity_reference_close",
+            "expected_data_date": "$equity_reference_close"
           },
           "freshness": {
             "max_age_h": 6,
@@ -68,13 +70,16 @@
           "args": {
             "types": "bars_daily",
             "symbols": "SPY,QQQ,IWM,DIA,GLD,SLV,TLT,USO",
-            "end_date": "$refdate",
-            "limit": 15
+            "limit": 15,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
           },
           "freshness": {
             "max_age_h": 24,
             "required": true,
-            "expects_close": true
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$equity_reference_close"
           }
         },
         {
@@ -84,13 +89,16 @@
           "args": {
             "types": "bars_daily",
             "symbols": "XLK,XLB,XLF,XLE,XLV,XLI,XLY,XLP,XLU,XLC,XLRE",
-            "end_date": "$refdate",
-            "limit": 25
+            "limit": 25,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
           },
           "freshness": {
             "max_age_h": 24,
             "required": true,
-            "expects_close": true
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$equity_reference_close"
           }
         },
         {
@@ -100,14 +108,16 @@
           "args": {
             "types": "bars_daily",
             "symbols": "BTC-USD,ETH-USD,SOL-USD,XRP-USD",
-            "end_date": "$crypto_refdate",
-            "limit": 15
+            "limit": 15,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
           },
           "freshness": {
             "max_age_h": 24,
             "required": true,
             "expects_close": true,
-            "reference_close": "$crypto_refdate"
+            "asset_calendar": "crypto_24_7_utc",
+            "expected_completed_end": "$crypto_completed_refdate"
           }
         }
       ]
@@ -201,7 +211,7 @@
             "facets": "overview",
             "timeout": 90,
             "analysis_depth": "standard",
-            "as_of": "$refdate"
+            "as_of": "$equity_reference_close"
           },
           "freshness": {
             "max_age_h": 6,

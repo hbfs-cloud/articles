@@ -36,13 +36,13 @@ const base = {
   waves: [{
     name: 'preflight',
     gate: true,
-    calls: [{ as: 'status', server: 'marketdata', tool: 'GetStatus', args: {}, assert: { expected_close: '$refdate' }, freshness: { max_age_h: 1, required: true } }],
+    calls: [{ as: 'status', server: 'marketdata', tool: 'GetStatus', args: {}, assert: { equity_reference_close: '$refdate' }, freshness: { max_age_h: 1, required: true } }],
   }, {
     name: 'data',
     calls: [{
       as: 'bars', server: 'marketdata', tool: 'QueryData',
-      args: { types: 'bars_daily', symbols: '$symbols', end_date: '$refdate' },
-      freshness: { max_age_h: 24, required: true, expects_close: true },
+      args: { types: 'bars_daily', symbols: '$symbols', as_of_timestamp: '$as_of_timestamp', completion_policy: 'completed_only' },
+      freshness: { max_age_h: 24, required: true, expects_close: true, asset_calendar: 'us_equity_exchange_sessions', expected_completed_end: '$refdate' },
     }],
   }],
 };
@@ -67,25 +67,34 @@ assert(contract.validateRuntimeVariables({ ...spec, variable_constraints: { symb
 }).length >= 3);
 
 const splitCalendar = structuredClone(base);
-splitCalendar.waves[1].calls[0].args.end_date = '$crypto_refdate';
-splitCalendar.waves[1].calls[0].freshness.reference_close = '$crypto_refdate';
-const splitSpec = { required_variables: ['date', 'refdate', 'crypto_refdate', 'symbols'] };
+splitCalendar.waves[1].calls[0].freshness.asset_calendar = 'crypto_24_7_utc';
+splitCalendar.waves[1].calls[0].freshness.expected_completed_end = '$crypto_completed_refdate';
+const splitSpec = { required_variables: ['date', 'refdate', 'crypto_completed_refdate', 'symbols'] };
 assert.deepStrictEqual(contract.validatePlan(splitCalendar, splitSpec, config.policy), []);
 const mismatchedCalendar = structuredClone(splitCalendar);
-mismatchedCalendar.waves[1].calls[0].args.end_date = '$refdate';
+mismatchedCalendar.waves[1].calls[0].freshness.expected_completed_end = '$refdate';
 assert(
   contract.validatePlan(mismatchedCalendar, splitSpec, config.policy)
-    .some(e => e.includes('end_date must equal freshness.reference_close')),
+    .some(e => e.includes('crypto_24_7_utc must use expected_completed_end=$crypto_completed_refdate')),
   'a per-asset close must bind the query and freshness gate to the same variable',
 );
 
 const stale = structuredClone(base);
 stale.reference_date = '2026-08-01';
-stale.waves[1].calls[0].args.end_date = '2026-08-01';
+stale.waves[1].calls[0].args.as_of_timestamp = '2026-08-01T12:00:00Z';
+stale.waves[1].calls[0].args.start_date = '2026-08-01';
 const staleErrors = contract.validatePlan(stale, spec, config.policy);
 assert(staleErrors.some(e => e.includes('reference_date')));
 assert(staleErrors.some(e => e.includes('hard-coded date')));
-assert(staleErrors.some(e => e.includes('end_date must equal freshness.reference_close')));
+assert(staleErrors.some(e => e.includes('as_of_timestamp must equal $as_of_timestamp')));
+
+const partialBars = structuredClone(base);
+partialBars.waves[1].calls[0].args.include_partial = true;
+assert(contract.validatePlan(partialBars, spec, config.policy).some(e => e.includes('must not request include_partial=true')));
+
+const legacyEndDate = structuredClone(base);
+legacyEndDate.waves[1].calls[0].args.end_date = '$refdate';
+assert(contract.validatePlan(legacyEndDate, spec, config.policy).some(e => e.includes('end_date is forbidden')));
 
 const broker = structuredClone(base);
 broker.waves[1].calls[0].server = 'broker_live';

@@ -72,13 +72,14 @@ function validateRuntimeVariables(rawSpec = {}, vars = {}) {
   for (const name of ['date', 'scandate']) {
     if (name in vars && !/^20\d{6}$/.test(String(vars[name]))) errors.push(`${name} must use YYYYMMDD`);
   }
-  for (const name of ['refdate', 'startdate', 'asof']) {
+  for (const name of ['refdate', 'equity_reference_close', 'crypto_completed_refdate', 'crypto_refdate', 'startdate', 'asof']) {
     if (name in vars && !/^20\d{2}-\d{2}-\d{2}$/.test(String(vars[name]))) errors.push(`${name} must use YYYY-MM-DD`);
   }
   if (vars.request_id != null && !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(vars.request_id))) {
     errors.push('request_id must be a UUID v4');
   }
-  if (vars.startdate && vars.refdate && vars.startdate > vars.refdate) errors.push('startdate must not be after refdate');
+  const equityReferenceClose = vars.equity_reference_close || vars.refdate;
+  if (vars.startdate && equityReferenceClose && vars.startdate > equityReferenceClose) errors.push('startdate must not be after the equity reference close');
   for (const [name, constraint] of Object.entries(spec.variable_constraints)) {
     if (!(name in vars)) continue;
     if (constraint.type !== 'csv') { errors.push(`${name}: unsupported variable constraint type ${constraint.type}`); continue; }
@@ -105,7 +106,10 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
     .map(([server, tools]) => [server, new Set(tools)]));
   const allowedArgs = policy.allowed_args_by_server_tool || {};
   const forbiddenAliases = new Set(policy.forbidden_tool_aliases || []);
-  const declaredVars = new Set([...(Object.keys(plan.vars || {})), ...spec.required_variables]);
+  // Collection time is injected once by collect.js and is intentionally not a
+  // user-supplied workflow variable.
+  const declaredVars = new Set([...(Object.keys(plan.vars || {})), ...spec.required_variables, 'as_of_timestamp']);
+  const equityRef = declaredVars.has('equity_reference_close') ? '$equity_reference_close' : '$refdate';
 
   if (!Array.isArray(plan.waves) || !plan.waves.length) errors.push('waves[] is required');
   if (plan.reference_date != null) errors.push('reference_date must be null/absent in a reusable plan; pass refdate at runtime');
@@ -125,11 +129,11 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
     errors.push('marketdata plans must start with GetStatus in the gate wave');
   }
   if (hasMarketdata && !gateCalls.some(c => c.server === 'marketdata' && c.tool === 'GetStatus' && c.assert
-    && (c.assert.expected_close === '$refdate' || c.assert.covers_close === '$refdate'))) {
-    errors.push('marketdata plans must assert GetStatus expected_close=$refdate or covers_close=$refdate in the gate wave');
+    && (c.assert.equity_reference_close === equityRef || c.assert.expected_close === equityRef || c.assert.covers_close === equityRef))) {
+    errors.push(`marketdata plans must assert GetStatus equity_reference_close=${equityRef} in the gate wave`);
   }
-  if (hasSystematic && !gateCalls.some(c => c.server === 'systematic' && c.tool === 'GetHealth' && c.args && c.args.expected_close === '$refdate')) {
-    errors.push('systematic plans must start with GetHealth(expected_close=$refdate) in the gate wave');
+  if (hasSystematic && !gateCalls.some(c => c.server === 'systematic' && c.tool === 'GetHealth' && c.args && c.args.expected_close === equityRef)) {
+    errors.push(`systematic plans must start with GetHealth(expected_close=${equityRef}) in the gate wave`);
   }
 
   for (const { wave, call } of calls) {
@@ -175,8 +179,8 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
       if (!['stock', 'etf'].includes(String(call.args && call.args.asset || '').toLowerCase())) errors.push(`${label}: ${call.tool} asset must be stock or etf`);
       if (rawSpec.allow_current_screener_cut === true) {
         if (call.args && Object.hasOwn(call.args, 'as_of')) errors.push(`${label}: ${call.tool} as_of must be omitted when current-cut mode is enabled`);
-      } else if (!call.args || call.args.as_of !== '$refdate') {
-        errors.push(`${label}: ${call.tool} as_of must equal $refdate`);
+      } else if (!call.args || call.args.as_of !== equityRef) {
+        errors.push(`${label}: ${call.tool} as_of must equal ${equityRef}`);
       }
       if (call.args.force_async !== true) errors.push(`${label}: ${call.tool} force_async=true is required`);
     }
@@ -196,8 +200,8 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
       const facets = String(call.args?.facets || '').split(',').map(value => value.trim()).filter(Boolean);
       if (facets.includes('overview')) {
         if (facets.length !== 1) errors.push(`${label}: overview must be requested alone`);
-        if (declaredVars.has('refdate') && call.args.as_of !== '$refdate') {
-          errors.push(`${label}: overview as_of must equal $refdate`);
+        if ((declaredVars.has('refdate') || declaredVars.has('equity_reference_close')) && call.args.as_of !== equityRef) {
+          errors.push(`${label}: overview as_of must equal ${equityRef}`);
         }
       } else if (call.args && Object.prototype.hasOwnProperty.call(call.args, 'as_of')) {
         errors.push(`${label}: as_of is supported only for the overview facet`);
@@ -217,13 +221,22 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
     }
     if (call.server === 'marketdata' && call.tool === 'QueryData' && /(^|,)bars_daily(,|$)/.test(String(call.args && call.args.types || ''))) {
       if (!call.freshness || call.freshness.expects_close !== true) errors.push(`${label}: bars_daily must declare freshness.expects_close=true`);
-      const closeRef = call.freshness && call.freshness.reference_close || '$refdate';
+      if (!call.args || call.args.as_of_timestamp !== '$as_of_timestamp') errors.push(`${label}: bars_daily as_of_timestamp must equal $as_of_timestamp`);
+      if (!call.args || call.args.completion_policy !== 'completed_only') errors.push(`${label}: bars_daily completion_policy must equal completed_only`);
+      if (call.args && Object.prototype.hasOwnProperty.call(call.args, 'end_date')) errors.push(`${label}: bars_daily end_date is forbidden; use as_of_timestamp`);
+      if (call.args && call.args.include_partial === true) errors.push(`${label}: bars_daily close gates must not request include_partial=true`);
+      const calendar = call.freshness && call.freshness.asset_calendar;
+      if (!['us_equity_exchange_sessions', 'crypto_24_7_utc'].includes(calendar)) {
+        errors.push(`${label}: bars_daily freshness.asset_calendar must be explicit`);
+      }
+      const closeRef = call.freshness && call.freshness.expected_completed_end;
       const variable = typeof closeRef === 'string' && closeRef.match(/^\$([A-Za-z_][A-Za-z0-9_]*)$/);
       if (!variable || !declaredVars.has(variable[1])) {
-        errors.push(`${label}: freshness.reference_close must be a declared runtime date variable`);
+        errors.push(`${label}: freshness.expected_completed_end must be a declared runtime date variable`);
       }
-      if (!call.args || call.args.end_date !== closeRef) {
-        errors.push(`${label}: bars_daily end_date must equal freshness.reference_close (${closeRef})`);
+      const requiredRef = calendar === 'crypto_24_7_utc' ? '$crypto_completed_refdate' : equityRef;
+      if (closeRef !== requiredRef) {
+        errors.push(`${label}: ${calendar || 'unknown calendar'} must use expected_completed_end=${requiredRef}`);
       }
     }
     if (call.server === 'marketdata' && call.tool === 'QueryData') {
@@ -238,7 +251,7 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
       if (!['alpaca', 'trading212', 'ibkr', 'saxo'].includes(args.broker)) errors.push(`${label}: DtxDecide broker must be explicit and supported`);
       if (!['evening', 'intraday', 'manual'].includes(args.appel)) errors.push(`${label}: DtxDecide appel must be explicit`);
       if (!['alpaca', 'trading212', 'ibkr', 'saxo'].includes(args.broker)) errors.push(`${label}: DtxDecide broker must be explicit and supported`);
-      if (args.expected_data_date !== '$refdate') errors.push(`${label}: DtxDecide expected_data_date must equal $refdate`);
+      if (args.expected_data_date !== equityRef) errors.push(`${label}: DtxDecide expected_data_date must equal ${equityRef}`);
       if (args.request_id !== '$request_id') errors.push(`${label}: DtxDecide request_id must equal $request_id`);
       if (args.consumer_capabilities?.contract_version !== '2.0') errors.push(`${label}: DtxDecide Contract V2 capability is required`);
       if (!Array.isArray(args.positions) || !Array.isArray(args.orders)) errors.push(`${label}: DtxDecide positions/orders must be explicit arrays`);
@@ -246,7 +259,7 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
       if (args.balances?.broker_source !== args.broker) errors.push(`${label}: DtxDecide balances.broker_source must equal broker`);
     }
     if (call.server === 'systematic' && call.tool === 'DtxReplay') {
-      if (!call.args || call.args.to !== '$refdate') errors.push(`${label}: DtxReplay to must equal $refdate`);
+      if (!call.args || call.args.to !== equityRef) errors.push(`${label}: DtxReplay to must equal ${equityRef}`);
       if (call.args.equity_full !== true) errors.push(`${label}: DtxReplay must request equity_full=true`);
     }
     for (const key of ['symbol', 'symbols']) {
@@ -273,6 +286,7 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
 
   const usedVars = collectVariables({ artifact: plan.artifact, waves: plan.waves });
   usedVars.delete('item');
+  usedVars.delete('as_of_timestamp');
   for (const name of usedVars) if (!declaredVars.has(name)) errors.push(`variable $${name} is used but not declared by the plan contract`);
   for (const name of spec.required_variables) if (!usedVars.has(name)) errors.push(`required variable $${name} is declared but unused`);
   for (const name of Object.keys(spec.variable_constraints)) if (!spec.required_variables.includes(name)) errors.push(`variable constraint ${name} is not a required variable`);

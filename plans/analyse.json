@@ -15,7 +15,7 @@
             "required": true
           },
           "assert": {
-            "expected_close": "$refdate"
+            "equity_reference_close": "$refdate"
           }
         }
       ]
@@ -43,13 +43,16 @@
           "args": {
             "types": "bars_daily",
             "symbols": "$symbol",
-            "end_date": "$refdate",
-            "limit": 260
+            "limit": 260,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
           },
           "freshness": {
             "max_age_h": 24,
             "required": true,
-            "expects_close": true
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
           }
         },
         {
@@ -114,15 +117,18 @@
             "types": "bars_daily",
             "symbols": "$comparison_symbols",
             "start_date": "$comparison_start_date",
-            "end_date": "$refdate",
             "limit": 180,
             "include_partial": false,
-            "force_async": true
+            "force_async": true,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
           },
           "freshness": {
             "max_age_h": 24,
             "required": true,
-            "expects_close": true
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
           }
         },
         {
@@ -133,16 +139,19 @@
             "types": "bars_daily",
             "symbols": "$documented_client_symbols",
             "start_date": "$comparison_start_date",
-            "end_date": "$refdate",
             "limit": 180,
             "include_partial": false,
-            "force_async": true
+            "force_async": true,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
           },
           "freshness": {
             "max_age_h": 24,
             "required": true,
             "expects_close": true,
-            "note": "Economically documented clients are explicit inputs; they are not inferred from correlation."
+            "note": "Economically documented clients are explicit inputs; they are not inferred from correlation.",
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
           }
         },
         {

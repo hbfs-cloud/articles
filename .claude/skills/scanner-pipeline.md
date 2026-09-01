@@ -66,11 +66,14 @@ The script validates freshness and run provenance immediately after each collect
 
 ## Date and Freshness Contract
 
-- Every `bars_daily` call uses `end_date=$refdate` and `freshness.expects_close=true`.
+- Every `bars_daily` call uses the run-scoped `$as_of_timestamp`,
+  `completion_policy="completed_only"`, an explicit `asset_calendar`, and
+  `freshness.expected_completed_end`; `end_date` is forbidden for close certification.
 - Every systematic plan starts with `GetHealth(expected_close=$refdate)` and fails on `ok=false`,
   `freshness_ok=false` or `behind_expected=true`.
 - Every async marketdata job is polled once and paginated to exhaustion by `mcp-client.js`.
-- A harness carries resolved artifact, `reference_close`, plan SHA-256 and normalized input SHA-256.
+- A harness carries resolved artifact, `equity_reference_close`, any distinct
+  `crypto_completed_refdate`, plan SHA-256 and normalized input SHA-256.
 - Run `check-freshness.js` without `--warn-only`; a collected-at timestamp does not prove the referenced
   close, so `data_through` must reach `refdate`.
 

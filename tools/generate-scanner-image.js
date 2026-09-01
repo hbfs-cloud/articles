@@ -73,15 +73,10 @@ function addBusinessDays(dateStr, days) {
   return d.toISOString().slice(0, 10);
 }
 
-function fetchUrl(url) {
-  return new Promise((resolve) => {
-    const opts = { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 10000 };
-    https.get(url, opts, (res) => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => resolve(data));
-    }).on('error', () => resolve(null)).on('timeout', () => resolve(null));
-  });
+function formatFrenchDate(date, options = {}) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return 'date indisponible';
+  const rendered = new Intl.DateTimeFormat('fr-FR', options).format(date);
+  return rendered.replace(/\b1 (?=[a-zéû])/i, '1er ');
 }
 
 // ─── Extract top3 from scan HTML ─────────────────────────────────────────────
@@ -110,13 +105,15 @@ function extractTop3(scanDir) {
     if (s.entry == null || s.stop == null || s.tp1 == null) continue;
     trades.push({
       ticker: s.ticker,
+      name: s.name || s.ticker,
       strategy,
-      score: s.score || 85,
+      score: s.score ?? null,
       entry: s.entry,
       stop: s.stop,
       tp1: s.tp1,
       tp2: s.tp2 || null,
       rr: s.rr || 'n/a',
+      completed_end: s.selection_evidence?.screen_snapshot_as_of || null,
     });
   }
 
@@ -151,56 +148,79 @@ function extractRegime(scanDir) {
   return { label, color: colors[label] || '#64748b' };
 }
 
-// ─── Fetch FinViz chart as base64 ────────────────────────────────────────────
-// Direct PNG fetch — no Puppeteer needed. FinViz returns a chart image directly.
-// URL pattern: https://finviz.com/chart.ashx?t=TICKER&ty=c&ta=1&p=d&s=l
-// ty=c (candle), ta=1 (with technicals: SMA50/200, RSI, MACD, Volume), p=d (daily), s=l (large)
+// ─── Certified local charts ──────────────────────────────────────────────────
+// Notification cards must be reproducible and must not become blank when a
+// third-party chart CDN redirects, rate-limits or changes markup. Use the
+// already collected Marketdata bars, bounded to the scanner reference close.
 
-function fetchChartBase64(ticker) {
-  return new Promise((resolve) => {
-    const url = `https://finviz.com/chart.ashx?t=${ticker}&ty=c&ta=1&p=d&s=l`;
-    const opts = {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Referer': 'https://finviz.com/',
-      },
-      timeout: 10000,
-    };
-    https.get(url, opts, (res) => {
-      // Handle redirects. FinViz renvoie un Location RELATIF ("/chart?t=JCI&…") : le passer tel quel
-      // à https.get lève un ERR_INVALID_URL synchrone, hors du handler .on('error'), qui tue le process.
-      // On le résout donc contre l'URL d'origine avant de suivre.
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        let next;
-        try { next = new URL(res.headers.location, url).href; }
-        catch { return resolve(null); }
-        https.get(next, opts, (res2) => {
-          const chunks = [];
-          res2.on('data', c => chunks.push(c));
-          res2.on('end', () => {
-            const buf = Buffer.concat(chunks);
-            if (buf.length > 1000) {
-              resolve('data:image/png;base64,' + buf.toString('base64'));
-            } else {
-              resolve(null);
-            }
-          });
-        }).on('error', () => resolve(null));
-        return;
-      }
-      const chunks = [];
-      res.on('data', c => chunks.push(c));
-      res.on('end', () => {
-        const buf = Buffer.concat(chunks);
-        // Sanity check: a real chart PNG is > 1KB
-        if (buf.length > 1000) {
-          resolve('data:image/png;base64,' + buf.toString('base64'));
-        } else {
-          resolve(null);
-        }
-      });
-    }).on('error', () => resolve(null)).on('timeout', () => resolve(null));
-  });
+function findBarsForSymbol(value, ticker) {
+  let found = null;
+  const visit = node => {
+    if (found || !node || typeof node !== 'object') return;
+    if (Array.isArray(node)) { node.forEach(visit); return; }
+    if (String(node.symbol || node.instrument_id || '').toUpperCase() === ticker.toUpperCase() && Array.isArray(node.bars)) {
+      found = node.bars;
+      return;
+    }
+    Object.values(node).forEach(visit);
+  };
+  visit(value);
+  return found;
+}
+
+function loadLocalBars(scanDir, ticker, completedEnd) {
+  for (const subdir of ['_data2', '_data2_candidates']) {
+    const dir = path.join(SCANNER_DIR, scanDir, subdir);
+    let files = [];
+    try { files = fs.readdirSync(dir).filter(name => /^bars_.*\.json$/.test(name)).sort(); }
+    catch (_) { continue; }
+    for (const file of files) {
+      let payload;
+      try { payload = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')); }
+      catch (_) { continue; }
+      const bars = findBarsForSymbol(payload, ticker);
+      if (!bars) continue;
+      return bars
+        .map(row => Array.isArray(row) ? row : [row.date || row.time, row.open, row.high, row.low, row.close, row.volume])
+        .filter(row => /^20\d{2}-\d{2}-\d{2}$/.test(String(row[0])) && (!completedEnd || row[0] <= completedEnd)
+          && row.slice(1, 5).every(value => Number.isFinite(Number(value))))
+        .slice(-42);
+    }
+  }
+  return [];
+}
+
+function candleChart(bars, color) {
+  if (!Array.isArray(bars) || bars.length < 2) {
+    return `<div style="width:100%;height:110px;background:#f8fafc;border-radius:6px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;border:1px solid #e2e8f0;font-size:10px;color:#64748b;font-weight:700">Graphique indisponible · aucune clôture certifiée</div>`;
+  }
+  const width = 300, height = 110, left = 6, right = 48, top = 7, bottom = 18;
+  const highs = bars.map(row => Number(row[2]));
+  const lows = bars.map(row => Number(row[3]));
+  const min = Math.min(...lows), max = Math.max(...highs), range = max - min || 1;
+  const plotW = width - left - right, plotH = height - top - bottom;
+  const xStep = plotW / bars.length;
+  const y = value => top + (max - Number(value)) / range * plotH;
+  const candles = bars.map((row, index) => {
+    const [, open, high, low, close] = row.map((value, i) => i ? Number(value) : value);
+    const x = left + (index + 0.5) * xStep;
+    const up = close >= open;
+    const candleColor = up ? '#059669' : '#dc2626';
+    const bodyY = Math.min(y(open), y(close));
+    const bodyH = Math.max(1.3, Math.abs(y(open) - y(close)));
+    return `<line x1="${x.toFixed(1)}" y1="${y(high).toFixed(1)}" x2="${x.toFixed(1)}" y2="${y(low).toFixed(1)}" stroke="${candleColor}" stroke-width="0.8"/><rect x="${(x - Math.max(1, xStep * .31)).toFixed(1)}" y="${bodyY.toFixed(1)}" width="${Math.max(2, xStep * .62).toFixed(1)}" height="${bodyH.toFixed(1)}" rx="0.5" fill="${candleColor}"/>`;
+  }).join('');
+  const last = bars[bars.length - 1];
+  const firstDate = formatFrenchDate(new Date(`${bars[0][0]}T12:00:00Z`), { day: 'numeric', month: 'short' });
+  const lastDate = formatFrenchDate(new Date(`${last[0]}T12:00:00Z`), { day: 'numeric', month: 'short' });
+  return `<svg viewBox="0 0 ${width} ${height}" style="width:100%;height:110px;background:#f8fafc;border-radius:6px;margin-bottom:8px;display:block;border:1px solid #e2e8f0" role="img" aria-label="Chandeliers quotidiens jusqu’au ${lastDate}">
+    <rect width="${width}" height="${height}" fill="#f8fafc"/>
+    ${[0.25, 0.5, 0.75].map(ratio => `<line x1="${left}" y1="${(top + plotH * ratio).toFixed(1)}" x2="${width - right}" y2="${(top + plotH * ratio).toFixed(1)}" stroke="#e2e8f0" stroke-width="0.7"/>`).join('')}
+    ${candles}
+    <line x1="${width - right + 3}" y1="${y(last[4]).toFixed(1)}" x2="${width - 4}" y2="${y(last[4]).toFixed(1)}" stroke="${color}" stroke-width="1" stroke-dasharray="2 2"/>
+    <text x="${width - 4}" y="${Math.max(10, y(last[4]) - 2).toFixed(1)}" text-anchor="end" font-size="8" font-weight="700" fill="${color}">${Number(last[4]).toFixed(2)}</text>
+    <text x="${left}" y="${height - 5}" font-size="7" fill="#64748b">${firstDate}</text><text x="${width - right}" y="${height - 5}" text-anchor="end" font-size="7" fill="#64748b">${lastDate} · clôturée</text>
+  </svg>`;
 }
 
 // ─── Generate HTML for the image ─────────────────────────────────────────────
@@ -214,6 +234,8 @@ function generateHTML({ top3, metrics, positions, portfolio, regime, scanDir, ye
 
   function spark(vals, color, w, h) {
     w = w || 120; h = h || 26;
+    vals = Array.isArray(vals) ? vals.filter(Number.isFinite) : [];
+    if (vals.length < 2) return `<div style="height:${h}px;display:flex;align-items:center;color:#94a3b8;font-size:7px">Série indisponible</div>`;
     const max = Math.max(...vals), min = Math.min(...vals), range = max - min || 1;
     const pts = vals.map((v, i) => [
       (i / (vals.length - 1)) * w,
@@ -231,10 +253,16 @@ function generateHTML({ top3, metrics, positions, portfolio, regime, scanDir, ye
   const openPos = (positions || []).slice().sort((a, b) => a.ticker.localeCompare(b.ticker));
   for (let i = 0; i < openPos.length; i += 5) posGrid.push(openPos.slice(i, i + 5));
 
-  const equityHist = metrics.portfolio_history || [0, 0.5, 1.0, 1.8, 2.3, 2.8, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, metrics.return_total || 8.7];
-  const ddHist = metrics.drawdown_history || [0, -0.1, -0.2, -0.5, -0.8, -1.0, -0.8, -0.6, -0.4, -0.2, -0.3, -0.2, -0.1, -0.2, -0.1, -0.1, 0, 0, 0, metrics.max_drawdown || -1.0];
+  const equityHist = Array.isArray(metrics.portfolio_history) ? metrics.portfolio_history : [];
+  const ddHist = Array.isArray(metrics.drawdown_history) ? metrics.drawdown_history : [];
 
-  const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const scanDate = new Date(`${scanDir.slice(0, 4)}-${scanDir.slice(4, 6)}-${scanDir.slice(6, 8)}T12:00:00Z`);
+  const today = formatFrenchDate(scanDate, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const metricsEnd = metrics.updated_at ? new Date(metrics.updated_at) : scanDate;
+  const metricsStart = Number.isFinite(metrics.total_days) ? new Date(metricsEnd.getTime() - metrics.total_days * 86400000) : null;
+  const metricsPeriod = metricsStart
+    ? `${formatFrenchDate(metricsStart, { day: 'numeric', month: 'short' })} → ${formatFrenchDate(metricsEnd, { day: 'numeric', month: 'short', year: 'numeric' })}`
+    : 'période indisponible';
   const scanUrl = `https://articles.dailytickers.com/scanner/${scanDir}/`;
 
   return `<!DOCTYPE html>
@@ -262,9 +290,9 @@ body { background:#f8fafc; font-family:-apple-system,BlinkMacSystemFont,"Segoe U
     </div>
   </div>
   <div style="text-align:right">
-    <div style="color:#94a3b8;font-size:9px">Hier · Top 3</div>
+    <div style="color:#94a3b8;font-size:9px">Scan précédent · Top 3</div>
     <div style="color:#e2e8f0;font-size:10px;line-height:1.9;margin-top:2px">
-      ${(yesterday || []).map(t => `${t.ticker} <span style="color:${t.ret > 0 ? '#86efac' : '#f87171'}">${t.ret > 0 ? '+' : ''}${t.ret}%</span>`).join(' · ')}
+      ${(yesterday || []).map(t => t.ticker).join(' · ') || 'Indisponible'}
     </div>
   </div>
 </div>
@@ -275,7 +303,7 @@ body { background:#f8fafc; font-family:-apple-system,BlinkMacSystemFont,"Segoe U
   ${[
     ['📋 Méthode', 'Max 5 pos. · 1/30 capital · Stop obligatoire à l\'ouverture J+1 (15h30 Paris)'],
     ['🔄 Rotation', 'Scan 22h → Exec J+1 open · Sans cash : Sell J+1 → Cash J+2 → Buy J+3'],
-    ['📊 Stats', 'Depuis D0 (15 fév) · Return = MtM réalisé + positions ouvertes · Short Squeeze exclu'],
+    ['📊 Stats', `${metricsPeriod} · Return = réalisé + positions ouvertes MtM · exécution proxy`],
     ['⚡ Signal', '🟢 >+2%  🟡 Neutre  🔴 <−3% ou proche SL'],
   ].map(([t, d]) => `<span style="font-size:8px;color:#64748b"><strong style="color:#374151">${t}</strong> : ${d}</span>`).join('<span style="color:#cbd5e1">|</span>')}
 </div>
@@ -289,9 +317,7 @@ body { background:#f8fafc; font-family:-apple-system,BlinkMacSystemFont,"Segoe U
 </div>
 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
 ${top3.map(t => {
-  const chartEl = t.chart_b64
-    ? `<img src="${t.chart_b64}" style="width:100%;height:110px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block;border:1px solid #f1f5f9"/>`
-    : `<div style="width:100%;height:110px;background:${t.color}10;border-radius:6px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;border:1px solid ${t.color}30;font-size:12px;color:${t.color};font-weight:700">${t.ticker} · Daily</div>`;
+  const chartEl = candleChart(t.bars, t.color);
   return `
 <div style="background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);border:1px solid #e2e8f0">
   <div style="height:4px;background:${t.color}"></div>
@@ -301,13 +327,13 @@ ${top3.map(t => {
         <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
           <span style="background:${t.color};color:white;font-weight:800;font-size:9px;padding:2px 7px;border-radius:4px">#${t.rank}</span>
           <span style="font-weight:800;font-size:17px;color:#0f172a">${t.ticker}</span>
-          <span style="font-size:9px;color:#94a3b8">${t.name}</span>
+          <span style="font-size:9px;color:#64748b;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.name !== t.ticker ? t.name : ''}</span>
         </div>
         <div style="display:flex;gap:4px;align-items:center">
           <span style="background:${t.color}18;color:${t.color};font-size:9px;padding:1px 6px;border-radius:8px;border:1px solid ${t.color}40">${t.strategy}</span>
         </div>
       </div>
-      <div style="background:${t.color}18;border:2px solid ${t.color};color:${t.color};font-weight:900;font-size:18px;width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center">${t.score}</div>
+      <div style="background:${t.color}18;border:2px solid ${t.color};color:${t.color};font-weight:900;font-size:${String(t.score ?? '').length > 2 ? '15px' : '18px'};min-width:46px;height:38px;padding:0 5px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums">${t.score ?? 'N/D'}</div>
     </div>
     ${chartEl}
     <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:2px">
@@ -354,18 +380,18 @@ ${(portfolio || []).map(p => {
 <!-- CAPITAL -->
 <div style="background:white;border-radius:10px;padding:10px;box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid #e2e8f0">
   <div style="font-size:9px;font-weight:700;color:#475569;margin-bottom:6px">Capital</div>
-  ${[['Déployé', metrics.working_capital_pct || 86.7, '#3b82f6'],['Attente', metrics.pending_orders_pct || 13.3, '#f59e0b'],['Libre', metrics.available_cash_pct || 0, '#94a3b8']].map(([l,v,c]) => `
+  ${[['Déployé', metrics.working_capital_pct, '#3b82f6'],['Attente', metrics.pending_orders_pct, '#f59e0b'],['Libre', metrics.available_cash_pct, '#94a3b8']].map(([l,v,c]) => `
   <div style="margin-bottom:5px">
     <div style="display:flex;justify-content:space-between;margin-bottom:2px">
       <span style="font-size:8px;color:#64748b">${l}</span>
-      <span style="font-weight:700;font-size:9px;color:${c}">${v}%</span>
+      <span style="font-weight:700;font-size:9px;color:${c}">${Number.isFinite(v) ? `${v}%` : 'N/D'}</span>
     </div>
     <div style="background:#f1f5f9;border-radius:3px;height:4px">
-      <div style="background:${c};height:100%;width:${Math.min(100, v)}%;border-radius:3px"></div>
+      <div style="background:${c};height:100%;width:${Number.isFinite(v) ? Math.min(100, Math.max(0, v)) : 0}%;border-radius:3px"></div>
     </div>
   </div>`).join('')}
   <div style="background:${metrics.available_cash_pct > 5 ? '#f0fdf4' : '#fef2f2'};border-radius:4px;padding:3px 5px;font-size:7px;color:${metrics.available_cash_pct > 5 ? '#059669' : '#dc2626'};font-weight:600;margin-top:3px;text-align:center">
-    ${metrics.available_cash_pct > 5 ? '✅ Rotation J+1 possible' : '⚠️ 0% libre → Rotation J+3'}
+    ${!Number.isFinite(metrics.available_cash_pct) ? 'Capital indisponible' : metrics.available_cash_pct > 5 ? '✅ Rotation J+1 possible' : '⚠️ 0% libre → Rotation J+3'}
   </div>
 </div>
 </div>
@@ -373,53 +399,53 @@ ${(portfolio || []).map(p => {
 <!-- STATS DEPUIS D0 -->
 <div style="font-size:9px;font-weight:700;color:#475569;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px">
   <span style="width:3px;height:14px;background:#22c55e;border-radius:2px;display:inline-block"></span>
-  PERFORMANCES DEPUIS D0 (15 FÉV 2026) · ${metrics.total_days || 34}j · ${metrics.scans_count || 23} SCANS · MODÈLE OPTIMAL
+  SUIVI ${metricsPeriod.toUpperCase()} · ${metrics.total_days ?? 'N/D'} JOURS · ${metrics.scans_count ?? 'N/D'} SCANS · PROXY QUOTIDIEN, EXÉCUTION NON VÉRIFIÉE
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1.8fr;gap:8px;margin-bottom:14px">
 
   <div style="background:white;border-radius:10px;padding:11px 13px;box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid #e2e8f0">
     <div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">Realized P&L (closed)</div>
-    <div style="font-weight:900;font-size:28px;color:${(metrics.return_realized || 0) >= 0 ? '#059669' : '#dc2626'};line-height:1.1">${(metrics.return_realized || 0) > 0 ? '+' : ''}${metrics.return_realized != null ? metrics.return_realized : (metrics.return_30d_closed_only || 0)}%</div>
-    <div style="font-size:8px;color:#64748b;margin-bottom:2px">Unrealized (open MtM): <strong style="color:${(metrics.return_unrealized || 0) >= 0 ? '#059669' : '#dc2626'}">${(metrics.return_unrealized || 0) > 0 ? '+' : ''}${metrics.return_unrealized || 0}%</strong></div>
-    ${spark(equityHist, '#22c55e', 190, 22)}
-    <div style="font-size:7px;color:#94a3b8;margin-top:2px">15 fév → aujourd'hui</div>
+    <div style="font-weight:900;font-size:28px;color:${metrics.return_realized == null ? '#64748b' : metrics.return_realized >= 0 ? '#059669' : '#dc2626'};line-height:1.1">${metrics.return_realized == null ? 'N/D' : `${metrics.return_realized > 0 ? '+' : ''}${metrics.return_realized}%`}</div>
+    <div style="font-size:8px;color:#64748b;margin-bottom:2px">Unrealized (open MtM): <strong style="color:${metrics.return_unrealized == null ? '#64748b' : metrics.return_unrealized >= 0 ? '#059669' : '#dc2626'}">${metrics.return_unrealized == null ? 'N/D' : `${metrics.return_unrealized > 0 ? '+' : ''}${metrics.return_unrealized}%`}</strong></div>
+    ${spark(equityHist, (metrics.return_total ?? 0) >= 0 ? '#059669' : '#dc2626', 190, 22)}
+    <div style="font-size:7px;color:#94a3b8;margin-top:2px">${equityHist.length} observations ordonnées par idée</div>
   </div>
 
   <div style="background:white;border-radius:10px;padding:11px 13px;box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid #e2e8f0">
     <div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">Max Drawdown</div>
-    <div style="font-weight:900;font-size:28px;color:#ef4444;line-height:1.1">${metrics.max_drawdown || -1.0}%</div>
-    <div style="font-size:8px;color:#059669;margin-bottom:4px">Ratio R/DD : <strong>${metrics.return_dd_ratio || '8.7'}×</strong></div>
+    <div style="font-weight:900;font-size:28px;color:#ef4444;line-height:1.1">${metrics.max_drawdown != null ? `${metrics.max_drawdown}%` : 'N/D'}</div>
+    <div style="font-size:8px;color:#64748b;margin-bottom:4px">Ratio R/DD : <strong>${metrics.return_dd_ratio != null ? `${metrics.return_dd_ratio}×` : 'N/D'}</strong></div>
     ${spark(ddHist, '#ef4444', 190, 28)}
   </div>
 
   <div style="background:white;border-radius:10px;padding:11px 13px;box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid #e2e8f0">
     <div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">Win Rate</div>
-    <div style="font-weight:900;font-size:28px;color:#0f172a;line-height:1.1">${metrics.win_rate || 64}%</div>
-    <div style="font-size:8px;color:#94a3b8;margin-bottom:6px">${metrics.trades_closed || 31} trades résolus</div>
+    <div style="font-weight:900;font-size:28px;color:#0f172a;line-height:1.1">${metrics.win_rate != null ? `${metrics.win_rate}%` : 'N/D'}</div>
+    <div style="font-size:8px;color:#94a3b8;margin-bottom:6px">${metrics.trades_closed ?? 'N/D'} trades résolus</div>
     <div style="display:flex;gap:3px;flex-wrap:wrap">
-      <span style="background:#ecfdf5;color:#059669;font-size:7px;font-weight:700;padding:2px 5px;border-radius:4px">✅ ${metrics.tp1_count || 6} TP1</span>
-      <span style="background:#ecfdf5;color:#047857;font-size:7px;font-weight:700;padding:2px 5px;border-radius:4px">🎯 ${metrics.tp2_count || 5} TP2</span>
-      <span style="background:#fef2f2;color:#dc2626;font-size:7px;font-weight:700;padding:2px 5px;border-radius:4px">❌ ${metrics.sl_count || 16} SL</span>
+      <span style="background:#ecfdf5;color:#059669;font-size:7px;font-weight:700;padding:2px 5px;border-radius:4px">✅ ${metrics.tp1_count ?? 'N/D'} TP1</span>
+      <span style="background:#ecfdf5;color:#047857;font-size:7px;font-weight:700;padding:2px 5px;border-radius:4px">🎯 ${metrics.tp2_count ?? 'N/D'} TP2</span>
+      <span style="background:#fef2f2;color:#dc2626;font-size:7px;font-weight:700;padding:2px 5px;border-radius:4px">❌ ${metrics.sl_count ?? 'N/D'} SL</span>
     </div>
   </div>
 
   <div style="background:white;border-radius:10px;padding:11px 13px;box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid #e2e8f0">
     <div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">Profit Factor</div>
-    <div style="font-weight:900;font-size:28px;color:#0f172a;line-height:1.1">${metrics.profit_factor || '2.0'}×</div>
+    <div style="font-weight:900;font-size:28px;color:#0f172a;line-height:1.1">${metrics.profit_factor != null ? `${metrics.profit_factor}×` : 'N/D'}</div>
     <div style="font-size:8px;color:#94a3b8;margin-bottom:6px">Gains / Pertes</div>
-    <div style="font-size:8px;color:#64748b">Win moy : <strong style="color:#059669">+${metrics.avg_win_pct || 11.6}%</strong></div>
-    <div style="font-size:8px;color:#64748b">Loss moy : <strong style="color:#ef4444">${metrics.avg_loss_pct || -5.8}%</strong></div>
+    <div style="font-size:8px;color:#64748b">Win moy : <strong style="color:#059669">${metrics.avg_win_pct != null ? `+${metrics.avg_win_pct}%` : 'N/D'}</strong></div>
+    <div style="font-size:8px;color:#64748b">Loss moy : <strong style="color:#ef4444">${metrics.avg_loss_pct != null ? `${metrics.avg_loss_pct}%` : 'N/D'}</strong></div>
   </div>
 
   <!-- Equity curve large -->
   <div style="background:white;border-radius:10px;padding:11px 13px;box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid #e2e8f0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-      <span style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">Courbe equity depuis D0</span>
-      <span style="font-size:9px;font-weight:700;color:${((metrics.return_realized || 0) + (metrics.return_unrealized || 0)) >= 0 ? '#059669' : '#dc2626'}">Base 100 → ${(100 + (metrics.return_realized || 0) + (metrics.return_unrealized || 0)).toFixed(1)} <span style="color:#94a3b8;font-weight:500">(realized ${(metrics.return_realized || 0) > 0 ? '+' : ''}${metrics.return_realized || 0}%)</span></span>
+      <span style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">Trajectoire cumulée par idée</span>
+      <span style="font-size:9px;font-weight:700;color:${metrics.return_total == null ? '#64748b' : metrics.return_total >= 0 ? '#059669' : '#dc2626'}">${metrics.return_total == null ? 'Base 100 → N/D' : `Base 100 → ${(100 + metrics.return_total).toFixed(1)}`} <span style="color:#94a3b8;font-weight:500">${metrics.return_realized == null ? '(réalisé N/D)' : `(réalisé ${metrics.return_realized > 0 ? '+' : ''}${metrics.return_realized}%)`}</span></span>
     </div>
-    ${spark(equityHist.map(v => 100 + v), '#22c55e', 370, 50)}
+    ${spark(equityHist.map(v => 100 + v), (metrics.return_total ?? 0) >= 0 ? '#059669' : '#dc2626', 370, 50)}
     <div style="display:flex;justify-content:space-between;margin-top:3px;font-size:7px;color:#cbd5e1">
-      <span>15 fév</span><span>1 mars</span><span>10 mars</span><span>20 mars</span>
+      <span>Départ</span><span>${Math.floor(equityHist.length / 3)} obs.</span><span>${Math.floor(equityHist.length * 2 / 3)} obs.</span><span>${equityHist.length} obs.</span>
     </div>
   </div>
 </div>
@@ -451,7 +477,7 @@ ${posGrid.map(row => `
 <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 2px;border-top:1px solid #e2e8f0">
   <div style="font-size:7px;color:#94a3b8;line-height:1.6">
     <strong style="color:#475569">⚠️ Pas un conseil financier.</strong> Usage éducatif. Return = MtM réalisé + positions ouvertes depuis D0.
-    Charts: StockCharts.com · Données: Yahoo Finance · Modèle: Top 5 · Rotation max 2/j · Sans SQ · Anti-doublon
+    Charts: barres Marketdata certifiées · Suivi: proxy daily non vérifié en 15 min · Modèle: Top 5 · Rotation max 2/j · Sans SQ
   </div>
   <div style="text-align:right;flex-shrink:0;margin-left:10px">
     <div style="font-size:9px;font-weight:700;color:#374151">articles.dailytickers.com/scanner/${scanDir}/</div>
@@ -615,20 +641,18 @@ async function main() {
   const top3raw = extractTop3(scanDir);
   const regime = extractRegime(scanDir);
 
-  // Add chart images
-  console.log('Fetching charts...');
-  const top3 = await Promise.all(top3raw.map(async (t, i) => {
-    const chartB64 = await fetchChartBase64(t.ticker);
+  // Build charts from the close-bounded Marketdata artifacts collected for this scan.
+  console.log('Building certified local charts...');
+  const top3 = top3raw.map((t, i) => {
     const colors = ['#059669', '#2563eb', '#7c3aed'];
     return {
       ...t,
       rank: i + 1,
-      name: t.ticker, // Will be enhanced with full name in future
       color: colors[i],
       horizon_days: t.horizon_days || '10–20',
-      chart_b64: chartB64,
+      bars: loadLocalBars(scanDir, t.ticker, t.completed_end),
     };
-  }));
+  });
 
   // Yesterday top3 (previous scan)
   const allScanDirs = fs.readdirSync(SCANNER_DIR)
@@ -636,11 +660,11 @@ async function main() {
   const prevDir = allScanDirs[1];
   const yesterday = prevDir ? extractTop3(prevDir).slice(0, 3).map(t => ({
     ticker: t.ticker,
-    ret: 0, // Would need actual price data
   })) : [];
 
   // Generate HTML
-  const html = generateHTML({ top3, metrics, positions, portfolio, regime, scanDir, yesterday });
+  const html = generateHTML({ top3, metrics, positions, portfolio, regime, scanDir, yesterday })
+    .replace(/[ \t]+$/gm, '');
 
   // Save HTML for debugging
   const htmlPath = path.join(ROOT, 'scanner-daily-card.html');
