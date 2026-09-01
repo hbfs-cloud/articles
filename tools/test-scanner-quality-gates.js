@@ -101,22 +101,34 @@ assert(
   'served DTX snapshot may only be rejected when the curve/metric drawdown mismatch is material',
 );
 assert.strictEqual(dtxBest.decisionProvenance.contractVersion, '2.0', 'DTX best decision must retain Contract V2 provenance');
-assert(dtxBest.decisionProvenance.planId && dtxBest.decisionProvenance.validFrom && dtxBest.decisionProvenance.validUntil, 'DTX best decision provenance incomplete');
-const planFrom = Date.parse(dtxBest.decisionProvenance.validFrom);
-const planUntil = Date.parse(dtxBest.decisionProvenance.validUntil);
-assert.strictEqual(isPlanActive(dtxBest.decisionProvenance, dtxBest.executionPlan, planFrom - 1), false, 'DTX plan active before validFrom');
-assert.strictEqual(isPlanActive(dtxBest.decisionProvenance, dtxBest.executionPlan, planFrom), true, 'DTX plan inactive at validFrom');
-assert.strictEqual(isPlanActive(dtxBest.decisionProvenance, dtxBest.executionPlan, planUntil), true, 'DTX plan inactive at validUntil');
-assert.strictEqual(isPlanActive(dtxBest.decisionProvenance, dtxBest.executionPlan, planUntil + 1), false, 'DTX plan active after validUntil');
-assert.strictEqual(dtxBest.executionPlan.source, 'execution_plan.groups', 'DTX V2 ingestion must not consume actions.CREATE');
-const dtxHistory = read('data/dtx-engine-history.json');
-const historicalDecision = dtxHistory.modes.best['2026-08-31'];
-assert.deepStrictEqual(historicalDecision.decisionProvenance, dtxBest.decisionProvenance, 'DTX V2 provenance must survive history persistence');
-assert.strictEqual(historicalDecision.executionPlan.source, 'execution_plan.groups', 'DTX V2 source must survive history persistence');
-const dtxValidDate = dtxBest.decisionProvenance.validFrom.slice(0, 10);
-const rawScan = read('scanner/20260831/signals.json');
-if (dtxValidDate !== rawScan.scanDate) {
-  assert.strictEqual((rawScan.dtx_pool || []).filter(s => s.universe === 'best').length, 0, 'DTX plan must not leak into a different scanner session');
+if (dtxBest.actionable === false) {
+  assert.strictEqual(dtxBest.failureMode, 'fail_closed', 'non-actionable DTX staging must declare fail_closed');
+  assert.strictEqual((dtxBest.orders || []).length, 0, 'fail-closed DTX staging must contain zero orders');
+  assert.strictEqual(dtxBest.executionPlan, null, 'fail-closed DTX staging must not invent an execution plan');
+  assert.strictEqual(dtxBest.invalidDecision?.code, 'IDEMPOTENCY_FINGERPRINT_CONFLICT', 'fail-closed DTX staging must retain the exact refusal class');
+  assert.deepStrictEqual(dtxScan.stagingSnapshotErrors(dtxBest, 'best', {
+    todayIso: dtxBest.generatedAt.slice(0, 10), scanDateIso: dtxBest.asof,
+    expectedClose: dtxBest.decisionProvenance.expectedDataDate,
+  }), [], 'formal fail-closed DTX staging rejected');
+  assert.strictEqual((read('portfolio/v1/best/orders.json').orders || []).length, 0, 'fail-closed DTX API orders must be empty');
+} else {
+  assert(dtxBest.decisionProvenance.planId && dtxBest.decisionProvenance.validFrom && dtxBest.decisionProvenance.validUntil, 'DTX best decision provenance incomplete');
+  const planFrom = Date.parse(dtxBest.decisionProvenance.validFrom);
+  const planUntil = Date.parse(dtxBest.decisionProvenance.validUntil);
+  assert.strictEqual(isPlanActive(dtxBest.decisionProvenance, dtxBest.executionPlan, planFrom - 1), false, 'DTX plan active before validFrom');
+  assert.strictEqual(isPlanActive(dtxBest.decisionProvenance, dtxBest.executionPlan, planFrom), true, 'DTX plan inactive at validFrom');
+  assert.strictEqual(isPlanActive(dtxBest.decisionProvenance, dtxBest.executionPlan, planUntil), true, 'DTX plan inactive at validUntil');
+  assert.strictEqual(isPlanActive(dtxBest.decisionProvenance, dtxBest.executionPlan, planUntil + 1), false, 'DTX plan active after validUntil');
+  assert.strictEqual(dtxBest.executionPlan.source, 'execution_plan.groups', 'DTX V2 ingestion must not consume actions.CREATE');
+  const dtxHistory = read('data/dtx-engine-history.json');
+  const historicalDecision = dtxHistory.modes.best[dtxBest.asof];
+  assert.deepStrictEqual(historicalDecision.decisionProvenance, dtxBest.decisionProvenance, 'DTX V2 provenance must survive history persistence');
+  assert.strictEqual(historicalDecision.executionPlan.source, 'execution_plan.groups', 'DTX V2 source must survive history persistence');
+  const dtxValidDate = dtxBest.decisionProvenance.validFrom.slice(0, 10);
+  const rawScan = read('scanner/20260831/signals.json');
+  if (dtxValidDate !== rawScan.scanDate) {
+    assert.strictEqual((rawScan.dtx_pool || []).filter(s => s.universe === 'best').length, 0, 'DTX plan must not leak into a different scanner session');
+  }
 }
 const stagedValues = dtxBest.equity.values;
 const stagedReturn = (stagedValues[stagedValues.length - 1] / stagedValues[0] - 1) * 100;
@@ -128,7 +140,7 @@ assert(Math.abs(apiReturn - bestApi.stats.ret) <= 0.05, 'DTX API curve/headline 
 assert.strictEqual(bestApi.engineBacktest.metrics_source, 'mcp_replay', 'DTX API replay provenance missing');
 assert.strictEqual(bestApi.engineBacktest.curve_is_book, false, 'DTX replay must not be labeled as a served book curve');
 const now = Date.now();
-if (now < Date.parse(dtxBest.decisionProvenance.validFrom) || now > Date.parse(dtxBest.decisionProvenance.validUntil)) {
+if (dtxBest.actionable !== false && (now < Date.parse(dtxBest.decisionProvenance.validFrom) || now > Date.parse(dtxBest.decisionProvenance.validUntil))) {
   const bestOrdersApi = read('portfolio/v1/best/orders.json');
   assert.strictEqual((bestOrdersApi.orders || []).length, 0, 'DTX API orders must be empty outside plan window');
   assert.deepStrictEqual(bestOrdersApi.decisionProvenance, dtxBest.decisionProvenance, 'DTX API must disclose the gated plan provenance even when it publishes zero orders');

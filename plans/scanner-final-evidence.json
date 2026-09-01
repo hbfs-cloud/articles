@@ -1,0 +1,90 @@
+{
+  "artifact": "scanner/$date/signals.json",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": { "max_age_h": 2, "required": true },
+          "assert": {
+            "covers_close": "$refdate",
+            "expected_intraday_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "earnings-final",
+      "calls": [
+        {
+          "as": "earnings_selected",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "args": {
+            "symbols": "$stockcsv",
+            "days_ahead": 7,
+            "min_expected_move_pct": 0
+          },
+          "freshness": { "max_age_h": 24, "required": true }
+        }
+      ]
+    },
+    {
+      "name": "sec-final-b1",
+      "calls": [
+        {
+          "as": "sec_selected_b1",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": { "types": "sec_filings,flags", "symbols": "$sec1", "days": 180, "force_async": true },
+          "job_max_ms": 600000,
+          "freshness": { "max_age_h": 168, "required": true }
+        }
+      ]
+    },
+    {
+      "name": "sec-final-b2",
+      "calls": [
+        {
+          "as": "sec_selected_b2",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": { "types": "sec_filings,flags", "symbols": "$sec2", "days": 180, "force_async": true },
+          "job_max_ms": 600000,
+          "freshness": { "max_age_h": 168, "required": true }
+        }
+      ]
+    },
+    {
+      "name": "sec-final-b3",
+      "calls": [
+        {
+          "as": "sec_selected_b3",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": { "types": "sec_filings,flags", "symbols": "$sec3", "days": 180, "force_async": true },
+          "job_max_ms": 600000,
+          "freshness": { "max_age_h": 168, "required": true }
+        }
+      ]
+    },
+    {
+      "name": "sec-final-b4",
+      "calls": [
+        {
+          "as": "sec_selected_b4",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": { "types": "sec_filings,flags", "symbols": "$sec4", "days": 180, "force_async": true },
+          "job_max_ms": 600000,
+          "freshness": { "max_age_h": 168, "required": true }
+        }
+      ]
+    }
+  ]
+}

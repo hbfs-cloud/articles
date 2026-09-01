@@ -182,6 +182,7 @@
         "RunAutoScreener": [
           "as_of",
           "asset",
+          "disk_scan",
           "force_async",
           "max_debt_to_equity",
           "max_rsi",
@@ -548,7 +549,24 @@
       "plans": [
         {
           "path": "plans/scanner-wave1.json",
-          "required_variables": ["date", "refdate"]
+          "required_variables": ["date", "refdate"],
+          "allow_current_screener_cut": true
+        },
+        {
+          "path": "plans/scanner-etf-fallback.json",
+          "required_variables": ["date", "refdate"],
+          "allow_current_screener_cut": true
+        },
+        {
+          "path": "plans/scanner-final-evidence.json",
+          "required_variables": ["date", "refdate", "stockcsv", "sec1", "sec2", "sec3", "sec4"],
+          "variable_constraints": {
+            "stockcsv": { "type": "csv", "min_items": 6, "max_items": 8, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" },
+            "sec1": { "type": "csv", "min_items": 2, "max_items": 2, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" },
+            "sec2": { "type": "csv", "min_items": 2, "max_items": 2, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" },
+            "sec3": { "type": "csv", "min_items": 2, "max_items": 2, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" },
+            "sec4": { "type": "csv", "min_items": 1, "max_items": 2, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" }
+          }
         },
         {
           "path": "plans/scanner-wave2.json",

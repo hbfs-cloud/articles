@@ -657,7 +657,20 @@ function stagingSnapshotErrors(snapshot, portfolioId, { todayIso, scanDateIso, e
   if (scanDateIso && !expectedClose) errors.push('certified scanner reference close is missing');
   if (!provenance.expectedDataDate || provenance.expectedDataDate !== provenance.dataAsOf) errors.push('expectedDataDate/dataAsOf mismatch');
   if (expectedClose && provenance.expectedDataDate !== expectedClose) errors.push(`expectedDataDate ${provenance.expectedDataDate || 'missing'} != ${expectedClose}`);
-  if (!provenance.requestId || !provenance.runId || !provenance.callId || !provenance.planId) errors.push('decision provenance identifiers missing');
+  const failClosed = snapshot && snapshot.actionable === false;
+  if (failClosed) {
+    const fault = snapshot.invalidDecision || {};
+    if (!Array.isArray(snapshot.orders) || snapshot.orders.length !== 0) errors.push('fail-closed staging orders must be empty');
+    if (snapshot.executionPlan != null) errors.push('fail-closed staging executionPlan must be null');
+    if (snapshot.failureMode !== 'fail_closed') errors.push('fail-closed staging failureMode missing');
+    if (fault.code !== 'IDEMPOTENCY_FINGERPRINT_CONFLICT') errors.push('fail-closed staging invalidDecision.code unsupported');
+    if (typeof fault.message !== 'string' || !fault.message.trim()) errors.push('fail-closed staging invalidDecision.message missing');
+    if (typeof fault.sourceArtifact !== 'string' || !fault.sourceArtifact.trim()) errors.push('fail-closed staging invalidDecision.sourceArtifact missing');
+    if (!provenance.requestId) errors.push('fail-closed staging requestId missing');
+    if (provenance.runId || provenance.callId || provenance.planId) errors.push('fail-closed staging must not invent run/call/plan identifiers');
+  } else if (!provenance.requestId || !provenance.runId || !provenance.callId || !provenance.planId) {
+    errors.push('decision provenance identifiers missing');
+  }
   return errors;
 }
 

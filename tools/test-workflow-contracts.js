@@ -108,8 +108,19 @@ badDsl.waves[1].calls[0] = {
 const badDslErrors = contract.validatePlan(badDsl, spec, config.policy);
 assert(badDslErrors.some(e => e.includes('word operators')));
 assert(badDslErrors.some(e => e.includes('ema(close,N)')));
-assert(badDslErrors.some(e => e.includes('atr / close')));
+assert(badDslErrors.some(e => e.includes('atr() / close')));
 assert(badDslErrors.some(e => e.includes('abs()')));
+
+const currentCut = structuredClone(base);
+currentCut.waves[1].calls[0] = {
+  as: 'screen', server: 'marketdata', tool: 'RunScreener',
+  args: { pass_expr: 'rsi14 > 50', score_expr: 'rsi14', region: 'US', asset: 'stock', force_async: true },
+  freshness: { max_age_h: 24, required: true },
+};
+const currentCutSpec = { required_variables: ['date', 'refdate'], allow_current_screener_cut: true };
+assert.deepStrictEqual(contract.validatePlan(currentCut, currentCutSpec, config.policy), []);
+currentCut.waves[1].calls[0].args.as_of = '$refdate';
+assert(contract.validatePlan(currentCut, currentCutSpec, config.policy).some(e => e.includes('as_of must be omitted')));
 
 const detached = structuredClone(base);
 detached.waves[1].detached = true;

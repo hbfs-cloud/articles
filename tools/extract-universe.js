@@ -14,6 +14,7 @@
 const fs = require('fs'), path = require('path');
 const arg = (n, d) => { const i = process.argv.indexOf(n); return i > -1 && process.argv[i+1] ? process.argv[i+1] : d; };
 const inDir = arg('--in'), outFile = arg('--out');
+const inDirs = String(inDir || '').split(',').map(value => value.trim()).filter(Boolean);
 const limit = Number(arg('--limit', 60));
 const exclude = new Set((arg('--exclude', '') || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean));
 // `--strategy` : ne retenir que les candidats portant CETTE stratégie.
@@ -29,20 +30,22 @@ const seen = new Map(); // symbole -> meilleur score vu
 // same-day retry cannot absorb a stale screen_eu.json left by an older pipeline version.
 const isUsUniverseSource = f => /^autoscreen(?:_etf)?\.json$/.test(f) || /^(?:auto)?screen_.+_us\.json$/.test(f);
 const isForeignListing = sym => /\.(AS|BR|DE|F|L|LS|MC|MI|PA|ST|SW|TO|V)$/.test(sym);
-for (const f of fs.readdirSync(inDir).filter(isUsUniverseSource)) {
-  let d; try { d = JSON.parse(fs.readFileSync(path.join(inDir, f), 'utf8')); } catch { continue; }
-  const items = (d.data && d.data.items) || d.items || [];
-  for (const it of items) for (const c of (it.candidates || [])) {
-    const sym = (c.symbol || c.ticker || '').toUpperCase();
-    if (!sym || exclude.has(sym) || isForeignListing(sym)) continue;
-    if (strategy) {
-      const cs = String(c.strategy || c.strategy_name || '').toLowerCase();
-      // Pas de stratégie déclarée ⇒ on ne devine pas : le candidat est écarté. Le retenir
-      // reviendrait à supposer qu'il porte celle qu'on cherche, ce qui vide le filtre de son sens.
-      if (!cs || !cs.includes(strategy)) continue;
+for (const sourceDir of inDirs) {
+  for (const f of fs.readdirSync(sourceDir).filter(isUsUniverseSource)) {
+    let d; try { d = JSON.parse(fs.readFileSync(path.join(sourceDir, f), 'utf8')); } catch { continue; }
+    const items = (d.data && d.data.items) || d.items || [];
+    for (const it of items) for (const c of (it.candidates || [])) {
+      const sym = (c.symbol || c.ticker || '').toUpperCase();
+      if (!sym || exclude.has(sym) || isForeignListing(sym)) continue;
+      if (strategy) {
+        const cs = String(c.strategy || c.strategy_name || '').toLowerCase();
+        // Pas de stratégie déclarée ⇒ on ne devine pas : le candidat est écarté. Le retenir
+        // reviendrait à supposer qu'il porte celle qu'on cherche, ce qui vide le filtre de son sens.
+        if (!cs || !cs.includes(strategy)) continue;
+      }
+      const sc = typeof c.score === 'number' ? c.score : 0;
+      if (!seen.has(sym) || seen.get(sym) < sc) seen.set(sym, sc);
     }
-    const sc = typeof c.score === 'number' ? c.score : 0;
-    if (!seen.has(sym) || seen.get(sym) < sc) seen.set(sym, sc);
   }
 }
 const ranked = [...seen.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([s]) => s);
@@ -52,8 +55,12 @@ if (!ranked.length) { console.error('[extract-universe] vivier VIDE — screener
 // Le plan scanner-wave2 déclare cinq appels gouvernants. Répartir le vivier en
 // cinq lots équilibrés garantit que batch1..batch5 existent même lors d'une
 // séance pauvre en candidats, tout en restant sous la borne de 12 à limit=60.
-const B = Math.ceil(ranked.length / 5), batches = [];
-for (let i = 0; i < ranked.length; i += B) batches.push(ranked.slice(i, i + B).join(','));
+const batchCount = Math.min(5, ranked.length), batches = [];
+for (let i = 0; i < batchCount; i++) {
+  const start = Math.floor(i * ranked.length / batchCount);
+  const end = Math.floor((i + 1) * ranked.length / batchCount);
+  batches.push(ranked.slice(start, end).join(','));
+}
 const vars = { symbols: ranked.join(','), count: String(ranked.length) };
 batches.forEach((b, i) => { vars['batch' + (i + 1)] = b; });
 fs.writeFileSync(outFile, JSON.stringify(vars, null, 2));

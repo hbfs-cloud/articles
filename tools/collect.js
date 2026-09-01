@@ -120,12 +120,38 @@ function semanticFailure(call, value) {
   if (!call || !value || typeof value !== 'object') return null;
   if (call.server === 'marketdata' && call.tool === 'GetStatus') {
     const payload = value.result && typeof value.result === 'object' ? value.result : value;
+    const readiness = findScalarByKey(payload, 'operation_readiness');
+    const usEquity = readiness && typeof readiness === 'object' ? readiness.bars_daily_us_equity : null;
+    const intraday = readiness && typeof readiness === 'object' ? readiness.bars_intraday_15m : null;
+    const expectedClose = call.assert && call.assert.expected_close;
+    const coveredClose = call.assert && call.assert.covers_close;
+    const expectedIntradayClose = call.assert && call.assert.expected_intraday_close;
+    if (usEquity && typeof usEquity === 'object' && (expectedClose || coveredClose)) {
+      const operationState = String(usEquity.status || '').toLowerCase();
+      if (operationState !== 'ready') return `marketdata US equity daily not ready (${operationState || 'missing status'})`;
+      const actualClose = String(usEquity.served_completed_end || '');
+      if (!actualClose) return 'marketdata GetStatus missing US equity served_completed_end';
+      if (expectedClose && actualClose !== expectedClose) {
+        return `marketdata GetStatus close mismatch (expected ${expectedClose}, got ${actualClose})`;
+      }
+      if (coveredClose && actualClose < coveredClose) {
+        return `marketdata GetStatus does not cover historical close (required ${coveredClose}, got ${actualClose})`;
+      }
+      if (expectedIntradayClose) {
+        const intradayState = String(intraday && intraday.status || '').toLowerCase();
+        if (intradayState !== 'ready') return `marketdata US intraday not ready (${intradayState || 'missing status'})`;
+        const intradayClose = String(intraday.max_last_bar_at || '').slice(0, 10);
+        if (intradayClose !== expectedIntradayClose) {
+          return `marketdata intraday close mismatch (expected ${expectedIntradayClose}, got ${intradayClose || 'missing'})`;
+        }
+      }
+      return null;
+    }
     const health = payload.health && typeof payload.health === 'object' ? payload.health : payload;
     const state = String(health.status || health.state || '').toLowerCase();
     if (health.ok === false || health.healthy === false || /down|error|unavailable|degraded/.test(state)) {
       return `marketdata GetStatus unhealthy (${state || 'ok=false'})`;
     }
-    const expectedClose = call.assert && call.assert.expected_close;
     if (expectedClose) {
       const actualClose = String(findScalarByKey(value, 'bar_service_1d_max_last_bar_date') || '');
       if (!actualClose) return 'marketdata GetStatus missing bar_service_1d_max_last_bar_date';
@@ -133,7 +159,6 @@ function semanticFailure(call, value) {
         return `marketdata GetStatus close mismatch (expected ${expectedClose}, got ${actualClose})`;
       }
     }
-    const coveredClose = call.assert && call.assert.covers_close;
     if (coveredClose) {
       const actualClose = String(findScalarByKey(value, 'bar_service_1d_max_last_bar_date') || '');
       if (!actualClose) return 'marketdata GetStatus missing bar_service_1d_max_last_bar_date';
@@ -141,6 +166,22 @@ function semanticFailure(call, value) {
         return `marketdata GetStatus does not cover historical close (required ${coveredClose}, got ${actualClose})`;
       }
     }
+    return null;
+  }
+  if (call.server === 'marketdata' && call.tool === 'QueryData') {
+    const failures = [];
+    const visit = node => {
+      if (!node || typeof node !== 'object') return;
+      const status = String(node.status || '').toLowerCase();
+      if (status === 'failed') failures.push(String(node.error || node.data_type || 'facet failed'));
+      if (status === 'partial' && (Number(node.total_failed) > 0 || (Array.isArray(node.errors) && node.errors.length))) {
+        const detail = node.errors?.[0]?.error || node.error || `${node.total_failed || '?'} facet(s) failed`;
+        failures.push(String(detail));
+      }
+      for (const child of Object.values(node)) if (child && typeof child === 'object') visit(child);
+    };
+    visit(value);
+    if (failures.length) return `marketdata QueryData incomplete: ${[...new Set(failures)].slice(0, 3).join('; ')}`;
     return null;
   }
   if (call.server !== 'systematic') return null;

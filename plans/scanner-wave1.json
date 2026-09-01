@@ -15,7 +15,8 @@
             "required": true
           },
           "assert": {
-            "expected_close": "$refdate"
+            "covers_close": "$refdate",
+            "expected_intraday_close": "$refdate"
           }
         },
         {
@@ -33,7 +34,7 @@
       ]
     },
     {
-      "name": "vivier",
+      "name": "vivier-context",
       "calls": [
         {
           "as": "regime_marketdata",
@@ -70,30 +71,17 @@
             "max_age_h": 168,
             "required": true
           }
-        },
-        {
-          "as": "autoscreen",
-          "server": "marketdata",
-          "tool": "RunAutoScreener",
-          "args": {
-            "as_of": "$refdate",
-            "region": "US",
-            "asset": "stock",
-            "top_k": 60,
-            "force_async": true
-          },
-          "freshness": {
-            "max_age_h": 24,
-            "required": true
-          },
-          "cache_minutes": 180
-        },
+        }
+      ]
+    },
+    {
+      "name": "vivier-autoscreen-etf",
+      "calls": [
         {
           "as": "autoscreen_etf",
           "server": "marketdata",
           "tool": "RunAutoScreener",
           "args": {
-            "as_of": "$refdate",
             "region": "US",
             "asset": "etf",
             "top_k": 30,
@@ -104,7 +92,12 @@
             "required": true
           },
           "cache_minutes": 180
-        },
+        }
+      ]
+    },
+    {
+      "name": "vivier-momentum",
+      "calls": [
         {
           "as": "screen_momentum_us",
           "server": "marketdata",
@@ -114,7 +107,6 @@
             "score_expr": "rsi14 + (macd > 0 ? 15 : 0)",
             "region": "US",
             "asset": "stock",
-            "as_of": "$refdate",
             "top_k": 40,
             "force_async": true
           },
@@ -122,7 +114,12 @@
             "max_age_h": 24,
             "required": true
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "vivier-breakout",
+      "calls": [
         {
           "as": "screen_breakout_us",
           "server": "marketdata",
@@ -132,7 +129,6 @@
             "score_expr": "rsi14 + (vol_spike45(1.5) ? 20 : 0)",
             "region": "US",
             "asset": "stock",
-            "as_of": "$refdate",
             "top_k": 40,
             "force_async": true
           },
@@ -140,17 +136,21 @@
             "max_age_h": 24,
             "required": true
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "vivier-pullback",
+      "calls": [
         {
           "as": "screen_pullback_us",
           "server": "marketdata",
           "tool": "RunScreener",
           "args": {
-            "pass_expr": "rsi14 > 40 && rsi14 < 65 && ema(close,20) > ema(close,50) && atr / close < 0.025 && vol > 1500000 && close > 10",
+            "pass_expr": "rsi14 > 40 && rsi14 < 65 && ema(close,20) > ema(close,50) && atr() / close < 0.025 && vol > 1500000 && close > 10",
             "score_expr": "trend_strength(20) * 10 + (65 - rsi14)",
             "region": "US",
             "asset": "stock",
-            "as_of": "$refdate",
             "top_k": 25,
             "force_async": true
           },
@@ -158,7 +158,12 @@
             "max_age_h": 24,
             "required": true
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "vivier-events",
+      "calls": [
         {
           "as": "earnings_7d",
           "server": "marketdata",

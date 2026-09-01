@@ -173,7 +173,11 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
     if (call.server === 'marketdata' && ['RunScreener', 'RunAutoScreener'].includes(call.tool)) {
       if (String(call.args && call.args.region || '').toUpperCase() !== 'US') errors.push(`${label}: ${call.tool} region must be US`);
       if (!['stock', 'etf'].includes(String(call.args && call.args.asset || '').toLowerCase())) errors.push(`${label}: ${call.tool} asset must be stock or etf`);
-      if (!call.args || call.args.as_of !== '$refdate') errors.push(`${label}: ${call.tool} as_of must equal $refdate`);
+      if (rawSpec.allow_current_screener_cut === true) {
+        if (call.args && Object.hasOwn(call.args, 'as_of')) errors.push(`${label}: ${call.tool} as_of must be omitted when current-cut mode is enabled`);
+      } else if (!call.args || call.args.as_of !== '$refdate') {
+        errors.push(`${label}: ${call.tool} as_of must equal $refdate`);
+      }
       if (call.args.force_async !== true) errors.push(`${label}: ${call.tool} force_async=true is required`);
     }
     if (call.server === 'marketdata' && call.tool === 'RunScreener') {
@@ -183,7 +187,7 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
       const forbiddenDsl = [
         [/\b(?:and|or)\b/i, 'use &&/|| instead of word operators'],
         [/\b(?:ema|sma)\d+\b/i, 'use ema(close,N)/sma(close,N)'],
-        [/\batrpct\b/i, 'use atr / close'],
+        [/\batrpct\b/i, 'use atr() / close'],
         [/\babs\s*\(/i, 'abs() is unsupported'],
       ];
       for (const [pattern, message] of forbiddenDsl) if (pattern.test(dsl)) errors.push(`${label}: invalid screener DSL (${message})`);
@@ -231,6 +235,7 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
     }
     if (call.server === 'systematic' && call.tool === 'DtxDecide') {
       const args = call.args || {};
+      if (!['alpaca', 'trading212', 'ibkr', 'saxo'].includes(args.broker)) errors.push(`${label}: DtxDecide broker must be explicit and supported`);
       if (!['evening', 'intraday', 'manual'].includes(args.appel)) errors.push(`${label}: DtxDecide appel must be explicit`);
       if (!['alpaca', 'trading212', 'ibkr', 'saxo'].includes(args.broker)) errors.push(`${label}: DtxDecide broker must be explicit and supported`);
       if (args.expected_data_date !== '$refdate') errors.push(`${label}: DtxDecide expected_data_date must equal $refdate`);

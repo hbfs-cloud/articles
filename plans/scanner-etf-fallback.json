@@ -1,0 +1,41 @@
+{
+  "artifact": "scanner/$date/signals.json",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": { "max_age_h": 2, "required": true },
+          "assert": {
+            "covers_close": "$refdate",
+            "expected_intraday_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "vivier-etf-custom",
+      "calls": [
+        {
+          "as": "screen_etf_us",
+          "server": "marketdata",
+          "tool": "RunScreener",
+          "args": {
+            "pass_expr": "rsi14 > 40 && rsi14 < 70 && vol > 500000 && close > 10",
+            "score_expr": "trend_strength(20) * 20 + rsi14",
+            "region": "US",
+            "asset": "etf",
+            "top_k": 20,
+            "force_async": true
+          },
+          "freshness": { "max_age_h": 24, "required": true }
+        }
+      ]
+    }
+  ]
+}

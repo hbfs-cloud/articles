@@ -17,6 +17,8 @@ function healthState(value, expectedClose) {
   const behindExpected = find(value, 'behind_expected');
   const running = runningValue === true;
   const ok = find(value, 'ok') === true && find(value, 'freshness_ok') === true
+    // Some healthy GetHealth payloads omit false booleans through JSON `omitempty`.
+    // Exact close equality remains the fail-closed proof; only an explicit true blocks.
     && behindExpected !== true && last === expectedClose && runningValue === false;
   return { ok, last_data_date: last || null, prefetch_running: running };
 }

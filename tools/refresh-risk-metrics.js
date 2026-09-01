@@ -320,6 +320,7 @@ function normalizeRegime(rg) {
     transition5d: rg.transition_5d ?? rg.transition5d ?? null,
     expectedReturnSpyPct: rg.expected_return_spy_pct ?? rg.expectedReturnSpyPct ?? null,
     expectedDrawdownPct: rg.expected_drawdown_pct ?? rg.expectedDrawdownPct ?? null,
+    engine: rg.engine || null,
     model: rg.model || 'context_conditional',
   };
 }

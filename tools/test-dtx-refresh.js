@@ -11,6 +11,9 @@ assert.deepStrictEqual(healthState({ ok: true, freshness_ok: true, last_data_dat
 assert.deepStrictEqual(healthState({ ok: true, freshness_ok: true, jobs: { running: 1 }, last_data_date: '2026-08-28', prefetch: { running: false } }, '2026-08-28'), {
   ok: true, last_data_date: '2026-08-28', prefetch_running: false,
 });
+assert.deepStrictEqual(healthState({ ok: true, freshness_ok: true, last_data_date: '2026-08-28', jobs: { running: 0 }, prefetch: { running: false } }, '2026-08-28'), {
+  ok: true, last_data_date: '2026-08-28', prefetch_running: false,
+});
 assert.strictEqual(healthState({ ok: true, freshness_ok: true, behind_expected: false, last_data_date: '2026-08-27', prefetch: { running: false } }, '2026-08-28').ok, false);
 assert.strictEqual(healthState({ ok: true, freshness_ok: true, behind_expected: false, last_data_date: '2026-08-28', prefetch: { running: true } }, '2026-08-28').ok, false);
 assert.strictEqual(healthState({ ok: true, freshness_ok: true, behind_expected: true, last_data_date: '2026-08-28', prefetch: { running: false } }, '2026-08-28').ok, false);

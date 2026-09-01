@@ -454,6 +454,13 @@ check('dtx: fenêtres Contract V2 appliquées aux pools et ordres publics', () =
   for (const id of ['best']) {
     let stg;
     try { stg = readJSON(`data/dtx/${id}.json`); } catch { continue; }
+    if (stg.actionable === false && stg.failureMode === 'fail_closed') {
+      if ((stg.orders || []).length) issues.push(`${id}: staging fail-closed contient des ordres`);
+      let publicOrders = [];
+      try { publicOrders = readJSON(`portfolio/v1/${id}/orders.json`).orders || []; } catch { /* API covered elsewhere */ }
+      if (publicOrders.length) issues.push(`${id}: ${publicOrders.length} ordre(s) API malgré fail-closed`);
+      continue;
+    }
     const from = Date.parse(stg.decisionProvenance?.validFrom || '');
     const until = Date.parse(stg.decisionProvenance?.validUntil || '');
     if (!Number.isFinite(from) || !Number.isFinite(until)) {
