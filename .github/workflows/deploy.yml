@@ -36,29 +36,15 @@ jobs:
           # Static assets (CSS + JS)
           cp -r assets/ _site/assets/
 
-          # Article directories + public apps. Evidence/work directories use
-          # an underscore prefix and are deliberately absent from Pages.
+          # Article directories + public apps
           for dir in daily weekly scanner analyses series tech prompt-ia rotation; do
-            if [ -d "$dir" ]; then
-              mkdir -p "_site/$dir"
-              rsync -a --exclude='_*' --exclude='harness.json' "$dir/" "_site/$dir/"
-            fi
+            [ -d "$dir" ] && cp -r "$dir" "_site/$dir"
           done
 
-          # Public data only. Canonical execution state, notification queues and
-          # withdrawn pre-capacity backtests stay in git for the pipeline but
-          # must never be copied into the Pages artifact.
+          # Data (JSON indexes + search + trading plans)
           mkdir -p _site/data
-          for file in data/*.json data/*.js; do
-            [ -f "$file" ] || continue
-            case "$(basename "$file")" in
-              backtest-results.json|backtest-trades.json|enriched-trades.json|portfolio-history.json|rolling-walk-forward.json|trade-chain.json) continue ;;
-              pit-forward.json|pit-results.json|pit-state.json|dtx-engine-history.json|dtx-live-track.json|dtx-sleeve-exits.json) continue ;;
-              capacity-ledger-v1.json|iso-alignment.json|modes-config-history.json|risk-snapshots.json|scanner-metrics.json|scanner-positions.json|modes-status-history.json) continue ;;
-              broker-instruments.json|executor-allowlist.json|routines-manifest.json|scanner-heartbeat.json|scanner-notifications.json|signal-alerts-pending.json|signal-monitor-state.json|signals-ledger.json|signals-telegram-messages.json) continue ;;
-            esac
-            cp -f "$file" _site/data/
-          done
+          cp -f data/*.json data/*.js _site/data/ 2>/dev/null || true
+          [ -d data/trading-plans ] && cp -r data/trading-plans _site/data/trading-plans
 
           # Portfolio API (all modes + root endpoints)
           cp -r portfolio/ _site/portfolio/

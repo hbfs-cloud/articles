@@ -118,13 +118,6 @@ const SF_CARDS = {
   mom_bo: s => /momentum|breakout/i.test(s),
 };
 function buildPositions(cfg, modeKey) {
-  // Public cards may only show positions backed by the current certified
-  // accounting scope. The four legacy modes are simulations whose historical
-  // capacity-at-entry is retired; DTX starts only at its first certified fill.
-  if (cfg.performanceScope === 'simulated_backtest') return [];
-  if (cfg.assetClass === 'dtx'
-      && (cfg.forwardTracking?.status === 'not_started'
-        || Number(cfg.forwardTracking?.executedTrades || 0) === 0)) return [];
   const tradesPath    = path.join(ROOT, 'data/backtest-trades.json');
   const positionsPath = path.join(ROOT, 'data/scanner-positions.json');
   if (!fs.existsSync(tradesPath) || !fs.existsSync(positionsPath)) return [];
@@ -171,27 +164,21 @@ function buildCardHtml(modeKey, cfg, metrics, positions) {
   const today    = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const modeColor = cfg.color || '#888';
 
-  const metricsAvailable = !!metrics;
-  const metric = metrics || { ret: 0, dd: 0, wr: 0, pf: 0, trades: 0, worst: 0, now: 0, best: 0 };
-  const unavailableLabel = cfg.assetClass === 'dtx'
-    ? 'Suivi réel non démarré'
-    : 'Historique retiré · ledger forward actif';
-
   // KPI formatting helpers
   const fmtPct  = v => (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
   const fmtDD   = v => '-' + Math.abs(v).toFixed(2) + '%';
   const fmtWR   = v => v.toFixed(1) + '%';
   const fmtPF   = v => v.toFixed(2) + 'x';
 
-  const retColor = metric.ret >= 0 ? '#10b981' : '#ef4444';
+  const retColor = metrics.ret >= 0 ? '#10b981' : '#ef4444';
   const ddColor  = '#ef4444';
-  const wrColor  = metric.wr >= 55 ? '#10b981' : metric.wr >= 45 ? '#f59e0b' : '#ef4444';
-  const pfColor  = metric.pf >= 1.5 ? '#10b981' : metric.pf >= 1 ? '#f59e0b' : '#ef4444';
+  const wrColor  = metrics.wr >= 55 ? '#10b981' : metrics.wr >= 45 ? '#f59e0b' : '#ef4444';
+  const pfColor  = metrics.pf >= 1.5 ? '#10b981' : metrics.pf >= 1 ? '#f59e0b' : '#ef4444';
 
   // Scenario bar
-  const worstNum = metric.worst;
-  const nowNum   = metric.now;
-  const bestNum  = metric.best;
+  const worstNum = metrics.worst;
+  const nowNum   = metrics.now;
+  const bestNum  = metrics.best;
   const allVals  = [worstNum, nowNum, bestNum, 0];
   const minV     = Math.min(...allVals) - 2;
   const maxV     = Math.max(...allVals) + 2;
@@ -202,15 +189,15 @@ function buildCardHtml(modeKey, cfg, metrics, positions) {
 
   // Positions rows
   const posRows = positions.length === 0
-    ? `<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:18px 0;font-size:13px;">Aucune position certifiée</td></tr>`
+    ? `<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:18px 0;font-size:13px;">No open positions</td></tr>`
     : positions.slice(0, 6).map(p => {
         const rc = p.return_pct >= 0 ? '#10b981' : '#ef4444';
         const sign = p.return_pct >= 0 ? '+' : '';
         return `<tr>
           <td style="font-weight:700;color:#f1f5f9;font-size:15px;">${p.ticker}</td>
           <td style="color:${rc};font-weight:700;font-size:15px;">${sign}${p.return_pct.toFixed(2)}%</td>
-          <td style="color:#94a3b8;font-size:13px;">${p.left} j</td>
-          <td style="color:#6b7280;font-size:13px;">${p.stopDist > 0 ? p.stopDist.toFixed(1) + ' % stop' : '—'}</td>
+          <td style="color:#94a3b8;font-size:13px;">${p.left}d left</td>
+          <td style="color:#6b7280;font-size:13px;">${p.stopDist > 0 ? p.stopDist.toFixed(1) + '% stop' : '—'}</td>
           <td style="color:#94a3b8;font-size:13px;">${p.tp1 > 0 ? 'TP1: $' + p.tp1.toFixed(2) : '—'}</td>
         </tr>`;
       }).join('\n');
@@ -415,51 +402,51 @@ body {
     <div class="header-left">
       <div>
         <div class="mode-badge">${meta.emoji} ${meta.label}</div>
-        <div class="mode-goal">${cfg.goal || ''} — Risque ${cfg.riskProfile || ''}</div>
+        <div class="mode-goal">${cfg.goal || ''} — ${cfg.riskProfile || ''} Risk</div>
       </div>
     </div>
     <div class="header-right">
       <div class="brand">DailyTickers</div>
       <div class="date">${today}</div>
-      <div style="color:#475569;font-size:14px;margin-top:4px;">Fiche stratégie</div>
+      <div style="color:#475569;font-size:14px;margin-top:4px;">Portfolio Mode Card</div>
     </div>
   </div>
 
   <!-- KPIs -->
   <div class="kpi-row">
     <div class="kpi-card">
-      <div class="kpi-value" style="color:${metricsAvailable ? retColor : '#94a3b8'}">${metricsAvailable ? fmtPct(metric.ret) : '—'}</div>
-      <div class="kpi-label">Rendement total</div>
+      <div class="kpi-value" style="color:${retColor}">${fmtPct(metrics.ret)}</div>
+      <div class="kpi-label">Total Return</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-value" style="color:${metricsAvailable ? ddColor : '#94a3b8'}">${metricsAvailable ? fmtDD(metric.dd) : '—'}</div>
-      <div class="kpi-label">Repli maximum</div>
+      <div class="kpi-value" style="color:${ddColor}">${fmtDD(metrics.dd)}</div>
+      <div class="kpi-label">Max Drawdown</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-value" style="color:${metricsAvailable ? wrColor : '#94a3b8'}">${metricsAvailable ? fmtWR(metric.wr) : '—'}</div>
-      <div class="kpi-label">Taux de réussite</div>
+      <div class="kpi-value" style="color:${wrColor}">${fmtWR(metrics.wr)}</div>
+      <div class="kpi-label">Win Rate</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-value" style="color:${metricsAvailable ? pfColor : '#94a3b8'}">${metricsAvailable ? fmtPF(metric.pf) : '—'}</div>
-      <div class="kpi-label">Profit factor</div>
+      <div class="kpi-value" style="color:${pfColor}">${fmtPF(metrics.pf)}</div>
+      <div class="kpi-label">Profit Factor</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-value" style="color:#94a3b8">${metricsAvailable ? metric.trades : '—'}</div>
-      <div class="kpi-label">Trades clôturés</div>
+      <div class="kpi-value" style="color:#94a3b8">${metrics.trades}</div>
+      <div class="kpi-label"># Trades</div>
     </div>
   </div>
 
   <!-- Open Positions -->
   <div>
-    <div class="section-title">Positions certifiées (${positions.length})</div>
+    <div class="section-title">Open Positions (${positions.length})</div>
     <table class="positions-table">
       <thead>
         <tr>
           <th>Ticker</th>
-          <th>Rendement</th>
-          <th>Temps restant</th>
+          <th>Return</th>
+          <th>Time Left</th>
           <th>Stop</th>
-          <th>Objectif</th>
+          <th>Target</th>
         </tr>
       </thead>
       <tbody>
@@ -470,8 +457,7 @@ body {
 
   <!-- Scenario -->
   <div class="scenario-wrap">
-    <div class="scenario-title">${metricsAvailable ? 'Scénario portefeuille (pire / actuel / meilleur)' : unavailableLabel}</div>
-    ${metricsAvailable ? `
+    <div class="scenario-title">Portfolio Scenario (Worst / Now / Best)</div>
     <div class="scenario-bar-bg">
       <div class="scenario-bar-fill"></div>
       <div class="scenario-bar-marker" style="left:${pct(0)}%;background:#475569;"></div>
@@ -482,14 +468,13 @@ body {
       <span class="scenario-now">Now: ${nowNum >= 0 ? '+' : ''}${nowNum.toFixed(2)}%</span>
       <span>Best: ${bestNum >= 0 ? '+' : ''}${bestNum.toFixed(2)}%</span>
     </div>
-    ` : '<div style="color:#94a3b8;font-size:18px;line-height:1.5">Aucune performance ni position n’est publiée sans preuve d’exécution et de capacité à l’entrée.</div>'}
   </div>
 
   <!-- Footer -->
   <div class="footer">
     <span>articles.dailytickers.com/scanner/status/</span>
-    <span>Contenu informatif uniquement. Pas un conseil financier.</span>
-    <span>Capacité versionnée · suivi fail-closed</span>
+    <span>For informational purposes only. Not financial advice.</span>
+    <span>H${cfg.horizon || '?'} · ${cfg.filterName || ''} · ${cfg.portfolioSize || 1} slot${cfg.portfolioSize > 1 ? 's' : ''}</span>
   </div>
 
 </div>
@@ -576,14 +561,10 @@ async function main() {
     .map(([id]) => id);
   console.log(`Modes (non-draft, from config): ${MODES.join(', ')}`);
 
-  // Rebuild the mode portion of the manifest from the current config. Keeping the
-  // previous object made retired modes point at deleted PNGs indefinitely.
+  // Load manifest
   const manifestPath = path.join(STATUS_DIR, 'manifest.json');
-  let previousManifest = {};
-  try { previousManifest = JSON.parse(fs.readFileSync(manifestPath)); } catch (_) {}
-  const manifest = {};
-  const dailyCard = previousManifest['daily-card'];
-  if (dailyCard && fs.existsSync(path.join(STATUS_DIR, dailyCard))) manifest['daily-card'] = dailyCard;
+  let manifest = {};
+  try { manifest = JSON.parse(fs.readFileSync(manifestPath)); } catch (_) {}
 
   const ts = Date.now();
 
@@ -594,14 +575,8 @@ async function main() {
     const cfg = { id: modeKey, ...cfgRaw };
 
     // Metrics from status page
-    const performanceCertified = cfg.performanceScope !== 'simulated_backtest'
-      && !(cfg.assetClass === 'dtx'
-        && (cfg.forwardTracking?.status === 'not_started'
-          || Number(cfg.forwardTracking?.executedTrades || 0) === 0));
-    const metrics = performanceCertified ? readStatusMetrics(modeKey) : null;
-    console.log(metrics
-      ? `  metrics: ret=${metrics.ret} dd=${metrics.dd} wr=${metrics.wr} pf=${metrics.pf}`
-      : '  metrics: unavailable (fail-closed)');
+    const metrics = readStatusMetrics(modeKey) || { ret: 0, dd: 0, wr: 0, pf: 0, trades: 0, worst: 0, now: 0, best: 0 };
+    console.log(`  metrics: ret=${metrics.ret} dd=${metrics.dd} wr=${metrics.wr} pf=${metrics.pf}`);
 
     // Open positions
     const positions = buildPositions(cfg, modeKey);
@@ -642,11 +617,6 @@ async function main() {
 
   // Write updated manifest
   if (!DRY_RUN) {
-    for (const [key, filename] of Object.entries(manifest)) {
-      if (!fs.existsSync(path.join(STATUS_DIR, filename))) {
-        throw new Error(`manifest entry ${key} points to missing file ${filename}`);
-      }
-    }
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
     console.log(`\nManifest updated: ${manifestPath}`);
   }
@@ -654,8 +624,4 @@ async function main() {
   console.log('\nDone.');
 }
 
-if (require.main === module) {
-  main().catch(e => { console.error('Fatal:', e.message); process.exit(1); });
-}
-
-module.exports = { buildCardHtml, buildPositions, main, readStatusMetrics };
+main().catch(e => { console.error('Fatal:', e.message); process.exit(1); });

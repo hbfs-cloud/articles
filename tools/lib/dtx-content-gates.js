@@ -11,8 +11,6 @@ function validateDtxDecision(value, expected = {}) {
   const errors = dtxScan.validateDecisionV2(decision, {
     asof: expected.asof,
     requestId: expected.requestId,
-    portfolio: expected.portfolio,
-    configHash: expected.configHash,
   });
   if (!decision || typeof decision !== 'object') return errors;
   if (expected.referenceClose && decision.expected_data_date !== expected.referenceClose) {

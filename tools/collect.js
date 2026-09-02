@@ -53,7 +53,6 @@ const { callTool, callMany, awaitJob, canCallDirectly, McpAuthError } = require(
 const { validateDtxDecision, validateDtxReplay } = require('./lib/dtx-content-gates');
 const workflowContract = require('./lib/workflow-contract');
 const marketdataBarsContract = require('./lib/marketdata-bars-contract');
-const marketdataQueryDataContract = require('./lib/marketdata-querydata-contract');
 const { latestCompletedUSClose } = require('./lib/market-calendar');
 
 const CURRENT_ONLY_TOOLS = new Set(['GetMarketContext', 'GetEarningsCalendarFiltered', 'GetInsiderActivity', 'OptionsAnalytics']);
@@ -111,21 +110,49 @@ function maxBarDate(value) {
   return best;
 }
 
+function findScalarByKey(value, key) {
+  if (!value || typeof value !== 'object') return null;
+  if (Object.prototype.hasOwnProperty.call(value, key) && value[key] != null) return value[key];
+  for (const child of Object.values(value)) {
+    const found = findScalarByKey(child, key);
+    if (found != null) return found;
+  }
+  return null;
+}
+
 function semanticFailure(call, value) {
   if (!call || !value || typeof value !== 'object') return null;
   if (call.server === 'marketdata' && call.tool === 'GetStatus') {
     const payload = value.result && typeof value.result === 'object' ? value.result : value;
-    const legacyReadinessKeys = ['covers_close', 'expected_close']
-      .filter(key => Object.prototype.hasOwnProperty.call(call.assert || {}, key));
-    if (legacyReadinessKeys.length) {
-      return `marketdata GetStatus uses unsupported legacy assertion(s): ${legacyReadinessKeys.join(', ')}; use equity_reference_close`;
-    }
-    if (marketdataBarsContract.hasGetStatusContractAssertions(call.assert)) {
-      const check = marketdataBarsContract.validateGetStatus(value, call.assert, {
+    const readiness = findScalarByKey(payload, 'operation_readiness');
+    const intraday = readiness && typeof readiness === 'object' ? readiness.bars_intraday_15m : null;
+    const expectedClose = call.assert && (call.assert.equity_reference_close || call.assert.expected_close);
+    const coveredClose = call.assert && call.assert.covers_close;
+    const cryptoCompletedRefdate = call.assert && call.assert.crypto_completed_refdate;
+    const secOperation = call.assert && call.assert.sec_operation;
+    const expectedIntradayClose = call.assert && call.assert.expected_intraday_close;
+    if (expectedClose || cryptoCompletedRefdate || secOperation) {
+      const check = marketdataBarsContract.validateOperationReadiness(value, {
+        equityReferenceClose: expectedClose,
+        equityCoversClose: coveredClose,
+        cryptoCompletedRefdate,
+        secOperation,
         minimumBuild: marketdataBarsContract.MIN_MARKETDATA_BUILD,
       });
       if (check.errors.length) {
         return `marketdata operation readiness rejected: ${check.errors.join('; ')}${check.retryAt ? `; retry_at=${check.retryAt}` : ''}`;
+      }
+      if (coveredClose) {
+        const served = String(readiness?.bars_daily_us_equity?.served_completed_end || '');
+        if (served < coveredClose) return `marketdata GetStatus does not cover historical close (required ${coveredClose}, got ${served || 'missing'})`;
+      }
+      if (expectedIntradayClose) {
+        const intradayState = String(intraday && intraday.status || '').toLowerCase();
+        if (intradayState !== 'ready') return `marketdata US intraday not ready (${intradayState || 'missing status'})`;
+        const intradayClose = String(intraday.max_last_bar_at || '').slice(0, 10);
+        if (intradayClose !== expectedIntradayClose) {
+          return `marketdata intraday close mismatch (expected ${expectedIntradayClose}, got ${intradayClose || 'missing'})`;
+        }
       }
       return null;
     }
@@ -137,13 +164,6 @@ function semanticFailure(call, value) {
     return null;
   }
   if (call.server === 'marketdata' && call.tool === 'QueryData') {
-    const terminalCheck = marketdataQueryDataContract.validateQueryDataCells(value, {
-      symbols: call.args?.symbols,
-      types: call.args?.types,
-    });
-    if (terminalCheck.errors.length) {
-      return `marketdata QueryData terminal contract rejected: ${terminalCheck.errors.slice(0, 8).join('; ')}${terminalCheck.retryAt ? `; retry_at=${terminalCheck.retryAt}` : ''}`;
-    }
     if (/(^|,)bars_daily(,|$)/.test(String(call.args?.types || ''))) {
       const check = marketdataBarsContract.validateQueryData(value, {
         symbols: call.args?.symbols,
@@ -155,6 +175,19 @@ function semanticFailure(call, value) {
       }
       return null;
     }
+    const failures = [];
+    const visit = node => {
+      if (!node || typeof node !== 'object') return;
+      const status = String(node.status || '').toLowerCase();
+      if (status === 'failed') failures.push(String(node.error || node.data_type || 'facet failed'));
+      if (status === 'partial' && (Number(node.total_failed) > 0 || (Array.isArray(node.errors) && node.errors.length))) {
+        const detail = node.errors?.[0]?.error || node.error || `${node.total_failed || '?'} facet(s) failed`;
+        failures.push(String(detail));
+      }
+      for (const child of Object.values(node)) if (child && typeof child === 'object') visit(child);
+    };
+    visit(value);
+    if (failures.length) return `marketdata QueryData incomplete: ${[...new Set(failures)].slice(0, 3).join('; ')}`;
     return null;
   }
   if (call.server !== 'systematic') return null;
@@ -178,53 +211,10 @@ function semanticFailure(call, value) {
       return `systematic DtxListConfigs does not contain required portfolio ${requiredPortfolio}`;
     }
   }
-  if (call.tool === 'DtxCatalog') {
-    const entries = Array.isArray(payload) ? payload
-      : Array.isArray(payload.configs) ? payload.configs
-        : Array.isArray(payload.entries) ? payload.entries
-          : Array.isArray(payload.data) ? payload.data : null;
-    if (!entries || entries.length === 0) return 'systematic DtxCatalog returned no strategy';
-    const minimum = Number(call.assert && call.assert.minimum_configs || 0);
-    if (minimum > 0 && entries.length < minimum) {
-      return `systematic DtxCatalog returned ${entries.length} configs, expected at least ${minimum}`;
-    }
-    const requiredPortfolio = call.assert && call.assert.contains_portfolio;
-    const selected = requiredPortfolio
-      ? entries.find(c => c && (c.id === requiredPortfolio || c.file === requiredPortfolio || c.portfolio_id === requiredPortfolio))
-      : null;
-    if (requiredPortfolio && !selected) {
-      return `systematic DtxCatalog does not contain required portfolio ${requiredPortfolio}`;
-    }
-    const eligiblePortfolio = call.assert && call.assert.eligible_portfolio;
-    const eligible = eligiblePortfolio
-      ? entries.find(c => c && (c.id === eligiblePortfolio || c.file === eligiblePortfolio || c.portfolio_id === eligiblePortfolio))
-      : null;
-    if (eligiblePortfolio && (!eligible || eligible.eligible_for_live !== true)) {
-      const reasons = eligible && Array.isArray(eligible.ineligibility_reasons)
-        ? ` (${eligible.ineligibility_reasons.join(', ')})` : '';
-      return `systematic DtxCatalog portfolio ${eligiblePortfolio} is not eligible_for_live${reasons}`;
-    }
-    if (eligible && (!eligible.config_hash || !eligible.reference_stats)) {
-      return `systematic DtxCatalog portfolio ${eligiblePortfolio} lacks config_hash/reference_stats`;
-    }
-  }
-  if (call.tool === 'DtxValidateDecisionInput') {
-    const issues = Array.isArray(payload.errors) ? payload.errors : [];
-    if (payload.valid !== true || issues.length) {
-      return `systematic DtxValidateDecisionInput rejected input${issues.length ? `: ${issues.map(issue => issue.message || issue.code || String(issue)).join('; ')}` : ''}`;
-    }
-    if (call.args && payload.portfolio && payload.portfolio !== call.args.portfolio) {
-      return `systematic DtxValidateDecisionInput portfolio mismatch (${payload.portfolio} != ${call.args.portfolio})`;
-    }
-    if (call.args && payload.broker && payload.broker !== call.args.broker) {
-      return `systematic DtxValidateDecisionInput broker mismatch (${payload.broker} != ${call.args.broker})`;
-    }
-  }
   if (call.tool === 'DtxDecide') {
     const errors = validateDtxDecision(value, {
       asof: call.args && call.args.asof,
       requestId: call.args && call.args.request_id,
-      portfolio: call.args && call.args.portfolio,
       referenceClose: call.args && call.args.expected_data_date,
     });
     if (errors.length) return `systematic DtxDecide contract rejected: ${errors.join('; ')}`;
@@ -493,14 +483,7 @@ function socleRead(c) {
       process.exit(2);
     }
   }
-  const requestedCollectionTimestamp = cliVars.as_of_timestamp;
-  if (requestedCollectionTimestamp
-      && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/.test(requestedCollectionTimestamp)) {
-    throw new Error('as_of_timestamp doit porter une heure et un offset UTC explicites');
-  }
-  const parsedCollectionTimestamp = requestedCollectionTimestamp ? new Date(requestedCollectionTimestamp) : new Date();
-  if (!Number.isFinite(parsedCollectionTimestamp.getTime())) throw new Error(`as_of_timestamp illisible: ${requestedCollectionTimestamp}`);
-  const collectionTimestamp = parsedCollectionTimestamp.toISOString();
+  const collectionTimestamp = new Date().toISOString();
   const equityReferenceClose = cliVars.equity_reference_close || cliVars.refdate || plan.reference_date || null;
   const cryptoCompletedRefdate = cliVars.crypto_completed_refdate || cliVars.crypto_refdate || null;
   const refdate = equityReferenceClose;

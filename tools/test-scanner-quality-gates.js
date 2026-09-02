@@ -11,7 +11,6 @@ const { extractAllFromDir } = require('./update-tracking');
 const dtxScan = require('./dtx-scan');
 const { isPlanActive } = require('./lib/dtx-plan-window');
 const { isUSTradingDay, newYorkDateISO } = require('./lib/market-calendar');
-const { HISTORY_STATUS, REASON_CODE } = require('./lib/public-scanner-history');
 
 const ROOT = path.join(__dirname, '..');
 const read = rel => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
@@ -31,7 +30,6 @@ assert(tracked.every(t => t.entry_low && t.entry_high), 'tracking must retain en
 
 const positions = read('data/scanner-positions.json').open_positions || [];
 const today = newYorkDateISO();
-const todayKey = today.replace(/-/g, '');
 assert(!positions.some(p => p.scan_date > today), 'future scans must never become open positions');
 
 const statusHtml = fs.readFileSync(path.join(ROOT, 'scanner/status/index.html'), 'utf8');
@@ -40,6 +38,7 @@ const isMarketClosedDay = !isUSTradingDay(today);
 if (isMarketClosedDay) {
   assert(statusHtml.includes('Portefeuille · Marché fermé'), 'closed-session status must be labeled in the site language');
   assert(!/>\s*\d+ Orders? to Place</.test(statusHtml), 'closed-session status must not advertise actionable orders');
+  const todayKey = today.replace(/-/g, '');
   const snapshot = read(`scanner/status/history/${todayKey}.json`);
   for (const [mode, payload] of Object.entries(snapshot.modes || {})) {
     assert.strictEqual((payload.orders || []).length, 0, `${mode}: closed-session snapshot orders must be empty`);
@@ -50,18 +49,7 @@ if (isMarketClosedDay) {
 }
 const bestMethod = (statusHtml.split('<div id="p-best"')[1] || '').split('<!-- ══ 2bis.')[0];
 assert(!/market order/i.test(bestMethod), 'DTX public method must never prescribe LIMIT-to-MARKET conversion');
-assert(/uniquement le rang 1/i.test(bestMethod) && /protection affichée/i.test(bestMethod), 'DTX public method must describe grouped execution and exact protection in French');
-assert(statusHtml.includes('Simulations éditoriales'), 'legacy strategy group must disclose its simulated scope');
-for (const mode of ['turbo', 'dynamic', 'balanced', 'fortress']) {
-  const start = statusHtml.indexOf(`<div id="p-${mode}"`);
-  const next = statusHtml.indexOf('<div id="p-', start + 10);
-  const panel = statusHtml.slice(start, next < 0 ? statusHtml.length : next);
-  assert(panel.includes('data-performance-scope="simulated_backtest"'), `${mode}: simulated scope missing from panel`);
-  for (const row of (panel.match(/<tr data-sig-ticker=[\s\S]*?<\/tr>/g) || [])) {
-    assert(!/>LIVE<\/span>/.test(row), `${mode}: simulated candidate must not carry a LIVE execution badge`);
-    assert(/>SIGNAL<\/span>/.test(row), `${mode}: simulated candidate must be labeled SIGNAL`);
-  }
-}
+assert(/rank 1 only/i.test(bestMethod) && /engine_managed/i.test(bestMethod), 'DTX public method must describe grouped execution and exact protection');
 
 const sec = read('scanner/20260831/_data2/sec_selected_evidence.json');
 assert.strictEqual(sec.pagination_exhausted, true, 'SEC pagination must be exhausted');
@@ -99,7 +87,6 @@ assert.deepStrictEqual(summarize(momentumMature.filter(x => ['US', 'ETF'].includ
 assert.deepStrictEqual(summarize(momentumMature.filter(x => x.region === 'US')), policy.strict_us_sensitivity, 'Momentum strict-US sensitivity drift');
 
 const dtxBest = read('data/dtx/best.json');
-const publicBestConfig = read('data/modes-config.json').modes.best;
 const decideEnvelope = read('scanner/20260831/_dtx/decide_best.json');
 const decideV2 = decideEnvelope.result || decideEnvelope;
 assert.deepStrictEqual(dtxScan.validateDecisionV2(decideV2, { asof: '2026-08-31' }), [], 'valid DTX Contract V2 decision rejected');
@@ -108,18 +95,18 @@ const brokenDecision = structuredClone(decideV2);
 delete brokenDecision.execution_plan.groups[0].candidates[0].protection;
 assert(dtxScan.validateDecisionV2(brokenDecision, { asof: '2026-08-31' }).some(e => e.includes('protection missing')), 'missing V2 protection must fail closed');
 assert.strictEqual(dtxBest.metricsSource, 'mcp_replay', 'incoherent served DTX snapshot must fall back to fresh replay');
-assert.strictEqual(dtxBest.portfolioId, publicBestConfig.dtxPortfolio, 'public best alias must retain the selected engine identity');
-assert.strictEqual(dtxBest.configHash, publicBestConfig.dtxConfigHash, 'DTX staging must retain the exact configured engine hash');
-assert.strictEqual(dtxBest.rejectedServedSnapshot, undefined, 'new engine identity must not inherit the previous Best book rejection');
-assert.strictEqual(dtxBest.metrics.replay_scope, 'single_strategy', 'DTX Max must publish one exact strategy replay');
+assert(dtxBest.rejectedServedSnapshot, 'rejected DTX served snapshot must retain an audit record');
+assert(
+  Math.abs(dtxBest.rejectedServedSnapshot.curve_max_dd_pct - dtxBest.rejectedServedSnapshot.served_max_dd_pct) > 0.25,
+  'served DTX snapshot may only be rejected when the curve/metric drawdown mismatch is material',
+);
 assert.strictEqual(dtxBest.decisionProvenance.contractVersion, '2.0', 'DTX best decision must retain Contract V2 provenance');
 if (dtxBest.actionable === false) {
   assert.strictEqual(dtxBest.failureMode, 'fail_closed', 'non-actionable DTX staging must declare fail_closed');
   assert.strictEqual((dtxBest.orders || []).length, 0, 'fail-closed DTX staging must contain zero orders');
   assert.strictEqual(dtxBest.executionPlan, null, 'fail-closed DTX staging must not invent an execution plan');
   assert.strictEqual(dtxBest.invalidDecision?.code, 'IDEMPOTENCY_FINGERPRINT_CONFLICT', 'fail-closed DTX staging must retain the exact refusal class');
-  assert.deepStrictEqual(dtxScan.stagingSnapshotErrors(dtxBest, publicBestConfig.dtxPortfolio, {
-    publicModeId: 'best', expectedConfigHash: publicBestConfig.dtxConfigHash,
+  assert.deepStrictEqual(dtxScan.stagingSnapshotErrors(dtxBest, 'best', {
     todayIso: dtxBest.generatedAt.slice(0, 10), scanDateIso: dtxBest.asof,
     expectedClose: dtxBest.decisionProvenance.expectedDataDate,
   }), [], 'formal fail-closed DTX staging rejected');
@@ -135,7 +122,6 @@ if (dtxBest.actionable === false) {
   assert.strictEqual(dtxBest.executionPlan.source, 'execution_plan.groups', 'DTX V2 ingestion must not consume actions.CREATE');
   const dtxHistory = read('data/dtx-engine-history.json');
   const historicalDecision = dtxHistory.modes.best[dtxBest.asof];
-  assert.strictEqual(historicalDecision.configHash, dtxBest.configHash, 'DTX config hash must survive history persistence');
   assert.deepStrictEqual(historicalDecision.decisionProvenance, dtxBest.decisionProvenance, 'DTX V2 provenance must survive history persistence');
   assert.strictEqual(historicalDecision.executionPlan.source, 'execution_plan.groups', 'DTX V2 source must survive history persistence');
   const dtxValidDate = dtxBest.decisionProvenance.validFrom.slice(0, 10);
@@ -148,54 +134,17 @@ const stagedValues = dtxBest.equity.values;
 const stagedReturn = (stagedValues[stagedValues.length - 1] / stagedValues[0] - 1) * 100;
 assert(Math.abs(stagedReturn - dtxBest.metrics.return_pct) <= 0.05, 'DTX staging curve/headline mismatch');
 const bestApi = read('portfolio/v1/best/equity.json');
-assert.strictEqual(bestApi.engineConfigHash, publicBestConfig.dtxConfigHash, 'DTX API must disclose the exact configured engine hash');
-assert.strictEqual(bestApi.stats.scope, 'forward_execution', 'DTX API top-level stats must describe forward execution only');
-assert.strictEqual(bestApi.stats.status, 'not_started', 'DTX forward tracking must disclose its not-started state');
-assert.strictEqual(bestApi.stats.ret, null, 'DTX forward return must remain null before a certified execution');
-assert.deepStrictEqual(bestApi.equityCurve.v, [], 'DTX forward curve must remain empty before a certified execution');
-const apiValues = bestApi.engineBacktest.equityCurve.v;
+const apiValues = bestApi.equityCurve.v;
 const apiReturn = (apiValues[apiValues.length - 1] / apiValues[0] - 1) * 100;
-assert(Math.abs(apiReturn - bestApi.engineBacktest.return_pct) <= 0.05, 'DTX reference curve/headline mismatch');
-assert.strictEqual(bestApi.engineBacktest.metrics_source, 'exact_reference_replay', 'DTX API replay provenance missing');
+assert(Math.abs(apiReturn - bestApi.stats.ret) <= 0.05, 'DTX API curve/headline mismatch');
+assert.strictEqual(bestApi.engineBacktest.metrics_source, 'mcp_replay', 'DTX API replay provenance missing');
 assert.strictEqual(bestApi.engineBacktest.curve_is_book, false, 'DTX replay must not be labeled as a served book curve');
-const currentStatusSnapshot = read(`scanner/status/history/${todayKey}.json`);
-const currentSnapshotBest = currentStatusSnapshot.modes.best;
-assert.strictEqual(currentSnapshotBest.stats.scope, 'forward_execution', 'DTX Time Machine stats must be forward-only');
-assert.strictEqual(currentSnapshotBest.stats.status, 'not_started', 'DTX Time Machine must disclose forward not_started');
-for (const metric of ['ret', 'realized', 'unrealized', 'dd', 'wr', 'pf', 'avgHold', 'r2', 'cagr', 'sharpe']) {
-  assert.strictEqual(currentSnapshotBest.stats[metric], null, `DTX Time Machine ${metric} must stay null before certified fills`);
+const now = Date.now();
+if (dtxBest.actionable !== false && (now < Date.parse(dtxBest.decisionProvenance.validFrom) || now > Date.parse(dtxBest.decisionProvenance.validUntil))) {
+  const bestOrdersApi = read('portfolio/v1/best/orders.json');
+  assert.strictEqual((bestOrdersApi.orders || []).length, 0, 'DTX API orders must be empty outside plan window');
+  assert.deepStrictEqual(bestOrdersApi.decisionProvenance, dtxBest.decisionProvenance, 'DTX API must disclose the gated plan provenance even when it publishes zero orders');
 }
-assert.deepStrictEqual(currentSnapshotBest.equity.d, [], 'DTX Time Machine forward curve dates must be empty');
-assert.deepStrictEqual(currentSnapshotBest.equity.v, [], 'DTX Time Machine forward curve values must be empty');
-assert.deepStrictEqual(currentSnapshotBest.positions, [], 'DTX Time Machine positions must be certified-execution only');
-assert.deepStrictEqual(currentSnapshotBest.closedTrades, [], 'DTX Time Machine closed trades must be certified-execution only');
-assert.strictEqual(currentSnapshotBest.risk, null, 'DTX forward not_started must not inherit a pre-boundary VaR/stress snapshot');
-for (const modeId of ['turbo', 'dynamic', 'balanced', 'fortress']) {
-  const mode = currentStatusSnapshot.modes[modeId];
-  assert.strictEqual(mode.stats?.capacityBoundary?.forwardCertified, true, `${modeId}: forward capacity boundary missing`);
-  assert.strictEqual(mode.risk, null, `${modeId}: pre-boundary portfolio risk must not survive the zero-position genesis`);
-}
-assert.strictEqual(currentSnapshotBest.reference.scope, 'reference_backtest', 'DTX replay must be namespaced under reference');
-assert(currentSnapshotBest.reference.equity.d.length > 0, 'DTX reference replay curve must remain available outside the forward hero');
-assert.strictEqual(currentSnapshotBest.engine_decision.historyStatus, HISTORY_STATUS, 'pre-boundary DTX proposal must be retired_uncertified');
-assert.strictEqual(currentSnapshotBest.engine_decision.reasonCode, REASON_CODE, 'pre-boundary DTX proposal must disclose the capacity reason');
-assert.strictEqual(currentSnapshotBest.engine_decision.execution_verified, false, 'pre-boundary DTX proposal cannot be execution-verified');
-assert.deepStrictEqual(currentSnapshotBest.engine_decision.plans, [], 'pre-boundary DTX proposal must expose zero public plans');
-assert(!/SNDK/.test(JSON.stringify(currentSnapshotBest.engine_decision)), 'pre-boundary SNDK proposal leaked into current public snapshot');
-const publicPlanHistory = read('scanner/status/engine-history.json');
-const publicPlanSession = publicPlanHistory.modes.best['2026-09-01'];
-assert.strictEqual(publicPlanSession.historyStatus, HISTORY_STATUS, 'public plan registry must retire the pre-boundary decision');
-assert.deepStrictEqual(publicPlanSession.plans, [], 'public plan registry must expose zero pre-boundary plans');
-assert(!/(?:"engineMode"|"orders"|"metrics"|\bmcp\b|SNDK)/i.test(JSON.stringify(publicPlanHistory)), 'public proposed-plan registry leaked engine/order/metric/pre-boundary details');
-assert(statusHtml.includes('Plans proposés') && statusHtml.includes('NON EXÉCUTÉ'), 'public plan section must be explicit and non-executed');
-assert(!statusHtml.includes('Décisions du moteur'), 'legacy engine-decision heading must not survive');
-const bestOrdersApi = read('portfolio/v1/best/orders.json');
-assert.strictEqual((bestOrdersApi.orders || []).length, 0, 'DTX API orders must be empty for a pre-boundary decision');
-assert.deepStrictEqual(bestOrdersApi.plannedOrders, [], 'DTX API plannedOrders must be empty for a pre-boundary decision');
-assert.strictEqual(bestOrdersApi.decisionProvenance, null, 'pre-boundary plan-window provenance must be quarantined');
-assert.strictEqual(bestOrdersApi.planningCertification?.status, HISTORY_STATUS, 'DTX API must retire the pre-boundary proposal');
-assert.strictEqual(bestOrdersApi.planningCertification?.reasonCode, 'decision_precedes_capacity_boundary', 'DTX API must disclose the exact planning cutoff reason');
-assert.strictEqual(bestOrdersApi.planningCertification?.execution_verified, false, 'pre-boundary API plan cannot be execution-verified');
 
 const validation = spawnSync(process.execPath, ['tools/validate-scan.js', 'scanner/20260831/', '--skip-edgar'], {
   cwd: ROOT,

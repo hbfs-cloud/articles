@@ -25,7 +25,7 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..', '..');
 const STORE_PATH = path.join(ROOT, 'data', 'dtx-engine-history.json');
-const VERSION = 'v3-20260901';
+const VERSION = 'v1-20260807';
 
 function emptyStore() {
   return {
@@ -53,7 +53,6 @@ function load() {
 }
 
 function save(store) {
-  store._version = VERSION;
   store._updated = new Date().toISOString();
   fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2) + '\n');
 }
@@ -102,11 +101,6 @@ function append(staging, opts = {}) {
 
   const entry = {
     asof: date,
-    // `mode` est l'identifiant public stable ; `portfolioId` est l'identité du
-    // moteur. Les conserver séparément empêche un changement de stratégie sous
-    // le même hash public de reprendre l'historique de son prédécesseur.
-    portfolioId: staging.portfolioId || staging.mode || null,
-    configHash: staging.configHash || null,
     generatedAt: staging.generatedAt || null,
     engineMode: staging.engineMode || null,
     provenance: staging._provenance || 'staging',
@@ -147,19 +141,10 @@ function at(mode, date, store) {
 }
 
 /** Dernière séance connue À OU AVANT `date` — la lecture point-in-time correcte. */
-function asOf(mode, date, store, portfolioId = null, configHash = null) {
+function asOf(mode, date, store) {
   const s = store || load();
   const byDate = s.modes[mode] || {};
-  const keys = Object.keys(byDate).filter(d => {
-    if (d > date) return false;
-    if (!portfolioId) return true;
-    // Les entrées v1 sans identité moteur ne sont pas attribuables avec
-    // certitude au portefeuille désormais servi : lecture fail-closed.
-    if (!byDate[d] || byDate[d].portfolioId !== portfolioId) return false;
-    // Same portfolio id with a different deployed config is a different engine
-    // identity. Legacy entries without a hash are intentionally unattributable.
-    return !configHash || byDate[d].configHash === configHash;
-  }).sort();
+  const keys = Object.keys(byDate).filter(d => d <= date).sort();
   return keys.length ? byDate[keys[keys.length - 1]] : null;
 }
 

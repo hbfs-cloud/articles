@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * scan-ingest-all.js — LEGACY DISABLED. This positional ingester is retained only
- * while old references are migrated; invoking it always fails before any write.
- *
- * Historical description: transforme les réponses MCP BRUTES déversées par
+ * scan-ingest-all.js — ASSEMBLEUR (node, ZÉRO MCP) : transforme les réponses MCP BRUTES déversées par
  * l'agent (/tmp/mcp-raw/<key>.json) en tous les staging que `publish-daily-card.sh` ingère, + lance
  * l'ingest dtx. C'est le « scriptant tout » de la doctrine perf-parallel-mcp (R5) : le MCP ne sort que
  * du brut, node fait TOUT l'assemblage — déterministe, testable A/B, aucune arithmétique de staging à la
@@ -38,9 +35,8 @@ const scan = require('./dtx-scan');
 
 const REPO = path.resolve(__dirname, '..');
 const RAW_DIR = '/tmp/mcp-raw';
-const DTX_MODES = scan.SCRIPTED_MODES;
+const DTX_MODES = ['best'];
 const PRE_SCORED = ['highvol', 'momentum', 'factor', 'etf', 'forex', 'trendline-forex', 'trendline-indices'];
-const LEGACY_DISABLED_REASON = 'legacy scan-plan/scan-ingest-all pipeline disabled: QueryData must be ingested through collect.js with per-cell completed-bar validation';
 
 function readJson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (_) { return null; } }
 function raw(key) { return readJson(path.join(RAW_DIR, `${key}.json`)); }
@@ -172,7 +168,6 @@ function main() {
   const dtxFrozen = [];
   const dtxSkipped = [];
   for (const id of DTX_MODES) {
-    const portfolio = scan.dtxPortfolioForMode(id);
     const dec = raw(`dtx_${id}_decide`);
     const rep = raw(`dtx_${id}_replay`);
     const decBody = dec?.result || dec;
@@ -181,12 +176,11 @@ function main() {
     const decPath = `/tmp/${id}.decide.json`;
     const repPath = `/tmp/${id}.replay.json`;
     fs.writeFileSync(decPath, JSON.stringify(decBody), 'utf8');
-    const args = ['tools/dtx-mcp-ingest.js', '--portfolio', portfolio, '--decide', decPath,
-      '--asof', expectedClose, '--scan-session', asof, '--expected-close', expectedClose,
-      '--from', scan.DEFAULT_FROM, '--out', path.join('data', 'dtx', `${id}.json`)];
+    const args = ['tools/dtx-mcp-ingest.js', '--portfolio', id, '--decide', decPath, '--asof', asof, '--expected-close', expectedClose, '--from', scan.DEFAULT_FROM];
     if (repBody && (repBody.results || repBody.result?.results)) {
       fs.writeFileSync(repPath, JSON.stringify(repBody), 'utf8');
-      args.push('--replay', repPath, '--to', expectedClose);
+      const to = String(scan.goLiveFor(id) || asof).slice(0, 10);
+      args.push('--replay', repPath, '--to', to);
     }
     const res = cp.spawnSync('node', args, { cwd: REPO, encoding: 'utf8' });
     process.stdout.write(res.stdout || '');
@@ -210,8 +204,5 @@ function main() {
   else if (dtxFrozen.length) process.exitCode = 8;
 }
 
-if (require.main === module) {
-  console.error(`⛔ ${LEGACY_DISABLED_REASON}`);
-  process.exit(2);
-}
-module.exports = { barsMapFromKeys, extractResults, normBars, LEGACY_DISABLED_REASON };
+if (require.main === module) main();
+module.exports = { barsMapFromKeys, extractResults, normBars };

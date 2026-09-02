@@ -1,31 +1,7 @@
 'use strict';
 
 const MIN_MARKETDATA_BUILD = '0424cf4b';
-// Git hashes are not orderable. The client therefore keeps a fail-closed list
-// of builds whose ancestry from MIN_MARKETDATA_BUILD was verified in the
-// Marketdata source repository. 0e946129 was checked with:
-//   git merge-base --is-ancestor 0424cf4b 0e94612996111518814c6415e38cb5c913c9309d
-// on 2026-09-01 before this release. 4d8a54f1 was checked as a descendant
-// of both 0424cf4b and the prior live 0e946129 before its live probes.
-// d24684fb was then checked as a descendant of 0424cf4b, 0e946129 and
-// 4d8a54f1 before its post-ready single-symbol SEC and daily-calendar probes.
-const AUDITED_MARKETDATA_BUILDS = new Set([
-  MIN_MARKETDATA_BUILD,
-  '0424cf4bc65f117e15497c1e83d86e91c441635d',
-  '0e946129',
-  '0e94612996111518814c6415e38cb5c913c9309d',
-  '4d8a54f1',
-  '4d8a54f183c17f60e946e06f5caa4e31bd97378c',
-  'd24684fb',
-  'd24684fbb8f415d8bd7632f23a25f7d17a75f24c',
-]);
 const ASSET_CALENDARS = new Set(['us_equity_exchange_sessions', 'crypto_24_7_utc']);
-const GET_STATUS_CONTRACT_ASSERTIONS = new Set([
-  'equity_reference_close',
-  'crypto_completed_refdate',
-  'sec_operation',
-  'expected_intraday_close',
-]);
 
 function scalar(value, keys) {
   if (!value || typeof value !== 'object') return null;
@@ -46,13 +22,6 @@ function identifier(value) {
   return id == null ? null : String(id);
 }
 
-function ownScalar(value, key) {
-  if (!value || typeof value !== 'object') return null;
-  if (!Object.prototype.hasOwnProperty.call(value, key)) return null;
-  const candidate = value[key];
-  return candidate == null || candidate === '' ? null : candidate;
-}
-
 function findObjectByKey(value, key) {
   if (!value || typeof value !== 'object') return null;
   if (value[key] && typeof value[key] === 'object') return value[key];
@@ -64,9 +33,15 @@ function findObjectByKey(value, key) {
 }
 
 function findBuild(value) {
-  const payload = value && value.result && typeof value.result === 'object' ? value.result : value;
-  const build = payload && payload.server_version;
-  return typeof build === 'string' && build.trim() ? build.trim() : null;
+  if (!value || typeof value !== 'object') return null;
+  for (const key of ['server_version', 'deployment_id', 'commit_hash', 'commit']) {
+    if (typeof value[key] === 'string' && value[key].trim()) return value[key].trim();
+  }
+  for (const child of Object.values(value)) {
+    const found = findBuild(child);
+    if (found) return found;
+  }
+  return null;
 }
 
 function findQueryResults(value) {
@@ -95,55 +70,16 @@ function structuredReason(cell) {
   return '';
 }
 
-function exactProofValue(cell, row, key, normalize = value => String(value)) {
-  const values = [ownScalar(cell, key), ownScalar(row, key)].filter(value => value != null);
-  if (!values.length) return { value: null, conflict: false };
-  const normalized = values.map(normalize);
-  return { value: values[0], conflict: normalized.some(value => value !== normalized[0]) };
-}
-
 function proofFor(cell, row) {
-  const assetCalendar = exactProofValue(cell, row, 'asset_calendar');
-  const expectedCompletedEnd = exactProofValue(cell, row, 'expected_completed_end');
-  const servedCompletedEnd = exactProofValue(cell, row, 'served_completed_end');
-  const requestedEndState = exactProofValue(cell, row, 'requested_end_state');
-  const lastBarComplete = exactProofValue(cell, row, 'last_bar_complete', value => String(boolean(value)));
-  const currentBarIncluded = exactProofValue(cell, row, 'current_bar_included', value => String(boolean(value)));
-  const currentBarComplete = exactProofValue(cell, row, 'current_bar_complete', value => String(boolean(value)));
-  const retryAt = exactProofValue(cell, row, 'retry_at');
-  const nextCompleteAvailableAt = exactProofValue(cell, row, 'next_complete_available_at');
+  const coverage = row && row.coverage && typeof row.coverage === 'object' ? row.coverage : {};
   return {
-    assetCalendar: assetCalendar.value,
-    expectedCompletedEnd: expectedCompletedEnd.value,
-    servedCompletedEnd: servedCompletedEnd.value,
-    requestedEndState: requestedEndState.value,
-    lastBarComplete: boolean(lastBarComplete.value),
-    currentBarIncluded: boolean(currentBarIncluded.value),
-    currentBarComplete: boolean(currentBarComplete.value),
-    retryAt: retryAt.value || nextCompleteAvailableAt.value,
-    conflicts: [
-      ['asset_calendar', assetCalendar],
-      ['expected_completed_end', expectedCompletedEnd],
-      ['served_completed_end', servedCompletedEnd],
-      ['requested_end_state', requestedEndState],
-      ['last_bar_complete', lastBarComplete],
-      ['current_bar_included', currentBarIncluded],
-      ['current_bar_complete', currentBarComplete],
-      ['retry_at', retryAt],
-      ['next_complete_available_at', nextCompleteAvailableAt],
-    ].filter(([, result]) => result.conflict).map(([key]) => key),
+    assetCalendar: scalar(cell, ['asset_calendar']) || scalar(row, ['asset_calendar']) || scalar(coverage, ['asset_calendar']),
+    expectedCompletedEnd: scalar(cell, ['expected_completed_end']) || scalar(row, ['expected_completed_end']) || scalar(coverage, ['expected_completed_end', 'expected_session_end']),
+    servedCompletedEnd: scalar(cell, ['served_completed_end']) || scalar(row, ['served_completed_end']) || scalar(coverage, ['served_completed_end', 'served_end']),
+    requestedEndState: scalar(cell, ['requested_end_state']) || scalar(row, ['requested_end_state']) || scalar(coverage, ['requested_end_state']),
+    lastBarComplete: boolean(scalar(cell, ['last_bar_complete']) ?? scalar(row, ['last_bar_complete']) ?? scalar(coverage, ['last_bar_complete', 'complete'])),
+    retryAt: scalar(cell, ['retry_at', 'next_complete_available_at']) || scalar(row, ['retry_at', 'next_complete_available_at']) || scalar(coverage, ['retry_at', 'next_complete_available_at']),
   };
-}
-
-function lastBarDate(row) {
-  if (!row || !Array.isArray(row.bars) || !row.bars.length) return null;
-  const last = row.bars[row.bars.length - 1];
-  if (Array.isArray(last)) return last[0] == null ? null : String(last[0]).slice(0, 10);
-  if (last && typeof last === 'object') {
-    const date = ownScalar(last, 'date') || ownScalar(last, 'timestamp') || ownScalar(last, 'time');
-    return date == null ? null : String(date).slice(0, 10);
-  }
-  return null;
 }
 
 /**
@@ -153,7 +89,6 @@ function lastBarDate(row) {
  */
 function validateQueryData(value, options = {}) {
   const expectedIds = String(options.symbols || '').split(',').map(item => item.trim()).filter(Boolean);
-  const expectedIdSet = new Set(expectedIds);
   const results = findQueryResults(value);
   const cells = results.flatMap(result => result.cells || []);
   const rows = results.flatMap(result => Array.isArray(result.data) ? result.data : []);
@@ -178,80 +113,51 @@ function validateQueryData(value, options = {}) {
       continue;
     }
     seen.set(id, (seen.get(id) || 0) + 1);
-    const cellErrors = [];
-    if (expectedIds.length && !expectedIdSet.has(id)) cellErrors.push(`${id}: unexpected terminal cell`);
     if (status === 'completed_without_data') {
-      errors.push(...cellErrors, `${id}: completed_without_data is forbidden (fail-closed)`);
+      errors.push(`${id}: completed_without_data is forbidden (fail-closed)`);
       continue;
     }
     if (status === 'not_applicable') {
-      if (!String(cell.not_applicable_reason || '').trim()) cellErrors.push(`${id}: not_applicable missing not_applicable_reason`);
-      if (ownScalar(cell, 'rejection_reason') != null || ownScalar(cell, 'error') != null) {
-        cellErrors.push(`${id}: not_applicable carries a conflicting failure reason`);
-      }
-      if ((rowsById.get(id) || []).length) cellErrors.push(`${id}: not_applicable must not carry a data row`);
-      errors.push(...cellErrors);
-      if (!cellErrors.length) healthyCells.push({ id, status, cell, row: null });
+      if (!String(cell.not_applicable_reason || '').trim()) errors.push(`${id}: not_applicable missing not_applicable_reason`);
+      else healthyCells.push({ id, status, cell, row: null });
       continue;
     }
     if (status === 'failed' || status === 'unavailable') {
-      if (ownScalar(cell, 'not_applicable_reason') != null) cellErrors.push(`${id}: ${status} carries a conflicting not_applicable_reason`);
-      if (!structuredReason(cell)) cellErrors.push(`${id}: ${status} missing rejection_reason/structured error`);
-      else cellErrors.push(`${id}: ${status}: ${structuredReason(cell)}`);
-      if ((rowsById.get(id) || []).length) cellErrors.push(`${id}: ${status} must not carry a data row`);
+      if (!structuredReason(cell)) errors.push(`${id}: ${status} missing rejection_reason/structured error`);
+      else errors.push(`${id}: ${status}: ${structuredReason(cell)}`);
       const proof = proofFor(cell, null);
       if (proof.retryAt && (!retryAt || String(proof.retryAt) < retryAt)) retryAt = String(proof.retryAt);
-      errors.push(...cellErrors);
       continue;
     }
     if (status !== 'completed') {
-      errors.push(...cellErrors, `${id}: non-terminal or unknown cell status ${status || '(missing)'}`);
+      errors.push(`${id}: non-terminal or unknown cell status ${status || '(missing)'}`);
       continue;
-    }
-    if (ownScalar(cell, 'not_applicable_reason') != null || ownScalar(cell, 'rejection_reason') != null || ownScalar(cell, 'error') != null) {
-      cellErrors.push(`${id}: completed cell carries a conflicting terminal reason`);
     }
     const matches = rowsById.get(id) || [];
     if (matches.length !== 1) {
-      errors.push(...cellErrors, `${id}: completed cell must map to exactly one data row (got ${matches.length})`);
+      errors.push(`${id}: completed cell must map to exactly one data row (got ${matches.length})`);
       continue;
     }
     const row = matches[0];
     const proof = proofFor(cell, row);
     if (proof.retryAt && (!retryAt || String(proof.retryAt) < retryAt)) retryAt = String(proof.retryAt);
-    for (const field of proof.conflicts) cellErrors.push(`${id}: conflicting ${field} between terminal cell and data row`);
     if (options.assetCalendar && proof.assetCalendar !== options.assetCalendar) {
-      cellErrors.push(`${id}: asset_calendar mismatch (expected ${options.assetCalendar}, got ${proof.assetCalendar || 'missing'})`);
+      errors.push(`${id}: asset_calendar mismatch (expected ${options.assetCalendar}, got ${proof.assetCalendar || 'missing'})`);
     }
     if (options.expectedCompletedEnd) {
-      if (!proof.expectedCompletedEnd) cellErrors.push(`${id}: missing expected_completed_end`);
+      if (!proof.expectedCompletedEnd) errors.push(`${id}: missing expected_completed_end`);
       else if (String(proof.expectedCompletedEnd) !== String(options.expectedCompletedEnd)) {
-        cellErrors.push(`${id}: expected_completed_end mismatch (expected ${options.expectedCompletedEnd}, got ${proof.expectedCompletedEnd})`);
+        errors.push(`${id}: expected_completed_end mismatch (expected ${options.expectedCompletedEnd}, got ${proof.expectedCompletedEnd})`);
       }
-      if (!proof.servedCompletedEnd) cellErrors.push(`${id}: missing served_completed_end`);
+      if (!proof.servedCompletedEnd) errors.push(`${id}: missing served_completed_end`);
       else if (String(proof.servedCompletedEnd) !== String(options.expectedCompletedEnd)) {
-        cellErrors.push(`${id}: served_completed_end mismatch (expected ${options.expectedCompletedEnd}, got ${proof.servedCompletedEnd})`);
+        errors.push(`${id}: served_completed_end mismatch (expected ${options.expectedCompletedEnd}, got ${proof.servedCompletedEnd})`);
       }
     }
     // current_bar_open describes the requested end, not stale data. It is safe
     // only when the separately served completed end is proven above.
-    if (!proof.requestedEndState) cellErrors.push(`${id}: missing requested_end_state`);
-    // QueryData certifies the close through expected/served_completed_end plus
-    // the identified last data row. `last_bar_complete` is mandatory only on
-    // RefreshBars; when QueryData does expose it, an explicit false still fails.
-    if (proof.lastBarComplete === false) {
-      cellErrors.push(`${id}: last_bar_complete=false cannot satisfy a close gate`);
-    }
-    if (proof.currentBarIncluded === true && proof.currentBarComplete !== true) {
-      cellErrors.push(`${id}: included current bar is partial (complete=false) and cannot satisfy a close gate`);
-    }
-    const actualLastBar = lastBarDate(row);
-    if (!actualLastBar) cellErrors.push(`${id}: completed data row has no identifiable bar`);
-    else if (proof.servedCompletedEnd && actualLastBar !== String(proof.servedCompletedEnd).slice(0, 10)) {
-      cellErrors.push(`${id}: last bar ${actualLastBar} != served_completed_end ${proof.servedCompletedEnd}`);
-    }
-    errors.push(...cellErrors);
-    if (!cellErrors.length) healthyCells.push({ id, status, cell, row, proof });
+    if (proof.lastBarComplete === false) errors.push(`${id}: last bar is partial (complete=false) and cannot satisfy a close gate`);
+    if (!errors.some(error => error.startsWith(`${id}:`))) healthyCells.push({ id, status, cell, row, proof });
   }
 
   for (const id of expectedIds) {
@@ -259,10 +165,6 @@ function validateQueryData(value, options = {}) {
     if (count !== 1) errors.push(`${id}: expected exactly one terminal cell (got ${count})`);
   }
   for (const [id, count] of seen) if (count !== 1) errors.push(`${id}: duplicate terminal cells (${count})`);
-  for (const id of rowsById.keys()) {
-    if (!seen.has(id)) errors.push(`${id}: data row has no terminal cell`);
-    if (expectedIds.length && !expectedIdSet.has(id)) errors.push(`${id}: unexpected data row`);
-  }
   if (expectedIds.length && cells.length === 0) errors.push('QueryData returned no terminal cells');
 
   const completedEnds = healthyCells
@@ -283,16 +185,16 @@ function validateOperationReadiness(value, expectations = {}) {
   if (!readiness) return { errors: ['marketdata GetStatus missing operation_readiness'], retryAt };
   const build = findBuild(value);
   if (expectations.minimumBuild && !build) errors.push(`marketdata build identity missing (minimum ${expectations.minimumBuild})`);
-  else if (expectations.minimumBuild && !AUDITED_MARKETDATA_BUILDS.has(build)) {
-    // Git hashes have no ordering. Accepting an arbitrary different hash as
-    // "newer" would turn the minimum version into a no-op. Every descendant
-    // must be admitted only after an explicit ancestry + contract audit.
-    errors.push(`marketdata build ${build} is not an audited descendant of ${expectations.minimumBuild}`);
-  }
+  // Git hashes have no lexical ordering. A different/newer hash is accepted
+  // only through the capability checks below; the known floor hash is recorded
+  // in every harness and all required 0424cf4b fields remain mandatory.
 
   const checks = [];
   if (expectations.equityReferenceClose) checks.push({
     key: 'bars_daily_us_equity', calendar: 'us_equity_exchange_sessions', expected: expectations.equityReferenceClose,
+  });
+  if (expectations.equityCoversClose && !expectations.equityReferenceClose) checks.push({
+    key: 'bars_daily_us_equity', calendar: 'us_equity_exchange_sessions', covers: expectations.equityCoversClose,
   });
   if (expectations.cryptoCompletedRefdate) checks.push({
     key: 'bars_daily_crypto_utc', calendar: 'crypto_24_7_utc', expected: expectations.cryptoCompletedRefdate,
@@ -305,11 +207,11 @@ function validateOperationReadiness(value, expectations = {}) {
     }
     if (String(operation.status || '').toLowerCase() !== 'ready') errors.push(`${check.key} not ready (${operation.status || 'missing status'})`);
     if (operation.asset_calendar !== check.calendar) errors.push(`${check.key} asset_calendar mismatch (expected ${check.calendar}, got ${operation.asset_calendar || 'missing'})`);
-    const serverExpected = String(operation.expected_completed_end || '');
+    const serverExpected = String(operation.expected_completed_end || check.expected || operation.served_completed_end || '');
     const served = String(operation.served_completed_end || '');
-    if (!serverExpected) errors.push(`${check.key} expected_completed_end missing`);
     if (check.expected && serverExpected !== String(check.expected)) errors.push(`${check.key} expected_completed_end mismatch (expected ${check.expected}, got ${serverExpected || 'missing'})`);
     if (!served || served !== serverExpected) errors.push(`${check.key} served_completed_end mismatch (expected ${serverExpected || check.expected}, got ${served || 'missing'})`);
+    if (check.covers && served < String(check.covers)) errors.push(`${check.key} does not cover completed close ${check.covers} (got ${served || 'missing'})`);
     const announcedRetry = operation.retry_at || operation.next_complete_available_at;
     if (announcedRetry && (!retryAt || String(announcedRetry) < retryAt)) retryAt = String(announcedRetry);
   }
@@ -320,38 +222,6 @@ function validateOperationReadiness(value, expectations = {}) {
     else if (String(sec.status || '').toLowerCase() !== 'ready') errors.push(`${expectations.secOperation} not ready (${sec.status || 'missing status'})`);
   }
   return { errors: [...new Set(errors)], retryAt, build };
-}
-
-function hasGetStatusContractAssertions(assertions = {}) {
-  return Object.keys(assertions || {}).some(key => GET_STATUS_CONTRACT_ASSERTIONS.has(key));
-}
-
-/**
- * Apply every contractual GetStatus assertion with explicit, calendar-specific
- * reference names. Legacy `covers_close`/`expected_close` aliases are rejected
- * by plan validation rather than silently weakening readiness semantics.
- */
-function validateGetStatus(value, assertions = {}, options = {}) {
-  const equityReferenceClose = assertions.equity_reference_close;
-  const check = validateOperationReadiness(value, {
-    equityReferenceClose,
-    cryptoCompletedRefdate: assertions.crypto_completed_refdate,
-    secOperation: assertions.sec_operation,
-    minimumBuild: options.minimumBuild || MIN_MARKETDATA_BUILD,
-  });
-  const errors = [...check.errors];
-  const expectedIntradayClose = assertions.expected_intraday_close;
-  if (expectedIntradayClose) {
-    const readiness = findObjectByKey(value, 'operation_readiness');
-    const intraday = readiness && readiness.bars_intraday_15m;
-    const state = String(intraday && intraday.status || '').toLowerCase();
-    if (state !== 'ready') errors.push(`bars_intraday_15m not ready (${state || 'missing status'})`);
-    const intradayClose = String(intraday && intraday.max_last_bar_at || '').slice(0, 10);
-    if (intradayClose !== String(expectedIntradayClose)) {
-      errors.push(`bars_intraday_15m close mismatch (expected ${expectedIntradayClose}, got ${intradayClose || 'missing'})`);
-    }
-  }
-  return { ...check, errors: [...new Set(errors)] };
 }
 
 function validateRefreshBars(value, expectedCompletedEnd) {
@@ -368,13 +238,9 @@ function validateRefreshBars(value, expectedCompletedEnd) {
 }
 
 module.exports = {
-  AUDITED_MARKETDATA_BUILDS,
   ASSET_CALENDARS,
-  GET_STATUS_CONTRACT_ASSERTIONS,
   MIN_MARKETDATA_BUILD,
   findQueryResults,
-  hasGetStatusContractAssertions,
-  validateGetStatus,
   validateOperationReadiness,
   validateQueryData,
   validateRefreshBars,

@@ -5699,12 +5699,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "⚡ DTX Max — stratégie US HighVol",
-    "desc": "Le plan moteur courant, son backtest certifié et le suivi d’exécution sont affichés séparément. Risque extrême ; une décision n’est pas une position ouverte.",
-    "tags": "technique,formation,trade-idea,us,etf,dtx",
+    "title": "⚡ Scanner Live — Signals, Positions & Performance",
+    "desc": "Daily signals with real-time P&L tracking, equity curves and full trade history. Balanced strategy optimized with per-strategy stop caps.",
+    "tags": "technique,formation,trade-idea,us,eu,asia,etf",
     "grade": "",
-    "href": "/scanner/status/#best",
-    "date": "Décision quotidienne · suivi forward séparé"
+    "href": "/scanner/status/",
+    "date": "Updated continuously"
   },
   {
     "type": "scanner",

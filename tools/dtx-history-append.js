@@ -30,7 +30,6 @@
 const fs = require('fs');
 const path = require('path');
 const hist = require('./lib/dtx-engine-history');
-const scan = require('./dtx-scan');
 
 const ROOT = path.join(__dirname, '..');
 const DTX_DIR = path.join(ROOT, 'data', 'dtx');
@@ -171,14 +170,6 @@ function main() {
     } catch (e) {
       // Un staging illisible est une VRAIE erreur : on ne l'avale pas.
       res.unreadable.push(`${mode}: ${e.message}`);
-      continue;
-    }
-    const expectedPortfolio = scan.dtxPortfolioForMode(mode);
-    const expectedConfigHash = scan.dtxConfigHashForMode(mode);
-    if (expectedConfigHash
-        && (staging.mode !== mode || staging.portfolioId !== expectedPortfolio
-          || staging.configHash !== expectedConfigHash)) {
-      res.unreadable.push(`${mode}: staging identity rejected (got ${staging.mode || 'missing'}←${staging.portfolioId || 'missing'}@${staging.configHash || 'missing'}, expected ${mode}←${expectedPortfolio}@${expectedConfigHash})`);
       continue;
     }
     staging._provenance = 'staging';

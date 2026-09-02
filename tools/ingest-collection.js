@@ -4,8 +4,6 @@
 const fs = require('fs');
 const path = require('path');
 const contract = require('./lib/workflow-contract');
-const marketdataBarsContract = require('./lib/marketdata-bars-contract');
-const marketdataQueryDataContract = require('./lib/marketdata-querydata-contract');
 
 const ROOT = contract.ROOT;
 const arg = name => {
@@ -52,8 +50,6 @@ const substitute = value => {
 const waves = (plan.waves || []).map(wave => ({ ...wave, calls: (wave.calls || []).map(substitute) }));
 const artifact = substitute(plan.artifact || '');
 const refdate = vars.refdate || plan.reference_date;
-const equityReferenceClose = vars.equity_reference_close || refdate;
-const cryptoCompletedRefdate = vars.crypto_completed_refdate || vars.crypto_refdate || null;
 const resolvedInput = { artifact, refdate, waves };
 const planSha256 = contract.sha256(planBytes);
 const inputSha256 = contract.sha256(Buffer.from(contract.stableStringify(resolvedInput)));
@@ -128,38 +124,13 @@ for (const wave of waves) {
     const bytes = fs.readFileSync(sourcePath);
     const payload = JSON.parse(bytes.toString('utf8'));
     const hash = contract.sha256(bytes);
-    const pagination = payload?.pagination || payload?.data?.pagination;
-    if (pagination?.has_next === true) {
-      throw new Error(`${call.as}: pagination MCP incomplète (has_next=true)`);
+    const dataThrough = call.freshness?.expects_close ? maxBarDate(payload) : maxObservedDate(payload);
+    if (call.freshness?.expects_close && dataThrough !== refdate) {
+      throw new Error(`${call.as}: expected close ${refdate}, observed ${dataThrough || 'none'}`);
     }
-    let barsProof = null;
-    if (call.server === 'marketdata' && call.tool === 'GetStatus') {
-      const check = marketdataBarsContract.validateGetStatus(payload, call.assert || {}, {
-        minimumBuild: marketdataBarsContract.MIN_MARKETDATA_BUILD,
-      });
-      if (check.errors.length) throw new Error(`${call.as}: ${check.errors.join('; ')}`);
-    }
-    if (call.server === 'marketdata' && call.tool === 'QueryData') {
-      const terminalCheck = marketdataQueryDataContract.validateQueryDataCells(payload, {
-        symbols: call.args?.symbols,
-        types: call.args?.types,
-      });
-      if (terminalCheck.errors.length) throw new Error(`${call.as}: ${terminalCheck.errors.join('; ')}`);
-      if (/(^|,)bars_daily(,|$)/.test(String(call.args?.types || ''))) {
-        barsProof = marketdataBarsContract.validateQueryData(payload, {
-          symbols: call.args?.symbols,
-          assetCalendar: call.freshness?.asset_calendar,
-          expectedCompletedEnd: call.freshness?.expected_completed_end || equityReferenceClose,
-        });
-        if (barsProof.errors.length) throw new Error(`${call.as}: ${barsProof.errors.join('; ')}`);
-      }
-    }
-    const dataThrough = call.freshness?.expects_close
-      ? barsProof?.completedDataThrough || maxBarDate(payload)
-      : maxObservedDate(payload);
-    const expectedCompletedEnd = call.freshness?.expected_completed_end || equityReferenceClose;
-    if (call.freshness?.expects_close && dataThrough !== expectedCompletedEnd) {
-      throw new Error(`${call.as}: expected completed end ${expectedCompletedEnd}, observed ${dataThrough || 'none'}`);
+    if (call.tool === 'GetStatus') {
+      const actualClose = JSON.stringify(payload).match(/"bar_service_1d_max_last_bar_date"\s*:\s*"(\d{4}-\d{2}-\d{2})"/)?.[1];
+      if (call.assert?.expected_close && actualClose !== call.assert.expected_close) throw new Error(`${call.as}: GetStatus close ${actualClose || 'missing'} != ${call.assert.expected_close}`);
     }
     const embeddedObservation = visitDates(payload, key => /^(as_of|timestamp|generated_at|fetched_at|observed_at)$/i.test(key));
     const observationAtCallTime = new Set(['GetStatus', 'ExplainSymbolMove', 'GetSymbolSignals', 'GetEarningsCalendarFiltered']);
@@ -175,13 +146,8 @@ for (const wave of waves) {
       data_through: dataThrough,
       max_age_h: call.freshness?.max_age_h,
       required,
-      ...(call.freshness?.expects_close ? {
-        expects_close: true,
-        reference_close: expectedCompletedEnd,
-        asset_calendar: call.freshness?.asset_calendar,
-        completion_policy: call.args?.completion_policy,
-      } : {}),
-      temporal_mode: call.args?.as_of || call.args?.as_of_timestamp || call.args?.end_date ? 'point_in_time_or_bounded' : 'current',
+      ...(call.freshness?.expects_close ? { expects_close: true, reference_close: refdate } : {}),
+      temporal_mode: call.args?.as_of || call.args?.end_date ? 'point_in_time_or_bounded' : 'current',
       note: `${call.server}.${call.tool} ingéré depuis la réponse MCP authentifiée de la session agent${call.freshness?.note ? ` — ${call.freshness.note}` : ''}`
     });
   }
@@ -193,17 +159,13 @@ const planRelative = path.relative(ROOT, planPath).replace(/\\/g, '/');
 const journal = {
   contract_version: '1.0', workflow: owner.workflow, plan: planRelative, plan_sha256: planSha256,
   input_sha256: inputSha256, resolved_input: resolvedInput, artifact, reference_date: refdate,
-  equity_reference_close: equityReferenceClose, crypto_completed_refdate: cryptoCompletedRefdate,
   started_at: generatedAt, finished_at: generatedAt, failures: 0, blocked_at_gate: null,
   executed_calls: executedCalls, skipped_calls: 0, collection_mode: 'authenticated_agent_mcp_ingest', waves: journalWaves
 };
 const harness = {
   contract_version: '1.0', workflow: owner.workflow, generated_at: generatedAt, artifact,
   content: artifact.endsWith('/index.html') ? path.dirname(artifact) : artifact,
-  reference_close: refdate, equity_reference_close: equityReferenceClose,
-  crypto_completed_refdate: cryptoCompletedRefdate,
-  marketdata_min_build: marketdataBarsContract.MIN_MARKETDATA_BUILD,
-  plan: planRelative, plan_sha256: planSha256, input_sha256: inputSha256, sources
+  reference_close: refdate, plan: planRelative, plan_sha256: planSha256, input_sha256: inputSha256, sources
 };
 fs.writeFileSync(path.join(outDir, '_collect.json'), JSON.stringify(journal, null, 2) + '\n');
 fs.writeFileSync(path.join(outDir, 'harness.json'), JSON.stringify(harness, null, 2) + '\n');

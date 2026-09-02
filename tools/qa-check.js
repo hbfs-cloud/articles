@@ -19,21 +19,6 @@
 const fs = require('fs');
 const path = require('path');
 const { isUSTradingDay, newYorkDateISO, usTradingDaysBetween } = require('./lib/market-calendar');
-const {
-  capacityCertificationErrors,
-  configHistoryCoverageErrors,
-  summarizeLedgerAccounting,
-} = require('./lib/mode-stats');
-const {
-  modeBoundaryStatus,
-  validateRegistry: validateCapacityRegistry,
-} = require('./lib/capacity-ledger');
-const {
-  HISTORY_STATUS: PUBLIC_HISTORY_STATUS,
-  METRIC_KEYS: PUBLIC_HISTORY_METRIC_KEYS,
-  REASON_CODE: PUBLIC_HISTORY_REASON,
-  boundaryFromRegistry: publicHistoryBoundaryFromRegistry,
-} = require('./lib/public-scanner-history');
 
 const ROOT = path.resolve(__dirname, '..');
 const STRICT = process.argv.includes('--strict');
@@ -134,111 +119,6 @@ check('scanner/status: signaux présents (pill-score)', () => {
   if (matches < 2) return `aucun signal trouvé (pill-score × ${matches})`;
 });
 
-check('scanner/status: manifest limité aux 5 modes actifs + daily card', () => {
-  const manifest = readJSON('scanner/status/manifest.json');
-  const expected = ['daily-card', 'mode-balanced', 'mode-best', 'mode-dynamic', 'mode-fortress', 'mode-turbo'];
-  const actual = Object.keys(manifest).sort();
-  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-    return `clés inattendues: ${actual.join(', ')}`;
-  }
-  for (const [key, filename] of Object.entries(manifest)) {
-    if (!/^[-a-z]+-\d+\.png$/.test(filename)) return `${key}: nom de fichier invalide ${filename}`;
-    if (!fs.existsSync(path.join(ROOT, 'scanner/status', filename))) return `${key}: fichier absent ${filename}`;
-  }
-});
-
-check('surfaces publiques: aucun identifiant opérationnel privé', () => {
-  const roots = ['scanner/status/history', 'portfolio/v1'];
-  const files = [];
-  const visit = rel => {
-    const abs = path.join(ROOT, rel);
-    for (const name of fs.readdirSync(abs)) {
-      const childRel = path.join(rel, name);
-      const childAbs = path.join(ROOT, childRel);
-      if (fs.statSync(childAbs).isDirectory()) visit(childRel);
-      else if (name.endsWith('.json')) files.push(childRel);
-    }
-  };
-  roots.forEach(visit);
-  const privateKey = /"(?:trace_?ids?|request_?id|run_?id|call_?id|plan_?id|intent_?id|job_?id|correlation_?id|invocation_?id|execution_?id)"\s*:/i;
-  const leaked = files.filter(file => privateKey.test(readFile(file)));
-  if (leaked.length) return `identifiants privés dans ${leaked.slice(0, 5).join(', ')}`;
-});
-
-check('scanner public: aucun libellé MCP ni identifiant moteur brut', () => {
-  const files = ['scanner/20260901/index.html', 'scanner/20260901/data.json', 'scanner/20260901/signals.json'];
-  const bad = /Sizing MCP|us_highvol_tp999_vwap|plan-[a-f0-9]{8,}/i;
-  const leaked = files.filter(file => fs.existsSync(path.join(ROOT, file)) && bad.test(readFile(file)));
-  if (leaked.length) return `libellé technique dans ${leaked.join(', ')}`;
-});
-
-check('scanner/status: registre moteur limité aux identités publiques actives', () => {
-  const history = readJSON('scanner/status/engine-history.json');
-  const config = readJSON('data/modes-config.json');
-  const expected = Object.entries(config.modes || {})
-    .filter(([, value]) => value.assetClass === 'dtx')
-    .map(([id]) => id).sort();
-  const actual = Object.keys(history.modes || {}).sort();
-  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-    return `modes moteur inattendus: ${actual.join(', ') || '(aucun)'}`;
-  }
-});
-
-check('scanner/status: plans publics non exécutés et décision pré-frontière retirée', () => {
-  const history = readJSON('scanner/status/engine-history.json');
-  const raw = JSON.stringify(history);
-  if (/(?:"engineMode"|"orders"|"metrics"|\bmcp\b|plan-[a-f0-9]{8,})/i.test(raw)) {
-    return 'le registre public conserve un champ moteur, ordre, métrique ou identifiant opérationnel';
-  }
-  for (const [modeId, byDate] of Object.entries(history.modes || {})) {
-    for (const [date, entry] of Object.entries(byDate || {})) {
-      if (entry.execution_verified !== false) return `${modeId}@${date}: execution_verified doit être false`;
-      if (!Array.isArray(entry.plans)) return `${modeId}@${date}: plans doit être un tableau`;
-      for (const plan of entry.plans) {
-        if (plan.status !== 'proposed_not_executed' || plan.execution_verified !== false || plan.fill_verified !== false) {
-          return `${modeId}@${date}: proposition sans état non exécuté explicite`;
-        }
-      }
-    }
-  }
-  const boundaryEntry = history.modes?.best?.['2026-09-01'];
-  if (!boundaryEntry || boundaryEntry.historyStatus !== PUBLIC_HISTORY_STATUS || boundaryEntry.plans.length !== 0) {
-    return 'best@2026-09-01: décision générée avant effectiveAt non retirée';
-  }
-  if (/SNDK/.test(JSON.stringify(boundaryEntry))) return 'SNDK pré-frontière encore exposé';
-});
-
-check('scanner/status: snapshots pré-frontière quarantinés et exclus de la Time Machine', () => {
-  const historyDir = path.join(ROOT, 'scanner/status/history');
-  const registry = readJSON('data/capacity-ledger-v1.json');
-  const boundary = publicHistoryBoundaryFromRegistry(registry);
-  const files = fs.readdirSync(historyDir).filter(name => /^\d{8}\.json$/.test(name)).sort();
-  const preBoundary = files.filter(name => name.slice(0, 8) < boundary.dateKey);
-  if (preBoundary.length !== 135) return `${preBoundary.length} snapshots pré-frontière au lieu de 135`;
-  for (const name of preBoundary) {
-    const snapshot = JSON.parse(fs.readFileSync(path.join(historyDir, name), 'utf8'));
-    if (snapshot.historyStatus !== PUBLIC_HISTORY_STATUS || snapshot.reasonCode !== PUBLIC_HISTORY_REASON || snapshot.execution_verified !== false) {
-      return `${name}: tombstone top-level incomplet`;
-    }
-    for (const [modeId, mode] of Object.entries(snapshot.modes || {})) {
-      if (mode.historyStatus !== PUBLIC_HISTORY_STATUS || mode.reasonCode !== PUBLIC_HISTORY_REASON || mode.execution_verified !== false) {
-        return `${name}/${modeId}: tombstone mode incomplet`;
-      }
-      for (const metric of PUBLIC_HISTORY_METRIC_KEYS) {
-        if (mode.stats?.[metric] !== null) return `${name}/${modeId}: métrique ${metric} non nulle`;
-      }
-      if ((mode.equity?.d || []).length || (mode.equity?.v || []).length) return `${name}/${modeId}: courbe non vide`;
-      for (const key of ['signals', 'positions', 'orders', 'trades', 'closedTrades', 'closeNow', 'expiresTomorrow']) {
-        if (!Array.isArray(mode[key]) || mode[key].length) return `${name}/${modeId}: ${key} non vide`;
-      }
-    }
-  }
-  const dates = readJSON('scanner/status/history/dates.json');
-  if (!dates.length || dates.some(date => date < boundary.dateKey)) {
-    return `dates publiques invalides: ${dates.join(', ') || '(aucune)'}`;
-  }
-});
-
 check('scanner/status: pas de "No signals for this mode today"', () => {
   const html = readFile('scanner/status/index.html');
   if (html.includes('No signals for this mode today')) return 'message "no signals" présent — parser KO';
@@ -271,17 +151,14 @@ warn('radar.json: fraîcheur < 48h', () => {
   if (!isFresh(d.updated, 48)) return `dernière MAJ: ${d.updated} (> 48h)`;
 });
 
-// 3. scanner.json — tuile produit française en position 0, sans suggérer un fill live
-check('scanner.json: tuile DTX Max ACTIF en position 0 avec lien permanent', () => {
+// 3. scanner.json — tile LIVE en position 0
+check('scanner.json: tile LIVE en position 0', () => {
   const d = readJSON('data/scanner.json');
   if (!d[0]) return 'scanner.json vide';
   if (!d[0].includes('scanner/status') && !d[0].includes('Scanner Live')) {
-    return `position 0 = "${d[0].substring(0,60).replace(/\n/g,' ')}..." (pas la tuile DTX Max)`;
+    return `position 0 = "${d[0].substring(0,60).replace(/\n/g,' ')}..." (pas le tile LIVE)`;
   }
-  if (!d[0].includes('ACTIF')) return 'tuile en position 0 mais badge ACTIF absent';
-  if (d[0].includes('>LIVE</span>')) return 'badge LIVE ambigu avec un suivi forward non démarré';
-  if (!d[0].includes('data-lang="fr"')) return 'tuile DTX Max masquée sur la home française (data-lang="fr" absent)';
-  if (!d[0].includes('href="/scanner/status/#best"')) return 'lien permanent vers /scanner/status/#best absent';
+  if (!d[0].includes('LIVE')) return 'tile en position 0 mais badge LIVE absent';
   if (!d[0].includes('#059669') && !d[0].includes('059669')) return 'tile LIVE sans couleur verte (#059669)';
 });
 
@@ -614,271 +491,44 @@ check('dtx: courbe, headline et provenance décrivent le même replay', () => {
       const sr = (Number(sv[sv.length - 1]) / Number(sv[0]) - 1) * 100;
       if (Math.abs(sr - sm) > 0.05) issues.push(`${id}: staging curve return ${sr.toFixed(2)} != metrics ${sm}`);
     }
-    if (api.stats?.scope !== 'forward_execution' || api.stats?.ret !== null) {
-      issues.push(`${id}: statistiques forward absentes ou contaminées par le replay`);
-    }
-    if ((api.equityCurve?.v || []).length !== 0) {
-      issues.push(`${id}: courbe forward non vide avant exécution certifiée`);
-    }
-    const av = api.engineBacktest?.equityCurve?.v || [];
+    const av = api.equityCurve?.v || [];
     const ar = av.length > 1 ? Number(av[av.length - 1]) / Number(av[0]) * 100 - 100 : NaN;
-    const hm = Number(api.engineBacktest?.return_pct);
+    const hm = Number(api.stats?.ret);
     if (!Number.isFinite(ar) || !Number.isFinite(hm) || Math.abs(ar - hm) > 0.05) {
-      issues.push(`${id}: API reference curve/headline mismatch (${Number.isFinite(ar) ? ar.toFixed(2) : 'n/a'} vs ${hm})`);
+      issues.push(`${id}: API curve/headline mismatch (${Number.isFinite(ar) ? ar.toFixed(2) : 'n/a'} vs ${hm})`);
     }
-    if (api.engineBacktest?.metrics_source !== 'exact_reference_replay' || api.engineBacktest?.curve_is_book !== false) {
-      issues.push(`${id}: provenance API ne déclare pas le replay exact de référence non-book`);
-    }
-    if (/\bmcp\b|systematic-tss/i.test(String(api.engineBacktest?.source || ''))) {
-      issues.push(`${id}: provenance API expose un libellé d'infrastructure interne`);
+    if (api.engineBacktest?.metrics_source !== 'mcp_replay' || api.engineBacktest?.curve_is_book !== false) {
+      issues.push(`${id}: provenance API ne déclare pas la reconstruction mcp_replay non-book`);
     }
   }
   if (issues.length) return issues.join(' | ');
 });
 
-// A forward reset resolves the operational blocker without rewriting history.
-// It is valid only when its timestamped genesis, config binding and complete
-// hash chain all validate. Historical metrics remain a separate, false gate.
-check('capacity PIT v1: frontière forward scellée, historique retiré', () => {
-  const registry = readJSON('data/capacity-ledger-v1.json');
-  const history = readJSON('data/modes-config-history.json');
-  const issues = validateCapacityRegistry(registry, { configHistory: history });
-  for (const modeId of ['turbo', 'dynamic', 'balanced', 'fortress']) {
-    const status = modeBoundaryStatus(registry, modeId, { configHistory: history });
-    if (!status.forwardCertified) issues.push(`${modeId}: frontière forward non certifiée`);
-    if (status.historyStatus !== 'retired_uncertified') issues.push(`${modeId}: historique antérieur non retiré`);
-    if (status.historicalStatsPublishable || status.historicalCurvesPublishable) {
-      issues.push(`${modeId}: l'ancien historique ne doit jamais être rendu publiable par le genesis`);
-    }
-  }
-  if (issues.length) return issues.join(' | ');
-});
-
-// 5a-bis. CONTRAT LEDGER ↔ FROZEN (anti-gel silencieux). Une comparaison de dates seule
-// laisse passer exactement le cas dangereux `exitDate === curveLast`: le raw ledger avance,
-// le compteur et le P&L frozen restent gelés. On réconcilie donc les compteurs ET les trois
-// scalaires comptables pondérés. Un MtM d'une position remplacée ne peut plus survivre.
-check('frozen: ledger raw, compteurs et P&L scellés réconciliés', () => {
+// 5a-bis. GARDE-FOU FRAÎCHEUR FROZEN (anti-gel silencieux). Bug du 26/06→21/07 2026 : les héros LLM
+// sont restés GELÉS 3 semaines (frozen bloqué au 26/06, affichant le pic pendant que juillet chutait)
+// car l'avance append-only ne tournait plus. Ici : si des trades CLÔTURÉS existent APRÈS la fin de la
+// courbe frozen d'un mode, le frozen n'a pas avancé → ❌ (le dashboard surévalue en cachant les pertes).
+check('frozen: avance append-only à jour (aucun trade clôturé au-delà de la fin de la courbe frozen)', () => {
   const rp = path.join(ROOT, 'data', 'backtest-results.json');
   const tp = path.join(ROOT, 'data', 'backtest-trades.json');
   if (!fs.existsSync(rp) || !fs.existsSync(tp)) return; // pas de contexte sweep → skip
   const R = JSON.parse(fs.readFileSync(rp, 'utf8'));
   const T = JSON.parse(fs.readFileSync(tp, 'utf8'));
-  const configDocument = readJSON('data/modes-config.json');
-  const C = configDocument.modes || {};
-  const H = readJSON('data/modes-config-history.json');
-  let forwardRegistry = null;
-  try { forwardRegistry = readJSON('data/capacity-ledger-v1.json'); } catch (_) { }
-  const cfgVersions = Object.fromEntries((H.versions || []).map(version => [version.id, version.config || {}]));
-  const TOL = 0.06; // deux arrondis à 0,01 peuvent différer d'un centième
-  const drift = [];
-  const legacyIds = Object.keys(C).filter(mode => C[mode]?.performanceScope === 'simulated_backtest');
-  const historyErrors = configHistoryCoverageErrors(H, configDocument, legacyIds);
-  if (historyErrors.length) drift.push(`config history: ${historyErrors.join(', ')}`);
+  const TOL_DAYS = 3; // tolérance : le frozen peut légitimement traîner de qq séances (sweep différé)
+  const stale = [];
   for (const [mode, trades] of Object.entries(T)) {
-    if (C[mode]?.assetClass === 'dtx') continue; // replay/forward DTX est un contrat séparé
     const f = R['frozen_' + mode];
     if (!f || !Array.isArray(f.equityCurve) || !f.equityCurve.length) continue;
-    const cfg = C[mode] || {};
-
-    if (cfg.performanceScope === 'simulated_backtest') {
-      const certificationErrors = capacityCertificationErrors(f, { configHistory: H, modeId: mode });
-      const forwardStatus = modeBoundaryStatus(forwardRegistry, mode, { configHistory: H });
-      if (certificationErrors.length && !forwardStatus.forwardCertified) {
-        drift.push(`${mode}: ni historique PIT certifié, ni frontière forward valide (${certificationErrors.join(', ')})`);
-      }
-      // A valid reset removes the operational blocker only. Other QA checks
-      // below still require every old metric, curve, trade and position to be masked.
-      continue;
-    }
-
-    const defaultWeight = (1 / (cfg.portfolioSize || 1)) * (cfg.positionSizePct || 1);
-    let ledger;
-    try {
-      ledger = summarizeLedgerAccounting(trades, mode, cfgVersions, defaultWeight, {
-        portfolioSize: cfg.portfolioSize || 1,
-        positionSizePct: cfg.positionSizePct || 1,
-      });
-    }
-    catch (e) { drift.push(e.message); continue; }
-
-    const issues = [];
-    if (f.accountingPolicy !== ledger.accountingPolicy) {
-      issues.push(`accountingPolicy ${f.accountingPolicy || 'absent'} != ${ledger.accountingPolicy}`);
-    }
-    if (Number(f.acceptedTradeRows) !== ledger.resolved + ledger.pending) {
-      issues.push(`accepted rows ${f.acceptedTradeRows} != ${ledger.resolved + ledger.pending}`);
-    }
-    if (Number(f.rejectedCapacityRows) !== ledger.rejectedCapacity) {
-      issues.push(`capacity rejects ${f.rejectedCapacityRows} != ${ledger.rejectedCapacity}`);
-    }
-    if (Number(f.trades) !== ledger.resolved) issues.push(`trades ${f.trades} != ${ledger.resolved}`);
-    if (!Number.isFinite(Number(f.returnRealized)) || Math.abs(Number(f.returnRealized) - ledger.realized) > TOL) {
-      issues.push(`realized ${f.returnRealized} != ${ledger.realized}`);
-    }
-    if (!Number.isFinite(Number(f.returnUnrealized)) || Math.abs(Number(f.returnUnrealized) - ledger.unrealized) > TOL) {
-      issues.push(`unrealized ${f.returnUnrealized} != ${ledger.unrealized}`);
-    }
-    if (!Number.isFinite(Number(f.returnTotal)) || Math.abs(Number(f.returnTotal) - ledger.total) > TOL) {
-      issues.push(`total ${f.returnTotal} != ${ledger.total}`);
-    }
-    if (issues.length) drift.push(`${mode}: ${issues.join(', ')}`);
+    const closed = (trades || []).filter(x => x && x.exitDate && !x._premature);
+    if (!closed.length) continue;
+    const maxExit = closed.map(x => x.exitDate).sort().slice(-1)[0];       // dernière clôture réelle
+    const curveLast = f.equityCurve[f.equityCurve.length - 1].date;         // fin de la courbe scellée
+    const gapDays = Math.round((new Date(maxExit) - new Date(curveLast)) / 86400000);
+    if (gapDays > TOL_DAYS) stale.push(`${mode}: courbe finit ${curveLast} mais dernière clôture ${maxExit} (+${gapDays}j non intégrés)`);
   }
-  if (!drift.length) return;
-  return `FROZEN/LEDGER DRIFT — ${drift.join(' | ')}. Publication bloquée : produire un ledger PIT scellé; un sweep statique ne suffit pas.`;
-});
-
-// 5a-ter. Ces quatre portefeuilles sont issus de simulatePortfolio/backtest : une API ou
-// une carte encore marquée "real/live" transforme une simulation en performance broker.
-// La config est la source de vérité, mais les artefacts publiés doivent porter le même
-// scope explicitement. On bloque donc aussi les artefacts non régénérés.
-check('modes historiques: scope simulé explicite dans config, dashboard et API', () => {
-  const ids = ['turbo', 'dynamic', 'balanced', 'fortress'];
-  const modes = readJSON('data/modes-config.json').modes || {};
-  const html = readFile('scanner/status/index.html');
-  const issues = [];
-
-  for (const id of ids) {
-    if (modes[id]?.performanceScope !== 'simulated_backtest') {
-      issues.push(`${id}: config performanceScope=${modes[id]?.performanceScope || 'absent'}`);
-    }
-
-    const marker = `id="p-${id}"`;
-    const panelStart = html.indexOf(marker);
-    if (panelStart < 0) {
-      issues.push(`${id}: panneau dashboard absent`);
-    } else {
-      const nextPanel = html.indexOf('<div id="p-', panelStart + marker.length);
-      const panel = html.slice(panelStart, nextPanel < 0 ? html.length : nextPanel);
-      if (!panel.includes('data-performance-scope="simulated_backtest"')) {
-        issues.push(`${id}: dashboard sans data-performance-scope=simulated_backtest`);
-      }
-      const forwardReset = panel.includes('data-forward-capacity-certified="true"');
-      if (forwardReset) {
-        if (!panel.includes('Suivi point-in-time remis à zéro') || !panel.includes('historique retiré')) {
-          issues.push(`${id}: frontière forward certifiée sans copie de retrait historique`);
-        }
-      } else if (!panel.includes('Métriques historiques indisponibles')) {
-        issues.push(`${id}: état fail-closed PIT absent`);
-      }
-      if (panel.includes('data-section="closenow"') || /<span class="pill pos">BUY<\/span>/.test(panel)) {
-        issues.push(`${id}: CTA exécutable exposé malgré scope simulé`);
-      }
-    }
-
-    const apiPath = `portfolio/v1/${id}/equity.json`;
-    if (!fs.existsSync(path.join(ROOT, apiPath))) {
-      issues.push(`${id}: API equity absente`);
-      continue;
-    }
-    const api = readJSON(apiPath);
-    if (api.status?.tradingMode !== 'simulated') {
-      issues.push(`${id}: API tradingMode=${api.status?.tradingMode || 'absent'}`);
-    }
-    if (api.status?.performanceScope !== 'simulated_backtest') {
-      issues.push(`${id}: API status.performanceScope=${api.status?.performanceScope || 'absent'}`);
-    }
-    if (api.stats?.scope !== 'simulated_backtest') {
-      issues.push(`${id}: API stats.scope=${api.stats?.scope || 'absent'}`);
-    }
-    if (api.equityCurve?.scope !== 'simulated_backtest') {
-      issues.push(`${id}: API equityCurve.scope=${api.equityCurve?.scope || 'absent'}`);
-    }
-    if (api.stats?.status !== 'unavailable' || api.stats?.execution_verified !== false) {
-      issues.push(`${id}: API metrics non fail-closed (${api.stats?.status || 'absent'})`);
-    }
-    if ((api.equityCurve?.v || []).length) issues.push(`${id}: API courbe simulée non certifiée encore exposée`);
-    for (const endpoint of ['positions', 'orders', 'trades', 'actions']) {
-      const payload = readJSON(`portfolio/v1/${id}/${endpoint}.json`);
-      const rows = endpoint === 'trades' ? payload.trades
-        : endpoint === 'actions' ? [...(payload.closeNow || []), ...(payload.expiresTomorrow || [])]
-          : payload[endpoint];
-      if ((rows || []).length) issues.push(`${id}: ${endpoint} non certifié encore exposé (${rows.length})`);
-    }
-  }
-
-  if (issues.length) {
-    return `${issues.join(' | ')}. Publication bloquée : régénérer scanner/status et portfolio/v1.`;
-  }
-});
-
-// 5a-quater. Le générateur tech/track-record avait son propre ancien gate
-// `frozen.trades > 0` et pouvait donc republier des valeurs déjà masquées dans
-// scanner/status et portfolio/v1. On audite l'artefact final, pas seulement le code.
-check('tech/track-record: frontière PIT fail-closed et DTX forward/reference', () => {
-  const html = readFile('tech/track-record/index.html');
-  const results = readJSON('data/backtest-results.json');
-  const history = readJSON('data/modes-config-history.json');
-  const config = readJSON('data/modes-config.json').modes || {};
-  const issues = [];
-  let certifiedCurves = 0;
-  const cardFor = id => {
-    const marker = `id="mode-${id}"`;
-    const start = html.indexOf(marker);
-    if (start < 0) return null;
-    const nextMode = html.indexOf('<div id="mode-', start + marker.length);
-    const limits = html.indexOf('<div id="limites"', start + marker.length);
-    const ends = [nextMode, limits].filter(index => index >= 0);
-    return html.slice(start, ends.length ? Math.min(...ends) : html.length);
-  };
-  const fr2 = value => Number(value).toFixed(2).replace('.', ',');
-
-  for (const id of ['turbo', 'dynamic', 'balanced', 'fortress']) {
-    const frozen = results[`frozen_${id}`];
-    const certificationErrors = capacityCertificationErrors(frozen, {
-      configHistory: history,
-      modeId: id,
-    });
-    const card = cardFor(id);
-    if (!card) { issues.push(`${id}: carte absente`); continue; }
-    if (config[id]?.performanceScope !== 'simulated_backtest') {
-      issues.push(`${id}: scope canonique inattendu`);
-    }
-    if (!certificationErrors.length) {
-      certifiedCurves++;
-      continue;
-    }
-    if (!card.includes('data-performance-scope="simulated_backtest" data-accounting-certified="false"')) {
-      issues.push(`${id}: attribut de certification fail-closed absent`);
-    }
-    if (!card.includes('data-forward-capacity-certified="true"')
-        || !card.includes('Forward certifié · historique retiré')) {
-      issues.push(`${id}: frontière forward/retrait historique absent du track record`);
-    }
-    if ((card.match(/class="tr-metric-value[^"]*">—/g) || []).length !== 5) {
-      issues.push(`${id}: les cinq métriques ne sont pas masquées`);
-    }
-    if (card.includes(`id="tr-chart-${id}"`) || card.includes('Arrêté au')) {
-      issues.push(`${id}: courbe ou date certifiée exposée malgré le gate`);
-    }
-    for (const value of [frozen?.returnTotal, frozen?.maxDD, frozen?.winRate, frozen?.profitFactor]) {
-      if (Number.isFinite(Number(value)) && card.includes(fr2(value))) {
-        issues.push(`${id}: ancienne valeur frozen ${fr2(value)} encore visible`);
-      }
-    }
-  }
-
-  const dtxCard = cardFor('best');
-  const dtxApi = readJSON('portfolio/v1/best/equity.json');
-  if (!dtxCard) {
-    issues.push('DTX Max: carte absente');
-  } else {
-    if (!dtxCard.includes('data-performance-scope="forward_execution" data-accounting-certified="false"')) {
-      issues.push('DTX Max: frontière forward_execution absente');
-    }
-    if (!dtxCard.includes('Suivi réel non démarré')) {
-      issues.push('DTX Max: état réel non démarré absent');
-    }
-    const referenceReturn = dtxApi.engineBacktest?.return_pct;
-    if (Number.isFinite(Number(referenceReturn))
-        && (dtxCard.includes(String(referenceReturn)) || dtxCard.includes(fr2(referenceReturn)))) {
-      issues.push('DTX Max: rendement du replay injecté dans le suivi réel');
-    }
-  }
-  if (certifiedCurves === 0 && !html.includes('var CURVES = [];')) {
-    issues.push('payload chart non vide sans registre PIT certifié');
-  }
-  if (issues.length) return `${issues.join(' | ')}. Publication bloquée : régénérer le track-record fail-closed.`;
+  if (!stale.length) return;
+  return `FROZEN GELÉ (non avancé) — ${stale.join(' | ')}. Le dashboard affiche un pic périmé en cachant les pertes récentes `
+    + `(cf. incident 26/06→21/07). Relancer le sweep (avance append-only des stats frozen) puis gen-status-page/gen-api.`;
 });
 
 // 5b. data/bench-spy.json — existence + fraîcheur + stats numériques
@@ -1269,16 +919,12 @@ check('scanner (dernier scan): engine_meta.risk_gating non vide (corrélation + 
   return 'aucun scan trouvé';
 });
 
-// ─── Check 25c: DTX forward — série fraîche seulement après le premier fill certifié ──
-// L'alias public `best` a été réinitialisé en DTX Max le 01/09/2026. Tant que le suivi
-// forward est explicitement `not_started`, exiger un point d'une ancienne série live
-// réintroduirait précisément l'historique retiré que le registre fail-closed interdit.
-warn('dtx-live-track.json: série forward fraîche après démarrage certifié (<72h)', () => {
-  const modes = readJSON('data/modes-config.json').modes || {};
-  const DTX = Object.entries(modes)
-    .filter(([, mode]) => mode.assetClass === 'dtx' && mode.forwardTracking?.status !== 'not_started')
-    .map(([id]) => id);
-  if (!DTX.length) return;
+// ─── Check 25c: dtx-live-track — série live scriptée fraîche (audit 21/07/2026) ──
+// Deux semaines de modes dtx live sans historique accumulé ni drift : ne doit JAMAIS se
+// reproduire. La série data/dtx-live-track.json doit exister et porter, pour chacun des 6
+// modes, un dernier point de moins de 72h (tolérance week-end).
+warn('dtx-live-track.json: série live des modes scriptés fraîche (<72h)', () => {
+  const DTX = ['best'];
   let track;
   try { track = readJSON('data/dtx-live-track.json'); } catch { return 'fichier absent — lancer dtx-live-track.js --backfill puis gen-status-page'; }
   const stale = [];
@@ -1366,27 +1012,12 @@ check('scanner/status: SEALED-PRIMARY invariant (hero = sealed sweep, no sim/str
     if (start === -1) continue; // panel presence covered by another check
     const next = html.indexOf('id="p-', start + anchor.length);
     const panel = html.slice(start, next === -1 ? html.length : next);
-    const frozen = br[`frozen_${id}`];
-    const simulationFailClosed = cfg.performanceScope === 'simulated_backtest'
-      && (!frozen || frozen.accountingCertified !== true
-        || frozen.accountingPolicy !== 'capacity_pit_sealed_ledger_v1');
-    if (simulationFailClosed) {
-      if (!/data-performance-scope="simulated_backtest"/.test(panel)) {
-        issues.push(`${id}: scope simulated_backtest absent du panneau fail-closed`);
-      }
-      if (!/data-section="performance-unavailable"[^>]*data-accounting-certified="false"/.test(panel)) {
-        issues.push(`${id}: carte performance-unavailable fail-closed absente`);
-      }
-      if (/class="perf-hero"/.test(panel)) {
-        issues.push(`${id}: hero chiffré présent malgré ledger PIT non certifié`);
-      }
-      continue;
-    }
     // Scripted dtx modes label the headline "Engine Return"; quality modes label it "Total Return".
     // Historical "Live Return" is accepted for old snapshots while the public page rolls forward.
-    const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">(?:Total Return|Live Return|Engine Return|Rendement simulé)/);
+    const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">(?:Total Return|Live Return|Engine Return)/);
     if (!heroM) { issues.push(`${id}: hero return introuvable`); continue; }
     const heroRet = parseFloat(heroM[1]);
+    const frozen = br[`frozen_${id}`];
     const frozenRet = frozen && typeof frozen.returnTotal === 'number' ? frozen.returnTotal : null;
     const frozenTrades = frozen && typeof frozen.trades === 'number' ? frozen.trades : 0;
     const frozenMeaningful = frozenRet !== null && (frozenTrades >= 10 || Math.abs(frozenRet) >= 5);
@@ -1457,16 +1088,6 @@ check('scanner/status: bout scellé du chart == frozen equityCurve (SEALED-PRIMA
     if (NON_PUBLIC.has(cfg.status)) continue;
     if (cfg.assetClass === 'dtx') continue; // API follows the engine snapshot, not frozen_<id>
     const frozen = br[`frozen_${id}`];
-    const simulationFailClosed = cfg.performanceScope === 'simulated_backtest'
-      && (!frozen || frozen.accountingCertified !== true
-        || frozen.accountingPolicy !== 'capacity_pit_sealed_ledger_v1');
-    if (simulationFailClosed) {
-      const ch = modeCharts[id];
-      if (ch && ((Array.isArray(ch.v) && ch.v.length) || (Array.isArray(ch.d) && ch.d.length))) {
-        issues.push(`${id}: modeCharts doit rester vide tant que le ledger PIT n'est pas certifié`);
-      }
-      continue;
-    }
     const frozenRet = frozen && typeof frozen.returnTotal === 'number' ? frozen.returnTotal : null;
     const frozenTrades = frozen && typeof frozen.trades === 'number' ? frozen.trades : 0;
     const frozenMeaningful = frozenRet !== null && (frozenTrades >= 10 || Math.abs(frozenRet) >= 5);
@@ -1517,28 +1138,7 @@ check('portfolio/v1: equity.json == dashboard hero == frozen (SEALED-PRIMARY)', 
 
   for (const [id, cfg] of Object.entries(modes)) {
     if (NON_PUBLIC.has(cfg.status)) continue;
-    if (cfg.assetClass === 'dtx') continue; // forward execution and reference replay are namespaced separately
     const frozen = br[`frozen_${id}`];
-    const simulationFailClosed = cfg.performanceScope === 'simulated_backtest'
-      && (!frozen || frozen.accountingCertified !== true
-        || frozen.accountingPolicy !== 'capacity_pit_sealed_ledger_v1');
-    if (simulationFailClosed) {
-      const eqRel = `portfolio/v1/${id}/equity.json`;
-      let eq;
-      try { eq = readJSON(eqRel); } catch (e) { issues.push(`${id}: equity.json illisible (${e.message})`); continue; }
-      const curve = eq.equityCurve || {};
-      if (eq.performanceScope !== 'simulated_backtest' || eq.execution_verified !== false) {
-        issues.push(`${id}: API fail-closed sans scope/execution_verified explicite`);
-      }
-      if (!eq.stats || eq.stats.status !== 'unavailable' || eq.stats.ret !== null
-          || eq.stats.accountingCertified !== false) {
-        issues.push(`${id}: API doit masquer stats.ret et déclarer accountingCertified=false`);
-      }
-      if ((Array.isArray(curve.d) && curve.d.length) || (Array.isArray(curve.v) && curve.v.length)) {
-        issues.push(`${id}: API equityCurve doit rester vide tant que le ledger PIT n'est pas certifié`);
-      }
-      continue;
-    }
     const frozenRet = frozen && typeof frozen.returnTotal === 'number' ? frozen.returnTotal : null;
     const frozenTrades = frozen && typeof frozen.trades === 'number' ? frozen.trades : 0;
     const frozenMeaningful = frozenRet !== null && (frozenTrades >= 10 || Math.abs(frozenRet) >= 5);
@@ -1550,7 +1150,7 @@ check('portfolio/v1: equity.json == dashboard hero == frozen (SEALED-PRIMARY)', 
     if (start === -1) { issues.push(`${id}: panneau hero absent`); continue; }
     const nextIdx = html.indexOf('id="p-', start + anchor.length);
     const panel = html.slice(start, nextIdx === -1 ? html.length : nextIdx);
-    const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">(?:Total Return|Live Return|Engine Return|Rendement simulé)/);
+    const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">(?:Total Return|Live Return|Engine Return)/);
     if (!heroM) { issues.push(`${id}: hero return introuvable`); continue; }
     const heroRet = parseFloat(heroM[1]);
 

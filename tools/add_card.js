@@ -504,16 +504,14 @@ if (tab === 'daily') {
         cards.sort((a, b) => weeklyDate(b).localeCompare(weeklyDate(a)));
     }
 
-    // Pour scanner.json : tri chronologique décroissant (tuile produit épinglée en 0).
-    // Le badge public est « ACTIF », pas « LIVE » : le produit est disponible,
-    // mais son suivi d'exécution forward peut légitimement ne pas avoir démarré.
+    // Pour scanner.json : tri chronologique décroissant (LIVE pinned en 0)
     if (tab === 'scanner') {
         function extractCardDate(tile) {
             const m = tile && tile.match(/href="[^"]*?\/(\d{8})\//);
             return m ? m[1] : null;
         }
-        const liveTile = cards.find(c => c && /href="\/scanner\/status\/?#best"/.test(c));
-        const otherCards = cards.filter(c => c && !/href="\/scanner\/status\/?#best"/.test(c));
+        const liveTile = cards.find(c => c && c.includes('Scanner Live'));
+        const otherCards = cards.filter(c => c && !c.includes('Scanner Live'));
         otherCards.sort((a, b) => {
             const da = extractCardDate(a) || '00000000';
             const db = extractCardDate(b) || '00000000';

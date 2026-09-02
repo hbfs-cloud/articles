@@ -40,18 +40,12 @@ fail(){ echo "ÉCHEC: $*" >&2; exit 1; }
 # 1. ingestion dtx (decide + replay OBLIGATOIRES : sans replay, metrics/equity vides
 #    et le dashboard retombe sur un placeholder figé — incident du 23/07)
 if [ -d "$DIR/_dtx" ]; then
-  node tools/dtx-replay-cache.js --dir "$DIR/_dtx" --asof "$REF_CLOSE" --refdate "$REF_CLOSE" --plan plans/scanner-dtx.json > /tmp/d-cache.log 2>&1
+  node tools/dtx-replay-cache.js --dir "$DIR/_dtx" --asof "$ASOF" > /tmp/d-cache.log 2>&1
   for d in "$DIR"/_dtx/decide_*.json; do
     [ -e "$d" ] || continue
     pf=$(basename "$d" .json); pf=${pf#decide_}
-    public_mode=$(node -e '
-      const s=require("./tools/dtx-scan"), p=process.argv[1];
-      const m=s.publicModeForPortfolio(p);
-      if(!m || s.dtxPortfolioForMode(m)!==p) process.exit(2);
-      process.stdout.write(m);
-    ' "$pf") || { echo "  $pf : ancien/non configuré, brut ignoré" >> /tmp/d-dtx.log; continue; }
     r="$DIR/_dtx/replay_${pf}.json"
-    [ -f "$r" ] && node tools/dtx-mcp-ingest.js --portfolio "$pf" --decide "$d" --replay "$r" --asof "$REF_CLOSE" --scan-session "$ASOF" --expected-close "$REF_CLOSE" --to "$REF_CLOSE" --out "data/dtx/$public_mode.json" >> /tmp/d-dtx.log 2>&1 \
+    [ -f "$r" ] && node tools/dtx-mcp-ingest.js --portfolio "$pf" --decide "$d" --replay "$r" --asof "$ASOF" --expected-close "$REF_CLOSE" >> /tmp/d-dtx.log 2>&1 \
       || fail "$pf : replay absent ou ingestion DTX invalide"
   done
   node tools/dtx-history-append.js >> /tmp/d-dtx.log 2>&1

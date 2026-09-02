@@ -155,7 +155,7 @@
     /* Empty chart — zero-trade state: show a subtle "No trades yet" watermark */
     '  .lp-grid>[data-grid="equity"] .perf-chart:empty::after,',
     '  .lp-grid>[data-grid="equity"] .perf-chart[data-empty]::after{',
-    '    content:"Aucun trade clôturé";',
+    '    content:"No closed trades yet";',
     '    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);',
     '    font-size:.65rem;font-weight:600;color:#cbd5e1;letter-spacing:.04em;text-transform:uppercase;',
     '    pointer-events:none;white-space:nowrap;',
@@ -535,21 +535,7 @@
     '  .lp-grid .section-card table.t th,.lp-grid .section-card table.t td{font-size:.66rem!important;padding:.3rem .45rem!important;white-space:nowrap}',
     /* Live strip: tighten the UNREALIZED P&L label */
     '  .lp-strip-pnl .lp-pnl-label{font-size:.52rem!important;letter-spacing:.03em!important}',
-    '}',
-
-    /* DTX is a decision product with separate forward and historical scopes. */
-    '.lp-grid.lp-grid-dtx{display:flex!important;flex-direction:column!important;gap:1rem!important;min-width:0!important}',
-    '.lp-grid-dtx>[data-grid="plan"]{order:1}',
-    '.lp-grid-dtx>[data-grid="forward"]{order:2}',
-    '.lp-grid-dtx>[data-grid="equity"]{order:3;align-self:auto!important}',
-    '.lp-grid-dtx>[data-grid="method"]{order:4}',
-    '.lp-grid-dtx>[data-grid="decisions"]{order:5}',
-    '.lp-grid-dtx>[data-grid="footer"]{order:6}',
-    '.lp-grid-dtx>*{width:100%!important;max-width:100%!important;min-width:0!important;margin-bottom:0!important}',
-    '.lp-grid-dtx>[data-grid="equity"] .perf-chart-wrap{max-height:none!important}',
-    '.lp-grid-dtx>[data-grid="equity"] .perf-hero{display:flex!important;min-width:0!important}',
-    '.lp-grid-dtx table.t{display:block!important;max-width:100%!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch}',
-    '@media(max-width:700px){.lp-grid-dtx>[data-grid="equity"] .perf-hero{flex-direction:column!important}}'
+    '}'
   ].join('\n');
   document.head.appendChild(css);
 
@@ -588,10 +574,6 @@
       if (v) el.style.setProperty('grid-row', v, 'important'); // inline !important beats the CSS !important
       else el.style.removeProperty('grid-row');
     };
-    if (grid.classList.contains('lp-grid-dtx')) {
-      grid.querySelectorAll('[data-grid]').forEach(function (node) { setRow(node, null); });
-      return;
-    }
     if (!window.matchMedia('(min-width:1024px)').matches) {
       setRow(q('equity'), null);
       LP_RIGHT.concat(['positions', 'history', 'method', 'footer']).forEach(function (g) { setRow(q(g), null); });
@@ -627,8 +609,7 @@
     if (!panel || panel.querySelector('.lp-grid')) return;
 
     var grid = document.createElement('div');
-    var isDtxMode = panel.getAttribute('data-asset-class') === 'dtx';
-    grid.className = 'lp-grid' + (isDtxMode ? ' lp-grid-dtx' : '');
+    grid.className = 'lp-grid';
     var mc = modeColor(modeId);
     grid.style.setProperty('--mc', mc);
 
@@ -636,8 +617,6 @@
     var children = Array.prototype.slice.call(panel.children);
     children.forEach(function (child) {
       if (child.classList.contains('tm-render')) return;
-      // Keep the product name and any lifecycle warning above the layout.
-      if (child.classList.contains('panel-section-title') || child.classList.contains('mode-status-banner')) return;
       if (child.classList.contains('lp-card')) {
         child.setAttribute('data-grid', 'live');
       } else if (child.classList.contains('perf-hero')) {
@@ -657,18 +636,15 @@
         // Prefer explicit data-section attribute over heading text match (avoids collisions
         // when a section header dynamically reads e.g. "On Watch" but isn't the watch card)
         var explicit = child.getAttribute('data-section');
-        var explicitGrid = explicit === 'dtx-plan' ? 'plan' : explicit === 'forward-tracking' ? 'forward' : explicit;
-        if (explicitGrid && ['signals','orders','watch','closenow','expiring','positions','history','plan','forward'].indexOf(explicitGrid) >= 0) {
-          child.setAttribute('data-grid', explicitGrid);
+        if (explicit && ['signals','orders','watch','closenow','expiring','positions','history'].indexOf(explicit) >= 0) {
+          child.setAttribute('data-grid', explicit);
           grid.appendChild(child);
           return;
         }
         var summary = child.querySelector('.sc-sum-title, .sc-head h3');
         var text = summary ? summary.textContent.toLowerCase() : '';
 
-        if (isDtxMode && text.indexOf('décisions du moteur') >= 0) {
-          child.setAttribute('data-grid', 'decisions');
-        } else if (text.indexOf('signal') >= 0) {
+        if (text.indexOf('signal') >= 0) {
           child.setAttribute('data-grid', 'signals');
         } else if (text.indexOf('order') >= 0) {
           child.setAttribute('data-grid', 'orders');
@@ -713,10 +689,6 @@
   function createCard(modeId) {
     var panel = document.getElementById('p-' + modeId);
     if (!panel) return null;
-    // DTX publishes a static, scope-correct "Suivi réel" card. LiveEngine must not
-    // synthesize 0.00%, zero positions, a market snapshot, or a connection state.
-    if (panel.getAttribute('data-asset-class') === 'dtx') return null;
-    var simulated = panel.getAttribute('data-performance-scope') === 'simulated_backtest';
     var color = modeColor(modeId);
 
     var card = el('div', 'lp-card lp-init');
@@ -727,16 +699,16 @@
       '<div class="lp-strip">' +
         '<div class="lp-strip-left">' +
           '<span class="lp-live-dot idle" id="lp-dot-' + modeId + '"></span>' +
-          '<span class="lp-label">' + (simulated ? 'Portefeuille simulé' : 'Portefeuille réel') + '</span>' +
-          '<span class="lp-conn-chip idle" id="lp-conn-' + modeId + '">' + (simulated ? 'Cours en attente' : 'Connexion...') + '</span>' +
+          '<span class="lp-label">Live Portfolio</span>' +
+          '<span class="lp-conn-chip idle" id="lp-conn-' + modeId + '">Connecting...</span>' +
         '</div>' +
-        '<span class="lp-market-chip closed" id="lp-mkt-' + modeId + '"><i class="fas fa-moon"></i> Marché fermé</span>' +
+        '<span class="lp-market-chip closed" id="lp-mkt-' + modeId + '"><i class="fas fa-moon"></i> Closed</span>' +
         '<div class="lp-strip-pnl">' +
           '<span class="lp-pnl flat" id="lp-pnl-' + modeId + '">—</span>' +
-          '<span class="lp-pnl-sub"><span id="lp-pnl-abs-' + modeId + '">' + (simulated ? 'MtM simulé' : 'P&amp;L latent') + '</span></span>' +
+          '<span class="lp-pnl-sub"><span id="lp-pnl-abs-' + modeId + '">Unrealized P&amp;L</span></span>' +
         '</div>' +
         '<div class="lp-strip-chips" id="lp-chips-' + modeId + '"></div>' +
-        '<div class="lp-init-inline" id="lp-init-' + modeId + '"><i class="fas fa-spinner"></i>Connexion aux cours...</div>' +
+        '<div class="lp-init-inline" id="lp-init-' + modeId + '"><i class="fas fa-spinner"></i>Connecting to market data...</div>' +
       '</div>' +
       '<div class="lp-positions" id="lp-pos-' + modeId + '"></div>';
 
@@ -766,13 +738,13 @@
     if (!wrap) return;
 
     if (!posArr || !posArr.length) {
-      wrap.innerHTML = '<div class="lp-empty"><i class="fas fa-inbox"></i>Aucune position ouverte</div>';
+      wrap.innerHTML = '<div class="lp-empty"><i class="fas fa-inbox"></i>No open positions</div>';
       return;
     }
 
     var html =
       '<div class="lp-row-head">' +
-        '<span>Symbole</span><span>Cours</span><span>P&amp;L</span><span>Plage</span><span style="text-align:right">État</span>' +
+        '<span>Ticker</span><span>Price</span><span>P&amp;L</span><span>Range</span><span style="text-align:right">Status</span>' +
       '</div>';
 
     posArr.forEach(function (pos) {
@@ -780,17 +752,17 @@
       var isTerminal = pos._terminal === true;
       var termStyle = isTerminal ? ' style="opacity:.45;filter:grayscale(1);background:#f1f5f9"' : '';
       var termAttr = isTerminal ? ' data-terminal="1"' : '';
-      var badgeLabel = 'Ouverte';
+      var badgeLabel = 'Open';
       var badgeStyle = 'background:#f1f5f9;color:#94a3b8';
       if (isTerminal) {
         var st = (pos._terminalStatus || '').toLowerCase();
-        if (st === 'sl') { badgeLabel = 'SL touché'; badgeStyle = 'background:#fee2e2;color:#dc2626'; }
-        else if (st === 'tp1') { badgeLabel = 'TP1 touché'; badgeStyle = 'background:#d1fae5;color:#059669'; }
-        else if (st === 'tp2') { badgeLabel = 'TP2 touché'; badgeStyle = 'background:#a7f3d0;color:#047857'; }
+        if (st === 'sl') { badgeLabel = 'SL Hit'; badgeStyle = 'background:#fee2e2;color:#dc2626'; }
+        else if (st === 'tp1') { badgeLabel = 'TP1 Hit'; badgeStyle = 'background:#d1fae5;color:#059669'; }
+        else if (st === 'tp2') { badgeLabel = 'TP2 Hit'; badgeStyle = 'background:#a7f3d0;color:#047857'; }
         else if (st === 'breakeven') { badgeLabel = 'B.Even'; badgeStyle = 'background:#e0e7ff;color:#4f46e5'; }
-        else if (st === 'expired') { badgeLabel = 'Expirée'; badgeStyle = 'background:#fef3c7;color:#d97706'; }
-        else if (st === 'rotated') { badgeLabel = 'Remplacée'; badgeStyle = 'background:#ede9fe;color:#7c3aed'; }
-        else { badgeLabel = st || 'Clôturée'; badgeStyle = 'background:#f1f5f9;color:#64748b'; }
+        else if (st === 'expired') { badgeLabel = 'Expired'; badgeStyle = 'background:#fef3c7;color:#d97706'; }
+        else if (st === 'rotated') { badgeLabel = 'Rotated'; badgeStyle = 'background:#ede9fe;color:#7c3aed'; }
+        else { badgeLabel = st || 'Closed'; badgeStyle = 'background:#f1f5f9;color:#64748b'; }
       }
       var pnlDisplay = isTerminal && pos.return_pct != null ? (pos.return_pct >= 0 ? '+' : '') + pos.return_pct.toFixed(2) + '%' : '0.00%';
       var pnlClass = isTerminal ? (pos.return_pct >= 0 ? 'up' : 'down') : 'flat';
@@ -955,17 +927,13 @@
     connState = state;
     var marketOpen = LE.isMarketOpen();
     Object.keys(cards).forEach(function (modeId) {
-      var panel = document.getElementById('p-' + modeId);
-      var simulated = panel && panel.getAttribute('data-performance-scope') === 'simulated_backtest';
       var dot = document.getElementById('lp-dot-' + modeId);
       var chip = document.getElementById('lp-conn-' + modeId);
       if (dot) dot.className = 'lp-live-dot ' + (marketOpen ? state : 'idle');
       if (chip) {
         var labels = marketOpen
-          ? (simulated
-            ? { connected: 'Cours temps réel · simulation', connecting: 'Connexion cours...', disconnected: 'Reconnexion cours...', idle: 'Simulation' }
-            : { connected: 'Temps réel', connecting: 'Connexion...', disconnected: 'Reconnexion...', idle: 'En attente' })
-          : { connected: 'Instantané', connecting: 'Instantané', disconnected: 'Instantané', idle: 'Instantané' };
+          ? { connected: 'Live', connecting: 'Connecting...', disconnected: 'Reconnecting...', idle: 'Idle' }
+          : { connected: 'Snapshot', connecting: 'Snapshot', disconnected: 'Snapshot', idle: 'Snapshot' };
         chip.textContent = labels[state] || state;
         chip.className = 'lp-conn-chip ' + (marketOpen ? state : 'idle');
       }
@@ -973,10 +941,10 @@
       if (mkt) {
         if (marketOpen) {
           mkt.className = 'lp-market-chip open';
-          mkt.innerHTML = '<i class="fas fa-circle"></i> Marché ouvert';
+          mkt.innerHTML = '<i class="fas fa-circle"></i> Market Open';
         } else {
           mkt.className = 'lp-market-chip closed';
-          mkt.innerHTML = '<i class="fas fa-moon"></i> Marché fermé';
+          mkt.innerHTML = '<i class="fas fa-moon"></i> Market Closed';
         }
       }
       // Mark ready as soon as we have a verdict: connected OR market is closed (no live data expected).
@@ -1001,12 +969,9 @@
         var cap = NOMINAL_CAPITAL[modeId] || 10000;
         var dollars = cap * (a.totalPnl / 100);
         if (a.count > 0) {
-          absEl.textContent = (dollars >= 0 ? '+$' : '-$') + fmt(Math.abs(dollars), 0) + ' sur $' + fmt(cap, 0) + ' nominaux';
+          absEl.textContent = (dollars >= 0 ? '+$' : '-$') + fmt(Math.abs(dollars), 0) + ' on $' + fmt(cap, 0) + ' nominal';
         } else {
-          var panel = document.getElementById('p-' + modeId);
-          absEl.textContent = panel && panel.getAttribute('data-performance-scope') === 'simulated_backtest'
-            ? 'MtM simulé'
-            : 'P&L latent';
+          absEl.textContent = 'Unrealized P&L';
         }
       }
 
@@ -1026,10 +991,8 @@
     });
   }
 
-  function showToast(modeId, evalResult) {
+  function showToast(evalResult) {
     if (!toastContainer) return;
-    var activeTab = document.querySelector('.mode-tab.active[data-mode]');
-    if (activeTab && activeTab.getAttribute('data-mode') !== modeId) return;
     var status = evalResult.status;
     if (['SL_HIT', 'TP2_HIT', 'TP1_HIT', 'TP1_PARTIAL', 'EXPIRED'].indexOf(status) < 0) return;
     // Expiry already has an inline chip and a Close Now row. Repeating every expired
@@ -1108,14 +1071,14 @@
       var spans = labels.querySelectorAll('span');
       if (spans[0]) {
         spans[0].className = worst < 0 ? 'neg' : 'pos';
-        spans[0].innerHTML = '<i class="fas fa-shield-halved"></i> Pire cas : ' + sign(worst) + fmt(worst, 1) + '%';
+        spans[0].innerHTML = '<i class="fas fa-shield-halved"></i> Worst: ' + sign(worst) + fmt(worst, 1) + '%';
       }
       if (spans[1]) {
         spans[1].className = now >= 0 ? 'pos' : 'neg';
-        spans[1].innerHTML = '<i class="fas fa-circle-dot"></i> Actuel : ' + sign(now) + fmt(now, 1) + '%';
+        spans[1].innerHTML = '<i class="fas fa-circle-dot"></i> Now: ' + sign(now) + fmt(now, 1) + '%';
       }
       if (spans[2]) {
-        spans[2].innerHTML = '<i class="fas fa-bullseye"></i> Meilleur cas : +' + fmt(best, 1) + '%';
+        spans[2].innerHTML = '<i class="fas fa-bullseye"></i> Best: +' + fmt(best, 1) + '%';
       }
     }
 
@@ -1149,9 +1112,7 @@
           Object.keys(cfg.modes).forEach(function (modeId) {
             modesCfgFlat[modeId] = cfg.modes[modeId];
             var modeData = snap.modes ? snap.modes[modeId] : null;
-            allPositions[modeId] = cfg.modes[modeId].assetClass === 'dtx'
-              ? []
-              : (modeData && modeData.positions && modeData.positions.length > 0)
+            allPositions[modeId] = (modeData && modeData.positions && modeData.positions.length > 0)
               ? modeData.positions
               : [];
           });
@@ -1189,7 +1150,7 @@
           LE.on('eval', function (data) {
             updateRow(data.modeId, data.result);
             updateScenarioBar(data.modeId);
-            showToast(data.modeId, data.result);
+            showToast(data.result);
           });
           LE.on('aggregates', updateAgg);
 
@@ -1217,9 +1178,7 @@
                     var fresh = {};
                     Object.keys(modesCfgFlat).forEach(function (modeId) {
                       var md = newSnap.modes ? newSnap.modes[modeId] : null;
-                      fresh[modeId] = modesCfgFlat[modeId].assetClass === 'dtx'
-                        ? []
-                        : (md && md.positions && md.positions.length > 0) ? md.positions : [];
+                      fresh[modeId] = (md && md.positions && md.positions.length > 0) ? md.positions : [];
                     });
                     window._lePositions = fresh;
                     Object.keys(fresh).forEach(function (modeId) {
@@ -1247,7 +1206,7 @@
                 markReady(modeId);
                 var chip = document.getElementById('lp-conn-' + modeId);
                 if (chip && chip.textContent === 'Connecting...') {
-                  chip.textContent = 'Hors ligne';
+                  chip.textContent = 'Offline';
                   chip.className = 'lp-conn-chip disconnected';
                 }
               }
@@ -1260,7 +1219,7 @@
       // On la lit dans le DOM (les panneaux sont générés depuis la config) plutôt que de la
       // coder en dur — une liste figée privait `best` du message d'indisponibilité.
       Array.prototype.forEach.call(document.querySelectorAll('.mode-panel'), function (panel) {
-        var msg = el('div', 'lp-empty', '<i class="fas fa-exclamation-triangle"></i>Données temps réel indisponibles');
+        var msg = el('div', 'lp-empty', '<i class="fas fa-exclamation-triangle"></i>Live data unavailable');
         msg.style.margin = '.5rem 0';
         var first = panel.querySelector('.section-card, .perf-hero');
         if (first) panel.insertBefore(msg, first); else panel.appendChild(msg);

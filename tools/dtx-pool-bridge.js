@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * dtx-pool-bridge.js — compatibilité historique des décisions dtx vers `dtx_pool`.
+ * dtx-pool-bridge.js — ordres dtx (DtxDecide CREATE) → pool `dtx_pool` de signals.json.
  *
  * POURQUOI (fix "0 trades depuis D0", 2026-07-16). Depuis le cut-over « le MCP fait foi »
  * (2026-07-08, v15 2026-07-13), le staging data/dtx/<id>.json alimentait UNIQUEMENT l'affichage
@@ -14,11 +14,6 @@
  * par mode via `universe: <modeId>` + universeFilter. Le sweep fait ensuite TOUT le reste :
  * fills sur prix réels, exits (config du mode), append-only scellé (trade-chain), positions,
  * equity → la status page vit sans aucun nouveau moteur parallèle.
- *
- * CONTRAT FORWARD CERTIFIÉ (2026-09-01). Un mode qui déclare
- * `forwardTracking.source=no_certified_fill_yet` ne passe JAMAIS par ce pont : une proposition
- * moteur n'est pas un fill, et le sweep synthétique ne peut pas certifier une exécution. Le pool
- * est alors vidé pour ce mode ; le plan reste visible séparément depuis le staging Contract V2.
  *
  * FIDÉLITÉ (honnêteté, pas de fabrication) :
  *   - entry/stop = ceux du moteur (order.entry|limitPrice / order.stopLoss), JAMAIS inventés.
@@ -59,28 +54,23 @@ function parseArgs(argv) {
   return o;
 }
 
-/**
- * Modes scriptés = modes-config avec assetClass 'dtx' (source de vérité du câblage).
- * `modeId` is the stable public namespace (staging filename + signal universe);
- * `portfolioId` is the engine namespace selected by dtxPortfolio.
- */
+/** Modes scriptés = modes-config avec assetClass 'dtx' (source de vérité du câblage). */
 function scriptedModes() {
   const cfg = JSON.parse(fs.readFileSync(MODES_CFG, 'utf8')).modes || {};
-  return Object.entries(cfg)
-    .filter(([, modeCfg]) => modeCfg.assetClass === 'dtx' && modeCfg.status !== 'stopped')
-    .map(([modeId, modeCfg]) => ({
-      modeId,
-      portfolioId: String(modeCfg.dtxPortfolio || modeId),
-      configHash: String(modeCfg.dtxConfigHash || ''),
-      forwardSource: modeCfg.forwardTracking && modeCfg.forwardTracking.source || null,
-    }));
+  return Object.keys(cfg).filter((id) => cfg[id].assetClass === 'dtx' && cfg[id].status !== 'stopped');
 }
+
+// Stratégies ROTATION (stockbox_pit, etf_us, …) : le moteur n'émet PAS de stop — la rotation EST
+// l'exit. Même précédent que factor-scanner.js : disaster-stop informationnel entry×(1-25%),
+// filet aval du tracker, PAS un stop de stratégie.
+const DISASTER_STOP_PCT = 25;
 
 /** Un ordre CREATE BUY du staging → un signal pool (shape scanner-parser mapSignal). */
 function orderToSignal(o, modeId, rank) {
   const ticker = String(o.symbol || '').replace(/=X$/, '');
   const entry = o.entry != null ? Number(o.entry) : (o.limitPrice != null ? Number(o.limitPrice) : null);
-  const stop = o.stopLoss != null ? Number(o.stopLoss) : null;
+  let stop = o.stopLoss != null ? Number(o.stopLoss) : null;
+  if (stop == null && entry > 0) stop = +(entry * (1 - DISASTER_STOP_PCT / 100)).toFixed(4);
   if (!ticker || !entry || !stop || !(entry > 0) || !(stop > 0) || stop >= entry) return null;
   // TP1 — CELUI DU MOTEUR, ou RIEN (2026-08-12). L'ancien défaut `entry + 2R` était une cible que
   // personne n'avait décidée : le moteur n'émet aucun take-profit sur sa poche porteuse (18/18
@@ -172,62 +162,35 @@ function main() {
 
   const pool = [];
   const skipped = [];
-  const withheld = [];
   const ingested = [];
-  for (const { modeId, portfolioId, configHash, forwardSource } of modes) {
-    if (forwardSource === 'no_certified_fill_yet') {
-      withheld.push(`${modeId} (plan publié séparément ; aucune position synthétique)`);
-      continue;
-    }
-    const p = path.join(STAGING_DIR, `${modeId}.json`);
+  for (const id of modes) {
+    const p = path.join(STAGING_DIR, `${id}.json`);
     let stg;
     try { stg = JSON.parse(fs.readFileSync(p, 'utf8')); }
-    catch (_) { skipped.push(`${modeId} (staging manquant)`); continue; }
+    catch (_) { skipped.push(`${id} (staging manquant)`); continue; }
     const asof = String(stg.asof || '').slice(0, 10);
-    if (stg.engineMode !== 'mcp') { skipped.push(`${modeId} (engineMode:${stg.engineMode || '—'} ≠ mcp)`); continue; }
-    if (stg.mode !== modeId) {
-      skipped.push(`${modeId} (mode public du staging:${stg.mode || '—'} ≠ ${modeId})`);
-      continue;
-    }
-    if (stg.portfolioId !== portfolioId) {
-      skipped.push(`${modeId} (portfolioId:${stg.portfolioId || '—'} ≠ moteur attendu ${portfolioId})`);
-      continue;
-    }
-    if (!configHash || stg.configHash !== configHash) {
-      skipped.push(`${modeId} (configHash:${stg.configHash || '—'} ≠ attendu ${configHash || 'non configuré'})`);
-      continue;
-    }
-    if (asof !== opts.date) { skipped.push(`${modeId} (staging STALE asof:${asof} ≠ ${opts.date})`); continue; }
-    if (stg.metricsSuspect === true) { skipped.push(`${modeId} (metricsSuspect — sanity gate)`); continue; }
-    const validFromRaw = String(stg.decisionProvenance?.validFrom || '');
-    const validUntilRaw = String(stg.decisionProvenance?.validUntil || '');
-    const validFrom = validFromRaw.slice(0, 10);
-    const validUntil = validUntilRaw.slice(0, 10);
+    if (stg.engineMode !== 'mcp') { skipped.push(`${id} (engineMode:${stg.engineMode || '—'} ≠ mcp)`); continue; }
+    if (asof !== opts.date) { skipped.push(`${id} (staging STALE asof:${asof} ≠ ${opts.date})`); continue; }
+    if (stg.metricsSuspect === true) { skipped.push(`${id} (metricsSuspect — sanity gate)`); continue; }
+    const validFrom = String(stg.decisionProvenance?.validFrom || '').slice(0, 10);
+    const validUntil = String(stg.decisionProvenance?.validUntil || '').slice(0, 10);
     if (!validFrom || !validUntil) {
-      skipped.push(`${modeId} (fenêtre Contract V2 absente)`);
+      skipped.push(`${id} (fenêtre Contract V2 absente)`);
       continue;
     }
     if (validFrom !== opts.date) {
-      skipped.push(`${modeId} (plan valide le ${validFrom}, pas le ${opts.date})`);
-      continue;
-    }
-    const validFromMs = Date.parse(validFromRaw);
-    const validUntilMs = Date.parse(validUntilRaw);
-    const nowMs = Date.now();
-    if (!Number.isFinite(validFromMs) || !Number.isFinite(validUntilMs)
-      || nowMs < validFromMs || nowMs > validUntilMs) {
-      skipped.push(`${modeId} (plan hors fenêtre d’exécution exacte)`);
+      skipped.push(`${id} (plan valide le ${validFrom}, pas le ${opts.date})`);
       continue;
     }
     const buys = (stg.orders || []).filter((o) => String(o.side || '').toUpperCase() === 'BUY');
     let kept = 0, dropped = 0;
     for (let i = 0; i < buys.length; i++) {
       const o = buys[i];
-      const s = orderToSignal(o, modeId, i);
+      const s = orderToSignal(o, id, i);
       if (s) { pool.push(s); kept++; }
-      else { dropped++; console.log(`  ⚠️  [${modeId}] ordre skippé (niveaux inexploitables): ${o.symbol} entry:${o.entry ?? o.limitPrice ?? '—'} stop:${o.stopLoss ?? '—'}`); }
+      else { dropped++; console.log(`  ⚠️  [${id}] ordre skippé (niveaux inexploitables): ${o.symbol} entry:${o.entry ?? o.limitPrice ?? '—'} stop:${o.stopLoss ?? '—'}`); }
     }
-    ingested.push(`${modeId}←${portfolioId} (${kept} ordre${kept > 1 ? 's' : ''}${dropped ? `, ${dropped} skippé(s)` : ''})`);
+    ingested.push(`${id} (${kept} ordre${kept > 1 ? 's' : ''}${dropped ? `, ${dropped} skippé(s)` : ''})`);
   }
 
   const data = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
@@ -246,9 +209,6 @@ function main() {
 
   console.log(`dtx-pool-bridge — scan ${opts.folder} (séance ${opts.date})${opts.dryRun ? ' [DRY-RUN]' : ''}`);
   console.log(`  ✅ ingérés : ${ingested.length ? ingested.join(' · ') : '—'}`);
-  if (withheld.length) {
-    console.log(`  🛡️  exclus volontairement du tracker synthétique : ${withheld.join(' · ')}`);
-  }
   if (skipped.length) {
     console.log(`  ❗ SKIPPÉS (pas de candidats ce soir pour ces modes — dégradation honnête, jamais fabriquée) :`);
     for (const s of skipped) console.log(`     - ${s}`);
@@ -257,6 +217,4 @@ function main() {
   process.exit(skipped.length ? 3 : 0);
 }
 
-if (require.main === module) main();
-
-module.exports = { scriptedModes, orderToSignal, main };
+main();

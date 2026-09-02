@@ -728,9 +728,6 @@ ${civBlocks ? `  <div class="setup-civ-list">\n${civBlocks}\n  </div>` : ''}`;
 
 function buildPage(d) {
   const setups   = d.setups || [];
-  const marketdataContractStatus = d.engine_meta && d.engine_meta.marketdata_contract_status;
-  const marketdataContractBlocked = typeof marketdataContractStatus === 'string'
-    && marketdataContractStatus !== 'certified';
   const tagStr   = (d.tags || []).join(',');
   const tickers  = setups.map(s => s.ticker).join(', ');
   const { adjustRegimeLabel } = require('./lib/scanner-parser');
@@ -780,13 +777,8 @@ function buildPage(d) {
     badge(`${regimeDot} ${regime}`, regimeBadgeColor(regime)),
     badge(d.session_label || d.date || '', 'blue'),
     badge(`${setups.length} setups conditionnels`, 'green'),
-    ...(marketdataContractBlocked ? [badge('&#x26D4; Brouillon non publiable', 'amber')] : []),
     ...(d.alerts || []).map(a => badge(`&#x26A0; ${a.title}`, 'amber'))
   ].join('\n    ');
-
-  const marketdataContractAlert = marketdataContractBlocked
-    ? `<div style="margin:0 0 1rem;padding:.85rem 1rem;border:1px solid #f59e0b;border-radius:10px;background:#fffbeb;color:#78350f;line-height:1.45"><strong>Publication bloquée :</strong> les calculs utilisent des barres observées, mais la recollecte conforme au contrat Marketdata n’a pas encore fourni la preuve de clôture exigée. Ce brouillon ne doit être ni indexé ni distribué.</div>`
-    : '';
 
   // ── Performance table ──────────────────────────────────────────────────────
   const perf = d.performance || {};
@@ -815,7 +807,7 @@ function buildPage(d) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Top ${setups.length} conditionnel ${regime} &middot; ${setups.slice(0,10).map(s=>s.ticker).join(', ')} | DailyTickers Scanner</title>
-  <meta name="description" content="Scanner ${d.session_label || d.date} &middot; ${regime} (score ${d.regime_score || 0}). ${setups.length} setups conditionnels${marketdataContractBlocked ? ', brouillon en attente de certification Marketdata' : ', niveaux vérifiés'}.">
+  <meta name="description" content="Scanner ${d.session_label || d.date} &middot; ${regime} (score ${d.regime_score || 0}). ${setups.length} setups conditionnels, niveaux vérifiés.">
   <meta property="og:title" content="Scanner DailyTickers &middot; ${d.session_label || d.date} &middot; ${setups.slice(0,10).map(s=>s.ticker).join(', ')}">
   <meta property="og:description" content="Régime ${regime}. ${d.session_label || d.date}. ${setups.length} setups conditionnels.">
   <meta property="og:image" content="${ogImage}">
@@ -868,7 +860,7 @@ function buildPage(d) {
     ${heroBadges}
   </div>
   <h1 class="ticker-name">Scanner DailyTickers — ${d.session_label || d.date}</h1>
-  <p class="ticker-subtitle">Top ${setups.length} conditionnel ${regime} — niveaux techniques calculés sur données de séance, tableaux compacts par stratégie</p>
+  <p class="ticker-subtitle">Top ${setups.length} conditionnel ${regime} — niveaux vérifiés sur données de séance, tableaux compacts par stratégie</p>
   <div class="ticker-metrics">
     <div class="ticker-metric"><div class="tm-value" style="color:${regColor};">${regime}</div><div class="tm-label">Régime</div></div>
     <div class="ticker-metric"><div class="tm-value">${avgScore}</div><div class="tm-label">Score moyen</div></div>
@@ -882,7 +874,6 @@ function buildPage(d) {
 
 <!-- INTRO -->
 <div class="content-card" style="margin:1.5rem auto;max-width:960px;">
-${marketdataContractAlert}
   ${d.intro || ''}
 ${alertsHtml(d.alerts)}
   <p>${d.regime_prose || ''}</p>

@@ -26,13 +26,12 @@
  *
  * Usage:
  *   node tools/dtx-mcp-ingest.js --portfolio ep --decide decide.json --replay replay.json \
- *        --asof 2026-07-09 [--scan-session 2026-07-10] [--from 2021-01-01] [--to 2026-07-09] [--out path] [--quiet]
+ *        --asof 2026-07-09 [--from 2021-01-01] [--to 2026-07-06] [--out path] [--quiet]
  *
  *   --portfolio <id>   dtx portfolio id (see DtxListConfigs): book_honest|us_highvol|hvep|stockbox_pit|etf_us|ep
  *   --decide <file>    REQUIRED — path to the DtxDecide JSON result (or "-" to read stdin)
  *   --replay <file>    OPTIONAL — path to the DtxReplay JSON result (omit → metrics/equity = null)
- *   --asof YYYY-MM-DD  REQUIRED — completed close consumed by DtxDecide
- *   --scan-session     OPTIONAL — public scanner session (defaults to --asof)
+ *   --asof YYYY-MM-DD  REQUIRED — the session the decide was run for
  *   --from / --to      OPTIONAL — replay window stamp (default from=2021-01-01, to=go-live splice||asof)
  *   --out <file>       OPTIONAL — override output path (default data/dtx/<id>.json)
  *   --pit              OPTIONAL — POINT-IN-TIME / rétro : écrit data/dtx/<id>@<asof>.json (entrée
@@ -53,7 +52,6 @@ function parseArgs(argv) {
     else if (a === '--decide') o.decide = argv[++i];
     else if (a === '--replay') o.replay = argv[++i];
     else if (a === '--asof') o.asof = argv[++i];
-    else if (a === '--scan-session') o.scanSession = argv[++i];
     else if (a === '--expected-close') o.expectedClose = argv[++i];
     else if (a === '--from') o.from = argv[++i];
     else if (a === '--to') o.to = argv[++i];
@@ -121,21 +119,13 @@ function main() {
   if (!opts.decide) { console.error('ERROR: --decide <file> required (DtxDecide JSON)'); process.exit(2); }
   if (!opts.asof) { console.error('ERROR: --asof YYYY-MM-DD required'); process.exit(2); }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(opts.expectedClose || ''))) { console.error('ERROR: --expected-close YYYY-MM-DD required'); process.exit(2); }
-  const scanSession = opts.scanSession || opts.asof;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(scanSession))) { console.error('ERROR: --scan-session must be YYYY-MM-DD'); process.exit(2); }
 
   const { modeInfo, cfg } = resolveMode(opts.portfolio, opts);
   const currency = cfg.currency || 'USD';
-  const expectedConfigHash = scan.dtxConfigHashForMode(opts.portfolio);
 
   // 1) decide payload → validated Contract V2 groups. Tolerate the MCP result wrapper.
   const decideEnvelope = readJson(opts.decide, 'decide');
-  const decideErrors = validateDtxDecision(decideEnvelope, {
-    asof: opts.asof,
-    portfolio: opts.portfolio,
-    configHash: expectedConfigHash,
-    referenceClose: opts.expectedClose,
-  });
+  const decideErrors = validateDtxDecision(decideEnvelope, { asof: opts.asof, referenceClose: opts.expectedClose });
   if (decideErrors.length) {
     console.error(`ERROR: DtxDecide Contract V2 rejected: ${decideErrors.join('; ')}`);
     process.exit(3);
@@ -157,7 +147,7 @@ function main() {
       if (rep && !rep.results && rep.result && rep.result.results) rep = rep.result;
       if (!rep || !Array.isArray(rep.results)) throw new Error('replay JSON has no results[]');
       const from = opts.from || scan.DEFAULT_FROM;
-      const to = opts.to || opts.expectedClose;
+      const to = opts.to || scan.goLiveFor(cfg.id) || opts.asof;
       ({ metrics, equity } = scan.extractReplayMetrics(rep, from, to));
       if (!metrics) throw new Error('replay results[0] empty');
     } catch (e) {
@@ -167,7 +157,7 @@ function main() {
   }
 
   const out = scan.buildStaging({
-    modeInfo, cfg, asof: scanSession, decisionAsOf: opts.asof, currency,
+    modeInfo, cfg, asof: opts.asof, currency,
     decision: decide, metrics, equity, replayErr,
     engineLabel: 'dtx (systematic-tss) — MCP', engineMode: 'mcp', t0,
   });
@@ -175,7 +165,7 @@ function main() {
   // POINT-IN-TIME (idea #8) : --pit → écrit dans data/dtx/<id>@<asof>.json (entrée dédiée par as-of)
   // pour qu'un replay de RÉTRO n'écrase JAMAIS la staging LIVE du mode (data/dtx/<id>.json), et
   // réciproquement. Sans --pit → chemin live inchangé (pipeline nocturne intact). --out prime toujours.
-  const outPath = opts.out || scan.stagingPathFor(modeInfo.id, { asof: scanSession, pit: opts.pit });
+  const outPath = opts.out || scan.stagingPathFor(modeInfo.id, { asof: opts.asof, pit: opts.pit });
 
   // ── ⛔ ANTI-GEL (frozen-orders) — tripwire de régression (root cause corrigée côté MCP le 21/07/2026) ──
   // Bug 09→21/07 : DtxDecide renvoyait des CREATE FIGÉS à J-9, ré-ingérés en silence chaque soir. Les
@@ -195,10 +185,7 @@ function main() {
   if (Array.isArray(out.orders) && out.orders.length > 0 && fs.existsSync(outPath)) {
     let prior = null;
     try { prior = JSON.parse(fs.readFileSync(outPath, 'utf8')); } catch (_) { prior = null; }
-    const priorDecisionAsOf = prior && (prior.decisionAsOf
-      || (prior.decisionProvenance && prior.decisionProvenance.requestedAsOf)
-      || prior.asof);
-    if (prior && priorDecisionAsOf && priorDecisionAsOf !== opts.asof && Array.isArray(prior.orders)
+    if (prior && prior.asof && prior.asof !== opts.asof && Array.isArray(prior.orders)
         && JSON.stringify(prior.orders) === JSON.stringify(out.orders)) {
       // V2 can legitimately emit the same economic orders for the next session when
       // both decisions consume the same completed close (Friday -> Monday is the
@@ -214,9 +201,9 @@ function main() {
         && decide.request_id && decide.run_id && decide.call_id && plan.plan_id
         && Number.isFinite(validFrom) && Number.isFinite(validUntil) && validUntil > validFrom;
       if (v2RecalculationProof) {
-        console.log(`  [${modeInfo.id}] batch économique inchangé vs décision ${priorDecisionAsOf}, mais recalcul V2 prouvé par request/run/call/plan + fenêtre ${plan.valid_from}→${plan.valid_until}`);
+        console.log(`  [${modeInfo.id}] batch économique inchangé vs ${prior.asof}, mais recalcul V2 prouvé par request/run/call/plan + fenêtre ${plan.valid_from}→${plan.valid_until}`);
       } else {
-        frozenReasons.push(`batch CREATE (${out.orders.length} ordres) byte-identique à la décision du ${priorDecisionAsOf} sans preuve V2 complète de recalcul — réponse potentiellement figée pour ${opts.asof}`);
+        frozenReasons.push(`batch CREATE (${out.orders.length} ordres) byte-identique au staging du ${prior.asof} sans preuve V2 complète de recalcul — réponse potentiellement figée pour ${opts.asof}`);
       }
     }
   }

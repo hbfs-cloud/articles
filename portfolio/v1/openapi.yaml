@@ -1,19 +1,21 @@
 openapi: "3.0.3"
 info:
   title: DailyTickers Portfolio API
-  version: "1.5.0"
+  version: "1.4.1"
   description: >
-    Free JSON endpoints for the five published DailyTickers modes: DTX Max, Turbo, Dynamic,
-    Balanced and Fortress. DTX Max is published under the backward-compatible mode id `best`.
-    Its `stats` and `equityCurve` describe verified forward execution only; the separate
-    `engineBacktest` block is a historical reference with a full-resolution daily curve and
-    must never be interpreted as forward performance. Turbo, Dynamic, Balanced and Fortress
-    are non-broker simulations tracked by a point-in-time capacity ledger from 2026-09-01;
-    pre-boundary performance remains unavailable unless it is explicitly certified.
-    Updated every trading session (~23:00 UTC weekdays). No authentication is required.
-    Changelog 1.5.0 (2026-09-01): renamed the public `best` mode to DTX Max, documented the
-    reference/forward boundary and the capacity-ledger simulation scope, and aligned current
-    `tradingMode` values.
+    Free JSON endpoints to replicate the DailyTickers portfolios (5 modes: Best, Turbo, Dynamic,
+    Balanced, Fortress). Best is engine-backed (systematic-tss): its signals come from the engine
+    pool, not from the scanner, and its equity.json carries an extra `engineBacktest` block.
+    The four others are scanner modes.
+    Updated every trading session (~23:00 UTC weekdays). No authentication required.
+    Changelog 1.4.0 (2026-08-12): catalogue cut from 21 to 5 modes. The 17 removed ids
+    (secured, tkl, alpha, aplus, highvol, hybrid, forex, etf, etf_eu, etf_us, stockbox,
+    stockbox_pit, factor, book_honest, us_highvol, hvep, ep) were still advertised in the mode
+    enum and all returned 404; `best`, the only newly published directory, was missing from it.
+    Changelog 1.4.1 (2026-08-29): documented the existing root /rotation.json endpoint.
+    Also documented: /risk.json, /modes.json, /regime.json, /config-history.json,
+    /instruments.json, and the response fields (status, reliability, engineBacktest, risk,
+    scanDate) that the generator has been emitting.
   contact:
     url: https://articles.dailytickers.com/integrations/portfolio/
 servers:
@@ -29,21 +31,16 @@ servers:
           - "balanced"
           - "fortress"
         description: >
-          Portfolio mode. Exactly the 5 directories published under /portfolio/v1/;
-          `best` is the stable URL alias for DTX Max.
+          Portfolio mode. Exactly the 5 directories published under /portfolio/v1/.
           Discover them at runtime via /portfolio/v1/modes.json rather than hardcoding this list.
   - url: https://articles.dailytickers.com/portfolio/v1
     description: Root endpoints (no mode prefix) — modes overview, regime, status, config-history, instruments
 
-security: []
-
 paths:
   /signals.json:
     get:
-      summary: Latest published signals
-      description: >
-        Current candidates with entry, stop and target levels. For DTX Max these are strategy
-        candidates, not fills; simulation-mode candidates are not broker instructions.
+      summary: Latest scanner signals
+      description: Current scan picks with entry, stop, and target levels for the selected mode.
       responses:
         "200":
           description: Current scan picks with levels
@@ -62,11 +59,8 @@ paths:
 
   /positions.json:
     get:
-      summary: Reported open positions
-      description: >
-        Open positions, when they exist in the selected mode's declared performance scope.
-        An empty array is not replaced by simulated fills; check `execution_verified` before
-        treating DTX Max data as executed activity.
+      summary: Open positions with live P&L
+      description: Current open positions for the selected mode with entry, current price, return %, and days remaining.
       responses:
         "200":
           description: Current open positions
@@ -85,11 +79,8 @@ paths:
 
   /trades.json:
     get:
-      summary: Certified closed-trade history
-      description: >
-        Closed trades for the selected mode with P&L%, hold days and exit reason. DTX Max starts
-        its forward ledger on 2026-09-01. The four simulation modes do not expose retired,
-        uncertified pre-boundary history.
+      summary: Closed trade history
+      description: All closed trades for the selected mode with P&L%, hold days, and exit reason.
       responses:
         "200":
           description: All closed trades
@@ -108,12 +99,7 @@ paths:
   /equity.json:
     get:
       summary: Portfolio stats and equity curve
-      description: >
-        Scope-aware statistics and equity data. For DTX Max (`best`), root `stats` and
-        `equityCurve` are forward execution only and can be `not_started`; `engineBacktest` is a
-        separate historical reference whose curve is daily. For Turbo, Dynamic, Balanced and
-        Fortress, forward simulation accounting begins at the certified capacity-ledger boundary
-        on 2026-09-01 and unavailable metrics remain null.
+      description: Simulation statistics (return, drawdown, win rate, profit factor) and equity curve data points for the selected mode.
       responses:
         "200":
           description: Statistics and equity curve
@@ -139,14 +125,11 @@ paths:
 
   /orders.json:
     get:
-      summary: Orders and planned decisions
-      description: >
-        `orders` is reserved for executable, verified actions. DTX Max may expose candidates in
-        `plannedOrders`; they are plans, not fills or open positions. Simulation modes never turn
-        a simulated action into a broker order.
+      summary: Buy/rotate orders to place
+      description: Orders to execute at next market open for the selected mode based on available slots and signal strength.
       responses:
         "200":
-          description: Verified orders and non-executed plans, kept separate
+          description: Orders to execute at next market open
           content:
             application/json:
               schema:
@@ -159,18 +142,11 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/Order"
-                  plannedOrders:
-                    type: array
-                    description: Non-executed decisions; never proof of a fill or position.
-                    items:
-                      $ref: "#/components/schemas/Order"
 
   /actions.json:
     get:
-      summary: Verified positions requiring review
-      description: >
-        Actions derived only from positions present in the selected mode's declared scope.
-        No action is synthesized from a signal, plan or unavailable simulation history.
+      summary: Positions requiring action (close or check)
+      description: Positions in the selected mode that have exceeded their horizon (close now) or expire tomorrow (review needed).
       responses:
         "200":
           description: Expired and expiring positions
@@ -197,9 +173,8 @@ paths:
     get:
       summary: Win/loss streaks for the selected mode
       description: >
-        Aggregate streak metrics computed only from the mode's available closed-trades ledger.
-        Metrics remain unavailable when the ledger is not certified; absence is never converted
-        to zero performance.
+        Aggregate streak metrics computed from the mode's closed trades ledger.
+        Useful for social-proof, dashboards, or feeding a "hot hand" widget.
       responses:
         "200":
           description: Streak snapshot
@@ -282,9 +257,8 @@ paths:
     get:
       summary: Full portfolio state (all data in one call)
       description: >
-        Single scope-aware endpoint combining signals, plans, verified orders, positions,
-        actions, trades, forward equity and config. It does not merge DTX Max's historical
-        reference into forward results or materialize unavailable simulation data.
+        Single endpoint for LLM analysis — combines signals, orders, positions,
+        actions, trades, equity, and config in one response.
       responses:
         "200":
           description: Complete portfolio snapshot
@@ -297,17 +271,12 @@ paths:
                   date: { type: string, format: date }
                   scanDate: { type: string, format: date, description: "Scan session the signals/orders come from" }
                   mode: { type: string, example: "balanced" }
-                  performanceScope:
-                    type: string
-                    enum: [forward_execution, simulated_backtest]
-                  execution_verified: { type: boolean, example: false }
                   status: { $ref: "#/components/schemas/ModeStatus" }
                   config: { $ref: "#/components/schemas/Config" }
                   stats: { $ref: "#/components/schemas/Stats" }
                   equityCurve: { $ref: "#/components/schemas/EquityCurve" }
                   signals: { type: array, items: { $ref: "#/components/schemas/Signal" } }
                   orders: { type: array, items: { $ref: "#/components/schemas/Order" } }
-                  plannedOrders: { type: array, items: { $ref: "#/components/schemas/Order" } }
                   positions: { type: array, items: { $ref: "#/components/schemas/Position" } }
                   closeNow: { type: array, items: { $ref: "#/components/schemas/CloseAction" } }
                   expiresTomorrow: { type: array, items: { $ref: "#/components/schemas/ExpiresAction" } }
@@ -323,8 +292,8 @@ paths:
       description: >
         Aggregate snapshot of every mode's lifecycle state (draft, test, deploying,
         live, pausing, liquidated, paused, stopped) plus the last 20 status transitions.
-        Read `tradingMode`, `performanceScope` and `execution_verified` separately from the
-        lifecycle state: `live` does not by itself mean broker execution.
+        Lightweight endpoint for integrations that only need to know whether a mode
+        accepts new entries.
       responses:
         "200":
           description: Status snapshot for all modes
@@ -353,7 +322,7 @@ paths:
       description: >
         One entry per published mode with its label, colour, lifecycle status, headline stats
         and current position/order counts. This is the authoritative list of modes — clients
-        should read it instead of hardcoding mode ids. DTX Max retains the id `best`.
+        should read it instead of hardcoding mode ids.
       responses:
         "200":
           description: Overview of every published mode
@@ -372,21 +341,12 @@ paths:
                       type: object
                       properties:
                         id: { type: string, example: "best" }
-                        label: { type: string, example: "DTX Max" }
+                        label: { type: string, example: "Best" }
                         color: { type: string, example: "#2563eb" }
                         status: { $ref: "#/components/schemas/ModeStatus" }
                         stats: { $ref: "#/components/schemas/Stats" }
-                        tradingMode:
-                          type: string
-                          enum: [forward_execution, simulated]
-                          example: "forward_execution"
-                        execution_verified: { type: boolean, example: false }
-                        statsScope:
-                          type: string
-                          enum: [forward_execution, simulated_backtest]
-                        positionCount: { type: integer, nullable: true, example: null }
+                        positionCount: { type: integer, example: 0 }
                         orderCount: { type: integer, example: 18 }
-                        plannedOrderCount: { type: integer, nullable: true, example: 0 }
                         portfolioSize: { type: integer, example: 15 }
 
   /regime.json:
@@ -595,7 +555,7 @@ components:
     Config:
       type: object
       description: >
-        Published config of the mode as served in equity.json / all.json. The active config version id
+        Live config of the mode as served in equity.json / all.json. The active config version id
         and the regime are NOT inside this object — read them from the root /regime.json and
         /config-history.json, or from a trade's `configVersion`.
       properties:
@@ -605,7 +565,7 @@ components:
         topN: { type: integer, example: 1 }
         minScore: { type: integer, example: 85 }
         horizon: { type: integer, example: 6 }
-        filterName: { type: string, description: "Strategy filter applied to candidates.", example: "mom_bo" }
+        filterName: { type: string, description: "Strategy filter applied to candidates; `dtx_engine` for the engine-backed mode.", example: "mom_bo" }
         rotation: { type: string, example: "daily_max1" }
         partialTP: { type: boolean }
         trailingStop: { type: boolean }
@@ -625,51 +585,23 @@ components:
     Stats:
       type: object
       description: >
-        Scope-aware performance statistics. DTX Max contains forward execution only; Turbo,
-        Dynamic, Balanced and Fortress use certified point-in-time capacity accounting from
-        2026-09-01. Null values mean unavailable or not started and must never be read as zero.
-        All returns are in percent, base 100.
+        Simulation statistics computed from the mode's sealed (frozen) closed-trades ledger
+        via point-in-time position weighting. All returns are in percent, base 100.
       properties:
-        scope:
-          type: string
-          enum: [forward_execution, simulated_backtest]
-          example: "forward_execution"
-        status:
-          type: string
-          enum: [not_started, unavailable, reference_only]
-          description: Availability of the metrics in this exact scope.
-          example: "not_started"
-        since: { type: string, format: date, nullable: true, example: "2026-09-01" }
-        execution_verified: { type: boolean, nullable: true, example: false }
-        accountingCertified: { type: boolean, nullable: true, example: false }
-        accountingErrors:
-          type: array
-          description: Structured reasons why simulation metrics are unavailable.
-          items: { type: string }
-        capacityBoundary:
-          type: object
-          nullable: true
-          description: Point-in-time simulation boundary; historical data before it is not implied.
-          properties:
-            boundarySession: { type: string, format: date, example: "2026-09-01" }
-            effectiveAt: { type: string, format: date-time }
-            historyStatus: { type: string, example: "retired_uncertified" }
-            trackingStatus: { type: string, example: "not_started" }
-            forwardCertified: { type: boolean, example: true }
-        ret: { type: number, nullable: true, description: "Total cumulative return % (realized + unrealized)", example: null }
-        realized: { type: number, nullable: true, description: "Realized cumulative return % from closed trades", example: null }
-        unrealized: { type: number, nullable: true, description: "Unrealized return % contributed by still-open positions (marked-to-market)", example: null }
-        dd: { type: number, nullable: true, description: "Max drawdown % (negative)", example: null }
-        wr: { type: number, nullable: true, description: "Win rate %", example: null }
-        pf: { type: number, nullable: true, description: "Profit factor (gross wins / gross losses)", example: null }
-        pfLow: { type: number, nullable: true, description: "Lower bound of the profit-factor confidence interval", example: null }
-        pfHigh: { type: number, nullable: true, description: "Upper bound of the profit-factor confidence interval", example: null }
+        ret: { type: number, description: "Total cumulative return % (realized + unrealized)", example: 45.2 }
+        realized: { type: number, description: "Realized cumulative return % from closed trades", example: 45.2 }
+        unrealized: { type: number, description: "Unrealized return % contributed by still-open positions (marked-to-market)", example: 0 }
+        dd: { type: number, description: "Max drawdown % (negative)", example: -3.8 }
+        wr: { type: number, description: "Win rate %", example: 68.2 }
+        pf: { type: number, description: "Profit factor (gross wins / gross losses)", example: 2.15 }
+        pfLow: { type: number, description: "Lower bound of the profit-factor confidence interval", example: 1.32 }
+        pfHigh: { type: number, description: "Upper bound of the profit-factor confidence interval", example: 8.76 }
         pfReliable: { type: boolean, description: "True when the profit-factor sample is large enough to be statistically reliable", example: false }
-        trades: { type: integer, nullable: true, description: "Number of closed trades in this scope", example: 0 }
-        avgHold: { type: number, nullable: true, description: "Average hold days", example: null }
-        cagr: { type: number, nullable: true, description: "Compound annualized growth rate %", example: null }
-        sharpe: { type: number, nullable: true, description: "Sharpe ratio of the equity curve", example: null }
-        r2: { type: number, nullable: true, description: "Linearity of the equity curve (0-1, higher = smoother/more reliable)", example: null }
+        trades: { type: integer, description: "Number of closed trades in the sealed ledger", example: 22 }
+        avgHold: { type: number, description: "Average hold days", example: 4.2 }
+        cagr: { type: number, description: "Compound annualized growth rate %", example: 120.4 }
+        sharpe: { type: number, description: "Sharpe ratio of the equity curve", example: 2.1 }
+        r2: { type: number, description: "Linearity of the equity curve (0-1, higher = smoother/more reliable)", example: 0.94 }
         oosWarn:
           type: object
           nullable: true
@@ -691,7 +623,7 @@ components:
         sample_period_days: { type: integer, nullable: true, example: 158 }
         sample_period_start: { type: string, nullable: true, description: "First equity-curve label (MM/DD for scanner modes, YYYY-MM-DD for the engine-backed mode)" }
         sample_period_end: { type: string, nullable: true }
-        closed_trades: { type: integer, nullable: true, example: 561 }
+        closed_trades: { type: integer, example: 79 }
         statistically_reliable: { type: boolean, description: "True at n>=30 closed trades" }
         pf_reliable: { type: boolean, description: "True at n>=50 closed trades" }
         pf_low: { type: number, nullable: true, description: "Bootstrapped 90% CI lower bound for profit factor" }
@@ -707,14 +639,11 @@ components:
     EngineBacktest:
       type: object
       description: >
-        Historical reference for DTX Max only. Metrics are read as published and never merged
-        into root forward `stats` or `equityCurve`. Its reference curve is the exact
-        full-resolution daily series; it is not proof of a fill or forward performance.
+        Engine-backed modes only (assetClass `dtx`). Replay metrics read as-is from the engine —
+        never recomputed here. The equity curve of these modes is sampled at rebalance dates,
+        so a drawdown recomputed from `equityCurve` UNDERSTATES the real one: use `max_dd_pct`.
       properties:
-        portfolio: { type: string, description: "Stable identifier of the DTX reference portfolio." }
-        source: { type: string, example: "DailyTickers DTX reference replay" }
-        metrics_source: { type: string, example: "reference_replay" }
-        reliability: { $ref: "#/components/schemas/Reliability" }
+        source: { type: string, example: "systematic-tss engine (dtx) — replay metrics, authoritative" }
         as_of: { type: string, format: date, nullable: true }
         from: { type: string, format: date, nullable: true }
         to: { type: string, format: date, nullable: true }
@@ -725,9 +654,7 @@ components:
         r2: { type: number, nullable: true }
         win_rate: { type: number, nullable: true }
         total_trades: { type: integer, nullable: true }
-        equity_resolution: { type: string, enum: [daily], example: "daily" }
-        equityCurve: { $ref: "#/components/schemas/EquityCurve" }
-        curve_resolution: { type: string, enum: [daily], example: "daily" }
+        curve_resolution: { type: string, example: "rebalance dates (~13 calendar days), NOT daily" }
         curve_warning: { type: string }
 
     RegimeProbability:
@@ -736,7 +663,7 @@ components:
       properties:
         status: { type: string, nullable: true, example: "ok" }
         asOf: { type: string, format: date-time }
-        source: { type: string, example: "Données de marché certifiées" }
+        source: { type: string, example: "mcp_connected:GetMarketContext(facets=regime)" }
         currentState: { type: string, example: "risk_on" }
         currentStateConfidence: { type: number, example: 0.531 }
         regimeScore: { type: number, example: 1.3 }
@@ -753,15 +680,9 @@ components:
 
     EquityCurve:
       type: object
-      description: Equity series for one declared scope; never combine root and reference curves.
       properties:
-        d: { type: array, items: { type: string }, description: "Session dates; DTX daily reference uses ISO YYYY-MM-DD." }
+        d: { type: array, items: { type: string }, description: "Dates (MM/DD format)" }
         v: { type: array, items: { type: number }, description: "Equity values (base 100)" }
-        scope:
-          type: string
-          enum: [forward_execution, simulated_backtest, reference_backtest]
-          nullable: true
-        status: { type: string, nullable: true, example: "not_started" }
 
     ModeStatus:
       type: object
@@ -797,22 +718,14 @@ components:
           description: False for `draft` and `stopped` — hide from default UI listings.
         tradingMode:
           type: string
-          enum: [forward_execution, simulated, paper-ramp, exit-only, none]
+          enum: [real, paper, paper-ramp, exit-only, none]
           description: >
-            Public execution policy, independent from lifecycle state.
-            `forward_execution` = DTX forward tracking; check `execution_verified` for fills.
-            `simulated` = non-broker simulation with point-in-time capacity accounting.
+            Execution policy implied by the state.
+            `real` = live orders.
+            `paper` = simulated only.
             `paper-ramp` = `deploying` ramp-up, paper executions pending live promotion.
             `exit-only` = no new entries; existing positions wind down via normal SL/TP/horizon/trailing.
             `none` = no trading activity.
-        performanceScope:
-          type: string
-          enum: [forward_execution, simulated_backtest]
-          description: Scope to apply to stats, positions and trades for this mode.
-        execution_verified:
-          type: boolean
-          description: True only when the published execution activity is certified.
-          example: false
         nextReviewAt:
           type: string
           format: date

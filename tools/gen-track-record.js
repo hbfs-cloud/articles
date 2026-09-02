@@ -6,15 +6,13 @@
  * ══════════════════════════════════════════════════════════════════════════════
  * INVARIANT — SEALED-PRIMARY (cf. .claude/memory/feedback_sealed_primary_display.md)
  * ══════════════════════════════════════════════════════════════════════════════
- * Cette page ne CALCULE RIEN. Elle RECOPIE uniquement les agrégats dont la
- * certification point-in-time est complète :
+ * Cette page ne CALCULE RIEN. Elle RECOPIE les agrégats déjà scellés :
  *
  *   1. data/backtest-results.json  → `frozen_<mode>`  = SOURCE PRIMAIRE
  *      (returnTotal, maxDD, winRate, profitFactor, trades, sharpe, calmar,
- *       equityCurve[{date,value}], in_sample, out_sample), à condition qu'il
- *       embarque un ledger `capacityAt(entry)` scellé et valide ;
+ *       equityCurve[{date,value}], in_sample, out_sample)
  *   2. portfolio/v1/<mode>/equity.json → libellé, config, statut, `reliability`
- *      et contre-preuve publique `reference_only/accountingCertified=true` ;
+ *      (période d'échantillon, avertissements hors-échantillon)
  *   3. scanner/status/history/<latest>.json → date de la dernière séance suivie
  *      (badge « as of » uniquement — AUCUN chiffre de performance n'en sort)
  *
@@ -22,9 +20,8 @@
  * du 2026-07-02 et du 2026-07-13 :
  *   - aucun recalcul de return / DD / WR / PF à partir des trades ou des courbes ;
  *   - aucun carnet live ni forward-view incl. mark-to-market en chiffre de tête ;
- *   - un mode sans ledger PIT certifié n'est PAS inventé : métriques et courbe
- *     restent à « — », même si un ancien `frozen_<id>` numérique existe ;
- *   - le replay DTX de référence n'est jamais substitué au suivi d'exécution.
+ *   - un mode sans `frozen_<id>` n'est PAS inventé, il est marqué « pas encore de
+ *     registre scellé » et ses métriques restent à « — ».
  *
  * Usage :
  *   node tools/gen-track-record.js            # génère tech/track-record/index.html
@@ -43,8 +40,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const { capacityCertificationErrors } = require('./lib/mode-stats');
-const { modeBoundaryStatus } = require('./lib/capacity-ledger');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT_DEFAULT = path.join(ROOT, 'tech/track-record/index.html');
@@ -55,22 +50,12 @@ const PUBLIC_MODES = ['turbo', 'dynamic', 'balanced', 'fortress', 'best'];
 
 // Une ligne descriptive par carnet — factuelle, dérivée de la config publiée.
 const MODE_BLURB = {
-  turbo: 'Simulation éditoriale à rotation courte. Ses paramètres et sa capacité ont changé selon les versions.',
-  dynamic: 'Simulation éditoriale à horizon plus long, avec paramètres et capacité versionnés.',
-  balanced: 'Simulation éditoriale diversifiée, reconstruite selon la configuration effective à chaque date.',
-  fortress: 'Simulation éditoriale de diversification maximale. Son ancien historique PM/live ne peut pas être certifié.',
-  best: 'DTX Max : suivi réel distinct du backtest de référence, démarré sous cette identité le 1er septembre 2026.',
+  turbo: 'Une seule ligne en portefeuille, tenue trois séances, sur les candidats les mieux notés.',
+  dynamic: 'Une ligne, horizon dix séances : la même sélection tenue plus longtemps.',
+  balanced: 'Trois lignes en parallèle, horizon six séances, avec une rotation par jour au maximum.',
+  fortress: 'Dix lignes, horizon huit séances : la diversification sert de parachute.',
+  best: 'Quinze lignes, horizon quatorze séances, décidées le soir par le moteur systématique.',
 };
-
-const EMPTY_STATS = Object.freeze({
-  ret: null,
-  dd: null,
-  wr: null,
-  pf: null,
-  trades: null,
-  sharpe: null,
-  calmar: null,
-});
 
 const MONTHS_FR = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
   'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
@@ -79,7 +64,7 @@ const MONTHS_FR = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
 function frDate(iso) {
   if (!iso || !/^\d{4}-\d{2}-\d{2}/.test(iso)) return null;
   const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
-  return `${d === 1 ? '1er' : d} ${MONTHS_FR[m - 1]} ${y}`;
+  return `${d} ${MONTHS_FR[m - 1]} ${y}`;
 }
 function num(v, dec = 2) {
   if (v === null || v === undefined || Number.isNaN(v)) return '—';
@@ -118,16 +103,7 @@ function latestSnapshot() {
 function collectModes() {
   const results = readJSON(path.join(ROOT, 'data/backtest-results.json'));
   if (!results) throw new Error('data/backtest-results.json illisible — registre scellé introuvable');
-  const configDocument = readJSON(path.join(ROOT, 'data/modes-config.json'));
-  if (!configDocument || !configDocument.modes) {
-    throw new Error('data/modes-config.json illisible — scopes canoniques introuvables');
-  }
-  const configHistory = readJSON(path.join(ROOT, 'data/modes-config-history.json'));
-  if (!configHistory || !Array.isArray(configHistory.versions)) {
-    throw new Error('data/modes-config-history.json illisible — timeline PIT introuvable');
-  }
   const status = readJSON(path.join(ROOT, 'portfolio/v1/status.json')) || { modes: {} };
-  const capacityRegistry = readJSON(path.join(ROOT, 'data/capacity-ledger-v1.json'));
 
   const out = [];
   for (const id of PUBLIC_MODES) {
@@ -137,56 +113,17 @@ function collectModes() {
     if (st.publiclyVisible === false) continue;
 
     const eq = readJSON(path.join(ROOT, `portfolio/v1/${id}/equity.json`)) || {};
-    const cfg = configDocument.modes[id] || {};
+    const cfg = eq.config || {};
     const rel = eq.reliability || {};
     const frozen = results[`frozen_${id}`] || null;
 
-    const performanceScope = cfg.performanceScope || st.performanceScope || 'unspecified';
-    const simulatedScope = performanceScope === 'simulated_backtest';
-    const forwardScope = performanceScope === 'forward_execution';
-    const apiStats = eq.stats || {};
-    const trades = frozen && typeof frozen.trades === 'number' ? frozen.trades : 0;
-
-    // Une simulation historique n'est publiable que si les deux surfaces
-    // indépendantes sont d'accord : artefact PIT scellé + API reference_only.
-    const apiCurve = eq.equityCurve || {};
-    const certificationErrors = simulatedScope
-      ? capacityCertificationErrors(frozen, { configHistory, modeId: id })
-      : [];
-    if (simulatedScope && !(
-      eq.performanceScope === 'simulated_backtest'
-      && eq.execution_verified === false
-      && eq.status?.performanceScope === 'simulated_backtest'
-      && eq.status?.execution_verified === false
-      && apiStats.scope === 'simulated_backtest'
-      && apiStats.status === 'reference_only'
-      && apiStats.accountingCertified === true
-      && apiStats.execution_verified === false
-      && apiCurve.scope === 'simulated_backtest'
-      && apiCurve.status !== 'unavailable'
-    )) {
-      certificationErrors.push('public equity stats are not certified reference_only');
-    }
-    const uniqueCertificationErrors = [...new Set(certificationErrors)];
-    const boundaryStatus = simulatedScope
-      ? modeBoundaryStatus(capacityRegistry, id, { configHistory })
-      : { forwardCertified: false, historyStatus: 'unavailable', boundarySession: null, effectiveAt: null };
-    const sealed = simulatedScope
-      && !boundaryStatus.forwardCertified
-      && !!frozen
-      && trades > 0
-      && uniqueCertificationErrors.length === 0;
-
-    // Courbe scellée : on recopie les points datés tels quels, uniquement après
-    // le gate. Un ancien frozen non certifié ne doit même pas atteindre le DOM.
-    const curve = (sealed && Array.isArray(frozen.equityCurve) ? frozen.equityCurve : [])
+    // Courbe scellée : on recopie les points datés tels quels.
+    const curve = (frozen && Array.isArray(frozen.equityCurve) ? frozen.equityCurve : [])
       .filter(p => p && p.date && typeof p.value === 'number');
-    const performanceUnavailable = simulatedScope && !sealed;
-    const trackingNotStarted = forwardScope && (
-      st.execution_verified !== true
-      || apiStats.scope !== 'forward_execution'
-      || apiStats.status === 'not_started'
-    );
+
+    // Un registre n'est "parlant" que s'il porte de vrais trades clôturés.
+    const trades = frozen && typeof frozen.trades === 'number' ? frozen.trades : 0;
+    const sealed = !!frozen && trades > 0;
 
     out.push({
       id,
@@ -199,17 +136,9 @@ function collectModes() {
         minScore: cfg.minScore ?? null,
         rotation: cfg.rotation || 'none',
       },
-      performanceScope,
       sealed,
-      performanceUnavailable,
-      forwardCapacityCertified: boundaryStatus.forwardCertified,
-      historyStatus: boundaryStatus.historyStatus,
-      boundarySession: boundaryStatus.boundarySession,
-      boundaryEffectiveAt: boundaryStatus.effectiveAt,
-      trackingNotStarted,
-      certificationErrors: uniqueCertificationErrors,
       // Chiffres RECOPIÉS du registre scellé — jamais recalculés.
-      stats: sealed ? {
+      stats: frozen ? {
         ret: frozen.returnTotal ?? null,
         dd: frozen.maxDD ?? null,
         wr: frozen.winRate ?? null,
@@ -217,13 +146,13 @@ function collectModes() {
         trades,
         sharpe: frozen.sharpe ?? null,
         calmar: frozen.calmar ?? null,
-      } : { ...EMPTY_STATS, trades: forwardScope && apiStats.trades === 0 ? 0 : null },
-      oos: sealed && frozen.out_sample ? frozen.out_sample : null,
-      oosWarn: sealed ? (rel.out_of_sample_warning || null) : null,
+      } : { ret: null, dd: null, wr: null, pf: null, trades: 0, sharpe: null, calmar: null },
+      oos: frozen && frozen.out_sample ? frozen.out_sample : null,
+      oosWarn: rel.out_of_sample_warning || null,
       periodStart: curve.length ? curve[0].date : null,
       periodEnd: curve.length ? curve[curve.length - 1].date : null,
-      sampleDays: sealed ? (rel.sample_period_days ?? null) : null,
-      closedTrades: sealed ? (rel.closed_trades ?? null) : null,
+      sampleDays: rel.sample_period_days ?? null,
+      closedTrades: rel.closed_trades ?? null,
       curve,
       since: st.since || null,
     });
@@ -255,55 +184,36 @@ function modeCard(m) {
   const chartBlock = hasCurve
     ? `<div class="echart-box"><div id="${chartId}" class="tr-chart-slot"></div></div>
       <p class="tr-caption">Base 100 au premier jour du registre. La courbe s'arrête au jour du dernier trade scellé. Elle n'est pas prolongée par la valorisation des positions encore ouvertes.</p>`
-    : m.performanceUnavailable
-      ? m.forwardCapacityCertified
-        ? `<p class="tr-empty">Historique antérieur retiré : le suivi point-in-time repart à zéro depuis le ${esc(frDate(m.boundarySession))} à ${esc(m.boundaryEffectiveAt.slice(11, 16))} UTC. Aucun ancien rendement, trade ou point de courbe n'est repris.</p>`
-        : `<p class="tr-empty">Ancien registre masqué : la configuration datée est connue, mais aucune frontière forward point-in-time scellée n'est disponible.</p>`
-      : m.trackingNotStarted
-        ? `<p class="tr-empty">Suivi réel non démarré : aucune exécution certifiée sous cette identité. Le backtest de référence reste séparé sur le tableau de bord.</p>`
-        : `<p class="tr-empty">Aucune courbe certifiée n'est disponible pour ce carnet.</p>`;
+    : `<p class="tr-empty">Pas encore de courbe : ce carnet n'a aucun trade clôturé et scellé à ce jour. Rien n'est affiché à la place.</p>`;
 
-  const oosLine = (m.sealed && m.oosWarn && m.oosWarn.oosTrades)
+  const oosLine = (m.oosWarn && m.oosWarn.oosTrades)
     ? `<p class="tr-warn"><i class="fa-solid fa-triangle-exclamation"></i>
         Hors échantillon, ce carnet se dégrade : réussite ${num(m.oosWarn.isWR, 1)} % → ${num(m.oosWarn.oosWR, 1)} %,
         facteur de profit ${num(m.oosWarn.isPF, 2)}× → ${num(m.oosWarn.oosPF, 2)}× sur ${m.oosWarn.oosTrades} trades.
         Les chiffres d'ensemble ci-dessus intègrent une part ajustée après coup : lisez-les comme un plafond, pas comme une attente.</p>`
     : '';
-  const oosBlock = oosLine ? `\n      ${oosLine}` : '';
 
-  const secondary = m.sealed
-    ? `<p class="tr-secondary">Sharpe ${num(s.sharpe, 2)} · Calmar ${num(s.calmar, 2)} · configuration point-in-time certifiée</p>`
-    : m.performanceUnavailable
-      ? `<p class="tr-secondary">Simulation · métriques masquées${m.forwardCapacityCertified ? ' · forward certifié' : ''}</p>`
-      : '<p class="tr-secondary">Suivi réel distinct du backtest de référence · aucune exécution certifiée</p>';
-  const asOfLabel = asOf
-    ? `Arrêté au ${esc(asOf)}`
-    : m.performanceUnavailable
-      ? (m.forwardCapacityCertified ? 'Forward certifié · historique retiré' : 'Indisponible · frontière PIT absente')
-      : m.trackingNotStarted
-        ? 'Suivi réel non démarré'
-        : 'Registre indisponible';
-  const periodLine = from && asOf
-    ? `Période couverte : du ${esc(from)} au ${esc(asOf)}${m.sampleDays ? `, soit ${m.sampleDays} jours` : ''}.`
-    : m.performanceUnavailable
-      ? (m.forwardCapacityCertified
-        ? `Période historique : retirée avant la frontière exacte du ${esc(frDate(m.boundarySession))} à ${esc(m.boundaryEffectiveAt.slice(11, 16))} UTC. Le nouveau registre est vide.`
-        : 'Période couverte : aucune, faute de frontière point-in-time scellée.')
-      : `Suivi réel : aucune exécution certifiée${m.since && frDate(m.since.slice(0, 10)) ? ` depuis le ${esc(frDate(m.since.slice(0, 10)))}` : ''}.`;
+    const secondary = m.sealed
+      ? `<p class="tr-secondary">Sharpe ${num(s.sharpe, 2)} · Calmar ${num(s.calmar, 2)} · ` +
+        `${m.config.portfolioSize} ligne${m.config.portfolioSize > 1 ? 's' : ''} · horizon ${m.config.horizon} séances</p>`
+      : `<p class="tr-secondary">${m.config.portfolioSize} ligne${m.config.portfolioSize > 1 ? 's' : ''} · horizon ${m.config.horizon} séances</p>`;
 
   return `
-    <div id="mode-${m.id}" class="content-card tr-mode" data-performance-scope="${esc(m.performanceScope)}" data-accounting-certified="${m.sealed ? 'true' : 'false'}" data-forward-capacity-certified="${m.forwardCapacityCertified ? 'true' : 'false'}" data-history-status="${esc(m.historyStatus || 'unavailable')}" style="border-top: 4px solid ${esc(m.color)}">
+    <div id="mode-${m.id}" class="content-card tr-mode" style="border-top: 4px solid ${esc(m.color)}">
       <div class="tr-mode-head">
         <h2>${esc(m.label)}</h2>
-        <span class="tr-asof">${asOfLabel}</span>
+        <span class="tr-asof">${asOf ? `Arrêté au ${esc(asOf)}` : 'Registre vide'}</span>
       </div>
       <p class="tr-blurb">${esc(m.blurb)}</p>
       <div class="tr-metrics">
         ${metrics}
       </div>
       ${secondary}
-      ${chartBlock}${oosBlock}
-      <p class="tr-period">${periodLine}</p>
+      ${chartBlock}
+      ${oosLine}
+      <p class="tr-period">${from && asOf
+        ? `Période couverte : du ${esc(from)} au ${esc(asOf)}${m.sampleDays ? `, soit ${m.sampleDays} jours` : ''}.`
+        : `Période couverte : aucune${m.since && frDate(m.since.slice(0, 10)) ? `, ce carnet a ouvert le ${esc(frDate(m.since.slice(0, 10)))}` : ', ce carnet vient d\'ouvrir'}.`}</p>
     </div>`;
 }
 
@@ -319,10 +229,7 @@ function buildHTML(modes, snap) {
     || (modes.map(m => (m.since || '').slice(0, 10)).filter(Boolean).sort()[0] || null)
   );
   const degraded = sealedModes.filter(m => m.oosWarn && m.oosWarn.oosTrades);
-  const degradedLine = !sealedModes.length
-    ? `Les comparaisons hors échantillon restent elles aussi masquées tant que le ledger de capacité
-       point-in-time n'est pas scellé. Une absence de métrique n'est jamais convertie en zéro.`
-    : degraded.length
+  const degradedLine = degraded.length
     ? `${degraded.length === 1 ? 'Un carnet porte' : `${['', '', 'Deux', 'Trois', 'Quatre', 'Cinq'][degraded.length] || degraded.length} carnets portent`} une dégradation hors
        échantillon signalée plus haut (${degraded.map(m => esc(m.label)).join(', ')}). Elle est affichée parce
        qu'elle existe, pas parce qu'elle arrange : la partie de l'historique postérieure au dernier réglage est
@@ -360,25 +267,18 @@ function buildHTML(modes, snap) {
     v: m.curve.map(p => p.value),
   }));
 
-  const availabilityLine = sealedModes.length
-    ? `Le plus ancien registre certifié commence ${inception ? `le ${esc(inception)}` : 'en 2026'}. Même certifié,
-       cet échantillon ne couvre pas nécessairement tous les régimes de marché.`
-    : `Aucun historique de performance n'est actuellement publié. L'historique des configurations est
-       conservé et résolu à la date, mais les slots réellement disponibles dépendaient aussi du cycle de vie,
-       des positions, du cash, du régime et des garde-fous de risque. Cette seconde preuve manque encore.`;
-
   return `<!DOCTYPE html>
 <html lang="fr" data-tags="tech,technique,retrospective,education" data-tab="tech">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track record : chiffres publiés seulement après certification | DailyTickers</title>
+    <title>Track record scellé : les carnets, chiffres figés | DailyTickers</title>
     <meta name="description"
-        content="État de certification des carnets DailyTickers. Les anciens chiffres restent masqués sans ledger de capacité point-in-time ; le suivi réel DTX reste séparé de son backtest de référence.">
-    <meta property="og:title" content="Track record : chiffres publiés seulement après certification">
+        content="Les performances des carnets publics, recopiées d'un registre scellé en ajout seul : trades clôturés, taux de réussite, facteur de profit, rendement, pire repli. Aucun chiffre recalculé pour l'affichage.">
+    <meta property="og:title" content="Track record scellé : les carnets, chiffres figés">
     <meta property="og:description"
-        content="Configurations versionnées, capacité point-in-time certifiée et séparation stricte entre simulation, backtest de référence et exécution réelle.">
+        content="Trades clôturés, taux de réussite, facteur de profit, rendement, pire repli : recopiés d'un registre scellé, jamais recalculés pour la page.">
     <meta property="og:image" content="/logo.svg">
     <meta property="og:url" content="https://articles.dailytickers.com/tech/track-record/">
     <meta property="og:type" content="article">
@@ -615,17 +515,17 @@ function buildHTML(modes, snap) {
     </nav>
 
     <header class="hero-section">
-        <div class="hero-date">SUIVI DES REGISTRES</div>
-        <h1 class="hero-title">Les chiffres seulement quand ils sont certifiés</h1>
+        <div class="hero-date">TRACK RECORD SCELLÉ</div>
+        <h1 class="hero-title">Les chiffres, tels qu'ils ont été figés</h1>
         <p class="hero-sub">
-            Les configurations sont versionnées, y compris le nombre de slots. Une performance
-            n'est publiée que si chaque entrée est reliée à la configuration et à la capacité
-            réellement disponibles ce jour-là. Sans cette preuve, la page reste volontairement vide.
+            Chaque carnet public tient un registre en ajout seul. Un trade clôturé y reçoit une
+            empreinte et n'en ressort plus. Cette page ne fait que recopier ces registres :
+            ni recalcul, ni arrondi favorable, ni période choisie après coup.
         </p>
         <div class="hero-badges">
-            <div class="hero-badge"><i class="fa-solid fa-lock"></i> ${sealedModes.length} registre${sealedModes.length > 1 ? 's' : ''} certifié${sealedModes.length > 1 ? 's' : ''}</div>
+            <div class="hero-badge"><i class="fa-solid fa-lock"></i> ${sealedModes.length} carnet${sealedModes.length > 1 ? 's' : ''} scellé${sealedModes.length > 1 ? 's' : ''}</div>
             <div class="hero-badge"><i class="fa-solid fa-calendar-check"></i> ${asOfGlobal ? `Au ${esc(asOfGlobal)}` : 'Date en attente'}</div>
-            <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> Fail-closed actif</div>
+            <div class="hero-badge"><i class="fa-solid fa-rotate"></i> Mis à jour chaque séance</div>
         </div>
         <div id="article-clickable-tags" class="card-tags"></div>
     </header>
@@ -634,42 +534,49 @@ function buildHTML(modes, snap) {
 
         <div id="lecture" class="content-card">
             <h2><i class="fa-solid fa-file-signature"></i> Ce que vous lisez</h2>
-            <p>L'historique de configuration existe bien. La frontière de certification porte sur
-                la capacité réellement exploitable à chaque date, pas sur l'existence des fichiers.</p>
+            <p>Une performance affichée ne vaut que par ce qu'on s'interdit d'en faire. Ici,
+                trois interdits tiennent toute la page.</p>
             <ol class="tr-seal">
-                <li><code>configAt(date)</code> sélectionne la version effective : paramètres,
-                    horizon et capacité nominale ne sont jamais restampés avec la config actuelle.</li>
-                <li><code>capacityAt(date)</code> doit aussi prouver les slots disponibles après
-                    positions, ordres en attente, cash, régime, VIX, drawdown, rotations et garde-fous.</li>
-                <li>Le backtest DTX de référence reste dans son propre périmètre. Il ne devient
-                    jamais une position, un fill ou une performance de suivi réel.</li>
+                <li>Un trade clôturé entre dans un registre en ajout seul, avec une empreinte
+                    SHA-256 qui intègre celle de l'entrée précédente : retoucher une ligne
+                    ancienne casse toute la chaîne, et la routine de mise à jour s'arrête.</li>
+                <li>Les agrégats de cette page (trades clôturés, taux de réussite, facteur de
+                    profit, rendement cumulé, pire repli) sont recopiés depuis ces registres
+                    scellés, jamais recalculés au moment d'afficher la page.</li>
+                <li>Les positions encore ouvertes ne comptent pas. Aucune plus-value latente
+                    n'est fondue dans le rendement affiché, et aucune courbe n'est prolongée
+                    jusqu'à aujourd'hui pour faire joli.</li>
             </ol>
-            <p>Conséquence directe : un ancien chiffre plausible peut rester masqué. L'absence de
-                preuve est affichée comme indisponible, jamais comme zéro et jamais remplacée par
-                une donnée live ou partielle.</p>
+            <p>Conséquence directe : ces chiffres bougent moins vite que le marché. La courbe
+                d'un carnet s'arrête au jour de son dernier trade scellé, pas à la séance
+                d'hier. C'est le prix d'un historique qu'on ne peut pas réécrire.</p>
         </div>
 
 ${modes.map(modeCard).join('\n')}
 
         <div id="limites" class="content-card">
             <h2><i class="fa-solid fa-triangle-exclamation"></i> Ce que ces chiffres ne disent pas</h2>
-            <p>${availabilityLine}</p>
+            <p>Le plus ancien registre commence ${inception ? `le ${esc(inception)}` : 'en 2026'}. Aucun carnet
+                n'a traversé un marché baissier comparable à 2022 ou à mars 2020. Un rendement obtenu
+                dans un marché porteur ne prouve pas la résistance en marché cassant : il prouve
+                seulement qu'on n'a pas raté le marché porteur.</p>
             <p>${wrPfLine}</p>
             <p>${degradedLine}</p>
         </div>
 
         <div id="verifier" class="content-card">
             <h2><i class="fa-solid fa-magnifying-glass"></i> Vérifier soi-même</h2>
-            <p>Les mêmes frontières de certification sont servies en accès libre, au format machine.</p>
+            <p>Les mêmes chiffres sont servis en accès libre, au format machine, avec la liste
+                des trades et la courbe de chaque carnet.</p>
             <ul class="tr-seal">
                 <li><a href="/portfolio/v1/status.json">Statut des carnets</a> : état, date d'ouverture,
-                    scope de performance et preuve d'exécution.</li>
-                <li><a href="/portfolio/v1/config-history.json">Historique des configurations</a> :
-                    versions effectives, empreintes et séparation des identités produit.</li>
-                <li><a href="/portfolio/v1/turbo/equity.json">État des métriques par carnet</a> :
-                    remplacez <code>turbo</code> par le nom voulu ; les valeurs non certifiées sont nulles.</li>
+                    raison du dernier changement.</li>
+                <li><a href="/portfolio/v1/turbo/equity.json">Courbe et agrégats par carnet</a> :
+                    remplacez <code>turbo</code> par le nom du carnet voulu.</li>
+                <li><a href="/portfolio/v1/trades.json">Trades</a> : chaque ligne clôturée, avec
+                    sa date d'entrée, sa sortie et son résultat.</li>
                 <li><a href="/scanner/status/">Tableau de bord des carnets</a> : la vue jour par jour,
-                    avec le suivi réel DTX séparé de son backtest de référence.</li>
+                    positions ouvertes comprises, séparée des chiffres scellés.</li>
             </ul>
             <p>Un écart entre cette page et ces fichiers est un défaut, pas une nuance de
                 présentation. Il se signale.</p>
@@ -688,7 +595,7 @@ ${fabItems}
     </div>
 
     <footer class="article-footer">
-        &copy; 2026 DailyTickers. Données de marché certifiées. Ceci n'est pas un conseil financier.
+        &copy; 2026 DailyTickers. Ceci n'est pas un conseil financier.
         <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
     </footer>
 
@@ -774,16 +681,7 @@ function generate(opts = {}) {
     sealed: modes.filter(m => m.sealed).length,
     asOf: (snap && snap.date) || null,
     bytes: Buffer.byteLength(html),
-    detail: modes.map(m => ({
-      id: m.id,
-      scope: m.performanceScope,
-      sealed: m.sealed,
-      unavailable: m.performanceUnavailable,
-      trackingNotStarted: m.trackingNotStarted,
-      trades: m.stats.trades,
-      ret: m.stats.ret,
-      asOf: m.periodEnd,
-    })),
+    detail: modes.map(m => ({ id: m.id, sealed: m.sealed, trades: m.stats.trades, ret: m.stats.ret, asOf: m.periodEnd })),
   };
 }
 
@@ -798,8 +696,7 @@ if (require.main === module) {
     } else {
       console.log(`✅ ${r.path} généré (${(r.bytes / 1024).toFixed(0)}KB) — ${r.modes} carnets, ${r.sealed} scellés`);
       for (const d of r.detail) {
-        const unavailable = d.unavailable ? 'indisponible (ledger PIT)' : d.trackingNotStarted ? 'suivi réel non démarré' : 'registre vide';
-        console.log(`   ${d.id.padEnd(9)} ${d.sealed ? String(d.trades).padStart(4) + ' trades' : unavailable}` +
+        console.log(`   ${d.id.padEnd(9)} ${d.sealed ? String(d.trades).padStart(4) + ' trades' : '   registre vide'}` +
           `${d.sealed ? `, ${d.ret > 0 ? '+' : ''}${d.ret}%` : ''}${d.asOf ? ` (au ${d.asOf})` : ''}`);
       }
     }

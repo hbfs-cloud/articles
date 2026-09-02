@@ -47,10 +47,9 @@ echo "=== Scanner Daily Card Publisher ==="
 echo "Date: $(date '+%Y-%m-%d %H:%M:%S')"
 echo "Options: sweep=$([ "$SKIP_SWEEP" = true ] && echo "skip" || echo "yes") telegram=$([ "$NO_NOTIFY" = true ] && echo "no (→ via MCP notification)" || echo "yes")"
 
-# ─── Target scanner session — computed ONCE, used by every gate/generator ─────
-# `downstream-split distribute <DATE>` binds PUBLISH_SCAN_DATE so distribution
-# cannot silently switch to a different folder when the wall clock crosses a
-# session boundary. Direct evening invocations retain the J+1 convention.
+# ─── Next trading session (séance J+1) — computed ONCE, used by dtx-scan (Step 4d) ─────
+# and by the commit step (Step 6). Convention: scanner du soir = prochaine séance ouvrable
+# (Lun→Mar … Ven→Lun). Cross-platform date arithmetic (BSD on macOS / GNU on Linux).
 if date -v +1d '+%Y' >/dev/null 2>&1; then
   _date_add_days() { date -v "+${1}d" "$2"; }   # BSD
 else
@@ -63,23 +62,15 @@ case "$_DOW" in
   7) _ADD=1 ;;  # Dimanche → lundi
   *) _ADD=1 ;;  # Lun-Jeu → J+1
 esac
-if [ -n "${PUBLISH_SCAN_DATE:-}" ]; then
-  case "$PUBLISH_SCAN_DATE" in
-    20[0-9][0-9][01][0-9][0-3][0-9]) ;;
-    *) echo "⛔ PUBLISH_SCAN_DATE doit utiliser YYYYMMDD (reçu: $PUBLISH_SCAN_DATE)" >&2; exit 2 ;;
-  esac
-  SCAN_DATE="$PUBLISH_SCAN_DATE"
-  SCAN_DATE_ISO="${SCAN_DATE:0:4}-${SCAN_DATE:4:2}-${SCAN_DATE:6:2}"
-else
-  SCAN_DATE=$(_date_add_days "$_ADD" '+%Y%m%d')       # YYYYMMDD (folders / commits)
-  SCAN_DATE_ISO=$(_date_add_days "$_ADD" '+%Y-%m-%d') # YYYY-MM-DD (dtx --asof)
-fi
+SCAN_DATE=$(_date_add_days "$_ADD" '+%Y%m%d')       # YYYYMMDD (folders / commits)
+SCAN_DATE_ISO=$(_date_add_days "$_ADD" '+%Y-%m-%d') # YYYY-MM-DD (dtx --asof)
 TODAY=$(date '+%Y%m%d')
 echo "Scan date (séance): $SCAN_DATE ($SCAN_DATE_ISO) | Today: $TODAY"
 
-# ─── Step 1: Tracking is broker-ledger only ──────────────────────────────────
+# ─── Step 1: Update tracking (positions + metrics from live prices) ──────────
 echo ""
-echo "🔒 Step 1: Legacy OHLC tracking disabled — no broker-certified ledger, no synthetic fills"
+echo "📊 Step 1: Updating tracking data..."
+node tools/update-tracking.js
 
 # ─── Step 1b: Clean old static-named images (pre-timestamp migration) ────────
 rm -f scanner/status/mode-growth.png scanner/status/mode-calmar.png scanner/status/mode-zero.png scanner/status/mode-turbo.png scanner/status/mode-dynamic.png scanner/status/mode-balanced.png scanner/status/mode-secured.png scanner/status/mode-fortress.png scanner/status/daily-card.png 2>/dev/null
@@ -88,9 +79,9 @@ rm -f scanner/status/mode-growth.png scanner/status/mode-calmar.png scanner/stat
 echo ""
 echo "🖼️  Step 2: Generating daily card image..."
 if [ "$DRY_RUN" = true ]; then
-  node tools/generate-scanner-image.js --dry-run
+  node tools/generate-scanner-image.js --dry-run || echo "⚠️  Image generation failed (non-blocking)"
 else
-  node tools/generate-scanner-image.js
+  node tools/generate-scanner-image.js || echo "⚠️  Image generation failed (non-blocking)"
 fi
 
 # ─── Step 3: Re-run sweep (backtest all scans with current prices) ───────────
@@ -261,6 +252,15 @@ if [ "$SKIP_SWEEP" = false ]; then
   # par mode) — dégradation honnête, jamais fabriquée, jamais silencieuse.
   node tools/dtx-pool-bridge.js --folder "$CS_FOLDER" --date "$SCAN_DATE_ISO" || echo "⚠️  dtx pool bridge incomplet (modes skippés ou erreur — voir résumé ci-dessus, non-bloquant)"
 
+  # Historise la décision du moteur pour CETTE séance dans data/dtx-engine-history.json.
+  # Le staging data/dtx/<mode>.json est un instantané écrasé à chaque ingestion : sans cette
+  # étape, les ordres du jour sont perdus dès le lendemain et la Time Machine ne peut rien
+  # remonter. Le registre est immuable par (mode, date) — relancer le pipeline sur la même
+  # séance ne réécrit rien, il le signale. Doit tourner AVANT gen-status-page, qui lit le
+  # registre pour le champ engine_decision du snapshot et pour l'artefact publié.
+  # Non bloquant : une absence d'historisation ne doit jamais empêcher la publication du scan.
+  node tools/dtx-history-append.js || echo "⚠️  historisation moteur incomplète (staging illisible — non-bloquant)"
+
   echo ""
   echo "🔄 Step 3: Running sweep (~5 min)..."
   SWEEP_START=$(date +%s)
@@ -318,6 +318,44 @@ if [ "$SKIP_SWEEP" = false ]; then
     echo "⏭️  Step 4c: pit-forward SKIPPÉ (déprécié en affichage — source unique = sweep frozen). Réactiver avec ENABLE_PIT_FORWARD=1."
   fi
 
+  # ─── Step 4d: dtx (systematic-tss) staging GUARD for SCRIPTED modes — MCP is the SOLE engine ───
+  # CUT-OVER (2026-07-08): the hosted dtx MCP (systematic.dailytickers.com) is the ONLY engine
+  # ("le MCP fait foi"). The vendored local binary + data bundle have been REMOVED. A `node`
+  # subprocess CANNOT call the MCP (OAuth2 on claude.ai, ZERO-token rule) — only the AGENT
+  # (Claude Code locally; `claude -p` in the cloud bot) holds mcp__claude_ai_systematic__*.
+  #
+  # So the dtx-wired scripted portfolios (currently `best`) get their staging
+  # (data/dtx/<mode>.json — "Orders to Place" from DtxDecide + backtest equity from DtxReplay)
+  # produced by the AGENT via `tools/dtx-mcp-ingest.js` BEFORE this shell pipeline runs (see the
+  # scanner-pipeline skill §"dtx refresh — MCP SOLE ENGINE", Phase 5). This step can NO LONGER
+  # regenerate anything (no binary to spawn). It is a GRACEFUL GUARD only: it warns per mode if the
+  # committed staging is missing or not a fresh (today, engineMode:"mcp") MCP snapshot, then lets
+  # gen-status-page READ whatever staging is committed. It NEVER blocks the scan.
+  echo ""
+  echo "🧩 Step 4d: dtx scripted-mode staging COMPLETENESS guard (MCP sole engine — no binary)..."
+  # ANTI-SILENT-SKIP FRESHNESS NET. A `node` subprocess CANNOT call the MCP, so it cannot regenerate
+  # staging — the AGENT must do that BEFORE this shell pipeline (GetHealth preflight + per-mode
+  # DtxReplay/DtxDecide → dtx-mcp-ingest; see scanner-pipeline skill §"dtx preflight & completeness").
+  # This step is the SECONDARY net that catches a stale-staging night even if the agent's MCP preflight
+  # was skipped: it writes data/dtx/_staging-completeness.json (the marker tools/qa-check.js reads →
+  # escalates a stale/missing mode to ❌) and prints a LOUD summary. It is NON-crashing (never exits
+  # non-zero here) but NEVER silent — an incomplete run is surfaced, not swallowed.
+  if node -e 'const r=require("./tools/dtx-scan").writeStagingCompleteness(process.argv[1]);process.exit(r.complete?0:1)' "$SCAN_DATE_ISO"; then
+    echo "  ✅ dtx staging COMPLET — les portefeuilles dtx câblés ont un staging MCP frais (engineMode:mcp, aujourd'hui)."
+  else
+    echo "  ❗❗❗ dtx staging INCOMPLET — un ou plusieurs portefeuilles dtx câblés n'ont PAS de staging MCP frais."
+    echo "  ❗❗❗ L'AGENT n'a PAS régénéré ces modes via le MCP dtx ce run (MCP injoignable / connector absent / job échoué)."
+    echo "  ❗❗❗ → data/dtx/_staging-completeness.json marque le run INCOMPLET ; qa-check.js le remontera en ❌ (fail loud)."
+    echo "  ❗❗❗ → l'agent DOIT avoir envoyé une alerte Telegram (alias 'alerts'). Staging conservé = STALE, JAMAIS fabriqué."
+  fi
+
+  # ─── Step 5: Regenerate scanner/status page + portfolio endpoints ──────────
+  echo ""
+  echo "📄 Step 5: Generating scanner/status page + portfolio endpoints..."
+  node tools/gen-status-page.js
+  node tools/gen-mode-cards.js
+  node tools/gen-api.js
+
   # ─── Step 5b: Regime recalibration check (dry-run) ─────────────────────────
   # Detects significant regime shift vs modes-config.json. Append-only to
   # config-history.json. Auto-apply only when REGIME_AUTO_APPLY=1 is set.
@@ -330,71 +368,8 @@ if [ "$SKIP_SWEEP" = false ]; then
   fi
 else
   echo ""
-  echo "⏭️  Steps 2c-4c and 5b: Skipped (--no-sweep)"
+  echo "⏭️  Steps 3-5b: Skipped (--no-sweep)"
 fi
-
-# ─── Common pre-publication path — NEVER skipped with --no-sweep ─────────────
-# Distribution may reuse an already-computed sweep, but it must re-verify the
-# immutable Marketdata collections and regenerate every public derivative from
-# the exact target session. A changed plan, stale harness or missing required
-# wave exits here, before git staging/commit/push and before any notification.
-echo ""
-echo "🔐 Step 4d: Verifying scanner collection contracts..."
-verify_collection_run() {
-  local out="$1"
-  local journal="$out/_collect.json"
-  local harness="$out/harness.json"
-  local plan
-  [ -s "$journal" ] && [ -s "$harness" ] || {
-    echo "⛔ preuve de collecte absente: $out" >&2
-    return 1
-  }
-  plan=$(node -e '
-    const fs=require("fs");
-    const journal=JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-    if(typeof journal.plan!=="string" || !/^plans\/scanner-[a-z0-9-]+\.json$/.test(journal.plan)) process.exit(2);
-    process.stdout.write(journal.plan);
-  ' "$journal") || {
-    echo "⛔ plan scanner absent ou non autorisé dans $journal" >&2
-    return 1
-  }
-  node tools/check-freshness.js "$harness" \
-    && node tools/validate-workflows.js --run-plan "$plan" "$out"
-}
-
-verify_collection_run "scanner/$SCAN_DATE/_data"
-verify_collection_run "scanner/$SCAN_DATE/_data2"
-verify_collection_run "scanner/$SCAN_DATE/_final"
-if [ -e "scanner/$SCAN_DATE/_data_etf/_collect.json" ] || [ -e "scanner/$SCAN_DATE/_data_etf/harness.json" ]; then
-  verify_collection_run "scanner/$SCAN_DATE/_data_etf"
-fi
-
-# The engine decision store is append-only by session and feeds both status
-# history and the public API. Failure is blocking: publishing status without its
-# matching history would create a split-brain Time Machine.
-echo ""
-echo "🧾 Step 4e: Persisting DTX decision history..."
-node tools/dtx-history-append.js
-
-# A subprocess cannot refresh systematic MCP data. It can only certify that the
-# staging produced by the agent is complete for this target session. Incomplete
-# is a publication blocker, never a warning that can be pushed through.
-echo ""
-echo "🧩 Step 4f: DTX staging completeness gate..."
-if node -e 'const r=require("./tools/dtx-scan").writeStagingCompleteness(process.argv[1]);process.exit(r.complete?0:1)' "$SCAN_DATE_ISO"; then
-  echo "  ✅ dtx staging COMPLET — snapshot MCP frais pour la séance cible."
-else
-  echo "⛔ dtx staging INCOMPLET pour $SCAN_DATE_ISO — aucune publication." >&2
-  exit 1
-fi
-
-# These are public derivatives, not sweep work. Always rebuild them, including
-# on downstream-split's `distribute` path (`--no-sweep`).
-echo ""
-echo "📄 Step 5: Generating scanner/status page, history, cards and API..."
-node tools/gen-status-page.js
-node tools/gen-mode-cards.js
-node tools/gen-api.js
 
 # ─── Step 6: QA Check — AVANT le push, jamais après ──────────────────────────
 # Le QA tournait APRÈS le git push : il ne gardait rien, il constatait. Un scan
@@ -427,14 +402,9 @@ echo "📤 Step 7: Committing..."
 # SCAN_DATE / SCAN_DATE_ISO / TODAY were computed once at the top of this script.
 echo "   Scan date (séance): $SCAN_DATE | Today: $TODAY"
 
-# Stage the card and public derivatives as required outputs. Optional analysis
-# artifacts remain best-effort, but a missing canonical card/status/API file is
-# a release failure rather than a partial commit.
+# Stage all potentially changed files (ignore errors for missing files)
 git add \
   scanner-daily-card.html \
-  scanner-daily-card.png
-
-git add \
   data/scanner-metrics.json \
   data/scanner-positions.json \
   data/analyses-status.json \
@@ -442,15 +412,9 @@ git add \
   2>/dev/null || true
 
 git add \
-  data/dtx-engine-history.json \
-  data/dtx/*.json \
   scanner/status/daily-card-*.png \
-  scanner/status/mode-*-*.png \
-  scanner/status/index.html \
   scanner/status/manifest.json \
-  scanner/status/history/dates.json \
-  scanner/status/history/*.json \
-  portfolio/v1/
+  2>/dev/null || true
 
 if [ "$SKIP_SWEEP" = false ]; then
   git add \
@@ -460,6 +424,13 @@ if [ "$SKIP_SWEEP" = false ]; then
     data/modes-config.json \
     data/modes-config-history.json \
     data/risk-snapshots.json \
+    data/dtx/*.json \
+    scanner/status/mode-*-*.png \
+    scanner/status/index.html \
+    scanner/status/manifest.json \
+    scanner/status/history/dates.json \
+    scanner/status/history/*.json \
+    portfolio/v1/ \
     2>/dev/null || true
 fi
 
