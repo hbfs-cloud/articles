@@ -254,9 +254,10 @@
     "week": {
       "title": "Quatre séances, deux rendez-vous",
       "paragraphs": [
-        "Labor Day ferme les marchés américains lundi. La semaine ne compte que [[week_sessions]] séances, et les deux événements capables de la déplacer tombent jeudi et vendredi. Une réaction concentrée sur moins de jours a mécaniquement plus d'amplitude.",
-        "La Banque centrale européenne tranche jeudi, quelques heures avant Oracle ; son effet passe par les taux longs américains plutôt que par les actions européennes. Le lendemain, l'inflation américaine arrive avec un baril en hausse de {{USO_m:pc1}} sur un mois — la séquence qui pousse la composante énergie de l'indice des prix.",
-        "Les dates ci-dessous viennent du calendrier collecté, pas d'une saisie. C'est une précaution qui a une histoire : attribuer un mouvement à des résultats qu'une société n'a pas encore publiés est l'erreur la plus facile à commettre et la plus difficile à rattraper une fois imprimée."
+        "Labor Day ferme les marchés américains lundi. La semaine ne compte que [[week_sessions]] séances, et trois rendez-vous majeurs s'y concentrent : les prix à la production jeudi matin, la Banque centrale européenne quelques heures plus tard, Oracle après la clôture américaine, puis l'inflation à la consommation vendredi.",
+        "L'ordre compte, et nous l'avions inversé dans une première version de cette page. Les prix à la production sortent la veille de l'inflation à la consommation : ils ne la confirment pas, ils l'annoncent. Un chiffre de production supérieur aux attentes jeudi matin déplace les anticipations avant même que le second ne soit publié — et il tombe le jour où Oracle publie.",
+        "Le calendrier ci-dessous mêle deux sources. Les rendez-vous ordinaires viennent du flux collecté ; ceux dont une autorité publie la date un an d'avance viennent d'un registre versionné dans notre dépôt, qui l'emporte en cas de désaccord. Cette précaution a une histoire de quelques heures : le flux datait les prix à la production du lundi suivant, quatre jours trop tard, et ignorait purement et simplement la réunion de la Réserve fédérale.",
+        "Et la semaine ne s'arrête pas vendredi. La Réserve fédérale tranche le {{fomc_date:date}}, avec projections économiques à l'appui — le rendez-vous le plus lourd du trimestre. Toute position ouverte cette semaine et tenue dix séances le traverse."
       ]
     },
     "tape": {
@@ -348,6 +349,11 @@
           "watch": "L'écart d'ouverture plutôt que la clôture. Sur Broadcom, l'ouverture était à {{prec_react0_gap:pc1}} et la séance a rendu {{prec_react0_intraday:pc1}} — le mouvement se fait pendant la fermeture, pas pendant la séance."
         },
         {
+          "name": "La réunion de la Réserve fédérale, dans la fenêtre",
+          "trigger": "Décision de taux le {{fomc_date:date}}, accompagnée de projections économiques. Toute position tenue dix séances depuis cette semaine la traverse.",
+          "watch": "Les obligations d'État longues d'ici là. Elles font {{TLT_s:pc}} sur la semaine ; c'est le point de départ, et c'est là que la réaction se lira avant les actions."
+        },
+        {
           "name": "Inflation portée par l'énergie",
           "trigger": "Un baril à {{USO_m:pc1}} sur un mois qui remonte dans la composante énergie du chiffre de vendredi.",
           "watch": "Les obligations d'État longues plutôt que les actions. Elles font {{TLT_s:pc}} sur la semaine ; c'est le point de départ."
@@ -419,9 +425,29 @@
     "outlook": {
       "title": "Après vendredi",
       "paragraphs": [
-        "Les prix à la production tombent lundi prochain et confirmeront ou démentiront le chiffre de vendredi. Il vaut la peine d'y penser dès maintenant pour dimensionner ce qui restera ouvert pendant le week-end.",
+        "La Réserve fédérale décide le {{fomc_date:date}}, avec ses projections économiques. C'est ce rendez-vous, et non les chiffres d'inflation de cette semaine, qui fixera le coût de l'argent pour le trimestre. Il vaut la peine d'y penser dès maintenant pour dimensionner ce qui restera ouvert.",
         "La question de la rentrée n'est pas de savoir si l'infrastructure d'intelligence artificielle monte encore : [[chain_pos]] des [[chain_total]] noms montent sur le mois. Elle est de savoir ce qui distingue les [[chain_neg]] qui baissent — et la réponse n'est pas « avoir publié », puisque deux des trois n'ont rien publié et que les deux plus fortes hausses de la fenêtre sont précisément des réactions à des résultats.",
         "Ce qui reste, c'est une hiérarchie de preuves. Les noms qui montent ont montré un carnet, une capacité vendue, une marge. Oracle passera cet examen jeudi. C'est la seule chose que la semaine tranchera vraiment."
+      ],
+      "scenarios": [
+        {
+          "tone": "bullish",
+          "title": "Le carnet de commandes surprend",
+          "body": "Oracle dépasse les attentes sur l'engagement cloud restant à livrer et s'écarte au-delà de {{lead_move:amp}}. Ce serait aussi le démenti de notre lecture : la hausse d'avant-résultats aurait été de l'information, pas du positionnement.",
+          "action": "Ne pas poursuivre l'ouverture. Sur les [[lead_react_total]] réactions passées, la séance clôture au-dessus de son ouverture [[lead_react_intraday_up]] fois — attendre une base plutôt que payer le premier prix."
+        },
+        {
+          "tone": "neutral",
+          "title": "Un trimestre correct, sans catalyseur",
+          "body": "Le chiffre passe, le titre bouge moins que l'amplitude demandée. C'est le cas le plus fréquent de l'historique : [[lead_below_implied]] publications sur [[lead_react_total]] sont restées sous le seuil.",
+          "action": "Rien. Le régime à {{regime_score:pct100}} sur cent autorise de tenir ce qui est ouvert, et la Réserve fédérale tranche la semaine suivante — c'est là que la taille se décide."
+        },
+        {
+          "tone": "bearish",
+          "title": "Déception, et la chaîne suit",
+          "body": "Le carnet déçoit et Micron, Vertiv et Constellation reculent avec Oracle. La plus forte baisse de l'historique du titre est {{lead_react_max_down:pc1}}.",
+          "action": "Regarder la chaîne avant le titre. Si les autres tiennent, le problème est propre à Oracle ; s'ils suivent, c'est le thème qui se dégonfle et la question change d'échelle."
+        }
       ]
     },
     "method": {
@@ -429,6 +455,7 @@
       "paragraphs": [
         "Tous les chiffres de cette page sont arrêtés à la clôture américaine du {{ref_close_date:date}} et proviennent des fichiers listés ci-dessous. Aucun n'est saisi à la main : chaque valeur affichée est liée à un pointeur précis dans un artefact dont l'empreinte est publiée, et la page ne se construit pas si une série ne se termine pas sur la bonne séance.",
         "L'historique des réactions aux résultats est daté par dépôt réglementaire, numéro d'accession à l'appui, et non par la position d'un écart dans une série de prix. La distinction n'est pas théorique : déduire une date de publication du plus gros trou d'un graphique attribue des mouvements à des résultats qui n'ont pas eu lieu. Chaque réaction est mesurée de la séance précédant l'annonce à celle qui la suit, parce que le registre enregistre un jour et pas une heure.",
+        "Le calendrier économique mêle deux provenances. Les rendez-vous ordinaires viennent du flux de données collecté. Ceux dont la date est publiée un an d'avance par une autorité — Réserve fédérale, bureau des statistiques du travail — viennent d'un registre versionné, cité et daté, qui l'emporte sur le flux en cas de désaccord. Ce n'est pas une précaution théorique : le flux plaçait les prix à la production quatre jours trop tard et omettait la réunion de la Réserve fédérale, tout en étant parfaitement certifié. La certification prouve d'où vient un chiffre, elle ne dit rien de son exactitude.",
         "Trois limites, déclarées. La date de publication d'Oracle repose sur une source de calendrier unique, non recoupée. Le mouvement du brut est constaté, non expliqué. Et le seuil de deux fois le volume cité dans la matrice des risques est une convention de travail, pas un résultat statistique — nous l'appliquons d'ailleurs à la hausse d'Oracle elle-même, qu'il rejette.",
         "Les performances mensuelles portent sur vingt et une séances de bourse, les hebdomadaires sur cinq. Lundi étant férié, la semaine à venir n'en comptera que [[week_sessions]]."
       ]
@@ -479,5 +506,52 @@
   "literals": [
     "S&P 500",
     "Nasdaq 100"
-  ]
+  ],
+  "jump_nav": [
+    {
+      "id": "verdict",
+      "icon": "fa-gavel",
+      "label": "Synthèse"
+    },
+    {
+      "id": "agenda",
+      "icon": "fa-calendar-week",
+      "label": "Calendrier"
+    },
+    {
+      "id": "catalyseur",
+      "icon": "fa-bolt",
+      "label": "Oracle"
+    },
+    {
+      "id": "propagation",
+      "icon": "fa-diagram-project",
+      "label": "Chaîne"
+    },
+    {
+      "id": "precedent",
+      "icon": "fa-clock-rotate-left",
+      "label": "Précédents"
+    },
+    {
+      "id": "volatilite",
+      "icon": "fa-wave-square",
+      "label": "Volatilité"
+    },
+    {
+      "id": "plan",
+      "icon": "fa-list-check",
+      "label": "Plan"
+    },
+    {
+      "id": "sources",
+      "icon": "fa-database",
+      "label": "Sources"
+    }
+  ],
+  "registry_dates": {
+    "fomc_date": {
+      "id": "fomc"
+    }
+  }
 }

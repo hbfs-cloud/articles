@@ -164,6 +164,32 @@ const minRR = (() => {
  *  "measured at midpoint, worse at top-of-zone" pedagogy is false — there IS no top-of-zone
  *  distinct from the published price. Gate the zone-specific copy on this flag instead of
  *  asserting it unconditionally (was: always claimed a zone existed, even with none). */
+// LA GÉOMÉTRIE DES NIVEAUX SE DÉCLARE.
+//
+// Sur le scan du 8 septembre, sept objectifs sur huit étaient posés à 1,50 ATR et la page
+// présentait un rapport gain/risque voisin de 1 comme une lecture du marché. C'en était une
+// conséquence arithmétique. Pire, le plancher de stop en pourcentage ÉLARGIT le stop au-delà de
+// 1,5 ATR sur les titres peu volatils — 1,82 ATR sur KO, 2,14 sur PDBC — pendant que l'objectif
+// reste à 1,5 : le ratio tombe alors sous 1 précisément sur les instruments les plus calmes.
+// Le lecteur doit lire ça, pas le déduire.
+function describeGeometry(setups) {
+  const mult = setups.map(s => Number(s.tp1_atr_multiple)).filter(Number.isFinite);
+  if (mult.length < 3) return '';
+  const sorted = [...mult].sort((a, b) => a - b);
+  const med = sorted[Math.floor(sorted.length / 2)];
+  const clustered = mult.filter(m => Math.abs(m - med) <= 0.05).length;
+  if (clustered / mult.length < 0.6) return '';
+  const wide = setups.filter(s => {
+    const tp = Number(s.tp1_atr_multiple), rr = Number(s.rr_entry);
+    return Number.isFinite(tp) && Number.isFinite(rr) && rr > 0 && tp / rr > tp + 0.05;
+  });
+  const widest = wide.map(s => `${s.ticker} (${(Number(s.tp1_atr_multiple) / Number(s.rr_entry)).toFixed(2)} ATR)`).join(', ');
+  return `Ces objectifs ne sortent pas d'une lecture de résistance : ${clustered} sur ${mult.length} sont posés par formule à ${med.toFixed(2)} fois la volatilité moyenne. `
+    + `Le rapport gain/risque voisin de 1 en découle mécaniquement — ce n'est pas une découverte du marché.`
+    + (wide.length ? ` Et le plancher de stop, exprimé en pourcentage, l'élargit au-delà de l'objectif sur les titres les moins volatils : ${widest}. Sur ceux-là, le ratio est inférieur à 1 par construction, avant toute considération de marché.` : '');
+}
+const geometryNote = describeGeometry(d.setups || []);
+
 const hasEntryZone = (d.setups || []).some(s =>
   typeof s.entry_low === 'number' && typeof s.entry_high === 'number' && s.entry_low !== s.entry_high);
 
@@ -967,8 +993,10 @@ ${strategyTablesHtml}
         ? `Entrée = zone conditionnelle à l'ouverture (9h30–9h45 ET), uniquement si le prix s'y trouve et tient le VWAP observé.`
         : `Entrée = un prix unique, en ordre à cours limité valable la séance. Pas de zone, pas de condition de VWAP, pas de poursuite : si le marché ouvre au-dessus et n'y revient pas, la ligne ne se déclenche simplement pas.`} Le stop est un ordre dur, pas mental. ${hasEntryZone
         ? `Le R/R du tableau est calculé au HAUT de la zone d'entrée, soit le pire remplissage autorisé; le plancher du scan est 1:${minRR}.`
-        : `Entrée = prix unique (pas de zone) sur ce scan : le R/R affiché est le R/R exact, pas une mesure au milieu d'une fourchette — il n'y a pas de « pire remplissage » distinct à anticiper.`
-      } Aucun sizing individuel n'est fourni tant que le sizing portefeuille reste rejeté. Si l'ouverture dépasse le haut de la zone de 2%, l'entrée directe est annulée et seul un retour au VWAP peut réarmer la ligne. Une entrée est également nulle si son filtre de surextension est franchi avant l'exécution.</p>
+        : `Entrée = prix unique (pas de zone) sur ce scan : le R/R affiché ne dépend donc pas de l'endroit où l'on est rempli dans une fourchette. C'est une propriété arithmétique de niveaux posés par formule, pas une mesure de ce que le marché offre — il n'y a simplement pas de « pire remplissage » distinct à anticiper.`
+      } Aucun sizing individuel n'est fourni tant que le sizing portefeuille reste rejeté. ${hasEntryZone
+        ? `Si l'ouverture dépasse le haut de la zone de 2%, l'entrée directe est annulée et seul un retour au VWAP peut réarmer la ligne.`
+        : `Si le prix n'est pas touché pendant la séance, la ligne expire : elle n'est pas reportée au lendemain.`} Une entrée est également nulle si son filtre de surextension est franchi avant l'exécution.</p>
       <p style="font-size:0.85rem;color:#64748b;margin-top:0.5rem;">Badges : <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span> ligne dont le secteur d'activité est conforme aux critères de finance islamique retenus ici (l'endettement, quand vérifié, est précisé ligne par ligne dans les invalidations — non systématiquement audité) — <span class="badge" style="background:#e2e8f0;color:#334155;border:1px solid #94a3b8;font-size:.68rem">CONV</span> ligne conventionnelle, non conforme.</p>
     </div>
   </div>
@@ -992,11 +1020,13 @@ ${strategyTablesHtml}
     </div>
     <div class="pedagogy-box">
       <h4>4. Niveaux réels vérifiés</h4>
-      <p>Entrée / stop / TP / R/R calculés sur les données de clôture réelles et les résistances récentes. La cible principale reste dans une bande atteignable de 1 à 2 ATR. Une ligne ne devient exécutable qu'après confirmation du VWAP de la séance suivante.</p>
+      <p>Entrée / stop / TP / R/R calculés sur les données de clôture réelles. ${geometryNote} ${hasEntryZone
+        ? `Une ligne ne devient exécutable qu'après confirmation du VWAP de la séance suivante.`
+        : `Une ligne devient exécutable dès l'ouverture de la séance visée, à son prix limite, sans condition supplémentaire.`}</p>
     </div>
     <div class="pedagogy-box">
       <h4>5. Anti-dilution &amp; ranking</h4>
-      <p>Pour les émetteurs relevant du régulateur américain : registre de dépôts interrogé par type de formulaire (prospectus de placement, enregistrement en étagère, avis d'effet) sur dix ans, fenêtre de contrôle de 90 jours — présence du formulaire ET nature de l'opération (item-level pour les 8-K) sont à vérifier, la seule présence/absence d'un formulaire ne suffit pas à conclure. Hors de ce périmètre — émetteurs étrangers, fonds indiciels — il n'y a pas de registre à interroger : le champ reste vide et la réserve est écrite sur la ligne, jamais remplacée par un feu vert. Diversification secteur/géographie. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Entrées à prix unique sur ce scan (pas de zone) : le R/R affiché est donc exact, sans « pire remplissage » distinct. Il s'échelonne de 1:${minRR} à 1:${maxRR} selon les lignes${rrBelowOne}.`}${shariaSentence}</p>
+      <p>Pour les émetteurs relevant du régulateur américain : registre de dépôts interrogé par type de formulaire (prospectus de placement, enregistrement en étagère, avis d'effet) sur dix ans, fenêtre de contrôle de 90 jours — présence du formulaire ET nature de l'opération (item-level pour les 8-K) sont à vérifier, la seule présence/absence d'un formulaire ne suffit pas à conclure. Hors de ce périmètre — émetteurs étrangers, fonds indiciels — il n'y a pas de registre à interroger : le champ reste vide et la réserve est écrite sur la ligne, jamais remplacée par un feu vert. Diversification secteur/géographie. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Entrées à prix unique sur ce scan (pas de zone) : le R/R affiché est donc déterminé sans ambiguïté de remplissage — ce qui ne dit rien de sa pertinence, seulement qu'il n'y a pas de « pire prix » distinct à envisager. Il s'échelonne de 1:${minRR} à 1:${maxRR} selon les lignes${rrBelowOne}.`}${shariaSentence}</p>
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:1rem;">
       <h4 style="margin:0 0 0.5rem;">Sources de données</h4>

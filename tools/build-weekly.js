@@ -98,6 +98,8 @@ for (const [sym, s] of Object.entries(BARS)) {
 // provenance ne peut pas être publiée : c'est ce qui distingue un chiffre d'une affirmation.
 const M = {};
 const REACT_COUNTS = {};
+const REGISTRY_INFO = { supplied: [], corrected: [] };
+let REGISTRY_PENDING = {};
 const REACT_MOVES = {};
 function put(name, value, prov) {
   // Une mesure est un nombre fini ou une date ISO. `undefined` passait auparavant, et un champ
@@ -375,7 +377,63 @@ const ECO = [];
     if (!Number.isFinite(ta) || !Number.isFinite(tb)) throw new Error('calendrier : horodatage illisible');
     return ta - tb;
   });
-  ECO.forEach((row, i) => put(`eco_${i}`, row.event.event_time, { src: man.economic_source, pointer: row.pointer }));
+  // LE REGISTRE FAIT AUTORITÉ SUR LE FLUX.
+  //
+  // Le 2026-09-06, le flux datait le PPI d'août au 14 septembre. La BLS le publie le 10. L'article
+  // a publié le 14 — et bâti dessus un raisonnement inversé (« le PPI confirmera le CPI de
+  // vendredi » alors qu'il le précède d'un jour). Le même flux ignorait purement et simplement le
+  // FOMC des 15-16, pourtant dans la fenêtre qu'il couvrait.
+  //
+  // L'artefact était CERTIFIÉ : empreinte, journal, provenance complète. La certification prouve
+  // d'où vient un chiffre, elle ne dit rien de son exactitude. Pour les dates qu'une autorité
+  // publie un an d'avance, la référence vit donc dans le dépôt, et un désaccord est une ERREUR DE
+  // CONSTRUCTION — pas un avertissement qu'on lit après publication.
+  const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/scheduled-events.json'), 'utf8'));
+  const windowEnd = ECO.length ? String(ECO[ECO.length - 1].event.event_time).slice(0, 10) : REF;
+  if (windowEnd > reg.coverage_until) {
+    throw new Error(`le registre d'événements programmés s'arrête au ${reg.coverage_until}, le calendrier va jusqu'au ${windowEnd} — étendre data/scheduled-events.json`);
+  }
+  // Le registre COMPLÈTE et CORRIGE le flux, il ne se contente pas de le contrôler. Un flux qui
+  // ignore le FOMC ne pourra jamais être « réparé » par une nouvelle collecte : c'est au dépôt de
+  // porter la référence. Les deux opérations sont déclarées dans la section Méthode de l'article.
+  const REGISTRY_REL = 'data/scheduled-events.json';
+  REGISTRY_INFO.supplied = [];
+  REGISTRY_INFO.corrected = [];
+  for (const ev of reg.events) {
+    if (ev.date <= REF || ev.date > windowEnd) continue;
+    const idx = ECO.findIndex(r => (ev.match_feed || []).some(k => new RegExp(k, 'i').test(String(r.event.name || ''))));
+    if (idx < 0) {
+      const i = reg.events.indexOf(ev);
+      ECO.push({ event: { event_time: ev.date, name: ev.label_fr, impact: ev.impact }, registry: { pointer: `/events/${i}/date`, authority: ev.source } });
+      REGISTRY_INFO.supplied.push(ev.label_fr);
+      continue;
+    }
+    const fed = String(ECO[idx].event.event_time).slice(0, 10);
+    if (fed !== ev.date) {
+      const i = reg.events.indexOf(ev);
+      REGISTRY_INFO.corrected.push({ label: ev.label_fr, feed: fed, authority: ev.date, by: reg.sources[ev.source].authority });
+      ECO[idx] = { event: { event_time: ev.date, name: ev.label_fr, impact: ev.impact }, registry: { pointer: `/events/${i}/date`, authority: ev.source } };
+    }
+  }
+  ECO.sort((a, b) => {
+    const ta = Date.parse(a.event.event_time), tb = Date.parse(b.event.event_time);
+    return (Number.isFinite(ta) ? ta : Date.parse(a.event.event_time + 'T12:00:00Z')) - (Number.isFinite(tb) ? tb : Date.parse(b.event.event_time + 'T12:00:00Z'));
+  });
+  // Une date de registre citée dans la PROSE doit être une mesure liée comme une autre, sinon
+  // « le mercredi 16 » redevient un chiffre saisi à la main — celui-là même qui a mis les prix à
+  // la production quatre jours trop tard.
+  REGISTRY_PENDING = (man.registry_dates || {});
+  SRC.registry = { artifact: REGISTRY_REL, sha256: crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, REGISTRY_REL))).digest('hex'), doc: reg };
+
+  for (const [name, spec] of Object.entries(REGISTRY_PENDING)) {
+    const i = reg.events.findIndex(e => e.id === spec.id && e.date > (spec.after || REF));
+    if (i < 0) throw new Error(`aucun « ${spec.id} » programmé après le ${spec.after || REF} dans le registre`);
+    put(name, reg.events[i].date, { src: 'registry', pointer: `/events/${i}/date`, authority: reg.events[i].source });
+  }
+
+  ECO.forEach((row, i) => row.registry
+    ? put(`eco_${i}`, row.event.event_time, { src: 'registry', pointer: row.registry.pointer, authority: row.registry.authority })
+    : put(`eco_${i}`, row.event.event_time, { src: man.economic_source, pointer: row.pointer }));
 }
 
 // ── rendu ───────────────────────────────────────────────────────────────────
@@ -417,6 +475,7 @@ function bind(name, fmt, attrs = '') {
     source_artifact: src.artifact, source_sha256: src.sha256,
     source_pointer: pointer, source_value: at(pointer), render,
   };
+  if (m.authority) entry.authority = m.authority;
   if (m.formula) entry.formula = { ...m.formula, result: m.value };
   claims.push(entry);
   return `<span data-claim="${id}"${attrs}>${text}</span>`;
@@ -500,8 +559,8 @@ const words = text => String(text).replace(/\[\[(\w+)\]\]/g, (_, k) => {
 const P = t => `<p>${fill(words(t))}</p>`;
 const paras = a => a.map(P).join('');
 const table = (headers, rows) =>
-  `<div class="data-table-wrap" style="overflow-x:auto"><table class="compare-table"><thead><tr>${headers.map(x => `<th>${h(x)}</th>`).join('')}</tr></thead><tbody>${
-    rows.map(r => `<tr>${r.map((c, i) => `<td${i ? '' : ' style="font-weight:700"'}>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  `<div class="table-responsive" style="overflow-x:auto;max-width:100%"><table class="data-table"><thead><tr>${headers.map(x => `<th>${h(x)}</th>`).join('')}</tr></thead><tbody>${
+    rows.map(r => `<tr>${r.map((c, i) => `<td>${i ? c : `<strong>${c}</strong>`}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 
 const cell = (sym, suffix) => bind(`${sym}_${suffix}`, 'pc',
   val(`${sym}_${suffix}`) >= 0 ? ' style="color:#16a34a;font-weight:600"' : ' style="color:#dc2626;font-weight:600"');
@@ -517,6 +576,20 @@ function perfTable(spec) {
     ord.map(s => [maybeLit(man.labels[s] || s), cell(s, 'j'), cell(s, 's'), cell(s, 'm')]));
 }
 
+// ── vocabulaire visuel ──────────────────────────────────────────────────────
+// La première version de cette page n'employait que `section-block` et `compare-table` : 47 Ko
+// de texte gris là où l'hebdo précédent en faisait 124 avec treize graphiques, des cartes
+// métriques et des badges. Les classes existaient déjà dans report.css — je ne m'en servais pas.
+// Un rapport dont chaque chiffre est prouvé mais que personne ne lit n'a pas rempli sa fonction.
+const CHARTS = [];
+function chart(id, title, note, spec) {
+  CHARTS.push({ id, spec });
+  return `<div class="chart-panel"><div class="chart-title">${h(title)}</div><div id="${id}" class="chart-host"></div><p class="chart-note">${h(note)}</p></div>`;
+}
+const metric = (value, label) => `<div class="metric-card"><div class="metric-value">${value}</div><div class="metric-label">${h(label)}</div></div>`;
+const metricsGrid = cards => `<div class="metrics-grid">${cards.join('')}</div>`;
+const badge = (text, tone) => `<span class="badge badge-${tone}">${h(text)}</span>`;
+
 const sec = (id, icon, title, inner) =>
   `<section id="${id}" class="section-block"><div class="section-header"><h2><i class="fas ${icon}"></i> ${h(title)}</h2></div>${inner}</section>`;
 const card = inner => `<div class="content-card">${inner}</div>`;
@@ -525,27 +598,79 @@ const box = (cls, icon, title, inner) => `<div class="${cls}"><h4><i class="fas 
 const E = man.editorial;
 const S = [];
 
+const REACT = (man.reaction_stats && REACT_MOVES.lead) || [];
+const IMPLIED = val('lead_move');
+
 S.push(sec('verdict', 'fa-flag-checkered', E.verdict.title,
-  card(paras(E.verdict.paragraphs)) + box('alert-box', 'fa-bullseye', E.verdict.box_title, paras(E.verdict.box))));
+  metricsGrid([
+    metric(bind('lead_move', 'amp'), `Amplitude demandée · ${man.event_leader}`),
+    metric(bind('lead_react_median', 'amp'), `Médiane des publications passées`),
+    metric(bind('lead_react_max_up', 'pc1'), 'La plus forte réaction de la série'),
+    metric(bind('regime_score', 'pct100'), 'Régime de marché sur cent'),
+    metric(bind('vix9d', 'nb'), 'Volatilité à neuf jours'),
+    metric(bind('USO_m', 'pc1'), 'Pétrole sur un mois'),
+  ])
+  + card(paras(E.verdict.paragraphs))
+  + chart('reactionChart',
+      `Les ${COUNTS.lead_react_total} publications passées d'${man.labels[man.event_leader] || man.event_leader}, face à ce que le marché demande aujourd'hui`,
+      "Amplitude absolue de chaque réaction, mesurée de la séance précédant l'annonce à celle qui la suit. La ligne pointillée marque l'amplitude implicite de jeudi. Les barres vertes sont restées sous ce seuil, les rouges l'ont franchi — et la plus haute suffit à elle seule à effacer tous les gains des autres.",
+      {
+        grid: { left: 48, right: 24, top: 24, bottom: 56 },
+        xAxis: { type: 'category', data: REACT.map((_, i) => val(`lead_react${i}_date`).slice(0, 7)), axisLabel: { rotate: 45, fontSize: 10 } },
+        yAxis: { type: 'value', name: '% absolu', nameTextStyle: { fontSize: 10 } },
+        series: [{
+          type: 'bar',
+          data: REACT.map((v, i) => ({ value: Number(v.toFixed(2)), itemStyle: { color: v >= IMPLIED ? '#dc2626' : '#16a34a' } })),
+          markLine: {
+            symbol: 'none', silent: true,
+            data: [{ yAxis: Number(IMPLIED.toFixed(2)), lineStyle: { color: '#0f172a', type: 'dashed', width: 2 } }],
+            label: { formatter: 'implicite ' + IMPLIED.toFixed(1) + ' %', position: 'insideEndTop', fontSize: 10 },
+          },
+        }],
+      })
+  + box('alert-box', 'fa-bullseye', E.verdict.box_title, paras(E.verdict.box))));
 
 S.push(sec('agenda', 'fa-calendar-week', E.week.title, card(paras(E.week.paragraphs) +
   table(['Date', 'Rendez-vous', 'Portée'], ECO.map((row, i) => [
     bind(`eco_${i}`, 'date'),
     maybeLit(man.event_labels[row.event.name] || row.event.name),
-    row.event.impact === 'high' ? '<span style="color:#dc2626;font-weight:600">élevée</span>' : 'moyenne',
+    row.event.impact === 'high' ? badge('élevée', 'red') : badge('moyenne', 'yellow'),
   ])))));
 
 S.push(sec('regime', 'fa-gauge-high', E.tape.title, card(paras(E.tape.paragraphs))));
 S.push(sec('marches', 'fa-chart-line', E.indices.title, card(paras(E.indices.paragraphs) + perfTable(man.tables.indices))));
 S.push(sec('rotation', 'fa-arrows-rotate', E.sectors.title, card(paras(E.sectors.paragraphs) + perfTable(man.tables.sectors))));
 
-S.push(sec('volatilite', 'fa-wave-square', E.vol.title, card(paras(E.vol.paragraphs) +
-  table(['Échéance', 'Niveau', 'Lecture'], man.term_structure_order.map((name, i) => [
+S.push(sec('volatilite', 'fa-wave-square', E.vol.title, card(paras(E.vol.paragraphs))
+  + chart('volChart', 'La courbe de volatilité implicite, du plus court au plus long',
+      "Le point le moins cher de la courbe est la fenêtre de neuf jours — celle qui contient les deux rendez-vous de la semaine.",
+      {
+        grid: { left: 48, right: 24, top: 24, bottom: 40 },
+        xAxis: { type: 'category', data: man.term_structure_labels },
+        yAxis: { type: 'value', min: v => Math.floor(v.min - 2), name: 'niveau', nameTextStyle: { fontSize: 10 } },
+        series: [{ type: 'line', smooth: true, symbolSize: 9, lineStyle: { width: 3, color: '#0ea5e9' }, itemStyle: { color: '#0ea5e9' },
+          data: man.term_structure_order.map(n => Number(val(n).toFixed(2))), label: { show: true, fontSize: 10 } }],
+      })
+  + card(table(['Échéance', 'Niveau', 'Lecture'], man.term_structure_order.map((name, i) => [
     maybeLit(man.term_structure_labels[i]), bind(name, 'nb'), maybeLit(man.term_structure_reads[i]),
   ])))));
 
 S.push(sec('catalyseur', 'fa-bolt', E.leader.title, card(paras(E.leader.paragraphs))));
-S.push(sec('propagation', 'fa-diagram-project', E.blast.title, card(paras(E.blast.paragraphs) + perfTable(man.tables.chain))));
+{
+  const ord = [...CHAIN].sort((a, b) => val(`${a}_m`) - val(`${b}_m`));
+  S.push(sec('propagation', 'fa-diagram-project', E.blast.title,
+    card(paras(E.blast.paragraphs))
+    + chart('chainChart', 'La chaîne d\'infrastructure sur vingt et une séances',
+        "Neuf hausses, trois baisses. Deux des trois titres en baisse n'ont rien publié : la publication de résultats n'est pas ce qui sépare les uns des autres.",
+        {
+          grid: { left: 120, right: 40, top: 16, bottom: 32 },
+          xAxis: { type: 'value', name: '% sur un mois', nameTextStyle: { fontSize: 10 } },
+          yAxis: { type: 'category', data: ord.map(x => man.labels[x] || x), axisLabel: { fontSize: 11 } },
+          series: [{ type: 'bar', data: ord.map(x => ({ value: Number(val(`${x}_m`).toFixed(2)), itemStyle: { color: val(`${x}_m`) >= 0 ? '#16a34a' : '#dc2626' } })),
+            label: { show: true, position: 'right', fontSize: 10, formatter: p => p.value.toFixed(1) + ' %' } }],
+        })
+    + card(perfTable(man.tables.chain))));
+}
 S.push(sec('precedent', 'fa-clock-rotate-left', E.precedent.title, card(paras(E.precedent.paragraphs))));
 S.push(sec('metaux', 'fa-coins', E.metals.title, card(paras(E.metals.paragraphs))));
 S.push(sec('crypto', 'fa-bitcoin-sign', E.crypto.title, card(paras(E.crypto.paragraphs) + perfTable(man.tables.crypto))));
@@ -571,7 +696,10 @@ S.push(sec('trades', 'fa-scale-balanced', E.trades.title, card(
 S.push(sec('pedagogie', 'fa-graduation-cap', E.pedagogy.title,
   card(box('pedagogy-box', 'fa-lightbulb', E.pedagogy.box_title, paras(E.pedagogy.paragraphs)))));
 
-S.push(sec('outlook', 'fa-binoculars', E.outlook.title, card(paras(E.outlook.paragraphs))));
+S.push(sec('outlook', 'fa-binoculars', E.outlook.title,
+  card(paras(E.outlook.paragraphs))
+  + (E.outlook.scenarios ? `<div class="scenario-grid">${E.outlook.scenarios.map(sc =>
+      `<div class="scenario-card ${sc.tone}"><h3>${h(sc.title)}</h3><p>${fill(words(sc.body))}</p><p><strong>Ce qu'on fait :</strong> ${fill(words(sc.action))}</p></div>`).join('')}</div>` : '')));
 S.push(sec('methode', 'fa-flask', E.method.title, card(paras(E.method.paragraphs))));
 
 S.push(sec('sources', 'fa-database', 'Sources et empreintes',
@@ -590,6 +718,7 @@ const html = `<!DOCTYPE html>
 <meta property="og:title" content="${h(title)}"><meta property="og:description" content="${h(desc)}"><meta property="og:image" content="https://articles.dailytickers.com/logo.svg"><meta property="og:url" content="https://articles.dailytickers.com/${dirRel}/"><meta property="og:type" content="article">
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
 <link rel="icon" href="/favicon.ico"><link rel="stylesheet" href="/assets/report.css"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 </head>
 <body class="weekly-brief">
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -601,6 +730,7 @@ const html = `<!DOCTYPE html>
 <p class="hero-subtitle">${h(desc)}</p>
 <div id="article-clickable-tags" class="card-tags"></div>
 </header>
+<nav class="report-jump-nav" aria-label="Sommaire de l'hebdo">${man.jump_nav.map(j => `<a href="#${j.id}"><i class="fas ${j.icon}"></i> ${h(j.label)}</a>`).join('')}</nav>
 ${S.join('\n')}
 </main>
 <div class="fnav">
@@ -612,6 +742,23 @@ ${S.join('\n')}
 <a href="#sources" title="Sources"><i class="fas fa-database"></i></a>
 </div>
 <footer class="article-footer">&copy; 2026 DailyTickers · données arrêtées à la clôture du ${h(dFR(REF))} · contenu informatif.<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a></footer>
+<script>
+// Les graphiques lisent les MÊMES mesures que le texte : elles sont sérialisées ici depuis le
+// registre, pas ressaisies. Un graphique qui contredit son paragraphe est le pire des deux mondes.
+const CHART_SPECS = ${JSON.stringify(CHARTS)};
+(function () {
+  if (typeof echarts === 'undefined') return;
+  const drawn = [];
+  for (const c of CHART_SPECS) {
+    const el = document.getElementById(c.id);
+    if (!el) continue;
+    const inst = echarts.init(el);
+    inst.setOption(Object.assign({ animation: false, textStyle: { fontFamily: 'Inter, system-ui, sans-serif' }, tooltip: { trigger: 'axis' } }, c.spec));
+    drawn.push(inst);
+  }
+  window.addEventListener('resize', () => drawn.forEach(i => i.resize()));
+})();
+</script>
 <script src="/assets/core.js"></script>
 <script src="/assets/tag-renderer.js"></script>
 </body>

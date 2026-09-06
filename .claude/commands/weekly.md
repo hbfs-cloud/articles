@@ -79,6 +79,7 @@ node tools/check-freshness.js weekly/YYYYMMDD/_focus/harness.json
 node tools/validate-workflows.js --run-plan plans/weekly.json weekly/YYYYMMDD/_data
 node tools/validate-workflows.js --run-plan plans/weekly-focus.json weekly/YYYYMMDD/_focus
 node tools/validate-content-claims.js weekly/YYYYMMDD/_data/claims.json
+node tools/validate-horizon-risk.js weekly/YYYYMMDD/   # tolère l'absence de signals.json
 node tools/qa-content.js weekly/YYYYMMDD/index.html --strict
 node tools/check-ai-tells.js weekly/YYYYMMDD/index.html --strict
 node tools/validate-content-hierarchy.js weekly/YYYYMMDD/index.html

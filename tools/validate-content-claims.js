@@ -8,6 +8,11 @@ const { JSDOM } = require('jsdom');
 const { validateCollectedArtifact } = require('./lib/evidence-gates');
 
 const ROOT = path.resolve(__dirname, '..');
+
+// Liste CLOSE des références autoritaires du dépôt. Une seule entrée aujourd'hui. Toute addition
+// doit être un acte délibéré : c'est la seule voie par laquelle un chiffre publié peut se passer
+// d'une provenance de collecte.
+const REGISTRY_SOURCES = new Set(['data/scheduled-events.json']);
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
 // Résolution de pointeur JSON. Sur un tableau, seuls les index numériques sont acceptés : sans
 // cela, « /bars/length » publiait le nombre de barres comme s'il s'agissait d'une mesure, et
@@ -265,10 +270,37 @@ function validate(manifest, root = ROOT) {
     if (path.relative(root, sourcePath).startsWith('..') || !fs.existsSync(sourcePath)) { errors.push(`${claim.id}: source artifact is missing`); continue; }
     const sourceBytes = fs.readFileSync(sourcePath);
     if (sha256(sourceBytes) !== claim.source_sha256) { errors.push(`${claim.id}: source hash mismatch`); continue; }
-    const collectedErrors = validateCollectedArtifact(sourcePath, claim.source_sha256, manifest.reference_close, root);
-    if (collectedErrors.length) { errors.push(`${claim.id}: source collector provenance invalid: ${collectedErrors.join('; ')}`); continue; }
     let source;
     try { source = JSON.parse(sourceBytes); } catch { errors.push(`${claim.id}: source is not valid JSON`); continue; }
+    // DEUX CLASSES DE PROVENANCE.
+    //
+    // La première, historique : un artefact COLLECTÉ, dont la provenance est prouvée par le journal
+    // de collecte et le harnais. C'est le cas de tout ce qui vient d'un marché.
+    //
+    // La seconde, ajoutée le 2026-09-06 : une RÉFÉRENCE AUTORITAIRE versionnée dans le dépôt. Une
+    // date que la Réserve fédérale publie un an d'avance n'a pas besoin d'une provenance de
+    // collecte — elle a besoin d'une citation. Et elle en a besoin précisément parce que le flux
+    // de marché s'est révélé faux là-dessus : il datait le PPI d'août au 14 septembre quand la BLS
+    // le publie le 10, et ignorait le FOMC des 15-16. Un artefact certifié peut être faux ; la
+    // certification prouve l'origine, pas l'exactitude.
+    //
+    // Le contrat est strict : le fichier doit porter `sources` avec URL, autorité et date de
+    // relevé, et le claim doit désigner laquelle l'appuie. Sans quoi cette classe deviendrait une
+    // porte de sortie pour publier n'importe quoi sans provenance.
+    const isRegistry = REGISTRY_SOURCES.has(claim.source_artifact);
+    if (isRegistry) {
+      const authority = source && source.sources && source.sources[claim.authority];
+      if (!claim.authority || !authority) {
+        errors.push(`${claim.id}: une référence de registre doit nommer son autorité via \`authority\` (présentes : ${Object.keys((source && source.sources) || {}).join(', ') || 'aucune'})`);
+        continue;
+      }
+      for (const field of ['url', 'authority', 'fetched_at']) {
+        if (!authority[field]) { errors.push(`${claim.id}: l'autorité « ${claim.authority} » n'a pas de ${field}`); }
+      }
+    } else {
+      const collectedErrors = validateCollectedArtifact(sourcePath, claim.source_sha256, manifest.reference_close, root);
+      if (collectedErrors.length) { errors.push(`${claim.id}: source collector provenance invalid: ${collectedErrors.join('; ')}`); continue; }
+    }
     const observed = pointerGet(source, claim.source_pointer);
     if (JSON.stringify(observed) !== JSON.stringify(claim.source_value)) errors.push(`${claim.id}: source_value differs from source_pointer`);
     // `formula.result` DOIT être un nombre. Absent, `Math.abs(x - Number(undefined))` vaut NaN,

@@ -62,6 +62,7 @@ immutable for the run. Do not infer one from the other inside a plan.
 
    ```bash
    node tools/validate-scan.js scanner/YYYYMMDD/
+   node tools/validate-horizon-risk.js scanner/YYYYMMDD/
    node tools/qa-check.js scanner/YYYYMMDD/ --strict
    node tools/check-ai-tells.js scanner/YYYYMMDD/index.html --strict
    node tools/test-scanner-quality-gates.js
