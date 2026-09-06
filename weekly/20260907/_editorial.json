@@ -249,10 +249,52 @@
       "box_title": "En une ligne",
       "box": [
         "Ce que le marché vend jeudi n'est pas un écart moyen de {{lead_move:amp}} : c'est une distribution qui reste sous ce seuil six fois sur huit et qui, la septième, part à {{lead_react3_move:pc1}}. On ne dimensionne pas une position contre une médiane, on la dimensionne contre la queue."
+      ],
+      "decision_label": "Décision prioritaire",
+      "decision": "NE RIEN PARIER SUR LE SENS, décider la taille",
+      "lead": "<strong>Oracle publie jeudi soir.</strong> Les options demandent {{lead_move:amp}} quand la médiane des [[lead_react_total]] publications passées est de {{lead_react_median:amp}}. La prime paraît chère — jusqu'à ce qu'on remarque que la vendre aurait gagné [[lead_below_implied]] fois sur [[lead_react_total]] et perdu quand même, à cause d'une seule séance à {{lead_react_max_up:pc1}}.",
+      "stats": [
+        {
+          "measure": "lead_move",
+          "format": "amp",
+          "label": "amplitude demandée"
+        },
+        {
+          "measure": "lead_react_median",
+          "format": "amp",
+          "label": "médiane des huit publications"
+        },
+        {
+          "measure": "lead_react_max_up",
+          "format": "pc1",
+          "label": "la queue de la distribution"
+        }
+      ],
+      "checks": [
+        {
+          "tone": "pass",
+          "title": "Données",
+          "text": "Dernière clôture américaine complète, toutes séries alignées."
+        },
+        {
+          "tone": "block",
+          "title": "Événement",
+          "text": "Résultats Oracle jeudi après clôture, amplitude implicite {{lead_move:amp}}."
+        },
+        {
+          "tone": "warn",
+          "title": "Fenêtre",
+          "text": "La Réserve fédérale tranche le {{fomc_date:date}}, dans l'horizon de dix séances."
+        },
+        {
+          "tone": "warn",
+          "title": "Direction",
+          "text": "{{lead_react_up:nb0}} hausses, {{lead_react_down:nb0}} baisses : aucun avantage de sens."
+        }
       ]
     },
     "week": {
-      "title": "Quatre séances, deux rendez-vous",
+      "title": "La semaine en une séquence",
       "paragraphs": [
         "Labor Day ferme les marchés américains lundi. La semaine ne compte que [[week_sessions]] séances, et trois rendez-vous majeurs s'y concentrent : les prix à la production jeudi matin, la Banque centrale européenne quelques heures plus tard, Oracle après la clôture américaine, puis l'inflation à la consommation vendredi.",
         "L'ordre compte, et nous l'avions inversé dans une première version de cette page. Les prix à la production sortent la veille de l'inflation à la consommation : ils ne la confirment pas, ils l'annoncent. Un chiffre de production supérieur aux attentes jeudi matin déplace les anticipations avant même que le second ne soit publié — et il tombe le jour où Oracle publie.",
@@ -469,6 +511,57 @@
         "La seule asymétrie mesurable est du côté de la prime, et elle penche contre le vendeur : vendre l'amplitude aurait gagné [[lead_below_implied]] fois sur [[lead_react_total]] et perdu au total. Nous ne la vendons donc pas non plus.",
         "Condition de démenti, écrite d'avance. Si Oracle publie jeudi et que le titre s'écarte à la hausse au-delà de l'amplitude implicite de {{lead_move:amp}}, notre lecture — une hausse de positionnement sans volume ni révision — était fausse : c'était de l'information, et nous l'aurons manquée. Le bilan sera fait dans l'hebdo suivant, sans réécriture."
       ]
+    },
+    "quality": {
+      "title": "Sources, qualité et limites",
+      "paragraphs": [
+        "Instantané arrêté à la dernière clôture américaine complète. Les prix, réactions historiques, fondamentaux et calendriers viennent de collectes datées et contrôlées ; chaque chiffre de cette page est lié au fichier et à la ligne dont il sort. Ce tableau dit ce qu'on tient pour solide et ce qu'on ne tient pas.",
+        "Un mot sur la dernière ligne, parce qu'elle a coûté une rectification aujourd'hui : notre flux de calendrier datait les prix à la production quatre jours trop tard et ignorait la réunion de la Réserve fédérale, tout en étant parfaitement certifié. La certification prouve d'où vient un chiffre — elle ne dit rien de son exactitude.",
+        "Les performances mensuelles portent sur vingt et une séances de bourse, les hebdomadaires sur cinq. Lundi étant férié, la semaine à venir n'en comptera que [[week_sessions]]. Le seuil de deux fois le volume cité dans la matrice des risques est une convention de travail, pas un résultat statistique — nous l'appliquons d'ailleurs à la hausse d'Oracle elle-même, qu'il rejette."
+      ],
+      "blocks": [
+        {
+          "block": "Barres actions et ETF",
+          "grade": "VALIDÉ",
+          "limit": "Dernière clôture servie, séance partielle exclue, toutes les séries arrêtées à la même date."
+        },
+        {
+          "block": "Réactions aux résultats",
+          "grade": "VALIDÉ",
+          "limit": "Dates issues des dépôts réglementaires, numéro d'accession à l'appui. Chaque variation est mesurée de la séance précédant l'annonce à celle qui la suit, parce que le registre enregistre un jour et pas une heure."
+        },
+        {
+          "block": "Amplitude implicite Oracle",
+          "grade": "AVEC RÉSERVE",
+          "limit": "Straddle à la monnaie sur l'échéance qui suit la publication. Cette échéance englobe aussi l'inflation de vendredi : ce n'est donc pas une mesure pure de l'effet des résultats."
+        },
+        {
+          "block": "Date de publication Oracle",
+          "grade": "AVEC RÉSERVE",
+          "limit": "Source de calendrier unique, non recoupée. Une date de résultats fausse contamine tout ce qui en découle."
+        },
+        {
+          "block": "Chaîne d'infrastructure",
+          "grade": "DOCUMENTÉ",
+          "limit": "Liens économiques déclarés, aucune causalité affirmée. Nous n'avons pas de discriminant à proposer pour expliquer ce qui sépare les neuf hausses des trois baisses."
+        },
+        {
+          "block": "Calendrier économique",
+          "grade": "CONTRÔLÉ",
+          "limit": "Les rendez-vous programmés par une autorité viennent d'un registre versionné, cité et daté, qui l'emporte sur le flux de données. Un contrôle refuse de construire la page si l'un d'eux manque ou porte une autre date."
+        },
+        {
+          "block": "Mouvement du brut",
+          "grade": "DOCUMENTÉ",
+          "limit": "Constaté, non expliqué. Pas de source datée établissant la cause, donc aucune n'est proposée."
+        }
+      ]
+    },
+    "macro": {
+      "title": "Marché, secteurs et volatilité"
+    },
+    "assets": {
+      "title": "Crypto, métaux et matières premières"
     }
   },
   "reaction_stats": {
@@ -511,12 +604,17 @@
     {
       "id": "verdict",
       "icon": "fa-gavel",
-      "label": "Synthèse"
+      "label": "Décision"
     },
     {
       "id": "agenda",
       "icon": "fa-calendar-week",
-      "label": "Calendrier"
+      "label": "Semaine"
+    },
+    {
+      "id": "macro",
+      "icon": "fa-chart-line",
+      "label": "Marché"
     },
     {
       "id": "catalyseur",
@@ -534,18 +632,13 @@
       "label": "Précédents"
     },
     {
-      "id": "volatilite",
-      "icon": "fa-wave-square",
-      "label": "Volatilité"
-    },
-    {
       "id": "plan",
       "icon": "fa-list-check",
       "label": "Plan"
     },
     {
       "id": "sources",
-      "icon": "fa-database",
+      "icon": "fa-file-lines",
       "label": "Sources"
     }
   ],

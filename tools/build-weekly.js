@@ -590,9 +590,24 @@ const metric = (value, label) => `<div class="metric-card"><div class="metric-va
 const metricsGrid = cards => `<div class="metrics-grid">${cards.join('')}</div>`;
 const badge = (text, tone) => `<span class="badge badge-${tone}">${h(text)}</span>`;
 
+// Structure calquée sur weekly/20260831, qui est la référence du format : chaque section EST une
+// `content-card`, pas un `section-block` contenant une carte. La première version imbriquait les
+// deux et produisait une page grise et plate.
 const sec = (id, icon, title, inner) =>
-  `<section id="${id}" class="section-block"><div class="section-header"><h2><i class="fas ${icon}"></i> ${h(title)}</h2></div>${inner}</section>`;
-const card = inner => `<div class="content-card">${inner}</div>`;
+  `<section id="${id}" class="content-card"><h2><i class="fas ${icon}"></i> ${h(title)}</h2>${inner}</section>`;
+const card = inner => inner;
+
+// Tableau de décision : ce que le lecteur doit retenir s'il ne lit rien d'autre, avec les trois
+// chiffres qui le portent et les contrôles systématiques à côté.
+const decisionBoard = (label, title, lead, stats, checks) => `
+<section id="verdict" class="decision-board" aria-label="Décision de la semaine">
+  <div class="decision-main"><div class="decision-label">${h(label)}</div><h2>${fill(words(title))}</h2><p>${fill(words(lead))}</p>
+    <div class="decision-stats">${stats.map(x => `<div class="mini-stat"><strong>${x.value}</strong><span>${h(x.label)}</span></div>`).join('')}</div>
+  </div>
+  <div class="decision-side"><div class="decision-label">Contrôle systématique</div>
+    <div class="check-grid">${checks.map(c => `<div class="check-item ${c.tone}"><i class="fas ${c.tone === 'pass' ? 'fa-circle-check' : c.tone === 'block' ? 'fa-circle-xmark' : 'fa-triangle-exclamation'}"></i><span><strong>${h(c.title)}</strong><br>${fill(words(c.text))}</span></div>`).join('')}</div>
+  </div>
+</section>`;
 const box = (cls, icon, title, inner) => `<div class="${cls}"><h4><i class="fas ${icon}"></i> ${h(title)}</h4>${inner}</div>`;
 
 const E = man.editorial;
@@ -601,34 +616,38 @@ const S = [];
 const REACT = (man.reaction_stats && REACT_MOVES.lead) || [];
 const IMPLIED = val('lead_move');
 
-S.push(sec('verdict', 'fa-flag-checkered', E.verdict.title,
-  metricsGrid([
-    metric(bind('lead_move', 'amp'), `Amplitude demandée · ${man.event_leader}`),
-    metric(bind('lead_react_median', 'amp'), `Médiane des publications passées`),
-    metric(bind('lead_react_max_up', 'pc1'), 'La plus forte réaction de la série'),
-    metric(bind('regime_score', 'pct100'), 'Régime de marché sur cent'),
-    metric(bind('vix9d', 'nb'), 'Volatilité à neuf jours'),
-    metric(bind('USO_m', 'pc1'), 'Pétrole sur un mois'),
-  ])
-  + card(paras(E.verdict.paragraphs))
-  + chart('reactionChart',
-      `Les ${COUNTS.lead_react_total} publications passées d'${man.labels[man.event_leader] || man.event_leader}, face à ce que le marché demande aujourd'hui`,
-      "Amplitude absolue de chaque réaction, mesurée de la séance précédant l'annonce à celle qui la suit. La ligne pointillée marque l'amplitude implicite de jeudi. Les barres vertes sont restées sous ce seuil, les rouges l'ont franchi — et la plus haute suffit à elle seule à effacer tous les gains des autres.",
-      {
-        grid: { left: 48, right: 24, top: 24, bottom: 56 },
-        xAxis: { type: 'category', data: REACT.map((_, i) => val(`lead_react${i}_date`).slice(0, 7)), axisLabel: { rotate: 45, fontSize: 10 } },
-        yAxis: { type: 'value', name: '% absolu', nameTextStyle: { fontSize: 10 } },
-        series: [{
-          type: 'bar',
-          data: REACT.map((v, i) => ({ value: Number(v.toFixed(2)), itemStyle: { color: v >= IMPLIED ? '#dc2626' : '#16a34a' } })),
-          markLine: {
-            symbol: 'none', silent: true,
-            data: [{ yAxis: Number(IMPLIED.toFixed(2)), lineStyle: { color: '#0f172a', type: 'dashed', width: 2 } }],
-            label: { formatter: 'implicite ' + IMPLIED.toFixed(1) + ' %', position: 'insideEndTop', fontSize: 10 },
-          },
-        }],
-      })
-  + box('alert-box', 'fa-bullseye', E.verdict.box_title, paras(E.verdict.box))));
+S.push(decisionBoard(
+  E.verdict.decision_label, E.verdict.decision, E.verdict.lead,
+  E.verdict.stats.map(x => ({ value: bind(x.measure, x.format), label: x.label })),
+  E.verdict.checks)
+  + sec('synthese', 'fa-flag-checkered', E.verdict.title,
+      metricsGrid([
+        metric(bind('lead_move', 'amp'), `Amplitude demandée · ${man.event_leader}`),
+        metric(bind('lead_react_median', 'amp'), 'Médiane des publications passées'),
+        metric(bind('lead_react_max_up', 'pc1'), 'La plus forte réaction de la série'),
+        metric(bind('regime_score', 'pct100'), 'Régime de marché sur cent'),
+        metric(bind('vix9d', 'nb'), 'Volatilité à neuf jours'),
+        metric(bind('USO_m', 'pc1'), 'Pétrole sur un mois'),
+      ])
+      + paras(E.verdict.paragraphs)
+      + chart('reactionChart',
+          `Les ${COUNTS.lead_react_total} publications passées d'${man.labels[man.event_leader] || man.event_leader}, face à ce que le marché demande aujourd'hui`,
+          "Amplitude absolue de chaque réaction, mesurée de la séance précédant l'annonce à celle qui la suit. La ligne pointillée marque l'amplitude implicite de jeudi. Les barres vertes sont restées sous ce seuil, les rouges l'ont franchi — et la plus haute suffit à elle seule à effacer tous les gains des autres.",
+          {
+            grid: { left: 48, right: 24, top: 24, bottom: 56 },
+            xAxis: { type: 'category', data: REACT.map((_, i) => val(`lead_react${i}_date`).slice(0, 7)), axisLabel: { rotate: 45, fontSize: 10 } },
+            yAxis: { type: 'value', name: '% absolu', nameTextStyle: { fontSize: 10 } },
+            series: [{
+              type: 'bar',
+              data: REACT.map(v => ({ value: Number(v.toFixed(2)), itemStyle: { color: v >= IMPLIED ? '#dc2626' : '#16a34a' } })),
+              markLine: {
+                symbol: 'none', silent: true,
+                data: [{ yAxis: Number(IMPLIED.toFixed(2)), lineStyle: { color: '#0f172a', type: 'dashed', width: 2 } }],
+                label: { formatter: 'implicite ' + IMPLIED.toFixed(1) + ' %', position: 'insideEndTop', fontSize: 10 },
+              },
+            }],
+          })
+      + box('alert-box', 'fa-bullseye', E.verdict.box_title, paras(E.verdict.box))));
 
 S.push(sec('agenda', 'fa-calendar-week', E.week.title, card(paras(E.week.paragraphs) +
   table(['Date', 'Rendez-vous', 'Portée'], ECO.map((row, i) => [
@@ -637,13 +656,35 @@ S.push(sec('agenda', 'fa-calendar-week', E.week.title, card(paras(E.week.paragra
     row.event.impact === 'high' ? badge('élevée', 'red') : badge('moyenne', 'yellow'),
   ])))));
 
-S.push(sec('regime', 'fa-gauge-high', E.tape.title, card(paras(E.tape.paragraphs))));
-S.push(sec('marches', 'fa-chart-line', E.indices.title, card(paras(E.indices.paragraphs) + perfTable(man.tables.indices))));
-S.push(sec('rotation', 'fa-arrows-rotate', E.sectors.title, card(paras(E.sectors.paragraphs) + perfTable(man.tables.sectors))));
-
-S.push(sec('volatilite', 'fa-wave-square', E.vol.title, card(paras(E.vol.paragraphs))
+// Une seule section de marché, comme dans la référence : régime, indices, secteurs et volatilité
+// se lisent ensemble. Quatre sections séparées donnaient quatre paragraphes maigres au lieu d'un
+// tableau de bord.
+S.push(sec('macro', 'fa-chart-line', E.macro.title,
+  paras(E.tape.paragraphs)
+  + `<h3>Indices et grandes classes d'actifs</h3>`
+  + paras(E.indices.paragraphs) + perfTable(man.tables.indices)
+  + `<h3>${h(E.sectors.title)}</h3>`
+  + paras(E.sectors.paragraphs)
+  + (() => {
+      const syms = [...symsOf(man.tables.sectors)].sort((a, b) => val(`${b}_s`) - val(`${a}_s`));
+      return chart('sectorChart', 'Onze secteurs américains, semaine et mois',
+        "Les barres claires sont la semaine, les foncées le mois. Un secteur peut mener la semaine et rester en retard sur le mois : c'est le cas de la technologie.",
+        {
+          legend: { data: ['semaine', 'mois'], bottom: 0, textStyle: { fontSize: 11 } },
+          grid: { left: 150, right: 40, top: 16, bottom: 44 },
+          xAxis: { type: 'value', name: '%', nameTextStyle: { fontSize: 10 } },
+          yAxis: { type: 'category', data: syms.map(x => man.labels[x] || x), axisLabel: { fontSize: 11 } },
+          series: [
+            { name: 'semaine', type: 'bar', itemStyle: { color: '#93c5fd' }, data: syms.map(x => Number(val(`${x}_s`).toFixed(2))) },
+            { name: 'mois', type: 'bar', itemStyle: { color: '#1d4ed8' }, data: syms.map(x => Number(val(`${x}_m`).toFixed(2))) },
+          ],
+        });
+    })()
+  + perfTable(man.tables.sectors)
+  + `<h3>${h(E.vol.title)}</h3>`
+  + paras(E.vol.paragraphs)
   + chart('volChart', 'La courbe de volatilité implicite, du plus court au plus long',
-      "Le point le moins cher de la courbe est la fenêtre de neuf jours — celle qui contient les deux rendez-vous de la semaine.",
+      "Le point le moins cher de la courbe est la fenêtre de neuf jours — celle qui contient les rendez-vous de la semaine.",
       {
         grid: { left: 48, right: 24, top: 24, bottom: 40 },
         xAxis: { type: 'category', data: man.term_structure_labels },
@@ -651,11 +692,29 @@ S.push(sec('volatilite', 'fa-wave-square', E.vol.title, card(paras(E.vol.paragra
         series: [{ type: 'line', smooth: true, symbolSize: 9, lineStyle: { width: 3, color: '#0ea5e9' }, itemStyle: { color: '#0ea5e9' },
           data: man.term_structure_order.map(n => Number(val(n).toFixed(2))), label: { show: true, fontSize: 10 } }],
       })
-  + card(table(['Échéance', 'Niveau', 'Lecture'], man.term_structure_order.map((name, i) => [
-    maybeLit(man.term_structure_labels[i]), bind(name, 'nb'), maybeLit(man.term_structure_reads[i]),
-  ])))));
+  + table(['Échéance', 'Niveau', 'Lecture'], man.term_structure_order.map((name, i) => [
+      maybeLit(man.term_structure_labels[i]), bind(name, 'nb'), maybeLit(man.term_structure_reads[i]),
+    ]))));
 
-S.push(sec('catalyseur', 'fa-bolt', E.leader.title, card(paras(E.leader.paragraphs))));
+S.push(sec('catalyseur', 'fa-bolt', E.leader.title, paras(E.leader.paragraphs)
+  + (() => {
+      const b = series(man.event_leader).bars, n = man.lead_run_sessions;
+      const from = Math.max(0, b.length - 26);
+      const seg = b.slice(from);
+      return chart('leadPathChart', `${man.labels[man.event_leader] || man.event_leader} sur les dernières séances`,
+        "La zone ombrée est la course de trois séances dont tout le monde parlera. Elle part du plus bas cours de clôture du mois — c'est ce point de départ, et non le parcours, qui produit le gros chiffre.",
+        {
+          grid: { left: 56, right: 24, top: 24, bottom: 40 },
+          xAxis: { type: 'category', data: seg.map(x => x[0].slice(5)), axisLabel: { rotate: 45, fontSize: 9 } },
+          yAxis: { type: 'value', scale: true, name: '$', nameTextStyle: { fontSize: 10 } },
+          series: [{
+            type: 'line', smooth: true, symbol: 'none', lineStyle: { width: 2.5, color: '#0f172a' },
+            data: seg.map(x => Number(x[CLOSE].toFixed(2))),
+            markArea: { silent: true, itemStyle: { color: 'rgba(22,163,74,0.12)' },
+              data: [[{ xAxis: seg[seg.length - 1 - n][0].slice(5) }, { xAxis: seg[seg.length - 1][0].slice(5) }]] },
+          }],
+        });
+    })()));
 {
   const ord = [...CHAIN].sort((a, b) => val(`${a}_m`) - val(`${b}_m`));
   S.push(sec('propagation', 'fa-diagram-project', E.blast.title,
@@ -671,10 +730,58 @@ S.push(sec('catalyseur', 'fa-bolt', E.leader.title, card(paras(E.leader.paragrap
         })
     + card(perfTable(man.tables.chain))));
 }
-S.push(sec('precedent', 'fa-clock-rotate-left', E.precedent.title, card(paras(E.precedent.paragraphs))));
-S.push(sec('metaux', 'fa-coins', E.metals.title, card(paras(E.metals.paragraphs))));
-S.push(sec('crypto', 'fa-bitcoin-sign', E.crypto.title, card(paras(E.crypto.paragraphs) + perfTable(man.tables.crypto))));
-S.push(sec('matieres', 'fa-oil-well', E.commodities.title, card(paras(E.commodities.paragraphs))));
+S.push(sec('precedent', 'fa-clock-rotate-left', E.precedent.title, paras(E.precedent.paragraphs)
+  + chart('precChart', "D'où vient réellement le mois de Broadcom",
+      "La publication n'explique qu'une fraction du mois. Attribuer l'ensemble à l'événement est une inversion de causalité, et elle se mesure.",
+      {
+        grid: { left: 150, right: 60, top: 16, bottom: 32 },
+        xAxis: { type: 'value', name: '%', nameTextStyle: { fontSize: 10 } },
+        yAxis: { type: 'category', data: ['Le mois entier', 'La publication', 'Avant le communiqué'] },
+        series: [{ type: 'bar', label: { show: true, position: 'left', fontSize: 10, formatter: p => p.value.toFixed(1) + ' %' },
+          data: [
+            { value: Number(val('AVGO_m').toFixed(2)), itemStyle: { color: '#64748b' } },
+            { value: Number(val('prec_react0_move').toFixed(2)), itemStyle: { color: '#dc2626' } },
+            { value: Number(val('prec_month_before').toFixed(2)), itemStyle: { color: '#f59e0b' } },
+          ] }],
+      })
+  + (() => {
+      const n = REACT.length;
+      return chart('intradayChart', `Sur les ${COUNTS.lead_react_total} réactions passées, l'ouverture a été le bas de la séance`,
+        "Chaque point compare l'écart d'ouverture (horizontal) à ce que la séance a fait ensuite (vertical). Presque tous sont au-dessus de zéro, y compris les réactions négatives : vendre à la cloche d'ouverture a historiquement été le mauvais réflexe sur ce titre.",
+        {
+          grid: { left: 56, right: 24, top: 24, bottom: 44 },
+          xAxis: { type: 'value', name: 'écart d\'ouverture %', nameLocation: 'middle', nameGap: 26, nameTextStyle: { fontSize: 10 } },
+          yAxis: { type: 'value', name: 'séance %', nameTextStyle: { fontSize: 10 } },
+          series: [{
+            type: 'scatter', symbolSize: 13,
+            data: Array.from({ length: n }, (_, i) => ({
+              value: [Number(val(`lead_react${i}_gap`).toFixed(2)), Number(val(`lead_react${i}_intraday`).toFixed(2))],
+              itemStyle: { color: val(`lead_react${i}_intraday`) >= 0 ? '#16a34a' : '#dc2626' },
+            })),
+            markLine: { symbol: 'none', silent: true, data: [{ yAxis: 0, lineStyle: { color: '#94a3b8', type: 'dashed' } }] },
+          }],
+        });
+    })()));
+S.push(sec('actifs', 'fa-coins', E.assets.title,
+  `<h3>${h(E.metals.title)}</h3>` + paras(E.metals.paragraphs)
+  + `<h3>${h(E.crypto.title)}</h3>` + paras(E.crypto.paragraphs)
+  + (() => {
+      const syms = [...symsOf(man.tables.crypto)].sort((a, b) => val(`${b}_m`) - val(`${a}_m`));
+      return chart('cryptoChart', 'Crypto : le mois contre la semaine',
+        "Un mois très fort, une semaine nettement plus calme. C'est le ralentissement, pas la hausse, qui commande la décision de taille.",
+        {
+          legend: { data: ['mois', 'semaine'], bottom: 0, textStyle: { fontSize: 11 } },
+          grid: { left: 90, right: 40, top: 16, bottom: 44 },
+          xAxis: { type: 'value', name: '%', nameTextStyle: { fontSize: 10 } },
+          yAxis: { type: 'category', data: syms.map(x => man.labels[x] || x) },
+          series: [
+            { name: 'mois', type: 'bar', itemStyle: { color: '#7c3aed' }, data: syms.map(x => Number(val(`${x}_m`).toFixed(2))) },
+            { name: 'semaine', type: 'bar', itemStyle: { color: '#c4b5fd' }, data: syms.map(x => Number(val(`${x}_s`).toFixed(2))) },
+          ],
+        });
+    })()
+  + perfTable(man.tables.crypto)
+  + `<h3>${h(E.commodities.title)}</h3>` + paras(E.commodities.paragraphs)));
 
 S.push(sec('risques', 'fa-triangle-exclamation', E.risks.title,
   card(table(['Risque', 'Ce qui le déclenche', 'Ce qu\'on regarde'],
@@ -700,12 +807,15 @@ S.push(sec('outlook', 'fa-binoculars', E.outlook.title,
   card(paras(E.outlook.paragraphs))
   + (E.outlook.scenarios ? `<div class="scenario-grid">${E.outlook.scenarios.map(sc =>
       `<div class="scenario-card ${sc.tone}"><h3>${h(sc.title)}</h3><p>${fill(words(sc.body))}</p><p><strong>Ce qu'on fait :</strong> ${fill(words(sc.action))}</p></div>`).join('')}</div>` : '')));
-S.push(sec('methode', 'fa-flask', E.method.title, card(paras(E.method.paragraphs))));
-
-S.push(sec('sources', 'fa-database', 'Sources et empreintes',
-  card(`<p>Chaque chiffre de cette page dérive d'un des fichiers ci-dessous, arrêtés à la clôture américaine du ${bind('ref_close_date', 'date')}. Les empreintes permettent de vérifier qu'aucun n'a bougé depuis.</p>` +
-    table(['Source', 'Empreinte'], Object.entries(SRC).map(([k, v]) => [maybeLit(man.source_labels[k] || k), `<code>${litHash(v.sha256.slice(0, 12))}</code>`])) +
-    `<p style="margin-top:1rem"><em>${h(man.disclaimer)}</em></p>`)));
+S.push(sec('sources', 'fa-file-lines', E.quality.title,
+  paras(E.quality.paragraphs)
+  + table(['Bloc', 'Qualité', 'Limite appliquée'],
+      E.quality.blocks.map(b => [
+        maybeLit(b.block),
+        badge(b.grade, b.grade === 'VALIDÉ' ? 'green' : b.grade === 'AVEC RÉSERVE' ? 'yellow' : 'blue'),
+        fill(words(b.limit)),
+      ]))
+  + `<p class="disclaimer">${h(man.disclaimer)}</p>`));
 
 const title = E.title;
 const desc = E.description;

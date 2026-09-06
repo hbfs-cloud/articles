@@ -105,8 +105,10 @@ function validate(dirRel) {
   const errors = [];
   const notes = [];
 
+  // Un hebdo n'a pas de signaux : son « horizon » est le calendrier qu'il publie. Le contrôle des
+  // dates, lui, s'applique aux deux — et c'est la partie qui a manqué le FOMC.
   const sigPath = path.join(dir, 'signals.json');
-  if (!fs.existsSync(sigPath)) return { errors: [`${dirRel}: signals.json absent`], notes };
+  if (!fs.existsSync(sigPath)) return validateCalendarOnly(dir, dirRel, notes);
   const sig = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
   const signals = sig.signals || [];
   if (!signals.length) return { errors: [], notes: ['aucun signal — rien à contrôler'] };
@@ -228,6 +230,47 @@ function validate(dirRel) {
   }
 
   return { errors: [...new Set(errors)], notes };
+}
+
+// Contrôle réduit au calendrier, pour les publications sans horizon de position. Le registre y
+// fait autorité de la même façon : c'est là que le PPI était daté de quatre jours trop tard.
+function validateCalendarOnly(dir, dirRel, notes) {
+  const errors = [];
+  const reg = loadRegistry();
+  const claimsPath = path.join(dir, '_data/claims.json');
+  if (!fs.existsSync(claimsPath)) return { errors: [`${dirRel}: ni signals.json ni _data/claims.json`], notes };
+  const html = readProse(dir);
+  const year = (/(20\d{2})-\d{2}-\d{2}/.exec(JSON.parse(fs.readFileSync(claimsPath, 'utf8')).reference_close || '') || [])[1] || String(new Date().getUTCFullYear());
+  const ref = JSON.parse(fs.readFileSync(claimsPath, 'utf8')).reference_close;
+  // Ne retenir que la PROCHAINE occurrence de chaque type d'événement après la clôture de
+  // référence. Sans cette borne, le contrôle exigeait que la page cite le PPI d'octobre, de
+  // novembre et de décembre au seul motif qu'elle nomme « prix à la production ».
+  const next = new Map();
+  for (const ev of [...reg.events].sort((a, b) => a.date.localeCompare(b.date))) {
+    if (ev.date <= ref || next.has(ev.id)) continue;
+    next.set(ev.id, ev);
+  }
+  for (const ev of next.values()) {
+    const shown = (ev.match || []).some(k => new RegExp(k, 'i').test(html));
+    if (!shown) continue;
+    const expect = renderFrenchDateLike(ev.date);
+    if (!html.includes(expect)) {
+      errors.push(`« ${ev.label_fr} » est nommé dans la page mais pas au ${ev.date} (${expect}) — date de ${reg.sources[ev.source].authority}`);
+    } else notes.push(`« ${ev.id} » cité à la date de l'autorité (${expect})`);
+  }
+  for (const m of RETIRED_MECHANISMS) {
+    if (new RegExp(`${m.term}[^.]{0,120}?(?:doit|obligatoire|attendre|il faut|exiger)`, 'i').test(html.replace(/<[^>]+>/g, ' '))) {
+      errors.push(`« ${m.term} » est retiré depuis le ${m.retired_on} mais la page en fait encore une règle`);
+    }
+  }
+  return { errors, notes };
+}
+
+const MOIS_LONG = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+function renderFrenchDateLike(iso) {
+  const d = new Date(iso + 'T12:00:00Z');
+  const n = d.getUTCDate() === 1 ? '1er' : String(d.getUTCDate());
+  return `${n} ${MOIS_LONG[d.getUTCMonth()]}`;
 }
 
 let proseCache = null;
