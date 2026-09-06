@@ -1,0 +1,51 @@
+---
+title: "Size at the Portfolio Level"
+subtitle: "Per-trade loss is only one ceiling on position size."
+series_id: "retail-systematic-desk"
+module_id: "portfolio-risk"
+module_title: "Control the Portfolio Before the Trade"
+module_episode: 1
+episode_number: 28
+scheduled_at: "2027-03-12T13:00:00.000Z"
+send_email: false
+---
+*Part 1 of 3 in Control the Portfolio Before the Trade. Lesson 28 of 45 in Build a Retail Systematic Desk, Safely.*
+
+A stop distance tells you what one trade costs when the exit works. Size has to answer the harder question: what the book carries when it doesn't. Prices jump over stops overnight. Fills land worse than the level you asked for. So the loss budget is an aim, not a wall.
+
+Which means you compute the quantity several times, once per ceiling, and keep the smallest.
+
+![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
+
+**Input from last Friday:** the accepted validation protocol.
+
+**Friday deliverable:** a stressed sizing sheet, owned by the desk operator and kept in the review bundle.
+
+## Build this
+
+Four ceilings. The loss budget. The stressed version of it, same stop widened by the worst overnight jump you are willing to assume. The concentration cap, meaning the most any single name may weigh. And the liquidity cap, tied to how many shares change hands on an ordinary day, because a position you cannot leave is not a position you own.
+
+Made-up figures, here only to show the shape of the sheet: a paper book of 100,000 units, 0.5% budget per trade, so 500 units of loss allowed. SYM_A stops 4% away, which permits 12,500 of exposure. Widen that stop to a 9% gap and the same 500 units allows 5,500. Concentration caps the name at 8,000. Liquidity caps it at 4,200. The sheet keeps 4,200, rounds down to a quantity the broker will accept, and records that liquidity governed, not risk. People skip that last field. It is the only one that later explains why the position was small.
+
+### Minimum record
+
+- `risk_budget_target`
+- `nominal_stop_loss`
+- `stressed_loss` — the same stop under a gap, never the clean one
+- `liquidity_cap`
+- `concentration_cap`
+- `final_qty` — after rounding down
+
+## Test it before moving on
+
+Feed it two candidates with identical stop distances: one in a quiet name, one in a sector already holding half your exposure. Identical quantities mean the sheet reads the stop and nothing else. Then delete the account equity and the currency rate. It must refuse to size. A sheet that silently falls back on a default is worse than one that halts.
+
+**Operating limit:** sizing runs once, before the session, on paper figures only. No intraday top-ups.
+
+## Release decision
+
+**GO:** accept when both tests behave and every retained row carries the six fields, governing ceiling included.
+
+**NO-GO:** unused buying power is not permission. Borrowed room widens the loss on an unchanged stop. On what that room costs: [SEC: Margin](https://www.sec.gov/investor/pubs/margin.htm); [FINRA: Margin Accounts](https://www.finra.org/rules-guidance/key-topics/margin-accounts). Educational, not investment advice.
+
+**Next Friday:** the accepted sheet goes into Find Correlation and Hidden Factor Bets.

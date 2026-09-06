@@ -99,6 +99,15 @@ const page = (id, spec, meta, h) => `<!doctype html><meta charset="utf-8">
       console.log(`  ✓ ${id.padEnd(22)} ${(fs.statSync(file).size / 1024).toFixed(0)} Ko  ${meta.title}`);
     }
   } finally { await browser.close(); }
-  fs.writeFileSync(path.join(outDir, 'index.json'), JSON.stringify({ generated_from: 'tools/lib/schematics.js', figures: written }, null, 2) + '\n');
+  // FUSIONNER, JAMAIS REMPLACER. Un rendu partiel (`--only`) écrasait le catalogue complet, et le
+  // constructeur d'épisodes échouait ensuite sur « figure inconnue » pour des images pourtant
+  // présentes sur le disque. Un fichier d'index qui ment sur ce qui existe est pire qu'aucun index.
+  const indexPath = path.join(outDir, 'index.json');
+  const prev = fs.existsSync(indexPath) ? (JSON.parse(fs.readFileSync(indexPath, 'utf8')).figures || []) : [];
+  const merged = new Map(prev.map(f => [f.id, f]));
+  for (const f of written) merged.set(f.id, f);
+  // Une entrée dont l'image a disparu du disque n'a rien à faire dans le catalogue.
+  const figures = [...merged.values()].filter(f => fs.existsSync(path.resolve(ROOT, f.file))).sort((a, b) => a.id.localeCompare(b.id));
+  fs.writeFileSync(indexPath, JSON.stringify({ generated_from: 'tools/lib/schematics.js', figures }, null, 2) + '\n');
   console.log(`[schema] ${written.length} figure(s) → ${outRel}`);
 })().catch(e => { console.error(`[schema] ERREUR: ${e.message}`); process.exit(1); });
