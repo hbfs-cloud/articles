@@ -12,39 +12,41 @@ send_email: false
 
 *Part 1 of 3 in Start With a Mandate, Not a Model. Lesson 1 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Write down the market, holding period, permitted instruments, decision time, account constraints and maximum operational complexity. A first system for liquid US stocks at one daily decision point is easier to observe than a machine spanning options, crypto, premarket and several brokers. Scope is a risk control because every extra surface creates another clock, identifier and failure mode.
+Before the first line of code, write one page that says what this system may do and what it may never do. That page is the mandate. Market, session, holding period, permitted order types, paper or live, and the name of the person who can switch it off.
 
-**Input from last Friday:** A blank repository and a named human owner.
+Then count what you just signed up for. A toy count, invented to show the shape rather than to be copied: one market, one decision moment per day, one order family gives you three things that can be wrong at seven in the morning. Add index options, a second broker and a coin that trades all weekend, and the same one-person desk is watching four clocks, three ways of spelling the same instrument, two settlement rules and a funding charge. Scope is not ambition. Scope is how many alarms one person can answer alone.
 
-**Friday deliverable:** A signed mandate, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** a blank repository and a named human owner.
+
+**Friday deliverable:** a signed mandate, owned by the desk operator and filed in the review bundle — the dated folder holding the artefact, its test output and the sign-off.
 
 ## Build this
 
-Create a one-page mandate with explicit inclusions and exclusions. Give every future feature a default answer of no until it has data coverage, a test plan and an owner. The mandate should also name the human who can pause the system and the condition that forces a return to paper mode.
+One page, two columns: in scope, out of scope. Any feature not written down starts at no and stays at no until someone can point to data coverage, a test and an owner. Name the pause, too: who stops the desk, and what forces it back to paper mode, where orders are written down and never sent.
 
 ### Minimum record
 
-- `market and session`
-- `instrument types`
-- `holding horizon`
-- `allowed order families`
-- `paper or live mode`
-- `owner and kill path`
+- market and session
+- instrument types
+- holding horizon
+- allowed order families
+- paper or live mode
+- owner and kill path
 
 ## Test it before moving on
 
-Hand the mandate to another person and ask them to classify five hypothetical requests. They should agree on whether each request is in scope without asking what you meant. If they disagree, the specification is not operational yet.
+Hand the page to someone who did not write it, along with five invented requests: add an index future; trade the open as well as the close; double the size; add a second price feed; let it run overnight. They rule each one in or out without asking what you meant. In a dry run of mine, four were obvious and the second price feed split the room. That split is the useful part, because it names the sentence the mandate is missing.
 
-**Operating limit:** The signed mandate is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** a teaching exercise on paper. No live account, no real size, no claim that any of this earns money.
 
-**Further reading for the signed mandate (context, not implementation evidence):** [Investor.gov: Five Questions to Ask Before You Invest](https://www.investor.gov/introduction-investing/getting-started/five-questions-ask-you-invest); [FINRA: Concentration Risk](https://www.finra.org/investors/insights/concentration-risk)
+Two short reads while you draft: [holding period, defined](https://www.investor.gov/introduction-investing/investing-basics/glossary/holding-period), and the [CFTC education centre](https://www.cftc.gov/LearnAndProtect/EducationCenter/index.htm) on the products you are about to exclude.
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the signed mandate only when the test above passes and its retained output matches the minimum record.
+**GO:** your reader classifies all five requests the way you would, using only the page.
 
-**NO-GO:** Do not build a scanner while the universe, decision clock or permitted products can still change during a run.
+**NO-GO:** no scanner while the universe, the daily clock or the permitted products can still change mid-run.
 
-**Next Friday:** Carry the accepted signed mandate into Define Non-Goals and Kill Criteria.
+**Next Friday:** the signed mandate goes into Define Non-Goals and Kill Criteria.

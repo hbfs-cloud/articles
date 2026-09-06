@@ -8,27 +8,34 @@ source_path: "series/marketwatch-checklist/part1-regime/index.html"
 
 *Part 1 of 7 in The Market Checklist.*
 
-Set the market regime before opening a scanner. The decision is practical: choose normal, reduced, or no new risk for the session, then apply the matching playbook. Do not turn a mixed dashboard into a confident forecast. A regime label is a constraint on exposure, setup selection, and holding period, not a prediction of the next index move.
+The first decision of a session is not which stock to buy. It is what kind of weather you are trading in. The same breakout, the same volume, the same chart, behaves very differently depending on the background. Read that background first, then open the scanner.
 
-Use the same four observations each time:
+I score six things from 0 to 100 and take the average. Above 70 I call it risk-on. Below 30, risk-off. Between the two, something in transition.
 
-1. **Broad trend:** Is the primary index above or below a preselected intermediate and long-term trend measure? Are those measures rising or falling?
-2. **Expected volatility:** Is option-implied volatility calm, expanding, or dislocated relative to its own recent range? The VIX reflects expected S&P 500 volatility derived from index options; it is not a direct reading of fear or future direction.
-3. **Rates and funding:** Are Treasury yields moving smoothly or repricing sharply across maturities? Add one credit-spread series if you trade credit-sensitive equities.
-4. **Known events:** Are an FOMC decision, inflation release, employment report, or major portfolio earnings event due before the planned exit?
+- Expected volatility. The VIX is what option prices imply about how much the S&P 500 will swing over the next 30 days. Under 15 scores 100. Around 15 to 25 scores 50. Above 28 scores 0.
+- Index trend. Where the S&P 500 sits against its 50-day and 200-day averages. Above the 50-day scores 100; below the 200-day scores 0; stuck between them scores 50, because that zone is a coin toss dressed up as a trend.
+- Credit. The ratio of high-yield corporate bonds to investment-grade ones. When lenders get nervous they sell the risky bonds before anyone sells shares.
+- The dollar. A rising dollar usually means money is hiding, not hunting.
+- Long Treasuries. Rising prices mean institutions are buying safety. Falling prices during an equity sell-off is the rarer, uglier case: everyone needs cash at once.
+- Liquidity. Central bank balance sheet, overnight funding, reverse repo. Money getting tighter squeezes valuations long before earnings show it.
 
-Record observations before assigning the label. A fixed score can hide disagreement among inputs, so write one sentence explaining which condition controls the decision.
+Here is what that looked like on 13 March 2026. Inflation came in at +3.1% at 14:30 UTC. Within the hour the VIX printed 29.4, long Treasuries were sold hard, the dollar bounced, and the score landed at 31 out of 100. The playbook that day was straightforward: no growth exposure, hedges on, cash for the rest, and no new unhedged longs until the VIX settled back under 25.
 
-**Worked procedure:** Suppose the broad index remains above its long-term trend, but implied volatility is expanding, Treasury yields are repricing quickly, and a scheduled policy decision falls inside the intended holding period. Calling that simply “bullish” discards the relevant execution risk. A defensible classification is “trend intact, event risk elevated.” The matching action might permit only liquid continuation setups at reduced size, prohibit new overnight positions before the decision, and reject trades that require a tight stop. Those are operating choices, not claims that prices must fall.
+The score had been sliding for weeks before that. Late January it read 68. End of February, 46, with the VIX at 24.1 and liquidity contracting. On 10 March it was 52, VIX 22.8, index caught between its two averages. Nothing dramatic happened on any single day. That slow kind of decay is more dangerous than a shock, because it gives you time to talk yourself out of noticing.
 
-**Regime card**
+The label changes what you are allowed to do, not what you predict. At a score near 31, momentum trades drop to about 10% of the book and hedges do the work. Near 75, momentum can carry half of it. Same trader, same skills, different permissions.
 
-- Timestamp the index, volatility, yield, and calendar observations.
-- Write the regime label and the condition that would change it.
-- Select the allowed setup types, total exposure, and overnight policy.
-- Apply the rule before looking at individual candidates.
+Fifteen minutes, in this order:
 
-The framework has an important limit: markets can change state faster than end-of-day inputs update. A surprise headline, liquidity break, or opening gap can invalidate the morning classification. Reassess when a predefined condition changes, but do not relabel the regime merely to justify a position already losing money. Also avoid treating correlation among the four observations as causation. They are risk context, not a mechanical explanation of price.
+- Check the VIX level, then compare it with the three-month VIX. Spot above three-month means acute stress, and that comparison beats the raw level.
+- Record where the index closed against its 50-day and 200-day averages.
+- Track the high-yield to investment-grade ratio over five sessions. Direction matters more than the level.
+- Look at the dollar on a four-hour chart, not just daily, and note today's scheduled data.
+- Score each input 0, 50 or 100. Average them. Write the number down before you open a single position.
+
+The last step matters most. Score it first, or you will read the same inputs to fit the trade you already want.
+
+Limitation: end-of-day inputs cannot keep up with a headline, a funding break, or a gap at the open. Reassess when a condition you named in advance actually changes. Do not relabel the regime to excuse a position that is already losing. And these six inputs are context, not a mechanism. They describe the weather; they do not cause it.
 
 Sources: [Federal Reserve: Financial Stability Framework](https://www.federalreserve.gov/publications/november-2024-financial-stability-report-purpose-and-framework.htm), [Cboe: VIX Methodology](https://cdn.cboe.com/api/global/us_indices/governance/VIX_Methodology.pdf), [U.S. Treasury: Daily Treasury Rates](https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve).
 

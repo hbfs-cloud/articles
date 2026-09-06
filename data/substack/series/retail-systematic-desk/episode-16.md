@@ -12,15 +12,17 @@ send_email: false
 
 *Part 1 of 3 in Build a Scanner That Can Say No. Lesson 16 of 45 in Build a Retail Systematic Desk, Safely.*
 
-A scanner is a funnel, not a recommendation engine. Begin with a defined universe and inexpensive eligibility checks. Only survivors receive deeper technical, event, filing and peer research. This keeps cost bounded and makes every rejection traceable.
+A scanner narrows. It does not advise. Cheap checks run on everything, and only the survivors earn the slow work of reading a filing or checking an earnings date.
 
-**Input from last Friday:** The accepted offline replay bundle.
+Here is a toy run, with counts invented to show the shape rather than measured in any real session. 5,397 symbols go in. A liquidity floor, meaning a minimum on how much stock changes hands on an average day so you can get back out, leaves 2,403. A price and session filter leaves 812. An event gate, which drops anything reporting earnings inside the holding window, leaves 11. Eleven names deserve research. The other 5,386 never cost you a second.
 
-**Friday deliverable:** A two-stage scanner run record, owned by the desk operator and retained in the review bundle.
+Last week's replay bundle is the input. This week it feeds a funnel.
+
+**Friday deliverable:** a two-stage run record, where stage one lists the candidates and stage two lists the evidence that governs them.
 
 ## Build this
 
-Split the run into candidate discovery and governing evidence. Persist both stages. Use stable tie-breaks and per-candidate gates. Do not let a language model transport raw data or recalculate rankings.
+Save both stages separately, and never let stage two quietly rewrite stage one. Use a stable tie-break: when two candidates land on the same score, the order must be settled by something fixed such as the symbol string, not by whichever row the code happened to read first. A language model may read the record. It must not carry the numbers or redo the ranking.
 
 ### Minimum record
 
@@ -32,18 +34,18 @@ Split the run into candidate discovery and governing evidence. Persist both stag
 
 ## Test it before moving on
 
-Run the same snapshot twice and require identical candidates, ranks and reasons. Remove one expensive enrichment source and confirm only candidates requiring it become ineligible.
+Run the same frozen snapshot twice. Same 11 names, same ranks, same reasons, or something in your code is reading the clock when it should be reading the file. Then unplug one expensive source, the filings feed for instance, and confirm that only the candidates needing it turn ineligible. In the toy run that was 3 of the 11; the remaining 8 came through untouched.
 
-**Operating limit:** The two-stage scanner run record is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** every count above is a teaching number on paper. No live thresholds, no account, no claim that any of it pays.
 
-**Further reading for the two-stage scanner run record (context, not implementation evidence):** [Investor.gov: Researching Investments](https://www.investor.gov/introduction-investing/getting-started/researching-investments); [Investor.gov: How to Read a 10-K](https://www.investor.gov/introduction-investing/getting-started/researching-investments/how-read-10-k)
+For context, [NYSE hours and calendars](https://www.nyse.com/markets/hours-calendars) defines the session boundaries your first filter depends on, and the [SEC on trade execution](https://www.sec.gov/investor/pubs/tradexec.htm) explains why a thin, wide name is expensive long before it is wrong.
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the two-stage scanner run record only when the test above passes and its retained output matches the minimum record.
+**GO:** two runs, identical output, both stages on disk.
 
-**NO-GO:** Do not publish a ranked name until all evidence required by its setup has completed.
+**NO-GO:** nothing gets published while evidence its setup requires is still pending. Half-checked is not checked.
 
-**Next Friday:** Carry the accepted two-stage scanner run record into Zero Candidates Is a Valid Outcome.
+**Next Friday:** the run record carries into Zero Candidates Is a Valid Outcome.

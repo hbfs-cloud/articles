@@ -12,15 +12,23 @@ send_email: false
 
 *Part 1 of 3 in Connect a Broker Without Losing Control. Lesson 37 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Order types, extended hours, fractional quantities and native protection vary by account and venue. Before any real credential is connected, establish least privilege, secret storage and rotation, paper/live isolation, controlled egress, redacted audit logs and an independent revoke path. A generic broker label is not enough.
+Two accounts at the same broker do not do the same things. One accepts an entry with its protective exit attached, handled broker-side. The next accepts the entry and silently drops the exit. Fractional quantities, session hours, which exit types are native: all of it varies by account, by venue, occasionally by the week.
 
-**Input from last Friday:** The accepted terminal run envelope.
+Discovery is therefore not setup work you do once. It runs at the start of every session and again immediately before anything is placed.
 
-**Friday deliverable:** A broker security and capability preflight, owned by the desk operator and retained in the review bundle.
+Toy preflight, invented figures: 14 capabilities queried, 11 supported, 2 unsupported, 1 returning nothing at all. Unknown is not a soft yes. It is refused until somebody answers the question.
+
+**Input from last Friday:** the accepted terminal run envelope.
+
+**Friday deliverable:** a broker preflight report, owned by the desk operator and kept in the review bundle.
 
 ## Build this
 
-Complete the security baseline, then fetch capabilities and account safety state at run start and again before mutation. Classify unsupported requirements precisely. Never downgrade a protected order to a weaker local approximation in silence.
+Before the first real credential exists, the unglamorous half. Least privilege, meaning the key can trade this one account and do nothing else. Secrets in a store rather than a file beside the code. A rotation date in the calendar. Paper and live in separate processes with separate keys, so a mistyped flag cannot cross the line. Outbound traffic limited to the broker's endpoints. Tokens stripped from logs. And a revoke path that works from a phone at three in the morning.
+
+Then query capabilities and account state at run start and again before every change, storing the answers with the run rather than in somebody's memory. Classify precisely: which capability, which account, which venue, which session.
+
+Never approximate a protective exit in silence. A local imitation exists only while your process is alive, and that difference surfaces on exactly the day your process is not.
 
 ### Minimum record
 
@@ -34,18 +42,18 @@ Complete the security baseline, then fetch capabilities and account safety state
 
 ## Test it before moving on
 
-Ask a limited adapter to execute a plan requiring unsupported protection. It must refuse before entry. A reduction or close may follow a separate contract that does not require new-position protection.
+Hand a deliberately limited adapter a plan requiring broker-side protection. It must refuse before the entry, not after. Before is the entire test.
 
-**Operating limit:** The broker security and capability preflight is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+Then check the asymmetry: reducing or closing an existing position runs under a different contract, one that does not demand new protection. A system that cannot exit is worse than one that cannot enter.
 
-**Further reading for the broker security and capability preflight (context, not implementation evidence):** [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders); [FINRA: Extended-Hours Trading](https://www.finra.org/investors/insights/extended-hours-trading)
+Last, the clock. A price-capped order valid only in the regular session behaves differently when the run drifts past the close ([Investor.gov: Limit Orders](https://www.investor.gov/introduction-investing/investing-basics/glossary/limit-orders); [FINRA: Extended-Hours Trading](https://www.finra.org/investors/insights/extended-hours-trading)).
 
-Educational, not investment advice.
+**Operating limit:** written against paper connections only, with no live credential, no account detail, no deployed configuration and no return figure. Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the broker security and capability preflight only when the test above passes and its retained output matches the minimum record.
+**GO:** accept the preflight when the limited adapter refuses early and the retained output carries all seven fields.
 
-**NO-GO:** If required-before-fill protection cannot be guaranteed, reject the candidate.
+**NO-GO:** if protection cannot be guaranteed before the fill, drop the candidate. Do not place the entry and improvise afterwards.
 
-**Next Friday:** Carry the accepted broker security and capability preflight into Make Placement Idempotent.
+**Next Friday:** carry the accepted preflight into Make Placement Idempotent.

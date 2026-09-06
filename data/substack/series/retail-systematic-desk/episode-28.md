@@ -12,39 +12,39 @@ send_email: false
 
 *Part 1 of 3 in Control the Portfolio Before the Trade. Lesson 28 of 45 in Build a Retail Systematic Desk, Safely.*
 
-A position can fit its nominal stop and still make the portfolio fragile. Stops can gap and fill with slippage, so a loss budget is a target rather than a guaranteed ceiling. Size must also respect cash, concentration, gross and net exposure, liquidity, currency and event clustering.
+A stop distance tells you what one trade costs when the exit works. Size has to answer the harder question: what the book carries when it doesn't. Prices jump over stops overnight. Fills land worse than the level you asked for. So the loss budget is an aim, not a wall.
 
-**Input from last Friday:** The accepted locked validation protocol.
+Which means you compute the quantity several times, once per ceiling, and keep the smallest.
 
-**Friday deliverable:** A stressed portfolio sizing sheet, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** the accepted validation protocol.
+
+**Friday deliverable:** a stressed sizing sheet, owned by the desk operator and kept in the review bundle.
 
 ## Build this
 
-Calculate candidate size from nominal stop distance and stressed gap, slippage, liquidity and event scenarios, then apply portfolio caps. Round down to supported quantities. Record every ceiling and the scenario that governed.
+Four ceilings. The loss budget. The stressed version of it, same stop widened by the worst overnight jump you are willing to assume. The concentration cap, meaning the most any single name may weigh. And the liquidity cap, tied to how many shares change hands on an ordinary day, because a position you cannot leave is not a position you own.
+
+Made-up figures, here only to show the shape of the sheet: a paper book of 100,000 units, 0.5% budget per trade, so 500 units of loss allowed. SYM_A stops 4% away, which permits 12,500 of exposure. Widen that stop to a 9% gap and the same 500 units allows 5,500. Concentration caps the name at 8,000. Liquidity caps it at 4,200. The sheet keeps 4,200, rounds down to a quantity the broker will accept, and records that liquidity governed, not risk. People skip that last field. It is the only one that later explains why the position was small.
 
 ### Minimum record
 
 - `risk_budget_target`
 - `nominal_stop_loss`
-- `stressed_loss`
+- `stressed_loss` — the same stop under a gap, never the clean one
 - `liquidity_cap`
 - `concentration_cap`
-- `final_qty`
+- `final_qty` — after rounding down
 
 ## Test it before moving on
 
-Create two candidates with identical stops but different sector exposure and gap stress. Their quantities should differ for explicit reasons. Missing equity, currency conversion or stress inputs must block sizing.
+Feed it two candidates with identical stop distances: one in a quiet name, one in a sector already holding half your exposure. Identical quantities mean the sheet reads the stop and nothing else. Then delete the account equity and the currency rate. It must refuse to size. A sheet that silently falls back on a default is worse than one that halts.
 
-**Operating limit:** The stressed portfolio sizing sheet is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
-
-**Further reading for the stressed portfolio sizing sheet (context, not implementation evidence):** [Investor.gov: Five Questions to Ask Before You Invest](https://www.investor.gov/introduction-investing/getting-started/five-questions-ask-you-invest); [FINRA: Concentration Risk](https://www.finra.org/investors/insights/concentration-risk)
-
-Educational, not investment advice.
+**Operating limit:** sizing runs once, before the session, on paper figures only. No intraday top-ups.
 
 ## Release decision
 
-**GO:** Accept the stressed portfolio sizing sheet only when the test above passes and its retained output matches the minimum record.
+**GO:** accept when both tests behave and every retained row carries the six fields, governing ceiling included.
 
-**NO-GO:** Never increase size merely because the broker reports unused buying power.
+**NO-GO:** unused buying power is not permission. Borrowed room widens the loss on an unchanged stop. On what that room costs: [SEC: Margin](https://www.sec.gov/investor/pubs/margin.htm); [FINRA: Margin Accounts](https://www.finra.org/rules-guidance/key-topics/margin-accounts). Educational, not investment advice.
 
-**Next Friday:** Carry the accepted stressed portfolio sizing sheet into Find Correlation and Hidden Factor Bets.
+**Next Friday:** the accepted sheet goes into Find Correlation and Hidden Factor Bets.

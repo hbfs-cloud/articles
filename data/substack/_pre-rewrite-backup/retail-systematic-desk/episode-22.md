@@ -1,0 +1,50 @@
+---
+title: "Put Strategy Rules in Versioned Configuration"
+subtitle: "Code should execute a declared contract, not hide tunable behavior."
+series_id: "retail-systematic-desk"
+module_id: "decision-contract"
+module_title: "Make Strategy Decisions Machine-Readable"
+module_episode: 1
+episode_number: 22
+scheduled_at: "2027-01-29T13:00:00.000Z"
+send_email: false
+---
+
+*Part 1 of 3 in Make Strategy Decisions Machine-Readable. Lesson 22 of 45 in Build a Retail Systematic Desk, Safely.*
+
+Configuration makes strategy changes reviewable and forward-dated. It also lets the same engine run different mandates without hardcoded symbol or strategy lists. The public lesson is the contract pattern; actual parameters, weights and deployed combinations stay private.
+
+**Input from last Friday:** The accepted expiring conditional plan.
+
+**Friday deliverable:** A versioned strategy configuration schema, owned by the desk operator and retained in the review bundle.
+
+## Build this
+
+Define a schema for universe reference, schedule, required features, risk ownership and output type. Version every change and record its effective date. Defaults must be conservative and new engine features should be opt-in.
+
+### Minimum record
+
+- `config_id`
+- `version`
+- `effective_from`
+- `universe_ref`
+- `schedule`
+- `feature_flags`
+
+## Test it before moving on
+
+Load an old and new configuration against the same frozen snapshot. The engine should report which version governed each decision and reject unknown fields or missing required values.
+
+**Operating limit:** The versioned strategy configuration schema is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+
+**Further reading for the versioned strategy configuration schema (context, not implementation evidence):** [CFTC: Trading Systems Advisory](https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/fraudadv_tradingsystem.html); [NIST: Bootstrap Plot](https://www.itl.nist.gov/div898/handbook/eda/section3/bootplot.htm)
+
+Educational, not investment advice.
+
+## Release decision
+
+**GO:** Accept the versioned strategy configuration schema only when the test above passes and its retained output matches the minimum record.
+
+**NO-GO:** Never edit historical configuration to make a prior result look as if it used today's rules.
+
+**Next Friday:** Carry the accepted versioned strategy configuration schema into Persist State, Validity and Revisions.

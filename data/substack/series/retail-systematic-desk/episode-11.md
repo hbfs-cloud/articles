@@ -12,38 +12,32 @@ send_email: false
 
 *Part 2 of 3 in Treat Identity and Time as Data. Lesson 11 of 45 in Build a Retail Systematic Desk, Safely.*
 
-A filing may describe an earlier transaction, a quote may be observed after the market closes, and a dataset may be ingested much later. Using one date field for all three creates lookahead and false freshness. Every evidence item should state when the event happened and when the system could first know it.
+One row of data can carry four different dates, and beginners squash them into one column called date. When something happened. When the public could first read about it. When your program looked. When it finally landed in your database. Squash them and your backtest starts reading tomorrow's newspaper, which is the single most flattering bug in this whole craft.
 
-**Input from last Friday:** The accepted effective-dated instrument record.
+**Input from last Friday:** the accepted effective-dated instrument record.
 
-**Friday deliverable:** A temporal-field contract, owned by the desk operator and retained in the review bundle.
+**Friday deliverable:** a temporal-field contract, filed with the run's paperwork, a contract here being a short written rule about which date means what.
 
 ## Build this
 
-Adopt explicit temporal names and require a temporal mode on each query. Point-in-time analysis filters by first availability, not by the date printed inside the document. Current-only composites must reject historical reconstruction requests.
+Give the four dates four names and never let them collapse: event time, available-at, observed-at, ingested-at. Then make every query state its mode. A point-in-time query, meaning one that replays the past as it was known then, filters on available-at, not on the date printed inside the document. A current-value query answers about today only, and must refuse a request to reconstruct history rather than pretending.
 
-### Minimum record
-
-- `event_time`
-- `available_at`
-- `observed_at`
-- `ingested_at`
-- `temporal_mode`
+Toy example, dates invented for illustration: an insider transaction in SYM_A executed on the 3rd, filed and public on the 7th, pulled by the loader on the 9th, and a later correction that arrives on the 21st. Four numbers, one row. A replay standing on the 5th that can see this row is cheating, and it will show up as a strategy that looks unusually good around news.
 
 ## Test it before moving on
 
-Construct a filing whose transaction date precedes its publication. A replay before publication must not see it; a replay after publication may. Repeat with a corrected dataset that arrived later.
+Build that row by hand and replay it twice, once from the 5th and once from the 8th. The first must not see it. The second must. Then run the corrected version and confirm a replay of the 10th sees the original figures, not the tidy revision that only existed eleven days later.
 
-**Operating limit:** The temporal-field contract is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** paper stage, public write-up, no tuned parameter and no account detail, and nothing here is a performance claim.
 
-**Further reading for the temporal-field contract (context, not implementation evidence):** [Investor.gov: Using EDGAR to Research Investments](https://www.investor.gov/introduction-investing/getting-started/researching-investments/using-edgar-research-investments); [SEC: Form 8-K](https://www.sec.gov/info/edgar/forms/form8-k.pdf)
+Useful background: [Investor.gov on using EDGAR](https://www.investor.gov/introduction-investing/getting-started/researching-investments/using-edgar-research-investments), where the gap between a transaction date and a publication date is visible on the page, and [Investor.gov on broker-dealer record-keeping](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements), a reminder that dated, retained records are the industry's own answer to this problem.
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the temporal-field contract only when the test above passes and its retained output matches the minimum record.
+**GO:** accept the contract when both replays behave, the correction test behaves, and every evidence row carries all four dates plus its mode.
 
-**NO-GO:** Do not substitute a current value when the requested historical snapshot is missing.
+**NO-GO:** never substitute today's value when the historical snapshot you asked for is missing. Return nothing and let the run stop.
 
-**Next Friday:** Carry the accepted temporal-field contract into Corporate Events Can Change the Instrument.
+**Next Friday:** the accepted contract carries into Corporate Events Can Change the Instrument.

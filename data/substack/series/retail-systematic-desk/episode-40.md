@@ -12,39 +12,38 @@ send_email: false
 
 *Part 1 of 3 in Design a Decision-First Retail Desktop. Lesson 40 of 45 in Build a Retail Systematic Desk, Safely.*
 
-A retail expert should not hunt through charts to learn whether a plan is active. Lead with status, validity, trigger, invalidation, risk state and next check. Detailed evidence belongs below, visible by default or through clear section navigation rather than one giant hidden disclosure.
+Watch somebody open their own desk. They scroll. They scroll again, hunting a chart, then a table, then a badge, and two minutes later they still cannot say whether the plan is live. The first screen, meaning the part visible before any scrolling, has to answer that on its own.
 
-**Input from last Friday:** The accepted broker reconciliation report.
+**Input from last Friday:** the reconciliation report from the broker module.
 
-**Friday deliverable:** A decision-first desktop summary, owned by the desk operator and retained in the review bundle.
+**Friday deliverable:** A decision-first desktop summary, owned by the desk operator and kept with the week's evidence.
 
 ## Build this
 
-Design a summary band, a systematic control checklist and a scenario panel. Use consistent states such as ready, wait, blocked, expired and data insufficient. Keep the authoritative values in structured data and render them once.
+Six answers go at the top, written in words rather than decoration: is the plan active, until when, what triggers it, what proves it wrong, what risk is already on, and when do I look again. The fourth of those is the invalidation, the price or condition that says the idea has failed. Write it as a number, not as a mood.
 
-### Minimum record
+Beneath that sits a checklist of the systematic controls, each one either passing or blocking, and a small scenario panel. Use the same five state words everywhere: ready, wait, blocked, expired, insufficient data. Not "ok" on one page and "green" on the next.
 
-- `decision_status`
-- `validity`
-- `trigger`
-- `invalidation`
-- `blocking_checks`
-- `next_observation`
+Compute those values once, in the data layer, and let the page render them. A number recomputed inside a template will eventually disagree with itself, and you will trust the wrong copy.
+
+Keep: `decision_status`, `validity`, `trigger`, `invalidation`, `blocking_checks`, `next_observation`.
 
 ## Test it before moving on
 
-Give the page to a user for thirty seconds. They should identify whether action is allowed, the main risk and the condition that changes the status without scrolling through the full report.
+Thirty seconds, one reader, no scrolling. Then three questions: can I act, what is the main risk, what would change the answer. Three right answers, or the layout has failed and the fix is layout, not more data.
 
-**Operating limit:** The decision-first desktop summary is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+The following budget is illustrative, invented to show proportions: a toy page carries 6 fields above the fold, 11 controls listed, 2 of them blocking, and 340 rows of supporting evidence further down that the reader never needs to reach.
 
-**Further reading for the decision-first desktop summary (context, not implementation evidence):** [Investor.gov: Five Questions to Ask Before You Invest](https://www.investor.gov/introduction-investing/getting-started/five-questions-ask-you-invest); [FINRA: Concentration Risk](https://www.finra.org/investors/insights/concentration-risk)
+**Operating limit:** a public teaching build over paper data. Live position sizes have no business on this screen.
+
+Further reading: [Investor.gov's five questions to ask before investing](https://www.investor.gov/introduction-investing/getting-started/five-questions-ask-you-invest) and [FINRA on concentration risk](https://www.finra.org/investors/insights/concentration-risk).
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the decision-first desktop summary only when the test above passes and its retained output matches the minimum record.
+**GO:** three readers out of three answer all three questions without scrolling.
 
-**NO-GO:** Do not use a grade, gauge or color as a substitute for the decision state.
+**NO-GO:** a letter grade, a dial, or a colour is not a decision state. Colour may repeat the answer; it cannot carry it.
 
-**Next Friday:** Carry the accepted decision-first desktop summary into Make Missing Data Actionable.
+**Next Friday:** the summary carries into Make Missing Data Actionable.

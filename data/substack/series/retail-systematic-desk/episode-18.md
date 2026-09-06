@@ -12,15 +12,15 @@ send_email: false
 
 *Part 3 of 3 in Build a Scanner That Can Say No. Lesson 18 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Opaque scores teach users to chase the top row. A better scanner exposes the controlling gate: stale data, event veto, weak liquidity, unreachable target, missing filing review or portfolio conflict. The reason should come from structured observations, not generated prose.
+A score with no reason teaches exactly one behavior: click the top row. Publish the gate that killed the name instead, and readers learn your rules by reading your refusals.
 
-**Input from last Friday:** The accepted no-setup run record.
+Two toy rejections, invented for teaching and not observations of any listed company. SYM_A fails on liquidity: average spread 0.8% against a ceiling of 0.3%, the spread being the gap between what buyers offer and sellers ask, which you pay on the way in and again on the way out. SYM_K fails on the event gate: earnings due in 3 days against a 5-day exclusion. Two names, two sentences, no mysterious number out of 100.
 
-**Friday deliverable:** A gate-by-gate rejection report, owned by the desk operator and retained in the review bundle.
+**Friday deliverable:** a gate-by-gate rejection report, built from what was measured rather than from prose a model wrote afterwards.
 
 ## Build this
 
-Store each gate as field, operator, threshold class, observed value, source and pass state. Public tutorials should use toy values and generic rule classes; production parameters remain private.
+Every gate is a row of structured facts: field, operator, rule class, observed value, pass state, source. Publish the class, not your number. "Liquidity ceiling" is a fair thing to show a reader; the exact threshold you tuned stays private.
 
 ### Minimum record
 
@@ -31,20 +31,22 @@ Store each gate as field, operator, threshold class, observed value, source and 
 - `passed`
 - `source`
 
+A candidate often fails several gates at once. Pick one controlling gate by fixed priority, data freshness first, then risk, then setup quality, and show the rest underneath. In the toy run, 4 of the 11 candidates failed on more than one gate.
+
 ## Test it before moving on
 
-For a fixture candidate, alter one observation at a time and confirm only the matching gate changes. The displayed value must equal the value used by the gate.
+Take one fixture candidate and change a single observation. Move that spread from 0.8% to 0.2% and only the liquidity row may flip. If the event row moves too, your gates are sharing state they should not share. Then compare the printed value against the value the gate compared. A report showing 0.8% while the code tested 0.75% is a small lie that will teach a reader the wrong rule.
 
-**Operating limit:** The gate-by-gate rejection report is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** fixtures on paper, invented thresholds, no account and no performance claim. The deliverable here is an audit trail.
 
-**Further reading for the gate-by-gate rejection report (context, not implementation evidence):** [Investor.gov: Researching Investments](https://www.investor.gov/introduction-investing/getting-started/researching-investments); [Investor.gov: How to Read a 10-K](https://www.investor.gov/introduction-investing/getting-started/researching-investments/how-read-10-k)
+Background reading: [FINRA on best execution](https://www.finra.org/rules-guidance/key-topics/best-execution) for why spread and venue quality deserve a gate at all, and [NIST on measurement processes](https://www.itl.nist.gov/div898/handbook/mpc/section1/mpc11.htm) for the discipline of making the displayed number and the measured number agree.
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the gate-by-gate rejection report only when the test above passes and its retained output matches the minimum record.
+**GO:** one changed observation flips one row, and every displayed value matches the value tested.
 
-**NO-GO:** If a user cannot tell whether a name failed on data, setup or risk, the scanner is not actionable.
+**NO-GO:** if a reader cannot tell whether a name died on data, on setup or on risk, the report is decoration.
 
-**Next Friday:** Carry the accepted gate-by-gate rejection report into Certify a Candidate With Independent Evidence.
+**Next Friday:** the rejection report carries into Certify a Candidate With Independent Evidence.

@@ -8,26 +8,29 @@ source_path: "series/piloter-son-portefeuille/part5-pause-vacances/index.html"
 
 *Part 5 of 6 in Operate a Portfolio, Not a Collection of Trades.*
 
-Choose the portfolio state before an absence or operational disruption: normal, reduced, no-new-risk, or liquidation. These states are not interchangeable. Pausing new entries leaves existing market risk in place; reducing exposure changes it; liquidation seeks to remove it and introduces execution risk of its own.
+Two ways exist to stop taking risk, and they cost wildly different amounts.
 
-Start with the reason and duration. A planned absence may allow an orderly review of each position. A data failure can justify blocking new orders immediately. A breached mandate or compromised account may require emergency action. Do not use the vague instruction "be careful" where an executable state is possible.
+The frightened way sells everything at once, at whatever price the screen happens to show. The patient way switches off two things only: new positions, and swapping one holding for a supposedly better one. Everything already open keeps its own four guardrails — stop loss, profit target, time limit, trailing stop — and closes when those say so. Exposure then falls like a staircase instead of a cliff. A healthy trade does not become unhealthy because you decided to take a week off.
 
-Use this pause checklist:
+Ask yourself one question before touching anything. Do I want to stop taking new risk, or do I want to escape the risk I already carry? Almost always it is the first, and the first does not require a fire sale.
 
-- Name the state, reason, owner, start time, and review time.
-- Block or cancel orders that conflict with the state.
-- Reconcile open positions, leverage, and concentration.
-- Verify accepted exits and exception contacts.
-- Reduce size when monitoring capacity no longer matches the risk.
-- Require a documented restart gate.
+How much to trim depends on why you are trimming. A vague uneasy feeling about the market: cut roughly a fifth to a third, usually one or two of the wildest lines. Conditions clearly turning against you: cut forty to fifty percent, empty the clusters that all move together, tighten what remains. Your own losses reaching the line you wrote down in advance, say six to eight percent off the account's high: cut half to seventy percent and keep only the positions you would buy again today.
 
-For a planned pause, inspect every open position against current thesis, event calendar, liquidity, leverage, and shared exposure. Decide whether the strategy can manage the position without discretionary intervention. If not, reduce or close it under a prewritten rule. Tightening every stop to keep the same size is not equivalent: it changes the trade thesis and may increase noise-driven exits without addressing gap risk.
+Sell in the wrong order and the trim achieves nothing. The panicked reflex sells what is liquid and in profit, because that feels good, which leaves the junk and the losers behind. Go the other way. Riskiest first: tiny, thinly traded, wildly swinging names. Then the ones that all rise and fall together, since keeping one of a group of five removes most of the concentration. Then the ideas you no longer believe in. Your best positions go last, with a tighter stop.
 
-Consider a concrete absence procedure. At the final staffed review, block new entries after a recorded timestamp. Reconcile positions with the broker, cancel stale entry orders, confirm which exit orders are accepted, and document who can act on an exception. For each retained position, record quantity, current thesis, invalidation, scheduled events, financing, and the response to an order rejection. On return, do not restore normal size until data, broker access, exposure, and strategy assumptions have been checked again.
+Now the week away with no reliable signal. A portfolio you cannot watch has to be one that does not need watching, and you build that before leaving, not from an airport.
 
-Order labels do not remove execution risk. Investor.gov explains that a stop order becomes a market order when triggered and may fill away from the stop price; a stop-limit order controls price but may not execute. Linked or automated orders can also be rejected, canceled, or configured incorrectly. Confirm broker-specific behavior rather than treating an order ticket as insurance.
+- Halve the number of open positions, then reduce size on what stays.
+- Check that every single line has both a stop and a target sitting at the broker, linked so one cancels the other.
+- Read the calendar for earnings and dividend dates falling during your absence, and close or shrink anything reporting.
+- Write down, for each position kept, its quantity, its reason, and what would prove it wrong.
+- On return, ramp back in steps rather than restoring full size on day one.
 
-**Limitation:** an orderly pause may be impossible during a halt, outage, margin event, or abrupt liquidity loss. Closing everything can realize poor prices and abandon valid positions; holding can expose the portfolio to unmanaged gaps. In a margin account, the broker may liquidate securities without consulting the customer. No pause design eliminates that trade-off.
+Cutting size beats tightening every stop. A tight stop asks the market to stay quiet for a week, a bet it rarely loses. Smaller positions with normal stops leave room to breathe.
+
+Order tickets are not insurance either. Investor.gov explains that a stop order turns into a market order once triggered and can fill well away from your price, while a stop-limit protects the price but may never execute at all. Linked orders get rejected or set up wrong. A gap through your level is covered by one thing only: size. A small position gapping 15% is an annoyance. A large one is a problem.
+
+**Limitation:** an orderly pause is impossible during a halt, an outage, or a sudden loss of buyers. Selling everything locks in bad prices and abandons good positions; holding leaves gaps unmanaged. In a margin account the broker may sell your securities without consulting you. No protocol removes that trade-off.
 
 Sources: [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders); [Investor.gov: Executing an Order](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order); [Investor.gov: Understanding Margin Accounts](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-29)
 

@@ -12,15 +12,15 @@ send_email: false
 
 *Part 3 of 3 in Treat Identity and Time as Data. Lesson 12 of 45 in Build a Retail Systematic Desk, Safely.*
 
-A price series can look continuous while shares, symbols or economic rights changed. Adjusted prices help historical return calculations but do not authorize a client to mutate live broker positions or orders. The broker may cancel, replace or adjust them first, so historical normalization and broker reconciliation are separate operations.
+A price chart can run smooth and straight while the thing underneath it quietly changed shape. A split — the company cuts each share into several smaller ones — a merger, a one-off cash payment: the line survives, the instrument does not. Adjusted history is fine for measuring past returns. It is not permission to rewrite what your broker is holding right now.
 
 **Input from last Friday:** The accepted temporal-field contract.
 
-**Friday deliverable:** A corporate-action reconciliation runbook, owned by the desk operator and retained in the review bundle.
+**Friday deliverable:** A corporate-action reconciliation runbook — one page saying who checks what, in which order — filed with the week's evidence.
 
 ## Build this
 
-Maintain effective-dated corporate actions in a deduplicated event ledger. Normalize historical data through a tested transformation layer. For live state, pause the instrument, identify documented broker behavior, fetch broker-authoritative positions and orders, and apply an explicit repair only after reconciliation.
+Keep every corporate action in one ledger, each row stamped with the date it takes effect, and collapse duplicates when two feeds report the same event. Run history through a transformation layer you have tested. For anything live, do the unclever thing: freeze the instrument, look up what your broker documents that it adjusts on its own, pull the broker's own position and order records, then apply a repair you wrote down in advance.
 
 ### Minimum record
 
@@ -33,18 +33,18 @@ Maintain effective-dated corporate actions in a deduplicated event ledger. Norma
 
 ## Test it before moving on
 
-Replay a split where the broker has already adjusted one order and canceled another. The client must not double-adjust either record; reconciliation must remain balanced and the sealed decision artifact must remain unchanged.
+Replay a split where the broker has already adjusted one resting order and cancelled another. Toy figures for illustration, not market data: the ledger takes 34 events for the month, folds two duplicate feed entries into one, and hands 33 to the client. SYM_K splits four for one. The client must touch neither of the two orders the broker already handled — repair them a second time and the paper position lands four times too large, which is the exact bug this drill exists to catch. The sealed decision file from earlier in the week comes out unchanged, byte for byte, or the run failed.
 
-**Operating limit:** The corporate-action reconciliation runbook is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** Paper only, public teaching material. No live sizing, no account numbers, and nothing here makes money.
 
-**Further reading for the corporate-action reconciliation runbook (context, not implementation evidence):** [Investor.gov: Using EDGAR to Research Investments](https://www.investor.gov/introduction-investing/getting-started/researching-investments/using-edgar-research-investments); [SEC: Form 8-K](https://www.sec.gov/info/edgar/forms/form8-k.pdf)
+Further reading: [SEC: Form 8-K](https://www.sec.gov/info/edgar/forms/form8-k.pdf); [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders)
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the corporate-action reconciliation runbook only when the test above passes and its retained output matches the minimum record.
+**GO:** The runbook passes the replay above and what it stored matches the minimum record, field for field.
 
-**NO-GO:** Pause the instrument when a material corporate action cannot be reconciled across data and broker records.
+**NO-GO:** An action you cannot line up across data and broker records means the instrument stays frozen until you can.
 
-**Next Friday:** Carry the accepted corporate-action reconciliation runbook into Use One Snapshot for One Decision.
+**Next Friday:** Carry the accepted runbook into Use One Snapshot for One Decision.

@@ -12,15 +12,19 @@ send_email: false
 
 *Part 3 of 3 in Prove Execution in a Simulator. Lesson 33 of 45 in Build a Retail Systematic Desk, Safely.*
 
-The hardest execution bug is uncertainty after a request may have reached the broker. A local fingerprint alone never proves non-execution. Durable pre-submit intent, broker idempotency keys where supported, complete paginated history and bounded reconciliation reduce risk; unresolved ambiguity must forbid automatic retry.
+A rejected order is the easy case. Silence is the hard one: you sent something, the connection died mid-sentence, and now you cannot say whether the broker has it. Nothing on your own machine answers that question. Only the broker's records do.
 
-**Input from last Friday:** The accepted order-state transition suite.
+Toy run, figures invented to show the shape and nothing else: 40 submissions into a simulator, network cut at a random moment each time. 31 answered normally. 6 timed out and turned up in the broker's history anyway. 3 timed out and never existed. From your side those last two groups look identical for several seconds, and a client that retries on impulse ends up with a double position in 6 cases out of 9.
 
-**Friday deliverable:** An uncertain-submit recovery test, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** the accepted order-state transition suite.
+
+**Friday deliverable:** an uncertain-submit drill, owned by the desk operator and kept in the review bundle.
 
 ## Build this
 
-Persist request identity and business intent before submission. On timeout, inspect complete open, completed, fill and execution history across a bounded consistency window. Restore protections and group state after restart, but keep an explicit unknown state when broker evidence is incomplete.
+Write the intent down before sending it, never after. Two labels, two jobs. The request identifier names this attempt. The idempotency key is a label the broker itself understands, so the same label arriving twice counts once — where your broker supports that, and plenty do not. Assuming support you never verified is one of the shorter routes to a duplicate.
+
+After a timeout, read the broker's whole history: working orders, completed orders, individual fills, every page of each. Then wait out the consistency window, meaning the few seconds a broker may need before an order it has already accepted shows up in what it reports back to you.
 
 ### Minimum record
 
@@ -33,18 +37,14 @@ Persist request identity and business intent before submission. On timeout, insp
 
 ## Test it before moving on
 
-Drop the response after acceptance, hide the order during an eventual-consistency window, then restart. The client must remain unknown and refuse a duplicate until authoritative evidence resolves the intent. Repeat after a partial fill.
+Drop the response after acceptance. Hide the order for the length of the consistency window. Restart the process. The client has to sit in `unknown`, send nothing, and move only when the broker's own evidence arrives. Run the same test again on a partial fill, where 40 shares of a 100-share intent already exist (quantities illustrative).
 
-**Operating limit:** The uncertain-submit recovery test is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
-
-**Further reading for the uncertain-submit recovery test (context, not implementation evidence):** [Investor.gov: Broker-Dealer Record-Keeping Requirements](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements); [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations)
-
-Educational, not investment advice.
+**Operating limit:** simulator only, no live credential anywhere in the loop, no account detail, no production parameter, and no claim of profitability. Educational, not investment advice. On what an execution report is supposed to contain: [Investor.gov: Executing an Order](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order) and [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations).
 
 ## Release decision
 
-**GO:** Accept the uncertain-submit recovery test only when the test above passes and its retained output matches the minimum record.
+**GO:** accept the drill when `unknown` survives a restart untouched and the retained output carries all six fields.
 
-**NO-GO:** Do not use a fresh request identifier for a technical retry of identical intent.
+**NO-GO:** never mint a fresh request identifier for a technical retry of the same intent. New label, new order.
 
-**Next Friday:** Carry the accepted uncertain-submit recovery test into Use an Append-Only Decision Ledger.
+**Next Friday:** carry the accepted drill into Use an Append-Only Decision Ledger.

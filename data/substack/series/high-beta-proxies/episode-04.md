@@ -8,26 +8,32 @@ source_path: "series/proxys-haut-beta/part4-secteurs-leaders/index.html"
 
 *Part 4 of 6 in Use High-Beta Proxies Without Getting Trapped.*
 
-Do not rank sector proxies until you can explain the transmission chain from the reference to the security's cash flows. Statistical co-movement is one check. The operating link is another. A miner is not metal, a chip supplier is not an equity index, and a crypto-related company is not the token. Each adds costs, capital structure, management choices, and event timing.
+Gold at $2,000 an ounce. Cost to pull it out of the ground, $1,200. The miner keeps $800.
 
-Use a five-step map. First, name the reference exposure: price, demand, rates, or broad risk appetite. Second, identify how it reaches revenue. Third, list the variable and fixed costs between revenue and operating profit. Fourth, inspect financing, dilution, hedging, and customer concentration. Fifth, mark company events that can overwhelm the common factor.
+Now gold rises 10%, to $2,200, and the cost stays where it was for a while. The miner keeps $1,000. The metal moved 10%. The profit moved 25%. Nobody borrowed anything, and nobody used leverage in the ordinary sense. The gap between a fixed cost and a moving price did all of it.
+
+That is operating leverage, and it is the real reason a mining share often swings further than the metal. Published estimates put a senior gold-miner fund near 1.5 times the metal's moves and a junior fund nearer 2.0. Chip makers work the same way from a different direction: a fabrication plant can cost around $20 billion whether it runs full or half empty, so a 10% lift in demand can push profits 20% to 30% higher, and a 10% fall can cut them by roughly 30%.
+
+Note what the arithmetic does not do. It says nothing about the share price. Costs rise. Output slips. Hedges cap the price the company actually receives. Investors decide the business deserves a smaller multiple. The chain explains the amplification; it does not predict the return.
+
+So do not rank sector proxies until you can walk the chain out loud. A miner is not metal. A chip supplier is not an equity index. A crypto-related company is not the token.
+
+Five steps. Name the exposure: a price, demand, interest rates, or broad appetite for risk. Show how it reaches revenue. List what sits between revenue and operating profit, fixed and variable. Inspect the balance sheet, the share issuance, the hedging book and how few customers the revenue depends on. Then mark the company events that can overwhelm all of it.
 
 **Transmission map**
 
-- Define the reference instrument and holding period.
-- Trace the link from reference move to revenue and margins.
-- Read Business, Risk Factors, MD&A, and the financial statements.
-- Identify financing, dilution, hedge, and customer risks.
-- Measure shared-date beta, correlation, R-squared, and residuals.
-- Recheck the map after material filings or strategy changes.
+- Define the reference instrument and the holding period.
+- Trace the path from a reference move to revenue and margins.
+- Read the business description, risk factors, management discussion and the statements.
+- Identify financing, dilution, hedging and customer-concentration risk.
+- Measure shared-date beta, correlation, R-squared and residuals.
+- Redo the map after material filings or a change of strategy.
 
-**Worked operating-leverage example.** Consider a hypothetical producer that receives $100 per unit, incurs $80 of unit and allocated operating costs, and therefore earns $20 before financing and tax. If the selling price rises to $110 while those costs temporarily remain $80, operating profit becomes $30. The underlying price increased 10%, while operating profit increased 50%. That arithmetic explains why an equity can sometimes react more than the commodity. It does not predict the stock return. Costs may rise, production may fall, hedges may cap the realized price, or investors may change the valuation multiple.
+Sectors distort the chain in their own ways. A biotech detaches from everything on one regulatory verdict, where published outcome ranges run from roughly +50% to +200% on approval and -50% to -80% on rejection; no index move competes with that. A crypto miner stacks network difficulty, electricity contracts, machine efficiency and repeated share issuance on top of the token, which is how published estimates reach around 2.5 times Bitcoin's moves. A commodity fund may hold futures rather than the physical metal, adding contract rolls.
 
-The same discipline applies across sectors. A semiconductor supplier can add customer concentration, inventory cycles, product execution, and export controls to a broad technology reference. A biotech company can detach from its sector on clinical or regulatory news. A crypto miner adds network economics, electricity contracts, equipment efficiency, financing, and equity issuance. A commodity ETP may hold futures rather than the physical commodity, creating contract-roll and collateral effects.
+Once the economics hold up, test the statistics on matched dates. Then look at the leftovers. If several supposed proxies share a factor you never modelled, their leftovers move together too, and calling each one a separate position does not make the basket diversified.
 
-After the economic map, test the statistics on common timestamps. Report beta, correlation, R-squared, and overlapping observations. Then inspect the residual series. If several supposed proxies share an omitted sector factor, their residuals may still move together. Calling each position a separate proxy does not make the basket diversified.
-
-**Limitation:** Economic logic does not guarantee synchronized prices. Markets can price future costs, policy, or capital needs before they appear in reported results. Conversely, a strong historical regression can survive for a time after the business link has weakened. Use both lenses, and treat disagreement as a reason to reduce confidence.
+**Limitation:** Sound economic logic does not guarantee synchronised prices. Markets price future costs and policy long before results show them, and a strong historical regression can outlive the business link that created it. When the story and the statistics disagree, treat the disagreement as a reason to hold less, not as a puzzle to solve with a better window.
 
 Sources: [SEC Guide to Reading a 10-K](https://www.investor.gov/introduction-investing/getting-started/researching-investments/how-read-10-k), [CFTC Commodity ETP Advisory](https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/CustomerAdvisory_CommodityETPs.htm), [NIST Linear Least Squares Regression](https://www.itl.nist.gov/div898/handbook/pmd/section1/pmd141.htm).
 

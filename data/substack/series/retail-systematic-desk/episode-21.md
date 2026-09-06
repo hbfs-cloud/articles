@@ -12,15 +12,15 @@ send_email: false
 
 *Part 3 of 3 in Turn Candidates Into Conditional Plans. Lesson 21 of 45 in Build a Retail Systematic Desk, Safely.*
 
-A useful plan says enter if, skip if and invalidate if. It distinguishes a trigger from a blind limit order and checks whether the target is reachable within the intended horizon. The plan also expires; old levels are historical references, not standing instructions.
+A number on a chart is not a plan. It becomes one when you write down what has to happen before anything is sent, what would prove the idea wrong, and the date after which the whole thing is dead. A trigger is the condition the market must meet first. That is not the same as a resting limit order, which just sits there for weeks and gets filled by whatever bad news arrives.
 
-**Input from last Friday:** The accepted factor-documented peer map.
+**Input from last Friday:** the accepted peer map, with its factors written down.
 
-**Friday deliverable:** An expiring conditional plan, owned by the desk operator and retained in the review bundle.
+**Friday deliverable:** one expiring conditional plan, owned by you, filed with the week's paperwork.
 
 ## Build this
 
-Represent entry window, trigger, stop, targets, horizon, maximum slippage and validity as fields. Recalculate the plan after a material gap rather than moving every level to preserve the idea.
+Store the plan as fields, not as a sentence: entry window, trigger, stop (the level that says the idea failed), targets, horizon, the worst slippage you will accept — slippage being the distance between the price you wanted and the price you got — and the two validity dates. After a large overnight gap, rebuild the plan from scratch instead of dragging every level along to keep the idea alive.
 
 ### Minimum record
 
@@ -33,18 +33,18 @@ Represent entry window, trigger, stop, targets, horizon, maximum slippage and va
 
 ## Test it before moving on
 
-Test a clean trigger, a gap beyond the allowed entry, an expired plan and a price that reaches the stop before activation. Only the first scenario may arm an order.
+Feed it four cases. The figures below are invented to exercise the code; none of them are market data. SYM_A meets its trigger inside the window and arms exactly one order. SYM_B opens 4% above the entry window, so the plan recalculates and stays idle. SYM_C carries a `valid_until` that passed nine days ago and is refused on sight. SYM_D touches the stop before the trigger ever fires, so the plan closes unused. One arm, three quiet refusals. That ratio is the lesson.
 
-**Operating limit:** The expiring conditional plan is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** paper only. No live money, no real settings, no account. What you are building is the wiring, not something that earns.
 
-**Further reading for the expiring conditional plan (context, not implementation evidence):** [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders); [FINRA: Extended-Hours Trading](https://www.finra.org/investors/insights/extended-hours-trading)
+Background: [how an order gets executed](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order) and [when the market is actually open](https://www.nyse.com/trade/hours-calendars).
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the expiring conditional plan only when the test above passes and its retained output matches the minimum record.
+**GO:** the four cases behave exactly as described, and the saved output carries every field in the minimum record.
 
-**NO-GO:** Do not convert a limit into a market order or widen invalidation simply to obtain a fill.
+**NO-GO:** a plan that missed its window is rebuilt tomorrow, not loosened today. Turning a limit into a market order to force a fill is not a fix.
 
-**Next Friday:** Carry the accepted expiring conditional plan into Put Strategy Rules in Versioned Configuration.
+**Next Friday:** the accepted plan becomes the input to Put Strategy Rules in Versioned Configuration.

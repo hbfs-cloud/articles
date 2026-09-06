@@ -8,30 +8,36 @@ source_path: "series/banques-centrales/part6-trader-la-macro/index.html"
 
 *Part 6 of 6 in The Central Bank Playbook.*
 
-Do not enter a central-bank event with only a directional forecast. Write a scenario plan that maps each official outcome to an allowed action, a no-trade condition, and a loss limit. Anchor the event clock to the central bank's own calendar, then treat the first market move as new evidence rather than confirmation of the preferred story.
+On 31 July 2024 the Bank of Japan lifted its policy rate from 0.10% to 0.25%. Fifteen hundredths of one percent. Three sessions later the Nikkei closed 12.4% lower — its worst day since 1987. US indices lost 3% to 4%. The VIX, the index that tracks what crash protection costs, touched 65. The yen had gained 8% in four days, so everyone who had borrowed cheap yen to buy assets elsewhere had to unwind at once.
 
-Start with the policy state, not asset folklore. Record the institution's target, current tools, the exact documents due, release time and time zone, and what the market appears to expect from a timestamped source. Define scenarios using official observables: target change or no change, implementation settings, balance-sheet decision, statement language, and projections when scheduled. "Hawkish" and "dovish" are conclusions, not scenario inputs.
+No directional forecast covers that. A written plan can.
 
-For each scenario, write three layers:
+Before a meeting, write down what each official outcome permits you to do, what makes you sit still, and how much you accept losing. Anchor the clock to the bank's own calendar. Then treat the first market move as evidence, not as proof you were right.
 
-- **Policy fact:** what the official release changed and when it takes effect.
-- **Market observation:** price, yield, spread, or volatility change over a fixed window.
-- **Interpretation:** a conditional explanation that can remain uncertain.
+Start with the policy state, not folklore about which assets "like" rate cuts. Record the target, the documents due, the release time with its time zone, and what the market appears to expect, from a source carrying a timestamp. Build scenarios from what the release actually says: target changed or unchanged, balance-sheet decision, statement wording, projections when they are scheduled. Hawkish and dovish are conclusions. They are not inputs.
 
-Consider a hypothetical event where the target range and implementation rates are unchanged, while participant projections shift lower. Bond yields fall immediately, then finish the observation window above their pre-release level. The policy fact is no rate change; the projection shift is conditional information; the market path contains both a decline and reversal. A plan based on "lower dots mean buy bonds" would have confused a projection with a commitment and ignored path-dependent execution.
+Each scenario carries three layers:
 
-A usable event card includes the maximum exposure allowed before release, eligible order types, trigger evidence, invalidation, response to a rejected order, and the time at which the scenario expires. Recalculate risk from the actual fill. Investor.gov notes that market orders do not guarantee price and that stop orders can execute away from their stop price. An event loss budget is therefore an estimate under assumptions, not a guaranteed cap.
+- **Policy fact:** what the release changed, and when it takes effect.
+- **Market observation:** the price, yield, spread, or volatility move over a window you fixed in advance.
+- **Interpretation:** a conditional explanation, allowed to stay uncertain.
 
-Use this event checklist:
+Keeping those apart is the whole discipline. Take projections. A committee can leave rates untouched while its members' own forecasts drift lower. Yields drop on the headline, then finish the window above where they started. The fact is no rate change; the forecast shift is information, not a promise. "Lower projections mean buy bonds" confuses the two, and ignores what the path did to your fill.
 
-- Verify the official calendar immediately before the event.
+The 10-year minus 2-year spread is the cautionary case. It inverted — short rates above long rates — in July 2022 and stayed inverted for more than two years, the longest stretch on record. The textbook reading is recession inside 6 to 18 months, and it had been right 7 times out of 7 since 1970. By mid-2026 no official recession had arrived. A tree that treats a signal as a schedule breaks. One that treats it as a condition to keep checking does not.
+
+A usable event card holds the exposure allowed before the release, the order types permitted, the evidence that triggers action, the invalidation, what you do when an order is rejected, and the moment the scenario expires. Recalculate risk from the fill you got, not the one you planned. Investor.gov is blunt about why: market orders do not guarantee a price, and stop orders can execute away from the stop price. An event loss budget is an estimate, never a cap.
+
+Run this before every meeting:
+
+- Check the official calendar again on the morning itself.
 - Freeze scenarios, exposure, and no-trade conditions.
-- Capture each official document with its timestamp.
-- Separate target, implementation tool, and effective date.
-- Record prices before assigning an explanation.
-- Preserve rejected, partial, canceled, and skipped orders.
+- Save each document with its timestamp.
+- Separate the target, the tool, and the effective date.
+- Write the prices down before you explain them.
+- Keep the rejected, partial, cancelled, and skipped orders.
 
-**Limitation:** scenario trees cannot enumerate every statement change, data leak, technical failure, or simultaneous headline. Liquidity can disappear and several assets can reverse before an order fills. Historical event correlations are unstable and do not prove causality. Abstention is a valid scenario when the release does not match the prepared map or execution risk exceeds the plan.
+**Limitation:** a tree cannot list every wording change, leak, technical failure, or headline landing in the same second. August 2024 turned 15 basis points into a 12.4% index day. Liquidity can disappear while your order sits unfilled, and several assets can reverse at once. Historical event patterns are unstable and prove nothing about cause. Sitting out is a legitimate branch when the release does not match the map you prepared.
 
 Sources: [Federal Reserve: FOMC Meeting Calendars, Statements, and Minutes](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm); [BLS: Release Calendar](https://www.bls.gov/schedule/); [BEA: Release Schedule](https://www.bea.gov/news/schedule/); [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders)
 

@@ -12,38 +12,36 @@ send_email: false
 
 *Part 3 of 3 in Connect a Broker Without Losing Control. Lesson 39 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Reconciliation compares expected positions, open orders, fills and protections with broker facts. Differences need typed causes and bounded actions. A missing protection blocks new risk, but ambiguous broker state forbids automatic repair; the client may never invent a strategy decision.
+Two lists exist. Yours, and the broker's. When they disagree about a fill, the broker wins, because the broker is the one holding the shares. When they disagree about what you meant to do, your plan wins. Reconciliation is the habit of keeping those two truths apart.
 
-**Input from last Friday:** The accepted durable intent and deduplication record.
+**Input from last Friday:** the deduplication record you accepted.
 
-**Friday deliverable:** A broker reconciliation report, owned by the desk operator and retained in the review bundle.
+**Friday deliverable:** A broker reconciliation report, owned by the desk operator and stored with the week's evidence.
 
 ## Build this
 
-Run reconciliation before new orders and after uncertain responses. Classify missing order, extra order, quantity drift, partial fill, protection gap and unknown state. Require exact target identifiers, verify every mutation by readback and escalate unresolved protection to a human or independent emergency revoke path.
+Run the comparison twice: before you send anything new, and again after any answer you did not fully understand. Four things get compared. Positions, open orders, fills, and protections. A protection is the resting stop order that caps the loss on a position, and a position without one is naked.
 
-### Minimum record
+Name every difference instead of writing it out in free text. Missing order. Extra order. Quantity drift. Partial fill. Protection gap. Unknown state. Each name gets exactly one permitted repair, and the repair addresses a specific order identifier, never "the most recent one". After each change, read the broker back and confirm it landed. If a protection is still missing when you finish, stop opening new risk and escalate it to a person, or fire the emergency cancel-everything path.
 
-- `expected_state`
-- `broker_state`
-- `difference_type`
-- `repair_action`
-- `approval_state`
+Keep: `expected_state`, `broker_state`, `difference_type`, `repair_action`, `approval_state`.
 
 ## Test it before moving on
 
-Inject an extra broker order and a missing stop. The first should be escalated or canceled only under policy; the second should block new risk and trigger the defined protection path.
+Plant two faults in a paper account: an order the plan never asked for, and a stop that quietly disappeared. The orphan order should be escalated, not silently cancelled. The missing stop should freeze new entries immediately.
 
-**Operating limit:** The broker reconciliation report is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+Numbers below are invented to show the shape of the report, not to describe any real book: a toy run compares 37 expected positions against 36 at the broker, finds one orphan order, two quantity drifts of 3 and 11 shares from partial fills, and SYM_C sitting with no stop attached. Six lines, six named causes, no prose.
 
-**Further reading for the broker reconciliation report (context, not implementation evidence):** [Investor.gov: Broker-Dealer Record-Keeping Requirements](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements); [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations)
+**Operating limit:** the whole exercise runs on a simulated account, so nothing in the report carries a live allocation.
+
+Further reading: [FINRA on checking trade confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations) and [the SEC primer on trade execution](https://www.sec.gov/investor/pubs/tradexec.htm).
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the broker reconciliation report only when the test above passes and its retained output matches the minimum record.
+**GO:** both planted faults are caught, named, and routed the way your policy says they should be.
 
-**NO-GO:** Never treat absence from local state as proof that a broker order does not exist.
+**NO-GO:** never read "it isn't in my database" as "it doesn't exist at the broker". Your database is the one that can be wrong.
 
-**Next Friday:** Carry the accepted broker reconciliation report into Put the Decision and Controls First.
+**Next Friday:** this report becomes the raw material for Put the Decision and Controls First.

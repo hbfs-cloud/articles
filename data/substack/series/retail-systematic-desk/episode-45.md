@@ -12,15 +12,19 @@ send_email: false
 
 *Part 3 of 3 in Constrain AI and Promote Slowly. Lesson 45 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Promotion should move through offline replay, read-only monitoring, paper trading, shadow execution and a tightly bounded live pilot. Each stage has objective evidence, an observation window, rollback and a human owner. Production also requires operational security; passing market tests is not enough.
+Forty-four weeks, and the thing you have built is not a robot that trades for you. It is a routine you run, with brakes you installed yourself and can reach in the dark. That distinction is the whole course.
 
-**Input from last Friday:** The accepted four-role review attestation.
+Nothing jumps from a backtest to real money. It walks: replay on old data, then watching live data without acting, then paper orders, then shadow mode where real decisions are recorded but never sent, and only then a small live pilot with a hard ceiling. Each step has an entry rule written before results arrive, a fixed observation window, a way back, and one named person who owns it. Write the promotion evidence first. Deciding what counts as success after seeing the numbers is how every desk fools itself.
 
-**Friday deliverable:** A staged promotion dossier, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** the accepted review attestation.
+
+**Friday deliverable:** a staged promotion dossier — the folder that says, per stage, what has to be true before the next one opens.
 
 ## Build this
 
-Assemble the capstone and add least-privilege credentials, secret storage and rotation, paper/live isolation, controlled egress, redacted audit logs, clock monitoring, tested backup restoration and an independent manual revoke path. Define promotion evidence before collecting results.
+The unglamorous half first. Keys scoped to one account. Secrets in a store, not in a file next to the code, with a rotation date somebody actually holds. Paper and live in separate processes, separate keys. Outbound traffic limited to the broker. Tokens stripped from logs. Backups restored at least once, because an untested backup is a rumour. A clock check, since a system quietly running four minutes behind is a different system. And a revoke path you can trigger from a phone.
+
+Toy dossier, invented figures: 5 stages, 5 drills, 3 closed, 1 open on restart recovery, 1 not yet attempted. That is not four fifths ready. It is one stage from the end and stationary until the last two drills close.
 
 ### Minimum record
 
@@ -35,18 +39,14 @@ Assemble the capstone and add least-privilege credentials, secret storage and ro
 
 ## Test it before moving on
 
-Run incident drills for stale data, duplicate intent, missing protection and restart recovery. The system is not ready for the next stage until every required drill closes with auditable evidence.
+Rehearse the bad nights. Stale data with a market open. The same intent arriving twice. A fill without its protection attached. A crash mid-run, then restart. Each drill closes with evidence someone else can read, or the stage stays shut.
 
-**Operating limit:** The staged promotion dossier is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
-
-**Further reading for the staged promotion dossier (context, not implementation evidence):** [CFTC: Trading Systems Advisory](https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/fraudadv_tradingsystem.html); [NIST: Bootstrap Plot](https://www.itl.nist.gov/div898/handbook/eda/section3/bootplot.htm)
-
-Educational, not investment advice.
+**Operating limit:** the dossier ends in paper mode. Nothing here is a live configuration or a claim about returns.
 
 ## Release decision
 
-**GO:** Accept the staged promotion dossier only when the test above passes and its retained output matches the minimum record.
+**GO:** accept the dossier when every required drill has closed and all eight fields are retained.
 
-**NO-GO:** Never let the system promote itself or increase real-money scope without explicit human approval.
+**NO-GO:** no system promotes itself. Widening real-money scope is a human decision, taken awake, on evidence — and the operational side deserves the same care as the market side ([FINRA: Cybersecurity](https://www.finra.org/rules-guidance/key-topics/cybersecurity); [NIST: What are Control Charts?](https://www.itl.nist.gov/div898/handbook/pmc/section3/pmc31.htm)). Educational, not investment advice.
 
-**Next Friday:** Keep the completed dossier in paper mode; any live promotion remains a separate human decision.
+**Next Friday:** nothing new arrives. Run what you built, keep it in paper, and let the record decide when it earns more.

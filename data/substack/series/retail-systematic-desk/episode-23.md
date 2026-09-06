@@ -12,15 +12,17 @@ send_email: false
 
 *Part 2 of 3 in Make Strategy Decisions Machine-Readable. Lesson 23 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Strategy state may include entry dates, trailing references, cooldowns or risk halts. Treat it as an opaque object owned by the decision engine. A revised plan explicitly supersedes the previous one; two plans are never merged by convenience.
+Between two runs the engine has to remember things. When a position was opened. Where the trailing reference sits. Whether a cooldown is still counting down, or a risk halt is on. All of that together is the state.
 
-**Input from last Friday:** The accepted versioned strategy configuration schema.
+Rebuilding it from what your broker shows is guesswork. The broker knows you hold 30 shares of SYM_K — an invented example — and nothing else. It does not know that those shares came from the second revision of a plan whose cooldown ends Thursday.
 
-**Friday deliverable:** A supersession state record, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** the accepted versioned configuration schema.
+
+**Friday deliverable:** one supersession record, meaning a written note that plan B replaces plan A and plan A is now dead, filed with the week's paperwork.
 
 ## Build this
 
-Persist state per portfolio with plan id, revision, validity and supersession reference. Store it only after a successful decision. Echo it unchanged on the next run and keep broker snapshots as separate evidence.
+Keep one state object per book, one book being one portfolio's worth of positions. Treat it as sealed: the engine that wrote it is the only thing allowed to look inside. Save it after a decision completes, never before, and hand it back untouched on the next run. Each plan carries an id, a revision number, its validity dates, and the id of the plan it supersedes. Broker snapshots live in a separate file as evidence, never as the source of truth.
 
 ### Minimum record
 
@@ -33,18 +35,18 @@ Persist state per portfolio with plan id, revision, validity and supersession re
 
 ## Test it before moving on
 
-Restart between two decisions and confirm the same state resumes. Submit an older revision after a newer one and require rejection. Expire a plan and prove it can no longer create an order.
+Kill the process between two decisions, restart, and demand the same state back. Toy figures, invented for the drill: 12 stored keys went in, 12 came out identical, one of them a cooldown with two days left on it. Next, send revision 2 after revision 3 has already landed — refused, out of order. Last, take a plan whose validity ended yesterday and try to create an order from it. Refused, with the reason written to the log rather than swallowed.
 
-**Operating limit:** The supersession state record is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** the whole drill runs on paper with fabricated records. No account, no position size, no deployed configuration appears anywhere in it.
 
-**Further reading for the supersession state record (context, not implementation evidence):** [Investor.gov: Broker-Dealer Record-Keeping Requirements](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements); [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations)
+Background: [what brokers must keep, and for how long](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements) and [the books-and-records idea in its regulatory form](https://www.finra.org/rules-guidance/key-topics/books-records).
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the supersession state record only when the test above passes and its retained output matches the minimum record.
+**GO:** state survives the restart byte for byte, out-of-order revisions bounce, and expired plans cannot arm anything.
 
-**NO-GO:** Do not infer missing strategy state from current holdings or an explanatory note.
+**NO-GO:** do not reconstruct missing state from current holdings, and do not let a note in a chat thread stand in for a stored revision.
 
-**Next Friday:** Carry the accepted supersession state record into Use a Complete Machine-Readable Plan.
+**Next Friday:** the accepted record carries into Use a Complete Machine-Readable Plan.

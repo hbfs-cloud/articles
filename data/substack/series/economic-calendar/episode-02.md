@@ -8,27 +8,29 @@ source_path: "series/calendrier-economique/part2-emploi/index.html"
 
 *Part 2 of 6 in Read the Economic Calendar.*
 
-Never reduce the Employment Situation to one headline. Read the establishment survey for payrolls, hours and earnings; read the household survey for employment status, unemployment and labor-force participation. Then inspect revisions. A trade based only on the payroll change ignores half of the release.
+The monthly jobs report is not one number. It is two separate surveys printed on the same page, and they can disagree without either being wrong.
 
-The Current Employment Statistics survey gathers data from employers and estimates nonfarm payroll employment. The Current Population Survey gathers data from households and classifies people by labor-force status. Their universes, samples and estimation methods differ. They can disagree without either series being “wrong,” especially around turning points or changes in labor-force participation.
+One survey asks employers. About 160,000 businesses report how many people they paid, how many hours they worked, and what they earned. That produces the payroll headline. The other asks households, roughly 60,000 of them, and sorts people into working, looking for work, or out of the labour force. That produces the unemployment rate and the participation rate. Different universes, different samples, different methods.
 
-Population controls, seasonal adjustment and differing reference periods can also affect comparisons between the measures.
+The 7 March 2026 release shows why this matters. Employers reported 92,000 fewer jobs against a forecast of +140,000, the first monthly contraction since April 2020. Meanwhile the household survey pushed unemployment from 4.1% to 4.4%, with participation slipping to 62.4%. Wages rose only 0.2% on the month, below the 0.3% expected, which was the single reassuring line in the whole document.
 
-Use a fixed reading order when the report arrives. First, record the payroll change and revisions to earlier months. Second, move to the household survey and note the unemployment rate, employment level and participation rate. Third, inspect average hourly earnings and average weekly hours from the establishment survey. Last, read the technical notes before assigning meaning to an unusual move.
+The revisions were arguably worse than the headline. February was cut from +151,000 to +125,000, January from +143,000 to +95,000. Seventy-four thousand jobs quietly removed from a picture people had already formed an opinion about. Beginners skip revisions. Professionals read them second, right after the headline, and before anything else.
 
-Consider a release in which payroll employment rises while the unemployment rate also increases. Those facts are not logically inconsistent. Payrolls count jobs reported by establishments; unemployment comes from people surveyed in households, and the labor force can expand. The disciplined note is: “The surveys diverged; check participation, household employment and prior payroll revisions.” Averaging the two headlines would erase the information.
+Read in a fixed order and you stop being surprised by your own reaction:
 
-JOLTS answers a different set of questions. It estimates job openings, hires and separations from establishments. Openings alone do not show completed hiring, while the separations detail distinguishes quits, layoffs and other departures. Use it to examine labor-market flows, not as a replacement for the monthly Employment Situation.
+- Record the payroll change, then the revisions to the two prior months.
+- Move to the household survey: unemployment rate, employment level, participation.
+- Check average hourly earnings and average weekly hours from the employer survey.
+- Review the technical notes before deciding an unusual move means anything.
+- Ask whether the conclusion survives more than one month of data.
 
-For each labor release, check:
+Payrolls rising while unemployment also rises is not a contradiction. Employers can add jobs while more people re-enter the labour force looking for work. The honest note reads: the surveys diverged, check participation, household employment and prior revisions. Averaging the two headlines into one word, strong or weak, throws away the actual information.
 
-- Which survey produced the figure.
-- Whether earlier estimates were revised.
-- Whether hours and earnings confirm or complicate the payroll signal.
-- Whether participation explains part of the unemployment move.
-- Whether the conclusion survives more than one data point.
+Two other releases sit around it. The private payroll estimate published on the Wednesday covers only the private sector and correlates with the official figure roughly six or seven times in ten. Useful as a direction, useless as a prediction; the gap between the two regularly exceeds 100,000. Weekly jobless claims are the fastest signal available, since layoffs show up there immediately. Claims climbed from about 215,000 to 265,000 in the weeks running up to that March report. Three consecutive rising weeks is worth noticing.
 
-Sampling error and later revision are unavoidable limitations. The two surveys also cover different concepts, so forcing them into a single “strong” or “weak” label can create false precision. Labor data can inform expectations about Federal Reserve policy, but one report does not mechanically determine the next policy decision or the direction of equities.
+The job openings and turnover survey answers different questions again: how many posts are open, how many people were hired, how many quit, how many were let go. The quit rate is the one policymakers watch, because people only resign when they think they can do better elsewhere. The ratio of openings to unemployed people fell to about 0.9 in March 2026, down from the two-to-one tightness of a few years earlier.
+
+Limitation: both surveys carry sampling error and both get revised. They measure different concepts, so forcing them into a single label creates false precision. And the market reaction is not mechanical. Weak jobs data sometimes lifts shares, on the logic that rate cuts follow. Sometimes it sinks them, because the weakness has crossed into something worse. In March 2026 it sank them. One report does not decide the next policy move, and it certainly does not decide the direction of equities.
 
 Sources: [BLS comparison of payroll and household surveys](https://www.bls.gov/web/empsit/ces_cps_trends.htm), [BLS Employment Situation technical note](https://www.bls.gov/news.release/empsit.tn.htm), [BLS JOLTS handbook](https://www.bls.gov/opub/hom/jlt/).
 

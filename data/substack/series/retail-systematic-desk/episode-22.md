@@ -12,15 +12,17 @@ send_email: false
 
 *Part 1 of 3 in Make Strategy Decisions Machine-Readable. Lesson 22 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Configuration makes strategy changes reviewable and forward-dated. It also lets the same engine run different mandates without hardcoded symbol or strategy lists. The public lesson is the contract pattern; actual parameters, weights and deployed combinations stay private.
+Rules buried inside code are invisible rules. You nudge a number on a Tuesday, and six weeks later nobody can say which number produced which decision. So move the rules out into a configuration file — a plain settings file the engine reads at startup — give it a version number and a start date, and that question answers itself.
 
-**Input from last Friday:** The accepted expiring conditional plan.
+The shape of the file is what this lesson shares. Whatever values you eventually put in it are yours and stay yours.
 
-**Friday deliverable:** A versioned strategy configuration schema, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** the accepted expiring conditional plan.
+
+**Friday deliverable:** one versioned configuration schema, owned by you, filed with the week's paperwork.
 
 ## Build this
 
-Define a schema for universe reference, schedule, required features, risk ownership and output type. Version every change and record its effective date. Defaults must be conservative and new engine features should be opt-in.
+A schema is the list of fields the file may contain, with the type each one must be. Cover which universe you trade, when the engine runs, which inputs it needs, who owns risk, and what it emits. Every edit raises the version and records the date it takes effect. New engine behaviour ships switched off; a feature flag — a plain on/off setting — turns it on for one configuration without disturbing the others.
 
 ### Minimum record
 
@@ -33,18 +35,18 @@ Define a schema for universe reference, schedule, required features, risk owners
 
 ## Test it before moving on
 
-Load an old and new configuration against the same frozen snapshot. The engine should report which version governed each decision and reject unknown fields or missing required values.
+Point two versions at the same frozen snapshot, a copy of the inputs that nothing is allowed to change mid-test. In a toy pass, with counts invented for the drill, 26 decisions came back and each one carried the version that governed it: 18 under v3, 8 under v4 once its effective date had passed. Then hand the loader a broken file, `max_positons` misspelled and `schedule` missing entirely. It must refuse, name both problems, and stop. Silently filling in a default is the failure mode you are hunting.
 
-**Operating limit:** The versioned strategy configuration schema is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** classroom material, on paper. Nothing here describes a live book, a real allocation, or a setting anyone runs money on.
 
-**Further reading for the versioned strategy configuration schema (context, not implementation evidence):** [CFTC: Trading Systems Advisory](https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/fraudadv_tradingsystem.html); [NIST: Bootstrap Plot](https://www.itl.nist.gov/div898/handbook/eda/section3/bootplot.htm)
+Background: [questions worth asking before you commit](https://www.investor.gov/introduction-investing/getting-started/five-questions-ask-you-invest) and [why opaque trading systems draw warnings](https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/fraudadv_tradingsystem.html).
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the versioned strategy configuration schema only when the test above passes and its retained output matches the minimum record.
+**GO:** both versions replay cleanly, every decision is stamped with its governing version, and the malformed file is rejected.
 
-**NO-GO:** Never edit historical configuration to make a prior result look as if it used today's rules.
+**NO-GO:** never rewrite an old version so past decisions look like they followed today's rules. That is not tidying up. It destroys the only trail you have.
 
-**Next Friday:** Carry the accepted versioned strategy configuration schema into Persist State, Validity and Revisions.
+**Next Friday:** the accepted schema carries into Persist State, Validity and Revisions.

@@ -12,15 +12,17 @@ send_email: false
 
 *Part 3 of 3 in Build Reproducible Market Snapshots. Lesson 15 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Re-querying after a bug or disagreement changes both data and diagnosis. A replay should be offline, deterministic and side-effect free. Byte equality is meaningful only when runtime, dependencies, serialization and randomness are controlled; otherwise the runner must explain the version difference.
+Something looks wrong in yesterday's run, so you run it again. The data has moved since. Now you are debugging two things at once and can prove neither. A replay has to be offline: it reads the frozen bundle, touches no network, changes nothing outside itself, and gives the same answer at three in the morning as at noon.
 
-**Input from last Friday:** The accepted independently checkpointed evidence digest.
+Sameness is conditional. Identical bytes only mean something when the language runtime, the libraries, the way numbers are written to disk, and any randomness are all pinned. If one of those differs, the runner should say which, not shrug.
 
-**Friday deliverable:** An offline replay bundle, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** The accepted evidence digest.
+
+**Friday deliverable:** An offline replay bundle a stranger can run on a clean machine.
 
 ## Build this
 
-Package normalized inputs, configuration version, code version, dependency lock, runtime metadata, fixed seed or recorded randomness, canonical serialization rules and expected outputs. Keep authentication and secrets outside the bundle. Add a runner that refuses network access and broker mutation.
+Pack the normalized inputs, the configuration version, the code version, the dependency lock file, notes on the runtime, a fixed seed or a recording of the random draws, the rules for writing output, and the outputs you expect. Keep passwords and keys out of it. Add a runner that refuses to reach the network and refuses to touch a broker account, so a replay can never turn into an accidental trade.
 
 ### Minimum record
 
@@ -33,18 +35,18 @@ Package normalized inputs, configuration version, code version, dependency lock,
 
 ## Test it before moving on
 
-Run the same bundle twice on a clean machine. Compare structured outputs before rendering. Then change only the renderer and prove the decision hash remains stable while presentation changes.
+Run the bundle twice on a clean machine and compare the structured output before anything is drawn on screen. Toy figures, invented for the drill: 2,403 rows in, eleven decisions out, same output fingerprint both times, twelve seconds each pass. Then change only the display — swap a table for a chart — and confirm the decision fingerprint holds while the picture changes. That separation is the whole point: presentation is allowed to move, evidence is not.
 
-**Operating limit:** The offline replay bundle is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** Paper exercise, published for teaching. No production settings, no allocations, no account data, no performance promised.
 
-**Further reading for the offline replay bundle (context, not implementation evidence):** [CFTC: Trading Systems Advisory](https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/fraudadv_tradingsystem.html); [NIST: Bootstrap Plot](https://www.itl.nist.gov/div898/handbook/eda/section3/bootplot.htm)
+Further reading: [CFTC: Trading Systems Advisory](https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/fraudadv_tradingsystem.html); [NIST: Model Validation](https://www.itl.nist.gov/div898/handbook/pmd/section1/pmd141.htm)
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the offline replay bundle only when the test above passes and its retained output matches the minimum record.
+**GO:** Two clean-machine runs agree, the renderer swap leaves the decision fingerprint alone, and the bundle carries the minimum record.
 
-**NO-GO:** A rerun that silently downloads fresh data is a new experiment, not a replay.
+**NO-GO:** A rerun that silently downloads fresh data is a new experiment wearing the word replay.
 
-**Next Friday:** Carry the accepted offline replay bundle into Screen Broad, Then Narrow With Evidence.
+**Next Friday:** Carry the accepted bundle into Screen Broad, Then Narrow With Evidence.

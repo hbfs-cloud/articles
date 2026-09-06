@@ -8,27 +8,31 @@ source_path: "series/calendrier-economique/part4-croissance/index.html"
 
 *Part 4 of 6 in Read the Economic Calendar.*
 
-Before interpreting a growth release, label it by scope, frequency, price basis and data vintage. A broad quarterly estimate, a nominal monthly sales report and a physical-output index are not interchangeable. If those labels are missing, do not combine the figures into one growth verdict.
+Three growth numbers land every month and they do not measure the same thing. Label each one before you use it: how wide is the scope, does it strip out price rises, and is it a first guess or a corrected one. Skip that and you end up stacking figures that were never built to stack.
 
-Gross domestic product is the broad account of final goods and services produced in the United States. BEA publishes an advance estimate followed by updated estimates as more complete source data arrive. Revisions are part of the process, so a later GDP release should be read against the preceding vintage, not treated as a duplicate headline.
+GDP is the widest measure, the value of what the country finally produced in a quarter. In the United States roughly 68% of it is household spending. Business investment runs near 18%, government near 17%, and net exports usually subtract a little. Consumption dominates, so consumer figures move the total more than anything else.
 
-Advance retail sales are timelier and narrower. Census describes the estimates as sales from retail and food-services firms, and the published values are not adjusted for price changes. A higher nominal sales figure can reflect more units, higher prices or both. It cannot, by itself, establish an acceleration in real consumer spending.
+The same quarter gets published three times. The advance estimate arrives about 30 days after the quarter ends, built on roughly 60% hard data with the rest estimated. The second lands near 60 days, at about 80% hard data. The third, near 90 days, is close to complete. So a later GDP headline is not a repeat. It is a correction, and it should be read against the version it replaces.
 
-The Federal Reserve's industrial production index measures real output in manufacturing, mining, and electric and gas utilities. Capacity utilization compares actual output with an estimate of sustainable maximum output. These measures illuminate the production side of the economy, but they do not cover the entire service sector or equal GDP.
+Retail sales are quicker and much narrower. Census publishes advance retail and food-services sales around the 15th of the month, at 8:30 in New York. Those values are not adjusted for prices. If shoppers pay 3% more for the same basket, the number rises and real spending has not improved at all. On release day the honest sentence is short: nominal retail sales rose.
 
-Suppose retail sales rise during a month in which consumer prices also rise. Write “nominal retail sales increased” and stop there. Next, inspect category detail and wait for inflation-adjusted consumption measures in the national accounts before claiming that households bought more in real terms. If industrial production falls in the same period, record the divergence instead of forcing both releases into a single narrative.
+One line inside that report does the real work. The control group strips out cars, gasoline, building materials and food services, and it feeds straight into the GDP calculation. A month near +0.5% there is a strong reading. The headline gets shoved around by car dealerships.
 
-A clean growth note includes:
+Industrial production, from the Federal Reserve, counts real output from factories, mines and utilities. Its companion, capacity utilization, compares what plants actually made with what they could sustainably make. Above 80%, factories run close to flat out. Below 75%, capacity sits idle. Neither figure covers services, and services are most of the economy, so this pair describes one room, not the house.
 
-- Release scope: whole economy, consumer sales or industrial output.
-- Nominal or real basis.
-- Initial estimate or revision.
-- Reference month or quarter.
-- The narrower claim that the data support.
+Then comes the awkward month: retail sales up, prices up, industrial output down. Record all three in their own words. Wait for the inflation-adjusted consumption figures in the national accounts before claiming households bought more. Do not fuse the releases into one verdict because a verdict reads better.
 
-Survey-based activity indexes can add timely information about respondents' reported conditions, but they still differ from measured output and spending. Confidence readings also describe reported attitudes, not completed purchases. Keep each series in its lane.
+Before filing a growth note, check that it carries:
 
-The limitation is structural: no monthly indicator can certify a recession, a recovery or the future path of earnings on its own. Different releases cover different populations and are revised on different schedules. Use agreement across independent measures as stronger evidence, while avoiding claims that one correlated release caused the next market move.
+- The scope: whole economy, consumer sales, or factory output.
+- Nominal or inflation-adjusted basis.
+- First estimate or revision, with its vintage.
+- The reference month or quarter, not the publication date.
+- The narrow claim the data actually support.
+
+Survey answers and confidence readings go in a separate bucket. They record what people say about conditions, not what was produced or bought.
+
+The limitation is built into the calendar. A single monthly release cannot certify a recession or a recovery, because each one covers a different population and is revised on its own schedule. Agreement across independent measures is real evidence. One correlated release explaining the next market move is not.
 
 Sources: [BEA GDP guide](https://www.bea.gov/sites/default/files/2020-08/quick-guide-gdp.pdf), [Census advance retail survey methodology](https://www.census.gov/retail/marts/how_surveys_are_collected.html), [Federal Reserve industrial production overview](https://www.federalreserve.gov/releases/g17/about.htm).
 

@@ -8,25 +8,31 @@ source_path: "series/options-trading/part5-strategies-avancees/index.html"
 
 *Part 5 of 6 in Options Without the Hidden Risk.*
 
-For an event trade, calculate the expiration breakevens before deciding that options imply a “big move.” The combined premium is a hurdle paid or received, not a forecast that the underlying will travel that distance. Direction, timing, implied-volatility repricing and the exit rule all affect the result.
+"The options are pricing in a big move" is a sentence about a price, not a prediction. Do the arithmetic before you believe it.
 
-A long straddle buys a call and a put with the same strike and expiration. Take a hypothetical $100 strike, with the call priced at $4.50 and the put at $3.50. Total premium is $8 per share, or $800 for one standard pair. At expiration, the gross breakevens are $108 and $92. A move to $106 sounds meaningful, but the call would have $6 of intrinsic value and the put would expire worthless. The position would still lose $2 per share before costs. At $112, intrinsic value would be $12, leaving a $4-per-share gross profit.
+Nvidia at $140, earnings tomorrow. The $140 call costs $6.00, the $140 put costs $5.50. Buy both, that is a straddle, and it costs $11.50 per share, $1,150 for the pair. You now need Nvidia above $151.50 or below $128.50 at expiry just to get your money back. That is 8.2% in either direction. Divide the straddle price by the share price and you get the same 8.2%: the implied move. It is the hurdle you paid for, nothing more.
 
-A strangle lowers the initial premium by using an out-of-the-money call and put, but it pushes the breakevens farther apart. An iron condor takes the opposite broad view: it sells an inner call spread and put spread, collecting a credit while using outer wings to cap expiration loss. Its best outcome requires the underlying to remain within a range. The credit is limited; a break through either side can realize the larger defined loss.
+Nvidia jumps 6% overnight. Feels enormous. You still lose money.
 
-Implied volatility complicates every event structure. Long straddles and strangles generally benefit from higher implied volatility and suffer when it falls, all else equal. Condors generally have the opposite exposure. After a scheduled announcement, uncertainty can collapse even when the stock moves in the expected direction. A long-volatility position can therefore lose despite being directionally right.
+A strangle makes the ticket cheaper and the hurdle taller. Out-of-the-money strikes on both sides bring the same trade down to about $650, but the breakevens spread out to $123.50 and $156.50, so now you need 11.8%. Cheaper is not easier.
 
-Run this event-volatility check:
+An iron condor sells the same idea. SPY at $550: sell the $535 put for $3.00, buy the $525 put for $1.50, sell the $565 call for $2.50, buy the $575 call for $1.00. Four legs, $300 collected. You keep it all if SPY finishes between $535 and $565. If it breaks one side, you lose the $10 width minus the $3 credit, or $700. Only one side can lose. The good outcome is small and frequent; the bad one is larger and arrives whole.
 
-- Add all premiums and calculate both expiration breakevens.
-- Compare the maximum loss with the account's event-risk budget.
-- Record Theta and Vega for the whole position, not one leg.
-- Define the exit time: before the event, after it, or at expiration.
-- Stress a smaller move, a delayed move and a volatility decline.
+Volatility decides which of these works, and it moves hardest right after the event. Long straddles and strangles want implied volatility up and suffer when it drops. Condors want the opposite. The day after an announcement the uncertainty is spent, implied volatility collapses, and a long-volatility position can be directionally right and still red.
 
-There is no universal way to convert one option chain into a reliable probability of the next price. Quotes can be stale, spreads can be wide, and skew means call and put volatility may differ. The simple straddle sum also ignores rates, dividends and the possibility of closing before expiration.
+So compare the two numbers before you choose a side. If Apple's implied move is 5% and the average move across the last eight earnings was 3.2%, the market is asking 56% more than history delivered, and history stayed inside 5% on six of those eight. That argues for selling premium, not buying it. When the implied move sits below the historical one, the argument flips.
 
-Use the implied move as a scenario boundary. It can organize the payoff map, but it does not tell you which path will occur or whether the premium is cheap.
+Run this event check:
+
+- Add every premium and write both expiry breakevens down before entering.
+- Set the maximum loss against what the account can lose on one event.
+- Record Theta and Vega for the whole position, never one leg alone.
+- Fix the exit time now: before the event, right after it, or at expiry.
+- Test a smaller move, a late move and a fall in implied volatility.
+
+Never sell a naked straddle or strangle to collect the credit. James Cordier's fund ran short natural gas strangles until a single 18% day in 2018 wiped out more than $150 million. Defined-risk wings exist for that day.
+
+The limitation runs deeper than any of these structures. No option chain converts cleanly into a reliable probability of the next price. Quotes go stale, spreads widen exactly when you need them tight, and skew means calls and puts carry different volatility. Adding two premiums together also ignores rates, dividends and the fact that most positions get closed early. Treat the implied move as the edge of a map, not a forecast of where the road goes.
 
 Sources: [OIC Long Straddle](https://www.optionseducation.org/strategies/all-strategies/long-straddle), [OIC Iron Condor](https://www.optionseducation.org/strategies/all-strategies/short-condor), [OIC Vega](https://www.optionseducation.org/advancedconcepts/vega), [OCC Options Disclosure Document](https://www.theocc.com/company-information/documents-and-archives/options-disclosure-document).
 

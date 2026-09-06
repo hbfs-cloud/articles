@@ -8,28 +8,30 @@ source_path: "series/options-trading/part6-gestion-risque/index.html"
 
 *Part 6 of 6 in Options Without the Hidden Risk.*
 
-Set the maximum acceptable portfolio loss before choosing the option structure. For a debit trade, the full premium may be lost. For a short option, premium received is not the risk limit. If assignment, margin or a gap can create a loss you cannot state and fund, reject the position rather than relying on a stop order.
+Traders rarely go broke on a bad strategy. They go broke on a good strategy sized wrong. Losing everything on a position is survivable at 2% of the account and fatal at 30%.
 
-Suppose a hypothetical $25,000 account caps one options idea at 0.5% of equity, or $125. A one-contract debit spread costing $1.10 has $110 of premium at risk before fees and may fit that narrow cap. Two contracts put $220 at risk and fail it. The calculation is deliberately simple: `account equity x risk fraction`, then divide by maximum loss per spread and round down.
+So the budget comes first, before the strike, before the view. Pick a fraction of capital you accept losing on one idea. One to three percent is the common range. On a $30,000 account, 3% is $900. That $900 is the loss, not the ticket price.
 
-Now compare a cash-secured put sold for $1.20 at a $40 strike. The $120 credit is maximum option profit, not maximum loss. Assignment requires $4,000 to buy 100 shares, and the effective purchase price is $38.80 before costs. If the stock fell to zero, the economic loss would be substantial. The position must pass a stock-ownership and concentration test, not merely a premium test.
+Then divide. Suppose an iron condor on SPY, $2.50 credit, $10 wide. Worst case is the width minus the credit, times 100: $750. Nine hundred divided by $750 is 1.2, so you trade one contract and round down. One contract puts $750 at risk, 2.5% of the account, inside the line. Two contracts would be $1,500, or 5%, and the line is there precisely so you do not talk yourself into that.
 
-Defined-risk spreads still need operational controls. Maximum-loss formulas assume the intended legs remain in place through expiration. Closing one wing, suffering an early assignment or receiving poor fills can change exposure. Uncovered short calls can carry theoretically unlimited loss. Margin requirements may also rise when volatility increases, forcing action at a bad time.
+Scale it and the arithmetic stays boring. At $25,000 with a 3% cap, one $450 debit spread or one $700 condor. At $50,000, three spreads or two condors. At $100,000, six and four. A $10,000 account cannot really run four-leg trades: one bad condor is 7% of everything, so single-leg positions on shares you already own are the honest starting point. Leverage does not fix a small account.
+
+Short options break the arithmetic if you let them. Sell a $40 put for $1.20 and the $120 credit is the most you can make. Assignment costs $4,000 for 100 shares at an effective $38.80, and the real downside runs from there to zero. Size that trade on the share exposure, never on the premium.
+
+Exits belong in the same decision, written before entry. On a credit trade, taking 50% of the credit is usually the better trade than waiting for the last dollar. A condor with $300 of credit reaches $150 of profit around 85% of the time and reaches the full $300 roughly 60% of the time. You give up the tail and win far more often. Set the stop at twice the credit. Close at 21 days to expiry if neither has triggered, because Gamma turns the position jumpy after that.
 
 Build the order from this checklist:
 
-- State maximum contractual loss and a separate gap or assignment stress.
-- Convert every quote into whole-position dollars using the contract multiplier.
-- Include commissions, bid-ask slippage and any stock obligation.
-- Group Greeks by underlying and expiration, then estimate portfolio dollars under named spot, time, and volatility shocks; do not add raw Greeks across unlike underlyings.
-- Set an exit rule, a no-roll condition and the last acceptable day to act.
-- Confirm available cash and margin after the stress, not before it.
+- State the maximum contractual loss and a separate gap or assignment stress.
+- Convert every quote into whole-position dollars with the contract multiplier.
+- Add commissions, bid-ask slippage and any share obligation into the total.
+- Group Greeks by underlying and expiry, then price named spot, time and volatility shocks in dollars; never add raw Greeks across different underlyings.
+- Fix the exit rule, the no-roll condition and the last acceptable day to act.
+- Confirm cash and margin after the stress, not before it.
 
-Rolling is not a loss eraser. Closing one contract and opening another realizes or carries forward economics through a new trade with a new expiration, premium and risk profile. Judge the replacement on its own merits. If it would not be opened from flat, the existing loss is not a reason to open it.
+Rolling deserves suspicion. Buying back a July $225 call at $6.00 that you sold for $3.00, then selling the August $230 at $5.00, is a $1.00 debit for $5 of room and 30 days. That can be sensible. It is still a new trade with a new expiry and a new risk profile, and it should be judged as one. If you would not open it from flat, an existing loss is not a reason to open it.
 
-No fixed percentage suits every account. Income needs, liquidity, tax situation, strategy evidence and tolerance for drawdown differ. A stated budget also cannot guarantee the exit price during a gap or halt. It is a rejection boundary, not a promise.
-
-The final control is procedural: know what the broker may liquidate, how exercise instructions work, and when assignment can occur. Risk management begins before the order and remains active until every obligation is closed.
+No single percentage fits every account. Income needs, liquidity, taxes and tolerance for a drawdown all differ. And a stated budget cannot guarantee your exit price through a gap or a halt. It is a rejection boundary, not a promise. The last control is procedural: know what your broker may liquidate, how exercise instructions work, and when assignment can land.
 
 Sources: [SEC Introduction to Options](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-63), [SEC Margin Accounts Bulletin](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-29), [OCC Options Disclosure Document](https://www.theocc.com/company-information/documents-and-archives/options-disclosure-document).
 

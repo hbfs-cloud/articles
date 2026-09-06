@@ -12,15 +12,21 @@ send_email: false
 
 *Part 1 of 3 in Prove Execution in a Simulator. Lesson 31 of 45 in Build a Retail Systematic Desk, Safely.*
 
-A broker simulator should expose the same order states and capability limits the execution client expects. Its job is to test transitions, rejection handling and protection, not to make fills look favorable. Keep strategy logic outside the adapter.
+Most home-built simulators get written to answer the wrong question. They are asked whether the strategy makes money. What they should be asked is whether the code that talks to a broker survives everything a broker does to it: rejections, half-fills, features that simply are not there.
 
-**Input from last Friday:** The accepted event-and-kill-state runbook.
+So build one that lies to you as little as possible, and never in your favour. Fills at the price you wanted, always, is a bug pretending to be a result.
 
-**Friday deliverable:** A deterministic broker simulator contract, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** the accepted event-and-kill-state runbook.
+
+**Friday deliverable:** a deterministic broker simulator contract, owned by the desk operator and kept in the review bundle.
 
 ## Build this
 
-Implement a small capability matrix and deterministic order book. Support accepted, working, partial, filled, canceled, rejected and expired states. Make time and prices injectable for replay.
+Two pieces. First a capability matrix: a plain list of what this broker can do — which order types, whether a protective exit can be attached to the entry so both arrive together, the minimum quantity, the price increments allowed. Second, an order book that is deterministic, meaning identical inputs produce identical output every single run, because time and prices are handed in rather than read from the clock.
+
+Support the states an order genuinely passes through: accepted, working, partially filled, filled, cancelled, rejected, expired.
+
+Illustrative run, figures invented: the same plan of 11 candidates aimed at two simulated brokers. Broker A attaches protective exits, so all 11 route. Broker B cannot, and 7 of them require that attachment — the client rejects those 7 and stops rather than sending an entry with nothing behind it. Determinism check: same seed, same injected clock, run twice, 1,344 events identical line for line. One mismatch and the fixture is worthless as a test.
 
 ### Minimum record
 
@@ -32,18 +38,14 @@ Implement a small capability matrix and deterministic order book. Support accept
 
 ## Test it before moving on
 
-Run the client against two simulated brokers with different capabilities. The plan should be accepted only when required protection and order features are available.
+Point the client at both brokers without changing a line of it. The plan may only be accepted where the required protection actually exists. Strategy logic stays out of the adapter — the adapter translates, it never decides.
 
-**Operating limit:** The deterministic broker simulator contract is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
-
-**Further reading for the deterministic broker simulator contract (context, not implementation evidence):** [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders); [FINRA: Extended-Hours Trading](https://www.finra.org/investors/insights/extended-hours-trading)
-
-Educational, not investment advice.
+**Operating limit:** simulated fills prove plumbing, never edge. Nothing here is a broker recommendation or a live configuration.
 
 ## Release decision
 
-**GO:** Accept the deterministic broker simulator contract only when the test above passes and its retained output matches the minimum record.
+**GO:** accept when both brokers are driven by one unmodified client and the retained output carries all five fields.
 
-**NO-GO:** Do not add a broker workaround that changes the plan without surfacing a rejection.
+**NO-GO:** never paper over a missing broker feature with a workaround that changes the plan quietly. A rejection you can read beats a substitution you cannot. On what each order type actually promises: [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders). On the duty behind a fill: [FINRA: Best Execution](https://www.finra.org/rules-guidance/key-topics/best-execution). Educational, not investment advice.
 
-**Next Friday:** Carry the accepted deterministic broker simulator contract into Build an Explicit Order State Machine.
+**Next Friday:** the accepted contract goes into Build an Explicit Order State Machine.

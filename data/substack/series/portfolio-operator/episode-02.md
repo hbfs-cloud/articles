@@ -8,26 +8,32 @@ source_path: "series/piloter-son-portefeuille/part2-backtest-forward/index.html"
 
 *Part 2 of 6 in Operate a Portfolio, Not a Collection of Trades.*
 
-Call an observation forward evidence only if it occurred after the strategy, data rules, and evaluation criteria were frozen. Replaying unseen historical data is an out-of-sample backtest, not a forward test. Paper trading after the freeze is forward observation without financial risk; live trading adds actual fills, costs, operational failures, and behavioral pressure.
+A backtest is a hypothesis wearing the clothes of a track record. The date you froze the rules decides which results count as evidence and which are just description.
 
-Start by separating three records. The **development sample** is where rules were proposed or tuned. The **held-out sample** is historical data reserved for one clean evaluation. The **forward log** begins at a timestamp after the final rule version exists. Once a held-out result influences the method, that period belongs to development for every later claim.
+Keep three boxes and never let them touch. In-sample is where you tuned the thresholds and filters. Out-of-sample is history you locked away and look at exactly once. The forward log begins at the timestamp after the final rule version exists. The moment an out-of-sample result changes your method, that period joins in-sample for every claim you make afterwards.
 
-A reproducible handoff needs more than signal code. Freeze the universe definition, corporate-action treatment, time zone, release timestamps, order model, fees, slippage assumptions, position sizing, portfolio constraints, and treatment of missing or rejected trades. Preserve every eligible signal, including those that could not be filled. Otherwise execution selection can make the forward record look cleaner than the strategy was.
+Here is the trap that voids the whole exercise. Out-of-sample only protects you if you look once. Re-optimise and re-test enough parameter sets and window splits and one of them passes by luck alone. Walk-forward analysis — optimise on a window, validate on the next unseen one, step forward, repeat — is stronger, but each re-tested window burns a cartridge too. Decide the protocol and the thresholds before you look at anything.
 
-Use a hypothetical chronology. A researcher finishes rule version 1.0 on June 30 and records its file checksum, parameters, and test protocol. Data through June 30 remain historical, even if some dates were never viewed. Signals first generated on July 1 can enter the forward log. If an August review changes the liquidity filter, version 1.1 starts with a new timestamp. July's results may explain the change, but they cannot serve as untouched validation for version 1.1.
+Count your degrees of freedom honestly. Eight tuned parameters against 40 trades is five trades per parameter. At that ratio the curve is describing your sample, not the market.
 
-Compare like with like. Backtest fills should use assumptions available to the simulation. Paper results should retain unfilled and partial orders. Live results should come from broker records and include known transaction costs. Investor.gov explains that execution is not instantaneous and that the observed quote need not be the eventual fill. A chart crossing an entry price is therefore not proof of executable performance.
+Then set the promotion rules in cold blood, in writing, before any live result exists. A workable frame: at least 20 to 30 live trades before performance gets read at all; live profit factor no worse than 0.7 times the backtest figure; live drawdown inside the backtest envelope plus a stated margin; hit rate inside the backtest's confidence interval; realised slippage within the cost budget. Profit factor is money won divided by money lost — 1.5 means $1.50 earned per dollar lost. If the backtest showed 1.6, the live floor is about 1.12.
 
-Run this evidence check:
+One broken criterion is a no-go. Not an average. A strong profit factor buys no forgiveness for a drawdown outside the envelope, and reading the results first, then adjusting the threshold, is how confirmation bias wins every time.
 
-- Identify development, held-out, paper-forward, and live-forward periods.
-- Timestamp every strategy and data-processing version.
-- Retain rejected, partial, canceled, and skipped orders.
-- Reconcile live fills and costs independently of chart data.
-- State all exclusions before calculating performance.
-- Reset the forward label after a material rule change.
+Never judge a strategy by one flat average across the whole history either. Split it by regime — calm, uncertain, stressed — using something as plain as the volatility index below 15, between 15 and 20, and above 20. A full-period average blends a strategy that prints in calm markets with one that gets cut apart in stressed ones, then hands you a single reassuring number. What ends portfolios is not the average. It is the worst regime at the worst moment. Demand survival in the stressed bucket — profit factor near 0.9, drawdown contained — even when all the profit comes from calm ones.
 
-**Limitation:** a clean forward test can still be too short, too narrow, or drawn from one market regime. Paper execution omits financial risk and may model queue position poorly. Live evidence at small size may not reveal capacity. Forward performance reduces some hindsight risk; it does not make future observations independent or guarantee persistence.
+Evidence check:
+
+- Label development, held-out, paper-forward and live-forward periods separately.
+- Timestamp every strategy version and every data-processing change.
+- Keep rejected, partial, cancelled and skipped orders in the record.
+- Reconcile live fills and costs against broker statements, not charts.
+- Review performance regime by regime before reading the overall number.
+- Reset the forward label the moment a rule materially changes.
+
+Budget the decay before you deploy. Between real costs and the optimisation that survives every precaution, an edge commonly gives back 20-40% moving from backtest to live. Take your backtest edge, cut 30%, then look at what remains. If the strategy is only profitable without that haircut, it is not profitable.
+
+**Limitation:** a clean forward test can still be too short, too narrow, or drawn from a single market climate. Paper trading omits financial fear and models queue position badly. Live evidence at tiny size says nothing about capacity. Forward testing removes some hindsight; it does not make the next observation independent.
 
 Sources: [CFTC: Commodity Trading Systems Sold on the Internet](https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/fraudadv_tradingsystem.html); [Investor.gov: Executing an Order](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order); [Investor.gov: Understanding Fees](https://www.investor.gov/introduction-investing/getting-started/understanding-fees)
 

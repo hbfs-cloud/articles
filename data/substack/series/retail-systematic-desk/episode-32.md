@@ -12,15 +12,21 @@ send_email: false
 
 *Part 2 of 3 in Prove Execution in a Simulator. Lesson 32 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Network timeouts, pending cancels and partial fills make binary status unsafe. Model allowed transitions and make unexpected transitions errors. A partial fill ends alternate selection and immediately creates a protection obligation for the filled quantity.
+Done or not done. That is how most retail code stores an order, and it is fine right up to the afternoon a cancel request and a fill cross in flight. Then the desk holds a position it believes it cancelled.
 
-**Input from last Friday:** The accepted deterministic broker simulator contract.
+A state machine is the boring fix: a written list of the states an order may occupy and the moves allowed between them. Anything outside the list raises an error instead of quietly overwriting what you knew.
 
-**Friday deliverable:** An order-state transition suite, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** the accepted deterministic broker simulator contract.
+
+**Friday deliverable:** an order-state transition suite, owned by the desk operator and kept in the review bundle.
 
 ## Build this
 
-Draw states and transitions for submit, acknowledge, partial fill, fill, cancel request, cancel confirmation, rejection and expiry. Store every transition with source and time.
+Draw the whole thing on one page: submitted, acknowledged, partially filled, filled, cancel requested, cancelled, rejected, expired. Then decide which arrows exist between them. Cancel requested may still reach filled — that arrow is legal and it is the one that hurts. Submitted may not reach cancelled without passing through a request.
+
+Store every transition with where it came from and when: your own send, the broker's message, a timeout your code invented. Sources matter, because a timeout is a guess about the world, not news from it.
+
+Numbers made up to show the scale: 8 states means 56 ordered pairs, of which 17 are legal here. Replay 400 synthetic event streams through them — 3 carry a duplicate acknowledgement, 1 delivers a fill mid-cancel, 1 answers 40 seconds after the client had given up. All 400 must land on one final state with no second order created anywhere.
 
 ### Minimum record
 
@@ -28,23 +34,19 @@ Draw states and transitions for submit, acknowledge, partial fill, fill, cancel 
 - `previous_state`
 - `new_state`
 - `filled_qty`
-- `source`
+- `source` — broker message, own send, or local timeout
 - `occurred_at`
 
 ## Test it before moving on
 
-Replay duplicate acknowledgements, a fill during cancellation and a late response after timeout. The final state must reconcile without creating a second order.
+Work the partial fill case hardest. Take 300 filled of 800 requested: alternates die the instant that print arrives, and the desk owes protection on those 300 immediately, not once the rest completes. Half a position with no exit is the worst state on the page.
 
-**Operating limit:** The order-state transition suite is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
-
-**Further reading for the order-state transition suite (context, not implementation evidence):** [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders); [FINRA: Extended-Hours Trading](https://www.finra.org/investors/insights/extended-hours-trading)
-
-Educational, not investment advice.
+**Operating limit:** transitions are replayed against recorded fixtures. No live account, no real quantity, no timing anyone should copy.
 
 ## Release decision
 
-**GO:** Accept the order-state transition suite only when the test above passes and its retained output matches the minimum record.
+**GO:** accept when all 400 replays reconcile and every stored transition names its source.
 
-**NO-GO:** Never promote an alternate candidate after any fill, including a partial one.
+**NO-GO:** no alternate gets promoted after any fill, partial included. On how an order actually reaches a market: [SEC: Trade Execution](https://www.sec.gov/investor/pubs/tradexec.htm). On the sessions where these edge cases cluster: [FINRA: Extended-Hours Trading](https://www.finra.org/investors/insights/extended-hours-trading). Educational, not investment advice.
 
-**Next Friday:** Carry the accepted order-state transition suite into Test Restarts, Duplicates and Broken Networks.
+**Next Friday:** the accepted suite goes into Test Restarts, Duplicates and Broken Networks.

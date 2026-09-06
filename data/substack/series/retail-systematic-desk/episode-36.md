@@ -12,15 +12,25 @@ send_email: false
 
 *Part 3 of 3 in Keep an Audit Trail That Survives Incidents. Lesson 36 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Each scheduled run should leave a terminal record even when it does nothing. Include capabilities, data health, snapshot, decisions, gates, broker checks, actions and errors. A missing run marker is an operational incident, not no activity.
+Most scheduled runs decide nothing at all. That is normal. It is also why a quiet day and a dead pipeline have to look different in your records, because from the outside both produce the same thing: no orders.
 
-**Input from last Friday:** The accepted restart-and-supersession drill report.
+So silence gets written down. Every run opens an envelope and every run closes it. Closed with `no_action` is a result you can trust. No envelope is an incident, and it should wake you as loudly as a stack trace would.
 
-**Friday deliverable:** A terminal run envelope, owned by the desk operator and retained in the review bundle.
+EDGAR has that property at national scale: the absence of a filing on a date is itself information, because the archive is complete by construction ([Investor.gov: Using EDGAR](https://www.investor.gov/introduction-investing/getting-started/researching-investments/using-edgar-research-investments)). Your run log needs the same property in miniature.
+
+Toy week, counts invented for illustration: 5 scheduled runs, 5 envelopes, 4 closed `no_action`, 1 closed `orders_placed`. Wednesday finished in 90 seconds and wrote 14 stage markers, not one of which described a decision.
+
+**Input from last Friday:** the accepted restart drill report.
+
+**Friday deliverable:** a terminal run envelope, owned by the desk operator and kept in the review bundle.
 
 ## Build this
 
-Create a run envelope with stage markers and a final status. Link structured outputs and hashes. Keep logs useful but do not depend on free text for accounting or execution state.
+One marker per stage: capabilities checked, data health, snapshot taken, decisions produced, gates applied, broker verified, actions attempted. Each timestamped, each linked to a structured output and its fingerprint. The final status closes the envelope and has a small fixed vocabulary: `no_action`, `orders_placed`, `aborted`, `failed`.
+
+Free text logs are for a human reading afterwards. They are not accounting. If the only trace of a fill is a printed line, that fill is not recorded.
+
+Half sessions and holidays deserve a marker too: a run that finds a closed market still opens and closes its envelope, having checked the calendar rather than assumed one ([NYSE: Hours and Calendars](https://www.nyse.com/trade/hours-calendars)).
 
 ### Minimum record
 
@@ -33,18 +43,14 @@ Create a run envelope with stage markers and a final status. Link structured out
 
 ## Test it before moving on
 
-Kill the process after each stage in separate tests. Monitoring should identify the last completed marker and the final record should remain absent until recovery closes the run.
+Kill the process after each stage, one test per stage. Monitoring must name the last completed marker inside your alert window, and the envelope must stay open until recovery or a human closes it. In a toy pass of 7 kills: 7 envelopes left open, 0 false completions. A wrapper exiting with status zero while 3 of 7 markers are missing counts as failure.
 
-**Operating limit:** The terminal run envelope is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
-
-**Further reading for the terminal run envelope (context, not implementation evidence):** [Investor.gov: Broker-Dealer Record-Keeping Requirements](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements); [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations)
-
-Educational, not investment advice.
+**Operating limit:** a public engineering pattern exercised on paper, carrying no allocation, no account identifier, no tuned value from anything live, and no performance claim. Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the terminal run envelope only when the test above passes and its retained output matches the minimum record.
+**GO:** accept the envelope when every kill leaves a diagnosable trail and the retained output carries all six fields.
 
-**NO-GO:** Do not mark a run completed because a wrapper process exited with code zero while required stages are missing.
+**NO-GO:** never mark a run complete because the wrapper exited cleanly while required stages are absent.
 
-**Next Friday:** Carry the accepted terminal run envelope into Check Broker Capabilities Before Placement.
+**Next Friday:** carry the accepted envelope into Check Broker Capabilities Before Placement.

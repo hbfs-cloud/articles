@@ -8,28 +8,58 @@ source_path: "series/plan-de-trading/part6-execution/index.html"
 
 *Part 6 of 6 in Build a Trading Plan You Can Execute.*
 
-Use four states for every candidate: prepare, observe, execute, and record. Do not submit an order until the prepared trigger, current market, order type, size, and exit instructions agree. Afterward, preserve the actual decisions and fills instead of repairing the plan to match the outcome.
+The plan is written. Most people fail here anyway, not for want of rules but for want of a habit that
+carries them out. Fifteen to twenty-five minutes in the evening, when the market is shut, is enough for a
+swing trader. An hour-long intraday ritual is the version people abandon in three weeks.
 
-During **prepare**, write the setup, evidence timestamp, trigger, invalidation, expiry, intended order type, and size ceiling. During **observe**, update only fields the plan permits, such as the current spread or whether a trigger occurred. A moving price is not a reason to improvise a new setup.
+Four states, always in this order: prepare, watch, execute, record.
 
-During **execute**, translate the plan into the broker ticket. Investor.gov notes that a market order generally favors execution rather than a guaranteed price, while a limit order controls price but may not execute. Order routing and market movement can affect the fill. The order choice should follow the intended trade-off, not habit.
+**Prepare**, away from the noise. Review the list. Mark the names sitting within 2% of their trigger, since
+those are the only ones that can act tomorrow. Check the calendar. Most swing plans refuse a new entry when
+results are due within five sessions, because an earnings gap walks straight over a stop. Then write the
+order out in full: entry, stop, target, size, expiry.
 
-Take a hypothetical order. The prepared record permits a limit entry up to $18.40, thesis invalidation at $18.05, and no entry after 2:30 p.m. The broker fills 150 shares at $18.38. The trader immediately records the actual fill and recalculates planned price risk as $0.33 per share. If the intended protective instruction is rejected, the routine does not assume protection exists. It requires confirmation, correction if allowed by the plan, or an orderly exit under the exception rule.
+**Watch** means watching for one named event, not for excitement. You update what the plan permits, such as
+the current spread or whether the trigger actually happened. A price moving fast is not permission to
+invent a new setup at 3 p.m.
 
-During **record**, retain the order submission time, fills, rejected or canceled orders, fees, and the reason for every manual intervention. Investor.gov advises investors to understand transaction and account fees; even a commission-free label does not establish that execution has no cost. Performance review should use actual net outcomes, not ideal chart prices.
+**Execute** turns the note into a broker ticket, with the entry, the stop and the target sent together as a
+linked order. A stop you intend to place later is a stop that does not exist. Investor.gov notes that a
+market order generally favours execution over a guaranteed price, while a limit order controls price and
+may not execute at all; routing and movement affect the fill. Pick the trade-off deliberately, not out of
+habit.
 
-Run this compact check at the order ticket:
+Take a prepared ticket. Buy-stop entry at €152.40, invalidation at €148.90, first target at €159.80. Risk
+per share is €3.50. On capital of €20,000 with 2.5% allowed per trade, the budget is €500, so €500 divided
+by €3.50 gives 142 shares after rounding down, and the real exposure is 142 × €3.50, about €497. Reward
+against risk is €7.40 over €3.50, roughly 2.1 to one. If the price has already run past €152.40 when you go
+to place the order, recompute: when the ratio drops below the plan's floor, you skip it. Chasing a move
+already underway is the fastest way to spend an edge.
 
-- Setup valid and source information still current?
-- Trigger observed without anticipation?
-- Order type, duration, and session correct?
-- Size within trade, liquidity, and portfolio caps?
-- Exit instruction accepted and visible?
-- Actual fill and exception notes saved?
+**Record** immediately, at entry and at exit, while the detail is intact. Keep submission times, fills,
+cancelled and rejected orders, fees, and the reason for every manual intervention. Investor.gov advises
+understanding transaction and account fees; a commission-free label does not mean execution was free. Two
+extra fields repay the effort: the worst unrealised loss and the best unrealised gain during the trade. On
+the ticket above, price dipped to €150.10, then ran to €161.20 before you sold at €159.80. The dip never
+came near €148.90. The run says the market offered €8.80 and you took €7.40. One trade proves nothing;
+thirty of these will tune your stops and targets better than any opinion.
 
-**Limitation:** a routine cannot prevent platform failure, rejected orders, delayed data, trading halts, or fills outside the expected range. Automation also introduces its own configuration and connectivity risks. When the observed state no longer matches the plan, abstaining or exiting can be valid; forcing completion of the original sequence is not discipline.
+Run this compact check at the ticket:
 
-The final review question is narrow: did the trader follow the version of the plan that existed before the decision? Profit does not excuse a violation, and a compliant loss does not by itself invalidate the method. Strategy evaluation requires a larger, consistently measured record.
+- Setup still valid, source information still current?
+- Trigger observed, not anticipated?
+- Order type, duration and session correct?
+- Size inside the trade, liquidity and portfolio caps?
+- Protective instruction accepted and visible on screen?
+- Actual fill and any exception saved?
+
+**Limitation:** a routine cannot stop a platform failing, an order being rejected, data arriving late, a
+halt, or a fill outside the expected range. Automation adds its own configuration and connectivity risks.
+When what you see stops matching the plan, standing aside or getting out can be the right answer. Forcing
+the original sequence to completion is not discipline.
+
+The review question is narrow: did you follow the version of the plan that existed before the decision?
+Profit does not excuse a breach, and a loss taken by the book does not condemn the method.
 
 Sources: [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders); [Investor.gov: Executing an Order](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order); [Investor.gov: Understanding Fees](https://www.investor.gov/introduction-investing/getting-started/understanding-fees)
 

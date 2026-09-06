@@ -12,15 +12,17 @@ send_email: false
 
 *Part 1 of 3 in Backtest Without Fooling Yourself. Lesson 25 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Backtests need effective-dated membership, corporate actions and first-availability timestamps. Current fundamentals applied across history introduce lookahead even when price bars are correct. When a historical field is not point-in-time, label the approximation or exclude it.
+A backtest is a claim about the past: with these rules, this is what I would have done. The claim only holds if the simulation was blind to everything that had not happened yet. Lookahead — letting a test see tomorrow's information while it pretends to be yesterday — is the cheapest way to draw a beautiful curve that means nothing.
 
-**Input from last Friday:** The accepted validated paper-plan fixture.
+Three leaks account for most of it. Index membership taken from today's list and applied to a year when the list was different. Splits and mergers left unadjusted. And company figures stamped with the period they cover instead of the day they became public: a quarter ending in March is not knowable in March.
 
-**Friday deliverable:** A point-in-time backtest bundle, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** the accepted validated paper-plan fixture.
+
+**Friday deliverable:** one frozen input bundle — data, versions and coverage locked together — filed with the week's paperwork.
 
 ## Build this
 
-Freeze an input bundle before each experiment. Store data coverage, unavailable ranges and configuration version. Separate the research notebook from the authoritative replay runner.
+Freeze the inputs before the experiment starts, not after you like the answer. Record which dates you actually hold, which ranges are missing, and the configuration version in force. Keep the exploratory notebook apart from the runner that produces the official numbers. The notebook is for wandering; the runner is for the record.
 
 ### Minimum record
 
@@ -32,18 +34,18 @@ Freeze an input bundle before each experiment. Store data coverage, unavailable 
 
 ## Test it before moving on
 
-Insert a future filing and a later index constituent into a fixture. Neither may appear before its effective availability. Run the same bundle twice and compare trade records and metrics.
+Plant two traps in a fixture, meaning a small hand-built data set whose answers you already know. The numbers are invented to exercise the code, not observations of any market. First, a filing for SYM_A covering a period that ended on day 40 but only published on day 61: invisible on day 45, visible on day 62, no exceptions. Second, SYM_M joining the index on day 30: it must not appear in any candidate list dated day 29. Then run the identical bundle twice — 143 trades both times, same order, same metrics. If the two runs disagree, something in the pipeline is quietly reaching for live data.
 
-**Operating limit:** The point-in-time backtest bundle is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** a classroom bundle. Fixture data, invented counts, nothing that resembles a tradable result or a real book.
 
-**Further reading for the point-in-time backtest bundle (context, not implementation evidence):** [CFTC: Trading Systems Advisory](https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/fraudadv_tradingsystem.html); [NIST: Bootstrap Plot](https://www.itl.nist.gov/div898/handbook/eda/section3/bootplot.htm)
+Background: [what an 8-K is and when it appears](https://www.sec.gov/info/edgar/forms/form8-k.pdf) and [how to look up the date a filing actually became public](https://www.investor.gov/introduction-investing/getting-started/researching-investments/using-edgar-research-investments).
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the point-in-time backtest bundle only when the test above passes and its retained output matches the minimum record.
+**GO:** both traps stay invisible until their availability date, and the repeated run matches trade for trade.
 
-**NO-GO:** Do not describe a backtest as historical proof when current-only enrichments governed past trades.
+**NO-GO:** do not call a backtest historical proof when present-day fields governed past decisions. Name every approximated field, or drop it.
 
-**Next Friday:** Carry the accepted point-in-time backtest bundle into Model Costs, Gaps and Partial Fills.
+**Next Friday:** the accepted bundle carries into Model Costs, Gaps and Partial Fills.

@@ -8,26 +8,30 @@ source_path: "series/banques-centrales/part3-qe-qt/index.html"
 
 *Part 3 of 6 in The Central Bank Playbook.*
 
-When a central bank changes its balance-sheet policy, record five facts separately: eligible assets, purchase or runoff flow, reinvestment rule, total holdings, and relevant liabilities. Do not reduce quantitative easing to "printing money" or quantitative tightening to a fixed amount of "liquidity removed." Those labels hide the accounting and invite unsupported market claims.
+$900bn in 2007. A peak of $8,900bn in April 2022. Roughly $6,800bn by mid-2026. That is the Fed's balance sheet — everything it owns, funded by everything it owes — and it is the single number people most often summarise as "money printing". The summary hides the part that matters.
 
-The Federal Reserve defines open market operations as central-bank purchases and sales of securities used to implement monetary policy. Outright purchases add securities to the System Open Market Account; maturities, reinvestments, and sales determine how holdings evolve. The Federal Reserve publishes balance-sheet categories in its weekly H.4.1 release. The ECB likewise documents the securities included in its asset purchase programmes and the Governing Council's decisions on net purchases and reinvestment.
+Split the sheet. On the asset side, mid-2026, sit about $4,200bn of Treasuries and about $2,200bn of mortgage-backed securities. On the liability side: bank reserves, overnight reverse repos, and roughly $2,300bn of actual paper dollars in circulation. Quantitative easing buys assets and creates reserves — money banks hold at the Fed, which is not the same thing as money in your pocket. That gap is why the 2009-2014 purchases did not produce the hyperinflation many people forecast: banks sat on the reserves rather than lending them.
 
-Separate **flow** from **stock**. A slower purchase pace can still increase total holdings. Ending net purchases can leave holdings unchanged if maturities are reinvested. Runoff reduces holdings when maturing principal is not fully reinvested. None of these statements, by itself, tells you where an equity index or long-term yield must go.
+Now separate flow from stock, because almost every bad take collapses the two.
 
-Consider a simplified hypothetical month. Securities with $100 of principal mature, and the announced plan allows only $40 to be reinvested. If no purchases, sales, valuation changes, or other relevant transactions occur, securities holdings decline by $60. That arithmetic describes the asset side under the stated assumptions. It does not prove reserve balances also fall by exactly $60: currency, Treasury balances, reverse repos, lending, and other balance-sheet items can change at the same time.
+Flow is the monthly pace. Stock is total holdings. A slower purchase pace still adds to the stock. Ending net purchases leaves the stock flat if maturing bonds are reinvested. Only when principal is allowed to run off without reinvestment does the stock actually shrink.
 
-Use this balance-sheet procedure:
+Watch how that plays out in real caps. The Fed's tightening ran at $47.5bn a month from June 2022 ($30bn Treasuries, $17.5bn mortgage bonds), doubled to $95bn from September 2022 ($60bn and $35bn), then slowed to about $60bn from mid-2024 with the Treasury cap cut to $25bn. Those are ceilings, not deliveries. The mortgage cap stayed at $35bn while actual runoff came in nearer $15bn, because few mortgage bonds happened to mature. Announced pace and realised change are two different series. Check both.
 
-- Save the policy announcement with its release time and time zone.
-- Extract the eligible assets, pace, caps, and effective period.
-- Distinguish gross purchases, redemptions, reinvestment, and net change.
-- Compare announced flow with subsequent published holdings.
-- Inspect relevant liabilities instead of using one liquidity label.
-- Record the policy-rate decision separately from balance-sheet policy.
+Before writing anything about a balance-sheet announcement, do this.
 
-For market review, first state the observed price change and measurement window. Then compare it with prior expectations and simultaneous news. "Prices rose after the announcement" establishes chronology, not that asset purchases caused the move. The central bank's stated objective is evidence about intent, not proof of a particular market transmission magnitude.
+- Save the announcement with its release time and time zone.
+- Pull out the eligible assets, the pace, the caps and the effective period.
+- Keep gross purchases, redemptions, reinvestment and net change in separate columns.
+- Compare the announced flow against the holdings actually published afterwards.
+- Look at the liabilities rather than leaning on one word like "liquidity".
+- Record the rate decision separately from the balance-sheet decision.
 
-**Limitation:** public balance sheets are aggregated and published on schedules that may not match trade settlement or market timestamps. Holdings can change for operational reasons, and reserve balances can shift among liabilities. Even precise accounting does not isolate the causal effect of a balance-sheet announcement on one asset price.
+Two dates are worth memorising. On 22 May 2013 Ben Bernanke merely mentioned that purchases might slow. The ten-year Treasury yield went from 1.63% to 3.00% within weeks, a 137 basis point move, and the S&P 500 fell 5.8% in a month. Nothing had been sold. Then September 2019: the Fed's first tightening cycle ended abruptly when overnight repo rates spiked to 10% and it had to put reserves back. Nobody, including the Fed, knows precisely where reserves become scarce.
+
+And liquidity is an accelerator, not a steering wheel. Through 2023 the Fed ran down its holdings at $95bn a month and the S&P 500 still gained 26%. Its own rough estimate puts $1,000bn of runoff at about 25 basis points of tightening; other estimates span 10 to 50.
+
+**Limitation:** published balance sheets are aggregated weekly and will not line up with market timestamps. Holdings shift for operational reasons, and reserves can move between liabilities without any policy change. Precise accounting still cannot isolate what one announcement did to one price.
 
 Sources: [Federal Reserve: Open Market Operations](https://www.federalreserve.gov/monetarypolicy/openmarket.htm); [Federal Reserve: H.4.1 Factors Affecting Reserve Balances](https://www.federalreserve.gov/releases/h41/); [ECB: Asset Purchase Programmes](https://www.ecb.europa.eu/mopo/implement/app/html/index.en.html)
 

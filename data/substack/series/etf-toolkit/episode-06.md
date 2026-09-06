@@ -8,28 +8,30 @@ source_path: "series/trader-etf/part6-portefeuille-allocation/index.html"
 
 *Part 6 of 6 in The ETF Toolkit.*
 
-Build the portfolio from financial jobs, then choose the smallest set of funds that can perform them. Each holding needs a target weight, a reason tied to time horizon and risk tolerance, and a rebalancing rule. If two ETFs perform the same job with the same underlying exposures, adding the second ticker may add complexity rather than diversification.
+The cure for a messy portfolio is not another fund. It is a job description for each one already in there.
 
-Start with the goal. Money needed soon cannot absorb the same volatility as capital intended for decades. Asset allocation divides the portfolio among categories such as equities, bonds and cash. Diversification then spreads risk within those categories. Neither removes the possibility of loss.
+Start from the money, not the tickers. Cash you need in three years cannot ride the same waves as capital you won't touch for thirty. Allocation splits the pot between stocks, bonds and cash; diversification spreads risk inside each of those. Neither removes the possibility of loss, and both get sold as if they did.
 
-Consider a hypothetical $100,000 portfolio targeted at 60% equities, 30% bonds and 10% cash. After market moves it holds $68,000, $25,000 and $7,000. Restoring target weights would mean reducing equities by $8,000, adding $5,000 to bonds and $3,000 to cash, before tax and trading costs. If new contributions are available, direct them to the underweight jobs first and reduce the required sales.
+The classic templates are useful mainly because their trade-offs are visible. A 60/40 has returned around 8.5% a year with a worst fall from a previous high near 30%. Ray Dalio's All-Weather — 30% stocks, 40% long bonds, 15% intermediate bonds, 7.5% gold, 7.5% commodities — gave up about a point of annual return for a worst fall near 12%. Harry Browne's Permanent Portfolio, four equal quarters of stocks, long bonds, gold and cash, returned roughly 6.5% with a worst fall near 8%. The Bogleheads three-fund sits at the far end: about 8.2% a year, and a 35% hole to sit through. Choose the drawdown you can actually live with, not the headline return.
 
-Fund selection comes after that decision. For each slot, compare objective, benchmark, holdings, concentration, expense ratio, spread, tracking difference, premium-discount history and legal structure. A low expense ratio does not compensate for the wrong exposure. A broad label does not prevent overlap: a total-market fund, a large-cap fund and a technology fund may all concentrate the combined portfolio in the same largest companies.
+Arithmetic beats intention here. Take $100,000 targeted at 60% stocks, 30% bonds, 10% cash. After a good run it holds $68,000, $25,000 and $7,000. Restoring the plan means selling $8,000 of stocks, buying $5,000 of bonds and $3,000 of cash, before tax and trading costs. If contributions are still arriving, point them at the underweight jobs first and that sale shrinks or vanishes.
 
-Write a maintenance policy while the plan is calm. It can use periodic reviews, preset bands or both. Record what justifies a change: a new goal, shorter horizon, changed risk capacity, fund closure, material methodology change or persistent implementation failure. A market forecast alone is not a durable allocation policy.
+Only then pick the fund. For each slot, compare objective, index, holdings, concentration, fee, spread, tracking difference and legal structure. A cheap fee never fixes a wrong exposure. And a broad name does not prevent duplication: a total-market fund, a large-cap fund and a technology fund can all pile into the same handful of giants.
 
-Use this portfolio review:
+Write the maintenance policy while nothing is going wrong. Thirty minutes a quarter covers it. Are the weights inside their bands? Has the fee changed? Is tracking still normal? Is the fund still large enough that the issuer will bother keeping it open — below roughly $100M in assets, closure is a genuine possibility.
 
-- Name the job, target weight and acceptable range for every holding.
-- Aggregate underlying holdings, sectors, countries, currencies and duration.
-- Compare actual weights with targets.
-- Use contributions and distributions before taxable sales where practical.
-- Recheck fees, spread, tracking and fund documents.
-- Document the reason for any allocation change.
+Quarterly review:
 
-Backtests can help reveal drawdowns and rebalance mechanics, but they are not forecasts. Results depend on the selected period, index history, reconstitution assumptions, taxes, costs and available products. A model portfolio may also ignore liabilities, emergency reserves and jurisdiction-specific rules.
+- Name the job, the target weight and the acceptable range for every holding.
+- Add up the underlying holdings, sectors, countries, currencies and duration.
+- Compare actual weights against targets and record the gap.
+- Use contributions and dividends before taxable sales wherever practical.
+- Recheck fees, spread, tracking and fund documents once a year.
+- Write down the reason behind any change to the allocation.
 
-The final limitation is personal. No generic stock-bond formula can determine an individual's required return, ability to bear loss or spending needs. The toolkit makes the decision auditable; it does not make the decision universal.
+Backtests let you feel a drawdown before it happens to you. They do not forecast. Overfitting, survivorship bias and regime change all live inside them — the stock-bond correlation ran near -0.40 for two decades and flipped to roughly +0.50 in 2022, which is exactly why 60/40 hurt that year and why the models built on the old number said it couldn't.
+
+Change the allocation for personal reasons: a shorter horizon, a new job, the discovery that you panic at -20%. Not because a forecast says a crash is coming. That risk was already priced into the target you chose. This toolkit makes the decision auditable. It cannot make it universal.
 
 Sources: [Investor.gov Asset Allocation and Diversification](https://www.investor.gov/introduction-investing/getting-started/asset-allocation), [SEC ETF Investor Bulletin](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-24), [SEC Fund and ETF Fees Bulletin](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins/mutual-fund-and-etf-fees-and-expenses-investor-bulletin).
 

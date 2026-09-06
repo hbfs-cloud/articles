@@ -8,25 +8,29 @@ source_path: "series/lire-le-marche/part1-sec-filings/index.html"
 
 *Part 1 of 6 in Read Market Evidence Without Inventing a Signal.*
 
-Record three dates before interpreting an SEC filing: the event or transaction date, the period covered, and EDGAR's “Accepted” timestamp. Never use the filing's appearance in a feed as the date of the underlying activity. The form tells you what was disclosed; its clock tells you whether the disclosure is fresh enough for your question.
+Every SEC document carries three dates, and mixing them up is how an old disclosure turns into a fresh-looking signal.
 
-EDGAR normally operates on federal business days from 6:00 a.m. to 10:00 p.m. Eastern Time. Most live submissions started after 5:30 p.m. receive the next business day's filing date and dissemination, even if accepted that evening. Certain forms, including Forms 3, 4 and 5, can retain same-day treatment when accepted before 10:00 p.m. The SEC's filing-status page is the authority for these rules, which should be rechecked if timing matters.
+The three: when the event or transaction happened, what period the document covers, and the moment EDGAR stamped it "Accepted". The moment it appeared in your feed is not one of them.
 
-Form 4 reports changes in beneficial ownership for covered officers, directors and large holders. It is generally due within two business days after the transaction. Read the transaction date, code, price, amount, direct or indirect ownership, and footnotes. Code P identifies an open-market or private purchase; code A can identify an award. Treating every acquisition as a discretionary purchase discards the form's most important distinction.
+EDGAR is the SEC's public filing system, open since 1993, free to read, taking in roughly three thousand documents on a normal business day. Same archive the large funds use. The gap between a professional and everyone else is not access. It is knowing which clock a document runs on.
 
-Form 13F is not an insider-transaction report. Covered institutional investment managers report specified quarter-end holdings, and the filing can arrive within 45 days after quarter end. It is a holdings snapshot for the report date, not a list of trades made on the acceptance date. Form 8-K has another clock: unless its instructions specify otherwise, it is generally due within four business days after the triggering event.
+The system operates federal business days, 6:00 a.m. to 10:00 p.m. Eastern. A live submission started after 5:30 p.m. usually receives the next business day's filing date and dissemination, even though it was accepted that evening. Forms 3, 4 and 5 get different treatment: they can keep same-day status when accepted before 10:00 p.m. If timing decides your reading, check the SEC's filing-status page rather than a remembered rule of thumb. It is the authority, and it changes.
 
-Consider a Form 13F accepted this afternoon and a Form 4 accepted this evening. The 13F can support a claim about reportable holdings at quarter end. It cannot show that the manager bought today. The Form 4 may describe a transaction from an earlier business day. Check its code before describing it as a purchase, sale, grant, tax withholding or other event.
+Form 4 reports a change in beneficial ownership by a covered officer, director or large holder. It is generally due within two business days of the transaction. Read the transaction date, the code, the price, the amount, whether ownership is direct or indirect, and the footnotes. Code P means an open-market or private purchase. Code A can mean an award, so shares handed over rather than bought. Call both of those "insider buying" and you have thrown away the single distinction the form exists to make.
+
+Form 13F is a different animal, and the two get confused constantly. Institutional investment managers above the $100 million threshold report specified holdings as of quarter end, and the filing can arrive up to 45 days later. It photographs positions on the report date. It is not a list of trades made on the day it showed up. Form 8-K runs on yet another clock, generally four business days after the triggering event unless its instructions say otherwise.
+
+Picture a 13F accepted this afternoon and a Form 4 accepted this evening. The 13F supports a sentence about what a manager reportedly held at quarter end. Nothing about today. The Form 4 may describe a transaction from an earlier business day, so read the code before calling it a purchase, a sale, a grant or a tax withholding.
 
 Filing check:
 
-- Save the accession link and EDGAR acceptance timestamp.
-- Record the event date and period of report separately.
-- Read the form item, transaction code and footnotes.
-- Distinguish a position snapshot from a transaction report.
-- Check for amendments and related exhibits.
+- Save the accession link and the EDGAR acceptance timestamp.
+- Record the event date and the period of report separately.
+- Read the form item, the transaction code and the footnotes.
+- Tell a position snapshot apart from a transaction report.
+- Look for amendments and related exhibits.
 
-A filing still has limits. Confidential treatment, reporting thresholds, amendments and form-specific coverage can leave parts of an investor's exposure unseen. EDGAR acceptance proves that a document entered the public system; it does not prove the market noticed it immediately or that every statement predicts future performance.
+Where this ends. Confidential treatment, reporting thresholds, amendments and the coverage limits of each form can leave large parts of an investor's real exposure unseen. A short seller's borrowed position, for instance, does not appear anywhere in a 13F. Acceptance proves a document entered the public record at a known second. It does not prove the market noticed, and it does not make any sentence inside the document a forecast.
 
 Sources: [SEC EDGAR filing-time guidance](https://www.sec.gov/submit-filings/filer-support-resources/how-do-i-guides/determine-status-my-filing), [Investor.gov Form 4 guide](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-69), [SEC Form 13F FAQ](https://www.sec.gov/rules-regulations/staff-guidance/division-investment-management-frequently-asked-questions/frequently-asked-questions-about-form-13f), [SEC Form 8-K](https://www.sec.gov/info/edgar/forms/form8-k.pdf).
 

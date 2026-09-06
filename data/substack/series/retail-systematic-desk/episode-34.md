@@ -12,15 +12,23 @@ send_email: false
 
 *Part 1 of 3 in Keep an Audit Trail That Survives Incidents. Lesson 34 of 45 in Build a Retail Systematic Desk, Safely.*
 
-A useful ledger records what the system knew, decided and attempted at the time. Later corrections reference the original event and add a new version. A hash chain detects changes only relative to a trusted external checkpoint; it does not make the storage truthful or complete by itself.
+Something breaks on a Tuesday. By Thursday you understand it, and the tempting move is to reach back and fix the Tuesday row. Do that once and the ledger stops being evidence; it becomes an opinion you keep updating.
 
-**Input from last Friday:** The accepted uncertain-submit recovery test.
+Append-only means the file only grows. A correction is a new row pointing at the old one, saying what changed and why. Public companies operate the same way: an error in a filed 8-K comes back as a dated amendment sitting beside the original, never in place of it ([SEC: Form 8-K](https://www.sec.gov/info/edgar/forms/form8-k.pdf)).
 
-**Friday deliverable:** An externally checkpointed decision ledger, owned by the desk operator and retained in the review bundle.
+Toy month, invented counts for illustration: 612 events written, 3 of them corrections, 0 rows edited, 615 rows on disk. The third number is the one that matters. If it ever moves, no dashboard will tell you.
+
+**Input from last Friday:** the accepted uncertain-submit drill.
+
+**Friday deliverable:** a checkpointed decision ledger, owned by the desk operator and kept in the review bundle.
 
 ## Build this
 
-Write events with sequence, timestamp, actor identity, object identifiers and previous-event hash. Retain signed or independently stored root hashes, restrict mutation access, test backup restoration and separate immutable events from derived views.
+Each row carries a sequence number, the time, who or what caused it, the object it concerns, a fingerprint of its own contents, and the fingerprint of the row before it. That last field is the chain: alter an old row and every fingerprint after it stops matching.
+
+The chain by itself proves very little. Whoever can rewrite rows can recompute fingerprints just as easily. So the day's final fingerprint goes somewhere you cannot quietly revise later: signed, mailed to yourself, written to storage under different credentials. That outside copy is the checkpoint, and it is the part that turns arithmetic into evidence.
+
+Keep raw events apart from anything calculated from them. Positions, equity, statistics are all rebuildable and all disposable.
 
 ### Minimum record
 
@@ -35,18 +43,14 @@ Write events with sequence, timestamp, actor identity, object identifiers and pr
 
 ## Test it before moving on
 
-Alter a historical event and confirm chain verification fails. Rebuild a dashboard from the unmodified ledger and compare it with the stored projection.
+Edit one historical row by hand, changing a single quantity, then run verification. It must fail and it must name the row. Next, rebuild yesterday's position view from the events alone and compare it field by field against the view you stored. A toy pass turned up one mismatch, in a rounding rule (illustration only) — precisely the class of quiet bug this comparison exists to surface.
 
-**Operating limit:** The externally checkpointed decision ledger is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
-
-**Further reading for the externally checkpointed decision ledger (context, not implementation evidence):** [Investor.gov: Broker-Dealer Record-Keeping Requirements](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements); [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations)
-
-Educational, not investment advice.
+**Operating limit:** everything here is public architecture on paper data. No live account, no allocation, no threshold from any running system, no performance claim. Educational, not investment advice. Retention duties for regulated firms, as background on why records outlive incidents: [Investor.gov: Broker-Dealer Record-Keeping Requirements](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements).
 
 ## Release decision
 
-**GO:** Accept the externally checkpointed decision ledger only when the test above passes and its retained output matches the minimum record.
+**GO:** accept the ledger when tampering is detected, the rebuild matches, and the retained output carries all eight fields.
 
-**NO-GO:** Do not repair a past decision by editing it in place.
+**NO-GO:** never repair a past decision by editing it where it sits.
 
-**Next Friday:** Carry the accepted externally checkpointed decision ledger into Design Recovery and Supersession.
+**Next Friday:** carry the accepted ledger into Design Recovery and Supersession.

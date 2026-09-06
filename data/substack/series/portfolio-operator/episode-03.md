@@ -8,28 +8,34 @@ source_path: "series/piloter-son-portefeuille/part3-drawdown/index.html"
 
 *Part 3 of 6 in Operate a Portfolio, Not a Collection of Trades.*
 
-Measure drawdown from the portfolio's prior equity peak, but manage future exposure with separate loss budgets and stress limits. Drawdown is an observed path statistic. It is not the amount at risk on the next trade, the maximum future loss, or proof that an edge has disappeared.
+Drawdown is the distance from your highest recorded equity down to where you sit now. It describes the road behind you. It is not the amount at risk on your next trade.
 
-Choose the equity convention first. Decide whether the series includes open-position marks, cash flows, fees, financing, and taxes, and specify the valuation time and price source. Then calculate:
+It earns the attention because recovery is lopsided. Down 10% needs +11% to get level. Down 25% needs +33%. Down 50% needs +100%. Down 80% needs +400%. The deeper the hole, the steeper the climb out, and past a point a drawdown stops costing money and starts costing years.
+
+Fix the accounting first. Does the equity series include open positions, deposits, fees, financing, tax? Priced at what time, from which source? Then the formula is simple:
 
 `drawdown = (current equity - prior peak equity) / prior peak equity`
 
-Suppose a hypothetical account reaches a closing equity peak of $50,000 and later closes at $46,000 with no deposits or withdrawals. Its drawdown under that convention is -8 percent. That figure describes a $4,000 decline from the recorded peak. It does not say that another trade risks $4,000, nor does it prevent the account from falling further. A separate policy might allow only $120 of planned loss on a new position and $300 across all open positions. Those are prospective limits chosen by the operator, not values inferred from the drawdown.
+An account peaks at $50,000 and later closes at $46,000 with no deposits. That is -8%, a $4,000 decline from the recorded high. It says nothing about the next trade, which might be capped at $375 of planned loss by a completely separate rule.
 
-Portfolio risk also needs a stress view. FINRA describes concentration risk as amplified loss from a large exposure to one investment, asset class, or market segment. Positions with different tickers can share the same economic driver. Adding each planned stop loss will understate exposure if correlated gaps bypass several stops together.
+That separate rule is where survival actually lives. Fix the fraction of capital you will lose per trade — 0.5% to 1% is the institutional standard — and let the stop distance decide the share count, never the reverse. On $50,000 at 0.75%, the budget is $375. A stock at $40 with invalidation at $37 risks $3 a share, so you buy 125 shares. The same stock with a stop at $39 risks $1 a share, so 375 shares. Wildly different position sizes, identical loss when you're wrong.
 
-Define drawdown states before they occur. A first state can trigger enhanced reconciliation and exposure review. A later state can reduce or block new risk. A mandate breach can require a pause and formal decision. The levels must reflect the portfolio's objective, capital needs, evidence, and ability to bear loss. No fixed percentage is suitable for every strategy or trader.
+The fraction matters more than the signal. At 1% per trade, ten consecutive losses cost about 9.6%; it takes roughly 11 losses in a row to reach -10%. At 5% per trade, the same ten losses cost about 40%, and two of them get you to -10%.
 
-Use this risk check:
+Volatility deserves the same treatment. Two stocks at $40 do not move the same way. Size against average true range, the typical daily swing, so a nervous name gets a smaller position than a calm one for the same dollar risk. With a $375 budget and a stop at 2.5 times ATR: a stock with ATR of $0.80 has a $2.00 stop and takes 187 shares; a stock with ATR of $2.40 has a $6.00 stop and takes 62 shares. Three times smaller, same risk.
 
-- Freeze the equity, cash-flow, and valuation convention.
-- Report current and maximum drawdown with dates.
-- Keep trade and aggregate loss budgets in separate fields.
-- Stress gaps, leverage, and shared portfolio drivers.
-- Link each drawdown state to an automatic operating response.
-- Require a documented review before restoring size.
+Then the blind spot that ruins careful sizing. Ten tickers can be one bet. Hold NVDA, AMD, AVGO, MU and ARM and you own five lines and roughly one wager on the semiconductor cycle. Ten genuinely unrelated positions cut portfolio swings by about a factor of 3.2; ten correlated ones cut nothing at all. Treat anything above 0.6 correlation as one cluster and cap it — two or three positions, no more than 30% of total book risk.
 
-**Limitation:** historical maximum drawdown is sample-dependent and cannot bound an unobserved worst case. Marks can be unreliable in illiquid instruments, and correlation can rise during stress. Stop orders do not guarantee the stop price, while margin agreements may permit forced sales. A drawdown gate can reduce planned exposure; it cannot guarantee the portfolio's terminal loss.
+Risk check:
+
+- Freeze the equity, cash-flow and valuation convention in writing.
+- Report current and maximum drawdown with their dates.
+- Keep per-trade and portfolio loss budgets in separate fields.
+- Size against volatility rather than a fixed dollar amount per position.
+- Wire each drawdown level to an automatic response before it triggers: review at -4%, half size at -8%, no new entries at -12%.
+- Require a documented review before restoring full size.
+
+**Limitation:** the worst drawdown you have observed cannot bound the one you have not. Marks go stale in illiquid instruments, correlations converge toward 1 exactly when you need them not to, stop orders do not guarantee the stop price, and margin agreements can force sales. A drawdown gate limits planned exposure. It cannot cap the final loss.
 
 Sources: [FINRA: Risk](https://www.finra.org/investors/investing/investing-basics/risk); [FINRA: Concentration Risk](https://www.finra.org/investors/insights/concentration-risk); [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders); [Investor.gov: Understanding Margin Accounts](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-29)
 

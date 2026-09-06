@@ -8,26 +8,35 @@ source_path: "series/piloter-son-portefeuille/part6-arreter/index.html"
 
 *Part 6 of 6 in Operate a Portfolio, Not a Collection of Trades.*
 
-Define shutdown conditions while the strategy is healthy, and separate an operational stop from a research conclusion. A control breach can require an immediate halt without proving the edge is gone. A drawdown can trigger a mandate pause without proving permanent failure. Declaring the strategy dead requires evidence under the predeclared evaluation method, not exhaustion after a losing streak.
+The day to write your shutdown rules is the day you start, while nothing hurts. In the middle of a losing run your brain swings between denial and surrender, and neither one is a decision.
 
-Use three shutdown classes. An **emergency stop** responds to compromised credentials, uncontrolled orders, invalid data, margin danger, or another condition that makes continued operation unsafe. An **orderly stop** blocks new entries, manages existing positions under written exits, and closes the operating cycle. A **research retirement** follows a frozen review showing that the current version no longer meets its stated evidence or economic criteria after costs.
+Start by separating three things that people call "stopping."
 
-Use this closure checklist:
+An emergency stop is for danger: stolen login, orders firing on their own, corrupted prices, a margin call. You close at market and ask questions afterwards.
 
-- Block new exposure and identify every working order.
-- Reconcile positions and broker records before analysis.
-- Execute emergency and orderly exits under separate rules.
-- Freeze data, code, parameters, costs, and exception logs.
-- Compare the result with the original mandate and test protocol.
-- State whether the decision is pause, revision, or retirement.
+An orderly stop is the default. New entries end immediately. Existing positions keep running under the exits already written, close at their planned prices, and only then do you switch the strategy off for good. Nothing gets dumped, so you never pay the panic premium.
 
-The sequence matters. First protect the account and stop creating new exposure. Then reconcile positions, working orders, fills, financing, and external cash flows. Preserve the strategy version and the complete record before analysis. Only after the operating state is controlled should the review classify causes such as execution deterioration, changed opportunity set, underestimated costs, concentration, or ordinary variation.
+A retirement is a research verdict, and it needs evidence, not exhaustion.
 
-Consider a hypothetical strategy with a predeclared mandate drawdown gate. The gate is breached after a gap produces a worse exit than planned. New orders stop immediately because the mandate says so. Existing positions follow the separate shutdown schedule. The post-mortem retains the full gap loss rather than clipping it to the planned stop and reruns performance with actual costs. The result may support revision, retirement, or a new forward test, but the original record remains closed and unchanged.
+That last one is where retail investors make their biggest statistical mistake: killing a strategy on a handful of trades. With a real but modest edge, losing runs of six, eight, even twelve trades happen by pure chance. Ten trades tells you about luck, not about the method.
 
-Do not choose the sample length after seeing the answer. If the retirement test depends on expectancy, drawdown, or execution quality, define the observation unit, review window, exclusions, and uncertainty before deployment. FINRA's performance guidance emphasizes including transaction fees and comparing compatible periods. A flat average without its distribution, capital path, and largest contributors is not enough.
+A readable threshold: do not even consider "the edge is gone" before roughly thirty live trades, and then only if the profit factor stays below the line. Profit factor is simply gross winnings divided by gross losses, so 1.0 means you broke even. Judge it on a rolling window, not on one snapshot, and treat a sustained reading under 1.0 — or under about seventy percent of what the backtest promised, say 1.5 falling to 0.8 — as the signal. Below that sample size, the correct move is to cut size, not to cut the strategy.
 
-**Limitation:** shutdown rules can exit near a recovery, while waiting for stronger statistical evidence can exceed a real capital constraint. Emergency liquidation can produce poor fills, and an orderly exit can retain risk longer. The objective is not perfect timing. It is a controlled decision whose reason and evidence remain inspectable.
+There is a cleaner test for the difference between cutting and quitting. If you held nothing today and discovered this strategy with its current live numbers, would you start it? Yes means you are in a normal drawdown, so hold. No, because the edge has genuinely gone, means you stop.
+
+Sequence matters when you do stop:
+
+- Block new exposure first, then list every working order sitting at the broker.
+- Reconcile positions, fills, financing and cash movements against broker records before analysing anything.
+- Run emergency exits and orderly exits under separate written rules.
+- Freeze the data, the parameters, the costs and the exception log.
+- Compare the result against the original mandate, then state plainly: pause, revision, or retirement.
+
+Forced selling is the expensive path, and it is worth pricing before choosing it. Dumping everything at once crosses the spread the wrong way and moves the book on your least liquid lines, often when liquidity has already thinned. As a teaching order of magnitude, an unwind spread over days might cost a few basis points per line while a panic exit costs five to eight times that on illiquid names. So compare the two numbers directly. If waiting risks another 8% of loss and forcing the exit costs about 1.5% in extra slippage, force it. Reverse the sizes and unwind calmly instead.
+
+Afterwards, write the post-mortem on the information available at the time, not on what you now know. Keep the record append-only: losses included, bad sequences included. A track record that quietly edits out its worst weeks teaches nothing. FINRA's guidance on evaluating performance makes the same point about honest accounting — include transaction fees, compare like periods.
+
+**Limitation:** a shutdown rule can fire right before a recovery, and waiting for statistical certainty can outlast your actual capital. Emergency selling produces bad fills; patient selling holds risk longer. Perfect timing is not the goal. An inspectable decision is.
 
 Sources: [FINRA: Evaluating Performance](https://www.finra.org/investors/investing/investing-basics/evaluating-performance); [FINRA: Risk](https://www.finra.org/investors/investing/investing-basics/risk); [Investor.gov: Executing an Order](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order)
 

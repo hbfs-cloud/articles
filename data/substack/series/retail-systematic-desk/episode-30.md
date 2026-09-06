@@ -12,15 +12,19 @@ send_email: false
 
 *Part 3 of 3 in Control the Portfolio Before the Trade. Lesson 30 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Earnings, macro releases, halts and broker incidents can change execution risk faster than a daily model. Event gates belong in the plan before placement. Kill switches reduce further exposure when conditions cross predeclared boundaries; they do not guarantee cancellation, flattening or protection.
+A kill switch is a rule that stops the desk from taking on anything new once a line you drew in advance gets crossed. It is not a guarantee. Orders may not cancel; positions may not close.
 
-**Input from last Friday:** The accepted factor-exposure stress map.
+Earnings dates, macro releases, a trading halt, a broker whose connection goes quiet — each changes execution risk far faster than a model that recalculates once a day. Those belong in the plan before an order exists, not in your judgement at the moment of placing it.
 
-**Friday deliverable:** An event-and-kill-state runbook, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** the accepted factor-exposure stress map.
+
+**Friday deliverable:** an event-and-kill-state runbook, owned by the desk operator and kept in the review bundle.
 
 ## Build this
 
-Maintain an event calendar with source and confidence. Define distinct halt-new-risk, cancel, reduce and flatten actions, reduce-only mode, explicit resume authority and an independent manual credential-revocation path. Keep event vetoes separate from strategy rejection.
+Keep a calendar where every entry carries its source and how confident that source is. Define four separate actions, because collapsing them into one switch is how desks flatten a book they meant to freeze: halt new risk, cancel resting orders, reduce, flatten. Add a reduce-only mode, one named person allowed to lift the state, and a way to revoke the trading credentials by hand that does not run through the software you are trying to stop.
+
+A rehearsal, with invented counts: 26 events on the coming fortnight, 22 confirmed against a filing, 4 known only from a secondhand mention. Those 4 veto entries in 4 names. The veto gets written as an event veto — never as "the strategy rejected it" — or next quarter's research reads a rejection that never happened. Then the outage drill: 9 cancel requests go out, 7 read back cancelled, 2 return unknown. Unknown is neither done nor failed. It freezes automatic repair and pages a human.
 
 ### Minimum record
 
@@ -29,23 +33,19 @@ Maintain an event calendar with source and confidence. Define distinct halt-new-
 - `entry_veto`
 - `kill_state`
 - `broker_action`
-- `verification_state`
+- `verification_state` — what the broker confirmed back, not what you sent
 - `resume_rule`
 
 ## Test it before moving on
 
-Simulate an unconfirmed event date, a confirmed release and a broker outage. Every requested broker mutation must be read back. Ambiguous state blocks automatic repair, escalates to a human and remains distinct from a confirmed operational halt.
+Three drills: a date you only half trust, a confirmed release, a broker outage mid-session. Every requested change must be read back from the broker before the runbook believes it happened.
 
-**Operating limit:** The event-and-kill-state runbook is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
-
-**Further reading for the event-and-kill-state runbook (context, not implementation evidence):** [Investor.gov: Using EDGAR to Research Investments](https://www.investor.gov/introduction-investing/getting-started/researching-investments/using-edgar-research-investments); [SEC: Form 8-K](https://www.sec.gov/info/edgar/forms/form8-k.pdf)
-
-Educational, not investment advice.
+**Operating limit:** kill states are declared before the session and lifted by a person, never by the code that tripped them. Paper drills only.
 
 ## Release decision
 
-**GO:** Accept the event-and-kill-state runbook only when the test above passes and its retained output matches the minimum record.
+**GO:** accept when all three drills behave and the retained rows carry every field.
 
-**NO-GO:** Never bypass a kill state because a candidate appears unusually attractive.
+**NO-GO:** an unusually attractive candidate is not a reason to step around a kill state. That is the exact moment the switch exists for. On confirming a corporate event from the filing itself: [SEC: Form 8-K](https://www.sec.gov/info/edgar/forms/form8-k.pdf). On when the market is open at all: [NYSE: Hours and Calendars](https://www.nyse.com/markets/hours-calendars). Educational, not investment advice.
 
-**Next Friday:** Carry the accepted event-and-kill-state runbook into Simulate the Broker Before Connecting One.
+**Next Friday:** the accepted runbook goes into Simulate the Broker Before Connecting One.

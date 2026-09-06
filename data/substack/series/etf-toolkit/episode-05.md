@@ -8,28 +8,30 @@ source_path: "series/trader-etf/part5-leveraged-options/index.html"
 
 *Part 5 of 6 in The ETF Toolkit.*
 
-Read the reset period before using a leveraged or inverse exchange-traded product. If the objective is two times the benchmark's daily return, judge it against one day, not against the benchmark's return over your entire holding period. For any position lasting longer than the reset period, model the sequence of returns. The path can matter more than the endpoint.
+The word doing all the work in a leveraged fund's name is "daily".
 
-Consider a two-day hypothetical. An index starts at 100, rises 10% to 110, then falls 9.09% to roughly 100. It is essentially flat over the two days. A daily 2x fund starts at 100, rises 20% to 120, then falls 18.18%, twice the second day's index move. It ends near 98.18, a loss of about 1.82% before fees and tracking effects.
+A 3x fund promises three times the index move over one day. Not one week. Not one year. Follow it for two days and the gap opens. The index starts at 100, gains 10% to 110, then loses 10% to 99 — down 1% overall. The 3x fund starts at 100, gains 30% to 130, then loses 30% to 91 — down 9%. Nine times the index loss, from a product that did precisely what it advertised.
 
-Nothing malfunctioned in that arithmetic. The product delivered twice each daily move. Daily compounding created a different multi-day result. In a smooth trend, compounding can help; in an alternating path, it can hurt. That is why a long holding period cannot be evaluated by multiplying the benchmark's cumulative return by the leverage factor.
+Nothing malfunctioned. The fund delivered three times each daily move. Resetting the leverage every evening simply means day two's multiplier applies to a different base than day one's. In a smooth trend that helps you. In a chop it grinds you down.
 
-Inverse products have the same reset issue. They can provide a defined tactical exposure without borrowing shares directly, but they are not permanent mirrors of a benchmark. Derivatives, financing, expenses, rebalancing and volatile markets can add further divergence.
+2022 put the arithmetic on public display. QQQ fell 33% over the year. TQQQ, its 3x version, fell 79%. Climbing back from -79% requires a gain of 376%. Someone who put $100,000 into TQQQ in January 2022 was looking at roughly $21,000 in December.
 
-Options on ETFs are a separate decision. A put can define premium at risk for its buyer, while a short option can create assignment and margin obligations. The ETF's own structure does not remove the option contract's expiration, volatility and liquidity risks. Combining options with a leveraged ETF layers two nonlinear products.
+Inverse products carry the same reset, plus the cost of holding a short position. Estimated annual decay runs around 3-5% on a -1x S&P fund, 8-12% at -2x, and 25-40% at -3x. SQQQ, the -3x Nasdaq fund, has lost more than 99% over five years. These are instruments for a few days around a known event, not a view about the decade.
 
-Run this leveraged-product check:
+Options on ETFs are a separate decision that people bolt on top of the first one. A bought put has a known maximum cost — the premium. A sold option creates assignment and margin obligations that the fund's structure does nothing to soften. Stack options onto a leveraged fund and you now hold two products whose payoffs bend, interacting. Most of the horror stories start there.
 
-- Identify the exact benchmark, leverage multiple and reset period.
-- Recreate at least one trending path and one alternating path.
+Before touching any of this:
+
+- Write down the exact benchmark, the multiple and the reset period.
+- Recreate one trending path and one alternating path by hand, on paper.
 - Read the derivatives, financing and counterparty disclosures.
-- Set holding horizon and rebalance rule before entry.
-- Stress a gap, a wide spread and failure to meet the daily objective.
-- If adding options, calculate the combined exposure and maximum obligation.
+- Set the holding horizon and the exit rule before entry, not after.
+- Test a gap open, a wide spread and a day the fund misses its daily objective.
+- If options are involved, calculate the combined exposure and the worst obligation.
 
-The numerical example is not a performance forecast. Actual funds subtract expenses and may not track their stated objective perfectly. Some geared products use periods other than one day, so the prospectus governs. A low-volatility trend and a high-volatility range can produce very different outcomes even with the same start and end level.
+The numbers above are arithmetic, not forecasts, and that is their limitation. Real funds also subtract fees, some track their objective imperfectly, and a few reset on a period other than one day — the prospectus governs, never the ticker. Two markets that start and end at the same level can hand a leveraged holder wildly different results depending only on how bumpy the road between them was. Multiplying an index's yearly return by the leverage factor cannot tell you what the fund did.
 
-Leverage is a specification, not a thesis. The product may implement the requested multiple correctly while still producing an outcome the holder did not expect.
+Leverage is a specification, not a thesis. The product can execute its stated multiple flawlessly and still leave you somewhere you never intended to be.
 
 Sources: [SEC Leveraged and Inverse ETF Bulletin](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-alerts/sec), [FINRA Exchange-Traded Funds and Products](https://www.finra.org/investors/investing/investment-products/exchange-traded-funds-and-products), [SEC Introduction to Options](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-63).
 

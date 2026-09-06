@@ -12,38 +12,40 @@ send_email: false
 
 *Part 2 of 3 in Start With a Mandate, Not a Model. Lesson 2 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Goals such as maximize return are too loose for engineering. Pair every objective with a constraint and a shutdown rule. Examples include no leverage in the first version, no order without protection, no action on stale data and no automatic promotion from paper to live. A kill criterion is not pessimism; it is the point where evidence no longer supports continued operation.
+Last Friday you signed a mandate, meaning a short written statement of what this desk is for. Today you write the other half: what it refuses to do, and when it has to stop.
 
-**Input from last Friday:** The accepted signed mandate.
+"Make money" cannot be coded. A refusal can. Three worth borrowing: no borrowed money in version one, no order sent without a protective exit already attached, no decision computed from a price older than the last close. A kill criterion is not gloom. It is the line where the evidence stops supporting the machine, and where somebody says so out loud before the account says it for you.
 
-**Friday deliverable:** A kill-and-resume matrix, owned by the desk operator and retained in the review bundle.
+**Friday deliverable:** a kill-and-resume matrix, which is just a table of what breaks, what happens automatically when it breaks, and who is allowed to switch things back on.
 
 ## Build this
 
-Add a non-goals section and a kill matrix to the mandate. Separate strategy failure, data failure, broker failure and process failure. Each row needs an observable trigger, immediate behavior, evidence to retain and the authority required to resume.
+Four failure families, kept apart because they fail differently: strategy, data, broker, process. Each row carries a trigger you can observe, the automatic response, the evidence you keep, and the person who may resume.
 
-### Minimum record
+Rows to fill:
 
-- `failure family`
-- `observable trigger`
-- `automatic response`
-- `retained evidence`
-- `resume authority`
+- `failure_family`
+- `observable_trigger`
+- `automatic_response`
+- `retained_evidence`
+- `resume_authority`
+
+Write triggers you can count. "Feels wrong" is not a trigger. "The last close is more than one session old" is.
 
 ## Test it before moving on
 
-Run a tabletop exercise for a stale close, a duplicate order response and a missing stop. The operator should know whether to abstain, cancel, reconcile or escalate without inventing a new rule in the moment.
+Tabletop it: read a scenario aloud, then follow your own table. The numbers below are invented for the drill, not observations of any market. The close is 2 sessions stale. The broker returns 2 identical fills for 1 order. One of 3 open positions has no stop attached. Each time, the operator should reach for a row rather than for an opinion, and should land on abstain, cancel, reconcile or escalate within a few seconds.
 
-**Operating limit:** The kill-and-resume matrix is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** paper only, toy numbers, no live account and no real thresholds. The matrix is a habit, not an edge.
 
-**Further reading for the kill-and-resume matrix (context, not implementation evidence):** [Investor.gov: Five Questions to Ask Before You Invest](https://www.investor.gov/introduction-investing/getting-started/five-questions-ask-you-invest); [FINRA: Concentration Risk](https://www.finra.org/investors/insights/concentration-risk)
+Two sources for context: the [SEC on margin](https://www.sec.gov/investor/pubs/margin.htm) explains why borrowed money is the first thing a beginner desk should refuse, and [FINRA on cybersecurity](https://www.finra.org/rules-guidance/key-topics/cybersecurity) covers the process failures nobody plans for.
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the kill-and-resume matrix only when the test above passes and its retained output matches the minimum record.
+**GO:** every severe failure ends in a named action and a named person.
 
-**NO-GO:** If any severe failure ends with keep watching rather than a deterministic action, the control is incomplete.
+**NO-GO:** any row whose response reads "keep watching" is unfinished. That is a feeling wearing the costume of a control.
 
-**Next Friday:** Carry the accepted kill-and-resume matrix into Choose a Boring First Market.
+**Next Friday:** the accepted matrix travels with you into Choose a Boring First Market.

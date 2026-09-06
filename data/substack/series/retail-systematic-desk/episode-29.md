@@ -12,39 +12,39 @@ send_email: false
 
 *Part 2 of 3 in Control the Portfolio Before the Trade. Lesson 29 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Names from different industries may share the same growth, rate, commodity or broad-market factor. Measure pairwise dependence, but also group economic exposures and common event risk. Correlation is unstable, so it informs limits rather than certifying diversification.
+Ten tickers, one bet. That happens whenever the names share a driver underneath: the same interest-rate story, the same oil price, the same crowded growth trade. A shared driver like that is what people mean by a factor. Counting names never finds it. Measuring does.
 
-**Input from last Friday:** The accepted stressed portfolio sizing sheet.
+Two numbers carry most of the work. Correlation says how often two names move the same way at the same time. Beta says how far one name travels when the whole market moves one percent. Both wander over time, so treat them as the input to a limit, never as proof of diversification.
 
-**Friday deliverable:** A factor-exposure stress map, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** the accepted stressed sizing sheet.
+
+**Friday deliverable:** a factor-exposure stress map, owned by the desk operator and kept in the review bundle.
 
 ## Build this
 
-Produce a portfolio map with sector, theme, beta, currency and event buckets. Show coverage and observation counts beside correlations. Add stress scenarios that shock common factors rather than isolated tickers.
+Sort the book into buckets: sector, theme, market beta, currency, and the events already sitting on the calendar. Beside every correlation, print two things the number alone hides — the window it was measured over, and how many overlapping observations existed. Then shock whole buckets rather than single names.
+
+Invented figures, for illustration: 14 positions, correlations over 120 sessions. On the account statement it looks like 14 bets. The map shows 9 of them in one bucket, 61% of the book, all leaning on the same rate story. Shock that bucket by three standard deviations and the map returns a 7.4% book loss, against the 1.8% you would have projected by adding the individual stops. SYM_K overlaps the others on only 38 sessions, so it comes back flagged low-coverage instead of being quietly averaged in.
 
 ### Minimum record
 
 - `exposure_bucket`
 - `weight`
 - `beta`
-- `correlation_window`
-- `coverage`
+- `correlation_window` — the stretch measured, not a default
+- `coverage` — overlapping observations behind the number
 - `stress_loss`
 
 ## Test it before moving on
 
-Construct a portfolio with many names driven by one factor. The dashboard should reveal concentration even if ticker count looks diversified. Reduce coverage and confirm confidence falls.
+Build a book on purpose from many names driven by one thing. If the map still calls it diversified, it is counting rather than measuring. Then shorten the history until coverage thins out: stated confidence has to fall with it, visibly.
 
-**Operating limit:** The factor-exposure stress map is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
-
-**Further reading for the factor-exposure stress map (context, not implementation evidence):** [Investor.gov: Five Questions to Ask Before You Invest](https://www.investor.gov/introduction-investing/getting-started/five-questions-ask-you-invest); [FINRA: Concentration Risk](https://www.finra.org/investors/insights/concentration-risk)
-
-Educational, not investment advice.
+**Operating limit:** the map caps new exposure and nothing else. It never sizes a trade, and none of these buckets describe a live account.
 
 ## Release decision
 
-**GO:** Accept the factor-exposure stress map only when the test above passes and its retained output matches the minimum record.
+**GO:** accept when the single-factor book is exposed and all six fields survive in the retained output.
 
-**NO-GO:** Do not call a portfolio diversified from name count alone.
+**NO-GO:** never call a book diversified from ticker count. On reading dependence off data honestly: [NIST: Scatter Plot](https://www.itl.nist.gov/div898/handbook/eda/section3/scatterp.htm). On what concentration does to a portfolio: [FINRA: Concentration Risk](https://www.finra.org/investors/insights/concentration-risk). Educational, not investment advice.
 
-**Next Friday:** Carry the accepted factor-exposure stress map into Gate Event Risk and Add Kill Switches.
+**Next Friday:** the accepted map goes into Gate Event Risk and Add Kill Switches.

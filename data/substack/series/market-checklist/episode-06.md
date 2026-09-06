@@ -8,28 +8,35 @@ source_path: "series/marketwatch-checklist/part6-timing/index.html"
 
 *Part 6 of 7 in The Market Checklist.*
 
-Translate every setup into an order card before the trigger occurs. The card must state what activates the trade, the worst acceptable entry, the order’s time in force, the cancellation condition, position size, and every exit branch. If any field is missing, the setup remains a watch item. Speed is useful only after the decisions are complete.
+A good setup entered at the wrong moment is a planned loss. Timing here has nothing to do with guessing the exact price. It means refusing to act until the written conditions are all present.
 
-Use this sequence:
+Write the order card before the trigger happens, not while it is happening. Trigger, worst acceptable price, size, how long the order lives, what cancels it, and every exit. Leave one field blank and the idea stays on the watchlist. Speed only helps once the thinking is finished.
 
-1. **Trigger:** Name the observable event, such as a completed close above a range or a pullback holding a defined level.
-2. **Entry boundary:** Set the highest buy price or lowest short-sale price that preserves the planned reward and risk. A limit order controls price but does not guarantee a fill.
-3. **Validity window:** State when the order expires and which event cancels it. Confirm whether the broker treats it as regular-hours only or eligible for extended hours.
-4. **Risk order:** Distinguish the chart condition that invalidates the thesis from the stop, stop-limit, or manual process used to exit.
-5. **Complete exit:** Define the initial loss exit, partial-profit rule, trailing rule for any residual tranche, time exit, and event exit.
+Entries are zones, not points. A card reading $165 to $168 means any fill inside that range works. Trying to buy at $166.43 exactly produces either a missed trade or an emotional one. The low end is the better entry: tighter stop, more room to the target. The high end still counts if the momentum is real. More than 5% above the zone, the trade is gone. Skip it.
 
-**Worked procedure:** A hypothetical breakout plan uses the prior range high as its trigger. The trader will act only after a completed bar closes above it and only while the spread stays within the written limit. A buy-limit order is allowed up to the precomputed entry boundary; a gap above that boundary cancels the trade. Once filled, the position uses a thesis stop below the failed-break level. The first objective releases part of the position, while the residual tranche follows a trailing exit based on completed bars. An issuer announcement before entry cancels the order and sends the security back to review.
+A card from 13 March 2026, on an energy large-cap. Entry zone $165 to $168, stop $160.40, first target $180, second target $188. From $166 that is 1.6 units of reward for 1 of risk to the first target, and 2.8 to the second. Two other names on the list read $124 entry with $132 first target, and $35 entry with $39 and $43. All of it written before the open.
 
-Before holding through a macro release, consult the primary calendar rather than a social-media summary. BLS and the Federal Reserve publish schedules that can change. Company events require issuer or filing verification.
+The sequence:
 
-**Order card**
+1. Trigger. Name the observable event. A completed close above the range, or a pullback that holds a level you defined yesterday.
+2. Entry boundary. The highest price you will pay and still keep the reward-to-risk you planned. A limit order controls the price. It does not promise a fill.
+3. Validity. When the order expires and what cancels it. Check whether your broker treats it as regular hours only.
+4. Risk order. Separate the chart condition that kills the idea from the order you use to leave.
+5. Exits, all of them. First loss exit, partial profit, trailing rule for what is left, time exit, event exit.
 
-- Write trigger, entry boundary, size, and expiration.
-- Choose the order type and session eligibility.
-- Add cancellation, loss, profit, residual, time, and event rules.
-- Confirm open orders and actual fills after execution.
+Order type follows the situation. Limit by default, for a pullback into the low end of the zone: no slippage, and if the price never comes, that is often the correct outcome. Market only during an active breakout on volume above three times normal, where the move is gone in minutes and slippage is the price of admission. Stop-limit when you want a known resistance level to trigger the entry while you are away from the screen.
 
-Market orders favor execution but not price. Limit orders favor price control but can miss or partially fill. Extended-hours markets may have lower liquidity, greater volatility, and unlinked venues; a displayed quote there need not predict the regular-session open. A missed trade is an acceptable outcome when the market never offers the price assumed by the plan.
+Exits, from the same card. First target releases half the position and the stop moves to the entry price. What remains follows the high minus 1.2 times the 14-day average range, updated each evening. A close below the 20-day average on volume half again above normal ends the trade entirely, no discussion.
+
+Before you send anything:
+
+- Write trigger, entry boundary, size, and expiry on one line.
+- Choose the order type and confirm the session it is valid for.
+- Add the cancel, loss, profit, trailing, time, and event rules.
+- Check open orders and actual fills after the session, not from memory.
+- Check the official calendar before holding through a macro release. The statistical agencies and the Federal Reserve publish their dates, and those dates change.
+
+Limitation: market orders buy execution and give up price. Limit orders do the reverse and can miss entirely, or fill only in part. Extended-hours sessions have thinner books, wider swings, and venues that do not talk to each other, so a quote at seven in the morning tells you very little about the open. A trade you never got is an acceptable outcome when the market never offered the price your plan assumed.
 
 Sources: [Investor.gov: Understanding Order Types](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-14), [FINRA: Extended-Hours Trading Risks](https://www.finra.org/investors/insights/extended-hours-trading), [BLS: Release Calendar](https://www.bls.gov/schedule/), [Federal Reserve: FOMC Calendars](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm).
 

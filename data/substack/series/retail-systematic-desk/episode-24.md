@@ -12,15 +12,17 @@ send_email: false
 
 *Part 3 of 3 in Make Strategy Decisions Machine-Readable. Lesson 24 of 45 in Build a Retail Systematic Desk, Safely.*
 
-A complete plan carries candidate identity, side, quantity, broker intent, order type, protection, execution window, promotion policy and reason. At this stage quantities are synthetic fixtures only; portfolio sizing must pass later before paper deployment. Human-readable context explains the choice but never supplies missing operational fields.
+A plan a machine can read has no adjectives in it. It carries the candidate, the side, the quantity, which broker it is meant for, the order type, the protection (the stop that travels with the position), the window during which the order is allowed to exist, the rule that says when a group may move from test to armed, and a plain sentence of reasoning. That sentence is for humans. It never fills a blank the machine needed.
 
-**Input from last Friday:** The accepted supersession state record.
+Toy figures, invented for this lesson, on made-up tickers: 3 groups, 7 candidates, 12 fields each. Eighty-four slots, and the validator's only job is to refuse the whole thing if one of them is empty.
 
-**Friday deliverable:** A validated paper-plan fixture, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** the accepted supersession record, the file that states which earlier plan this one replaces.
+
+**Friday deliverable:** a validated paper-plan fixture, owned by the desk operator and filed with the rest of the week's evidence.
 
 ## Build this
 
-Validate the entire plan before arming any group. Enforce unique identifiers, ordered ranks, one-winner constraints and protection for every new position. Reject the full plan when a required quantity or level is missing.
+Validate everything before arming anything. Identifiers unique. Ranks ordered, no ties. One winner per group, so two candidates competing for the same slot can never both fill. Every new position gets a stop before it gets a quantity. Missing level, missing quantity, dead validity window: the plan fails as a block, not field by field. Partial arming is how a desk ends up holding something nobody decided to hold.
 
 ### Minimum record
 
@@ -34,18 +36,18 @@ Validate the entire plan before arming any group. Enforce unique identifiers, or
 
 ## Test it before moving on
 
-Create malformed fixtures for duplicate ranks, absent stops and expired validity. Each should fail before any broker call. A valid single-candidate group should pass without requiring an alternate.
+Break your own fixtures on purpose. Four of the seven failed in the toy run and none of them reached a broker call: a duplicate rank inside group 2, no stop attached to SYM_C, a validity window that had closed 40 minutes before the plan was even written, and a quantity of zero on SYM_H. The fifth case matters just as much. A group holding a single candidate and no substitute passed clean, because a plan is never obliged to offer an alternate.
 
-**Operating limit:** The validated paper-plan fixture is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** made-up quantities, no account, no venue, no profit claim. Paperwork under stress test.
 
-**Further reading for the validated paper-plan fixture (context, not implementation evidence):** [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders); [FINRA: Extended-Hours Trading](https://www.finra.org/investors/insights/extended-hours-trading)
+Background reading: [SEC: Trade Execution](https://www.sec.gov/investor/pubs/tradexec.htm); [FINRA: Extended-Hours Trading](https://www.finra.org/investors/insights/extended-hours-trading)
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the validated paper-plan fixture only when the test above passes and its retained output matches the minimum record.
+**GO:** accept the fixture once every malformed case is rejected and the surviving plan fills all seven fields.
 
-**NO-GO:** Never complete a partially specified plan in the broker or user-interface layer.
+**NO-GO:** never let the broker layer or the interface finish a plan the strategy left incomplete.
 
-**Next Friday:** Carry the accepted validated paper-plan fixture into Backtest on Frozen Point-in-Time Data.
+**Next Friday:** carry the accepted fixture into Backtest on Frozen Point-in-Time Data.

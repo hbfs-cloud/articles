@@ -8,28 +8,34 @@ source_path: "series/obligations-et-taux/part6-construire-un-portefeuille/index.
 
 *Part 6 of 6 in Bonds and Rates for Equity Traders.*
 
-Define the bond sleeve's job before choosing an allocation. A known cash need, an income objective, inflation protection and equity-risk diversification require different instruments. Start with time horizon, loss tolerance and liabilities; do not begin with a universal stock-bond ratio.
+2022 settled an old argument. The S&P 500 fell 18%. The US Aggregate bond index fell 13% right alongside it. A 60/40 portfolio lost 17%, its worst year since 1937. The cushion was supposed to soften the fall. It fell too.
 
-Known spending dates call for cash-flow matching. A bond ladder staggers maturities for recurring needs. A single known liability can instead be matched with principal due near that date. These are scheduling choices, not return forecasts. Credit quality, calls and reinvestment still matter.
+Put that next to 2008, when stocks lost 37% and the same bond index gained 5.2%. Or 2020, when stocks dropped 34% at the low and bonds added 7.5%. Same asset class, opposite behaviour. What changed was the reason people were scared. When weak growth is the problem, central banks cut rates and bonds rally. When inflation is the problem, they raise rates, and stocks and bonds sink together.
 
-For a concrete portfolio procedure, list each expected cash need and its date. Separate near-term liquidity from money that can tolerate price movement. For a hypothetical payment due in a known month, compare an individual security maturing before that date with a bond fund that has no personal maturity date. Record the consequence if the security defaults, is called, or must be sold early. Then aggregate duration and issuer exposure across the remaining sleeve.
+So a ratio is a poor starting point. Give the bond sleeve a job instead, and write the job on paper.
 
-Inflation protection also needs precise language. Treasury TIPS adjust principal using a specified consumer-price index, and Treasury promises at maturity to pay at least the original principal. Their market price can still fall before maturity when real yields rise. TIPS therefore address a defined inflation risk; they do not eliminate interest-rate risk or guarantee a positive holding-period return.
+There are four jobs, and they need different bonds. Money you will spend on a known date. Income you want to collect. Cover against rising prices. Ballast against a stock crash. One broad bond fund rarely does all four well.
 
-Corporate bonds can add income, but the extra yield comes with credit and liquidity exposure. During stress, that exposure may behave more like equity risk than a high-quality government bond. Diversification depends on what each holding owns, not the “fixed income” label.
+For spending dates, match the cash flow. A ladder does that without any forecast: split $100,000 across ten maturities, one year through ten, and $10,000 comes back every single year. If rates rise, you reinvest the returning rung at the higher rate. If they fall, the long rungs already locked in the old one. No timing skill required. That is why it suits individual investors better than anything cleverer.
 
-Portfolio maintenance list:
+Inflation cover has a narrow meaning. TIPS are Treasury bonds whose principal follows the official consumer price index, and the Treasury promises at least the original principal back at maturity. Before maturity, the price can still drop when real yields rise. TIPS fix one risk. They do not fix all of them.
 
-- Assign every holding to liquidity, liability matching, income or diversification.
-- Map maturities and expected cash flows to spending dates.
-- Measure total duration, credit and issuer concentration.
-- Read fund prospectuses and individual bond call terms.
-- Set a calendar or threshold rule for rebalancing.
-- Review taxes, currency and account constraints.
+Duration, meaning how much a bond loses when rates rise by one point, deserves a look before yield. TLT, the long Treasury fund, carries a duration near 17. One point on rates costs it roughly 17%. Park all your protection there and the parachute weighs more than the fall it was bought for. A core fund near duration 6 absorbs shocks without generating its own.
 
-Rebalancing restores a chosen allocation after market moves; it does not decide what the allocation should be. Investor.gov notes that asset allocation depends on time horizon and risk tolerance. Revisit the policy when those inputs change, not simply because one asset class recently performed well or poorly.
+Borrowing magnifies the problem. Risk-parity funds lever bonds, often about three times, so the bond sleeve carries the same risk weight as stocks. In 2022 that turned a 13% bond loss into roughly 39% on the sleeve.
 
-Diversification cannot guarantee against loss. Stocks and nominal bonds can decline together, correlations can change, and a bond fund's net asset value can be below the purchase price when cash is needed. Liability matching also fails if the amount or date changes. The portfolio should disclose these counter-cases rather than promising that bonds will always cushion equities.
+Work through the sleeve like this:
+
+- Write one job beside every holding: cash, spending date, income or ballast.
+- Line the maturities and coupons up against dates you truly need the money.
+- Add the durations together, then check how much sits with a single issuer.
+- Read the call terms on individual bonds and the prospectus on funds.
+- Fix the rebalancing rule now, by calendar date or by drift threshold.
+- Check the tax and account rules before, not after, you buy.
+
+Rebalancing puts the weights back where you set them. It cannot tell you where to set them. Investor.gov ties that decision to time horizon and tolerance for loss, so revisit it when those change, not because one asset class just had a loud year.
+
+Diversification promises nothing. Stocks and bonds can fall together, as 2022 showed. A fund's value can sit below your purchase price on the exact day you need cash. And matching a liability fails the moment the amount or the date moves.
 
 Sources: [Investor.gov asset allocation and diversification](https://www.investor.gov/introduction-investing/getting-started/asset-allocation), [Investor.gov bond-ladder glossary](https://www.investor.gov/introduction-investing/investing-basics/glossary/bond-ladder), [TreasuryDirect TIPS](https://www.treasurydirect.gov/marketable-securities/tips/), [Investor.gov bond funds](https://www.investor.gov/introduction-investing/investing-basics/glossary/bond-funds-and-income-funds).
 

@@ -12,15 +12,17 @@ send_email: false
 
 *Part 2 of 3 in Build Reproducible Market Snapshots. Lesson 14 of 45 in Build a Retail Systematic Desk, Safely.*
 
-A review cannot prove what it saw unless it is bound to a precise evidence set. Hash each input and aggregate the ordered hashes into one snapshot digest. A hash proves correspondence to a separately trusted checkpoint; by itself it proves neither completeness, truth nor original creation time.
+"I reviewed the data" is a sentence, not a proof. Bind the review to the exact files instead. A hash is a fingerprint: a short string computed from a file, which changes completely if a single byte inside it moves. Fingerprint each input, then fingerprint the ordered list of fingerprints, and you get one string that stands for the whole evidence set.
+
+Say what that string does not do, because people oversell it. It proves the files match a copy you trusted earlier. It says nothing about whether the files are complete, whether the numbers in them are true, or when they were really created.
 
 **Input from last Friday:** The accepted single-cut snapshot manifest.
 
-**Friday deliverable:** An independently checkpointed evidence digest, owned by the desk operator and retained in the review bundle.
+**Friday deliverable:** An evidence digest checkpointed somewhere the desk cannot quietly overwrite.
 
 ## Build this
 
-Create a manifest listing each evidence path, digest, source and relevant JSON pointer. Retain the aggregate digest independently or sign it, enforce append-only access where practical, and test restoration. Refuse publication or execution when a required file differs after review.
+List every piece of evidence with its path, its fingerprint, where it came from, and the exact field inside it the decision leaned on. Roll the list into one aggregate fingerprint. Park that aggregate outside the working folder, or sign it. Make the folder append-only if your storage allows it. Practise restoring from it before you need to. If a required file no longer matches after review, publication stops.
 
 ### Minimum record
 
@@ -32,18 +34,18 @@ Create a manifest listing each evidence path, digest, source and relevant JSON p
 
 ## Test it before moving on
 
-Change one byte in a reviewed input and run the release gate. It must invalidate the attestation. Restore the byte and confirm the replay returns the original digest and result.
+Flip one byte in one reviewed input and run the gate. Illustrative counts, not market data: 48 files listed, one edited, one fingerprint changed, aggregate changed, gate refuses. Put the byte back and the replay returns the original aggregate and the original result. A gate that shrugs at a changed byte is decoration.
 
-**Operating limit:** The independently checkpointed evidence digest is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** Everything here runs on paper for teaching. There are no live parameters, no allocations, no account details, and no profit claim attached.
 
-**Further reading for the independently checkpointed evidence digest (context, not implementation evidence):** [Investor.gov: Broker-Dealer Record-Keeping Requirements](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements); [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations)
+Further reading: [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations); [Investor.gov: Executing an Order](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order)
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the independently checkpointed evidence digest only when the test above passes and its retained output matches the minimum record.
+**GO:** The tampering test fails the gate, the restore test passes it, and the stored fields cover the minimum record.
 
-**NO-GO:** Do not accept a reviewer statement that is not bound to the exact snapshot it reviewed.
+**NO-GO:** A reviewer statement that names no snapshot certifies nothing and should not be filed as if it did.
 
-**Next Friday:** Carry the accepted independently checkpointed evidence digest into Replay Without Re-Querying.
+**Next Friday:** Carry the accepted digest into Replay Without Re-Querying.

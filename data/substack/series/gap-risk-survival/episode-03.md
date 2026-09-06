@@ -8,31 +8,27 @@ source_path: "series/risque-de-gap/part3-protection/index.html"
 
 *Part 3 of 5 in Survive Gap Risk.*
 
-Choose overnight protection from the maximum loss and operational failure you can accept. The cleanest hedge is often less exposure: exit before the event, reduce the position, remove leverage, or hold more cash. A stop manages an order after a trigger; it does not cap a loss through an empty price range. An option can define risk for a period, but only under its contract terms and after paying its cost.
+Pick the protection by the failure you can live with. The product comes second.
 
-Start with the unhedged stress. Estimate the loss at a defensible adverse executable price, then add spread, fees, currency effects, and any margin response. If that amount exceeds the account’s budget, compare four choices:
+Start with size, because size costs nothing. A €50,000 account. A stock at €100, a stop at €90, so €10 of risk per share. Risking 2% of the account means €1,000, which buys 100 shares — a €10,000 position, a fifth of the money. Now let the stock open at €70 instead of stopping politely at €90. The loss is €3,000, or 6% of the account. Unpleasant, survivable. Put the whole €50,000 into that same stock and the identical morning takes €15,000, close to a third of everything. Same news, same stop, same open. Only the size changed.
 
-Do not choose the stress price after seeing which value permits the desired size. Predeclare the event taxonomy, universe, lookback, sample count, tail statistic, worst observation, and treatment of failures or delistings. Add a policy shock beyond observed history. If the evidence is insufficient, call the scenario unavailable and remove the overnight exposure. This remains scenario-limited sizing, not a guaranteed loss boundary.
+The stop is not doing the work here. A stock at $100 with a stop at $95 that opens at $72 after an evening profit warning sells at $72. The 5% you planned to lose shows up as 28%.
 
-1. **Exit:** removes the security-specific overnight exposure, although reinvestment and tax considerations remain.
-2. **Reduce:** lowers every scenario without adding contract complexity.
-3. **Protective put:** a long put paired with long stock establishes a sale right at the strike during the option’s life. Premium, strike, expiration, liquidity, and exercise procedures matter.
-4. **Collar:** adding a long put and a covered short call can offset some hedge cost, but the call caps upside and creates assignment obligations.
+So price the damage unhedged first. Pick a bad-but-defensible opening price, work out the loss, then add the spread, the fees, any currency effect, and whatever your broker does to your margin. If that number is bigger than the account can absorb, there are four ways out, and they are not interchangeable.
 
-Do not describe a collar as free protection. Net premium can be small or even a credit in a quoted market, yet the strategy gives up upside, incurs trading costs, and may be difficult to unwind.
+- **Sell before the event.** The overnight exposure is gone. Tax and buying back in still cost you something.
+- **Own less.** Every scenario shrinks at once, and there is no new contract to learn.
+- **Buy a put.** Hold 100 shares at €150, buy the €140 strike for €3, and the worst case is about €13 a share whatever the opening price. That is a right to sell at 140, not an order waiting in a queue.
+- **Collar it.** Own AAPL at $180, buy the $165 put for $4, sell the $195 call for $4. Net cost near zero. Floor about $15 below you, ceiling the same $15 above.
 
-**Worked micro-example:** A trader owns stock at entry price `E` and buys a put with strike `K` for premium `P`. At expiration, ignoring fees, dividends, taxes, and early-exercise effects, the combined maximum loss per share is approximately `E - K + P` when `K` is below `E`. Compare that defined amount with the unhedged gap stress and the cost of simply reducing shares. If the option spread is too wide or the contract expires before the event window ends, the put does not satisfy the plan.
+Puts carry a price tag and it is not small. One roughly 10% out of the money runs about 4% to 12% a year. At-the-money cover, the kind you want the night before earnings, runs 20% to 32%. The collar is the one people call free. The premium nets to nothing, true — and you have sold your upside, paid two sets of trading costs, and put yourself in line to have the shares called away.
 
-**Protection decision**
+Decide the stressed price before you decide the size. Do it the other way round and the stress test quietly becomes whatever number lets you keep the position you already wanted. Write down which events you modelled, over how much history, how many cases you found, what the worst one did, and how you handled the companies that went bust or delisted along the way. Then add a shock worse than anything in that record.
 
-- Calculate unhedged loss at the stressed executable price.
-- Compare exit, reduced size, put, and collar in account currency.
-- Check option multiplier, strike, expiry, spread, and exercise rules.
-- Add premium, fees, upside cap, and margin effects.
-- Write how and when both stock and hedge will be closed.
+Four limits worth carrying around. Some brokers sell a guaranteed stop that fills at your exact price even through a gap, at roughly 0.3% to 1% of the notional — generally on contracts for difference, not on real shares. An index put does not cover one company's own disaster. An illiquid option quote flatters what you could actually get for it. And diversification thins out precisely when it is needed: US and developed international equities correlate near 0.78 in calm markets and around 0.95 in a panic. Long Treasuries are one of the few holdings that lean the other way, roughly -0.35 normally and -0.60 in a crisis.
 
-Options cannot protect outside their life or against every basis mismatch. A put on an index may not offset an individual stock gap, and an illiquid option quote may overstate realizable value. Tax, account permissions, and assignment treatment vary. If protection cannot be understood and executed, smaller exposure is the more reliable control.
+If you cannot explain the hedge out loud, own less instead.
 
 Sources: [OIC: Protective Put](https://www.optionseducation.org/strategies/all-strategies/protective-put-married-put), [OIC: Protective Collar](https://www.optionseducation.org/strategies/all-strategies/collar-protective-collar), [OCC: Options Disclosure Document](https://www.theocc.com/company-information/documents-and-archives/options-disclosure-document), [Investor.gov: Understanding Order Types](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-14).
 
-Educational, not investment advice.
+Educational, not investment advice. The prices above are worked illustrations, not quotes.

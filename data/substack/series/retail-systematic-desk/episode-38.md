@@ -12,41 +12,36 @@ send_email: false
 
 *Part 2 of 3 in Connect a Broker Without Losing Control. Lesson 38 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Idempotence starts with durable business intent, not only order fields. Scope the intent by portfolio, plan, revision, candidate or group and execution window, then derive a canonical fingerprint. Prefer a broker-supported idempotency key; a local hash never proves that an unseen order was not accepted.
+One day your connection drops mid-request and you will not know whether the broker received it. That is this week's problem. Idempotent placement means the same instruction can be sent twice and still produce one order, never two.
 
-**Input from last Friday:** The accepted broker security and capability preflight.
+**Input from last Friday:** the security and capability preflight you signed off on.
 
-**Friday deliverable:** A durable intent and deduplication record, owned by the desk operator and retained in the review bundle.
+**Friday deliverable:** A durable intent and deduplication record, owned by the desk operator and kept with the week's evidence.
 
 ## Build this
 
-Persist intent before the network call, define canonical field ordering and numeric precision, and keep request identity stable for identical retries. Search complete paginated order and execution history. An ambiguous result remains unknown and blocks automatic placement.
+Write down what you meant to do before you touch the network. That is the intent: which book, which plan, which revision of that plan, which candidate, and the time window the order is allowed to live in. From those fields compute a fingerprint, a short code derived from the meaning of the order rather than from the moment you clicked. Same meaning, same code. Sort the fields in a fixed order and round numbers the same way every time, or the code drifts and a retry looks like a fresh instruction.
 
-### Minimum record
+Ask the broker for an idempotency key whenever it offers one: a token the broker itself remembers, so it refuses your second copy. A code you compute at home proves nothing about an order you never saw acknowledged.
 
-- `portfolio_id`
-- `plan_id`
-- `revision`
-- `candidate_id`
-- `execution_window`
-- `fingerprint`
-- `broker_idempotency_key`
-- `dedup_status`
+Keep at least: `desk_id`, `plan_id`, `revision`, `candidate_id`, `execution_window`, `fingerprint`, `broker_key`, `dedup_status`.
 
 ## Test it before moving on
 
-Submit the same intent through retries with fields in different JSON order. It should produce one fingerprint and one broker order. A real plan revision should produce a distinct fingerprint.
+Send one intent five times, shuffling the JSON field order on each attempt, and drop a timeout into the middle. One fingerprint, one live order. Then bump the plan revision and confirm the code does change.
 
-**Operating limit:** The durable intent and deduplication record is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+Illustration only, figures invented to show the shape of the log rather than any market: a toy run across SYM_A and SYM_K logs 214 attempts, 9 retries after timeouts, 8 of them folded onto an order that already existed, and 1 left sitting in `unknown`. That last one is the good news. It blocked itself instead of guessing.
 
-**Further reading for the durable intent and deduplication record (context, not implementation evidence):** [Investor.gov: Broker-Dealer Record-Keeping Requirements](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements); [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations)
+**Operating limit:** paper only, published as teaching material, with no live sizing or account identifier anywhere in the record.
+
+Further reading: [Investor.gov on how an order gets executed](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order) and [FINRA on books and records](https://www.finra.org/rules-guidance/key-topics/books-records).
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the durable intent and deduplication record only when the test above passes and its retained output matches the minimum record.
+**GO:** the shuffled-retry test yields one order, and the unknown case blocks placement on its own.
 
-**NO-GO:** Do not rely on a user-interface button becoming disabled as the duplicate-order control.
+**NO-GO:** a greyed-out button in the broker's web page is not a duplicate control. It protects the page, not the account.
 
-**Next Friday:** Carry the accepted durable intent and deduplication record into Reconcile Intent With Broker Reality.
+**Next Friday:** carry this record into Reconcile Intent With Broker Reality.

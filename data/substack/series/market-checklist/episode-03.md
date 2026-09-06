@@ -8,25 +8,38 @@ source_path: "series/marketwatch-checklist/part3-technique/index.html"
 
 *Part 3 of 7 in The Market Checklist.*
 
-A technical setup is usable only when it defines an entry condition, an invalidation point, and a complete exit policy. A pattern by itself is not a trade. Price and volume can describe what traded; they do not establish why it traded or whether institutions were buying. Treat indicators as transformations of market data, not as independent confirmation of a narrative.
+A scan hands you ten candidates, all scoring 85 or better out of 100. Scoring says interesting. The technical check says now, here, at this price, or not at all. Most of the money in this step is saved by the names you refuse.
 
-Start with market structure. Mark the level that separates your thesis from ordinary noise, then describe the trigger in observable language: a close above a range, a reclaim after a failed break, or a pullback that holds a prior level. Add a liquidity condition and a maximum acceptable entry price. If the fill would make the distance to invalidation too wide for the risk budget, skip the trade.
+The rule used in this checklist: at least three of six signals must agree before anything is entrable.
 
-Use transformations sparingly. A moving average can standardize a trend summary, true range can summarize observed movement, and volume can show that reported activity changed. Each result depends on its input series and window. None reveals the identity or motive of the traders behind the prints.
+RSI in a usable zone. Volume above 1.5 times its 20-day average. Price sitting on an actual level rather than mid-air. A pattern you can name out loud. Moving averages stacked in the direction of the trade. ATR expanding, ATR14 being average true range, roughly what the stock covers in a typical day.
 
-**Worked micro-example:** Assume a liquid stock has spent several sessions below a clearly marked range high. The plan activates only after a close above that level, provided the spread remains inside the trader’s execution limit. The thesis fails on a close back inside the range, while a separate emergency stop addresses an intraday break. The trader takes partial profit at the first prewritten objective and manages the residual tranche with a trailing exit based on completed bars. If the opening price is already beyond the maximum entry, there is no chase. Every branch is defined without claiming that the breakout must continue.
+Three of six: entrable, tight stop, reduced size. Four: normal size. Five or six: full size. Under three there is nothing to argue about.
 
-Order mechanics matter. A stop order becomes a market order when triggered, so its execution price is not guaranteed. A stop-limit order controls the acceptable price but can remain unfilled. The chart level that invalidates the thesis and the broker order used to act on it are separate decisions.
+RSI is a 0-to-100 momentum gauge reporting a state, not an instruction. Below 35 is oversold, where bounces start and falling knives also live. Between 50 and 75 is healthy trend, the zone where positions hold best. Above 80, momentum is spent and entries are refused. The worksheet's energy large cap entered at RSI 61, no bearish divergence: trend intact, nothing stretched.
 
-**Technical setup test**
+Volume decides whether a break is real. Above twice the 20-day average, large capital actually moved. Between 1.5 and 2 times is the minimum that counts. Under 0.7 times on a breakout, treat it as a failed break until price retests the level on normal volume and holds. One case in the sheet: a services name printing 2.3 times its 20-day average inside a Bollinger squeeze. That is accumulation, not noise.
 
-- Write the setup, trigger, maximum entry, and invalidation in plain language.
-- Specify position size, initial order type, and cancellation condition.
-- Define partial profit, residual exit, and time-based exit.
-- Reject any “confirmation” that cannot change the decision.
+Worked example. A defense name based at $140 to $143, on its 50-day average and a horizontal level tested before. Stop $133, the last swing low less half an ATR. Target $155 at prior yearly resistance. Risk $9 per share, reward $15, ratio 1:1.7, above the 1:1.5 floor this plan requires. Calculated before entry, never after.
 
-Technical structure cannot protect against an overnight gap, trading halt, or sudden loss of liquidity. A clean setup can also fail without new information. That is a normal outcome, not evidence that the original pattern was manipulated.
+Order mechanics are where plans leak. The chart level that invalidates your thesis and the broker order you use to leave are two separate decisions. A stop order becomes a market order the instant it triggers, so the fill can land well away from the stop price. A stop-limit order controls price but can leave you holding the position. And a stop tighter than one ATR gets removed by ordinary intraday noise, not by anything about your idea. When a correct stop makes the trade too large, cut the size. Never tighten the stop to fit.
+
+One scheduled event outranks the whole page. No entry within five days of an earnings report. A setup in the sheet was compressed, clean and confirmed on volume, with earnings three days out. It lost 18% in a single session.
+
+**Entry test, five of seven required**
+
+- RSI in zone, nothing above 80.
+- Volume at least 1.5 times the 20-day average.
+- Price on a level, with a maximum acceptable entry written down.
+- A pattern you can name.
+- Stop at a technical level, at least one ATR wide.
+- Reward to risk at least 1:1.5.
+- No earnings inside five days.
+
+Refuse the late entry too. A name up 15% on the week has the move priced in. You are buying from whoever caught it early.
+
+Indicators are transformations of price and volume. They describe what traded, never who traded or why, and no arrangement of them confirms a story. Structure cannot protect you from an overnight gap, a halt, or liquidity vanishing either. A clean setup can fail with no news at all. Normal outcome, not evidence of anything rigged. Waiting is a position.
 
 Sources: [Investor.gov: Understanding Order Types](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-14), [SEC: Stop, Stop-Limit, and Trailing Stop Orders](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-15).
 
-Educational, not investment advice.
+Educational, not investment advice. Figures above come from a past worksheet, not current levels.

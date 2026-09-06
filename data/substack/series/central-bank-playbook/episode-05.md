@@ -8,26 +8,30 @@ source_path: "series/banques-centrales/part5-indicateurs-cles/index.html"
 
 *Part 5 of 6 in The Central Bank Playbook.*
 
-Before comparing a macro release with expectations, identify the exact series, reference period, adjustment, change interval, release timestamp, and revision status. "Inflation" and "jobs" are not single data points. A surprise calculation is valid only when the released value and the pre-event expectation refer to the same definition and vintage.
+Housing is about 36% of the Consumer Price Index and about 16% of the personal consumption expenditures price index. One number, two answers, and that weighting gap alone explains most of the reason CPI usually prints 0.2 to 0.3 points higher than PCE. "Inflation" is not a data point. It is a choice of series, and the choice changes the answer.
 
-The Consumer Price Index and the personal consumption expenditures price index measure different concepts. BLS says CPI tracks average price change for a market basket used by urban consumers. BEA explains that PCE covers spending by and on behalf of the personal sector and differs from CPI in formula, weights, scope, and other effects. The FOMC states its longer-run inflation goal in terms of the PCE price index, so CPI should not be mislabeled as the Fed's target measure.
+The two are built differently on purpose. The Bureau of Labor Statistics publishes CPI about two weeks after the month it covers, using a fixed basket: same goods, same quantities. The Bureau of Economic Analysis publishes PCE about four weeks after, with a basket that adjusts when shoppers substitute — beef gets expensive, people buy chicken, the index notices. PCE also counts healthcare paid on your behalf by an employer or by Medicare, which CPI does not.
 
-Keep headline and core measures separate. Core commonly excludes food and energy, but that exclusion does not make it a forecast or make headline inflation irrelevant. Also distinguish a one-month seasonally adjusted change from a twelve-month unadjusted change. Annualizing one monthly observation can exaggerate noise and is not the same statistic as the published twelve-month rate.
+That matters because the Fed's 2% goal is stated in PCE, specifically core PCE, meaning PCE with food and energy stripped out because those prices jump around on weather and geopolitics. CPI arrives first and moves markets more; PCE arrives late and is what the mandate actually references. Calling CPI "the Fed's target measure" is simply wrong. Since 2022 the committee has also leaned on "supercore" — core PCE excluding housing — because rents reflect leases signed six to twelve months earlier and lag everything else.
 
-The Employment Situation combines two major surveys. The household survey supplies labor-force and unemployment measures; the establishment survey supplies nonfarm payroll employment, hours, and earnings. Their populations and methods differ. BLS also revises establishment estimates as more reports and updated seasonal factors arrive. The first release is a dated estimate, not an immutable count.
+Now the jobs report, first Friday of the month, 08:30 ET. It is not one survey but two, and they can disagree without either being wrong. The household survey, which phones people, produces the unemployment rate and the participation rate. The establishment survey, which asks employers, produces payrolls, hours and earnings. Different populations, different methods. Joining a payroll number to an unemployment number without labelling which survey each came from manufactures contradictions out of nothing.
 
-Use this concrete release procedure:
+Payrolls also get revised. The first print is a dated estimate that moves as late reports and updated seasonal factors arrive, and revisions to the prior two months routinely matter more than the headline. Save the first vintage before it changes.
 
-- Take the event time and time zone from the BLS or BEA schedule.
-- Save the official release and technical note at publication.
-- Record series name, seasonal status, reference period, and change interval.
-- Preserve the first vintage before later revisions.
-- Source any consensus separately with its pre-release timestamp.
-- Log market prices as observations in a predeclared window.
+Work every macro release this way.
 
-For example, if a headline says payrolls "missed," verify whether the comparison used the establishment survey's monthly change and whether prior months were revised. A simultaneous change in unemployment comes from the household survey. Joining the two without labels can create a contradiction that is only methodological.
+- Take the event time and time zone from the BLS or BEA schedule, not a news calendar.
+- Save the official release and its technical note at publication.
+- Record the series name, seasonal status, reference period and change interval.
+- Preserve the first vintage before later revisions overwrite it.
+- Source any consensus separately, with its own pre-release timestamp.
+- Log market prices only inside a window you declared beforehand.
 
-**Limitation:** official estimates contain sampling, nonsampling, seasonal-adjustment, and revision uncertainty. A market move around release time can reflect expectations, positioning, revisions, components, or unrelated news. The data constrain interpretation; they do not establish that one component caused the observed price response or dictate the next policy decision.
+Keep a few reference marks for scale, and treat them as rough. Monthly payroll gains of 150,000 to 250,000 read as a steady labour market; above 300,000 reads as hot. Average hourly earnings above 4% year on year points to wage pressure. Weekly jobless claims above 250,000 deserve attention, above 300,000 more than that. Job openings per unemployed person near 1.5 says employers are scrambling; near 1.0 says balance.
+
+One more trap. A single seasonally adjusted month annualised is not the published twelve-month rate. They are different statistics and they will tell you different stories about the same month.
+
+**Limitation:** these estimates carry sampling, seasonal-adjustment and revision uncertainty, all of it published openly. A price move around release time can come from expectations, positioning, revisions, one component, or news that has nothing to do with the release. Data constrain what you may claim; they do not prove causation or dictate the next policy decision.
 
 Sources: [BLS: Consumer Price Index Questions and Answers](https://www.bls.gov/cpi/questions-and-answers.htm); [BEA: Differences Between PCE and CPI](https://www.bea.gov/help/faq/555); [BLS: Employment Situation Technical Note](https://www.bls.gov/news.release/empsit.tn.htm); [BLS: Release Calendar](https://www.bls.gov/schedule/); [BEA: Release Schedule](https://www.bea.gov/news/schedule/)
 

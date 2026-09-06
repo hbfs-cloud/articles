@@ -12,15 +12,17 @@ send_email: false
 
 *Part 2 of 3 in Backtest Without Fooling Yourself. Lesson 26 of 45 in Build a Retail Systematic Desk, Safely.*
 
-A realistic simulator distinguishes order type, session, spread, slippage, volume and gaps. Stops may fill beyond their trigger; limit orders may not fill at all. Partial fills create positions that still require protection and reconciliation.
+Yesterday's close minus today's close is arithmetic. It is not execution. Real orders miss, or fill halfway, or fill somewhere nobody chose. A stop is an instruction to get out once a level trades, and when a market reopens far below that level, the exit lands where the market opens, not where you wrote the number. A simulator that hides this is flattering you.
 
-**Input from last Friday:** The accepted point-in-time backtest bundle.
+Partial fills deserve their own paragraph. You asked for 40 shares, you got 15. Those 15 are a real position: they need protection, they need to show up when you reconcile, and the missing 25 need a decision rather than silence.
 
-**Friday deliverable:** An execution-stress fixture pack, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** the accepted point-in-time backtest bundle.
+
+**Friday deliverable:** one execution-stress pack — synthetic bars built specifically to break your fill logic — filed with the week's paperwork.
 
 ## Build this
 
-Implement market-state transitions and broker capability profiles. Simulate no fill, partial fill, gap-through stop, rejected order and delayed cancel. Keep assumptions visible and configurable.
+Model the state of the market (open, closed, halted, in auction) and what your broker actually supports, since not every venue accepts every order type. Simulate at least five outcomes: no fill, partial fill, gap through the stop, rejected order, and a cancel that arrives too late. Every assumption stays a visible setting. None of them become a constant buried in the code.
 
 ### Minimum record
 
@@ -33,18 +35,18 @@ Implement market-state transitions and broker capability profiles. Simulate no f
 
 ## Test it before moving on
 
-Use synthetic bars where high and low cross several order levels. Define deterministic precedence and test it. Stress costs beyond the base assumption to see whether the result depends on optimistic execution.
+Build one bar whose high and low sweep three of your levels in the same session, then answer the question the simulator cannot dodge: which one filled first? Pick a precedence rule, write it down, test it. Invented counts follow, purely to show the shape of the output: across 200 simulated orders, 41 never filled, 12 filled partially, 3 exited through the stop rather than at it, and all 12 partials inherited protection — that last number is the one you are checking. Then raise the assumed cost of getting in and back out from 5 to 20 basis points, a basis point being one hundredth of a percent. A made-up dial. If the answer flips sign somewhere along it, what you found was execution luck.
 
-**Operating limit:** The execution-stress fixture pack is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** a paper drill. The fills, the counts and the cost dial are all fabricated for the exercise and describe no live account.
 
-**Further reading for the execution-stress fixture pack (context, not implementation evidence):** [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders); [FINRA: Extended-Hours Trading](https://www.finra.org/investors/insights/extended-hours-trading)
+Background: [order types and what each one promises](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders) and [how uncertainty around a single statistic gets measured](https://www.itl.nist.gov/div898/handbook/eda/section3/bootplot.htm).
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the execution-stress fixture pack only when the test above passes and its retained output matches the minimum record.
+**GO:** precedence is documented and reproducible, and every partial fill leaves the run with a stop attached.
 
-**NO-GO:** Do not promote a strategy whose edge disappears under modest execution stress.
+**NO-GO:** do not promote a system whose edge evaporates under a modest cost increase. That edge belonged to the simulator.
 
-**Next Friday:** Carry the accepted execution-stress fixture pack into Use Baselines, Walk-Forward and Stress Tests.
+**Next Friday:** the accepted pack carries into Use Baselines, Walk-Forward and Stress Tests.

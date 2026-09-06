@@ -8,26 +8,30 @@ source_path: "series/lire-le-marche/part4-news-sentiment/index.html"
 
 *Part 4 of 6 in Read Market Evidence Without Inventing a Signal.*
 
-Do not trade a headline or sentiment score until the underlying claim has a named source, publication time and primary document. If primary confirmation is unavailable, mark the claim unverified. Fast repetition across accounts increases reach; it does not create independent evidence.
+Repetition is not confirmation. A claim copied across forty accounts in ten minutes is still one claim, with good distribution.
 
-News chronology has at least three clocks: when the event occurred, when the source disclosed it, and when a publisher or social account repeated it. A later article can be accurate while adding no new information. A corrected headline can also leave stale copies in aggregators. Preserve the original link and timestamp instead of relying on the time shown by the last repost.
+So do not act on a headline or a sentiment score until the claim underneath has a named source, a publication time and a primary document behind it. When the primary document cannot be found, the honest label is "unverified", and it stays that way in your notes.
 
-Issuer communications require context. The SEC has said companies may use social media for material announcements under Regulation FD when investors have been alerted to the channels that will be used. That does not make every account authentic or every post an SEC filing. Check the issuer's investor-relations page, EDGAR record and disclosed communication channels.
+News runs on at least three clocks: when the event happened, when the source disclosed it, and when a publisher or an account repeated it. A later article can be perfectly accurate and add nothing new. A corrected headline can leave stale copies sitting in aggregators for days. Keep the original link and its timestamp instead of the time shown by whoever reposted it last. Speed is not the edge on offer here in any case. Headline-parsing algorithms react in roughly fifty milliseconds, and the big US macro releases land at 8:30 a.m. Eastern with the first move priced before a person finishes the opening paragraph.
 
-Sentiment tools transform a selected corpus into a score. Results depend on source coverage, language handling, duplicate removal, bot filtering, classification rules and lookback window. A rise in mentions establishes attention within that sample. It does not show whether posters own the security, are joking, hedging, promoting it or reacting after the price moved. SEC and FINRA guidance warns that social information can be inaccurate, stale, incomplete or manipulated.
+Company communications need their own context. The SEC has said companies may use social media for material announcements under Regulation FD when investors have been alerted to the channels that will be used. That does not make every account authentic, and it does not turn a post into a filing. Check the issuer's investor-relations page, its EDGAR record, and the channels it actually disclosed.
 
-Suppose posts claim that a company won a government contract. Search the awarding agency and the company's EDGAR filings or official investor-relations releases. Record the contract scope and award date from the primary source. If the only evidence is copied social text, retain “unverified contract claim” in the log and do not convert mention volume into expected revenue.
+Sentiment tools turn a chosen pile of text into a number. The number depends on which sources were scraped, how languages are handled, whether duplicates and bots were removed, what the classification rules are, and how far back the window reaches. A rise in mentions establishes attention inside that sample. It cannot show whether posters own the security, are joking, are hedging, are being paid to post, or are simply reacting after the price already moved. Scale does not fix this: one stock forum passed fourteen million members, which produces volume, not evidence. SEC and FINRA guidance warns in the same direction, that social information can be inaccurate, stale, incomplete or manipulated.
+
+Tidy indexes deserve the same care. A widely quoted fear-and-greed gauge compresses seven separate inputs onto a 0-100 scale, and a long-running weekly survey of individual investors has averaged somewhere near 37% bullish across its history. Both describe a chosen sample on a chosen schedule. Record which one you used and what it covers, then treat the reading as a description of that sample rather than of the market.
+
+Worked case. Posts claim a company won a government contract. Search the awarding agency. Search the company's EDGAR filings and its official investor-relations releases. Record the scope and the award date from the primary source. If the only evidence is copied social text, the log entry reads "unverified contract claim", and mention volume does not get converted into expected revenue.
 
 Verification pass:
 
 - Capture the earliest source you can authenticate.
 - Separate event time, publication time and repost time.
-- Locate the filing, agency notice or issuer release behind the claim.
+- Find the filing, agency notice or issuer release behind the claim.
 - Document the sentiment tool's corpus and window.
 - Check corrections, sponsorships and conflicts.
-- State what remains unknown.
+- Write down what remains unknown.
 
-Sentiment has an unavoidable limitation: it observes expressions selected by a platform and model, not the full population of investors or their positions. Primary confirmation may also arrive after prices react. The procedure can prevent a rumor from becoming a fact in your notes, but it cannot guarantee early entry or prove that a headline caused a market move.
+The unavoidable limit is what sentiment can see. It observes expressions selected by a platform and a model, never the full population of investors or the positions they hold. Primary confirmation can also arrive after prices have already reacted. This procedure keeps a rumour from hardening into a fact inside your own notes. It will not get you in early, and it cannot prove that a headline caused a move.
 
 Sources: [Investor.gov social-sentiment bulletin](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-18), [SEC guidance on company social-media announcements](https://www.sec.gov/newsroom/press-releases/2013-2013-51htm), [Investor.gov social-media fraud guide](https://www.investor.gov/protect-your-investments/fraud/types-fraud/internet-and-social-media-fraud).
 

@@ -8,34 +8,32 @@ source_path: "series/piloter-son-portefeuille/part4-scale-up/index.html"
 
 *Part 4 of 6 in Operate a Portfolio, Not a Collection of Trades.*
 
-Approve a size increase only through a written scaling rule that existed before the recent returns. Confidence, a winning streak, or recovery from a loss is not a scaling variable. The gate should require forward evidence, acceptable execution, available capacity, intact portfolio limits, and no unresolved control breach.
+Eight winning trades in a row proves nothing. On a small but real edge, and even on a strategy with no edge at all, that run shows up by chance more often than people expect. It is also the moment most accounts double their size.
 
-Separate two decisions. **Position scaling** changes quantity in one strategy or trade. **Book scaling** changes capital assigned to the strategy and its share of total portfolio risk. Adding to a favorable position is not the same as increasing the strategy mandate. Each needs its own trigger, ceiling, and reversal rule.
+So write the ladder while you are bored, not while you are winning.
 
-A practical scaling gate can ask:
+A ladder is a short list: account levels, and the size allowed at each one. Round teaching numbers show the shape. Call the starting account 100, and call your normal trade size 1.0×. Every time the account is 10% higher, size steps up by about a quarter. At 110 you may trade 1.25×. At 121, 1.55×. At 133, 1.95×. Fall back under a level and you drop a rung. No vertical jumps, and no increase at all while the account sits below its previous high.
 
-- Has the predeclared forward observation window completed without a material rule change?
-- Do net results remain within the strategy's stated review bounds, including losses?
-- Are actual spread, slippage, fill rate, and rejected orders within capacity assumptions?
-- Does the larger allocation preserve trade, aggregate, concentration, and leverage limits?
-- Has the operator observed the strategy during adverse conditions rather than only favorable ones?
+That is the exact opposite of the old casino habit of betting bigger after a loss to win it back. Bigger after money is actually banked; smaller after money is lost.
 
-Take a hypothetical strategy trading 100 shares per signal. Its next stage permits 150 shares only if a fixed review closes with reconciled fills and no capacity exception. Before promotion, replay the actual order book or broker records under a conservative 150-share model, then run the first larger orders under a tighter monitoring state. If average price deteriorates beyond the predeclared tolerance, return to 100 shares. A profitable 150-share trade does not override that rule; the measured execution difference does.
+Two different decisions hide inside the word "scaling," and mixing them gets expensive. Pyramiding means adding to one trade that is already going your way. Book scaling means raising the reference size for every new trade the strategy takes. Either can happen without the other.
 
-Capacity cannot be inferred by multiplying small-size results. Larger orders can receive partial fills, consume displayed liquidity, alter timing, or miss a limit entirely. Investor.gov notes that quotes apply to a specified number of shares and that price can change before an order reaches the market. Scaling tests therefore need actual quantity, timestamps, fill prices, unfilled orders, and costs.
+Pyramiding is only safe if the stop climbs with the adds. First entry at 100, stop at 96: that gap is one unit of risk, written 1R. Add half a size at 106 and lift the stop to 102. Add again at 112, stop to 108. Risk on the whole stack stays at or below the original 1R. Add without moving the stop and the position becomes heaviest exactly when it is most stretched.
 
-Scaling should also preserve portfolio structure. If the strategy already dominates one sector or factor, more capital can amplify concentration even when its standalone metrics look stable. Adding a genuinely distinct strategy may reduce one concentration, but a low historical correlation is not a guarantee during stress.
+Then comes the part almost nobody tests: capacity. A method that prints on small orders can die on large ones. Investor.gov notes that a quote applies to a stated number of shares, and the price can change before your order reaches the market. Big orders eat several levels of the order book, fill halfway, or miss a limit entirely. Your true edge is the gross edge minus slippage, impact and fees, and only the costs grow with size.
 
-Use this action checklist:
+Before you climb a rung:
 
-- Freeze promotion, demotion, and rollback rules.
-- Measure live execution at the current size.
-- Stress the proposed quantity and shared exposures.
-- Change one size variable at a time.
-- Preserve the prior stage while validating the new one.
-- Roll back on a control or capacity breach, regardless of profit.
+- Write the promotion and demotion rules down, then leave them alone.
+- Record every fill at your current size: price expected versus price obtained.
+- Send a few real orders at the next rung's size and read the fills before committing.
+- Check the larger allocation against your per-trade, sector and borrowing limits.
+- Keep the old rung running while the new one is being proved.
+- Step back down on a capacity or control breach, even when the trade made money.
 
-**Limitation:** no small-scale test fully reveals market impact at larger size, and historical liquidity may vanish. Forward success can still be regime-specific. A staircase slows escalation and makes decisions auditable; it does not convert past performance into a reliable forecast.
+One number must never move: risk per trade as a share of the account. Risk 1% at $20,000 and you still risk 1% at $200,000 — $200 becomes $2,000, same fraction. Chart that percentage on its own, separate from profit. It should be a flat line. The slide from 1% to 3% is how a path whose worst decline was 12% turns into one whose worst decline was 34%.
+
+**Limitation:** no small test reveals real market impact at ten times the size, and the liquidity you measured can be gone the day you need it. A ladder forecasts nothing. It only slows the climb down enough to be checked.
 
 Sources: [Investor.gov: Executing an Order](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order); [FINRA: Concentration Risk](https://www.finra.org/investors/insights/concentration-risk); [FINRA: Evaluating Performance](https://www.finra.org/investors/investing/investing-basics/evaluating-performance)
 

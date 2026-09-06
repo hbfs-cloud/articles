@@ -12,39 +12,34 @@ send_email: false
 
 *Part 3 of 3 in Make Data Quality Executable. Lesson 9 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Batching is efficient, but careless clients associate responses by array position or collapse any error into an empty result. Use canonical identity and per-cell status instead. A batch can be completed, partial or failed; the label should reflect what actually happened.
+Asking for a hundred things in one request is cheap and sensible. The trouble starts with how most code reads the answer back. Two habits do the damage: matching answers to questions by their position in the list, and treating one bad item as a reason to throw the whole reply away, or worse, to report success with an empty basket.
 
-**Input from last Friday:** The accepted freshness gate test report.
+**Input from last Friday:** the accepted freshness gate test report.
 
-**Friday deliverable:** A batch-integrity fixture pack, owned by the desk operator and retained in the review bundle.
+**Friday deliverable:** a batch-integrity fixture pack, filed with the run's paperwork.
 
 ## Build this
 
-Key results by instrument id and facet. Include requested and returned ranges, missing intervals, truncation and pagination state. Concatenate pages only when their snapshot identifier matches.
+File every answer under two labels: which instrument it belongs to, using the durable internal identifier rather than the ticker, and which facet it is, a facet being one kind of information about that instrument, such as prices or company details.
 
-### Minimum record
+Alongside each cell, keep the range you asked for, the range you actually received, any gap in the middle, whether the answer was cut short, and the snapshot identifier, meaning the stamp saying which version of the database served it. Glue pages together only when those stamps agree. Two halves from two snapshots are not one answer.
 
-- `instrument_id`
-- `facet`
-- `requested_range`
-- `returned_range`
-- `pagination_token`
-- `snapshot_id`
+A toy batch, invented values for illustration: ten instruments requested across two facets, twenty cells expected. Fourteen come back complete. Four are marked not applicable, because SYM_D and SYM_E are funds and the company-details facet does not exist for them. One cell is truncated at 60 of 250 days. One instrument, SYM_K, never resolved at all. That is a partial batch. Calling it complete would have hidden six holes.
 
 ## Test it before moving on
 
-Request one stock, one ETF and one unknown symbol across price and company-only facets. Valid stock data should survive; ETF fundamentals may be not applicable; the unknown identity should be unavailable. Shuffle response order to prove the client does not rely on indexes.
+Send one ordinary company, one fund and one symbol that does not exist, across both facets, then shuffle the order of the replies before your code reads them. The company data survives, the fund's company details come back as not applicable, the unknown one comes back as unavailable, and the shuffle changes nothing. If shuffling changes anything, you are still matching by position.
 
-**Operating limit:** The batch-integrity fixture pack is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** a public teaching exercise, run on paper, with no live sizing or account detail anywhere in it, and no suggestion that it produces profit.
 
-**Further reading for the batch-integrity fixture pack (context, not implementation evidence):** [Investor.gov: Researching Investments](https://www.investor.gov/introduction-investing/getting-started/researching-investments); [Investor.gov: How to Read a 10-K](https://www.investor.gov/introduction-investing/getting-started/researching-investments/how-read-10-k)
+Two readings that make the habit stick: [FINRA on checking trade confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations), which is the same discipline applied line by line to your own fills, and [Investor.gov on reading a 10-K](https://www.investor.gov/introduction-investing/getting-started/researching-investments/how-read-10-k), a reminder that company facets belong to operating companies and not to every listed thing.
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the batch-integrity fixture pack only when the test above passes and its retained output matches the minimum record.
+**GO:** accept the pack when the shuffle test passes and every cell carries its instrument, facet, requested range, returned range, page token and snapshot stamp.
 
-**NO-GO:** Reject any batch whose pages come from different snapshots or whose results cannot be tied to canonical instruments.
+**NO-GO:** refuse any batch whose pages came from different snapshots, and any cell you cannot tie back to a known instrument.
 
-**Next Friday:** Carry the accepted batch-integrity fixture pack into Resolve Identity Before You Use a Ticker.
+**Next Friday:** the accepted pack opens Resolve Identity Before You Use a Ticker.

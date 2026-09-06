@@ -8,29 +8,29 @@ source_path: "series/proxys-haut-beta/part1-comprendre-beta/index.html"
 
 *Part 1 of 6 in Use High-Beta Proxies Without Getting Trapped.*
 
-Before calling anything a high-beta proxy, write down the reference asset, return frequency, sample window, and number of overlapping observations. If any one is missing, the beta is not decision-grade. A beta of 1.6 does not mean the proxy will move 1.6 times as much tomorrow. It is the slope estimated from a particular historical sample.
+One widely cited estimate put Nvidia's beta against the market near 1.2 in 2020 and near 1.8 in 2024. Same company. Same method. The number moved because the sample moved.
 
-For reference returns `x_t` and proxy returns `y_t`, a simple model is:
+That is the first thing to understand about beta. Beta is a slope. You take the market's daily percentage moves, you take your stock's daily percentage moves, you plot one against the other, and you draw the line that fits best. The steepness of that line is beta. A beta of 1.0 means the stock has historically moved about like the market. A beta of 1.8 means it has moved about 1.8 times as far, up and down both.
 
-`y_t = alpha + beta * x_t + epsilon_t`
+It is a measurement of the past, not a promise about tomorrow.
 
-With an intercept, the ordinary least-squares slope is `beta = Cov(y,x) / Var(x)`. It can also be written as correlation multiplied by the ratio of the two return volatilities: `beta = rho_xy * (sigma_y / sigma_x)`. This distinction matters. A proxy can show a large beta because it is extremely volatile even when its correlation with the reference is mediocre.
+So before you write a beta down anywhere, write down four things beside it: which reference you measured against, whether you used daily or weekly returns, which window, and how many days the two series actually share. A beta with no window attached is decoration. A one-year window is roughly 252 trading days, two years about 504, five years about 1,260. The longer window is steadier and slower to notice that something changed. The shorter one is quicker and more easily hijacked by a single bad week.
 
-Alpha is the fitted intercept for that sample. It is not proof of trading skill. The residual `epsilon_t` is whatever the one-factor model did not explain: company news, another common factor, market microstructure, nonlinear behavior, or noise.
+**Beta is two things multiplied.** The slope equals the correlation between the two assets, multiplied by the ratio of their volatilities. Correlation says whether they move together at all, on a scale from -1 to +1. Volatility says how violently each one moves. Multiply them and you get beta, which means a stock can post a big beta purely by being wild, even when it barely tracks the market.
 
-**Worked reading.** Suppose a hypothetical regression uses 120 shared daily observations and reports alpha of 0.10%, beta of 1.6, and R-squared of 0.49. For a reference return of +1%, the fitted proxy return is +1.70%: 0.10% + 1.6 x 1%. That is a conditional model estimate, not a target. An R-squared of 0.49 says the fitted line accounted for 49% of the proxy's in-sample return variance. It does not mean a 49% probability of success, and it establishes no causal link.
+**Worked reading.** Published estimates for two large US stocks against the S&P 500 illustrate it. One showed beta 1.80 with correlation 0.85. The other showed beta 2.00 with correlation 0.45. In a simple one-predictor regression, squaring the correlation gives R-squared, the share of the stock's in-sample movement the fitted line accounted for: 0.72 for the first, 0.20 for the second. The second name has the steeper slope and the flimsier relationship. Roughly four fifths of what it did had nothing to do with the index. Note what R-squared is not. It is not a 72% chance of anything, and it proves no cause.
 
-In simple one-predictor regression with an intercept, R-squared equals the squared Pearson correlation. Here, the correlation magnitude would be 0.70, with a positive sign because beta is positive. That identity does not automatically carry over to regressions with multiple factors, omitted intercepts, weights, or different samples.
+Rolling estimates expose the rest. Recompute beta every day over a moving 90-day window and you get a line instead of a number. Published rolling estimates for Tesla have swung between roughly 0.8 and 2.5 depending on the period. A proxy whose slope wanders like that is not measuring the market. It is measuring itself.
 
 **Beta report**
 
-- Align both return series to exactly the same timestamps.
-- Use the same currency, frequency, and return convention.
-- Report beta, correlation, R-squared, alpha, and overlapping count together.
-- Inspect rolling estimates and residuals, not only the full-sample result.
-- Reject a calculation contaminated by stale prices or unmatched sessions.
+- Line both return series up on exactly the same dates.
+- Use one currency, one frequency, one return convention.
+- Record beta, correlation, R-squared, alpha and the shared-day count together.
+- Plot the rolling estimate and check the leftovers, not just the headline slope.
+- Throw out any calculation built on stale prices or mismatched sessions.
 
-**Limitation:** Linear beta is sample-dependent and sensitive to outliers. A relationship measured in quiet trading can change during earnings, financing stress, market closures, or a volatility shock. Confidence intervals and out-of-sample checks can reveal uncertainty; they cannot make the coefficient stable.
+**Limitation:** A beta measured in calm trading does not survive earnings, financing stress, a halt or a volatility shock unchanged. Confidence intervals and out-of-sample tests will show you how uncertain the number is. Nothing makes it hold still.
 
 Sources: [NIST Linear Least Squares Regression](https://www.itl.nist.gov/div898/handbook/pmd/section1/pmd141.htm), [NIST Correlation Reference](https://www.itl.nist.gov/div898/software/dataplot/refman2/ch2/correlat.pdf).
 

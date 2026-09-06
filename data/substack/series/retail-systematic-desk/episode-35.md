@@ -12,15 +12,19 @@ send_email: false
 
 *Part 2 of 3 in Keep an Audit Trail That Survives Incidents. Lesson 35 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Recovery is part of the normal architecture. Persist active plan identity, group state, order fingerprints, broker identifiers, fills and protection state. A new revision replaces the old one atomically and records why.
+Supersession is a long word for a plain rule. When a new version of the plan takes over, the old version stops existing, all at once. Half a swap is the dangerous state: you inherit the old exit level and the new position size, a combination nobody designed and nobody reviewed.
 
-**Input from last Friday:** The accepted externally checkpointed decision ledger.
+Recovery is that rule seen from the other side. A process coming back from a crash must be able to say which revision was in charge, what is actually working in the market, and whether every open position still carries its protective exit.
 
-**Friday deliverable:** A restart-and-supersession drill report, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** the accepted checkpointed decision ledger.
+
+**Friday deliverable:** a restart drill report, owned by the desk operator and kept in the review bundle.
 
 ## Build this
 
-Create a startup sequence: verify ledger, load active plan, fetch broker state, reconcile, restore monitoring, then permit new decisions. Expired plans remain visible but cannot execute.
+Fix the startup order and never vary it. Verify the ledger. Load the active revision. Ask the broker what it is actually holding. Reconcile the two pictures. Restore monitoring. Only then allow a new decision. A plan whose validity has expired stays readable and cannot act.
+
+Reconciliation lives or dies on exact identifiers. Matching on "same symbol, roughly the same quantity" will invent a pairing eventually, and it will do it on the day two similar orders are open at once.
 
 ### Minimum record
 
@@ -33,18 +37,18 @@ Create a startup sequence: verify ledger, load active plan, fetch broker state, 
 
 ## Test it before moving on
 
-Terminate the process between entry fill and local acknowledgement. With complete broker evidence and exact identifiers, recover the fill, place protection idempotently, verify it by readback and close the group. With incomplete evidence, remain unknown, block mutation and escalate manually.
+Kill the process in the narrow window between the entry filling at the broker and your own system writing that fill down. Restart it.
 
-**Operating limit:** The restart-and-supersession drill report is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+With complete evidence, meaning the fill visible in broker history under identifiers that match exactly, the system recovers the fill, places the protective exit, reads it back from the broker, and closes the group. Read-back is not ceremony: an exit you sent is not an exit that exists ([Investor.gov: Stop Orders](https://www.investor.gov/introduction-investing/investing-basics/glossary/stop-orders)).
 
-**Further reading for the restart-and-supersession drill report (context, not implementation evidence):** [Investor.gov: Broker-Dealer Record-Keeping Requirements](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements); [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations)
+With incomplete evidence, it stays `unknown`, blocks every change and calls a human. A toy drill of 12 kills at randomised moments (invented figures): 9 resolved on their own, 3 escalated. Three hands-on escalations out of twelve reads like a healthy result to me, not a defect. A drill that always self-heals is usually a drill that is not aiming at the awkward moments.
 
-Educational, not investment advice.
+**Operating limit:** paper drill, public architecture, no live account, no deployed setting, no return figure implied anywhere. Educational, not investment advice. On the general habit of doubting what an automated system claims to have done: [CFTC: Advisory on Automated Trading Systems](https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/fraudadv_tradingsystem.html).
 
 ## Release decision
 
-**GO:** Accept the restart-and-supersession drill report only when the test above passes and its retained output matches the minimum record.
+**GO:** accept the report when both branches behave and the retained output carries all six fields.
 
-**NO-GO:** Never activate two plan revisions simultaneously or merge their candidates.
+**NO-GO:** never leave two revisions active at the same time, and never merge candidates across them.
 
-**Next Friday:** Carry the accepted restart-and-supersession drill report into Make Every Run Auditable.
+**Next Friday:** carry the accepted report into Make Every Run Auditable.

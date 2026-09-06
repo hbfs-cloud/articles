@@ -8,27 +8,29 @@ source_path: "series/calendrier-economique/part5-banques-centrales/index.html"
 
 *Part 5 of 6 in Read the Economic Calendar.*
 
-Read an FOMC event in document order: policy decision, implementation details, statement, projections when released, and press conference when held. Compare each item with its prior version. Do not infer the policy path from a single adjective, headline or chart point.
+The Committee meets eight times a year, roughly every six weeks. The decision goes out at 2:00 in the afternoon, New York time, on the second day of the meeting. The Chair takes questions half an hour later. Four of those eight meetings also carry the projections. That schedule is the packet, and each piece answers a different question.
 
-The statement records the Committee's decision and its current assessment. A line-by-line comparison can show which descriptions changed, which risks gained emphasis and whether the voting record was unanimous. The implementation note explains how the Federal Reserve intends to carry out the decision. These are official actions; commentary about whether the language sounds “hawkish” or “dovish” is interpretation.
+Start with the decision and the implementation note, which explains how the Fed intends to carry the decision out. Those are actions. Everything after them is explanation.
 
-At designated meetings, the Summary of Economic Projections reports individual participants' views under their own assumptions about appropriate policy. The projections are not a negotiated Committee forecast, and the policy-rate chart is not a promise. Medians, ranges and uncertainty matter more than treating one plotted point as a scheduled move.
+The statement itself is short, around 500 words, and it is written to be compared. Save the previous one. When the new text lands, mark what was added, what was cut, what was reworded. Twelve people vote: seven governors and five reserve bank presidents in rotation. Put the decision and the vote split at the top of your note, ahead of any adjective. Calling the language hawkish or dovish is interpretation, not the record.
 
-The press conference provides explanations and qualifications that cannot fit in the statement. It does not replace the written decision. Minutes arrive later and describe the discussion in greater detail; they are not a live update of conditions after the meeting.
+At four meetings a year the Summary of Economic Projections appears. Each dot on the rate chart is one participant's own view of where policy should go, under that person's own assumptions about the economy. It is not a negotiated Committee forecast and not a promise. Read the median, then read the spread around it, then compare with the previous round. The distance between the dots and what the market already expects is where surprise lives.
 
-Run a simple document comparison. Save the previous official statement before the new one is released. When the new statement appears, mark added, removed and changed clauses. Put the decision and voting record at the top of your note. Add the projections only after labeling them as participant submissions. During the press conference, attach each comment to the question it answered rather than collecting isolated phrases.
+The press conference is the part people watch. Prepared remarks first, then unscripted answers. The statement can move prices at 2:00 and the answers can move them back by 3:00, which is why traders who work these events tend to wait until the questions are finished. Attach every quote you keep to the question that produced it. A sentence lifted out of the Q&A without its question is easy to misread.
+
+Minutes arrive weeks later with far more detail about the discussion. They describe the meeting, not the world since.
 
 Use this review list:
 
-- Confirm the decision on the Federal Reserve site.
-- Compare the statement with the previous meeting's text.
-- Separate Committee actions from participant projections.
-- Read the projection ranges and assumptions, not just the median.
-- Revisit the meeting with the minutes when they are published.
+- Confirm the decision and the vote on the Federal Reserve site.
+- Compare the statement line by line with the previous meeting's text.
+- Keep Committee actions separate from participant projections.
+- Read the ranges and assumptions, not only the median dot.
+- Go back over the meeting when the minutes are published.
 
-Suppose the statement retains concern about inflation while the Chair says future choices depend on incoming data. Those messages can coexist. One describes the Committee's assessment at the meeting; the other describes conditionality. Calling the pair a contradiction would manufacture certainty that the documents do not contain.
+One trap is worth rehearsing in advance. The statement still describes inflation as a concern, and the Chair says future choices depend on incoming data. Those two are not in conflict. One is the Committee's assessment on the day. The other is a condition attached to what comes next. Calling the pair a contradiction manufactures certainty the documents do not contain.
 
-There is no perfect translation from central-bank language to the next asset-price move. Markets also reflect prior expectations, positioning and developments outside monetary policy. The same reading discipline applies to other central banks, but their mandates, instruments and publication formats differ; never import FOMC terminology without checking the institution's own documents.
+There is no clean translation from central-bank wording into the next price move. Prior expectations, positioning and events far outside monetary policy all sit in between. The reading discipline travels to other central banks; the vocabulary does not. Mandates, tools and publication formats differ, so check an institution's own documents before importing a single Fed term into your notes on it.
 
 Sources: [Federal Reserve FOMC page](https://www.federalreserve.gov/monetarypolicy/fomc.htm), [Federal Reserve SEP FAQ](https://www.federalreserve.gov/faqs/summary-economic-projections-sep.htm), [Federal Reserve minutes FAQ](https://www.federalreserve.gov/faqs/minutes-federal-open-market-committee-fomc.htm).
 

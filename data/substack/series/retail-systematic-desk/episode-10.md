@@ -12,40 +12,34 @@ send_email: false
 
 *Part 1 of 3 in Treat Identity and Time as Data. Lesson 10 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Tickers are display labels, not durable primary keys. Listings change, symbols are reused and the same shorthand can represent different asset types. A systematic desk needs an instrument master that retains venue, currency, type and effective dates.
+A ticker is a name printed on a screen. Names get changed, reused and recycled: a company renames itself, disappears in a merger, and three years later a different business is trading under those same letters. Two exchanges can hand the same shorthand to two unrelated instruments on the same afternoon. Build your records around the name and your history quietly becomes a mixture of strangers.
 
-**Input from last Friday:** The accepted batch-integrity fixture pack.
+**Input from last Friday:** the accepted batch-integrity fixture pack.
 
-**Friday deliverable:** An effective-dated instrument record, owned by the desk operator and retained in the review bundle.
+**Friday deliverable:** an effective-dated instrument record, filed with the run's paperwork, effective-dated meaning each row states the window of time it was true for.
 
 ## Build this
 
-Create a resolver that returns one canonical record or an explicit ambiguous or unavailable result. Persist the identifier throughout data, decisions and orders. Keep the ticker as presentation metadata.
+Write one function that turns a name into an identity, and give it three possible answers: here is exactly one instrument, or this is ambiguous, or I cannot find it. Never a best guess. Whatever it returns carries an internal identifier that you then use everywhere downstream, in data, in decisions, in orders. The ticker rides along as a label for humans, and nothing keys off it.
 
-### Minimum record
+Each row holds the identifier, the symbol, the exchange, the currency, the asset type, and the two dates that bound it: valid from, valid until.
 
-- `instrument_id`
-- `symbol`
-- `exchange`
-- `currency`
-- `asset_type`
-- `effective_from`
-- `effective_to`
+Toy master file, numbers invented to show the shape: 5,397 rows, of which 41 carry a symbol that some other instrument also used within the previous eight years. SYM_A is one of those. Asked plainly, the resolver finds two live matches, a fund quoted in one currency and an operating company quoted in another, and answers ambiguous. Add the exchange and it resolves to one. Add nothing and it stays refused, which is the correct outcome.
 
 ## Test it before moving on
 
-Test a renamed listing, an ETF and an ambiguous symbol. Historical records must continue to point to the instrument that existed at the time; no request may resolve by uppercase conversion alone.
+Three cases: a listing that was renamed last year, a fund, and a symbol shared by two instruments. Records dated before the rename must still point at the instrument that existed then. And nothing may resolve on capitalisation alone, since making letters uppercase is not identification.
 
-**Operating limit:** The effective-dated instrument record is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** an open, paper-stage exercise. No live parameter, no allocation, no broker account, and no implied edge of any kind.
 
-**Further reading for the effective-dated instrument record (context, not implementation evidence):** [Investor.gov: Researching Investments](https://www.investor.gov/introduction-investing/getting-started/researching-investments); [Investor.gov: How to Read a 10-K](https://www.investor.gov/introduction-investing/getting-started/researching-investments/how-read-10-k)
+Two references worth keeping open: [Investor.gov on using EDGAR](https://www.investor.gov/introduction-investing/getting-started/researching-investments/using-edgar-research-investments), where filings are filed under a company number rather than a ticker, and [the SEC's Form 8-K](https://www.sec.gov/info/edgar/forms/form8-k.pdf), the form on which the changes that break your key tend to be announced.
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the effective-dated instrument record only when the test above passes and its retained output matches the minimum record.
+**GO:** accept the record when all three cases behave and every row carries identifier, symbol, exchange, currency, type and both dates.
 
-**NO-GO:** If the broker and market-data records cannot be joined without guessing, the instrument is not eligible.
+**NO-GO:** if the broker's list and the data vendor's list cannot be joined without guessing, that instrument is not eligible to trade.
 
-**Next Friday:** Carry the accepted effective-dated instrument record into Treat Time as a First-Class Field.
+**Next Friday:** the accepted record carries into Treat Time as a First-Class Field.

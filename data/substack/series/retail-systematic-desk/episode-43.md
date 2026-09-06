@@ -12,38 +12,38 @@ send_email: false
 
 *Part 1 of 3 in Constrain AI and Promote Slowly. Lesson 43 of 45 in Build a Retail Systematic Desk, Safely.*
 
-A language model can summarize evidence, challenge a thesis and improve explanations. It should not transport datasets, calculate position size, choose hidden thresholds or mutate broker state from prose. Deterministic scripts own arithmetic, schemas, hashes and release gates.
+A language model reads a pile of evidence well. It argues against your thesis well. It is a poor calculator and a worse database, and the trouble is that it never announces which of the three you just asked it to be. It answers in the same confident voice either way.
 
-**Input from last Friday:** The accepted action-owned alert policy.
+So sort your steps into three kinds before the model goes anywhere near them. Deterministic: code does the sum and returns the same answer every time. Interpretive: something is being described or challenged, and two sensible answers can both be fine. Side-effecting: the world outside the program changes — a file is written, an order leaves the desk. The model works on the interpretive pile. Only that one.
 
-**Friday deliverable:** An AI side-effect boundary map, owned by the desk operator and retained in the review bundle.
+**Input from last Friday:** the accepted action-owned alert policy.
+
+**Friday deliverable:** a side-effect boundary map — one page saying, for every step, what the model may read, what it may say, and what it may never touch.
 
 ## Build this
 
-Mark each pipeline step as deterministic, interpretive or side-effecting. Feed the model a frozen structured snapshot. Validate its output against the same schema and recompute every hard number outside the model.
+Hand the model a snapshot: a frozen copy of the evening's data, so the model and the checker are looking at the same rows. Require its answer in a schema, meaning a fixed list of fields it must fill and may not extend. Then recompute every hard number outside it and compare.
+
+Toy run, invented figures for illustration: 60 steps in one evening pass. 41 deterministic, 15 interpretive, 4 side-effecting. On a pass broken on purpose, the model's commentary on SYM_A said 180 shares while the computed payload said 120. The payload held, the sentence was flagged, the run stopped for a human. That is the shape of a working boundary.
 
 ### Minimum record
 
 - `input_snapshot`
 - `allowed_task`
 - `structured_output`
-- `numeric_recheck`
+- `numeric_recheck` — the number code produced, beside the number prose claimed
 - `side_effect_boundary`
 
 ## Test it before moving on
 
-Ask the model to change a quantity in narrative text. The renderer may display commentary, but the order payload must remain unchanged. Remove a required field and ensure the model cannot repair it.
+Ask the model, in plain words, to change a quantity. The page may print whatever it wrote. The payload must not move by one share. Then strip a required field out of the snapshot and check that the model cannot quietly fill the hole with something plausible.
 
-**Operating limit:** The AI side-effect boundary map is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
-
-**Further reading for the AI side-effect boundary map (context, not implementation evidence):** [CFTC: Trading Systems Advisory](https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/fraudadv_tradingsystem.html); [NIST: Bootstrap Plot](https://www.itl.nist.gov/div898/handbook/eda/section3/bootplot.htm)
-
-Educational, not investment advice.
+**Operating limit:** paper only, no live credential, no real account behind any figure above.
 
 ## Release decision
 
-**GO:** Accept the AI side-effect boundary map only when the test above passes and its retained output matches the minimum record.
+**GO:** accept the map when the quantity test leaves the payload untouched and all five fields survive in the retained output.
 
-**NO-GO:** Never allow persuasive prose to override a failed deterministic gate.
+**NO-GO:** never let good prose overturn a failed check. Confidence is not evidence — a lesson older than this technology ([CFTC: Learn and Protect](https://www.cftc.gov/LearnAndProtect/EducationCenter/index.htm)), and measurement quality still comes from bias and variability you can quantify ([NIST: Issues for Characterization](https://www.itl.nist.gov/div898/handbook/mpc/section1/mpc11.htm)). Educational, not investment advice.
 
-**Next Friday:** Carry the accepted AI side-effect boundary map into Use Adversarial Review as a Release Gate.
+**Next Friday:** the accepted map goes into Use Adversarial Review as a Release Gate.

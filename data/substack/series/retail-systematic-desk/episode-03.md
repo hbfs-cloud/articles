@@ -12,39 +12,43 @@ send_email: false
 
 *Part 3 of 3 in Start With a Mandate, Not a Model. Lesson 3 of 45 in Build a Retail Systematic Desk, Safely.*
 
-A first systematic build should minimize market plumbing, not maximize excitement. Start with instruments whose identity, session, corporate actions and execution constraints are well documented. Avoid mixing asset classes until the system can distinguish their calendars, quote conventions and settlement behavior. Complexity can be added later; ambiguous records are much harder to remove.
+Boring is the specification, not a compromise. Your first universe should contain instruments whose identity, trading hours and corporate actions — splits and dividends, the events that rewrite past prices — you can look up and reconcile on a Tuesday evening. Excitement is paid for in plumbing.
 
-**Input from last Friday:** The accepted kill-and-resume matrix.
+A toy funnel, with counts invented to show the shape of the filtering rather than any screen worth running:
 
-**Friday deliverable:** An instrument eligibility table, owned by the desk operator and retained in the review bundle.
+- 5,397 symbols in the starting list
+- 2,403 left after a liquidity floor, meaning a minimum of daily traded value so your own order is not the market
+- 1,911 after dropping every name whose exchange calendar could not be sourced
+- 41 more rejected because a split in the price history could not be reconciled against the adjusted series
+
+What survives is dull. Dull is the product.
+
+**Input from last Friday:** the accepted kill-and-resume matrix.
+
+**Friday deliverable:** an instrument eligibility table, owned by the desk operator and kept in the review bundle.
 
 ## Build this
 
-Create an eligibility table for the first universe. Record exchange, asset type, currency, regular session, price source, minimum liquidity evidence and whether corporate actions can be reconciled. Use canonical instrument identifiers internally even if the interface displays tickers.
+One row per instrument: exchange, asset type, currency, regular session, price source, the liquidity evidence you used, and whether corporate actions can be reconciled. Key every row on a stable instrument id, a number of your own that never changes, because tickers get retired and reassigned to other companies. Show the ticker on screen. Never join records on it.
 
 ### Minimum record
 
-- `instrument id`
-- `listing venue`
-- `asset type`
-- `currency`
-- `session calendar`
-- `data coverage`
+instrument id, listing venue, asset type, currency, session calendar, data coverage.
 
 ## Test it before moving on
 
-Resolve a stock, an ETF and an intentionally unknown ticker. The first two must retain different asset types; the unknown symbol must remain unavailable rather than being guessed or uppercased into existence.
+Ask your resolver for three things: SYM_A, a share; SYM_E, a fund; and SYM_ZZZ, which does not exist. Invented names, deliberately. The first two must come back with different asset types, because a fund's distributions and holdings do not behave like a single company's. The third must come back unknown, and stay unknown. The failure worth hunting is the resolver that quietly turns a typo into a tradable instrument by uppercasing it.
 
-**Operating limit:** The instrument eligibility table is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** paper exercise only; the counts above illustrate a funnel's shape and are not a screen to copy.
 
-**Further reading for the instrument eligibility table (context, not implementation evidence):** [NYSE: Hours and Calendars](https://www.nyse.com/trade/hours-calendars); [Investor.gov: Executing an Order](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order)
+While you fill the table: [NYSE hours and calendars](https://www.nyse.com/markets/hours-calendars) and [what a split does to your price history](https://www.investor.gov/introduction-investing/investing-basics/glossary/stock-splits).
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the instrument eligibility table only when the test above passes and its retained output matches the minimum record.
+**GO:** all three lookups behave as above and every row carries the six fields.
 
-**NO-GO:** Do not admit an instrument when identity or trading calendar depends on a free-text ticker alone.
+**NO-GO:** an instrument whose identity or trading calendar rests on free text alone does not enter the universe.
 
-**Next Friday:** Carry the accepted instrument eligibility table into Draw Hard System Boundaries.
+**Next Friday:** the eligibility table goes into Draw Hard System Boundaries.

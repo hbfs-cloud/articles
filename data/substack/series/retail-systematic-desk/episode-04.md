@@ -12,38 +12,44 @@ send_email: false
 
 *Part 1 of 3 in Separate Data, Decisions and Execution. Lesson 4 of 45 in Build a Retail Systematic Desk, Safely.*
 
-A useful retail desk has at least four boundaries: market facts, candidate research, portfolio decisions and broker execution. The interface is a fifth layer that explains state but does not become the source of truth. This separation lets a data outage block new decisions without corrupting the ledger, and lets the user interface fail without changing an order.
+Four walls, minimum. A fifth thing, the screen, explains the state of the desk and owns none of it.
 
-**Input from last Friday:** The accepted instrument eligibility table.
+| Layer | Owns | Must never |
+|---|---|---|
+| Facts | prices, calendars, filings | judge a candidate |
+| Research | scores and shortlists | send an order |
+| Decisions | the plan: what, how much, which stop | invent a price it did not receive |
+| Execution | broker calls and fills | repair a missing field by guessing |
+| Screen | the view | become the source of truth |
 
-**Friday deliverable:** A service-boundary diagram, owned by the desk operator and retained in the review bundle.
+Why bother. A toy incident, times invented, shape ordinary: the price feed dies at 14:12. Facts stop arriving. The decision layer produces no plan and says exactly why. The screen turns amber and prints stale. The ledger, meaning the record of what is actually held, changes zero rows. An outage became an abstention instead of a fabrication, and that is the entire return on this week's work.
+
+**Input from last Friday:** the accepted instrument eligibility table.
+
+**Friday deliverable:** a service-boundary diagram, owned by the desk operator and kept in the review bundle.
 
 ## Build this
 
-Draw the services and the objects passed between them. Use versioned JSON contracts rather than prose. The research layer may enrich candidates; it may not place orders. The execution layer may enforce broker risk; it may not repair a missing strategy field by guessing.
+Draw the boxes, then draw the objects that travel between them, which matters more. Each arrow is a versioned contract: an agreed message shape with a number attached, so a reader can tell whether it received the old shape or the new one. A paragraph of prose sitting in a field is not a contract.
 
 ### Minimum record
 
-- `facts snapshot`
-- `candidate record`
-- `decision plan`
-- `execution report`
-- `display projection`
+facts snapshot, candidate record, decision plan, execution report, display projection.
 
 ## Test it before moving on
 
-For every field on the desktop, identify its authoritative object. Then disable one layer at a time in a test environment. A broken renderer must not alter data, and an unavailable broker must not cause the strategy layer to fabricate fills.
+Point at every number on the screen and name the object it came from. Anything untraceable is a number the screen invented. Then switch off one layer at a time in a test environment. Kill the renderer: the ledger must show zero changed rows. Kill the broker: the decision layer must report unavailable, never a fill it never received. In a toy pass, 5 of 6 screen fields traced back cleanly; the sixth, an estimated total, had no owner, so it was deleted rather than explained.
 
-**Operating limit:** The service-boundary diagram is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** paper only. No live broker credential belongs anywhere near this drawing.
 
-**Further reading for the service-boundary diagram (context, not implementation evidence):** [Investor.gov: Broker-Dealer Record-Keeping Requirements](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements); [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations)
+Background worth reading once: [FINRA on books and records](https://www.finra.org/rules-guidance/key-topics/books-records), and [how an order actually gets executed](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order).
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the service-boundary diagram only when the test above passes and its retained output matches the minimum record.
+**GO:** every screen field has a named owner, and each layer, disabled alone, degrades without touching the others.
 
-**NO-GO:** If the same process both invents a trade and confirms that it executed correctly, split the responsibilities before proceeding.
+**NO-GO:** one process that both invents a trade and certifies that it executed. Split it before anything else.
 
-**Next Friday:** Carry the accepted service-boundary diagram into Facts, Decisions and Orders Are Different Objects.
+**Next Friday:** the diagram goes into Facts, Decisions and Orders Are Different Objects.

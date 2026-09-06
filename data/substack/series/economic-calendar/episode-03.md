@@ -8,25 +8,31 @@ source_path: "series/calendrier-economique/part3-inflation/index.html"
 
 *Part 3 of 6 in Read the Economic Calendar.*
 
-Start an inflation review with the seasonally adjusted monthly changes in the all-items and core indexes. Then identify the components responsible for the move. Use the annual rate as context, not as a substitute for current momentum. One headline cannot establish a trend or a policy outcome.
+Start with the monthly change, not the annual one. The month tells you what is happening now. The year tells you what happened over twelve months, most of which you already knew.
 
-The Consumer Price Index measures the average change over time in prices paid by urban consumers for a defined basket. “Core CPI” usually means all items less food and energy. That exclusion can make underlying movement easier to inspect, but core is not a corrected or superior version of the headline index. Both answer legitimate questions.
+Consumer prices arrive around the 13th of each month, at 8:30 in New York. Two figures come out together and they are not interchangeable. The headline covers everything people buy: food, petrol, rent, healthcare, transport. Core strips out food and energy, because a hurricane or a pipeline problem can swing those 10% in a month and then unwind it. Core is not a corrected version of the headline. It answers a narrower question and it answers it more steadily.
 
-The PCE price index is built from the national accounts and covers a different scope of consumer spending. BEA explains that CPI and PCE differ in coverage, weights, formulas and other methods. A gap between them is therefore not evidence that one agency made an error. The Producer Price Index is different again: it measures changes in selling prices received by domestic producers. A PPI move does not prove that consumer prices will move by the same amount.
+Housing is the heavyweight, near 36% of the basket. It is also the slowest. The method smooths rent changes over six to twelve months, so the housing line keeps rising for a while after real rents have started falling. Traders who care look at new lease signings rather than waiting for the official series to catch up.
 
-Use this release procedure. Record monthly headline CPI, monthly core CPI, and the corresponding annual changes in separate lines. Open the component detail and identify whether the move was broad or concentrated. Then compare the result with PCE only after noting the methodological differences.
+The Fed prefers a different gauge, published by a different agency at the end of the month. It weights spending by what people actually buy, so when beef gets expensive and shoppers switch to chicken, the index follows them. Housing carries about 17% there rather than 36%, and employer-paid healthcare is included. The official 2% target applies to that measure, not to consumer prices. In March 2026 it read 3.1%.
 
-For example, suppose monthly headline CPI accelerates while core CPI slows because energy accounts for much of the headline change. The correct observation is narrow: headline and core moved differently, with energy explaining part of the split. It would be an overclaim to announce that “inflation is back” or “inflation is solved.” Check whether shelter, services and goods categories support the same conclusion over subsequent releases.
+Producer prices land the day after the consumer figure and measure what factories and firms receive rather than what households pay. Raw materials, then intermediate goods, then finished goods, then the shop. Producer prices sit upstream, and a strong reading often shows up in consumer prices two or three months later. It is a hint, not a guarantee.
+
+Learn the monthly threshold: 0.3%. Twelve months of 0.3% compounds to roughly 3.6% a year, which is above target. Below that reading is described as cool, above it as hot. And beware the base effect. The annual rate can fall purely because a large number from a year ago drops out of the calculation, even while the current month runs hot. The monthly figure is where the real momentum lives.
 
 Before reacting, ask:
 
-- Am I reading a monthly or annual change?
+- Am I reading a monthly or an annual change?
 - Is the monthly figure seasonally adjusted?
-- Which components drove the result?
-- Am I comparing CPI with PCE as if their methods were identical?
-- Did I separate the published data from a market forecast?
+- Which components drove it? Broad, or one category doing all the work?
+- Am I comparing two indexes as if their methods matched, when they do not?
+- Did I record the published data separately from someone's forecast?
 
-Inflation indexes have an important boundary: they summarize price changes across many items and households, not every person's cost of living. Component volatility, methodological differences and later revisions to some national-account data can all alter the interpretation. Inflation news may change rate expectations and asset prices, but a simultaneous move does not by itself prove a single causal chain.
+Suppose headline prices accelerate while core slows, because energy did most of the headline work. The honest observation stops right there: the two moved apart, and energy explains part of the split. Announcing that inflation is back, or solved, is an overclaim from a single line. Check whether housing, services and goods point the same way over the next two releases.
+
+The transmission chain runs in seconds. Print lands, rate expectations reprice, bond yields move, the dollar follows the yields. Then shares, with technology hit hardest. Growth companies are valued on profits expected five or ten years out, and a higher discount rate shrinks distant money more than it shrinks next quarter's. The Nasdaq typically reacts around one and a half times as hard as the Dow. Banks and energy, earning their money now, care less.
+
+Limitation: a price index summarises millions of households and thousands of items. It is not your cost of living. Components are volatile, methods differ between agencies, and some national-accounts data gets revised later. Inflation news can move rate expectations and asset prices in the same hour without that proving one caused the other.
 
 Sources: [BLS CPI concepts](https://www.bls.gov/opub/hom/cpi/concepts.htm), [BEA on differences between PCE and CPI](https://www.bea.gov/help/faq/555), [BLS PPI concepts](https://www.bls.gov/opub/hom/ppi/concepts.htm).
 

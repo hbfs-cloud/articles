@@ -8,26 +8,30 @@ source_path: "series/obligations-et-taux/part4-credit-spreads/index.html"
 
 *Part 4 of 6 in Bonds and Rates for Equity Traders.*
 
-Define the benchmark and match maturity before calling a corporate bond cheap or risky. A raw corporate yield is not a credit spread. Subtract the yield on the stated Treasury or other benchmark, using comparable duration, and disclose any call or prepayment feature that changes the comparison.
+A corporate bond yields 4.8%. That number is not a credit spread. Subtract the matched Treasury, say 4.3%, and you get 50 basis points, half a percentage point. That half point is what you are paid for holding a company's promise instead of the government's. Match the maturity, name the benchmark, disclose any call feature, or the comparison is decoration.
 
-The extra yield on corporate debt compensates for several risks. The issuer may fail to pay on time, but investors also face liquidity, downgrade, recovery, uncertainty and changing demand for risky assets. Supply in either the corporate or Treasury market can move the measured spread. A spread is therefore a market price of a bundle of risks, not a direct probability of default.
+The ladder is steep. Top-rated issuers have traded around 30 to 50 basis points over Treasuries. Single-A names sit nearer 80 to 130, BBB around 130 to 200, BB in the 250 to 400 range, single-B 400 to 600, and CCC paper can demand 800 to 1,500 or more. Each rung is the market's price for a different distance from trouble.
 
-Spread arithmetic can change even when the corporate yield does not. Suppose a corporate bond's yield is unchanged while the matched Treasury yield falls. The corporate spread widens. That observation is valid, but “the company deteriorated” is not yet supported. Check issuer news, sector peers, bond terms and recent transactions before assigning a cause.
+Default risk is only part of what lives in that number. Liquidity, downgrade risk, expected recovery, plain uncertainty and the shifting appetite for risky assets are all bundled in. So is supply: a heavy month of corporate issuance, or of Treasury issuance, can move the measured spread without a single balance sheet changing.
 
-For an individual bond, start with its identifier and offering document. Confirm seniority, maturity, coupon and call schedule. Pull recent eligible trades from FINRA's fixed-income data, noting execution time, size, price and yield. Compare the bond with a Treasury benchmark and with bonds of similar seniority from the same issuer or sector. Thin trading, stale quotes and different call features can overwhelm a neat-looking comparison.
+Which produces the trap. A corporate yield holds steady while the matched Treasury yield falls. Arithmetic says the spread widened, and arithmetic is right. "The company deteriorated" is a separate claim that nothing here supports. Check issuer news, sector peers, the bond's own terms and recent trades before assigning a cause.
+
+When credit genuinely breaks, the moves are not subtle. In March 2020, high-yield spreads went from roughly 350 basis points to about 1,100 in three weeks. That is the credit market's version of a volatility spike, and it repriced refinancing plans long before it showed up in earnings guidance.
+
+Work one bond at a time. Start with the identifier and the offering document. Confirm seniority, maturity, coupon and call schedule. Pull recent eligible trades from FINRA's fixed-income data, noting execution time, size, price and yield. Then compare against a Treasury benchmark and against bonds of similar seniority from the same issuer or sector. Thin trading, stale quotes and different call features can wreck a comparison that looks tidy on screen.
 
 Keep the credit note short:
 
-- Name the bond, seniority and benchmark.
+- Name the bond, its seniority and the benchmark.
 - Match maturity or duration as closely as the data allow.
 - State the spread convention supplied by the data source.
 - Check calls, collateral and recent trade activity.
 - Compare with issuer peers and the broader credit index.
-- Separate observation from the proposed explanation.
+- Separate the observation from the proposed explanation.
 
-Credit and equity can disagree. A share price may rise while a bond spread widens because the two claims have different payoffs, investors and liquidity. Shareholders can favor a transaction that transfers value away from creditors; bondholders can favor deleveraging that limits equity upside. Divergence is a prompt to inspect the capital structure, not an automatic arbitrage signal.
+Credit and equity are allowed to disagree. A share price can rise while the bond spread widens, because the two claims have different payoffs, different owners and different liquidity. Shareholders can favour a transaction that moves value away from creditors. Creditors can favour deleveraging that caps equity upside. Divergence is a reason to open up the capital structure, not an automatic arbitrage.
 
-The main limitation is identification. A wider spread does not prove an imminent default, a recession or a future stock decline. Index spreads can move because their constituents or option characteristics differ, while a single bond may trade too rarely for a robust signal. Use spread changes as evidence of repricing, then test the reason against filings and transaction data.
+The main limitation is identification. A wider spread does not prove an imminent default, a recession or a coming stock decline. Index spreads move when their constituents or option characteristics change, and a single bond may trade too rarely to carry any robust signal. Treat a spread move as evidence that something was repriced, then go test the reason against filings and transaction data.
 
 Sources: [FINRA guide to bond spreads](https://www.finra.org/investors/insights/spread-word-what-you-need-know-about-bond-spreads), [FINRA TRACE overview](https://www.finra.org/sites/default/files/TRACE_Overview.pdf), [Investor.gov corporate-bond bulletin](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins/what-are).
 

@@ -8,25 +8,29 @@ source_path: "series/obligations-et-taux/part3-yield-curve/index.html"
 
 *Part 3 of 6 in Bonds and Rates for Equity Traders.*
 
-Never write “the curve steepened” without naming the two maturities, the observation dates and the direction of both yields. Calculate long-maturity yield minus short-maturity yield, then inspect which leg moved. The spread alone hides whether the market repriced near-term policy, long-term compensation or both.
+"The curve steepened" is half a sentence. Which two maturities? Measured on which dates? And which leg actually moved? Long yield minus short yield gives you a spread. The spread on its own hides whether the market repriced the next twelve months, the next thirty years, or both at once.
 
-A yield curve relates yields to maturities for securities of comparable credit quality. The Treasury's official par curve is a modelled curve, not a tape of completed trades. Treasury derives it from indicative bid-side quotations on recently auctioned nominal securities and interpolates fixed maturities. That method makes the series consistent, but an official constant-maturity yield is not necessarily the executable yield on one outstanding bond.
+Know what the official curve is first. Treasury's par yield curve is a model, not a tape of completed trades. It is derived from indicative bid-side quotations on recently auctioned securities and interpolated to fixed maturities. That makes the series consistent across time, which is the point. It also means a constant-maturity yield is not necessarily a yield you could execute on any single bond.
 
-Build a curve note from the official data. Choose a short and a long maturity before looking at the result. Record both yields on the starting date and again on the comparison date. Calculate the spread each time. If the spread widens, identify whether the short yield fell, the long yield rose, or both moved at different speeds. Only then attach a label such as steepening.
+Then build the note. Choose the short and the long maturity before you look at the answer, so the conclusion does not choose the inputs. Record both yields on the starting date and again on the comparison date. Compute the spread twice. If it widened, say which leg did it: the short yield fell, the long yield rose, or both moved at different speeds. Only then reach for a word like steepening.
 
-For an equity analyst, the decomposition is more useful than the nickname. A rise concentrated at the short end may reflect a different expected path for near-term rates. A move at the long end can also include changes in expected future short rates and the term premium. The New York Fed defines the term premium as compensation for the risk that rates change over the life of a bond, and stresses that it is unobservable and must be estimated. Model estimates are evidence, not measurements.
+Some rough anchors help. In a normal expansion the two-year to ten-year spread has often sat around +100 to +200 basis points. Transitional periods flatten it toward 0 to +50. Inverted stretches have run in the region of minus 50 to minus 100, and the 2022 inversion went deeper still, near minus 100 at its worst, after a hiking cycle of roughly 525 basis points in sixteen months.
 
-Use this curve discipline:
+The lags are where the label falls apart. August 2019 inversion, recession dated February 2020: six months. May 1998 inversion, recession March 2001: thirty-four months. December 2005 to December 2007: twenty-four. The average sits near a year and a half, with a spread wide enough that "inverted, therefore soon" is not a usable claim.
+
+For equity work the decomposition beats the nickname. A move concentrated at the short end says something about the expected path of near-term policy. A move at the long end mixes expected future short rates with the term premium, meaning the extra compensation investors want for the risk that rates change over the life of a bond. The New York Fed is explicit that this premium is unobservable and must be estimated. The arithmetic behind it is simple: if investors expect short rates to average 3% over ten years while the ten-year sits at 4%, the estimated term premium is about one point. Model output is evidence, not measurement.
+
+Curve discipline:
 
 - State the data source and whether yields are par, spot or transaction yields.
 - Name both maturities and the subtraction order.
 - Record each leg, not only the spread.
 - Separate observed yields from estimated term-premium components.
-- Compare several curve measures before making a broad claim.
+- Check several curve measures before making a broad claim.
 
-Suppose the long-minus-short spread becomes less negative. That is a steepening by arithmetic, but it says little by itself. If the short yield fell sharply while the long yield barely moved, the interpretation differs from a case in which the long yield rose while the short yield held steady. Equity duration, bank margins and discount-rate narratives may respond differently, and none follows mechanically from the label.
+Suppose a spread of minus 40 becomes minus 10. Arithmetically that is steepening, and it means very little by itself. A short yield collapsing while the long end sits still is a different world from a long end selling off while the short end holds. Bank margins, equity duration and discount-rate narratives react differently to each, and none of it follows automatically from the label.
 
-Curve inversion has predictive information in some historical models, but it is not a recession clock and does not cause recessions by definition. Federal Reserve research shows that model choice, the level of rates, term premiums and other variables affect the inference. The curve should update a probability assessment, never supply a certain date or a stand-alone equity signal.
+Inversion carries predictive information in some historical models. It is not a recession clock and it does not cause anything. Federal Reserve research shows the inference depends on model choice, the level of rates and the term premium. Let the curve update a probability. It cannot supply a date, and it is not a stand-alone equity signal.
 
 Sources: [Treasury yield-curve methodology](https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics/treasury-yield-curve-methodology), [Treasury daily par yields](https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve), [New York Fed term-premium data](https://www.newyorkfed.org/research/data_indicators/term-premia-tabs), [Federal Reserve yield-curve research](https://www.federalreserve.gov/econres/notes/feds-notes/predicting-recession-probabilities-using-the-slope-of-the-yield-curve-20180301.html).
 

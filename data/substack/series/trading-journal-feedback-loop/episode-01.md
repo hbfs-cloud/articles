@@ -8,30 +8,59 @@ source_path: "series/journal-et-performance/part1-tenir-le-journal/index.html"
 
 *Part 1 of 6 in Turn a Trading Journal Into a Feedback Loop.*
 
-Record the planned decision before entry and the execution facts as they occur. Add explanations only after the position is closed. This separation is the journal's core control: it prevents later price action from rewriting what the trader knew, intended, or felt at the time.
+Most journals die of ambition. Thirty columns, half a page of prose per trade, abandoned by the third busy
+week. Ten columns you can fill in two minutes will still be alive in six months, and a simple journal you
+keep beats a perfect one you quit.
 
-Keep the entry form short enough to complete under normal trading conditions. The minimum useful record has four layers:
+Timing is the other half. Write the plan before you enter, the facts as they happen, and the explanation
+only once the position is shut. Fill it in on Sunday from memory and the objective columns survive while
+the subjective ones turn to fiction: you will not recall that you were rattled, or that you took the trade
+out of boredom. Those are exactly the entries worth having.
 
-- **Plan:** timestamp, instrument, direction, setup version, evidence available, trigger, invalidation, intended order, risk budget, size ceiling, and expiry.
-- **Execution:** submission time, actual fills, quantity, cancellations, rejected orders, exit actions, and fees.
-- **Context:** scheduled event status, liquidity check, portfolio exposure, and any rule-based veto.
-- **Review:** net result, realized R, adherence grade, exception reason, and a post-trade note clearly marked as hindsight.
+Four layers cover it:
 
-Screenshots can support the record, but they should not replace structured fields. A chart captured after the close may display information that was absent at entry. Label capture time, data interval, session, and any later annotation. Preserve the original image if you create an annotated copy.
+- **Plan:** timestamp, instrument, direction, setup version, evidence in hand, trigger, invalidation,
+  intended order, risk budget, size ceiling, expiry.
+- **Execution:** submission time, actual fills, quantity, cancellations, rejected orders, exits, fees.
+- **Context:** scheduled events, liquidity check, portfolio exposure, any rule that vetoed the trade.
+- **Review:** net result, realised R, whether the plan was followed, and a note clearly marked as hindsight.
 
-Consider a hypothetical trade prepared at 9:15 a.m. The record says: limit entry no higher than $27.10, invalidation at $26.70, expiry at noon, and maximum size determined elsewhere by the risk rules. At 10:02, 80 shares fill at $27.06. At 10:47, an exit fills at $26.66 after a fast move. The factual log retains both fills and the actual cost. The later note may say, "I saw the spread widen and delayed the exit," but it must not change the original invalidation or imply that $26.66 was the planned price.
+R is the unit that makes trades comparable. One R is what you planned to lose, so a trade risking $100 that
+makes $250 is +2.5R, while one risking $400 that makes $400 is +1R. In dollars the second looks impressive.
+In R it is ordinary.
+
+A sample row from the template reads like this. Long, pullback to the 20-day average, VIX at 16, entry
+$118.00, stop $113.00, 100 shares. Risk per share is $5.00, so one R is $500. The exit prints at $130.00,
+which is $12.00 a share, and 12 divided by 5 is +2.4R: $1,200 made against $500 risked. Size never enters
+the ratio. Ten shares or a thousand, the trade is worth 2.4R, which is why R travels between trades and
+dollars do not.
+
+Of all the columns, the uncomfortable one is "plan followed, yes or no". It separates the method from you.
+When the followed trades average +0.5R and the improvised ones average −0.8R, the verdict is blunt: the
+strategy works, and it is being sabotaged in execution. That is good news, since discipline is trainable
+and rebuilding a strategy that was fine is months wasted.
+
+Screenshots help but never replace the fields. A chart captured after the close shows things that were not
+on screen at entry. Note the capture time, the interval, the session, and keep the original if you annotate
+a copy.
 
 Use this closeout check:
 
-- Reconcile journal fills with the broker confirmation or statement.
-- Enter commissions, fees, and other known transaction costs.
-- Mark every field that was unavailable rather than estimating it silently.
+- Reconcile your fills against the broker confirmation.
+- Enter commissions, fees and other known costs.
+- Mark unavailable fields as missing rather than estimating them quietly.
 - Grade rule adherence separately from profit or loss.
-- Write one concise observation, not a new strategy rule.
+- Write one short observation. Not a new strategy rule.
 
-Investor.gov notes that execution can occur away from the quote seen when an order is submitted, especially when prices move quickly. That is why the broker record, rather than a chart touch, should determine journaled fills. Fee disclosures and confirmations also matter because gross chart profit is not net performance.
+Investor.gov notes that execution can happen away from the quote you saw when you sent the order,
+especially when price is moving. That is why the broker record settles what goes in the journal, never a
+price the chart touched. Fee disclosures matter for the same reason: gross chart profit is not net
+performance.
 
-**Limitation:** a journal can still be incomplete or biased. Manually logged emotions are subjective, missing trades can distort summaries, and broker records do not reveal every decision considered but never submitted. A detailed diary also does not prove that the strategy has an edge. Its first job is narrower: preserve an auditable account of process and outcome.
+**Limitation:** a journal can be incomplete and biased. Emotions logged by hand are subjective, missing
+trades distort every summary, and no broker record shows the trades you considered and never sent. A thick
+diary does not prove you have an edge. Its job is narrower: keep an honest account of what you did and what
+happened.
 
 Sources: [Investor.gov: Executing an Order](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order); [Investor.gov: Understanding Fees](https://www.investor.gov/introduction-investing/getting-started/understanding-fees)
 

@@ -8,26 +8,30 @@ source_path: "series/proxys-haut-beta/part3-strategies-trading/index.html"
 
 *Part 3 of 6 in Use High-Beta Proxies Without Getting Trapped.*
 
-Treat a proxy-versus-reference trade as a temporary factor hedge, never as a machine that extracts pure alpha. The hedge ratio comes from an estimated relationship, while the remaining position still carries residual, financing, execution, and model risk. If the regression fit is weak or unstable, a mathematically neat hedge can be economically poor.
+Take one Thursday from a worked example. The index fell 1.5%. The stock fell 2.5%. The position made money.
 
-Suppose proxy returns follow `r_p = alpha + beta * r_b + epsilon`, where `r_b` is the reference return. For a long proxy position worth `P`, the first-order reference exposure is approximately `P * beta`. A beta-neutral construction shorts that amount of the reference, subject to contract multipliers and currency conversion. This cancels the fitted linear exposure at inception. It does not cancel `epsilon`, guarantee convergence, or prove that alpha will persist.
+Here is why. Long $100,000 of a stock whose measured beta was 1.8, short $180,000 of the index against it. The long side lost $2,500 that day. The short side gained $2,700. Net, plus $200. The stock dropped less than its slope said it should, and that gap is the only thing this structure is built to collect. Across the full week in that example, the index slipped 0.3% while the stock gained 3.3%: the long made $3,300, the short still added $540, and the pair finished up $3,840.
 
-**Worked hedge.** A hypothetical trader holds $10,000 of a proxy whose estimated beta is 1.5, using 150 overlapping daily observations. The initial beta-dollar exposure is $15,000, so a $15,000 short in the reference would make the modeled common-factor exposure approximately zero. If the relevant beta later rises to 2.0, the long leg carries $20,000 of beta-dollar exposure while the short remains $15,000. The trade is now net long $5,000 of reference-equivalent exposure. A +2% reference-only shock maps to about +$100 from that mismatch before residual returns, costs, and slippage.
+The construction is one line. Multiply what you hold by the estimated beta, and short that many dollars of the reference. Beta 1.8 on $100,000 means $180,000 short. At the moment you put it on, the fitted market exposure is roughly zero.
 
-R-squared reports the share of in-sample proxy-return variation explained by the fitted model. A high beta with low R-squared means a large slope coexists with substantial unexplained movement. It is not a confidence interval for beta or proof of out-of-sample hedge reliability. Inspect coefficient uncertainty, residuals, rolling stability, and a forward sample separately. None of those statistics captures a sudden company filing, earnings surprise, takeover rumor, borrow recall, or trading halt.
+Roughly, and only at that moment. Three things are not cancelled.
 
-Operationally, define the trade before entry: the estimation window, re-estimation schedule, maximum hedge-ratio drift, residual-loss limit, and event exclusions. Keep both legs' order types and trading hours compatible. Record dividends, borrow charges, funding costs, and any contract roll. A spread that looks flat before costs can still lose money after them.
+The leftover, first. Beta is a fitted average, and everything the line failed to explain still sits in the position. Second, the slope drifts. If a rolling 30-day estimate walks from 1.8 to 2.0, the long side is now carrying $200,000 of reference-equivalent exposure against a $180,000 short. You are quietly long $20,000 of the market you thought you had neutralised. Recheck it weekly and resize, or accept an exposure you never chose.
+
+Third, and this is the one that ends accounts: a company event does not care about your hedge. Suppose the stock reports results and falls 15% while the index falls 2%. The long loses $15,000. The short returns $3,600. Net loss $11,400, or 11.4% of the position, on a structure sold to you as market-neutral. It was market-neutral. It was never company-neutral. Close the pair before scheduled results rather than discover that arithmetic live.
+
+A high beta paired with a low R-squared is the warning light. It means the slope is steep and the fit is thin, and a thin fit is exactly the case where the leftover, not the market, drives the outcome. R-squared is not a confidence interval for beta, and it says nothing about how the hedge behaves next month.
 
 **Hedge check**
 
-- Use matched observations and disclose the sample size.
-- Require acceptable correlation, R-squared, and residual behavior.
-- Convert beta into beta-dollar exposure for both legs.
-- Set a rule for recalculation and hedge-ratio drift.
-- Reconcile borrow, dividends, fees, and fills.
-- Exit or resize when the relationship leaves its tested range.
+- Use matched observations and state the sample size.
+- Require acceptable correlation, R-squared and residual behaviour before entry.
+- Convert beta into dollars on both legs, not percentages.
+- Fix a recalculation schedule and a maximum drift you will tolerate.
+- Reconcile borrow costs, dividends, fees and actual fills.
+- Exit or resize when the relationship leaves the range you tested.
 
-**Limitation:** Shorting introduces asymmetric risk. The short leg requires a margin account and borrowed shares may become costly or unavailable. Even a well-estimated hedge can fail during a company-specific gap because the residual, not the reference factor, drives the move.
+**Limitation:** The short leg is not symmetric. It needs a margin account and borrowed shares, and borrow can turn expensive or vanish at the worst moment. A hedge estimated perfectly on clean data can still fail on a single gap, because the leftover moved and the reference did not.
 
 Sources: [NIST Linear Least Squares Regression](https://www.itl.nist.gov/div898/handbook/pmd/section1/pmd141.htm), [FINRA Short Interest and Short-Sale Mechanics](https://www.finra.org/investors/insights/short-interest).
 

@@ -12,38 +12,34 @@ send_email: false
 
 *Part 1 of 3 in Make Data Quality Executable. Lesson 7 of 45 in Build a Retail Systematic Desk, Safely.*
 
-Data and broker services evolve. A hardcoded tool list, field name or supported order type eventually drifts from production. Runtime discovery converts that drift into an explicit compatibility decision. It also prevents the client from assuming that every account, venue or data source supports the same operations.
+Services change under you. A tool gets renamed, a field quietly disappears, an account loses the right to place one kind of order. If your program is carrying last month's list of what the service can do, it will happily call something that no longer exists, and it will find that out halfway through a run. Ask instead. Every morning, before anything else.
 
-**Input from last Friday:** The accepted partial-failure fixture report.
+**Input from last Friday:** the accepted partial-failure fixture pack, meaning the file of saved fake responses you replay in tests.
 
-**Friday deliverable:** A capability bootstrap report, owned by the desk operator and retained in the review bundle.
+**Friday deliverable:** a capability bootstrap report, one page saying what the service claimed it could do at the start of today's run, filed with the run's paperwork.
 
 ## Build this
 
-Add a bootstrap phase that records service version, health, visible capabilities and schemas. Cache the result only for the run. Compare required capabilities with what is actually advertised and fail before collecting data or constructing orders when the contract is incompatible.
+Add a bootstrap step: a first phase whose only job is to ask the service four questions. Which version are you? Are you healthy? What can you do? What shape are your fields? Keep the answer for this run and this run only. Then hold the list you need against the list you were given, and stop right there if something required is absent. No data collected, no order drafted.
 
-### Minimum record
+For each capability write down: its name, the service version, a schema hash (a short fingerprint of the field layout, so a silent rename turns into a different number instead of a surprise), whether you need it, and the verdict.
 
-- `service version`
-- `capability name`
-- `schema hash`
-- `required flag`
-- `compatibility verdict`
+A toy run, with numbers invented purely for illustration: the service advertises 34 capabilities, this desk needs 6, five fingerprints match yesterday's, and the sixth, attaching a protective stop to an entry in one instruction, is no longer offered on that account. The run halts with nothing sent.
 
 ## Test it before moving on
 
-Remove one required capability from a test adapter. The run should stop during bootstrap with no downstream side effects. Adding an optional capability should not change prior decisions unless the configuration explicitly enables it.
+Point the program at a fake service with one required capability deleted. It has to stop during bootstrap and leave nothing behind: no cached rows, no half-built orders. Then add an optional capability nobody asked for, and check that yesterday's decisions come out identical until you switch it on deliberately.
 
-**Operating limit:** The capability bootstrap report is a public, paper-only engineering exercise with no production parameter, portfolio allocation or account detail; it is not a profitable strategy.
+**Operating limit:** paper only. The report is an engineering artefact holding no live parameter, no position size and no account number, and it tells you nothing about whether any of this earns money.
 
-**Further reading for the capability bootstrap report (context, not implementation evidence):** [Investor.gov: Broker-Dealer Record-Keeping Requirements](https://www.investor.gov/introduction-investing/investing-basics/glossary/broker-dealers-record-keeping-requirements); [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations)
+Background worth ten minutes: [the CFTC's advisory on claims made for automated trading systems](https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/fraudadv_tradingsystem.html) and [Investor.gov on order types](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders), since venues and accounts differ on which ones they accept.
 
 Educational, not investment advice.
 
 ## Release decision
 
-**GO:** Accept the capability bootstrap report only when the test above passes and its retained output matches the minimum record.
+**GO:** accept the report when the deletion test halts cleanly and the saved file carries all five fields for every capability.
 
-**NO-GO:** Do not use an old local schema as permission to call a capability the current service does not advertise.
+**NO-GO:** a schema sitting on your laptop is not permission. If the service does not advertise it today, you do not call it today.
 
-**Next Friday:** Carry the accepted capability bootstrap report into Make Freshness a Blocking Field.
+**Next Friday:** the accepted report becomes the input to Make Freshness a Blocking Field.

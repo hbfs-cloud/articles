@@ -8,32 +8,32 @@ source_path: "series/marketwatch-checklist/part4-portfolio/index.html"
 
 *Part 4 of 7 in The Market Checklist.*
 
-Size every new trade against four ceilings: planned-stop loss, stressed gap loss, concentration, and liquidity. Use the smallest permitted size. A stop-distance formula alone assumes an orderly exit near the stop; that assumption fails when a security gaps, halts, or has too little depth for the order.
+Every new trade has four ceilings: the planned-stop loss, a stressed gap loss, concentration, and liquidity. You take the smallest one. Not the one you like — the smallest.
 
-Write the variables before calculating shares:
+Work the stop ceiling with real numbers. Account of $100,000, risk budget of 1% per idea, so $1,000. Say the entry is $166 and the recent swing low sits at $159. Putting the stop exactly on the swing low is an invitation: those levels are obvious and they get hunted. Drop it half an ATR below instead — with a 14-day ATR of $4, that is $2 of cushion, so the stop goes at $157. Risk per share is $166 − $157 = $9. Position size is $1,000 ÷ $9 = 111 shares, or $18,426.
 
-- **L:** the loss budget for this idea.
-- **E:** the highest acceptable entry price.
-- **S:** the price where the thesis is invalid under normal trading.
-- **G:** a defensible adverse gap price based on the instrument’s event and historical scenario set.
+Which is 18.4% of the account, and in a defensive regime the cap per position is 15%. So the size drops to 90 shares, $14,940, 14.9%. You give up 21 shares. Real risk on 90 shares is $810, or 0.81% of capital. The stop math permitted 111. The rule permitted 90. Ninety wins.
 
-Freeze `G` before reviewing the candidate's permitted size. Record the event taxonomy, universe, lookback, sample count, tail statistic, worst observation, and treatment of failures or delistings. Then add an explicit policy shock beyond the historical sample. If those inputs are unavailable, label the gap scenario insufficient and set the permitted overnight size to zero. Even a complete process produces a scenario-limited estimate, not a loss cap.
+Note what changed: not the trade, only the ceiling that bound it. Write down which ceiling set the final size, every time.
 
-For a long position, the normal-stop ceiling is `L / (E - S)` and the gap-stress ceiling is `L / (E - G)`. Reverse the price distances for a short position. Both are scenario calculations, not promises about execution. Next apply a concentration ceiling based on total exposure to the issuer, sector, country, currency, duration, or common catalyst. Finally, cap the order at a size that can be entered and exited without relying on one favorable quote.
+The gap ceiling is the one people skip. Freeze an adverse opening price before you review the candidate's permitted size, and record how you got it: event taxonomy, universe, lookback, sample count, tail statistic, worst observation, how you treated failures and delistings. Add a policy shock beyond the historical sample. If those inputs are missing, label the scenario insufficient and set the permitted overnight size to zero. Even a complete process yields a scenario-limited estimate, not a loss cap.
 
-**Worked micro-example:** A trader proposes a software stock while already holding a technology ETF and another software company. The standalone stop calculation permits the largest size, but the gap calculation permits less. Looking through the ETF reveals more exposure to the same industry, making the concentration ceiling smaller still. That smallest ceiling controls. The decision does not require claiming that the holdings will move together. It recognizes that a shared earnings, rate, or regulatory shock could affect them at the same time.
+Concentration is where the illusion lives. Three energy names — a major, an explorer, a services company — feel like three independent bets. Measure them and the intra-sector correlation runs around 0.85. Functionally you hold about 1.5 positions on the price of oil, and if oil breaks they stop within minutes of each other. That is why the sector limit is three names, not a matter of taste. A geographic frame does similar work: five US, two European, one Asian, two thematic ETFs adds to ten, and ten is also about the number of positions one person can actually monitor.
 
-Correlation estimates can help expose duplication, but use them as diagnostics. State the measurement window, return frequency, and data source. Then add a plain-language factor map. Two positions with low historical correlation may still share a binary event; two stocks in one sector may have different revenue, currency, or duration sensitivities.
+There is a dated lesson behind that number. On 10 March 2026 the scan produced 13 qualifying setups instead of 10. The three extras were taken with whatever capital was left. They returned five stops and zero take-profits. Not bad luck — a construction error, sized by leftovers rather than by a ceiling.
+
+Correlation estimates help expose duplication, but use them as diagnostics. State the window, return frequency, and data source, then add a plain factor map. Two positions with low historical correlation can still share one binary event.
 
 **Sizing controls**
 
-- Calculate stop and gap ceilings from written scenarios.
-- Aggregate direct holdings, ETF overlap, options, and leverage.
-- Group positions by shared drivers, not ticker count.
+- Calculate the stop and gap ceilings from written scenarios, not from the size you want.
+- Aggregate direct holdings, ETF overlap, options, and leverage before sizing.
+- Group by shared drivers, not by ticker count.
+- Cut risk per trade to 0.5–0.75% when volatility rises, rather than cutting the number of trades.
 - Check spread, depth, and likely exit capacity.
-- Record which ceiling set the final size.
+- Record which ceiling bound the size.
 
-Diversification reduces some concentration risk but cannot guarantee against loss. Correlations can change during stress, and a broad ETF can trade away from its net asset value. Liquidity visible in normal conditions can also disappear. For instruments with uncertain gap behavior or opaque holdings, the valid size may be zero until the uncertainty is resolved.
+Diversification reduces some concentration risk but cannot guarantee against loss. Correlations move toward one under stress. A broad ETF can trade away from its net asset value, and the liquidity you see on a calm afternoon can disappear. Where gap behavior is unknown or holdings are opaque, the valid size is zero until that changes.
 
 Sources: [FINRA: Concentration Risk](https://www.finra.org/investors/insights/concentration-risk), [Investor.gov: Asset Allocation and Diversification](https://www.investor.gov/introduction-investing/getting-started/asset-allocation), [Investor.gov: Exchange-Traded Funds](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-24).
 

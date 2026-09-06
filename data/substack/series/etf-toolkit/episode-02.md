@@ -8,28 +8,34 @@ source_path: "series/trader-etf/part2-classes-actifs/index.html"
 
 *Part 2 of 6 in The ETF Toolkit.*
 
-Classify an ETF by its economic exposure and implementation before comparing returns. “Bond ETF,” “international ETF” and “commodity ETF” are starting labels, not risk descriptions. For every candidate, name the driver that can hurt it: equity concentration, duration, credit, currency, futures roll, counterparty or property-cycle exposure.
+Two funds can both be labelled "US stocks" and still be two completely different bets.
 
-Equity funds differ by region, company size, weighting rule and sector mix. A broad-market fund and a technology-heavy fund may both own large US companies, yet one can be far more concentrated in a handful of issuers. An international fund adds currency exposure unless it explicitly hedges. The listing currency alone does not tell you the currencies of the underlying businesses or securities.
+SPY holds 503 companies. QQQ holds 101, and roughly half its money sits in technology. Across 2020 and 2021 QQQ about doubled while SPY gained around half. Then 2022 arrived: QQQ fell 33%, SPY fell 19%. Same country, same wrapper, very different ride.
 
-Bond funds require two separate checks: interest-rate risk and credit risk. Longer-maturity holdings generally react more to rate changes. Lower-quality issuers add default and spread risk. A government-bond fund, an investment-grade corporate fund and a high-yield fund therefore do different jobs even if all three distribute income.
+So the useful question is never "what does it own?" It is "what can hurt this?"
 
-Use duration as a first stress, not a forecast. If a hypothetical bond ETF reports an effective duration of 7, a one-percentage-point parallel rise in yields suggests roughly a 7% price decline before considering convexity, income, spread changes and portfolio turnover. The actual move can differ, but the estimate prevents treating the yield as free return.
+For stock funds, usually two things: how much rides on a handful of names, and what currency the businesses actually earn. A fund priced in dollars can hold companies paid in yen. If Tokyo rises 10% and the yen drops 15% against the dollar, the dollar holder is down about 5%. Currency-hedged versions exist for exactly that, and the hedge is not free.
 
-Commodity products need a structural check. Some hold a physical asset; others obtain exposure through futures or swaps. A futures-based vehicle must replace expiring contracts. When the next contract costs more than the one sold, that roll can reduce the number of contracts the fund holds. The share return can therefore diverge from the change in a quoted spot commodity price.
+Size is a rule question too. The Russell 2000 (IWM) takes 2,000 small companies whether they earn a profit or not. The S&P SmallCap 600 (IJR) requires profitability to get in. That single filter has been worth roughly a percentage point a year.
 
-Apply this exposure checklist:
+Bond funds mix two risks people keep confusing. The first is duration — a number estimating how far the price falls if interest rates rise one point. SHY sits near 1.8 years, IEF near 7.5, TLT near 17. In 2022 the Fed took rates from 0% to 5.25% and TLT lost more than 30%. Safe haven, on paper.
 
-- Name the asset, benchmark and weighting rule.
-- For equities, inspect country, sector, issuer and currency weights.
+The second is credit: who borrowed the money. High-yield funds lend to shakier companies, so they behave like stocks, not bonds — HYG runs about 0.70 correlation with SPY. In 2008 HYG lost 25% while TLT gained 33%. Anyone holding HYG as ballast was holding equity risk with a coupon stapled on.
+
+Commodity products split on plumbing. GLD keeps real bars in a vault and charges 0.40% a year; IAU charges 0.25%, SGOL 0.17%. USO owns oil futures — contracts with an expiry date, swapped each month for the next one. When the next contract costs more, that swap bleeds 10-20% a year. April 2020 settled the argument: WTI printed -$37, USO fell 80% and had to rewrite its own strategy. Silver carries an industrial layer on top of the precious-metal one, so it swings harder; in March 2020 it took 125 ounces of silver to buy an ounce of gold, against a long-run average nearer 65.
+
+Property funds are their own animal. REITs borrow heavily, often 30-50% of assets, and must pay out 90% of income by law. Rates going from 0% to 5% in 2022 took VNQ down 28% before a single building changed hands.
+
+Run this before comparing returns:
+
+- Write down the asset, the index and the weighting rule.
+- For stocks, check country, sector, single-issuer and currency weights.
 - For bonds, record duration, credit quality, maturity and callable exposure.
-- For commodities, identify physical holdings, futures, swaps and roll policy.
-- Separate fund distributions from total return.
-- Read the tax section for the vehicle's actual legal structure and your jurisdiction.
+- For commodities, check physical holdings versus futures, then read the roll policy.
+- Track distributions and total return in separate columns.
+- Read the tax section for the fund's legal structure and your own country.
 
-Real-estate funds are another counter-case. Publicly traded property companies can respond to financing costs, equity markets and operating fundamentals. They are not the same as owning a building, and their market price can move before reported property values do.
-
-The main limitation is that one risk label rarely acts alone. Rates, credit spreads, currencies and equities can move together during stress. Historical correlation describes a sample; it does not establish a permanent hedge or causal relationship. Build the role from mechanics, then stress several drivers at once.
+These labels do not stay in their lanes. In a real panic, rates, credit, currencies and equities move together, and the correlation you measured over a calm five years cannot prove a hedge will work during the next stress. Build the job from mechanics, then push on two or three drivers at once and see what breaks.
 
 Sources: [SEC Bond Funds and Income Funds](https://www.investor.gov/introduction-investing/investing-basics/glossary/bond-funds-and-income-funds), [CFTC Commodity ETP Advisory](https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/CustomerAdvisory_CommodityETPs.htm), [SEC ETF Investor Bulletin](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-24).
 
