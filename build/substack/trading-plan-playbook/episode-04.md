@@ -11,9 +11,9 @@ Calculate position size from a preselected loss budget and an independently chos
 
 For a long position, start with:
 
-![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
-
 `planned price risk per share = intended entry - invalidation level`
+
+![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
 
 `share ceiling = floor(loss budget / planned price risk per share)`
 

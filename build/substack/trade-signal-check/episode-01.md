@@ -17,14 +17,14 @@ wrong, and every other number in the order should be built from it.
 Take an account of $10,000 whose owner decided, in advance, to put at most $50 behind any single idea.
 The 0.5% is there to make the sum readable, not because it suits anyone in particular.
 
-![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
-
 ```text
 $50 / $0.97 = 51.54 shares
 Round down to 51 shares
 Cash committed: 51 x $12.25 = $624.75
 Loss at the stop before costs: 51 x $0.97 = $49.47
 ```
+
+![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
 
 Now read the last two lines side by side. The order ties up $624.75, or 6.25% of the account. The planned
 loss is $49.47, just under 0.5%. One trade, two numbers that look nothing alike. Risking half a percent is

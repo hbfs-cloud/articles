@@ -15,12 +15,12 @@ Boring is the specification, not a compromise. Your first universe should contai
 
 A toy funnel, with counts invented to show the shape of the filtering rather than any screen worth running:
 
-![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
-
 - 5,397 symbols in the starting list
 - 2,403 left after a liquidity floor, meaning a minimum of daily traded value so your own order is not the market
 - 1,911 after dropping every name whose exchange calendar could not be sourced
 - 41 more rejected because a split in the price history could not be reconciled against the adjusted series
+
+![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
 
 What survives is dull. Dull is the product.
 

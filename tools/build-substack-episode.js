@@ -120,7 +120,14 @@ function transform(md, spec, key) {
     const meta = TITLES[spec.figure];
     figure = `![${meta.title}](${CDN_BASE}/${spec.figure}.png)`;
     const paras = body.split(/\n\n+/);
-    const at = Math.min(spec.figure_after || 3, paras.length);
+    let at = Math.min(spec.figure_after || 3, paras.length);
+    // NE PAS COUPER UNE PHRASE DE SA DÉMONSTRATION.
+    // Placée à l'aveugle, la figure tombait entre « voici les deux ratios » et le bloc de code qui
+    // les montre : le lecteur perd le fil au moment précis où il allait comprendre. On avance
+    // jusqu'après le bloc de code, le tableau ou la liste que le paragraphe annonçait.
+    const isSupport = t => /^```/.test(t) || /^\|/.test(t) || /^[-*]\s/.test(t);
+    const announces = t => /:\s*$/.test(String(t).trim());
+    while (at < paras.length && (isSupport(paras[at]) || (at > 0 && announces(paras[at - 1])))) at++;
     paras.splice(at, 0, figure);
     body = paras.join('\n\n');
   }

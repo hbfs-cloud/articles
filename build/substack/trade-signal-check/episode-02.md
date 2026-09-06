@@ -15,12 +15,12 @@ second target, $13.85, sat $1.60 above it.
 
 That produced two honest ratios and two very different impressions:
 
-![What a reward/risk ratio actually demands of you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/rr_vs_winrate.png)
-
 ```text
 First target:  $0.95 / $0.97 = 0.98R
 Second target: $1.60 / $0.97 = 1.65R
 ```
+
+![What a reward/risk ratio actually demands of you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/rr_vs_winrate.png)
 
 The distance to the second target is 1.65R. That number is valid as geometry. It is neither the expected
 reward nor the realized payoff. If half comes off at $13.20, the sold half earns 0.98R on that tranche

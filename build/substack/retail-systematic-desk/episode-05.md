@@ -15,13 +15,13 @@ A closing price is a fact. A ranked shortlist is an opinion. An order is an inst
 
 Toy records, invented, trimmed to the fields that carry weight:
 
-![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
-
 ```
 fact      f_1183   source vendor_a   observed 21:05   close of SYM_A
 decision  d_402    reads f_1183      stop attached    valid until next open
 order     o_77     reads d_402       limit, day       key d_402-1
 ```
+
+![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
 
 That last field is an idempotency key: a label saying this is the same instruction, so a retry after a timeout cannot open the position twice. The validity line matters just as much. A decision expires. Last week's plan does not become current tonight because the quote looks familiar.
 

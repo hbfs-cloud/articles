@@ -11,9 +11,9 @@ Define one R as the trade's initial planned dollar risk, frozen when the positio
 
 Use explicit formulas:
 
-![The average hides the shape](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/r_distribution.png)
-
 `realized R = net trade profit or loss / initial planned dollar risk`
+
+![The average hides the shape](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/r_distribution.png)
 
 `sample mean R = sum of realized R outcomes / number of included trades`
 

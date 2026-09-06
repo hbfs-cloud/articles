@@ -11,14 +11,14 @@ The first decision of a session is not which stock to buy. It is what kind of we
 
 I score six things from 0 to 100 and take the average. Above 70 I call it risk-on. Below 30, risk-off. Between the two, something in transition.
 
-![The regime sets a ceiling, never a direction](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/regime_map.png)
-
 - Expected volatility. The VIX is what option prices imply about how much the S&P 500 will swing over the next 30 days. Under 15 scores 100. Around 15 to 25 scores 50. Above 28 scores 0.
 - Index trend. Where the S&P 500 sits against its 50-day and 200-day averages. Above the 50-day scores 100; below the 200-day scores 0; stuck between them scores 50, because that zone is a coin toss dressed up as a trend.
 - Credit. The ratio of high-yield corporate bonds to investment-grade ones. When lenders get nervous they sell the risky bonds before anyone sells shares.
 - The dollar. A rising dollar usually means money is hiding, not hunting.
 - Long Treasuries. Rising prices mean institutions are buying safety. Falling prices during an equity sell-off is the rarer, uglier case: everyone needs cash at once.
 - Liquidity. Central bank balance sheet, overnight funding, reverse repo. Money getting tighter squeezes valuations long before earnings show it.
+
+![The regime sets a ceiling, never a direction](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/regime_map.png)
 
 Here is what that looked like on 13 March 2026. Inflation came in at +3.1% at 14:30 UTC. Within the hour the VIX printed 29.4, long Treasuries were sold hard, the dollar bounced, and the score landed at 31 out of 100. The playbook that day was straightforward: no growth exposure, hedges on, cash for the rest, and no new unhedged longs until the VIX settled back under 25.
 
