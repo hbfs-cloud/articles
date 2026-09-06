@@ -37,6 +37,23 @@
       "name": "vivier-context",
       "calls": [
         {
+          "as": "regime_authority",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "args": {
+            "facets": "overview",
+            "analysis_depth": "standard",
+            "maxsize": 200000,
+            "as_of": "$refdate"
+          },
+          "job_max_ms": 900000,
+          "freshness": {
+            "max_age_h": 6,
+            "required": true
+          },
+          "_reason": "AUTORITÉ du régime publié depuis le 2026-09-06. marketdata expose DEUX moteurs de régime de sens opposé et son schéma d'outil dit « do not mix the two numerically » : `overview.regime` rend un regime_score 0-1 où 1 = risk-on (0,772 au 2026-09-04, à 1,8 point de DtxRegime), tandis que `facets=regime` rend 0-100 de DÉFENSIVITÉ où 0 = risk-on. Seul le premier est comparable et fait autorité. Cet appel était auparavant dans la vague détachée, non requis : il rendait 181 octets vides et regime-reconcile retombait sur le moteur inverse, ce qui aurait publié 100/100 au lieu de 77,2. Une source qui porte l'autorité ne peut pas être facultative."
+        },
+        {
           "as": "regime_marketdata",
           "server": "marketdata",
           "tool": "GetMarketContext",
@@ -47,7 +64,8 @@
           "freshness": {
             "max_age_h": 6,
             "required": true
-          }
+          },
+          "_reason": "Classifieur probabiliste (0-100 défensivité) + marchés de prédiction. CONSERVÉ pour le contexte et les probabilités de transition, mais son regime_score n'est JAMAIS le score publié : échelle inverse de celle de l'autorité."
         },
         {
           "as": "regime_systematic",

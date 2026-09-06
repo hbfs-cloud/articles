@@ -110,8 +110,12 @@ function findOverviewRegime(root) {
 
 function readMarketdata(dir) {
   // 1) source canonique : le bloc regime embarqué dans overview (0-1, haut = risk-on)
-  const overviewPath = path.join(dir, '_data', 'overview.json');
-  if (fs.existsSync(overviewPath)) {
+  // `regime_authority` est l'appel REQUIS de la vague 1 ; `overview` est l'ancien appel
+  // détaché, conservé en second parce qu'il peut porter le même bloc quand il aboutit.
+  const candidates = ['regime_authority.json', 'overview.json']
+    .map(name => path.join(dir, '_data', name))
+    .filter(fs.existsSync);
+  for (const overviewPath of candidates) {
     const item = findOverviewRegime(unwrap(JSON.parse(fs.readFileSync(overviewPath, 'utf8'))));
     if (item) {
       const label = canonLabel(item.regime || item.state || item.current_state);
