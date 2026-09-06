@@ -396,3 +396,38 @@ elle est toujours là. **Piste** : une fonction unique `buildResolvedInput()` da
 `tools/test-series-ux.js` échoue sur `tech/track-record/index.html` (« runtime is missing or not
 cache-busted »). Aucun fichier de `tech/` n'est touché par les travaux du jour. À traiter avec le
 nettoyage du §7.
+
+## 10. Contenu evergreen : le chiffre qui dérive
+
+Constat du 2026-09-07, en enrichissant les 129 épisodes programmés jusqu'en avril 2028.
+
+`audit-episode-claims.js` classe 112 phrases en « agrégat sans étude citée ». La lecture de
+l'inventaire montre que l'étiquette recouvre **deux problèmes distincts**, qui n'appellent pas le
+même remède — et que le second est le plus grave.
+
+**(a) La statistique de population réellement inventée.** « 85 % des week-ends laissent un écart de
+2,3 % », « en moyenne 0,35 % pour le tracker S&P » : aucune des sources pédagogiques SEC, OCC ou
+CFTC citées ne publie ces chiffres. Remède : sourcer, calculer soi-même, ou couper le nombre en
+gardant l'affirmation qualitative.
+
+**(b) Le fait de fonds qui dérive, présenté comme fixe.** « SPY charges 0.09% a year, VOO charges
+0.03% », « QQQ's ten largest holdings make up about 52% », « technology near 30%, financials 13% ».
+Ces chiffres sont vérifiables et probablement justes à la rédaction. Le défaut n'est pas la source :
+c'est que **l'épisode sera lu en 2028**. Des frais, une concentration d'indice, un poids sectoriel
+et un recouvrement entre deux fonds bougent tous. Publier « QQQ's top ten are about 52% » sans date
+revient à affirmer en avril 2028 quelque chose qui n'aura pas été mesuré depuis deux ans.
+
+Certains épisodes le font déjà bien — « By 2025 the ten largest companies were roughly 37% » porte
+sa date et reste vrai quel que soit le jour de lecture. C'est la forme à généraliser.
+
+**Remède retenu** : dater le chiffre plutôt que le supprimer. La correction n'introduit aucun nombre
+nouveau, donc elle passe le garde-fou de `lib/episode-illustration.js`, et elle rend la phrase
+honnête à n'importe quelle date de lecture.
+
+**Portée** : etf-toolkit 21, gap-risk-survival 19, correlation-and-seasonality 12, bonds-and-rates
+10, high-beta-proxies 10, central-bank-playbook 9, economic-calendar 8, puis six séries à 5 ou
+moins. `retail-systematic-desk` (45 épisodes) et `market-checklist` sont quasi indemnes.
+
+**Piste d'outillage** : `audit-episode-claims.js` gagnerait une classe `drifting` — un nombre
+attaché à un ticker ou à un indice nommé, sans millésime dans la phrase. C'est mécaniquement
+détectable, et c'est ce qui distingue (b) de (a).

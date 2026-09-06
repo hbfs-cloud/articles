@@ -19,6 +19,7 @@ const fs = require('fs');
 const path = require('path');
 const { SCHEMATICS } = require('./lib/schematics');
 const { findChrome } = require('./lib/find-chrome');
+const { assertSerializable } = require('./lib/echarts-safe');
 
 const ROOT = path.resolve(__dirname, '..');
 const argv = process.argv.slice(2);
@@ -80,9 +81,11 @@ const page = (id, spec, meta, h) => `<!doctype html><meta charset="utf-8">
       // Hauteur par figure : un diagramme de flux tient dans 440 px et laissait sinon un tiers de
       // l'image vide, ce qui se voit immédiatement une fois l'image posée dans un article.
       const h = Number(meta.height) || height;
+      const option = SCHEMATICS[id]();
+      assertSerializable(option, id);
       const tab = await browser.newPage();
       await tab.setViewport({ width, height: h, deviceScaleFactor: 2 });
-      await tab.setContent(page(id, SCHEMATICS[id](), meta, h), { waitUntil: 'networkidle0' });
+      await tab.setContent(page(id, option, meta, h), { waitUntil: 'networkidle0' });
       await tab.waitForFunction('window.__ready === true', { timeout: 15000 });
       const painted = await tab.evaluate(() => {
         const c = document.querySelector('#c canvas');
