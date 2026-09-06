@@ -203,3 +203,196 @@ le tableau juste au-dessus, et un titre de section « semaine du Séance du mard
 Tout venait du gabarit du renderer, qu'aucun contrôle ne confrontait au contenu.
 **Fini quand** : un contrôle compare les affirmations du gabarit aux données (politique d'entrée,
 R/R, dimensionnement, légendes conditionnelles) et échoue en cas de contradiction.
+
+## 6. Les preuves d'un article publié dépendent d'un fichier de plan mutable
+
+`validate-content-claims.js` délègue la provenance à `validateCollectedArtifact`, qui relit
+`plans/<plan>.json` **sur le disque courant** et compare son empreinte à celle enregistrée dans le
+journal de collecte :
+
+```js
+const planPath = path.resolve(root, journal.plan || '');
+if (... sha256(fs.readFileSync(planPath)) !== journal.plan_sha256) errors.push('plan file hash mismatch');
+```
+
+Conséquence mesurée le 2026-09-06. `plans/weekly-focus.json` a été modifié ce jour-là (profondeur
+de `blast_bars` ramenée de 120 à 90 séances, parce que douze symboles sur 120 séances dépassaient
+la limite de la tâche asynchrone et faisaient échouer l'appel entier). Cette modification, qui ne
+touche aucune donnée déjà collectée, a rendu **invalides les 72 preuves de `weekly/20260831/`,
+article publié depuis une semaine** :
+
+```
+$ node tools/validate-content-claims.js weekly/20260831/_data/claims.json
+[content-claims] FAIL
+  - avgo_price: source collector provenance invalid: plan file hash mismatch
+  ... (72 fois)
+```
+
+Rien n'a bougé dans l'article ni dans ses artefacts. Le contrôle échoue parce qu'un fichier
+*voisin*, qui décrit comment on collecte **aujourd'hui**, a changé.
+
+C'est un défaut de conception, pas un incident : il rend le corpus publié fragile à toute
+évolution de la collecte, et il pousse à ne plus jamais toucher aux plans — c'est-à-dire à figer
+l'outillage pour préserver l'apparence de vérifiabilité de l'historique. L'incitation est
+exactement inversée.
+
+### Ce que la vérification devrait établir
+
+Qu'à l'instant de la collecte, l'artefact a bien été produit par le plan déclaré. Le journal
+contient déjà tout ce qu'il faut : `journal.plan_sha256` ET `journal.resolved_input`, qui est
+l'expansion complète du plan pour ce run. Comparer le journal à lui-même suffit à établir la
+cohérence interne ; relire le fichier courant n'ajoute aucune garantie et introduit une dépendance
+au futur.
+
+### Piste
+
+Verrouiller le plan **au moment de la collecte** plutôt qu'au moment du contrôle : archiver le
+contenu du plan résolu à côté des artefacts (`_data/plan.snapshot.json`) et faire porter la
+comparaison sur cet instantané. Le fichier vivant de `plans/` peut alors évoluer sans réécrire le
+passé, et un article ancien reste vérifiable exactement tel qu'il a été produit.
+
+À traiter avec §5 : c'est le même principe, appliqué à la preuve plutôt qu'à la logique — ce qui
+est figé doit l'être *dans* l'artefact, pas dans un fichier qu'on continue d'éditer.
+
+## 7. Inventaire du code à usage unique remplacé (suppression à valider par item)
+
+Le principe du §5 a produit deux constructeurs génériques — `tools/build-scan.js` (2026-09-05) et
+`tools/build-weekly.js` (2026-09-06). Ils rendent caduc l'essentiel des scripts datés ci-dessous.
+
+**Rien n'est supprimé ici.** La règle du dépôt interdit de retirer un fichier sans validation
+explicite, item par item. Cette liste existe pour rendre cette validation possible en une passe,
+avec ce qu'il faut vérifier avant chaque suppression.
+
+| Fichier | Taille | Remplacé par | À vérifier avant suppression |
+|---|---|---|---|
+| `tools/_build-scan-20260827.js` | 16 K | `tools/build-scan.js` | Le scan du 27/08 est publié et figé ; le script ne sert plus qu'à le rejouer. |
+| `tools/_build-scan-20260828.js` | 16 K | idem | idem |
+| `tools/_build-scan-20260831.js` | 28 K | idem | idem |
+| `tools/_build-scan-20260901.js` | 28 K | idem | idem |
+| `tools/_tmp-fix-impact.js` | 8 K | — | Correctif ponctuel du 12/08, jamais rejoué depuis. Vérifier qu'aucun plan ne l'appelle. |
+| `tools/_supp-enrich-20260908.js` | 16 K | — | Enrichissement supplétif du scan 20260908. À conserver tant que le chemin agent→staging n'est pas généralisé (cf. §5.1). |
+| `tools/_supp-enrich-20260908.bars.js` | 24 K | — | idem |
+| `tools/_weekly-blast-20260907.js` | 12 K | la collecte scindée (§8) | **Caduc depuis le 2026-09-06** : `blast_bars_a`/`blast_bars_b` passent et sont certifiés, ce palliatif n'a plus d'objet. Jamais versionné — il ne reste que dans les copies de travail. |
+| `weekly/20260831/_build.cjs` | 60 K | `tools/build-weekly.js` | **Attention** : ce fichier documente comment l'article publié a été produit. Le supprimer efface la traçabilité d'un article en ligne. Archiver plutôt que supprimer. |
+| `daily/20260830/_build.cjs` | 44 K | (aucun équivalent générique) | Un `tools/build-daily.js` reste à écrire. Ne pas supprimer avant. |
+| `daily/volume-evolution-now/_build.cjs` | 24 K | — | Page hors-série. Vérifier si elle est encore liée depuis l'index. |
+| `analyses/AVGO/_build.cjs` | 4 K | — | idem, analyse datée. |
+
+Total concerné : environ 172 Ko de code, dont **88 Ko sans aucun successeur générique**
+(`daily/*/_build.cjs`) — ce qui indique la prochaine pièce à écrire : `tools/build-daily.js`, sur
+le même patron que les deux autres.
+
+### Ordre recommandé
+
+1. Écrire `tools/build-daily.js` (le daily est le format le plus fréquent, donc le plus coûteux à
+   maintenir en copier-coller).
+2. Archiver les `_build.cjs` d'articles publiés sous `archive/builders/` plutôt que les effacer.
+3. Supprimer les quatre `_build-scan-*.js`, dont le successeur est en service et éprouvé.
+4. Statuer sur les supplétifs `_supp-enrich-*` une fois le §5.1 traité. Le supplétif `_weekly-blast-*` est déjà caduc.
+
+## 8. `blast_bars` et `focus_correlation` expirent côté serveur
+
+Trois exécutions du 2026-09-06, toutes soldées par `Job … non terminé après 900000ms` sur ces deux
+appels seulement, tandis que les cinq autres du même plan répondent en moins de 100 ms.
+
+Observation qui isole la cause : ces deux appels étaient les **seuls** à combiner `adjusted: true`
+et `days: N`. Réduire la profondeur de 120 à 90 séances n'a rien changé — la taille n'est donc pas
+en cause. `focus_bars`, même outil, huit symboles, `limit: 120` sans `adjusted`, répond en 73 ms.
+
+Les deux appels ont été alignés sur cette forme (`limit: 120`, sans `adjusted`, sans `days`).
+
+**Résultat, mesuré.** `focus_correlation` (huit symboles) est passé de « expire à 900 s » à **76 ms** et
+est désormais certifié. `blast_bars` (douze symboles) continue d'expirer. La cause n'est donc pas la
+forme de l'appel — corrigée et vérifiée — mais le **nombre de symboles** : le seuil est quelque part
+entre huit et douze pour ce type de tâche. Un troisième essai a d'ailleurs échoué en `HTTP 429`,
+c'est-à-dire un refus de débit, ce qui suggère que la tâche consomme le quota en boucle plutôt que
+d'aboutir.
+
+**Contournement retenu pour l'hebdo du 7 septembre** : la chaîne d'infrastructure est publiée sur les
+six titres couverts par `focus_bars` (huit symboles, certifié) au lieu de douze, et la limitation est
+écrite dans la section « Méthode et limites » de l'article. Six lignes prouvées valent mieux que douze
+dont la moitié ne l'est pas.
+
+**Piste pour le prochain hebdo** : scinder `blast_bars` en deux appels de six symboles, ou verser les
+noms de la chaîne dans `focus_symbols` — qui fonctionne à huit et qu'il faudrait tester à douze pour
+situer le seuil précisément.
+
+À signaler au propriétaire marketdata avec §4. Contournement en attendant : le chemin
+agent→staging (`tools/_weekly-blast-20260907.js`), qui produit les mêmes barres mais **sans
+certification de collecte** — donc inutilisable pour un chiffre publié sous contrôle de preuves.
+C'est exactement le coût de ce blocage : il ne dégrade pas la donnée, il dégrade la *preuve*.
+
+## 9. Ce qui reste ouvert sur le contrôle de preuves (revue Dev du 2026-09-06)
+
+Une revue de code adversariale a produit **douze contournements exécutés** contre
+`validate-content-claims.js`, chacun avec sa preuve de concept. Neuf sont fermés (voir
+`docs/reviews/weekly-20260907-methode.md` et les tests de `tools/test-content-claims.js`, qui
+couvrent désormais chaque brèche). Trois restent, avec leur raison.
+
+### 9.1 Les nombres écrits en toutes lettres échappent au détecteur — et la page les utilise
+
+`hasNumber` a été élargi aux chiffres Unicode (`٤٢`, `４２`, `½`, `²⁵` passaient). Mais
+« quatre points », « dix-huit pour cent » restent invisibles.
+
+Ce n'est pas théorique. `weekly/20260907/_editorial.json` contient « Couvre les **deux**
+rendez-vous de la semaine » et « le calme des **neuf** prochains jours » — deux affirmations
+chiffrées, écrites à la main, non liées. Et `tools/build-weekly.js` institutionnalise la pratique
+via `mot()`, qui rend les comptages en lettres précisément parce qu'un chiffre non lié serait
+refusé.
+
+La différence entre les deux cas est réelle : `mot()` **calcule** son comptage à partir de la
+donnée, donc il ne peut pas diverger ; une tournure saisie dans le manifeste le peut. Mais le
+contrôle ne sait pas les distinguer.
+
+**Piste** : un lexique français (`un`…`vingt`, `cent`, `mille`, `pour cent`) appliqué au texte
+issu du manifeste uniquement, et un `data-claim` avec un rendu « en lettres » pour les comptages
+dérivés. Le risque à surveiller est le faux positif : « un » est aussi un article.
+
+### 9.2 Soixante-seize journaux de collecte ne peuvent plus être vérifiés
+
+Inventaire au 2026-09-06 :
+
+| forme de `resolved_input` | nombre | verdict |
+|---|---|---|
+| complète, écrite après le correctif de `collect.js` | 2 | vérifiable |
+| complète, écrite **avant** le correctif | 3 | **échec permanent** |
+| forme à trois clés (`agent-collect-ingest.js`, `ingest-collection.js`) | 7 | vérifiable |
+| **absente** (outillage plus ancien) | **76** | **échec permanent** |
+
+Les trois artefacts en échec appartiennent à `scanner/20260908`, **déjà publié** (commit
+`afd1c2ad8`). Leur provenance est désormais invérifiable, non parce que la donnée est douteuse mais
+parce que l'empreinte stockée l'a été sous l'ancienne forme.
+
+C'est le même piège qu'au §6 : laisser en l'état reproduit exactement le défaut que le correctif
+dénonce — un contrôle qu'aucune donnée honnête ne peut satisfaire.
+
+**Trois options, à trancher** : (a) re-collecter, coûteux et impossible pour les dates passées ;
+(b) un script de remédiation qui recalcule `input_sha256` depuis le `resolved_input` existant, en
+consignant l'opération dans le journal lui-même ; (c) une clause de compatibilité **datée** dans
+`validateCollectedArtifact` : avant telle date, l'absence de `resolved_input` n'est pas une erreur.
+La (b) est préférable — elle rend l'historique vérifiable au lieu de l'exempter.
+
+### 9.3 Trois écritures indépendantes de la même structure
+
+`collect.js`, `agent-collect-ingest.js` et `ingest-collection.js` construisent chacun leur
+`resolved_input`, avec des formes différentes. C'est la cause racine du bug corrigé aujourd'hui, et
+elle est toujours là. **Piste** : une fonction unique `buildResolvedInput()` dans
+`tools/lib/workflow-contract.js` rendant `{ resolvedInput, inputSha256 }`, employée par les trois.
+
+### 9.4 Deux défauts mineurs du constructeur, non déclenchés aujourd'hui
+
+- `renderFrenchDate` ne lit que le préfixe `YYYY-MM-DD` et **ignore le décalage horaire**, alors que
+  le tri du calendrier se fait sur l'instant réel. Un événement Asie-Pacifique
+  (`2026-09-11T02:00+09:00`, soit le 10 à 17 h UTC) serait trié avant un événement américain du 10
+  tout en s'affichant « 11 septembre ». La page du 07/09 est indemne : elle ne contient que des
+  décalages `+02:00` et `-04:00`. **Piste** : convertir vers Europe/Paris avant de rendre, et trier
+  sur la même grandeur.
+- `man.tables.indices` est un tableau nu, donc dans un ordre saisi à la main — ce que le commentaire
+  du fichier condamne par ailleurs. **Piste** : rendre `sort` obligatoire, ou exiger un
+  `order: "declared"` explicite pour que le choix soit lisible plutôt que tacite.
+
+### 9.5 Échec de test antérieur et sans rapport
+
+`tools/test-series-ux.js` échoue sur `tech/track-record/index.html` (« runtime is missing or not
+cache-busted »). Aucun fichier de `tech/` n'est touché par les travaux du jour. À traiter avec le
+nettoyage du §7.

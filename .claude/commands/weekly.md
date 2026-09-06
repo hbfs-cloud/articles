@@ -10,7 +10,12 @@ Produit `weekly/YYYYMMDD/index.html` selon `weekly/CLAUDE.md`,
 - `refdate`: derniere cloture US terminee avant la redaction.
 - `focus_symbols`: 1 a 8 noms issus du run courant.
 - `event_leader`: catalyseur systémique principal, persisté dans la sélection éditoriale.
-- `blast_symbols`: 4 a 16 liens économiques documentés autour de ce catalyseur.
+- `blast_symbols_a` et `blast_symbols_b`: le panier de propagation, scindé en DEUX lots d'au plus six
+  noms. 4 a 16 liens économiques documentés autour du catalyseur, répartis entre les deux lots.
+  La scission n'est pas cosmétique : un appel de douze symboles expire côté serveur (mesuré quatre
+  fois le 2026-09-06, 900 s à chaque tentative), là où huit passent en 73 ms. Un lot unique trop
+  large ne dégrade pas la donnée, il rend la propagation NON CERTIFIÉE — et un tableau tronqué
+  fabrique la conclusion qu'il illustre.
 
 Une page datee d'un lundi passe qui pretend couvrir la semaine a venir est un bug. Verifier le calendrier
 NYSE et l'anti-doublon avant toute collecte.
@@ -32,7 +37,7 @@ lancer le plan focus qu'apres cette decision immutable:
 ```bash
 bash tools/run-collect.sh weekly-focus weekly/YYYYMMDD/_focus \
   --var date=YYYYMMDD --var refdate=YYYY-MM-DD --var focus_symbols=A,B,C \
-  --var blast_symbols=A,D,E,F
+  --var blast_symbols_a=D,E,F --var blast_symbols_b=G,H,I
 ```
 
 Le socle fournit les clotures cross-asset/sectorielles, regimes, correlations, options, short interest,

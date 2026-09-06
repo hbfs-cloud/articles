@@ -361,9 +361,15 @@ function expandCalls(wave, vars) {
     for (const item of items) {
       const suffix = item.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
       if (!suffix) throw new Error(`${declaration.as}: élément foreach inutilisable`);
+      // NE PAS POSER `foreach: undefined`. `stableStringify` émet littéralement la clé avec sa
+      // valeur `undefined` dans la chaîne hachée, alors que `JSON.stringify` la SUPPRIME à
+      // l'écriture du journal. L'empreinte calculée à l'écriture et celle recalculée à la
+      // relecture divergeraient donc pour tout plan utilisant `foreach` — ressuscitant exactement
+      // le mode d'échec corrigé plus bas dans ce fichier. Aucun plan du dépôt n'utilise `foreach`
+      // aujourd'hui : le défaut était dormant, pas absent.
+      const { foreach: _unusedForeach, ...withoutForeach } = declaration;
       expanded.push({
-        ...declaration,
-        foreach: undefined,
+        ...withoutForeach,
         as: `${declaration.as}_${suffix}`,
         args: substitute(declaration.args || {}, { ...vars, item }),
         ...(declaration.freshness ? { freshness: substitute(declaration.freshness, { ...vars, item }) } : {}),
@@ -515,7 +521,6 @@ function socleRead(c) {
   if (duplicateAliases.length) throw new Error(`alias d'appel dupliqué après expansion: ${[...new Set(duplicateAliases)].join(', ')}`);
   const totalCalls = waves.reduce((n, w) => n + (w.calls || []).length, 0);
   const planSha256 = workflowContract.sha256(planBytes);
-  const inputSha256 = workflowContract.sha256(workflowContract.stableStringify({ artifact, refdate, waves }));
   const neededServers = [...new Set(waves.flatMap(w => (w.calls || []).map(c => c.server)))];
 
   if (planOnly) {
@@ -561,13 +566,32 @@ function socleRead(c) {
 
   fs.mkdirSync(outDir, { recursive: true });
   const startedAt = collectionTimestamp;
+  // HACHER EXACTEMENT CE QU'ON ENREGISTRE.
+  // Jusqu'au 2026-09-06, l'empreinte portait ICI sur `{artifact, refdate, waves}` tandis que le
+  // journal enregistrait `{artifact, equity_reference_close, crypto_completed_refdate,
+  // as_of_timestamp, waves}` — deux objets différents. (Le défaut était propre à ce fichier :
+  // `agent-collect-ingest.js` et `ingest-collection.js` écrivaient la forme à trois clés et
+  // avaient toujours validé. Ces trois écritures indépendantes de la même structure sont la cause
+  // racine — voir docs/BACKLOG.md §9.) `validateCollectedArtifact` recalcule
+  // l'empreinte depuis `resolved_input` et la compare à `input_sha256` : la comparaison ne
+  // pouvait donc PLUS JAMAIS réussir, et `validate-content-claims.js` refusait tout article
+  // dont un chiffre provenait d'une collecte récente. Un contrôle qu'aucune donnée honnête ne
+  // peut satisfaire ne protège de rien : il apprend à passer outre.
+  const resolvedInput = {
+    artifact,
+    equity_reference_close: equityReferenceClose,
+    crypto_completed_refdate: cryptoCompletedRefdate,
+    as_of_timestamp: collectionTimestamp,
+    waves,
+  };
+  const inputSha256 = workflowContract.sha256(workflowContract.stableStringify(resolvedInput));
   const journal = {
     contract_version: '1.0',
     workflow: configured ? configured.workflow : null,
     plan: path.relative(workflowContract.ROOT, path.resolve(planPath)).replace(/\\/g, '/'),
     plan_sha256: planSha256,
     input_sha256: inputSha256,
-    resolved_input: { artifact, equity_reference_close: equityReferenceClose, crypto_completed_refdate: cryptoCompletedRefdate, as_of_timestamp: collectionTimestamp, waves },
+    resolved_input: resolvedInput,
     artifact,
     reference_date: equityReferenceClose,
     equity_reference_close: equityReferenceClose,

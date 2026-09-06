@@ -118,11 +118,10 @@
           "args": {
             "types": "bars_daily",
             "symbols": "$focus_symbols",
-            "adjusted": true,
             "force_async": true,
-            "days": 90,
             "as_of_timestamp": "$as_of_timestamp",
-            "completion_policy": "completed_only"
+            "completion_policy": "completed_only",
+            "limit": 120
           },
           "freshness": {
             "max_age_h": 24,
@@ -131,20 +130,20 @@
             "asset_calendar": "us_equity_exchange_sessions",
             "expected_completed_end": "$refdate"
           },
-          "job_max_ms": 900000
+          "job_max_ms": 900000,
+          "_reason_limit_not_days": "2026-09-06. Ces deux appels étaient les SEULS à combiner adjusted:true et days:N, et les seuls à expirer systématiquement (900 s, trois runs, y compris après réduction de 120 à 90 séances — la taille n'était donc pas la cause). focus_bars, même outil, mêmes symboles ou presque, mais limit:120 sans adjusted, répond en 73 ms. Alignés sur cette forme. Conséquence assumée : les barres ne sont pas ajustées des fractionnements, exactement comme focus_bars dont elles partagent l'usage — la cohérence entre les deux séries prime, et un écart de prix d'un facteur dix se détecte à la lecture (cf. incident KLAC du 2026-08-25)."
         },
         {
-          "as": "blast_bars",
+          "as": "blast_bars_a",
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
             "types": "bars_daily",
-            "symbols": "$blast_symbols",
-            "adjusted": true,
+            "symbols": "$blast_symbols_a",
             "force_async": true,
-            "days": 120,
             "as_of_timestamp": "$as_of_timestamp",
-            "completion_policy": "completed_only"
+            "completion_policy": "completed_only",
+            "limit": 120
           },
           "freshness": {
             "max_age_h": 72,
@@ -153,7 +152,62 @@
             "asset_calendar": "us_equity_exchange_sessions",
             "expected_completed_end": "$refdate"
           },
-          "job_max_ms": 900000
+          "job_max_ms": 300000,
+          "_reason_split": "2026-09-06. `blast_bars` en un seul appel de douze symboles a expiré quatre fois (900 s), y compris après alignement sur la forme qui marche. Le même plan sert huit symboles en 73 ms. Le nombre de symboles est donc la variable, pas la forme : deux lots de six passent sous le seuil. job_max_ms ramené à 300 s pour échouer vite plutôt que de bloquer un quart d'heure."
+        },
+        {
+          "as": "blast_bars_b",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$blast_symbols_b",
+            "force_async": true,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only",
+            "limit": 120
+          },
+          "freshness": {
+            "max_age_h": 72,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
+          },
+          "job_max_ms": 300000,
+          "_reason_split": "2026-09-06. `blast_bars` en un seul appel de douze symboles a expiré quatre fois (900 s), y compris après alignement sur la forme qui marche. Le même plan sert huit symboles en 73 ms. Le nombre de symboles est donc la variable, pas la forme : deux lots de six passent sous le seuil. job_max_ms ramené à 300 s pour échouer vite plutôt que de bloquer un quart d'heure."
+        },
+        {
+          "as": "chain_reactions_a",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "earnings_reactions",
+            "symbols": "$blast_symbols_a",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          },
+          "job_max_ms": 300000,
+          "_reason": "Ajouté le 2026-09-06. Sans réactions datées par dépôt SEC pour les noms de la chaîne, la page ne pouvait pas écrire « telle société a publié tel jour » — et la version précédente le faisait quand même, en déduisant la date de la séance qui précédait le plus gros écart de prix. C'est l'erreur PANW/ADI. Une date de publication vient d'un dépôt réglementaire ou n'est pas publiée."
+        },
+        {
+          "as": "chain_reactions_b",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "earnings_reactions",
+            "symbols": "$blast_symbols_b",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          },
+          "job_max_ms": 300000,
+          "_reason": "Ajouté le 2026-09-06. Sans réactions datées par dépôt SEC pour les noms de la chaîne, la page ne pouvait pas écrire « telle société a publié tel jour » — et la version précédente le faisait quand même, en déduisant la date de la séance qui précédait le plus gros écart de prix. C'est l'erreur PANW/ADI. Une date de publication vient d'un dépôt réglementaire ou n'est pas publiée."
         }
       ]
     }

@@ -1,0 +1,379 @@
+{
+  "contract_version": "1.0",
+  "workflow": "weekly",
+  "plan": "plans/weekly-focus.json",
+  "plan_sha256": "feffa5655e18757cf106c3815cabb37c8795878ebe246c7d0eeafc09c35a6216",
+  "input_sha256": "eba20e79b962e95a71c1a1cc93147d4548e8db5ab449253e0c22f6b831e9de3b",
+  "resolved_input": {
+    "artifact": "weekly/20260907/index.html",
+    "equity_reference_close": "2026-09-04",
+    "crypto_completed_refdate": null,
+    "as_of_timestamp": "2026-09-06T13:05:55.112Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "equity_reference_close": "2026-09-04"
+            },
+            "job_max_ms": 900000
+          }
+        ]
+      },
+      {
+        "name": "focus-evidence",
+        "calls": [
+          {
+            "as": "focus_bars",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "ORCL,NVDA,AVGO,MU,VRT,CEG,XOM,IBIT",
+              "limit": 120,
+              "force_async": true,
+              "as_of_timestamp": "2026-09-06T13:05:55.112Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 72,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-04"
+            },
+            "job_max_ms": 900000
+          },
+          {
+            "as": "focus_technicals",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "quote,technicals,support_resistance,trading_signals",
+              "symbols": "ORCL,NVDA,AVGO,MU,VRT,CEG,XOM,IBIT",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "_reason_end_date_removed": "end_date RETIRÉ le 2026-09-06. Les facettes quote, support_resistance, technicals, trading_signals sont current-only côté serveur : il REFUSE toute borne historique parce que le fournisseur ne sait pas reconstruire un instantané point-in-time. L'appel échouait donc intégralement, et le collecteur affichait quand même une coche — six appels sur sept de cette vague ont été perdus en silence le 2026-09-06. Le bornage point-in-time se fait CÔTÉ CLIENT après collecte, jamais par un paramètre que le serveur rejette.",
+            "job_max_ms": 900000
+          },
+          {
+            "as": "focus_fundamentals",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "financials,stats,earnings_quarterly,earnings_reactions,earnings_surprises,analyst_actions",
+              "symbols": "ORCL,NVDA,AVGO,MU,VRT,CEG,XOM,IBIT",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            },
+            "_reason_end_date_removed": "end_date RETIRÉ le 2026-09-06. Les facettes analyst_actions, financials, stats sont current-only côté serveur : il REFUSE toute borne historique parce que le fournisseur ne sait pas reconstruire un instantané point-in-time. L'appel échouait donc intégralement, et le collecteur affichait quand même une coche — six appels sur sept de cette vague ont été perdus en silence le 2026-09-06. Le bornage point-in-time se fait CÔTÉ CLIENT après collecte, jamais par un paramètre que le serveur rejette.",
+            "job_max_ms": 900000
+          },
+          {
+            "as": "focus_events",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "news,sec_filings,flags",
+              "symbols": "ORCL,NVDA,AVGO,MU,VRT,CEG,XOM,IBIT",
+              "days": 180,
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "_reason_end_date_removed": "end_date RETIRÉ le 2026-09-06. Les facettes flags, news, sec_filings sont current-only côté serveur : il REFUSE toute borne historique parce que le fournisseur ne sait pas reconstruire un instantané point-in-time. L'appel échouait donc intégralement, et le collecteur affichait quand même une coche — six appels sur sept de cette vague ont été perdus en silence le 2026-09-06. Le bornage point-in-time se fait CÔTÉ CLIENT après collecte, jamais par un paramètre que le serveur rejette.",
+            "job_max_ms": 900000
+          },
+          {
+            "as": "focus_flows",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "insider_transactions,unusual_options,dark_pool,max_pain,short_interest",
+              "symbols": "ORCL,NVDA,AVGO,MU,VRT,CEG,XOM,IBIT",
+              "days": 90,
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "_reason_end_date_removed": "end_date RETIRÉ le 2026-09-06. Les facettes dark_pool, insider_transactions, max_pain, short_interest, unusual_options sont current-only côté serveur : il REFUSE toute borne historique parce que le fournisseur ne sait pas reconstruire un instantané point-in-time. L'appel échouait donc intégralement, et le collecteur affichait quand même une coche — six appels sur sept de cette vague ont été perdus en silence le 2026-09-06. Le bornage point-in-time se fait CÔTÉ CLIENT après collecte, jamais par un paramètre que le serveur rejette.",
+            "job_max_ms": 900000
+          },
+          {
+            "as": "focus_correlation",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "ORCL,NVDA,AVGO,MU,VRT,CEG,XOM,IBIT",
+              "force_async": true,
+              "as_of_timestamp": "2026-09-06T13:05:55.112Z",
+              "completion_policy": "completed_only",
+              "limit": 120
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-04"
+            },
+            "job_max_ms": 900000,
+            "_reason_limit_not_days": "2026-09-06. Ces deux appels étaient les SEULS à combiner adjusted:true et days:N, et les seuls à expirer systématiquement (900 s, trois runs, y compris après réduction de 120 à 90 séances — la taille n'était donc pas la cause). focus_bars, même outil, mêmes symboles ou presque, mais limit:120 sans adjusted, répond en 73 ms. Alignés sur cette forme. Conséquence assumée : les barres ne sont pas ajustées des fractionnements, exactement comme focus_bars dont elles partagent l'usage — la cohérence entre les deux séries prime, et un écart de prix d'un facteur dix se détecte à la lecture (cf. incident KLAC du 2026-08-25)."
+          },
+          {
+            "as": "blast_bars_a",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "NVDA,AMD,AVGO,MU,DELL,SMCI",
+              "force_async": true,
+              "as_of_timestamp": "2026-09-06T13:05:55.112Z",
+              "completion_policy": "completed_only",
+              "limit": 120
+            },
+            "freshness": {
+              "max_age_h": 72,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-04"
+            },
+            "job_max_ms": 300000,
+            "_reason_split": "2026-09-06. `blast_bars` en un seul appel de douze symboles a expiré quatre fois (900 s), y compris après alignement sur la forme qui marche. Le même plan sert huit symboles en 73 ms. Le nombre de symboles est donc la variable, pas la forme : deux lots de six passent sous le seuil. job_max_ms ramené à 300 s pour échouer vite plutôt que de bloquer un quart d'heure."
+          },
+          {
+            "as": "blast_bars_b",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "VRT,CEG,ANET,MSFT,AMZN,CRM",
+              "force_async": true,
+              "as_of_timestamp": "2026-09-06T13:05:55.112Z",
+              "completion_policy": "completed_only",
+              "limit": 120
+            },
+            "freshness": {
+              "max_age_h": 72,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-04"
+            },
+            "job_max_ms": 300000,
+            "_reason_split": "2026-09-06. `blast_bars` en un seul appel de douze symboles a expiré quatre fois (900 s), y compris après alignement sur la forme qui marche. Le même plan sert huit symboles en 73 ms. Le nombre de symboles est donc la variable, pas la forme : deux lots de six passent sous le seuil. job_max_ms ramené à 300 s pour échouer vite plutôt que de bloquer un quart d'heure."
+          },
+          {
+            "as": "chain_reactions_a",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "earnings_reactions",
+              "symbols": "NVDA,AMD,AVGO,MU,DELL,SMCI",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            },
+            "job_max_ms": 300000,
+            "_reason": "Ajouté le 2026-09-06. Sans réactions datées par dépôt SEC pour les noms de la chaîne, la page ne pouvait pas écrire « telle société a publié tel jour » — et la version précédente le faisait quand même, en déduisant la date de la séance qui précédait le plus gros écart de prix. C'est l'erreur PANW/ADI. Une date de publication vient d'un dépôt réglementaire ou n'est pas publiée."
+          },
+          {
+            "as": "chain_reactions_b",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "earnings_reactions",
+              "symbols": "VRT,CEG,ANET,MSFT,AMZN,CRM",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            },
+            "job_max_ms": 300000,
+            "_reason": "Ajouté le 2026-09-06. Sans réactions datées par dépôt SEC pour les noms de la chaîne, la page ne pouvait pas écrire « telle société a publié tel jour » — et la version précédente le faisait quand même, en déduisant la date de la séance qui précédait le plus gros écart de prix. C'est l'erreur PANW/ADI. Une date de publication vient d'un dépôt réglementaire ou n'est pas publiée."
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "weekly/20260907/index.html",
+  "reference_date": "2026-09-04",
+  "equity_reference_close": "2026-09-04",
+  "crypto_completed_refdate": null,
+  "started_at": "2026-09-06T13:05:55.112Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 170,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 170,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "73f17518edd840eb1923fbf3b3c831c45feb364ca21c260f94daa86c40f4bc64"
+        }
+      ]
+    },
+    {
+      "name": "focus-evidence",
+      "ms": 18918,
+      "calls": [
+        {
+          "as": "focus_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 6766,
+          "wait_ms": 6713,
+          "error": null,
+          "output_sha256": "12540e828d8836f4d12287df6e68e55f107821fd497ad392e55d1303e8b8c158"
+        },
+        {
+          "as": "focus_technicals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": false,
+          "ms": 18747,
+          "wait_ms": 18695,
+          "error": "marketdata QueryData incomplete: 7 facet(s) failed; completed_without_data: no symbol-identified result row",
+          "output_sha256": "6491c459ff08c333081fa7367c71f0e5487723b40d0b5e20763ea9df43d1725d",
+          "artifact_preserved": true
+        },
+        {
+          "as": "focus_fundamentals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 12665,
+          "wait_ms": 12613,
+          "error": null,
+          "output_sha256": "86e47651a143ce1a1c65c51c51105e2ff425b1ebf19310afa15f8ff732d0900a"
+        },
+        {
+          "as": "focus_events",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": false,
+          "ms": 2535,
+          "wait_ms": 2490,
+          "error": "job async : Job job-413ffb3d-79be-45db-aac6-641c09b14c8a: page 2 dans un état inattendu (absent)"
+        },
+        {
+          "as": "focus_flows",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": false,
+          "ms": 9070,
+          "wait_ms": 9019,
+          "error": "job async : Job job-c46fa4b8-55bd-41b8-a120-fe8702d58f4b: page 2 dans un état inattendu (absent)"
+        },
+        {
+          "as": "focus_correlation",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 768,
+          "wait_ms": 722,
+          "error": null,
+          "output_sha256": "60799f41769639f3da723b990caff947f3132052fb7955d9aaf373317320968c"
+        },
+        {
+          "as": "blast_bars_a",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 706,
+          "wait_ms": 656,
+          "error": null,
+          "output_sha256": "50e53427ee6acf56a50b1cf2c1c0fef3f5591bdc3cf4c890462d7e6a320d5e12"
+        },
+        {
+          "as": "blast_bars_b",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 615,
+          "wait_ms": 573,
+          "error": null,
+          "output_sha256": "314466f707c5c4b481a2702ce91580f358ee213af9b427c4ee17b2c9f4b4f8c8"
+        },
+        {
+          "as": "chain_reactions_a",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 13429,
+          "wait_ms": 13278,
+          "error": null,
+          "output_sha256": "29c7c8f8195bc66fe4516e51dec55f7af1f082cd63e2b30fb580f8a92264cb43"
+        },
+        {
+          "as": "chain_reactions_b",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 12456,
+          "wait_ms": 12280,
+          "error": null,
+          "output_sha256": "7131007841ad00355a4a62b0d6eccb412883edd48c8f10c9ef7e981cad3bbb3c"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-09-06T13:06:14.231Z",
+  "failures": 3,
+  "executed_calls": 11,
+  "skipped_calls": 0
+}
