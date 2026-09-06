@@ -95,3 +95,33 @@ La sortie par defaut est locale. `--publish` doit etre present ou l'utilisateur 
 explicitement publication/push dans le message courant. Alors seulement indexer une fois, verifier les
 fichiers stages, commit/push apres les gates, puis notifier Telegram en francais avec une synthese
 autosuffisante et le lien. Substack/email reste une autorisation distincte.
+
+## Substack — exploiter le connecteur, pas seulement écrire
+
+Un Substack en texte seul, quand l'article web porte huit graphiques, est un livrable amputé. Deux
+capacités sont confirmées sur le déploiement courant, une ne l'est pas :
+
+| Capacité | État | Comment |
+|---|---|---|
+| Tableaux Markdown | **OK** | Rendus en PNG sur le CDN Substack (`table_format: image`, défaut). **Ne pas mettre de `**gras**` dans une cellule** : les astérisques s'affichent tels quels. |
+| Images | **OK** | `upload_image(source_url=…)` en pointant sur `raw.githubusercontent.com/<repo>/main/<chemin>` après un push. Évite de faire transiter du base64. |
+| Bloc `::chart {json}` | **NON** | Testé le 2026-09-06 en forme « labels/datasets » ET en option ECharts : les deux retombent en `code_block`. Ne pas s'y fier. |
+
+Procédure pour les graphiques :
+
+```bash
+node tools/render-charts-png.js --article weekly/YYYYMMDD/index.html --out weekly/YYYYMMDD/_img
+node tools/render-charts-png.js --article weekly/YYYYMMDD/index.html \
+     --out weekly/YYYYMMDD/_img/en --labels weekly/YYYYMMDD/_img/labels-en.json
+git add weekly/YYYYMMDD/_img && git commit && git push   # les URL brutes doivent répondre 200
+```
+
+Le rendeur lit `CHART_SPECS` **dans la page publiée** : le Substack montre les mêmes courbes aux
+mêmes valeurs, jamais une saisie parallèle. Le dictionnaire `--labels` traduit titres, notes et
+libellés d'axes ; sa clé `forbid` fait échouer le rendu si un mot de la langue source survit — une
+légende à moitié traduite ne doit pas pouvoir partir. Le rendeur vérifie aussi que le canvas n'est
+pas vide : une image blanche ne se remarque qu'après publication.
+
+Le connecteur n'a pas d'outil de mise à jour d'un article **publié** : `update_draft` modifie le
+brouillon sans toucher au corps en ligne. Pour corriger un article déjà publié, il faut
+`delete_draft` puis recréer et republier.
