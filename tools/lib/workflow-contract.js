@@ -200,8 +200,16 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
       const facets = String(call.args?.facets || '').split(',').map(value => value.trim()).filter(Boolean);
       if (facets.includes('overview')) {
         if (facets.length !== 1) errors.push(`${label}: overview must be requested alone`);
-        if ((declaredVars.has('refdate') || declaredVars.has('equity_reference_close')) && call.args.as_of !== equityRef) {
-          errors.push(`${label}: overview as_of must equal ${equityRef}`);
+        // Le serveur REFUSE désormais as_of sur GetMarketContext, tous facets confondus :
+        // « its data is current-only; historical requests are refused to prevent lookahead ».
+        // La règle antérieure EXIGEAIT as_of=$refdate sur overview et rendait donc l'appel
+        // impossible : la réponse n'était plus qu'un message de refus de 121 octets, que la
+        // vérification de fraîcheur laissait passer. Conséquence à assumer explicitement :
+        // overview est une observation COURANTE, jamais un point-in-time. Toute valeur qui en
+        // sort — le régime compris — se publie comme telle et ne peut pas être réauditée
+        // contre une clôture passée.
+        if (Object.prototype.hasOwnProperty.call(call.args || {}, 'as_of')) {
+          errors.push(`${label}: overview is current-only — as_of must be omitted (the server refuses it)`);
         }
       } else if (call.args && Object.prototype.hasOwnProperty.call(call.args, 'as_of')) {
         errors.push(`${label}: as_of is supported only for the overview facet`);

@@ -118,7 +118,7 @@
     ],
     "_reason": "Stable taxonomy. No 'DEEP RISK-OFF', no 'STRONG RISK-ON', no inventions.",
     "authority": "marketdata.GetMarketContext(facets=overview).regime",
-    "cross_check": "systematic.DtxRegime",
+    "cross_check": null,
     "max_bullish_divergence_pts": null,
     "canonical_scale": "bullish_0_100",
     "scale_enum": [
@@ -128,7 +128,11 @@
     ],
     "scale_enum_active_from": "20260902",
     "_scale_reason": "Août 2026 a publié TROIS échelles incompatibles pour le même champ (79 bullish/100, 0.81 bullish/1, et la convention défensivité 0-100 où 0 = plein risk-on). Le champ regimeScoreScale était du texte libre et validate-scan devinait l'échelle quand il manquait : 20260821 et 20260825 sont partis avec un label RISK-ON adossé à un score lu comme RISK-OFF. L'énuméré est désormais fermé et l'absence de déclaration est bloquante. active_from grandfathère l'archive.",
-    "_authority_reason": "Décision propriétaire 2026-09-06 : le régime publié est celui de marketdata, point. DtxRegime devient le contradicteur informatif et ne bloque plus (max_bullish_divergence_pts = null).\n\nCE QU'IL FAUT SAVOIR AVANT DE TOUCHER À CE BLOC — marketdata expose DEUX moteurs de régime, de sens OPPOSÉ, et son propre schéma d'outil dit « do not mix the two numerically » :\n  1. GetMarketContext(facets=overview).regime — switcher 5 états, regime_score 0-1, 1 = risk-on. C'EST CELUI-CI L'AUTORITÉ : il est directement comparable à DtxRegime (0,772 contre 0,79 au 2026-09-04, écart 1,8 pt).\n  2. GetMarketContext(facets=regime) — classifieur probabiliste, regime_score 0-100 de DÉFENSIVITÉ, 0 = risk-on. Sens INVERSE.\nUn contrôle de convergence branché par erreur sur le second a produit un faux écart de 21 points le 2026-09-05 et bloqué un scan pour rien. Les composantes concordent en réalité à moins de 0,05 partout (spx 0,77/0,781 · vix 1/0,947 · credit 0,53/0,507), les seuls écarts réels étant des SMA calculées sur des fenêtres de barres légèrement différentes."
+    "_authority_reason": "marketdata expose deux blocs de régime d échelles OPPOSÉES : overview.regime rend 0-1 où 1 = risk-on (0,7696 au 2026-09-04) et facets=regime rend 0-100 de DÉFENSIVITÉ où 0 = risk-on. Le schéma de l outil dit « do not mix the two numerically ». Seul overview.regime fait autorité. Il n est PAS atteignable par la collecte scriptée (le job est évincé côté serveur pendant la pagination) : il passe par le chemin agent -> staging, et le staging est vérifiable en rejouant l appel.",
+    "authority_engine": "switcher_analyzer",
+    "authority_model": "dtx",
+    "authority_scale": "0-1_risk_on",
+    "_cross_check_reason": "RETIRÉ le 2026-09-06. On croyait opposer deux avis : marketdata overview.regime (autorité) et systematic.DtxRegime (contradicteur). Vérification faite en paginant overview jusqu au bout : le bloc régime d overview porte engine=switcher_analyzer, model=dtx, scale=0-1_risk_on — C EST LE MÊME MOTEUR que DtxRegime. L écart de 2 points constaté le 2026-09-06 (77,0 contre 79,0) sépare deux exécutions du même modèle à des instants différents, pas deux opinions. Un contrôle de convergence entre eux ne peut donc RIEN détecter : il est structurellement incapable de diverger pour cause de désaccord de fond. Tant qu aucune seconde source de régime réellement indépendante n existe, ne pas simuler une contradiction qui ne existe pas."
   },
   "earnings_window": {
     "exclude_days_before": 3,
@@ -164,7 +168,10 @@
   },
   "diversification": {
     "effective_from": "2026-08-29",
-    "allowed_regions": ["US", "ETF"],
+    "allowed_regions": [
+      "US",
+      "ETF"
+    ],
     "min_us_count": 6,
     "min_etf_count": 2,
     "max_per_sector": 3,
@@ -230,7 +237,6 @@
       "BA": "Industrials",
       "CAT": "Industrials",
       "HON": "Industrials",
-      "GE": "Industrials",
       "LMT": "Defense",
       "NOC": "Defense",
       "RTX": "Defense",
@@ -309,7 +315,7 @@
       "MYRG": "Industrials",
       "PI": "Tech",
       "SFM": "Staples",
-      "KRE": "Financials",
+      "KRE": "ETF-Factor",
       "NVO": "Healthcare",
       "AXTI": "Semis",
       "VIAV": "Tech",
@@ -432,19 +438,12 @@
       "ITRK.L": "Industrials",
       "ELE.MC": "Utilities",
       "PHM": "Consumer",
-      "PCAR": "Industrials",
       "FND": "Consumer",
       "ORLY": "Consumer",
-      "GE": "Industrials",
-      "BDX": "Healthcare",
-      "RVTY": "Healthcare",
       "VLO": "Energy",
-      "NWSA": "Comm",
-      "IGV": "ETF-Factor",
       "ADP": "Industrials",
       "DV": "Comm",
-      "NDAQ": "Financials",
-      "KRE": "ETF-Factor"
+      "NDAQ": "Financials"
     }
   },
   "scan_size": {

@@ -160,6 +160,11 @@ assert(
   'GetSymbolSignals must not receive a CSV',
 );
 
+// GetMarketContext refuse as_of sur TOUS ses facets depuis le build a51481d9 :
+// « its data is current-only; historical requests are refused to prevent lookahead ».
+// L'ancienne règle EXIGEAIT as_of=$refdate sur overview, ce qui rendait l'appel impossible :
+// la réponse n'était plus qu'un refus de 121 octets. On vérifie donc l'inverse — un overview
+// SANS as_of est valide, et un overview AVEC as_of est refusé.
 const floatingContext = structuredClone(base);
 floatingContext.waves[1].calls[0] = {
   as: 'overview', server: 'marketdata', tool: 'GetMarketContext',
@@ -167,8 +172,19 @@ floatingContext.waves[1].calls[0] = {
   freshness: { max_age_h: 6, required: true },
 };
 assert(
-  contract.validatePlan(floatingContext, spec, config.policy).some(e => e.includes('overview as_of must equal $refdate')),
-  'overview must be reproducibly anchored to the reference close',
+  !contract.validatePlan(floatingContext, spec, config.policy).some(e => e.includes('overview')),
+  'overview without as_of is the only shape the server accepts',
+);
+
+const anchoredOverview = structuredClone(base);
+anchoredOverview.waves[1].calls[0] = {
+  as: 'overview', server: 'marketdata', tool: 'GetMarketContext',
+  args: { facets: 'overview', as_of: '$refdate' },
+  freshness: { max_age_h: 6, required: true },
+};
+assert(
+  contract.validatePlan(anchoredOverview, spec, config.policy).some(e => e.includes('overview is current-only')),
+  'an as_of on overview must be refused: the server rejects it',
 );
 
 const fakeHistoricalRegime = structuredClone(base);
