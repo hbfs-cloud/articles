@@ -11,7 +11,7 @@ A backtest is a hypothesis wearing the clothes of a track record. The date you f
 
 Keep three boxes and never let them touch. In-sample is where you tuned the thresholds and filters. Out-of-sample is history you locked away and look at exactly once. The forward log begins at the timestamp after the final rule version exists. The moment an out-of-sample result changes your method, that period joins in-sample for every claim you make afterwards.
 
-![The smooth curve is the one you fitted](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/forward_vs_backtest.png)
+![Drawdown measures the path, not the destination](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/drawdown_path.png)
 
 Here is the trap that voids the whole exercise. Out-of-sample only protects you if you look once. Re-optimise and re-test enough parameter sets and window splits and one of them passes by luck alone. Walk-forward analysis — optimise on a window, validate on the next unseen one, step forward, repeat — is stronger, but each re-tested window burns a cartridge too. Decide the protocol and the thresholds before you look at anything.
 

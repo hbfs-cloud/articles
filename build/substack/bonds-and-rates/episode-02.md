@@ -11,7 +11,7 @@ Take a ten-year bond, $1,000 face value, 4% coupon, bought at par. Market yields
 
 Compare the two one-point moves. Down 7.8% against up 8.5%. Not symmetric. That extra sliver on the upside is convexity, and it comes free with an ordinary bond.
 
-![The three shapes a yield curve takes](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/yield_curve_shapes.png)
+![How a rate decision reaches an asset price](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/policy_transmission.png)
 
 The mechanism is arithmetic, not economics. Your coupon is frozen at 4%. If new bonds pay 5%, nobody buys yours at par, so the price falls until the buyer's return matches the market. When yields drop, that frozen 4% becomes more valuable and the price climbs. Nothing about the contract changed.
 

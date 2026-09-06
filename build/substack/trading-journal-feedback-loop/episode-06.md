@@ -11,7 +11,7 @@ Build the screen backwards. It is allowed to produce three answers and no others
 
 Two sheets. The first holds one row per closed trade: date, plan version, entry, stop, size, fees, result, and a plain yes or no on whether you followed your own rules. The second computes everything from the first. You never type a number into the second sheet. Every hand-copied figure is a wrong figure waiting for its turn.
 
-![Without the record, the loop is just repetition](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/journal_loop.png)
+![The average hides the shape](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/r_distribution.png)
 
 Keep results in R. One R is the money you had at risk the moment you opened the trade. Risk 100, make 250, that is +2.5R. Risk 100, lose it, that is −1R. Counting this way strips out position size, so a good week traded small and a good week traded big finally look alike.
 

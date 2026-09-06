@@ -11,7 +11,7 @@ A corporate bond yields 4.8%. That number is not a credit spread. Subtract the m
 
 The ladder is steep. Top-rated issuers have traded around 30 to 50 basis points over Treasuries. Single-A names sit nearer 80 to 130, BBB around 130 to 200, BB in the 250 to 400 range, single-B 400 to 600, and CCC paper can demand 800 to 1,500 or more. Each rung is the market's price for a different distance from trouble.
 
-![The three shapes a yield curve takes](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/yield_curve_shapes.png)
+![How a rate decision reaches an asset price](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/policy_transmission.png)
 
 Default risk is only part of what lives in that number. Liquidity, downgrade risk, expected recovery, plain uncertainty and the shifting appetite for risky assets are all bundled in. So is supply: a heavy month of corporate issuance, or of Treasury issuance, can move the measured spread without a single balance sheet changing.
 

@@ -11,7 +11,7 @@ The Fed does not set the federal funds rate. It announces a target range for it 
 
 Three separate levers do the boxing. Interest on reserve balances, or IORB, is what the Fed pays banks to leave money with it, which sets a floor: no bank lends to another bank for less than it earns doing nothing. Overnight reverse repos put a second floor under money-market funds, which do not have Fed accounts. The discount rate, a deliberately unattractive rate for direct emergency borrowing, caps the top. The rate that actually prints each day, the effective federal funds rate, is a volume-weighted average of real overnight loans, and it normally sits just below IORB.
 
-![How a rate decision reaches an asset price](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/policy_transmission.png)
+![The headline is an average; the decision is in the layer](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/inflation_layers.png)
 
 That plumbing changed. Before 2008 the Fed steered the rate by controlling how scarce reserves were. After the crisis, reserves became abundant, so it steers by price instead. Same headline, different machine.
 

@@ -11,7 +11,7 @@ source_path: "series/obligations-et-taux/part6-construire-un-portefeuille/index.
 
 Put that next to 2008, when stocks lost 37% and the same bond index gained 5.2%. Or 2020, when stocks dropped 34% at the low and bonds added 7.5%. Same asset class, opposite behaviour. What changed was the reason people were scared. When weak growth is the problem, central banks cut rates and bonds rally. When inflation is the problem, they raise rates, and stocks and bonds sink together.
 
-![Many tickers can be one bet](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/exposure_lookthrough.png)
+![The three shapes a yield curve takes](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/yield_curve_shapes.png)
 
 So a ratio is a poor starting point. Give the bond sleeve a job instead, and write the job on paper.
 

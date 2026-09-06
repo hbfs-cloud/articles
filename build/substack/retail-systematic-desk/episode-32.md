@@ -15,7 +15,7 @@ Done or not done. That is how most retail code stores an order, and it is fine r
 
 A state machine is the boring fix: a written list of the states an order may occupy and the moves allowed between them. Anything outside the list raises an error instead of quietly overwriting what you knew.
 
-![Every order ends reconciled](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/order_state_machine.png)
+![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
 **Input from last Friday:** the accepted deterministic broker simulator contract.
 

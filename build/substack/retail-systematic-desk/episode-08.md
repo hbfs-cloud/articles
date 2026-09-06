@@ -15,7 +15,7 @@ The clock on a response tells you when the answer arrived at your machine. It sa
 
 **Input from last Friday:** the accepted capability bootstrap report.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
 
 **Friday deliverable:** a freshness gate test report, filed with the run's paperwork by whoever runs the desk that week.
 

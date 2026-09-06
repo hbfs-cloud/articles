@@ -18,6 +18,8 @@ be sold. And the loss you can carry without changing your behaviour. FINRA puts 
 of a financial outcome that hurts you. So the number is yours, drawn from your own finances. No universal
 percentage exists, and anybody who quotes one is guessing about your life.
 
+![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
+
 Then the chain of decisions, in order:
 
 | Element | What it must specify |

@@ -16,7 +16,7 @@ the price closes above the highest close of the last 20 sessions, and that day's
 times the average of the previous 20 sessions. Vague: it isn't stretched. Written: the price is no more
 than 8% above its 20-day average. Each line on the right answers yes or no. Nothing on the left does.
 
-![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
+![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
 
 Keep three words apart, because people use them interchangeably and then argue past each other. A
 **hypothesis** is why a behaviour might keep happening. A **setup** turns it into conditions you can check.

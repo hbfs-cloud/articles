@@ -11,7 +11,7 @@ Pick the protection by the failure you can live with. The product comes second.
 
 Start with size, because size costs nothing. A €50,000 account. A stock at €100, a stop at €90, so €10 of risk per share. Risking 2% of the account means €1,000, which buys 100 shares — a €10,000 position, a fifth of the money. Now let the stock open at €70 instead of stopping politely at €90. The loss is €3,000, or 6% of the account. Unpleasant, survivable. Put the whole €50,000 into that same stock and the identical morning takes €15,000, close to a third of everything. Same news, same stop, same open. Only the size changed.
 
-![Two orders, two different ways to be wrong](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/stop_vs_stop_limit.png)
+![A stop cannot fill where no price exists](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/gap_and_stop.png)
 
 The stop is not doing the work here. A stock at $100 with a stop at $95 that opens at $72 after an evening profit warning sells at $72. The 5% you planned to lose shows up as 28%.
 

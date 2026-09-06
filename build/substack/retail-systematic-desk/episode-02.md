@@ -15,7 +15,7 @@ Last Friday you signed a mandate, meaning a short written statement of what this
 
 "Make money" cannot be coded. A refusal can. Three worth borrowing: no borrowed money in version one, no order sent without a protective exit already attached, no decision computed from a price older than the last close. A kill criterion is not gloom. It is the line where the evidence stops supporting the machine, and where somebody says so out loud before the account says it for you.
 
-![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
+![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
 **Friday deliverable:** a kill-and-resume matrix, which is just a table of what breaks, what happens automatically when it breaks, and who is allowed to switch things back on.
 

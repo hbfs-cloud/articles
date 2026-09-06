@@ -15,7 +15,7 @@ Rules buried inside code are invisible rules. You nudge a number on a Tuesday, a
 
 The shape of the file is what this lesson shares. Whatever values you eventually put in it are yours and stay yours.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
 
 **Input from last Friday:** the accepted expiring conditional plan.
 

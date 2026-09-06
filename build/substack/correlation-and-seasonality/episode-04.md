@@ -11,7 +11,7 @@ Bitcoin's code does one thing on a schedule: every 210,000 blocks, roughly four 
 
 The price history around those dates is genuinely striking, which is exactly why it needs handling with tongs.
 
-![A calendar pattern is a hypothesis, not a rule](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/seasonality_caution.png)
+![Diversification is measured in calm and spent in stress](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/correlation_breaks.png)
 
 Count the completed events. Three. November 2012: bitcoin at about $12, peaking near $1,150 twelve months later, then falling to roughly $170, down 85%. July 2016: about $660, peaking near $19,700 seventeen months later, then down to $3,200, a fall of 84%. May 2020: about $8,600, peaking near $69,000 eighteen months later, then down to $15,500, a fall of 78%. The fourth began in April 2024 around $64,000 and is still running.
 

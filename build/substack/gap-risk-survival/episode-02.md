@@ -11,7 +11,7 @@ Between 19 February and 23 March 2020 the Nasdaq-100 tracker QQQ fell 28%. TQQQ,
 
 Same thesis. Same index. Wildly different survival odds. Stress the instrument you own, not the chart you watch.
 
-![A stop cannot fill where no price exists](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/gap_and_stop.png)
+![Two orders, two different ways to be wrong](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/stop_vs_stop_limit.png)
 
 Start with plain funds. Average absolute overnight moves sit near 0.35% for the S&P 500 tracker, 0.48% for the Nasdaq-100, 0.55% for small caps, 0.25% for gold. A fund holding 500 companies dilutes any single blow-up. But in a systemic shock everything moves together and dilution stops helping: on 16 March 2020 those same funds opened −8.1%, −9.3% and −10.2%. Read the prospectus and issuer data for holdings, spread, premiums or discounts, and creation-redemption risk. A fund's exchange price can trade above or below net asset value, and some holdings may be closed while it keeps trading. Leveraged and inverse funds target a stated daily result; over longer stretches, especially choppy ones, the outcome drifts far from that multiple.
 

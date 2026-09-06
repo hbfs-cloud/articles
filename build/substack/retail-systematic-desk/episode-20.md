@@ -15,7 +15,7 @@ Every number below is invented to show the shape of the work. Made-up tickers, m
 
 In the toy run, SYM_A arrived from certification with a peer file of 41 companies: 6 direct competitors, 4 suppliers, 3 customers, 12 same-sector names of similar size, and 16 that were only there because a screener had grouped them. Twenty-two had enough shared history to compare at all. Nine of those moved in step with SYM_A most of the time. Then I subtracted the part of each move that the whole market already explains, which is what people mean by residualising. Two were left.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
 
 Seven names changed status without changing behaviour. They were riding the same tide as everything else.
 

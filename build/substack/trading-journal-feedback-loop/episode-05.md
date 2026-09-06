@@ -11,7 +11,7 @@ Asking yourself mid-session whether you are revenge trading is like asking an an
 
 So turn the suspicion into a behavior you can count, and define it before you look at the money. Say you suspect that losses trigger unplanned follow-up trades. Define the event: a new order submitted within a stated interval after a losing exit, with no plan record created before the first trade opened. Log prior-trade outcome, elapsed time, setup version, planned-before-entry yes or no, rule adherence, market condition, net realized R. The definition catches profitable follow-ups too — one that only flags losers can be bent into any story you like.
 
-![The average hides the shape](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/r_distribution.png)
+![Without the record, the loop is just repetition](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/journal_loop.png)
 
 Averages hide the thing you are hunting. Take a trader at +0.12 R per trade overall. Segment it and you may find one setup at +0.42 R over 64 trades funding two others at −0.28 R over 47 and −0.19 R over 58. The average looks survivable. What you actually own is one good strategy paying for two destructive ones.
 

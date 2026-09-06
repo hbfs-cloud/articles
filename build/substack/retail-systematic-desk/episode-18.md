@@ -15,7 +15,7 @@ A score with no reason teaches exactly one behavior: click the top row. Publish 
 
 Two toy rejections, invented for teaching and not observations of any listed company. SYM_A fails on liquidity: average spread 0.8% against a ceiling of 0.3%, the spread being the gap between what buyers offer and sellers ask, which you pay on the way in and again on the way out. SYM_K fails on the event gate: earnings due in 3 days against a 5-day exclusion. Two names, two sentences, no mysterious number out of 100.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
 
 **Friday deliverable:** a gate-by-gate rejection report, built from what was measured rather than from prose a model wrote afterwards.
 

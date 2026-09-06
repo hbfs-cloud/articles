@@ -17,7 +17,7 @@ the plan version that was live at entry. Keep hindsight in a separate line. A pr
 still a rule break; a planned loss is a clean trade. One to three trades is noise, so no verdict about the
 strategy gets pronounced today.
 
-![Without the record, the loop is just repetition](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/journal_loop.png)
+![The average hides the shape](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/r_distribution.png)
 
 **Weekly, thirty to forty-five minutes, when the emotion has drained.** Five to fifteen trades is enough to
 show a pattern, and the week is short enough to catch a bad habit before it sets. Group trades and skipped

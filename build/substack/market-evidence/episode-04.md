@@ -11,7 +11,7 @@ Repetition is not confirmation. A claim copied across forty accounts in ten minu
 
 So do not act on a headline or a sentiment score until the claim underneath has a named source, a publication time and a primary document behind it. When the primary document cannot be found, the honest label is "unverified", and it stays that way in your notes.
 
-![Between the event and your screen, time passes](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/information_clock.png)
+![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
 News runs on at least three clocks: when the event happened, when the source disclosed it, and when a publisher or an account repeated it. A later article can be perfectly accurate and add nothing new. A corrected headline can leave stale copies sitting in aggregators for days. Keep the original link and its timestamp instead of the time shown by whoever reposted it last. Speed is not the edge on offer here in any case. Headline-parsing algorithms react in roughly fifty milliseconds, and the big US macro releases land at 8:30 a.m. Eastern with the first move priced before a person finishes the opening paragraph.
 

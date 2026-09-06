@@ -15,7 +15,7 @@ send_email: false
 
 Say what that string does not do, because people oversell it. It proves the files match a copy you trusted earlier. It says nothing about whether the files are complete, whether the numbers in them are true, or when they were really created.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
 
 **Input from last Friday:** The accepted single-cut snapshot manifest.
 

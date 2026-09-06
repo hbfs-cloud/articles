@@ -11,7 +11,7 @@ The cure for a messy portfolio is not another fund. It is a job description for 
 
 Start from the money, not the tickers. Cash you need in three years cannot ride the same waves as capital you won't touch for thirty. Allocation splits the pot between stocks, bonds and cash; diversification spreads risk inside each of those. Neither removes the possibility of loss, and both get sold as if they did.
 
-![Many tickers can be one bet](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/exposure_lookthrough.png)
+![A fee compounds against you the way returns compound for you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/fee_drag.png)
 
 The classic templates are useful mainly because their trade-offs are visible. A 60/40 has returned around 8.5% a year with a worst fall from a previous high near 30%. Ray Dalio's All-Weather — 30% stocks, 40% long bonds, 15% intermediate bonds, 7.5% gold, 7.5% commodities — gave up about a point of annual return for a worst fall near 12%. Harry Browne's Permanent Portfolio, four equal quarters of stocks, long bonds, gold and cash, returned roughly 6.5% with a worst fall near 8%. The Bogleheads three-fund sits at the far end: about 8.2% a year, and a 35% hole to sit through. Choose the drawdown you can actually live with, not the headline return.
 

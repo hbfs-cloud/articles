@@ -11,7 +11,7 @@ source_path: "series/risque-de-gap/part4-trader-les-gaps/index.html"
 
 Plenty of gaps do close. The ordinary kind — no real news, thin overnight volume, a bit of drift — come back better than nine times in ten, usually inside a week. A gap that breaks a stock out of its range on heavy volume comes back maybe three or four times in ten, and can take months to do it. The chart will not tell you which one is in front of you. The reason for the gap will.
 
-![A stop cannot fill where no price exists](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/gap_and_stop.png)
+![Two orders, two different ways to be wrong](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/stop_vs_stop_limit.png)
 
 So read the reason before you draw a single line. The company's own filing or press release. The agency that publishes the macro number, not a headline about it. Whether the security is halted, sitting in an opening auction, or trading normally. The spread, the depth, and the trades that actually printed — not one lonely premarket quote. If the disclosure changed the business behind the old chart, the old chart is scrap paper.
 

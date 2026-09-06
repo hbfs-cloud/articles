@@ -11,7 +11,7 @@ Two funds can both be labelled "US stocks" and still be two completely different
 
 SPY holds 503 companies. QQQ holds 101, and roughly half its money sits in technology. Across 2020 and 2021 QQQ about doubled while SPY gained around half. Then 2022 arrived: QQQ fell 33%, SPY fell 19%. Same country, same wrapper, very different ride.
 
-![Many tickers can be one bet](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/exposure_lookthrough.png)
+![A fee compounds against you the way returns compound for you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/fee_drag.png)
 
 So the useful question is never "what does it own?" It is "what can hurt this?"
 

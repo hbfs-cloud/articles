@@ -11,7 +11,7 @@ A good setup entered at the wrong moment is a planned loss. Timing here has noth
 
 Write the order card before the trigger happens, not while it is happening. Trigger, worst acceptable price, size, how long the order lives, what cancels it, and every exit. Leave one field blank and the idea stays on the watchlist. Speed only helps once the thinking is finished.
 
-![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
+![The regime sets a ceiling, never a direction](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/regime_map.png)
 
 Entries are zones, not points. A card reading $165 to $168 means any fill inside that range works. Trying to buy at $166.43 exactly produces either a missed trade or an emotional one. The low end is the better entry: tighter stop, more room to the target. The high end still counts if the momentum is real. More than 5% above the zone, the trade is gone. Skip it.
 

@@ -11,7 +11,7 @@ Drawdown is the distance from your highest recorded equity down to where you sit
 
 It earns the attention because recovery is lopsided. Down 10% needs +11% to get level. Down 25% needs +33%. Down 50% needs +100%. Down 80% needs +400%. The deeper the hole, the steeper the climb out, and past a point a drawdown stops costing money and starts costing years.
 
-![Drawdown measures the path, not the destination](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/drawdown_path.png)
+![The smooth curve is the one you fitted](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/forward_vs_backtest.png)
 
 Fix the accounting first. Does the equity series include open positions, deposits, fees, financing, tax? Priced at what time, from which source? Then the formula is simple:
 

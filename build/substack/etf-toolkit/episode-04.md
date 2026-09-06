@@ -11,7 +11,7 @@ Two rules, and people keep collapsing them into one. The contribution rule says 
 
 Dollar-cost averaging means buying a fixed amount on a fixed date, whatever the price. Its real product is behavioural — you stop arguing with yourself every month. What it does not do is make an expensive asset cheap. Vanguard compared the two approaches across 92 years of data and found that investing a lump sum beat spreading it out roughly 68% of the time, for the unglamorous reason that markets rise more often than they fall. Staging a windfall buys comfort and costs expected return. Which one you need depends on whether you would actually still be holding after a 20% fall.
 
-![Many tickers can be one bet](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/exposure_lookthrough.png)
+![A fee compounds against you the way returns compound for you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/fee_drag.png)
 
 Frequency matters far less than people assume. Over 20 years on the S&P 500, monthly contributions returned about 9.8% a year and weekly about 9.9% — while going from 12 transactions a year to 52. Monthly wins on paperwork alone.
 

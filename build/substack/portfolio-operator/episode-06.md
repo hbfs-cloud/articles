@@ -11,7 +11,7 @@ The day to write your shutdown rules is the day you start, while nothing hurts. 
 
 Start by separating three things that people call "stopping."
 
-![Drawdown measures the path, not the destination](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/drawdown_path.png)
+![The smooth curve is the one you fitted](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/forward_vs_backtest.png)
 
 An emergency stop is for danger: stolen login, orders firing on their own, corrupted prices, a margin call. You close at market and ask questions afterwards.
 

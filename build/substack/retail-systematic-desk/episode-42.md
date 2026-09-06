@@ -15,7 +15,7 @@ The fastest way to make a desk useless is to make it chatty. People mute what cr
 
 **Input from last Friday:** the missing-data component from last week's build.
 
-![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
+![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
 **Friday deliverable:** An action-owned alert policy, owned by the desk operator and kept with the week's evidence.
 

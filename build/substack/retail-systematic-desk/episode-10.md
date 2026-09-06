@@ -15,7 +15,7 @@ A ticker is a name printed on a screen. Names get changed, reused and recycled: 
 
 **Input from last Friday:** the accepted batch-integrity fixture pack.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
 
 **Friday deliverable:** an effective-dated instrument record, filed with the run's paperwork, effective-dated meaning each row states the window of time it was true for.
 

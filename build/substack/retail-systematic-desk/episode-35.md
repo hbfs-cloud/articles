@@ -15,7 +15,7 @@ Supersession is a long word for a plain rule. When a new version of the plan tak
 
 Recovery is that rule seen from the other side. A process coming back from a crash must be able to say which revision was in charge, what is actually working in the market, and whether every open position still carries its protective exit.
 
-![You correct by adding, never by erasing](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/append_only_ledger.png)
+![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
 **Input from last Friday:** the accepted checkpointed decision ledger.
 

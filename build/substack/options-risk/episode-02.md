@@ -11,7 +11,7 @@ Apple sat at $210 the day before earnings. The at-the-money call cost $8.00. Res
 
 Nothing broke. Two forces pulled in opposite directions and the bigger one won. The $5 move in the stock added about $2.50 to the option. Implied volatility, the market's guess at how much the stock will swing, fell from 38% to 22% once the news was out, and that took $2.40 back off. Net: a loss.
 
-![What a bought option can and cannot cost you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/option_payoff.png)
+![A spread is one trade only while both legs exist](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/spread_legs.png)
 
 Greeks are the four dials that let you see this coming. Delta is what the option gains for a $1 move in the stock. Gamma is how fast Delta itself changes. Theta is what one day costs you. Vega is what one point of implied volatility is worth. Each comes out of a pricing model, and each one is only accurate near today's price, today.
 

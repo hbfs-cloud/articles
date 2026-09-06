@@ -11,7 +11,7 @@ A scan hands you ten candidates, all scoring 85 or better out of 100. Scoring sa
 
 The rule used in this checklist: at least three of six signals must agree before anything is entrable.
 
-![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
+![The regime sets a ceiling, never a direction](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/regime_map.png)
 
 RSI in a usable zone. Volume above 1.5 times its 20-day average. Price sitting on an actual level rather than mid-air. A pattern you can name out loud. Moving averages stacked in the direction of the trade. ATR expanding, ATR14 being average true range, roughly what the stock covers in a typical day.
 

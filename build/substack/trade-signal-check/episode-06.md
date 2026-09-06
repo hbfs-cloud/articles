@@ -26,7 +26,7 @@ does not hide the next defect. At execution time, any hard failure stops the tra
 7. **Can every decisive number be reproduced point in time?** Record source, timestamp, coverage, version
    and method.
 
-![What a reward/risk ratio actually demands of you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/rr_vs_winrate.png)
+![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
 
 The purpose-selected historical `CLF` candidate shows how the check rejects a plausible chart. It fails
 gate 1 because intraday versus closing activation, order type, validity window and slippage were not

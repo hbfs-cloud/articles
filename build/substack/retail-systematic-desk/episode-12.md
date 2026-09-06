@@ -15,7 +15,7 @@ A price chart can run smooth and straight while the thing underneath it quietly 
 
 **Input from last Friday:** The accepted temporal-field contract.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
 
 **Friday deliverable:** A corporate-action reconciliation runbook — one page saying who checks what, in which order — filed with the week's evidence.
 

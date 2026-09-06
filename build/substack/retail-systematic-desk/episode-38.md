@@ -15,7 +15,7 @@ One day your connection drops mid-request and you will not know whether the brok
 
 **Input from last Friday:** the security and capability preflight you signed off on.
 
-![Every order ends reconciled](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/order_state_machine.png)
+![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
 **Friday deliverable:** A durable intent and deduplication record, owned by the desk operator and kept with the week's evidence.
 

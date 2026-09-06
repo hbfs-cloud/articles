@@ -11,7 +11,7 @@ The word doing all the work in a leveraged fund's name is "daily".
 
 A 3x fund promises three times the index move over one day. Not one week. Not one year. Follow it for two days and the gap opens. The index starts at 100, gains 10% to 110, then loses 10% to 99 — down 1% overall. The 3x fund starts at 100, gains 30% to 130, then loses 30% to 91 — down 9%. Nine times the index loss, from a product that did precisely what it advertised.
 
-![A fee compounds against you the way returns compound for you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/fee_drag.png)
+![Many tickers can be one bet](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/exposure_lookthrough.png)
 
 Nothing malfunctioned. The fund delivered three times each daily move. Resetting the leverage every evening simply means day two's multiplier applies to a different base than day one's. In a smooth trend that helps you. In a chop it grinds you down.
 
