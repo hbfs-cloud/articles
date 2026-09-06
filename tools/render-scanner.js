@@ -167,6 +167,37 @@ const minRR = (() => {
 const hasEntryZone = (d.setups || []).some(s =>
   typeof s.entry_low === 'number' && typeof s.entry_high === 'number' && s.entry_low !== s.entry_high);
 
+/** Bornes RÉELLES du R/R publié, et mention explicite quand des lignes visent moins qu'elles ne
+ *  risquent. La page affirmait « R/R exact 1:X pour toutes les lignes » en reprenant le minimum,
+ *  ce que le tableau situé juste au-dessus démentait ligne par ligne. Une revue lecteur du
+ *  2026-09-06 l'a relevé comme la seule erreur factuelle capable de faire perdre confiance dans
+ *  toute la page : une phrase fausse dans la section « Méthodologie ». */
+const rrValues = (d.setups || [])
+  .map(s => (typeof s.entry_high === 'number' && typeof s.stop === 'number' && typeof s.tp1 === 'number' && s.entry_high > s.stop)
+    ? (s.tp1 - s.entry_high) / (s.entry_high - s.stop) : null)
+  .filter(x => x != null && Number.isFinite(x));
+const maxRR = (rrValues.length ? Math.max(...rrValues).toFixed(2) : '1.50').replace('.', ',');
+const nBelowOne = rrValues.filter(x => x < 1).length;
+const rrBelowOne = nBelowOne
+  ? ` — ${nBelowOne} ligne${nBelowOne > 1 ? 's' : ''} sur ${rrValues.length} vise${nBelowOne > 1 ? 'nt' : ''} moins qu'elle${nBelowOne > 1 ? 's ne risquent' : ' ne risque'}, ce qui est la contrepartie d'une cible placée à une distance réellement parcourue`
+  : '';
+
+/** Le dimensionnement n'est affirmé que s'il a été calculé. `sizing_status: not_run` signifiait
+ *  « non calculé » et la page l'affichait comme « allocation recommandée : 0% », ce qui annulait
+ *  silencieusement les huit plans qu'elle venait de publier. */
+const rg = (d.engine_meta && d.engine_meta.risk_gating) || {};
+const sizingSentence = rg.sizing_status === 'rejected_overallocated'
+  ? ` Le dimensionnement de portefeuille a été REJETÉ pour surallocation : l'allocation recommandée au panier complet est de 0%.`
+  : (rg.sizing_status === 'not_run'
+    ? ` Aucun dimensionnement de portefeuille n'a été calculé pour ce scan : les lignes sont des plans conditionnels indépendants, la taille de position reste entièrement à la main du lecteur.`
+    : '');
+
+/** La légende Sharia ne s'affiche que si une ligne la porte. */
+const hasSharia = (d.setups || []).some(s => s.sharia === true);
+const shariaSentence = hasSharia
+  ? ` Conformité Sharia taggée sur chaque ligne (secteur d'activité ; endettement vérifié au cas par cas, voir invalidations).`
+  : '';
+
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 /** Escape for HTML attribute values (id, data-*, src, href) */
@@ -903,7 +934,7 @@ ${(d.market_snapshot || []).map(r => `        <tr><td><strong>${esc(r.name ?? r.
 
 <!-- MACRO -->
 <section id="macro" class="section-block">
-  <div class="section-header"><h2><i class="fas fa-globe"></i> Contexte macro — semaine du ${d.session_label || d.date}</h2></div>
+  <div class="section-header"><h2><i class="fas fa-globe"></i> Contexte macro — ${d.session_label || d.date}</h2></div>
   <div class="content-card">
     <div class="chart-grid-2col">
       <div>
@@ -926,11 +957,15 @@ ${sectorRotationTable(d.sector_rotation)}
 <section id="synthese" class="section-block">
   <div class="section-header"><h2><i class="fas fa-table-list"></i> Signaux du jour — ${setups.length} setups par stratégie</h2></div>
   <div class="content-card">
-    <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés sur la clôture de référence. Tous les setups restent non exécutables avant l'observation du VWAP de la prochaine séance. Le sizing portefeuille ayant été rejeté, l'allocation recommandée au panier complet est de 0%.</p>
+    <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés sur la clôture de référence. ${hasEntryZone
+      ? `Tous les setups restent non exécutables avant l'observation du VWAP de la prochaine séance.`
+      : `L'entrée est un prix unique : un ordre à cours limité valable la séance, sans condition de VWAP. Si le prix n'est pas touché, il n'y a pas de trade.`}${sizingSentence}</p>
 ${strategyTablesHtml}
     <div class="pedagogy-box">
       <h4><i class="fas fa-info-circle"></i> Comment utiliser ces niveaux</h4>
-      <p>Entrée = zone conditionnelle à l'ouverture (9h30–9h45 ET), uniquement si le prix s'y trouve et tient le VWAP observé. Le stop est un ordre dur, pas mental. ${hasEntryZone
+      <p>${hasEntryZone
+        ? `Entrée = zone conditionnelle à l'ouverture (9h30–9h45 ET), uniquement si le prix s'y trouve et tient le VWAP observé.`
+        : `Entrée = un prix unique, en ordre à cours limité valable la séance. Pas de zone, pas de condition de VWAP, pas de poursuite : si le marché ouvre au-dessus et n'y revient pas, la ligne ne se déclenche simplement pas.`} Le stop est un ordre dur, pas mental. ${hasEntryZone
         ? `Le R/R du tableau est calculé au HAUT de la zone d'entrée, soit le pire remplissage autorisé; le plancher du scan est 1:${minRR}.`
         : `Entrée = prix unique (pas de zone) sur ce scan : le R/R affiché est le R/R exact, pas une mesure au milieu d'une fourchette — il n'y a pas de « pire remplissage » distinct à anticiper.`
       } Aucun sizing individuel n'est fourni tant que le sizing portefeuille reste rejeté. Si l'ouverture dépasse le haut de la zone de 2%, l'entrée directe est annulée et seul un retour au VWAP peut réarmer la ligne. Une entrée est également nulle si son filtre de surextension est franchi avant l'exécution.</p>
@@ -949,7 +984,7 @@ ${strategyTablesHtml}
     </div>
     <div class="pedagogy-box">
       <h4>2. Screening multi-stratégie</h4>
-      <p>Trois filtres DSL complémentaires : Momentum (tendance + volume), Breakout (sortie de base / gap volume), Pullback (repli vers support dans un uptrend intact). Short Squeeze exclu depuis le 20 mars 2026.</p>
+      <p>Trois filtres de sélection complémentaires : Momentum (tendance + volume), Breakout (sortie de base / gap volume), Pullback (repli vers support dans un uptrend intact). Short Squeeze exclu depuis le 20 mars 2026.</p>
     </div>
     <div class="pedagogy-box">
       <h4>3. Scoring composite</h4>
@@ -961,7 +996,7 @@ ${strategyTablesHtml}
     </div>
     <div class="pedagogy-box">
       <h4>5. Anti-dilution &amp; ranking</h4>
-      <p>Pour les émetteurs relevant du régulateur américain : registre de dépôts interrogé par type de formulaire (prospectus de placement, enregistrement en étagère, avis d'effet) sur dix ans, fenêtre de contrôle de 90 jours — présence du formulaire ET nature de l'opération (item-level pour les 8-K) sont à vérifier, la seule présence/absence d'un formulaire ne suffit pas à conclure. Hors de ce périmètre — émetteurs étrangers, fonds indiciels — il n'y a pas de registre à interroger : le champ reste vide et la réserve est écrite sur la ligne, jamais remplacée par un feu vert. Diversification secteur/géographie. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Entrées à prix unique sur ce scan (pas de zone) : R/R exact 1:${minRR} pour toutes les lignes.`} Conformité Sharia taggée sur chaque ligne (secteur d'activité ; endettement vérifié au cas par cas, voir invalidations).</p>
+      <p>Pour les émetteurs relevant du régulateur américain : registre de dépôts interrogé par type de formulaire (prospectus de placement, enregistrement en étagère, avis d'effet) sur dix ans, fenêtre de contrôle de 90 jours — présence du formulaire ET nature de l'opération (item-level pour les 8-K) sont à vérifier, la seule présence/absence d'un formulaire ne suffit pas à conclure. Hors de ce périmètre — émetteurs étrangers, fonds indiciels — il n'y a pas de registre à interroger : le champ reste vide et la réserve est écrite sur la ligne, jamais remplacée par un feu vert. Diversification secteur/géographie. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Entrées à prix unique sur ce scan (pas de zone) : le R/R affiché est donc exact, sans « pire remplissage » distinct. Il s'échelonne de 1:${minRR} à 1:${maxRR} selon les lignes${rrBelowOne}.`}${shariaSentence}</p>
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:1rem;">
       <h4 style="margin:0 0 0.5rem;">Sources de données</h4>

@@ -576,7 +576,13 @@ function writeMode(mode, prefix) {
     config: mode.config || {}, stats: mode.stats || {},
     reliability,
     ...(_engineBacktest ? { engineBacktest: _engineBacktest } : {}),
-    equityCurve: equity || {},
+    // BASE DÉCLARÉE. `stats.ret` est mesuré depuis 100 (le capital au lancement), alors que la
+    // courbe publiée commence au premier point APRÈS le lancement — 100,11 pour `best` au
+    // 2026-08-12, la première séance ayant déjà bougé. Un consommateur qui calcule
+    // v[dernier]/v[0] trouve donc −0,97% là où le titre annonce −0,86%, et conclut à une
+    // incohérence qui n'existe pas. La courbe scellée ne peut pas être modifiée (règle
+    // d'immutabilité) : on publie donc sa base, pour que l'artefact se décrive lui-même.
+    equityCurve: equity && (equity.v || equity.d) ? { ...equity, rebasedTo: 100 } : (equity || {}),
   });
 
   // T2 coherence guard — cross-check the just-written equity.json against the frozen seal.
@@ -628,7 +634,13 @@ function writeMode(mode, prefix) {
     updatedAt: now, date: snap.date, scanDate: scanDir, mode: prefix || 'balanced',
     status,
     config: mode.config || {}, stats: mode.stats || {},
-    equityCurve: equity || {},
+    // BASE DÉCLARÉE. `stats.ret` est mesuré depuis 100 (le capital au lancement), alors que la
+    // courbe publiée commence au premier point APRÈS le lancement — 100,11 pour `best` au
+    // 2026-08-12, la première séance ayant déjà bougé. Un consommateur qui calcule
+    // v[dernier]/v[0] trouve donc −0,97% là où le titre annonce −0,86%, et conclut à une
+    // incohérence qui n'existe pas. La courbe scellée ne peut pas être modifiée (règle
+    // d'immutabilité) : on publie donc sa base, pour que l'artefact se décrive lui-même.
+    equityCurve: equity && (equity.v || equity.d) ? { ...equity, rebasedTo: 100 } : (equity || {}),
     signals: (mode.signals || []).map(s => ({
       ticker: s.ticker, score: s.score, strategy: s.strategy,
       entry: parsePrice(s.entry), stop: parsePrice(s.stop),

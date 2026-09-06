@@ -31,6 +31,7 @@ const DIR = path.resolve(ROOT, dirRel);
 const sig = JSON.parse(fs.readFileSync(path.join(DIR, 'signals.json'), 'utf8'));
 const man = JSON.parse(fs.readFileSync(path.resolve(ROOT, manifestRel), 'utf8'));
 const ed = man.editorial;
+if (ed) { ed.score_caveat_public = man._score_caveat_public; ed.entry_policy_public = man._entry_policy_public; }
 if (!ed) throw new Error('le manifeste ne porte pas de bloc `editorial` — rien à rédiger, fail-closed');
 
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
@@ -93,7 +94,7 @@ const out = {
   })(),
   market_snapshot: ed.market_snapshot,
   pedagogy: ed.pedagogy,
-  score_methodology: sig._scoreMethodology,
+  score_methodology: ed.score_caveat_public || sig._scoreMethodology,
   macro_calendar: ed.macro_calendar,
   sector_rotation: ed.sector_rotation,
   macro_thesis: ed.macro_thesis,
@@ -108,8 +109,10 @@ const out = {
     marketdata_contract_status: 'certified',
     marketdata_completion_policy: 'completed_only',
     freshness: ed.freshness,
-    risk_gating: ed.risk_gating,
-    entry_policy: sig._entryPolicy,
+    // L'identifiant de trace du fournisseur reste dans signals.json, qui est interne. data.json
+    // alimente la page publiée et ne doit porter aucun identifiant d'infrastructure.
+    risk_gating: (() => { const { correlation_trace, ...rg } = ed.risk_gating || {}; return rg; })(),
+    entry_policy: ed.entry_policy_public || sig._entryPolicy,
     pipeline_order: sig._pipelineOrder,
   },
   disclaimer_extra: ed.disclaimer_extra,

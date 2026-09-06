@@ -241,8 +241,22 @@ function buildLevels(sym, t, strategy) {
   const tgtMin = entryHigh + TP.min_atr_multiple * atr;
   const tgtMax = entryHigh + TP.max_atr_multiple * atr;
   let tp1 = null, tp1Basis = null;
+  // UNE RÉSISTANCE QUE LE PRIX A FRANCHIE DEPUIS N'EN EST PLUS UNE.
+  // La v1 retenait tout pivot haut de la fenêtre situé dans la bande, sans vérifier qu'il
+  // avait tenu. Sur KO le 2026-09-06, elle a retenu 90,92 — le plus-haut du 29 juillet —
+  // alors que le titre avait fait SIX plus-hauts au-dessus entre le 19 et le 26 août et
+  // TROIS clôtures au-dessus. Le niveau a été publié comme « le plus-haut du 20 août » et
+  // présenté comme une résistance réelle par opposition à un multiple d'ATR : il se trouvait
+  // valoir exactement entrée + 1,951 × ATR. Un multiple renarré en analyse technique.
+  // Un pivot n'est retenu que si AUCUNE clôture postérieure ne l'a dépassé.
+  const closes = b.map(x => x[4]);
   for (const hi of pivots(b).highs) {
-    if (hi >= tgtMin && hi <= tgtMax) { tp1 = r2(hi); tp1Basis = 'résistance'; break; }
+    if (hi < tgtMin || hi > tgtMax) continue;
+    const formedAt = b.findIndex(x => x[2] === hi);
+    if (formedAt < 0) continue;
+    const brokenSince = closes.slice(formedAt + 1).some(c => c > hi);
+    if (brokenSince) continue;
+    tp1 = r2(hi); tp1Basis = 'résistance'; break;
   }
   if (tp1 == null) { tp1 = r2(entryHigh + TP.target_atr_multiple * atr); tp1Basis = 'optimum_mesuré'; }
 
@@ -396,7 +410,7 @@ for (const pick of manifest.picks) {
         score_note: manifest._score_caveat },
       thesis: pick.thesis,
       invalidation: pick.invalidation, invalidation_level: inv,
-      execution: { status: 'conditional_next_session', gate: manifest.execution_gate },
+      execution: { status: 'limit_order_single_price', gate: manifest.execution_gate },
     });
   } catch (e) {
     rejected.push({ ticker: T, reason: e.message });
@@ -480,7 +494,7 @@ const out = {
   momentum: [], breakout: [], pullback: [], pre_squeeze: [],
   exited_factors: [],
   tkl_pool: [], dtx_pool: [], fortress_pool: [],
-  rejected,
+  rejected: [...rejected, ...(manifest.editorial_rejections || [])],
   provenance,
 };
 

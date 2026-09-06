@@ -135,7 +135,12 @@ const stagedReturn = (stagedValues[stagedValues.length - 1] / stagedValues[0] - 
 assert(Math.abs(stagedReturn - dtxBest.metrics.return_pct) <= 0.05, 'DTX staging curve/headline mismatch');
 const bestApi = read('portfolio/v1/best/equity.json');
 const apiValues = bestApi.equityCurve.v;
-const apiReturn = (apiValues[apiValues.length - 1] / apiValues[0] - 1) * 100;
+// La base d'une courbe rebasée n'est PAS forcément son premier point publié : celui-ci est la
+// première séance APRÈS le lancement, qui a déjà bougé. `rebasedTo` porte la base réelle.
+// Sans elle, ce test reconstruisait −0,97% là où le titre disait −0,86% et signalait une
+// incohérence inexistante (2026-09-06).
+const apiBase = Number(bestApi.equityCurve.rebasedTo) || apiValues[0];
+const apiReturn = (apiValues[apiValues.length - 1] / apiBase - 1) * 100;
 assert(Math.abs(apiReturn - bestApi.stats.ret) <= 0.05, 'DTX API curve/headline mismatch');
 assert.strictEqual(bestApi.engineBacktest.metrics_source, 'mcp_replay', 'DTX API replay provenance missing');
 assert.strictEqual(bestApi.engineBacktest.curve_is_book, false, 'DTX replay must not be labeled as a served book curve');

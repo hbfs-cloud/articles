@@ -102,8 +102,17 @@ for (const file of files) {
     while ((i = lower.indexOf(p, i)) !== -1) { n++; i += p.length; }
     if (n) hits.push(`phrase "${p}" ×${n}`);
   }
+  // Un connecteur de cadence est en TÊTE de proposition. Compter la chaîne nue produisait des
+  // faux positifs sur des tournures parfaitement françaises : « cassure de plus-hauts », « une
+  // ligne de plus sans que… », « ne lui accorde plus que trois séances » — trois occurrences
+  // signalées le 2026-09-06 sur une page qui n'employait aucun connecteur. On exige donc un
+  // début de phrase ou de proposition (après un point, un point-virgule, un deux-points, un
+  // tiret cadratin ou une ouverture de balise) et une frontière de mot en fin.
   let connTotal = 0;
-  for (const c of CONNECTORS) { const m = lower.split(c).length - 1; connTotal += m; }
+  for (const c of CONNECTORS) {
+    const re = new RegExp(`(^|[.;:!?—]\\s+|>\\s*)${c.replace(/ /g, '\\s+')}\\b`, 'gi');
+    connTotal += (prose.match(re) || []).length;
+  }
   const emDashes = (prose.match(/—/g) || []).length;
   const emPer500 = words ? (emDashes / words * 500) : 0;
 

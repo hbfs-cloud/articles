@@ -174,10 +174,24 @@ function main() {
   // AVANT d'écrire. Contrairement à metricsSuspect (écrit-puis-exit-7), un batch figé NE DOIT PAS être
   // écrit — sinon dtx-pool-bridge le transforme en dtx_pool et le sweep tracke des trades fantômes.
   const frozenReasons = [];
-  // (a) Date de calcul stampée par le moteur ≠ asof demandé (signal DIRECT si le payload la porte).
+  // (a) Date de calcul stampée par le moteur ≠ CLÔTURE ATTENDUE.
+  //
+  // CORRIGÉ LE 2026-09-06. La garde comparait la date de calcul du moteur à `--asof`, c'est-à-dire
+  // à la SÉANCE pour laquelle la décision est prise. Sous le Contrat V2 ces deux dates diffèrent
+  // toujours : le moteur calcule sur la dernière clôture complétée (D) une décision valable pour
+  // la séance suivante (D+1) — la réponse du 2026-09-06 portait requested_asof 2026-09-04 et un
+  // execution_plan valide de 2026-09-08T13:30Z à 19:55Z. La garde rejetait donc systématiquement
+  // l'ingestion dès qu'on lui passait la bonne séance, et le pont dtx-pool-bridge, qui exige lui
+  // que le staging porte la date de SÉANCE, ne pouvait jamais être satisfait en même temps. Les
+  // deux outils se contredisaient : aucune valeur de `--asof` ne les satisfaisait tous les deux.
+  //
+  // La comparaison correcte est avec `--expected-close`. Elle conserve l'intention d'origine —
+  // détecter un corps gelé venu d'une autre séance — et la renforce, puisqu'elle vérifie
+  // désormais que le moteur a bien calculé sur la clôture qu'on lui a demandée.
   const computedDate = extractComputedDate(decide);
-  if (computedDate && computedDate !== opts.asof) {
-    frozenReasons.push(`date de calcul moteur ${computedDate} ≠ --asof ${opts.asof} (réponse d'une autre séance)`);
+  const expectedComputed = opts.expectedClose || opts.asof;
+  if (computedDate && computedDate !== expectedComputed) {
+    frozenReasons.push(`date de calcul moteur ${computedDate} ≠ clôture attendue ${expectedComputed} (réponse d'une autre séance)`);
   }
   // (b) Batch CREATE byte-identique au staging d'une séance DIFFÉRENTE = figé (prix/order_id/reason=Score
   //     varient chaque jour → un batch NON VIDE identique sur deux asof distincts n'a pas été recalculé).

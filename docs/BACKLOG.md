@@ -136,3 +136,70 @@ screening journalier. Restent ouverts :
 - faux-vert de fraîcheur : `bars_daily_us_equity.status: ready` avec la clôture certifiée pendant
   que `bars_daily_universe` est à 0 % et 0 symbole chargé
 - pas de `restarting_since` : un redémarrage se lit comme une panne
+
+---
+
+## 5. Principe d'architecture — la logique déterministe sort des `.md`
+
+Posé le 2026-09-06, sur preuve. Un `.md` décrit un WORKFLOW et le jugement qu'on attend d'un
+LLM. Il ne contient aucune règle qu'une machine devrait faire respecter. Toute règle
+déterministe — seuil, plafond, contrôle de cohérence, ordre d'étapes — vit dans un script qui
+échoue quand elle est violée.
+
+### Ce qui a rendu ce principe non négociable
+
+Le scan du 2026-09-08 a été bâti en respectant scrupuleusement `CLAUDE.md`, `scanner/CLAUDE.md`
+et `data/scanner-filters.json`. Il échouait quand même son gate bloquant avec **155 constats**.
+Raison : **neuf règles déclarées exécutables n'étaient implémentées nulle part.**
+
+- Le plafond sectoriel `max_per_sector: 3` lisait `pick.sector`, un champ de texte libre écrit
+  par l'agent dans le manifeste. Le plafond était donc **auto-déclaré** : il suffisait
+  d'étiqueter un fonds « ETF-Commodity » plutôt que « Energy » pour loger une quatrième ligne
+  énergie sans que rien ne s'en aperçoive.
+- `audit_gates.recent_strategy_performance` et l'overlay immuable
+  `data/scanner-strategy-overlays.json` n'étaient évalués par aucun code : le panier est parti
+  à **80% Momentum** contre 40% autorisés sur preuve mature (PF 0,59, R moyen −0,243).
+- `max_distance_200dma_pct`, `min_consolidation_bars`, `allowed_regions`,
+  `tickers.min_market_cap_usd`, `min_avg_daily_volume_usd` : déclarés, jamais lus.
+- `estimated_valid_bars`, le champ par lequel le screener dit combien de séances de validité il
+  accorde encore à sa propre détection : **lu par aucune porte**. Trois signaux périmés sont
+  entrés dans la sélection.
+- Les screeners tournaient sans borne de capitalisation alors que `CLAUDE.md` l'impose en
+  toutes lettres. Résultat : `market_cap: 0` partout, et une porte de capitalisation
+  structurellement invérifiable.
+
+Aucun de ces défauts n'était une négligence de rédaction. Ils existaient parce que **la règle
+était écrite là où rien ne l'exécute**.
+
+### La forme cible
+
+| Ce qui va où | Contenu |
+|---|---|
+| `.md` (skill, commande) | l'enchaînement des étapes, les décisions qui demandent du jugement, ce qu'il faut regarder et pourquoi, les pièges déjà rencontrés |
+| `.json` (config) | les VALEURS des seuils, versionnées, avec la preuve qui les justifie |
+| `.js` (script) | la LECTURE de ces valeurs et l'échec quand elles sont violées |
+
+`tools/build-scan.js` est le premier exemple abouti : il lit `data/scanner-filters.json`, applique
+les portes, et refuse d'écrire `signals.json` tant qu'une reste ouverte. Le manifeste éditorial
+`_selection.json` ne porte plus que le jugement — quels tickers, quelle thèse — et ne peut plus
+contourner une règle, puisque le secteur vient désormais de `sector_map` et non du manifeste.
+
+### 5.1 Auditer les autres commandes sur ce critère
+`/daily`, `/weekly`, `/analyse`, `/aplus`, `/retro`, `/series`, `/desk` : pour chacune, lister
+les règles déterministes qui ne vivent aujourd'hui que dans un `.md`, et les déplacer.
+**Fini quand** : chaque règle chiffrée d'un `.md` de commande est soit dans un script qui la fait
+échouer, soit explicitement marquée comme relevant du jugement.
+
+### 5.2 Un test qui interdit la régression
+**Fini quand** : un test parcourt `data/scanner-filters.json` (et ses équivalents) et échoue si
+une clé de seuil n'est référencée par aucun script — le symétrique de la détection de code mort,
+appliqué à la config morte.
+
+### 5.3 Toujours inspecter l'artefact RENDU, jamais seulement le JSON
+Le 2026-09-06, `validate-scan`, `qa-content`, `check-ai-tells` et les portes qualité passaient
+tous, sur une page qui affichait « allocation recommandée au panier complet : 0% », trois
+politiques d'entrée contradictoires, un « R/R exact 1:0,71 pour toutes les lignes » démenti par
+le tableau juste au-dessus, et un titre de section « semaine du Séance du mardi 8 septembre ».
+Tout venait du gabarit du renderer, qu'aucun contrôle ne confrontait au contenu.
+**Fini quand** : un contrôle compare les affirmations du gabarit aux données (politique d'entrée,
+R/R, dimensionnement, légendes conditionnelles) et échoue en cas de contradiction.

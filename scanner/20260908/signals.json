@@ -15,7 +15,7 @@
   },
   "_editorialNote": "Panier reconstruit le 2026-09-06 après trois revues indépendantes (docs/reviews/scan-20260908-revues.md). La première sélection — huit Momentum, deux Breakout, zéro Pullback, toutes les entrées au-dessus de la clôture — était orientée du mauvais côté des trois axes que notre propre registre scellé mesure. Elle échouait par ailleurs son gate bloquant avec 155 constats. Rien n'en a été publié.",
   "_scoreMethodology": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement.",
-  "_entryPolicy": "Un prix unique, la clôture de référence — ni zone, ni gate VWAP, ni conditional_next_session. C'est la recommandation n°4 de la revue d'août, classée SOLIDE : sur 99 signaux, 86% se déclenchaient et 78% dès J+0, et ce qu'on ratait ne montait pas (0,33% de médiane). Le contrefactuel « achat à l'ouverture, sans zone » rendait +0,043 R contre −0,045 R pour la zone publiée. Garder le cérémonial revenait à vendre au lecteur une précision qu'on n'a pas. CE QUI A ÉTÉ ÉCARTÉ : la revue contrarian a trouvé un seau à +0,220 R pour les entrées au niveau ou sous la clôture (n=21) contre −0,260 R à +0,5/+1% (n=29). Une première version du panier plaçait la bande d'entrée sous la clôture pour le capter. C'était du sur-ajustement : rien n'établit que ce seau soit causal plutôt qu'un artefact de remplissage, la revue d'août classe explicitement ce levier « fragile, à mesurer avant d'appliquer », et Config Change Backtest l'interdit sans 30 jours de backtest. Voie de validation : 200 lignes scellées, puis validate-config-change.js en régime-aware.",
+  "_entryPolicy": "Un prix unique, la clôture de référence — ni zone, ni gate VWAP, ni conditional_next_session. C'est la recommandation n°4 de la revue d'août, classée SOLIDE : sur 99 signaux, 86% se déclenchaient et 78% dès J+0, et le taux de déclenchement était donc élevé. Le contrefactuel « achat à l'ouverture, sans zone » rendait +0,043 R contre −0,045 R pour la zone publiée. La hausse médiane manquée sur les non-déclenchés, chiffrée à 0,33% en août, est contestée à 0,77% par la revue du 6 septembre : elle n'est pas republiée comme un fait. Garder le cérémonial revenait à vendre au lecteur une précision qu'on n'a pas. CE QUI A ÉTÉ ÉCARTÉ : la revue contrarian a trouvé un seau à +0,220 R pour les entrées au niveau ou sous la clôture (n=21) contre −0,260 R à +0,5/+1% (n=29). Une première version du panier plaçait la bande d'entrée sous la clôture pour le capter. C'était du sur-ajustement : rien n'établit que ce seau soit causal plutôt qu'un artefact de remplissage, la revue d'août classe explicitement ce levier « fragile, à mesurer avant d'appliquer », et Config Change Backtest l'interdit sans 30 jours de backtest. Voie de validation : 200 lignes scellées, puis validate-config-change.js en régime-aware.",
   "generatedFrom": "tools/build-scan.js",
   "universe": {
     "certified_candidates_rows": 135,
@@ -36,11 +36,11 @@
       "entry_low": 258.51,
       "entry_high": 258.51,
       "stop": 248.47,
-      "tp1": 266.4,
+      "tp1": 267.56,
       "tp2": 271.89,
-      "rr": "1:0.79",
-      "rr_entry": 0.79,
-      "tp1_atr_multiple": 1.179,
+      "rr": "1:0.90",
+      "rr_entry": 0.9,
+      "tp1_atr_multiple": 1.352,
       "horizon": 10,
       "region": "US",
       "sector": "Consumer",
@@ -123,11 +123,11 @@
         "avg_daily_dollar_volume": 8444874132,
         "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
       },
-      "thesis": "Le titre le plus liquide du vivier, 8,4 Md$ échangés par séance, revenu à 0,88% de sa moyenne 50 jours après le décrochage de fin août, avec un RSI à 49,5. C'est la seule ligne du panier dont la cible bute sur une résistance réelle plutôt que sur un multiple d'ATR : 266,40 $, le plus-haut du 19 août, à 1,18 ATR de l'entrée.",
+      "thesis": "Le titre le plus liquide du vivier, 8,4 Md$ échangés par séance, revenu à 0,88% de sa moyenne 50 jours après le décrochage de fin août, avec un RSI à 49,5. Sa cible s'appuie sur un niveau réel et non sur un multiple : 267,56 $, le plus-haut du 28 août, que le titre n'a pas repris depuis.",
       "invalidation": "Clôture sous le plus bas de la séance de référence.",
       "invalidation_level": 255.29,
       "execution": {
-        "status": "conditional_next_session",
+        "status": "limit_order_single_price",
         "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
       }
     },
@@ -143,11 +143,11 @@
       "entry_low": 88.07,
       "entry_high": 88.07,
       "stop": 85.42,
-      "tp1": 90.92,
+      "tp1": 90.26,
       "tp2": 90.99,
-      "rr": "1:1.08",
-      "rr_entry": 1.08,
-      "tp1_atr_multiple": 1.951,
+      "rr": "1:0.83",
+      "rr_entry": 0.83,
+      "tp1_atr_multiple": 1.499,
       "horizon": 10,
       "region": "US",
       "sector": "Staples",
@@ -162,7 +162,7 @@
         "stop_atr_multiple_from_entry_low": 1.81,
         "stop_pct_from_entry_low": -3.01,
         "stop_basis": "plancher_bruit",
-        "tp1_basis": "résistance"
+        "tp1_basis": "optimum_mesuré"
       },
       "avg_daily_dollar_volume": 1268197753,
       "earnings_clear": true,
@@ -209,11 +209,11 @@
         "avg_daily_dollar_volume": 1268197753,
         "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
       },
-      "thesis": "ATR à 1,66%, la plus faible volatilité du panier, et le meilleur rapport gain/risque des huit lignes (1,08) parce que sa cible s'appuie sur une résistance à 90,92 $, le plus-haut du 20 août, et non sur un multiple. C'est la ligne qui amortit : elle ne fera pas la performance, elle contiendra l'amplitude un jour de restitution générale.",
+      "thesis": "ATR à 1,66%, la plus faible volatilité des six actions du panier — seul le fonds de matières premières fait moins, à 1,43%. Sa faible amplitude quotidienne réduit la probabilité d'être stoppé par du bruit ; elle ne protège de rien en cas de baisse générale, où le stop à −3,0% se déclenche comme les autres. Réserve à connaître : le screener ne lui accorde plus que trois séances de validité résiduelle, pour un horizon annoncé de dix. C'est la ligne la plus courte du panier sur ce critère.",
       "invalidation": "Clôture sous le plus bas de la séance de référence.",
       "invalidation_level": 87.85,
       "execution": {
-        "status": "conditional_next_session",
+        "status": "limit_order_single_price",
         "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
       }
     },
@@ -295,11 +295,11 @@
         "avg_daily_dollar_volume": 799218420,
         "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
       },
-      "thesis": "Repli depuis le plus-haut du 24 août sur un volume qui décroît : 12,7 M titres au sommet contre 6,1 M à la clôture de référence. Un repli qui perd son volume est une pause, pas une sortie. RSI à 50,5, et le cours reste 1,83% au-dessus de sa moyenne 50 jours.",
+      "thesis": "Repli depuis le plus-haut du 24 août, de 12,7 millions de titres au sommet à 6,1 millions à la clôture de référence. Attention à la lecture : entre les deux, le volume n'a pas décru régulièrement, six des neuf séances intermédiaires dépassent le lendemain du sommet. RSI à 50,5, cours 1,83% au-dessus de sa moyenne 50 jours mais à 0,02% seulement de sa moyenne 200 jours — la ligne de partage est sous ses pieds. Quatre séances de validité résiduelle.",
       "invalidation": "Clôture sous le plus bas de la séance de référence.",
       "invalidation_level": 105.17,
       "execution": {
-        "status": "conditional_next_session",
+        "status": "limit_order_single_price",
         "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
       }
     },
@@ -381,11 +381,11 @@
         "avg_daily_dollar_volume": 304439218,
         "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
       },
-      "thesis": "RSI à 42,8, le plus bas du panier, et un cours SOUS sa moyenne 50 jours (−1,34%) — le seul cas où la porte d'extension autorise le négatif, précisément parce que c'est là qu'une stratégie de repli est censée acheter. Les deux dernières séances remontent depuis le creux du 1er septembre.",
+      "thesis": "RSI à 42,8, le plus bas du panier, et un cours SOUS sa moyenne 50 jours (−1,34%) — le seul cas où la porte d'extension autorise le négatif, précisément parce que c'est là qu'une stratégie de repli est censée acheter. Les deux dernières séances remontent depuis le creux du 2 septembre.",
       "invalidation": "Clôture sous le plus bas de la séance de référence.",
       "invalidation_level": 124.15,
       "execution": {
-        "status": "conditional_next_session",
+        "status": "limit_order_single_price",
         "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
       }
     },
@@ -470,11 +470,11 @@
         "avg_daily_dollar_volume": 108705944,
         "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
       },
-      "thesis": "Acier, et un cas de force relative plutôt que de vent porteur : le secteur des matériaux perd 1,39% sur la semaine au 4 septembre (avant-dernier des onze secteurs) pendant que le titre tient quinze séances de consolidation sur quinze à 11,3% au-dessus de sa moyenne 50 jours. C'est aussi le signal le plus frais du panier, détecté à la clôture de référence elle-même, avec dix séances de validité devant lui.",
+      "thesis": "Acier, et un cas de force relative : le secteur des matériaux perd 1,39% sur la semaine au 4 septembre, avant-dernier des onze, pendant que le titre gagne 6,6% sur quinze séances. À dire sans détour, parce que c'est le principal risque du panier : 78,74 $ est le plus haut cours de CLÔTURE des cent vingt dernières séances, le titre a pris 3,5% le jour même et clôture à 96% du haut de sa bougie. L'entrée est donc posée sur un plus-haut semestriel, pas sur un repli. Émetteur luxembourgeois : il dépose des formulaires 6-K et non des 8-K, donc la fenêtre de résultats est établie par son calendrier d'émetteur certifié et non par le registre américain.",
       "invalidation": "Clôture sous le plus bas de la séance de référence.",
       "invalidation_level": 77.76,
       "execution": {
-        "status": "conditional_next_session",
+        "status": "limit_order_single_price",
         "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
       }
     },
@@ -559,11 +559,11 @@
         "avg_daily_dollar_volume": 70572844,
         "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
       },
-      "thesis": "Transport pétrolier. Cassure accompagnée d'un pic de volume — c'est ce pic qui vaut à cette ligne son score brut de 86,3, soit son RSI de 66,3 plus vingt. À déclarer sans détour : la revue d'août mesure Breakout à −0,220 R sur 22 lignes et recommandait de ne plus le publier. Cette ligne est ici parce que les plafonds de concentration du dépôt rendent un panier arithmétiquement impossible avec deux stratégies seulement — Pullback plafonné à 50% et Momentum à 40% ne couvrent que 90% du panier. C'est un conflit de règles, pas une conviction, et c'est la ligne à surveiller en premier.",
+      "thesis": "Transport pétrolier. Cassure accompagnée d'un pic de volume à 1,55 fois la moyenne vingt séances. Cette ligne est publiée en connaissance de cause : la revue d'août mesure la stratégie Breakout à −0,220 R sur 22 lignes matures et recommandait de ne plus la publier. Le plafond de concentration qui a servi à justifier sa présence est, lui, explicitement consultatif — son propre fichier écrit que l'échantillon apparié de 16 lignes ne peut pas gouverner un plafond. C'est donc un arbitrage éditorial, pas une contrainte, et il est rendu du côté le moins favorable à la mesure. Émetteur étranger, même réserve de registre que MT.",
       "invalidation": "Clôture sous le plus bas de la séance de référence.",
       "invalidation_level": 20.18,
       "execution": {
-        "status": "conditional_next_session",
+        "status": "limit_order_single_price",
         "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
       }
     },
@@ -646,11 +646,11 @@
         "avg_daily_dollar_volume": 95158658,
         "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
       },
-      "thesis": "Panier de matières premières, sans formulaire fiscal K-1. Classé Energy et non ETF-Commodity : son exposition est dominée par le pétrole, et l'étiqueter par son enveloppe juridique permettait de loger une ligne énergie de plus sans que le plafond sectoriel s'en aperçoive. Avec DHT, cela fait deux lignes énergie sur huit, comptées comme telles.",
+      "thesis": "Panier de matières premières, sans formulaire fiscal K-1. Classé Energy et non ETF-Commodity : son exposition est dominée par le pétrole, et l'étiqueter par son enveloppe juridique permettait de loger une ligne énergie de plus sans que le plafond sectoriel s'en aperçoive. Avec le transport pétrolier, cela fait deux lignes énergie sur huit, comptées comme telles. Réserve : son ATR de 1,43% place le stop réglementaire à 2,14 fois l'ATR, et non 1,5 — le rapport gain/risque de 0,71 qui en résulte est à un point de base du plancher du régime. C'est la ligne la plus contrainte du panier. Fonds indiciel : porte anti-dilution sans objet.",
       "invalidation": "Clôture sous le plus bas de la séance de référence.",
       "invalidation_level": 18.78,
       "execution": {
-        "status": "conditional_next_session",
+        "status": "limit_order_single_price",
         "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
       }
     },
@@ -733,11 +733,11 @@
         "avg_daily_dollar_volume": 2675827746,
         "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
       },
-      "thesis": "Bitcoin au comptant, sans levier, 2,7 Md$ échangés par séance, de loin le fonds le plus liquide du vivier ETF. Ce qu'il est, sans emballage : une exposition à un actif unique et volatil, pas un diversificateur. Il est ici parce qu'il est, avec PDBC, l'un des deux seuls ETF du vivier certifié à la fois assez frais et assez volatil pour porter un stop conforme à la politique. Sa décorrélation au reste du panier est réelle, sa volatilité aussi.",
+      "thesis": "Bitcoin au comptant, sans levier, 2,7 Md$ échangés par séance, de loin le fonds le plus liquide du vivier ETF. C'est une exposition à un actif unique et volatil — ATR de 2,9%, deuxième du panier derrière les 3,3% du transport pétrolier — et non un diversificateur, même si sa corrélation mesurée au reste du panier est faible. Il est retenu parce qu'il est, avec le fonds de matières premières, l'un des deux seuls ETF non crypto ou non levier du vivier certifié à porter un stop conforme. Fonds indiciel : la porte anti-dilution est sans objet, faute d'émetteur d'actions à interroger.",
       "invalidation": "Clôture sous le plus bas de la séance de référence.",
       "invalidation_level": 44.51,
       "execution": {
-        "status": "conditional_next_session",
+        "status": "limit_order_single_price",
         "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
       }
     }
@@ -750,7 +750,24 @@
   "tkl_pool": [],
   "dtx_pool": [],
   "fortress_pool": [],
-  "rejected": [],
+  "rejected": [
+    {
+      "ticker": "GILD",
+      "reason": "périmé — détecté 11 séances avant la clôture de référence, aucune validité résiduelle déclarée par le screener"
+    },
+    {
+      "ticker": "WTRG",
+      "reason": "périmé — une seule séance de validité résiduelle pour un horizon de dix"
+    },
+    {
+      "ticker": "ILF",
+      "reason": "périmé — détecté 12 séances avant la clôture de référence, aucune validité résiduelle déclarée"
+    },
+    {
+      "ticker": "XOM",
+      "reason": "écarté au plafond de concentration Pullback (4 lignes sur 8) — RSI le plus élevé des cinq candidats et exposition énergie déjà portée par DHT et PDBC"
+    }
+  ],
   "provenance": [
     {
       "file": "_data2/bars_b1.json",

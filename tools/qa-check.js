@@ -492,7 +492,12 @@ check('dtx: courbe, headline et provenance décrivent le même replay', () => {
       if (Math.abs(sr - sm) > 0.05) issues.push(`${id}: staging curve return ${sr.toFixed(2)} != metrics ${sm}`);
     }
     const av = api.equityCurve?.v || [];
-    const ar = av.length > 1 ? Number(av[av.length - 1]) / Number(av[0]) * 100 - 100 : NaN;
+    // La base d'une courbe rebasée n'est pas son premier point publié — celui-ci est la première
+    // séance APRÈS le lancement, qui a déjà bougé. `rebasedTo`, publié depuis le 2026-09-06,
+    // porte la base réelle : sans elle ce contrôle reconstruisait −0,97% contre un titre à
+    // −0,86% et signalait une incohérence qui n'existait pas.
+    const abase = Number(api.equityCurve?.rebasedTo) || av[0];
+    const ar = av.length > 1 ? Number(av[av.length - 1]) / Number(abase) * 100 - 100 : NaN;
     const hm = Number(api.stats?.ret);
     if (!Number.isFinite(ar) || !Number.isFinite(hm) || Math.abs(ar - hm) > 0.05) {
       issues.push(`${id}: API curve/headline mismatch (${Number.isFinite(ar) ? ar.toFixed(2) : 'n/a'} vs ${hm})`);
