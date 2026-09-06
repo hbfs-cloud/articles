@@ -446,8 +446,14 @@ function assertReplaySanity(portfolioId, metrics) {
 
 /** Build staging from DtxDecide Contract V2. Rank-1 candidates come exclusively from
  * execution_plan.groups; actions.UPDATE/CANCEL remain compatibility control actions. */
-function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity, replayErr, engineLabel, engineMode, t0 }) {
-  const contractErrors = validateDecisionV2(decision, { asof });
+function buildStaging({ modeInfo, cfg, asof, decidedOn, currency, decision, metrics, equity, replayErr, engineLabel, engineMode, t0 }) {
+  // DEUX DATES, DEUX RÔLES. `asof` est la SÉANCE que le plan vise et dont le staging est
+  // estampillé ; `decidedOn` est la CLÔTURE sur laquelle le moteur a décidé, et c'est elle
+  // seule que le contrat compare à `requested_asof`. Sous le Contrat V2 ces dates diffèrent
+  // toujours d'une séance (décision du soir sur la clôture D pour la séance D+1) : les
+  // confondre rendait l'ingestion impossible dès qu'on estampillait correctement la séance.
+  // Sans `decidedOn`, le comportement historique est conservé.
+  const contractErrors = validateDecisionV2(decision, { asof: decidedOn || asof });
   if (contractErrors.length) throw new Error(`DtxDecide Contract V2 rejected: ${contractErrors.join('; ')}`);
   // Contract V2 execution_plan.groups is authoritative. actions.CREATE is only
   // the V1 compatibility projection and must never be consumed in parallel.

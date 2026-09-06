@@ -484,8 +484,22 @@ function writeMode(mode, prefix) {
     ? _staged.metrics : null;
   const _engMetrics = (_staged && _staged.metrics) || ((mode.engine_decision || {}).metrics) || null;
   const _metricsSource = (_staged && _staged.metricsSource) || (_served ? 'book_served_stats' : 'engine_history');
-  const _apiDecisionProvenance = (mode.engine_decision && mode.engine_decision.decisionProvenance)
-    || (_staged && _staged.decisionProvenance)
+  // QUAND UN PLAN EST EN ATTENTE, C'EST LUI QU'ON DÉCLARE.
+  //
+  // L'API donnait la priorité au registre historique, donc à la dernière décision EN VIGUEUR.
+  // Mais lorsque le staging porte un plan dont la fenêtre de validité ne s'est pas encore
+  // ouverte — cas normal d'un scan publié la veille pour la séance suivante — l'API publie
+  // zéro ordre, ce qui est correct, tout en déclarant la provenance d'un plan ANTÉRIEUR. Un
+  // lecteur ne peut alors pas distinguer « aucun plan » de « un plan existe, il est bloqué
+  // jusqu'à l'ouverture de sa fenêtre ». Le 2026-09-06, l'API annonçait ainsi le plan du
+  // 31 août alors que le staging portait celui du 8 septembre. On déclare donc le plan MIS EN
+  // ATTENTE dès qu'il en existe un, et le plan en vigueur sinon.
+  const _stagedProv = (_staged && _staged.decisionProvenance) || null;
+  const _stagedFrom = _stagedProv && Date.parse(_stagedProv.validFrom || '');
+  const _stagedGated = Number.isFinite(_stagedFrom) && Date.now() < _stagedFrom;
+  const _apiDecisionProvenance = (_stagedGated && _stagedProv)
+    || (mode.engine_decision && mode.engine_decision.decisionProvenance)
+    || _stagedProv
     || null;
   const _isReplayReconstruction = _metricsSource === 'mcp_replay' && _staged?.equityResolution === 'replay';
   // La courbe publiée est-elle bien celle du livre ? Comparaison de longueur avec le staging —

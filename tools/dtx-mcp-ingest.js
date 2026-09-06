@@ -156,8 +156,27 @@ function main() {
     }
   }
 
+  // SÉANCE VISÉE PAR LE PLAN, PAS DATE DES DONNÉES.
+  //
+  // Établi le 2026-09-06 en interrogeant le moteur dans les deux sens. `asof` désigne la
+  // dernière CLÔTURE sur laquelle décider ; le plan rendu vise la séance SUIVANTE. Vérifié :
+  // asof=2026-09-04 rend valid_from 2026-09-08, et asof=2026-09-08 rend valid_from 2026-09-09.
+  // Le staging était estampillé avec la date de données, alors que dtx-pool-bridge exige la
+  // date de séance et vérifie EN PLUS la fenêtre de validité du plan. Les deux contrôles ne
+  // pouvaient jamais être satisfaits ensemble : --date 2026-09-04 échouait sur la validité,
+  // --date 2026-09-08 échouait sur la fraîcheur du staging. On estampille donc la séance que
+  // le plan cible réellement, lue dans execution_plan.valid_from, et le staging redevient
+  // cohérent avec le seul objet qui compte : la séance où les ordres s'exécutent.
+  const planValidFrom = decide && decide.execution_plan && decide.execution_plan.valid_from;
+  const targetSession = (typeof planValidFrom === 'string' && /^\d{4}-\d{2}-\d{2}/.test(planValidFrom))
+    ? planValidFrom.slice(0, 10)
+    : opts.asof;
+  if (targetSession !== opts.asof) {
+    console.log(`  [${modeInfo.id}] séance visée ${targetSession} (décision calculée sur la clôture ${opts.asof})`);
+  }
+
   const out = scan.buildStaging({
-    modeInfo, cfg, asof: opts.asof, currency,
+    modeInfo, cfg, asof: targetSession, decidedOn: opts.asof, currency,
     decision: decide, metrics, equity, replayErr,
     engineLabel: 'dtx (systematic-tss) — MCP', engineMode: 'mcp', t0,
   });
@@ -165,7 +184,7 @@ function main() {
   // POINT-IN-TIME (idea #8) : --pit → écrit dans data/dtx/<id>@<asof>.json (entrée dédiée par as-of)
   // pour qu'un replay de RÉTRO n'écrase JAMAIS la staging LIVE du mode (data/dtx/<id>.json), et
   // réciproquement. Sans --pit → chemin live inchangé (pipeline nocturne intact). --out prime toujours.
-  const outPath = opts.out || scan.stagingPathFor(modeInfo.id, { asof: opts.asof, pit: opts.pit });
+  const outPath = opts.out || scan.stagingPathFor(modeInfo.id, { asof: targetSession, pit: opts.pit });
 
   // ── ⛔ ANTI-GEL (frozen-orders) — tripwire de régression (root cause corrigée côté MCP le 21/07/2026) ──
   // Bug 09→21/07 : DtxDecide renvoyait des CREATE FIGÉS à J-9, ré-ingérés en silence chaque soir. Les
