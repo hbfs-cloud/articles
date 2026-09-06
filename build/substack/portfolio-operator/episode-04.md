@@ -13,11 +13,13 @@ Each part stands on its own. This is 4 of 6 in Operate a Portfolio, Not a Collec
 
 Eight winning trades in a row proves nothing. On a small but real edge, and even on a strategy with no edge at all, that run shows up by chance more often than people expect. It is also the moment most accounts double their size.
 
-So write the ladder while you are bored, not while you are winning.
-
 ![Add to a position on evidence, not on relief](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/scaling_ladder.png)
 
+So write the ladder while you are bored, not while you are winning.
+
 A ladder is a short list: account levels, and the size allowed at each one. Round teaching numbers show the shape. Call the starting account 100, and call your normal trade size 1.0×. Every time the account is 10% higher, size steps up by about a quarter. At 110 you may trade 1.25×. At 121, 1.55×. At 133, 1.95×. Fall back under a level and you drop a rung. No vertical jumps, and no increase at all while the account sits below its previous high.
+
+![The rung, not the streak, decides size](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/examples/portfolio-operator_episode-04.png)
 
 That is the exact opposite of the old casino habit of betting bigger after a loss to win it back. Bigger after money is actually banked; smaller after money is lost.
 
@@ -29,14 +31,16 @@ Then comes the part almost nobody tests: capacity. A method that prints on small
 
 Before you climb a rung:
 
-- Write the promotion and demotion rules down, then leave them alone.
-- Record every fill at your current size: price expected versus price obtained.
-- Send a few real orders at the next rung's size and read the fills before committing.
-- Check the larger allocation against your per-trade, sector and borrowing limits.
-- Keep the old rung running while the new one is being proved.
-- Step back down on a capacity or control breach, even when the trade made money.
+1. Write the promotion and demotion rules down, then leave them alone.
+1. Record every fill at your current size: price expected versus price obtained.
+1. Send a few real orders at the next rung's size and read the fills before committing.
+1. Check the larger allocation against your per-trade, sector and borrowing limits.
+1. Keep the old rung running while the new one is being proved.
+1. Step back down on a capacity or control breach, even when the trade made money.
 
-One number must never move: risk per trade as a share of the account. Risk 1% at $20,000 and you still risk 1% at $200,000 — $200 becomes $2,000, same fraction. Chart that percentage on its own, separate from profit. It should be a flat line. The slide from 1% to 3% is how a path whose worst decline was 12% turns into one whose worst decline was 34%.
+<mark>One number must never move: risk per trade as a share of the account.</mark> Risk 1% at $20,000 and you still risk 1% at $200,000 — $200 becomes $2,000, same fraction. Chart that percentage on its own, separate from profit. It should be a flat line. The slide from 1% to 3% is how a path whose worst decline was 12% turns into one whose worst decline was 34%.
+
+> Size climbs on banked money and proven fills. The fraction you risk climbs on nothing.
 
 **Limitation:** no small test reveals real market impact at ten times the size, and the liquidity you measured can be gone the day you need it. A ladder forecasts nothing. It only slows the climb down enough to be checked.
 

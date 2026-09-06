@@ -19,7 +19,7 @@ Done or not done. That is how most retail code stores an order, and it is fine r
 
 A state machine is the boring fix: a written list of the states an order may occupy and the moves allowed between them. Anything outside the list raises an error instead of quietly overwriting what you knew.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![Every order ends reconciled](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/order_state_machine.png)
 
 **Input from last Friday:** the accepted deterministic broker simulator contract.
 
@@ -27,7 +27,7 @@ A state machine is the boring fix: a written list of the states an order may occ
 
 ## Build this
 
-Draw the whole thing on one page: submitted, acknowledged, partially filled, filled, cancel requested, cancelled, rejected, expired. Then decide which arrows exist between them. Cancel requested may still reach filled — that arrow is legal and it is the one that hurts. Submitted may not reach cancelled without passing through a request.
+Draw the whole thing on one page: submitted, acknowledged, partially filled, filled, cancel requested, cancelled, rejected, expired. Then decide which arrows exist between them. <mark>Cancel requested may still reach filled — that arrow is legal and it is the one that hurts.</mark> Submitted may not reach cancelled without passing through a request.
 
 Store every transition with where it came from and when: your own send, the broker's message, a timeout your code invented. Sources matter, because a timeout is a guess about the world, not news from it.
 

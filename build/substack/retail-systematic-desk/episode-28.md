@@ -17,7 +17,7 @@ Each part stands on its own. This is 28 of 45 in Build a Retail Systematic Desk,
 
 A stop distance tells you what one trade costs when the exit works. Size has to answer the harder question: what the book carries when it doesn't. Prices jump over stops overnight. Fills land worse than the level you asked for. So the loss budget is an aim, not a wall.
 
-Which means you compute the quantity several times, once per ceiling, and keep the smallest.
+<mark>Which means you compute the quantity several times, once per ceiling, and keep the smallest.</mark>
 
 ![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
 
@@ -30,6 +30,8 @@ Which means you compute the quantity several times, once per ceiling, and keep t
 Four ceilings. The loss budget. The stressed version of it, same stop widened by the worst overnight jump you are willing to assume. The concentration cap, meaning the most any single name may weigh. And the liquidity cap, tied to how many shares change hands on an ordinary day, because a position you cannot leave is not a position you own.
 
 Made-up figures, here only to show the shape of the sheet: a paper book of 100,000 units, 0.5% budget per trade, so 500 units of loss allowed. SYM_A stops 4% away, which permits 12,500 of exposure. Widen that stop to a 9% gap and the same 500 units allows 5,500. Concentration caps the name at 8,000. Liquidity caps it at 4,200. The sheet keeps 4,200, rounds down to a quantity the broker will accept, and records that liquidity governed, not risk. People skip that last field. It is the only one that later explains why the position was small.
+
+![Four ceilings, and the sheet keeps the smallest](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/examples/retail-systematic-desk_episode-28.png)
 
 ### Minimum record
 

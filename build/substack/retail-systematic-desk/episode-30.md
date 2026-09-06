@@ -17,9 +17,9 @@ Each part stands on its own. This is 30 of 45 in Build a Retail Systematic Desk,
 
 A kill switch is a rule that stops the desk from taking on anything new once a line you drew in advance gets crossed. It is not a guarantee. Orders may not cancel; positions may not close.
 
-Earnings dates, macro releases, a trading halt, a broker whose connection goes quiet — each changes execution risk far faster than a model that recalculates once a day. Those belong in the plan before an order exists, not in your judgement at the moment of placing it.
+Earnings dates, macro releases, a trading halt, a broker whose connection goes quiet — each changes execution risk far faster than a model that recalculates once a day. <mark>Those belong in the plan before an order exists, not in your judgement at the moment of placing it.</mark>
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![Not all dates are known equally far in advance](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/calendar_certainty.png)
 
 **Input from last Friday:** the accepted factor-exposure stress map.
 
@@ -54,3 +54,5 @@ Three drills: a date you only half trust, a confirmed release, a broker outage m
 **NO-GO:** an unusually attractive candidate is not a reason to step around a kill state. That is the exact moment the switch exists for. On confirming a corporate event from the filing itself: [SEC: Form 8-K](https://www.sec.gov/info/edgar/forms/form8-k.pdf). On when the market is open at all: [NYSE: Hours and Calendars](https://www.nyse.com/markets/hours-calendars). Educational, not investment advice.
 
 **Next Friday:** the accepted runbook goes into Simulate the Broker Before Connecting One.
+
+> A kill state you can talk yourself out of is not a kill state.

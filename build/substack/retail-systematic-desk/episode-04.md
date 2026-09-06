@@ -25,9 +25,9 @@ Four walls, minimum. A fifth thing, the screen, explains the state of the desk a
 | Execution | broker calls and fills | repair a missing field by guessing |
 | Screen | the view | become the source of truth |
 
-![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
+Why bother. A toy incident, times invented, shape ordinary: the price feed dies at 14:12. Facts stop arriving. The decision layer produces no plan and says exactly why. The screen turns amber and prints stale. The ledger, meaning the record of what is actually held, changes zero rows. <mark>An outage became an abstention instead of a fabrication, and that is the entire return on this week's work.</mark>
 
-Why bother. A toy incident, times invented, shape ordinary: the price feed dies at 14:12. Facts stop arriving. The decision layer produces no plan and says exactly why. The screen turns amber and prints stale. The ledger, meaning the record of what is actually held, changes zero rows. An outage became an abstention instead of a fabrication, and that is the entire return on this week's work.
+![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
 
 **Input from last Friday:** the accepted instrument eligibility table.
 

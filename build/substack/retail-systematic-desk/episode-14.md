@@ -17,9 +17,9 @@ Each part stands on its own. This is 14 of 45 in Build a Retail Systematic Desk,
 
 "I reviewed the data" is a sentence, not a proof. Bind the review to the exact files instead. A hash is a fingerprint: a short string computed from a file, which changes completely if a single byte inside it moves. Fingerprint each input, then fingerprint the ordered list of fingerprints, and you get one string that stands for the whole evidence set.
 
-Say what that string does not do, because people oversell it. It proves the files match a copy you trusted earlier. It says nothing about whether the files are complete, whether the numbers in them are true, or when they were really created.
+Say what that string does not do, because people oversell it. It proves the files match a copy you trusted earlier. <mark>It says nothing about whether the files are complete, whether the numbers in them are true, or when they were really created.</mark>
 
-![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
+![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
 **Input from last Friday:** The accepted single-cut snapshot manifest.
 

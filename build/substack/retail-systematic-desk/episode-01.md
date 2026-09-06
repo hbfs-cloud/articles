@@ -15,7 +15,7 @@ Before the first line of code, write one page that says what this system may do 
 
 Then count what you just signed up for. A toy count, invented to show the shape rather than to be copied: one market, one decision moment per day, one order family gives you three things that can be wrong at seven in the morning. Add index options, a second broker and a coin that trades all weekend, and the same one-person desk is watching four clocks, three ways of spelling the same instrument, two settlement rules and a funding charge. Scope is not ambition. Scope is how many alarms one person can answer alone.
 
-![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
+![Add to a position on evidence, not on relief](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/scaling_ladder.png)
 
 **Input from last Friday:** a blank repository and a named human owner.
 
@@ -23,7 +23,7 @@ Then count what you just signed up for. A toy count, invented to show the shape 
 
 ## Build this
 
-One page, two columns: in scope, out of scope. Any feature not written down starts at no and stays at no until someone can point to data coverage, a test and an owner. Name the pause, too: who stops the desk, and what forces it back to paper mode, where orders are written down and never sent.
+One page, two columns: in scope, out of scope. <mark>Any feature not written down starts at no and stays at no until someone can point to data coverage, a test and an owner.</mark> Name the pause, too: who stops the desk, and what forces it back to paper mode, where orders are written down and never sent.
 
 ### Minimum record
 
@@ -51,3 +51,5 @@ Educational, not investment advice.
 **NO-GO:** no scanner while the universe, the daily clock or the permitted products can still change mid-run.
 
 **Next Friday:** the signed mandate goes into Define Non-Goals and Kill Criteria.
+
+> Everything the desk may do fits on one page — and what is not on the page, it may not do.

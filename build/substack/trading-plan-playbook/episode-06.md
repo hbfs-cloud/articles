@@ -17,7 +17,7 @@ swing trader. An hour-long intraday ritual is the version people abandon in thre
 
 Four states, always in this order: prepare, watch, execute, record.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![Every order ends reconciled](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/order_state_machine.png)
 
 **Prepare**, away from the noise. Review the list. Mark the names sitting within 2% of their trigger, since
 those are the only ones that can act tomorrow. Check the calendar. Most swing plans refuse a new entry when
@@ -29,7 +29,7 @@ the current spread or whether the trigger actually happened. A price moving fast
 invent a new setup at 3 p.m.
 
 **Execute** turns the note into a broker ticket, with the entry, the stop and the target sent together as a
-linked order. A stop you intend to place later is a stop that does not exist. Investor.gov notes that a
+linked order. <mark>A stop you intend to place later is a stop that does not exist.</mark> Investor.gov notes that a
 market order generally favours execution over a guaranteed price, while a limit order controls price and
 may not execute at all; routing and movement affect the fill. Pick the trade-off deliberately, not out of
 habit.
@@ -49,14 +49,16 @@ the ticket above, price dipped to €150.10, then ran to €161.20 before you so
 came near €148.90. The run says the market offered €8.80 and you took €7.40. One trade proves nothing;
 thirty of these will tune your stops and targets better than any opinion.
 
+![What the trade offered, what you took](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/examples/trading-plan-playbook_episode-06.png)
+
 Run this compact check at the ticket:
 
-- Setup still valid, source information still current?
-- Trigger observed, not anticipated?
-- Order type, duration and session correct?
-- Size inside the trade, liquidity and portfolio caps?
-- Protective instruction accepted and visible on screen?
-- Actual fill and any exception saved?
+1. Setup still valid, source information still current?
+1. Trigger observed, not anticipated?
+1. Order type, duration and session correct?
+1. Size inside the trade, liquidity and portfolio caps?
+1. Protective instruction accepted and visible on screen?
+1. Actual fill and any exception saved?
 
 **Limitation:** a routine cannot stop a platform failing, an order being rejected, data arriving late, a
 halt, or a fill outside the expected range. Automation adds its own configuration and connectivity risks.

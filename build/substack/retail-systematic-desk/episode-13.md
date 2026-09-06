@@ -19,13 +19,13 @@ Pick a candidate on Tuesday's close, then check its filings on Wednesday morning
 
 **Input from last Friday:** The accepted corporate-action reconciliation runbook.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
-
 **Friday deliverable:** A single-cut snapshot manifest: the list of what was captured, when, and from which version of each source.
+
+![Between the event and your screen, time passes](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/information_clock.png)
 
 ## Build this
 
-Stamp an identifier on the snapshot the moment you collect it. Every page of prices, every filing, every number you compute from them carries that same identifier, or it does not belong to the decision. Say out loud in the record which close you expected. Keep two separate piles: checks that must pass, and checks that are nice to have. Mixing those piles is how a weak candidate borrows credit from a strong one.
+Stamp an identifier on the snapshot the moment you collect it. <mark>Every page of prices, every filing, every number you compute from them carries that same identifier, or it does not belong to the decision.</mark> Say out loud in the record which close you expected. Keep two separate piles: checks that must pass, and checks that are nice to have. Mixing those piles is how a weak candidate borrows credit from a strong one.
 
 ### Minimum record
 
@@ -52,3 +52,5 @@ Educational, not investment advice.
 **NO-GO:** Two reviewers reading two different cuts cannot certify one plan, however confident either of them sounds.
 
 **Next Friday:** Carry the accepted manifest into Hash the Evidence, Not the Narrative.
+
+> A plan assembled from two moments was never true at either of them.

@@ -15,7 +15,7 @@ Each part stands on its own. This is 6 of 6 in The 30-Second Trade Signal Check;
 ::end
 
 Run these gates in order before an order exists. During research, complete every field so one early failure
-does not hide the next defect. At execution time, any hard failure stops the trade.
+does not hide the next defect. <mark>At execution time, any hard failure stops the trade.</mark>
 
 1. **Is the entry rule explicit and still inside its validity window?** Include trigger, order type and
    maximum acceptable slippage.
@@ -30,7 +30,7 @@ does not hide the next defect. At execution time, any hard failure stops the tra
 7. **Can every decisive number be reproduced point in time?** Record source, timestamp, coverage, version
    and method.
 
-![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
+![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
 
 The purpose-selected historical `CLF` candidate shows how the check rejects a plausible chart. It fails
 gate 1 because intraday versus closing activation, order type, validity window and slippage were not

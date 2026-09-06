@@ -11,7 +11,7 @@ source_path: "series/marketwatch-checklist/part2-scanner/index.html"
 Each part stands on its own. This is 2 of 7 in The Market Checklist; earlier parts cover the groundwork but you can start here.
 ::end
 
-A screen exists to throw things away. It is very good at that and very bad at the other job people give it. First place in a ranking means "look at this next." It never means "buy this."
+A screen exists to throw things away. It is very good at that and very bad at the other job people give it. <mark>First place in a ranking means "look at this next." It never means "buy this."</mark>
 
 Hunting by hand does not work either, and the reason is not laziness. You go back to the tickers you already know, the ones you traded last month, the ones in your feed. A screen has no memory and no favourites. It walks the whole list with the same indifference every evening.
 
@@ -31,12 +31,14 @@ Verification comes last, and it is the pass most people skip. Open the issuer's 
 
 Before you rank anything:
 
-- Freeze the universe and the liquidity rules, then run the screen.
-- Keep eligibility fields and ranking fields in separate columns.
-- Check filings, event dates, spread, depth, and how the product is built.
-- Save the timestamp, and record the reason for every manual override.
+1. Freeze the universe and the liquidity rules, then run the screen.
+1. Keep eligibility fields and ranking fields in separate columns.
+1. Check filings, event dates, spread, depth, and how the product is built.
+1. Save the timestamp, and record the reason for every manual override.
 
 Limitation: a screen cannot see a change that has not reached its data yet, and delayed quotes make liquidity look better than it is. It will also throw out an excellent but unusual setup now and then. Overrides are fine when written down before entry; silent ones destroy the record. In March 2026 the eight European and Asian names I screened produced nothing at all, which is a small sample and a reason to look harder, not a law.
+
+> The screen buys you time to verify. It does not do the verifying.
 
 Sources: [Investor.gov: Using EDGAR to Research Investments](https://www.investor.gov/introduction-investing/getting-started/researching-investments/using-edgar-research-investments), [Investor.gov: Researching Investments](https://www.investor.gov/introduction-investing/getting-started/researching-investments).
 

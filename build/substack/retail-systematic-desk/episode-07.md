@@ -15,11 +15,11 @@ send_email: false
 Each part stands on its own. This is 7 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-Services change under you. A tool gets renamed, a field quietly disappears, an account loses the right to place one kind of order. If your program is carrying last month's list of what the service can do, it will happily call something that no longer exists, and it will find that out halfway through a run. Ask instead. Every morning, before anything else.
+Services change under you. A tool gets renamed, a field quietly disappears, an account loses the right to place one kind of order. <mark>If your program is carrying last month's list of what the service can do, it will happily call something that no longer exists, and it will find that out halfway through a run.</mark> Ask instead. Every morning, before anything else.
+
+![Without the record, the loop is just repetition](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/journal_loop.png)
 
 **Input from last Friday:** the accepted partial-failure fixture pack, meaning the file of saved fake responses you replay in tests.
-
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
 **Friday deliverable:** a capability bootstrap report, one page saying what the service claimed it could do at the start of today's run, filed with the run's paperwork.
 

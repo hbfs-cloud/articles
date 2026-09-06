@@ -21,8 +21,6 @@ the plan version that was live at entry. Keep hindsight in a separate line. A pr
 still a rule break; a planned loss is a clean trade. One to three trades is noise, so no verdict about the
 strategy gets pronounced today.
 
-![The average hides the shape](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/r_distribution.png)
-
 **Weekly, thirty to forty-five minutes, when the emotion has drained.** Five to fifteen trades is enough to
 show a pattern, and the week is short enough to catch a bad habit before it sets. Group trades and skipped
 signals by setup version. Look for late entries, size overrides, unrecorded event exposure, rejected
@@ -39,20 +37,22 @@ positions overlapped. Break-even sits at 1 ÷ (1 + payoff), so 1 ÷ 2.80, near 3
 real room. FINRA notes that performance comparisons need an appropriate benchmark and must account for risk
 and costs. A short-term process usually needs more than one reference, and none of them proves skill.
 
+![What a reward/risk ratio actually demands of you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/rr_vs_winrate.png)
+
 Losing streaks are where people quit good systems. At a 55% hit rate, five losses in a row have a
 probability of 0.45 to the fifth power, roughly 1.8% per sequence. Rare, and over hundreds of trades it
 will happen to you. Before reacting, ask three questions: how many trades is this, is expectancy sliding on
 a rolling window or just dipping, and has your adherence rate fallen. Under about 30 trades, the answer is
-almost always noise. And the "system that stopped working" is very often a trader who stopped running it.
+almost always noise. <mark>And the "system that stopped working" is very often a trader who stopped running it.</mark>
 
 Use this checklist:
 
-- Reconcile trades, fees and open positions.
-- Preserve the plan version and the source timestamps.
-- Keep adherence findings apart from outcome findings.
-- Disclose exclusions and missing observations.
-- Compare only compatible periods and benchmarks.
-- Approve at most one clearly specified change for the next test.
+1. Reconcile trades, fees and open positions.
+1. Preserve the plan version and the source timestamps.
+1. Keep adherence findings apart from outcome findings.
+1. Disclose exclusions and missing observations.
+1. Compare only compatible periods and benchmarks.
+1. Approve at most one clearly specified change for the next test.
 
 **Limitation:** a calendar does not manufacture an adequate sample or independent observations. Regime
 shifts, overlapping positions, changing capital, taxes and parallel strategy variants all defeat simple

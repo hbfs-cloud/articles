@@ -19,8 +19,6 @@ Compare the two one-point moves. Down 7.8% against up 8.5%. Not symmetric. That 
 
 The mechanism is arithmetic, not economics. Your coupon is frozen at 4%. If new bonds pay 5%, nobody buys yours at par, so the price falls until the buyer's return matches the market. When yields drop, that frozen 4% becomes more valuable and the price climbs. Nothing about the contract changed.
 
-![Amplification is symmetric](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/high_beta.png)
-
 Duration puts a number on the sensitivity. <mark>The working rule: percentage price change equals minus duration multiplied by the yield change.</mark> Duration 7, yields up one point, expect roughly minus 7%. Desks scale that into dollars. A $10 million book with duration 7 loses about $7,000 per basis point of yield. That figure, the DV01, is how a rates position gets sized in practice.
 
 Match the measure to the instrument. Modified duration is fine for fixed cash flows. Effective duration is the one to use when calls or mortgage prepayments can move the payment dates around. Longer maturities push duration up. Bigger coupons pull it down, because more money arrives sooner. A ten-year zero-coupon bond has duration 10, since there is exactly one payment and it lands at the end. A two-year 4% coupon bond sits near 1.9.

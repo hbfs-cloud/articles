@@ -17,23 +17,23 @@ Use explicit formulas:
 
 `realized R = net trade profit or loss / initial planned dollar risk`
 
-![The average hides the shape](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/r_distribution.png)
-
 `sample mean R = sum of realized R outcomes / number of included trades`
+
+![The average hides the shape](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/r_distribution.png)
 
 For a long stock trade, initial planned dollar risk can begin with entry-to-invalidation distance times shares, then include the method's predeclared treatment of expected transaction costs. Keep that convention stable. If realized losses can exceed the initial amount because of gaps or slippage, preserve values below -1R rather than clipping them.
 
 Take a hypothetical trade of 100 shares filled at $40.00 with initial invalidation at $39.50. Price risk is $50. Suppose the journal's fixed convention adds $4 of estimated round-trip costs, making initial planned risk $54. An exit at $40.75 creates $75 gross profit; after $4 of actual costs, net profit is $71. Realized R is $71 divided by $54, or about 1.31R. The example is arithmetic, not evidence that this setup is profitable.
 
-Now consider four hypothetical net outcomes: +1.3R, -1.0R, +0.4R, and -0.8R. The hit rate is 50 percent, yet the sample mean is -0.025R per trade. The average winner is 0.85R and the average losing magnitude is 0.9R. These are descriptions of four observations, not a reliable forward estimate. A different trade or one large gap could materially change them.
+Now consider four hypothetical net outcomes: +1.3R, -1.0R, +0.4R, and -0.8R. <mark>The hit rate is 50 percent, yet the sample mean is -0.025R per trade.</mark> The average winner is 0.85R and the average losing magnitude is 0.9R. These are descriptions of four observations, not a reliable forward estimate. A different trade or one large gap could materially change them.
 
 For each review, calculate:
 
-- Net realized R for every eligible signal, with exclusions disclosed.
-- Hit rate and average win and loss, without treating either as sufficient alone.
-- Median, range, and the largest gains and losses to expose skew.
-- Results by predeclared setup version and relevant regime label.
-- Dollar returns and costs alongside R, since R normalization can hide capital usage.
+1. Net realized R for every eligible signal, with exclusions disclosed.
+1. Hit rate and average win and loss, without treating either as sufficient alone.
+1. Median, range, and the largest gains and losses to expose skew.
+1. Results by predeclared setup version and relevant regime label.
+1. Dollar returns and costs alongside R, since R normalization can hide capital usage.
 
 FINRA's return guidance includes changes in value, income, and transaction fees. For a trading journal, that supports the same basic discipline: use net economic outcomes and compare like with like. Do not annualize a short run of R outcomes or compare it mechanically with a long-term investment benchmark.
 

@@ -21,10 +21,10 @@ close.
 This case was selected after the event to show the mechanics of a gap. It does not estimate a typical
 earnings move or the probability of another one.
 
-![A stop cannot fill where no price exists](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/gap_and_stop.png)
+No regular-session trade occurred in the $21.04 between the prior close and the new opening price. <mark>A
+stop placed inside that empty interval could not create a buyer at its chosen level.</mark>
 
-No regular-session trade occurred in the $21.04 between the prior close and the new opening price. A
-stop placed inside that empty interval could not create a buyer at its chosen level.
+![A stop cannot fill where no price exists](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/gap_and_stop.png)
 
 A stop-market sell becomes a market order after the trigger condition is met. When a stock opens below
 the trigger, the order can execute near the available opening price. A stop-limit order refuses to sell
@@ -60,6 +60,8 @@ adjacent daily bars.
 
 The price figures come from unadjusted Yahoo daily bars collected on August 31, 2026. They are a post-event
 reconstruction, not a claim about what a live feed displayed at the opening print.
+
+> A stop instructs an order; it does not reserve a price. Decide the earnings treatment while the position is still hypothetical.
 
 Sources: [the fiscal 2026 company results](https://investors.tapestry.com/news-releases/news-release-details/tapestry-inc-reports-fiscal-2026-fourth-quarter-and-full-year)
 and the SEC's [Trading Basics guide](https://www.investor.gov/sites/default/files/trading101basics.pdf).

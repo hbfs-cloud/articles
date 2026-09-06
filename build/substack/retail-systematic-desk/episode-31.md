@@ -17,9 +17,9 @@ Each part stands on its own. This is 31 of 45 in Build a Retail Systematic Desk,
 
 Most home-built simulators get written to answer the wrong question. They are asked whether the strategy makes money. What they should be asked is whether the code that talks to a broker survives everything a broker does to it: rejections, half-fills, features that simply are not there.
 
-So build one that lies to you as little as possible, and never in your favour. Fills at the price you wanted, always, is a bug pretending to be a result.
+So build one that lies to you as little as possible, and never in your favour. <mark>Fills at the price you wanted, always, is a bug pretending to be a result.</mark>
 
-![Every order ends reconciled](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/order_state_machine.png)
+![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
 
 **Input from last Friday:** the accepted event-and-kill-state runbook.
 
@@ -54,3 +54,5 @@ Point the client at both brokers without changing a line of it. The plan may onl
 **NO-GO:** never paper over a missing broker feature with a workaround that changes the plan quietly. A rejection you can read beats a substitution you cannot. On what each order type actually promises: [Investor.gov: Types of Orders](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders). On the duty behind a fill: [FINRA: Best Execution](https://www.finra.org/rules-guidance/key-topics/best-execution). Educational, not investment advice.
 
 **Next Friday:** the accepted contract goes into Build an Explicit Order State Machine.
+
+> A simulator earns its keep by refusing what the broker would refuse, not by filling what you hoped.

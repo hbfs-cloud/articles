@@ -19,7 +19,7 @@ Rules buried inside code are invisible rules. You nudge a number on a Tuesday, a
 
 The shape of the file is what this lesson shares. Whatever values you eventually put in it are yours and stay yours.
 
-![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
+![You correct by adding, never by erasing](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/append_only_ledger.png)
 
 **Input from last Friday:** the accepted expiring conditional plan.
 
@@ -27,7 +27,7 @@ The shape of the file is what this lesson shares. Whatever values you eventually
 
 ## Build this
 
-A schema is the list of fields the file may contain, with the type each one must be. Cover which universe you trade, when the engine runs, which inputs it needs, who owns risk, and what it emits. Every edit raises the version and records the date it takes effect. New engine behaviour ships switched off; a feature flag — a plain on/off setting — turns it on for one configuration without disturbing the others.
+A schema is the list of fields the file may contain, with the type each one must be. Cover which universe you trade, when the engine runs, which inputs it needs, who owns risk, and what it emits. <mark>Every edit raises the version and records the date it takes effect.</mark> New engine behaviour ships switched off; a feature flag — a plain on/off setting — turns it on for one configuration without disturbing the others.
 
 ### Minimum record
 

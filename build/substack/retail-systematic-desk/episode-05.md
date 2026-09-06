@@ -15,7 +15,7 @@ send_email: false
 Each part stands on its own. This is 5 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-A closing price is a fact. A ranked shortlist is an opinion. An order is an instruction that money obeys. Same evening, same symbol, three objects with three owners — and the accident to prevent is one quietly being promoted into the next.
+A closing price is a fact. A ranked shortlist is an opinion. An order is an instruction that money obeys. <mark>Same evening, same symbol, three objects with three owners — and the accident to prevent is one quietly being promoted into the next.</mark>
 
 Toy records, invented, trimmed to the fields that carry weight:
 
@@ -25,7 +25,7 @@ decision  d_402    reads f_1183      stop attached    valid until next open
 order     o_77     reads d_402       limit, day       key d_402-1
 ```
 
-![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
+![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
 That last field is an idempotency key: a label saying this is the same instruction, so a retry after a timeout cannot open the position twice. The validity line matters just as much. A decision expires. Last week's plan does not become current tonight because the quote looks familiar.
 

@@ -17,7 +17,7 @@ Each part stands on its own. This is 6 of 45 in Build a Retail Systematic Desk, 
 
 Ten symbols requested after the close. Nine daily bars come back, one times out. The options page answers for four of them and hangs on the rest. Invented numbers, ordinary evening.
 
-The dishonest version of that evening reports ten out of ten and writes a zero where the missing bar belongs. Zero is a value. Missing is not a value, and the two must never share a cell. Nor must stale, which deserves its own word: data that is real and correctly recorded and simply too old to act on.
+The dishonest version of that evening reports ten out of ten and writes a zero where the missing bar belongs. Zero is a value. <mark>Missing is not a value, and the two must never share a cell.</mark> Nor must stale, which deserves its own word: data that is real and correctly recorded and simply too old to act on.
 
 ![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
 
@@ -50,3 +50,5 @@ Educational, not investment advice.
 **NO-GO:** ship nothing while the screen still cannot tell zero, not applicable, unavailable and stale apart.
 
 **Next Friday:** the fixture report goes into Discover Capabilities at Runtime.
+
+> Stale, missing and zero are three different words because they demand three different answers.

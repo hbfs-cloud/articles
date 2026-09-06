@@ -15,13 +15,13 @@ send_email: false
 Each part stands on its own. This is 12 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-A price chart can run smooth and straight while the thing underneath it quietly changed shape. A split — the company cuts each share into several smaller ones — a merger, a one-off cash payment: the line survives, the instrument does not. Adjusted history is fine for measuring past returns. It is not permission to rewrite what your broker is holding right now.
+<mark>A price chart can run smooth and straight while the thing underneath it quietly changed shape.</mark> A split — the company cuts each share into several smaller ones — a merger, a one-off cash payment: the line survives, the instrument does not. Adjusted history is fine for measuring past returns. It is not permission to rewrite what your broker is holding right now.
 
 **Input from last Friday:** The accepted temporal-field contract.
 
-![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
-
 **Friday deliverable:** A corporate-action reconciliation runbook — one page saying who checks what, in which order — filed with the week's evidence.
+
+![Every order ends reconciled](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/order_state_machine.png)
 
 ## Build this
 
@@ -53,3 +53,5 @@ Educational, not investment advice.
 **NO-GO:** An action you cannot line up across data and broker records means the instrument stays frozen until you can.
 
 **Next Friday:** Carry the accepted runbook into Use One Snapshot for One Decision.
+
+> Freeze the instrument, read the broker's own records, then repair — in that order.

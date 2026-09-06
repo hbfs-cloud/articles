@@ -15,11 +15,11 @@ send_email: false
 Each part stands on its own. This is 35 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-Supersession is a long word for a plain rule. When a new version of the plan takes over, the old version stops existing, all at once. Half a swap is the dangerous state: you inherit the old exit level and the new position size, a combination nobody designed and nobody reviewed.
+Supersession is a long word for a plain rule. When a new version of the plan takes over, the old version stops existing, all at once. <mark>Half a swap is the dangerous state: you inherit the old exit level and the new position size, a combination nobody designed and nobody reviewed.</mark>
 
 Recovery is that rule seen from the other side. A process coming back from a crash must be able to say which revision was in charge, what is actually working in the market, and whether every open position still carries its protective exit.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![A spread is one trade only while both legs exist](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/spread_legs.png)
 
 **Input from last Friday:** the accepted checkpointed decision ledger.
 
@@ -57,3 +57,5 @@ With incomplete evidence, it stays `unknown`, blocks every change and calls a hu
 **NO-GO:** never leave two revisions active at the same time, and never merge candidates across them.
 
 **Next Friday:** carry the accepted report into Make Every Run Auditable.
+
+> A restart is not a fresh start. It is a claim about which revision was in charge, and whether every open position is still protected.

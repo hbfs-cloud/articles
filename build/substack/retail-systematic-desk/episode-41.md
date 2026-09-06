@@ -15,13 +15,13 @@ send_email: false
 Each part stands on its own. This is 41 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-An empty card teaches the reader that nothing is wrong. That is the failure. On a screen, silence and calm look identical, and only one of the two is safe to act on.
+An empty card teaches the reader that nothing is wrong. That is the failure. <mark>On a screen, silence and calm look identical, and only one of the two is safe to act on.</mark>
 
 **Input from last Friday:** the decision-first summary you accepted.
 
-![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
-
 **Friday deliverable:** A missing-data impact component, owned by the desk operator and filed with the week's evidence.
+
+![Between the event and your screen, time passes](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/information_clock.png)
 
 ## Build this
 
@@ -52,3 +52,5 @@ Educational, not investment advice.
 **NO-GO:** never compute a score across a gap, and never pad a layout with N/A tiles.
 
 **Next Friday:** this component feeds Use Alerts That Lead to Decisions.
+
+> Unavailable is not a state of calm. It is a fault with an owner, a clock running on it, and a named next step.

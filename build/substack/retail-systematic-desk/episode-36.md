@@ -17,9 +17,9 @@ Each part stands on its own. This is 36 of 45 in Build a Retail Systematic Desk,
 
 Most scheduled runs decide nothing at all. That is normal. It is also why a quiet day and a dead pipeline have to look different in your records, because from the outside both produce the same thing: no orders.
 
-So silence gets written down. Every run opens an envelope and every run closes it. Closed with `no_action` is a result you can trust. No envelope is an incident, and it should wake you as loudly as a stack trace would.
+So silence gets written down. Every run opens an envelope and every run closes it. Closed with `no_action` is a result you can trust. <mark>No envelope is an incident, and it should wake you as loudly as a stack trace would.</mark>
 
-![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
+![Without the record, the loop is just repetition](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/journal_loop.png)
 
 EDGAR has that property at national scale: the absence of a filing on a date is itself information, because the archive is complete by construction ([Investor.gov: Using EDGAR](https://www.investor.gov/introduction-investing/getting-started/researching-investments/using-edgar-research-investments)). Your run log needs the same property in miniature.
 

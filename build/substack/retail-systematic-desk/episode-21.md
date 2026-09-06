@@ -15,13 +15,13 @@ send_email: false
 Each part stands on its own. This is 21 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-A number on a chart is not a plan. It becomes one when you write down what has to happen before anything is sent, what would prove the idea wrong, and the date after which the whole thing is dead. A trigger is the condition the market must meet first. That is not the same as a resting limit order, which just sits there for weeks and gets filled by whatever bad news arrives.
+A number on a chart is not a plan. <mark>It becomes one when you write down what has to happen before anything is sent, what would prove the idea wrong, and the date after which the whole thing is dead.</mark> A trigger is the condition the market must meet first. That is not the same as a resting limit order, which just sits there for weeks and gets filled by whatever bad news arrives.
 
 **Input from last Friday:** the accepted peer map, with its factors written down.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
-
 **Friday deliverable:** one expiring conditional plan, owned by you, filed with the week's paperwork.
+
+![Every order ends reconciled](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/order_state_machine.png)
 
 ## Build this
 
@@ -53,3 +53,5 @@ Educational, not investment advice.
 **NO-GO:** a plan that missed its window is rebuilt tomorrow, not loosened today. Turning a limit into a market order to force a fill is not a fix.
 
 **Next Friday:** the accepted plan becomes the input to Put Strategy Rules in Versioned Configuration.
+
+> An entry that cannot expire is an order waiting for bad news to fill it.

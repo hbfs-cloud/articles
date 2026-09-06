@@ -17,9 +17,9 @@ Each part stands on its own. This is 5 of 6 in The 30-Second Trade Signal Check;
 "Institutions bought 46% of today's volume" sounds precise. It is not evidence until 46% has a venue,
 time window, denominator and defensible direction.
 
-Precision without reproducible provenance is only decoration, not decision-grade evidence.
+<mark>Precision without reproducible provenance is only decoration, not decision-grade evidence.</mark>
 
-![What a reward/risk ratio actually demands of you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/rr_vs_winrate.png)
+![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
 Do not use a directional claim as evidence when its source cannot support direction. Treat an opaque
 model score as a score, not as observed buying.
@@ -56,6 +56,8 @@ A private dataset may still be useful. Its owner should be able to reproduce a v
 method, stable definitions and known coverage, then test the model on data not used to build it. An
 outside reader who cannot inspect the raw records should treat the published value as a model output,
 not an independently verified fact. That output may rank candidates without proving who bought them.
+
+> A number can be exact and still prove nothing. Direction, ownership and coverage have to come from the file itself, not from the label above the dashboard.
 
 Sources: FINRA's [organization description](https://www.finra.org/about),
 [Short Sale Volume documentation](https://www.finra.org/finra-data/browse-catalog/short-sale-volume) and

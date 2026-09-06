@@ -19,7 +19,7 @@ A backtest is a claim about the past: with these rules, this is what I would hav
 
 Three leaks account for most of it. Index membership taken from today's list and applied to a year when the list was different. Splits and mergers left unadjusted. And company figures stamped with the period they cover instead of the day they became public: a quarter ending in March is not knowable in March.
 
-![The smooth curve is the one you fitted](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/forward_vs_backtest.png)
+![Between the event and your screen, time passes](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/information_clock.png)
 
 **Input from last Friday:** the accepted validated paper-plan fixture.
 
@@ -27,7 +27,7 @@ Three leaks account for most of it. Index membership taken from today's list and
 
 ## Build this
 
-Freeze the inputs before the experiment starts, not after you like the answer. Record which dates you actually hold, which ranges are missing, and the configuration version in force. Keep the exploratory notebook apart from the runner that produces the official numbers. The notebook is for wandering; the runner is for the record.
+<mark>Freeze the inputs before the experiment starts, not after you like the answer.</mark> Record which dates you actually hold, which ranges are missing, and the configuration version in force. Keep the exploratory notebook apart from the runner that produces the official numbers. The notebook is for wandering; the runner is for the record.
 
 ### Minimum record
 

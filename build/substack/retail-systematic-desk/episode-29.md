@@ -17,7 +17,7 @@ Each part stands on its own. This is 29 of 45 in Build a Retail Systematic Desk,
 
 Ten tickers, one bet. That happens whenever the names share a driver underneath: the same interest-rate story, the same oil price, the same crowded growth trade. A shared driver like that is what people mean by a factor. Counting names never finds it. Measuring does.
 
-Two numbers carry most of the work. Correlation says how often two names move the same way at the same time. Beta says how far one name travels when the whole market moves one percent. Both wander over time, so treat them as the input to a limit, never as proof of diversification.
+Two numbers carry most of the work. Correlation says how often two names move the same way at the same time. Beta says how far one name travels when the whole market moves one percent. <mark>Both wander over time, so treat them as the input to a limit, never as proof of diversification.</mark>
 
 ![Diversification is measured in calm and spent in stress](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/correlation_breaks.png)
 
@@ -30,6 +30,8 @@ Two numbers carry most of the work. Correlation says how often two names move th
 Sort the book into buckets: sector, theme, market beta, currency, and the events already sitting on the calendar. Beside every correlation, print two things the number alone hides — the window it was measured over, and how many overlapping observations existed. Then shock whole buckets rather than single names.
 
 Invented figures, for illustration: 14 positions, correlations over 120 sessions. On the account statement it looks like 14 bets. The map shows 9 of them in one bucket, 61% of the book, all leaning on the same rate story. Shock that bucket by three standard deviations and the map returns a 7.4% book loss, against the 1.8% you would have projected by adding the individual stops. SYM_K overlaps the others on only 38 sessions, so it comes back flagged low-coverage instead of being quietly averaged in.
+
+![Adding the stops, then shocking the bucket](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/examples/retail-systematic-desk_episode-29.png)
 
 ### Minimum record
 

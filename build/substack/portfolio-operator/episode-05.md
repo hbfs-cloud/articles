@@ -15,9 +15,9 @@ Two ways exist to stop taking risk, and they cost wildly different amounts.
 
 The frightened way sells everything at once, at whatever price the screen happens to show. The patient way switches off two things only: new positions, and swapping one holding for a supposedly better one. Everything already open keeps its own four guardrails — stop loss, profit target, time limit, trailing stop — and closes when those say so. Exposure then falls like a staircase instead of a cliff. A healthy trade does not become unhealthy because you decided to take a week off.
 
-![Drawdown measures the path, not the destination](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/drawdown_path.png)
+Ask yourself one question before touching anything. <mark>Do I want to stop taking new risk, or do I want to escape the risk I already carry?</mark> Almost always it is the first, and the first does not require a fire sale.
 
-Ask yourself one question before touching anything. Do I want to stop taking new risk, or do I want to escape the risk I already carry? Almost always it is the first, and the first does not require a fire sale.
+![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
 
 How much to trim depends on why you are trimming. A vague uneasy feeling about the market: cut roughly a fifth to a third, usually one or two of the wildest lines. Conditions clearly turning against you: cut forty to fifty percent, empty the clusters that all move together, tighten what remains. Your own losses reaching the line you wrote down in advance, say six to eight percent off the account's high: cut half to seventy percent and keep only the positions you would buy again today.
 
@@ -25,11 +25,13 @@ Sell in the wrong order and the trim achieves nothing. The panicked reflex sells
 
 Now the week away with no reliable signal. A portfolio you cannot watch has to be one that does not need watching, and you build that before leaving, not from an airport.
 
-- Halve the number of open positions, then reduce size on what stays.
-- Check that every single line has both a stop and a target sitting at the broker, linked so one cancels the other.
-- Read the calendar for earnings and dividend dates falling during your absence, and close or shrink anything reporting.
-- Write down, for each position kept, its quantity, its reason, and what would prove it wrong.
-- On return, ramp back in steps rather than restoring full size on day one.
+### Before you leave
+
+1. Halve the number of open positions, then reduce size on what stays.
+1. Check that every single line has both a stop and a target sitting at the broker, linked so one cancels the other.
+1. Read the calendar for earnings and dividend dates falling during your absence, and close or shrink anything reporting.
+1. Write down, for each position kept, its quantity, its reason, and what would prove it wrong.
+1. On return, ramp back in steps rather than restoring full size on day one.
 
 Cutting size beats tightening every stop. A tight stop asks the market to stay quiet for a week, a bet it rarely loses. Smaller positions with normal stops leave room to breathe.
 

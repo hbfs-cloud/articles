@@ -27,7 +27,7 @@ Toy figures, invented for this lesson, on made-up tickers: 3 groups, 7 candidate
 
 ## Build this
 
-Validate everything before arming anything. Identifiers unique. Ranks ordered, no ties. One winner per group, so two candidates competing for the same slot can never both fill. Every new position gets a stop before it gets a quantity. Missing level, missing quantity, dead validity window: the plan fails as a block, not field by field. Partial arming is how a desk ends up holding something nobody decided to hold.
+Validate everything before arming anything. Identifiers unique. Ranks ordered, no ties. One winner per group, so two candidates competing for the same slot can never both fill. Every new position gets a stop before it gets a quantity. Missing level, missing quantity, dead validity window: the plan fails as a block, not field by field. <mark>Partial arming is how a desk ends up holding something nobody decided to hold.</mark>
 
 ### Minimum record
 
@@ -56,3 +56,5 @@ Educational, not investment advice.
 **NO-GO:** never let the broker layer or the interface finish a plan the strategy left incomplete.
 
 **Next Friday:** carry the accepted fixture into Backtest on Frozen Point-in-Time Data.
+
+> Execution finishes nothing. Either the plan is complete before it is armed, or it is refused as a block.

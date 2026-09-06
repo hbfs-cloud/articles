@@ -15,11 +15,11 @@ send_email: false
 Each part stands on its own. This is 15 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-Something looks wrong in yesterday's run, so you run it again. The data has moved since. Now you are debugging two things at once and can prove neither. A replay has to be offline: it reads the frozen bundle, touches no network, changes nothing outside itself, and gives the same answer at three in the morning as at noon.
+Something looks wrong in yesterday's run, so you run it again. The data has moved since. Now you are debugging two things at once and can prove neither. <mark>A replay has to be offline: it reads the frozen bundle, touches no network, changes nothing outside itself, and gives the same answer at three in the morning as at noon.</mark>
 
 Sameness is conditional. Identical bytes only mean something when the language runtime, the libraries, the way numbers are written to disk, and any randomness are all pinned. If one of those differs, the runner should say which, not shrug.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![Without the record, the loop is just repetition](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/journal_loop.png)
 
 **Input from last Friday:** The accepted evidence digest.
 
@@ -55,3 +55,5 @@ Educational, not investment advice.
 **NO-GO:** A rerun that silently downloads fresh data is a new experiment wearing the word replay.
 
 **Next Friday:** Carry the accepted bundle into Screen Broad, Then Narrow With Evidence.
+
+> The frozen bundle is what lets you debug one thing at a time.

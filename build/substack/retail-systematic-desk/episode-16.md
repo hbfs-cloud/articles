@@ -15,7 +15,7 @@ send_email: false
 Each part stands on its own. This is 16 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-A scanner narrows. It does not advise. Cheap checks run on everything, and only the survivors earn the slow work of reading a filing or checking an earnings date.
+A scanner narrows. It does not advise. <mark>Cheap checks run on everything, and only the survivors earn the slow work of reading a filing or checking an earnings date.</mark>
 
 Here is a toy run, with counts invented to show the shape rather than measured in any real session. 5,397 symbols go in. A liquidity floor, meaning a minimum on how much stock changes hands on an average day so you can get back out, leaves 2,403. A price and session filter leaves 812. An event gate, which drops anything reporting earnings inside the holding window, leaves 11. Eleven names deserve research. The other 5,386 never cost you a second.
 
@@ -54,3 +54,5 @@ Educational, not investment advice.
 **NO-GO:** nothing gets published while evidence its setup requires is still pending. Half-checked is not checked.
 
 **Next Friday:** the run record carries into Zero Candidates Is a Valid Outcome.
+
+> Cheap first, slow later: research is spent only where it can still change an answer.

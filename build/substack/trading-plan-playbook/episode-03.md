@@ -15,11 +15,11 @@ Four decisions hide inside what most people call "the trade". The signal says th
 order says how you will try to get filled. Invalidation says the reason for the trade has died. The exit
 instruction says what you do about it. Squash them into one price and you lose track of which one failed.
 
+![Two orders, two different ways to be wrong](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/stop_vs_stop_limit.png)
+
 Where you put the stop is the argument worth having. A trader thinks: I can afford to lose €200, so the
 stop goes wherever €200 lands. Backwards. The market has no idea what you can afford. It only knows where
-your idea stops being true. Put the stop under the level that defined the idea, then let the size adjust.
-
-![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
+your idea stops being true. <mark>Put the stop under the level that defined the idea, then let the size adjust.</mark>
 
 The numbers make the point better than the principle does. Capital €20,000, one trade capped at 1%, so
 €200. Entry €50, the base low that would refute the idea at €47, giving €3 of risk per share. €200 divided
@@ -27,6 +27,8 @@ by €3 is roughly 66 shares, about €3,300 committed. Now do it the wrong way 
 €200 and place the stop €1.50 away, and you buy 133 shares. Twice the position, hung on a level that proves
 nothing when it breaks. The honest stop was not the expensive one. It was the one that stopped you from
 overcommitting.
+
+![Two stops, twice the position](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/examples/trading-plan-playbook_episode-03.png)
 
 Order type is the other half. Investor.gov explains that a market order generally prioritises getting done
 over the price you get, while a limit order controls the worst price you will accept but may never fill. A
@@ -40,7 +42,7 @@ the ratio does not do is tell you the odds of either price arriving.
 
 Write every route before the entry goes in:
 
-| Element | What it must specify |
+| Route out | The instruction written in advance |
 |---|---|
 | No fill | cancel after the stated time. No chasing unless a separate written rule allows it. |
 | Invalidation | name the order or the action you will use to get out. |
@@ -54,11 +56,11 @@ evidence against the trade.
 
 Use this check at the ticket:
 
-- Keep the signal price and the order price apart in your head.
-- Verify duration, session eligibility and how your broker triggers stops.
-- Recalculate risk from the price you actually got, not the one you asked for.
-- State every exit, including the no-fill and time-expiry cases.
-- Reject the trade if a plausible gap costs more than you accepted.
+1. Keep the signal price and the order price apart in your head.
+1. Verify duration, session eligibility and how your broker triggers stops.
+1. Recalculate risk from the price you actually got, not the one you asked for.
+1. State every exit, including the no-fill and time-expiry cases.
+1. Reject the trade if a plausible gap costs more than you accepted.
 
 **Limitation:** none of this caps the loss at the planned amount. Fast markets, thin liquidity, news, halts
 and overnight gaps can hand you a materially worse exit. Using a limit on the way out avoids a terrible

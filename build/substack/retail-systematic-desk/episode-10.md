@@ -15,13 +15,13 @@ send_email: false
 Each part stands on its own. This is 10 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-A ticker is a name printed on a screen. Names get changed, reused and recycled: a company renames itself, disappears in a merger, and three years later a different business is trading under those same letters. Two exchanges can hand the same shorthand to two unrelated instruments on the same afternoon. Build your records around the name and your history quietly becomes a mixture of strangers.
+A ticker is a name printed on a screen. Names get changed, reused and recycled: a company renames itself, disappears in a merger, and three years later a different business is trading under those same letters. Two exchanges can hand the same shorthand to two unrelated instruments on the same afternoon. <mark>Build your records around the name and your history quietly becomes a mixture of strangers.</mark>
 
 **Input from last Friday:** the accepted batch-integrity fixture pack.
 
-![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
-
 **Friday deliverable:** an effective-dated instrument record, filed with the run's paperwork, effective-dated meaning each row states the window of time it was true for.
+
+![You correct by adding, never by erasing](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/append_only_ledger.png)
 
 ## Build this
 
@@ -48,3 +48,5 @@ Educational, not investment advice.
 **NO-GO:** if the broker's list and the data vendor's list cannot be joined without guessing, that instrument is not eligible to trade.
 
 **Next Friday:** the accepted record carries into Treat Time as a First-Class Field.
+
+> A resolver that guesses is worse than one that refuses.

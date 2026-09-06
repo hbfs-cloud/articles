@@ -15,11 +15,11 @@ Most people spend nine tenths of their time looking for entries and the rest thi
 
 So a position is not ready until five things are written: the ordinary exit, what you do on a gap, where you take profit, when time runs out, and what happens to the whole account after a bad run. "I'll manage it" is not one of the five.
 
-![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
-
 Size the stop to the stock, not to a round percentage. A name that moves a dollar a day and a name that moves five need different room. I use the last swing low minus half of the 14-day average range. On 13 March 2026 an energy large-cap had a 14-day average range of $3.20 and a swing low at $162.00. Half of 3.20 is 1.60, so the stop sat at $160.40. In a risk-off tape I widen that by a fifth, which put it at $160.08. A flat 3% stop would have thrown me out of a calm market too early and left me far too exposed in a violent one.
 
 Three layers, and they are not interchangeable.
+
+![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
 
 Position risk is the thesis. What observation kills it, what order you will use, and whether an intraday touch or a closing price counts. Read your broker's trigger rules, because two firms can use the same order name and behave differently.
 
@@ -31,15 +31,15 @@ Two micro-caps from a 10 March 2026 scan fell 13.2% and 8.7% while the tape was 
 
 Loss-policy check, before the order goes in:
 
-- Write the normal, gap, profit, remaining-shares, and time exits.
-- Check the issuer's filings and every scheduled event in the window.
-- Stress the leverage, the liquidity, and the total loss across all positions.
-- Confirm how your broker actually triggers and routes the order.
-- Record what you do after a drawdown or a failed execution.
+1. Write the normal, gap, profit, remaining-shares, and time exits.
+1. Check the issuer's filings and every scheduled event in the window.
+1. Stress the leverage, the liquidity, and the total loss across all positions.
+1. Confirm how your broker actually triggers and routes the order.
+1. Record what you do after a drawdown or a failed execution.
 
 A sell stop is not a floor. Once it triggers, it becomes a market order and can fill well below the trigger in a fast or thin market. A stop-limit protects the price and may simply never fill. Size the position so that neither outcome is fatal.
 
-Limitation: no policy can list every shock. Options protection carries premium, expiry, and liquidity costs of its own. Diversification tends to fail exactly when everything falls together. A mental stop is not a stop; it is an intention, and intentions lose to hope in real time. When you cannot put a number on the worst case, skipping the trade is a legitimate risk decision.
+Limitation: no policy can list every shock. Options protection carries premium, expiry, and liquidity costs of its own. Diversification tends to fail exactly when everything falls together. <mark>A mental stop is not a stop; it is an intention, and intentions lose to hope in real time.</mark> When you cannot put a number on the worst case, skipping the trade is a legitimate risk decision.
 
 Sources: [Investor.gov: Understanding Order Types](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-14), [Investor.gov: Using EDGAR to Research Investments](https://www.investor.gov/introduction-investing/getting-started/researching-investments/using-edgar-research-investments), [FINRA: Know What Triggers a Margin Call](https://www.finra.org/investors/insights/margin-calls).
 

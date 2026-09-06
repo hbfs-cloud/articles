@@ -13,9 +13,9 @@ Each part stands on its own. This is 5 of 6 in Read Market Evidence Without Inve
 
 A beat is a comparison, and a comparison is only honest when both sides were fixed before the news landed.
 
-So build the timeline first. Official release time. EDGAR acceptance. The conference call. The 10-Q or 10-K. Then the publication time of every analyst note. Compare reported results only with estimates frozen before the release. A screen that shows a raised price target sitting next to last night's earnings has quietly folded a reaction into a forecast.
+So build the timeline first. Official release time. EDGAR acceptance. The conference call. The 10-Q or 10-K. Then the publication time of every analyst note. Compare reported results only with estimates frozen before the release. <mark>A screen that shows a raised price target sitting next to last night's earnings has quietly folded a reaction into a forecast.</mark>
 
-![Between the event and your screen, time passes](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/information_clock.png)
+![You correct by adding, never by erasing](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/append_only_ledger.png)
 
 The filings run on staggered clocks. Companies commonly furnish earnings information under Item 2.02 of Form 8-K, and the instructions generally allow four business days after the public announcement, so the 8-K usually follows the press release rather than creating it. Item 2.02 information is normally "furnished", not "filed", unless the company specifies otherwise. Different word, different legal weight. The EDGAR acceptance timestamp and the attached exhibit are what tell you exactly what entered the public record, and when.
 
@@ -29,13 +29,15 @@ The worked case is deliberately dull. A company releases results after the close
 
 Earnings chronology:
 
-- Freeze estimates and guidance before publication.
-- Save the issuer release and the EDGAR accession.
-- Read GAAP results before the adjusted reconciliation.
-- Time-stamp the call, the filing and every analyst revision.
-- Keep pre-event forecasts apart from post-event reactions.
+1. Freeze estimates and guidance before publication.
+1. Save the issuer release and the EDGAR accession.
+1. Read GAAP results before the adjusted reconciliation.
+1. Time-stamp the call, the filing and every analyst revision.
+1. Keep pre-event forecasts apart from post-event reactions.
 
 What ordering cannot do is explain why the price moved, or make management and analyst judgments objective. The SEC sets disclosure rules; it does not vouch for a company's filing. An analyst's conflicts do not automatically invalidate the research. And an earnings surprise cannot separate the effect of guidance from positioning or valuation. Those explanations stay conditional, and they stay labelled as yours.
+
+> Order the evidence by when it was fixed, not by when a screen happened to show it.
 
 Sources: [SEC Form 8-K](https://www.sec.gov/info/edgar/forms/form8-k.pdf), [Investor.gov guide to Forms 10-K and 10-Q](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins/how-read), [SEC non-GAAP guidance](https://www.sec.gov/rules-regulations/staff-guidance/corporation-finance-interpretations/non-gaap-financial-measures), [SEC guide to analyst recommendations](https://www.sec.gov/about/reports-publications/investorpubsanalystshtm).
 

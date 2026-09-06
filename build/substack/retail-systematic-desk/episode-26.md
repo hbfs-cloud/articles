@@ -17,9 +17,9 @@ Each part stands on its own. This is 26 of 45 in Build a Retail Systematic Desk,
 
 Yesterday's close minus today's close is arithmetic. It is not execution. Real orders miss, or fill halfway, or fill somewhere nobody chose. A stop is an instruction to get out once a level trades, and when a market reopens far below that level, the exit lands where the market opens, not where you wrote the number. A simulator that hides this is flattering you.
 
-Partial fills deserve their own paragraph. You asked for 40 shares, you got 15. Those 15 are a real position: they need protection, they need to show up when you reconcile, and the missing 25 need a decision rather than silence.
-
 ![A stop cannot fill where no price exists](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/gap_and_stop.png)
+
+Partial fills deserve their own paragraph. You asked for 40 shares, you got 15. <mark>Those 15 are a real position: they need protection, they need to show up when you reconcile, and the missing 25 need a decision rather than silence.</mark>
 
 **Input from last Friday:** the accepted point-in-time backtest bundle.
 

@@ -19,9 +19,11 @@ Zero is an answer. Some days nothing is worth doing, and a desk that cannot say 
 
 The trap is that a crash also returns nothing. Same empty list, opposite meaning.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
 
-So the empty list has to arrive with proof that the machine actually ran, and the proof is a column of counters. These are teaching numbers, invented for the lesson, not a real session: universe 5,397, then liquidity 2,384, then trend 604, then setup 0. Read down that column and the emptiness explains itself, because the last rule was strict on a quiet tape. Now read a second column: 0, 0, 0, 0. That is not a calm market. That is a data feed that never loaded, and it must never print the same message as the calm one.
+<mark>So the empty list has to arrive with proof that the machine actually ran, and the proof is a column of counters.</mark> These are teaching numbers, invented for the lesson, not a real session: universe 5,397, then liquidity 2,384, then trend 604, then setup 0. Read down that column and the emptiness explains itself, because the last rule was strict on a quiet tape. Now read a second column: 0, 0, 0, 0. That is not a calm market. That is a data feed that never loaded, and it must never print the same message as the calm one.
+
+![Two counter columns, one empty result](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/examples/retail-systematic-desk_episode-17.png)
 
 **Friday deliverable:** a no-setup run record that says which of those two stories happened.
 
@@ -57,3 +59,5 @@ Educational, not investment advice.
 **NO-GO:** an interface that expects cards is not a reason to produce cards.
 
 **Next Friday:** the no-setup record carries into Explain Every Rejection.
+
+> An empty screen and a broken feed must never print the same sentence.

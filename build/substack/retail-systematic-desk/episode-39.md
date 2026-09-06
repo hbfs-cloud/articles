@@ -15,13 +15,13 @@ send_email: false
 Each part stands on its own. This is 39 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-Two lists exist. Yours, and the broker's. When they disagree about a fill, the broker wins, because the broker is the one holding the shares. When they disagree about what you meant to do, your plan wins. Reconciliation is the habit of keeping those two truths apart.
+Two lists exist. Yours, and the broker's. When they disagree about a fill, the broker wins, because the broker is the one holding the shares. When they disagree about what you meant to do, your plan wins. <mark>Reconciliation is the habit of keeping those two truths apart.</mark>
 
 **Input from last Friday:** the deduplication record you accepted.
 
-![Every order ends reconciled](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/order_state_machine.png)
-
 **Friday deliverable:** A broker reconciliation report, owned by the desk operator and stored with the week's evidence.
+
+![Every order ends reconciled](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/order_state_machine.png)
 
 ## Build this
 
@@ -50,3 +50,5 @@ Educational, not investment advice.
 **NO-GO:** never read "it isn't in my database" as "it doesn't exist at the broker". Your database is the one that can be wrong.
 
 **Next Friday:** this report becomes the raw material for Put the Decision and Controls First.
+
+> The broker holds the shares, so the broker owns the fill. Your plan owns the intent. Everything else is a difference with a name and exactly one permitted repair.

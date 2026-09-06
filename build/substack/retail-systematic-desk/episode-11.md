@@ -15,11 +15,11 @@ send_email: false
 Each part stands on its own. This is 11 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-One row of data can carry four different dates, and beginners squash them into one column called date. When something happened. When the public could first read about it. When your program looked. When it finally landed in your database. Squash them and your backtest starts reading tomorrow's newspaper, which is the single most flattering bug in this whole craft.
+One row of data can carry four different dates, and beginners squash them into one column called date. When something happened. When the public could first read about it. When your program looked. When it finally landed in your database. <mark>Squash them and your backtest starts reading tomorrow's newspaper, which is the single most flattering bug in this whole craft.</mark>
+
+![Between the event and your screen, time passes](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/information_clock.png)
 
 **Input from last Friday:** the accepted effective-dated instrument record.
-
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
 **Friday deliverable:** a temporal-field contract, filed with the run's paperwork, a contract here being a short written rule about which date means what.
 

@@ -27,13 +27,15 @@ Loss at the stop before costs: 51 x $0.97 = $49.47
 ![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
 
 Now read the last two lines side by side. The order ties up $624.75, or 6.25% of the account. The planned
-loss is $49.47, just under 0.5%. One trade, two numbers that look nothing alike. Risking half a percent is
+loss is $49.47, just under 0.5%. One trade, two numbers that look nothing alike. <mark>Risking half a percent is
 not investing half a percent, and confusing the two is how a position people describe as small ends up
-being the largest line they own.
+being the largest line they own.</mark>
 
 Notice what the arithmetic never asks: how much you like the trade. Conviction does not appear in the
 division. A setup that needs a wide exit gets fewer shares. An exit you can defend close to the entry buys
 more. Distance does the work.
+
+![One order, two very different percentages](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/examples/trade-signal-check_episode-01.png)
 
 The order of operations matters, and I would not bend it. Choose the protective exit first, quantity
 second. That exit is either the price at which the reason for the trade stops being true, or an earlier
@@ -63,6 +65,8 @@ this applies.
 
 The same `CLF` plan listed targets at $13.20 and $13.85. Part 2 asks whether either one paid enough for
 those 97 cents.
+
+> Choose the exit first and let the distance decide the quantity. Sliding the stop toward the entry to afford more shares is shopping for a position, not managing risk.
 
 Sources: [SEC: Stop, Stop-Limit, and Trailing Stop Orders](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-15); [FINRA: Understanding Risk](https://www.finra.org/investors/investing/investing-basics/risk)
 

@@ -17,9 +17,9 @@ Each part stands on its own. This is 23 of 45 in Build a Retail Systematic Desk,
 
 Between two runs the engine has to remember things. When a position was opened. Where the trailing reference sits. Whether a cooldown is still counting down, or a risk halt is on. All of that together is the state.
 
-Rebuilding it from what your broker shows is guesswork. The broker knows you hold 30 shares of SYM_K — an invented example — and nothing else. It does not know that those shares came from the second revision of a plan whose cooldown ends Thursday.
+<mark>Rebuilding it from what your broker shows is guesswork.</mark> The broker knows you hold 30 shares of SYM_K — an invented example — and nothing else. It does not know that those shares came from the second revision of a plan whose cooldown ends Thursday.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
 
 **Input from last Friday:** the accepted versioned configuration schema.
 
@@ -55,3 +55,5 @@ Educational, not investment advice.
 **NO-GO:** do not reconstruct missing state from current holdings, and do not let a note in a chat thread stand in for a stored revision.
 
 **Next Friday:** the accepted record carries into Use a Complete Machine-Readable Plan.
+
+> Holdings tell you what you own, never why you own it.

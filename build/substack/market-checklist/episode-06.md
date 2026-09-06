@@ -13,9 +13,9 @@ Each part stands on its own. This is 6 of 7 in The Market Checklist; earlier par
 
 A good setup entered at the wrong moment is a planned loss. Timing here has nothing to do with guessing the exact price. It means refusing to act until the written conditions are all present.
 
-Write the order card before the trigger happens, not while it is happening. Trigger, worst acceptable price, size, how long the order lives, what cancels it, and every exit. Leave one field blank and the idea stays on the watchlist. Speed only helps once the thinking is finished.
+<mark>Write the order card before the trigger happens, not while it is happening.</mark> Trigger, worst acceptable price, size, how long the order lives, what cancels it, and every exit. Leave one field blank and the idea stays on the watchlist. Speed only helps once the thinking is finished.
 
-![The regime sets a ceiling, never a direction](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/regime_map.png)
+![Every order ends reconciled](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/order_state_machine.png)
 
 Entries are zones, not points. A card reading $165 to $168 means any fill inside that range works. Trying to buy at $166.43 exactly produces either a missed trade or an emotional one. The low end is the better entry: tighter stop, more room to the target. The high end still counts if the momentum is real. More than 5% above the zone, the trade is gone. Skip it.
 
@@ -35,11 +35,11 @@ Exits, from the same card. First target releases half the position and the stop 
 
 Before you send anything:
 
-- Write trigger, entry boundary, size, and expiry on one line.
-- Choose the order type and confirm the session it is valid for.
-- Add the cancel, loss, profit, trailing, time, and event rules.
-- Check open orders and actual fills after the session, not from memory.
-- Check the official calendar before holding through a macro release. The statistical agencies and the Federal Reserve publish their dates, and those dates change.
+1. Write trigger, entry boundary, size, and expiry on one line.
+1. Choose the order type and confirm the session it is valid for.
+1. Add the cancel, loss, profit, trailing, time, and event rules.
+1. Check open orders and actual fills after the session, not from memory.
+1. Check the official calendar before holding through a macro release. The statistical agencies and the Federal Reserve publish their dates, and those dates change.
 
 Limitation: market orders buy execution and give up price. Limit orders do the reverse and can miss entirely, or fill only in part. Extended-hours sessions have thinner books, wider swings, and venues that do not talk to each other, so a quote at seven in the morning tells you very little about the open. A trade you never got is an acceptable outcome when the market never offered the price your plan assumed.
 

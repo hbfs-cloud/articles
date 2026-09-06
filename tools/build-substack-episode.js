@@ -130,15 +130,19 @@ function transform(md, spec, key, meta) {
   // « Before writing anything about a balance-sheet announcement, do this. » suivi de
   // « ### Before you write about a balance-sheet announcement » : le lecteur lit deux fois la même
   // annonce et l'auteur passe pour distrait. Le titre ne sert que quand le texte n'annonce rien.
-  const alreadyAnnounced = () => {
-    for (let k = out.length - 1; k >= 0; k--) {
-      const t = out[k].trim();
-      if (!t) continue;
-      return /:$/.test(t) || /\b(do this|here'?s how|as follows|in this order|the checklist)\b[.:]?$/i.test(t);
-    }
-    return false;
+  const lastInk = () => { for (let k = out.length - 1; k >= 0; k--) if (out[k].trim()) return k; return -1; };
+  const heading = title => {
+    if (!title) return;
+    const k = lastInk();
+    const t = k >= 0 ? out[k].trim() : '';
+    // Une ligne en gras seule et courte EST déjà un intertitre, écrit à la main. La doubler d'un
+    // second donne « **Instrument check** » puis « ### Five checks, in order ». On la PROMEUT : les
+    // mots de l'auteur valent mieux que les miens, et il n'en reste qu'un.
+    const pseudo = /^\*\*(.+?)\*\*$/.exec(t);
+    if (pseudo && pseudo[1].length <= 60) { out[k] = `### ${pseudo[1]}`; return; }
+    if (/:$/.test(t) || /\b(do this|here'?s how|as follows|in this order|the checklist)\b[.:]?$/i.test(t)) return;
+    out.push(`### ${title}`, '');
   };
-  const heading = title => { if (title && !alreadyAnnounced()) out.push(`### ${title}`, ''); };
   for (let i = 0; i < lines.length; i++) {
     if (!/^[-*]\s/.test(lines[i])) { out.push(lines[i]); continue; }
     let j = i;
@@ -205,6 +209,12 @@ function transform(md, spec, key, meta) {
   if (spec.takeaway) {
     const foreign = foreignNumbers(spec.takeaway, prose);
     if (foreign.length) throw new Error(`${key}: l'exergue apporte un chiffre absent du texte — ${foreign.join(', ')}`);
+    // UN EXERGUE QUI RECOPIE UNE PHRASE DU TEXTE LA DIT DEUX FOIS DE SUITE.
+    // Sur gap-risk 02, « The smallest cash outlay is not the smallest risk. » terminait un
+    // paragraphe puis reparaissait seule en exergue trois lignes plus bas. En 570 mots, ça se voit.
+    // L'exergue doit RÉSUMER, pas répéter ; s'il n'apporte rien de neuf, il n'a rien à faire là.
+    if (body.includes(spec.takeaway.replace(/^[>\s]+/, '')))
+      throw new Error(`${key}: l'exergue recopie une phrase déjà dans le texte — « ${spec.takeaway.slice(0, 60)}… »`);
     // AVANT la limitation, pas après. Un épisode qui finit par « voilà ce que ceci ne prouve pas »
     // puis assène une formule en exergue reprend d'une main ce qu'il vient de concéder de l'autre.
     // La limite doit rester le dernier mot.

@@ -21,8 +21,6 @@ shift was not rounding and its rule was not recorded.
 That history changes the interpretation. The source-screen stop was volatility-derived. The undocumented
 transformation prevents attributing the final stop to ATR or chart structure.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
-
 The stop happened to sit below the July 31 low of $11.35 and above the August 3 low of $10.87. If the
 setup used only the later base, $11.28 might be defensible. If it relied on the full late-July structure,
 the stop remained inside it. Because the screen generated the level from ATR first, neither chart story
@@ -33,6 +31,8 @@ probability requires the setup's historical maximum adverse excursion, meaning t
 each past trade before its exit. When using that measure to design a stop, end every observation at a
 predeclared horizon or outcome independent of the candidate stop; otherwise the sample is censored by the
 rule it is supposed to test.
+
+![Drawdown measures the path, not the destination](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/drawdown_path.png)
 
 The archived Yahoo decision snapshot creates a second warning. Its August 12 bar closed at $12.095 on
 5,831,609 shares. A Yahoo reconstruction collected on August 31 served $12.25 and 13,268,600 shares for
@@ -59,7 +59,7 @@ One sentence forces the issue:
 Below $____, this setup is wrong because ____________________.
 ```
 
-Write the ATR definition and multiple beside it. A number without a method is only a loss budget. Do not
+Write the ATR definition and multiple beside it. <mark>A number without a method is only a loss budget.</mark> Do not
 attach a probability word such as "likely" unless the adverse-excursion distribution supports it.
 
 ## What ATR cannot tell you
@@ -73,6 +73,8 @@ including gaps and slippage. Without that history, label the multiple a heuristi
 
 The ATR and adverse-excursion procedure above is the method defined for this case study. The official
 sources below support only the behavior and limits of stop orders; they do not validate that procedure.
+
+> ATR measures how much the stock has been moving. Only the setup's own record of adverse moves says where the protective exit belongs.
 
 Sources: [SEC: Stop, Stop-Limit, and Trailing Stop Orders](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-15); [Investor.gov: Understanding Order Types](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-14)
 

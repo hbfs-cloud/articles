@@ -15,13 +15,13 @@ send_email: false
 Each part stands on its own. This is 42 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-The fastest way to make a desk useless is to make it chatty. People mute what cries wolf, they mute it permanently, and the one message that mattered goes down with the rest.
+The fastest way to make a desk useless is to make it chatty. <mark>People mute what cries wolf, they mute it permanently, and the one message that mattered goes down with the rest.</mark>
 
 **Input from last Friday:** the missing-data component from last week's build.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
-
 **Friday deliverable:** An action-owned alert policy, owned by the desk operator and kept with the week's evidence.
+
+![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
 
 ## Build this
 

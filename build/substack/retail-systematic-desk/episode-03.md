@@ -15,16 +15,18 @@ send_email: false
 Each part stands on its own. This is 3 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-Boring is the specification, not a compromise. Your first universe should contain instruments whose identity, trading hours and corporate actions — splits and dividends, the events that rewrite past prices — you can look up and reconcile on a Tuesday evening. Excitement is paid for in plumbing.
+Boring is the specification, not a compromise. Your first universe should contain instruments whose identity, trading hours and corporate actions — splits and dividends, the events that rewrite past prices — you can look up and reconcile on a Tuesday evening. <mark>Excitement is paid for in plumbing.</mark>
+
+![Many tickers can be one bet](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/exposure_lookthrough.png)
 
 A toy funnel, with counts invented to show the shape of the filtering rather than any screen worth running:
 
-- 5,397 symbols in the starting list
-- 2,403 left after a liquidity floor, meaning a minimum of daily traded value so your own order is not the market
-- 1,911 after dropping every name whose exchange calendar could not be sourced
-- 41 more rejected because a split in the price history could not be reconciled against the adjusted series
+1. 5,397 symbols in the starting list
+1. 2,403 left after a liquidity floor, meaning a minimum of daily traded value so your own order is not the market
+1. 1,911 after dropping every name whose exchange calendar could not be sourced
+1. 41 more rejected because a split in the price history could not be reconciled against the adjusted series
 
-![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
+![The funnel that ends dull](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/examples/retail-systematic-desk_episode-03.png)
 
 What survives is dull. Dull is the product.
 

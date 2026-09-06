@@ -17,9 +17,9 @@ Each part stands on its own. This is 2 of 45 in Build a Retail Systematic Desk, 
 
 Last Friday you signed a mandate, meaning a short written statement of what this desk is for. Today you write the other half: what it refuses to do, and when it has to stop.
 
-"Make money" cannot be coded. A refusal can. Three worth borrowing: no borrowed money in version one, no order sent without a protective exit already attached, no decision computed from a price older than the last close. A kill criterion is not gloom. It is the line where the evidence stops supporting the machine, and where somebody says so out loud before the account says it for you.
+"Make money" cannot be coded. A refusal can. Three worth borrowing: no borrowed money in version one, no order sent without a protective exit already attached, no decision computed from a price older than the last close. A kill criterion is not gloom. <mark>It is the line where the evidence stops supporting the machine, and where somebody says so out loud before the account says it for you.</mark>
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
+![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
 
 **Friday deliverable:** a kill-and-resume matrix, which is just a table of what breaks, what happens automatically when it breaks, and who is allowed to switch things back on.
 
@@ -29,11 +29,11 @@ Four failure families, kept apart because they fail differently: strategy, data,
 
 Rows to fill:
 
-- `failure_family`
-- `observable_trigger`
-- `automatic_response`
-- `retained_evidence`
-- `resume_authority`
+1. `failure_family`
+1. `observable_trigger`
+1. `automatic_response`
+1. `retained_evidence`
+1. `resume_authority`
 
 Write triggers you can count. "Feels wrong" is not a trigger. "The last close is more than one session old" is.
 
@@ -54,3 +54,5 @@ Educational, not investment advice.
 **NO-GO:** any row whose response reads "keep watching" is unfinished. That is a feeling wearing the costume of a control.
 
 **Next Friday:** the accepted matrix travels with you into Choose a Boring First Market.
+
+> A control names an action and a person. Anything else is a feeling in costume.

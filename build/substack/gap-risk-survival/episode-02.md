@@ -25,9 +25,7 @@ Options add a clock. Many contracts trade in limited hours, so the shares can re
 
 Futures and retail foreign exchange bring contract-specific sessions and heavy leverage. On 15 January 2015 the Swiss National Bank abandoned its 1.20 floor without warning; EUR/CHF went from 1.2010 to about 0.8500 in seconds, near −30%. At 100:1 leverage a $10,000 position implies a $300,000 loss. One broker failed, another lost $225 million, and more than 100,000 retail accounts went negative. Digital assets trade around the clock, but continuous timestamps do not mean continuous liquidity: CME bitcoin futures close Friday evening and reopen Sunday, and the spot market keeps moving in between. The weekend gap on the futures contract is a recurring feature, not an occasional accident — check the contract specification for the exact halt, and measure the gap distribution yourself before you size around it.
 
-**Instrument check**
-
-### Five checks, in order
+### Instrument check
 
 1. Read the prospectus, contract, or options disclosure for the thing you are actually buying.
 1. Map its regular, extended, and closed trading periods.
@@ -37,7 +35,7 @@ Futures and retail foreign exchange bring contract-specific sessions and heavy l
 
 Run one thesis through stock, sector fund, and call option, and write for each: the first session you could exit, a stressed price, maximum capital loss, margin response, spread and depth, any expiry or reset. Reject the expression whose mechanics you cannot model. The smallest cash outlay is not the smallest risk.
 
-> The smallest cash outlay is not the smallest risk.
+> Two expressions of one thesis can differ more than two theses.
 
 **Limitation:** structure does not make outcomes predictable. Fund arbitrage can break, option markets can open wide, and a liquid futures contract can gap straight after a trading pause. Official disclosures explain mechanics and risks; they do not forecast your next loss.
 

@@ -19,15 +19,15 @@ One day your connection drops mid-request and you will not know whether the brok
 
 **Input from last Friday:** the security and capability preflight you signed off on.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
-
 **Friday deliverable:** A durable intent and deduplication record, owned by the desk operator and kept with the week's evidence.
+
+![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
 ## Build this
 
 Write down what you meant to do before you touch the network. That is the intent: which book, which plan, which revision of that plan, which candidate, and the time window the order is allowed to live in. From those fields compute a fingerprint, a short code derived from the meaning of the order rather than from the moment you clicked. Same meaning, same code. Sort the fields in a fixed order and round numbers the same way every time, or the code drifts and a retry looks like a fresh instruction.
 
-Ask the broker for an idempotency key whenever it offers one: a token the broker itself remembers, so it refuses your second copy. A code you compute at home proves nothing about an order you never saw acknowledged.
+Ask the broker for an idempotency key whenever it offers one: a token the broker itself remembers, so it refuses your second copy. <mark>A code you compute at home proves nothing about an order you never saw acknowledged.</mark>
 
 Keep at least: `desk_id`, `plan_id`, `revision`, `candidate_id`, `execution_window`, `fingerprint`, `broker_key`, `dedup_status`.
 

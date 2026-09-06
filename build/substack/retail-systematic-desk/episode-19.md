@@ -15,13 +15,13 @@ send_email: false
 Each part stands on its own. This is 19 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-Three indicators computed from the same closing prices are one piece of evidence wearing three hats. Stack them and the case feels stronger while nothing new has been learned. Certification is the step that asks a candidate to survive checks that do not lean on each other: the chart, the calendar of company events, the filings, how easily the thing trades, and whether the timing is even possible.
+<mark>Three indicators computed from the same closing prices are one piece of evidence wearing three hats.</mark> Stack them and the case feels stronger while nothing new has been learned. Certification is the step that asks a candidate to survive checks that do not lean on each other: the chart, the calendar of company events, the filings, how easily the thing trades, and whether the timing is even possible.
 
 **Input from last Friday:** The accepted gate-by-gate rejection report.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
-
 **Friday deliverable:** A certification sheet per candidate, written before any plan is drafted.
+
+![Many tickers can be one bet](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/exposure_lookthrough.png)
 
 ## Build this
 
@@ -55,3 +55,5 @@ Educational, not investment advice.
 **NO-GO:** Confidence must not rise because several numbers derived from one price series happen to point the same way.
 
 **Next Friday:** Carry the accepted sheet into Test the Sector, Leaders and Blast Radius.
+
+> Evidence drawn from the same prices is one witness repeating itself.

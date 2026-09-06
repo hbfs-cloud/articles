@@ -19,9 +19,9 @@ A backtest score on its own says nothing. It only starts to mean something next 
 
 The counters below are invented to show the shape of an audit. No prices, no returns, just bookkeeping.
 
-![The smooth curve is the one you fitted](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/forward_vs_backtest.png)
-
 The toy audit: 216 parameter combinations tried, one kept. Two thousand block resamples, meaning the history was reshuffled in chunks so the day-to-day stickiness of returns survived the shuffle. Six regime slices, two of them holding fewer than 30 trades and therefore labelled weak instead of ranked. One validation stretch of 14 months nobody had opened yet. And the counter almost no desk logs: how many times the untouched period was peeked at. Four, in this run. After the first peek it stopped being untouched.
+
+![The smooth curve is the one you fitted](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/forward_vs_backtest.png)
 
 **Input from last Friday:** the accepted execution-stress fixture pack.
 
@@ -42,7 +42,7 @@ Write the experiment down before you run it. Which question, which comparison, w
 
 ## Test it before moving on
 
-Delete the biggest winners and run it again. If the conclusion dies with three trades removed, the conclusion was three trades. Report ranges rather than single figures. Then pay the multiple-testing tax: 216 attempts means the best of them looks good partly through luck, and an honest write-up says so in the first paragraph, not a footnote.
+Delete the biggest winners and run it again. <mark>If the conclusion dies with three trades removed, the conclusion was three trades.</mark> Report ranges rather than single figures. Then pay the multiple-testing tax: 216 attempts means the best of them looks good partly through luck, and an honest write-up says so in the first paragraph, not a footnote.
 
 **Operating limit:** paper only, made-up inputs, no account and no allocation. A protocol that survives the week is a measuring tool, never a promise.
 
@@ -57,3 +57,5 @@ Educational, not investment advice.
 **NO-GO:** reject any change picked after repeated inspections of the same untouched period.
 
 **Next Friday:** carry the locked protocol into Size at the Portfolio Level.
+
+> The best of many attempts looks good partly through luck. Say so in the first paragraph, not a footnote.

@@ -15,9 +15,9 @@ Five facts about the same company, and not one of them is the same age.
 
 A Form 4, the notice an executive files after buying or selling shares of their own company, is due within two business days. A Form 13F, the quarterly list of what a large manager held, can arrive 45 days after the quarter it describes. FINRA publishes short-sale volume on its own delayed calendar. Options volume is one day of trading. Social posts are instant, and prove only that people were typing.
 
-![You correct by adding, never by erasing](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/append_only_ledger.png)
+Now watch what a popular habit does with those five. It gives each data family a mark from 0 to 10, adds them to a total out of 50, and calls anything above 35 a strong setup. Five ages, five meanings, one number. The number looks like knowledge. <mark>It is arithmetic performed on things that cannot be added.</mark>
 
-Now watch what a popular habit does with those five. It gives each data family a mark from 0 to 10, adds them to a total out of 50, and calls anything above 35 a strong setup. Five ages, five meanings, one number. The number looks like knowledge. It is arithmetic performed on things that cannot be added.
+![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
 
 Keep a ledger instead. One row per observation, and the row keeps its own clock.
 
@@ -31,12 +31,12 @@ Give every row one of three states. Admitted: the primary source and the field d
 
 Ledger maintenance, every time:
 
-- Pin the official page or the filing accession, not a summary of it.
-- Store the effective date and the publication date in separate columns.
-- Keep units, coverage and denominators exactly as published.
-- Write down one supported claim and one explicit unknown per row.
-- Check back for amendments and later snapshots.
-- Reject any conclusion that rests on guessing somebody's motive.
+1. Pin the official page or the filing accession, not a summary of it.
+1. Store the effective date and the publication date in separate columns.
+1. Keep units, coverage and denominators exactly as published.
+1. Write down one supported claim and one explicit unknown per row.
+1. Check back for amendments and later snapshots.
+1. Reject any conclusion that rests on guessing somebody's motive.
 
 The ledger does not remove judgment, and it does not make you right. Public data are late, revised and incomplete. Private positions and reasons usually stay invisible. A company missing from a reporting system may simply sit below a threshold. This method improves the audit trail and stops overclaiming. It cannot hand you a complete picture, a cause, or a profitable decision.
 

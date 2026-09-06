@@ -11,13 +11,15 @@ source_path: "series/marketwatch-checklist/part4-portfolio/index.html"
 Each part stands on its own. This is 4 of 7 in The Market Checklist; earlier parts cover the groundwork but you can start here.
 ::end
 
-Every new trade has four ceilings: the planned-stop loss, a stressed gap loss, concentration, and liquidity. You take the smallest one. Not the one you like — the smallest.
+Every new trade has four ceilings: the planned-stop loss, a stressed gap loss, concentration, and liquidity. <mark>You take the smallest one. Not the one you like — the smallest.</mark>
+
+![Many tickers can be one bet](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/exposure_lookthrough.png)
 
 Work the stop ceiling with real numbers. Account of $100,000, risk budget of 1% per idea, so $1,000. Say the entry is $166 and the recent swing low sits at $159. Putting the stop exactly on the swing low is an invitation: those levels are obvious and they get hunted. Drop it half an ATR below instead — with a 14-day ATR of $4, that is $2 of cushion, so the stop goes at $157. Risk per share is $166 − $157 = $9. Position size is $1,000 ÷ $9 = 111 shares, or $18,426.
 
-![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
-
 Which is 18.4% of the account, and in a defensive regime the cap per position is 15%. So the size drops to 90 shares, $14,940, 14.9%. You give up 21 shares. Real risk on 90 shares is $810, or 0.81% of capital. The stop math permitted 111. The rule permitted 90. Ninety wins.
+
+![The binding ceiling is the smallest one](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/examples/market-checklist_episode-04.png)
 
 Note what changed: not the trade, only the ceiling that bound it. Write down which ceiling set the final size, every time.
 
@@ -31,12 +33,12 @@ Correlation estimates help expose duplication, but use them as diagnostics. Stat
 
 **Sizing controls**
 
-- Calculate the stop and gap ceilings from written scenarios, not from the size you want.
-- Aggregate direct holdings, ETF overlap, options, and leverage before sizing.
-- Group by shared drivers, not by ticker count.
-- Cut risk per trade to 0.5–0.75% when volatility rises, rather than cutting the number of trades.
-- Check spread, depth, and likely exit capacity.
-- Record which ceiling bound the size.
+1. Calculate the stop and gap ceilings from written scenarios, not from the size you want.
+1. Aggregate direct holdings, ETF overlap, options, and leverage before sizing.
+1. Group by shared drivers, not by ticker count.
+1. Cut risk per trade to 0.5–0.75% when volatility rises, rather than cutting the number of trades.
+1. Check spread, depth, and likely exit capacity.
+1. Record which ceiling bound the size.
 
 Diversification reduces some concentration risk but cannot guarantee against loss. Correlations move toward one under stress. A broad ETF can trade away from its net asset value, and the liquidity you see on a calm afternoon can disappear. Where gap behavior is unknown or holdings are opaque, the valid size is zero until that changes.
 

@@ -13,11 +13,11 @@ Each part stands on its own. This is 2 of 6 in Operate a Portfolio, Not a Collec
 
 A backtest is a hypothesis wearing the clothes of a track record. The date you froze the rules decides which results count as evidence and which are just description.
 
+![The smooth curve is the one you fitted](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/forward_vs_backtest.png)
+
 Keep three boxes and never let them touch. In-sample is where you tuned the thresholds and filters. Out-of-sample is history you locked away and look at exactly once. The forward log begins at the timestamp after the final rule version exists. The moment an out-of-sample result changes your method, that period joins in-sample for every claim you make afterwards.
 
-![Drawdown measures the path, not the destination](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/drawdown_path.png)
-
-Here is the trap that voids the whole exercise. Out-of-sample only protects you if you look once. Re-optimise and re-test enough parameter sets and window splits and one of them passes by luck alone. Walk-forward analysis — optimise on a window, validate on the next unseen one, step forward, repeat — is stronger, but each re-tested window burns a cartridge too. Decide the protocol and the thresholds before you look at anything.
+Here is the trap that voids the whole exercise. <mark>Out-of-sample only protects you if you look once.</mark> Re-optimise and re-test enough parameter sets and window splits and one of them passes by luck alone. Walk-forward analysis — optimise on a window, validate on the next unseen one, step forward, repeat — is stronger, but each re-tested window burns a cartridge too. Decide the protocol and the thresholds before you look at anything.
 
 Count your degrees of freedom honestly. Eight tuned parameters against 40 trades is five trades per parameter. At that ratio the curve is describing your sample, not the market.
 
@@ -37,6 +37,8 @@ Evidence check:
 - Reset the forward label the moment a rule materially changes.
 
 Budget the decay before you deploy. Between real costs and the optimisation that survives every precaution, an edge commonly gives back 20-40% moving from backtest to live. Take your backtest edge, cut 30%, then look at what remains. If the strategy is only profitable without that haircut, it is not profitable.
+
+> A backtest is a hypothesis about the past. The forward log begins the day the rules stop moving.
 
 **Limitation:** a clean forward test can still be too short, too narrow, or drawn from a single market climate. Paper trading omits financial fear and models queue position badly. Live evidence at tiny size says nothing about capacity. Forward testing removes some hindsight; it does not make the next observation independent.
 

@@ -15,8 +15,6 @@ $900bn in 2007. A peak of $8,900bn in April 2022. Roughly $6,800bn by mid-2026. 
 
 Split the sheet. On the asset side, mid-2026, sit about $4,200bn of Treasuries and about $2,200bn of mortgage-backed securities. On the liability side: bank reserves, overnight reverse repos, and roughly $2,300bn of actual paper dollars in circulation. Quantitative easing buys assets and creates reserves — money banks hold at the Fed, which is not the same thing as money in your pocket. That gap is why the 2009-2014 purchases did not produce the hyperinflation many people forecast: banks sat on the reserves rather than lending them.
 
-![Many tickers can be one bet](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/exposure_lookthrough.png)
-
 Now separate flow from stock, because almost every bad take collapses the two.
 
 Flow is the monthly pace. Stock is total holdings. A slower purchase pace still adds to the stock. Ending net purchases leaves the stock flat if maturing bonds are reinvested. Only when principal is allowed to run off without reinvestment does the stock actually shrink.

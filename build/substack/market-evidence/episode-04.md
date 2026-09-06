@@ -13,7 +13,7 @@ Each part stands on its own. This is 4 of 6 in Read Market Evidence Without Inve
 
 Repetition is not confirmation. A claim copied across forty accounts in ten minutes is still one claim, with good distribution.
 
-So do not act on a headline or a sentiment score until the claim underneath has a named source, a publication time and a primary document behind it. When the primary document cannot be found, the honest label is "unverified", and it stays that way in your notes.
+So do not act on a headline or a sentiment score until the claim underneath has a named source, a publication time and a primary document behind it. <mark>When the primary document cannot be found, the honest label is "unverified", and it stays that way in your notes.</mark>
 
 ![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
@@ -29,12 +29,12 @@ Worked case. Posts claim a company won a government contract. Search the awardin
 
 Verification pass:
 
-- Capture the earliest source you can authenticate.
-- Separate event time, publication time and repost time.
-- Find the filing, agency notice or issuer release behind the claim.
-- Document the sentiment tool's corpus and window.
-- Check corrections, sponsorships and conflicts.
-- Write down what remains unknown.
+1. Capture the earliest source you can authenticate.
+1. Separate event time, publication time and repost time.
+1. Find the filing, agency notice or issuer release behind the claim.
+1. Document the sentiment tool's corpus and window.
+1. Check corrections, sponsorships and conflicts.
+1. Write down what remains unknown.
 
 The unavoidable limit is what sentiment can see. It observes expressions selected by a platform and a model, never the full population of investors or the positions they hold. Primary confirmation can also arrive after prices have already reacted. This procedure keeps a rumour from hardening into a fact inside your own notes. It will not get you in early, and it cannot prove that a headline caused a move.
 

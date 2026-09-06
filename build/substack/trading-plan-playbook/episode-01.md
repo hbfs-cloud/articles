@@ -22,7 +22,7 @@ percentage exists, and anybody who quotes one is guessing about your life.
 
 Then the chain of decisions, in order:
 
-| Element | What it must specify |
+| Decision | What the plan must state |
 |---|---|
 | Universe | instruments you understand and your account permits. |
 | Setup | the conditions that make a candidate eligible, written so they can be checked. |
@@ -44,14 +44,16 @@ rules before your record says anything about the method rather than about luck.
 
 Run this check before an order:
 
-- Confirm the instrument and the setup are permitted.
-- Record the trigger, the invalidation and every exit path.
-- Size from the risk budget, then apply the tighter portfolio and liquidity caps.
-- Name any scheduled event that changes the decision.
-- Fix the review date, and do not rewrite the plan while a trade is live.
+1. Confirm the instrument and the setup are permitted.
+1. Record the trigger, the invalidation and every exit path.
+1. Size from the risk budget, then apply the tighter portfolio and liquidity caps.
+1. Name any scheduled event that changes the decision.
+1. Fix the review date, and do not rewrite the plan while a trade is live.
+
+> You settle the five questions on a quiet day, or the market settles them for you, mid-move.
 
 **Limitation:** a written plan cannot make a losing strategy profitable, and it cannot force a fill at the
-price you wanted. It makes decisions auditable, which is a smaller and more useful claim. A sound plan also
+price you wanted. <mark>It makes decisions auditable, which is a smaller and more useful claim.</mark> A sound plan also
 leaves room for judgement during trading halts, broker outages, corporate actions, or news that destroys
 the original assumptions. When you depart from the rules, write down that you did. Pretending afterwards
 that the rule was followed costs you the only record you have.

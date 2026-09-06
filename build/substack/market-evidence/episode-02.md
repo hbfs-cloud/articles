@@ -13,9 +13,9 @@ Each part stands on its own. This is 2 of 6 in Read Market Evidence Without Inve
 
 A big options print tells you a trade happened. It does not tell you who wanted it, or why.
 
-Four questions come before any label. Do the data identify buyer versus seller? Opening versus closing? A single leg, or one leg of a spread? Speculation, or a hedge against something else in the account? Leave any of those blank and intent stays unresolved. Large volume is evidence of activity, not a decoded portfolio.
+Four questions come before any label. Do the data identify buyer versus seller? Opening versus closing? A single leg, or one leg of a spread? Speculation, or a hedge against something else in the account? Leave any of those blank and intent stays unresolved. <mark>Large volume is evidence of activity, not a decoded portfolio.</mark>
 
-![What a bought option can and cannot cost you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/option_payoff.png)
+![A spread is one trade only while both legs exist](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/spread_legs.png)
 
 The two headline numbers measure different things, and the difference does most of the work here. Volume counts contracts traded during a period. Open interest counts contracts still open after clearing. Every completed trade has a buyer and a seller. Every open contract has a long side and a short side. The Options Industry Council puts it flatly: open interest indicates neither a bullish nor a bearish outlook. Tomorrow's change in open interest shows the net effect of opening, closing, exercise and assignment across a whole series. It will not walk one conspicuous print back to one investor's final position.
 

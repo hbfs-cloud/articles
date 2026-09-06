@@ -13,7 +13,7 @@ The three: when the event or transaction happened, what period the document cove
 
 ![Between the event and your screen, time passes](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/information_clock.png)
 
-EDGAR is the SEC's public filing system, open since 1993, free to read, taking in roughly three thousand documents on a normal business day. Same archive the large funds use. The gap between a professional and everyone else is not access. It is knowing which clock a document runs on.
+EDGAR is the SEC's public filing system, open since 1993, free to read, taking in roughly three thousand documents on a normal business day. Same archive the large funds use. The gap between a professional and everyone else is not access. <mark>It is knowing which clock a document runs on.</mark>
 
 The system operates federal business days, 6:00 a.m. to 10:00 p.m. Eastern. A live submission started after 5:30 p.m. usually receives the next business day's filing date and dissemination, even though it was accepted that evening. Forms 3, 4 and 5 get different treatment: they can keep same-day status when accepted before 10:00 p.m. If timing decides your reading, check the SEC's filing-status page rather than a remembered rule of thumb. It is the authority, and it changes.
 
@@ -25,11 +25,11 @@ Picture a 13F accepted this afternoon and a Form 4 accepted this evening. The 13
 
 Filing check:
 
-- Save the accession link and the EDGAR acceptance timestamp.
-- Record the event date and the period of report separately.
-- Read the form item, the transaction code and the footnotes.
-- Tell a position snapshot apart from a transaction report.
-- Look for amendments and related exhibits.
+1. Save the accession link and the EDGAR acceptance timestamp.
+1. Record the event date and the period of report separately.
+1. Read the form item, the transaction code and the footnotes.
+1. Tell a position snapshot apart from a transaction report.
+1. Look for amendments and related exhibits.
 
 Where this ends. Confidential treatment, reporting thresholds, amendments and the coverage limits of each form can leave large parts of an investor's real exposure unseen. A short seller's borrowed position, for instance, does not appear anywhere in a 13F. Acceptance proves a document entered the public record at a known second. It does not prove the market noticed, and it does not make any sentence inside the document a forecast.
 

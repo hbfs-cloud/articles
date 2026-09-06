@@ -19,15 +19,15 @@ Asking for a hundred things in one request is cheap and sensible. The trouble st
 
 **Input from last Friday:** the accepted freshness gate test report.
 
-![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
-
 **Friday deliverable:** a batch-integrity fixture pack, filed with the run's paperwork.
+
+![A spread is one trade only while both legs exist](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/spread_legs.png)
 
 ## Build this
 
 File every answer under two labels: which instrument it belongs to, using the durable internal identifier rather than the ticker, and which facet it is, a facet being one kind of information about that instrument, such as prices or company details.
 
-Alongside each cell, keep the range you asked for, the range you actually received, any gap in the middle, whether the answer was cut short, and the snapshot identifier, meaning the stamp saying which version of the database served it. Glue pages together only when those stamps agree. Two halves from two snapshots are not one answer.
+Alongside each cell, keep the range you asked for, the range you actually received, any gap in the middle, whether the answer was cut short, and the snapshot identifier, meaning the stamp saying which version of the database served it. Glue pages together only when those stamps agree. <mark>Two halves from two snapshots are not one answer.</mark>
 
 A toy batch, invented values for illustration: ten instruments requested across two facets, twenty cells expected. Fourteen come back complete. Four are marked not applicable, because SYM_D and SYM_E are funds and the company-details facet does not exist for them. One cell is truncated at 60 of 250 days. One instrument, SYM_K, never resolved at all. That is a partial batch. Calling it complete would have hidden six holes.
 

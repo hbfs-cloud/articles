@@ -19,9 +19,9 @@ Every number below is invented to show the shape of the work. Made-up tickers, m
 
 In the toy run, SYM_A arrived from certification with a peer file of 41 companies: 6 direct competitors, 4 suppliers, 3 customers, 12 same-sector names of similar size, and 16 that were only there because a screener had grouped them. Twenty-two had enough shared history to compare at all. Nine of those moved in step with SYM_A most of the time. Then I subtracted the part of each move that the whole market already explains, which is what people mean by residualising. Two were left.
 
-![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
-
 Seven names changed status without changing behaviour. They were riding the same tide as everything else.
+
+![Diversification is measured in calm and spent in stress](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/correlation_breaks.png)
 
 **Input from last Friday:** the accepted candidate certification sheet.
 
@@ -29,7 +29,7 @@ Seven names changed status without changing behaviour. They were riding the same
 
 ## Build this
 
-Sort peers by the economic link first: who competes, who supplies, who buys. Measure second. Write down the yardstick you subtract, how returns are computed, the window, what happens to missing days, and how much history two series actually share. The candidate's own calendar stays in charge of the conclusion. A peer can agree with you; it cannot be your reason.
+Sort peers by the economic link first: who competes, who supplies, who buys. Measure second. Write down the yardstick you subtract, how returns are computed, the window, what happens to missing days, and how much history two series actually share. The candidate's own calendar stays in charge of the conclusion. <mark>A peer can agree with you; it cannot be your reason.</mark>
 
 ### Minimum record
 
@@ -44,6 +44,8 @@ Sort peers by the economic link first: who competes, who supplies, who buys. Mea
 ## Test it before moving on
 
 Push a fake market-wide rally through the synthetic series and watch what breaks. Raw co-movement for SYM_K climbed from 0.31 to 0.78 in the toy run; the residual number barely moved, 0.29. A screen that shows the 0.78 and calls it conviction is a broken screen. Run the same check on thin data: SYM_D shared 61 days inside a 250-day window, so the map has to print "thin" beside it instead of a rank.
+
+![The rally moves the raw number, not the residual](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/examples/retail-systematic-desk_episode-20.png)
 
 **Operating limit:** this map sizes nothing, names no real security and never leaves paper. Plumbing under test, not an edge.
 

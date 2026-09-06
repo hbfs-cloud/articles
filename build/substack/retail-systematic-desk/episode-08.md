@@ -15,11 +15,11 @@ send_email: false
 Each part stands on its own. This is 8 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-The clock on a response tells you when the answer arrived at your machine. It says nothing about how old the market observation inside it is. Those are different facts, and only the second one matters for a decision. A file downloaded at seven this morning can easily describe the world as it stood two sessions ago, and the download will look perfectly healthy while it does.
+The clock on a response tells you when the answer arrived at your machine. It says nothing about how old the market observation inside it is. Those are different facts, and only the second one matters for a decision. <mark>A file downloaded at seven this morning can easily describe the world as it stood two sessions ago, and the download will look perfectly healthy while it does.</mark>
+
+![Not all dates are known equally far in advance](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/calendar_certainty.png)
 
 **Input from last Friday:** the accepted capability bootstrap report.
-
-![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
 
 **Friday deliverable:** a freshness gate test report, filed with the run's paperwork by whoever runs the desk that week.
 
@@ -48,3 +48,5 @@ Educational, not investment advice.
 **NO-GO:** a healthy connection carrying old coverage is a failed input, not a warning to be waved through.
 
 **Next Friday:** the accepted report feeds Preserve Partial Failures in Batches.
+
+> Name the session you meant to trade, and make the file prove it got there.

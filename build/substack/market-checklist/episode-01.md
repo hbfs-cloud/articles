@@ -24,15 +24,15 @@ Here is what that looked like on 13 March 2026. Inflation came in at +3.1% at 14
 
 The score had been sliding for weeks before that. Late January it read 68. End of February, 46, with the VIX at 24.1 and liquidity contracting. On 10 March it was 52, VIX 22.8, index caught between its two averages. Nothing dramatic happened on any single day. That slow kind of decay is more dangerous than a shock, because it gives you time to talk yourself out of noticing.
 
-The label changes what you are allowed to do, not what you predict. At a score near 31, momentum trades drop to about 10% of the book and hedges do the work. Near 75, momentum can carry half of it. Same trader, same skills, different permissions.
+<mark>The label changes what you are allowed to do, not what you predict.</mark> At a score near 31, momentum trades drop to about 10% of the book and hedges do the work. Near 75, momentum can carry half of it. Same trader, same skills, different permissions.
 
 Fifteen minutes, in this order:
 
-- Check the VIX level, then compare it with the three-month VIX. Spot above three-month means acute stress, and that comparison beats the raw level.
-- Record where the index closed against its 50-day and 200-day averages.
-- Track the high-yield to investment-grade ratio over five sessions. Direction matters more than the level.
-- Look at the dollar on a four-hour chart, not just daily, and note today's scheduled data.
-- Score each input 0, 50 or 100. Average them. Write the number down before you open a single position.
+1. Check the VIX level, then compare it with the three-month VIX. Spot above three-month means acute stress, and that comparison beats the raw level.
+1. Record where the index closed against its 50-day and 200-day averages.
+1. Track the high-yield to investment-grade ratio over five sessions. Direction matters more than the level.
+1. Look at the dollar on a four-hour chart, not just daily, and note today's scheduled data.
+1. Score each input 0, 50 or 100. Average them. Write the number down before you open a single position.
 
 The last step matters most. Score it first, or you will read the same inputs to fit the trade you already want.
 

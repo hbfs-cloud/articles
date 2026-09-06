@@ -44,15 +44,15 @@ Expected value = sum(path probability x net payoff)
 ```
 
 The probabilities must come from the identical entry and exit rules, tested outside the sample used to
-design them, after costs and with the sample size disclosed. A distant target is only an unvalidated
-scenario until that evidence exists.
+design them, after costs and with the sample size disclosed. <mark>A distant target is only an unvalidated
+scenario until that evidence exists.</mark>
 
 Before accepting a headline ratio, calculate four items:
 
-- `R` at the first planned sale.
-- The percentage sold there.
-- The stop rule for the remainder.
-- The observed frequency and sample size of each exit path after costs.
+1. `R` at the first planned sale.
+1. The percentage sold there.
+1. The stop rule for the remainder.
+1. The observed frequency and sample size of each exit path after costs.
 
 No universal ratio separates good trades from bad ones. A high-win-rate strategy may work below 1.5R. A
 trend strategy may accept many small losses because a residual tranche uses a trailing exit and sometimes

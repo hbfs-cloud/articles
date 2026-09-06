@@ -15,11 +15,11 @@ send_email: false
 Each part stands on its own. This is 43 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-A language model reads a pile of evidence well. It argues against your thesis well. It is a poor calculator and a worse database, and the trouble is that it never announces which of the three you just asked it to be. It answers in the same confident voice either way.
+A language model reads a pile of evidence well. It argues against your thesis well. <mark>It is a poor calculator and a worse database, and the trouble is that it never announces which of the three you just asked it to be.</mark> It answers in the same confident voice either way.
 
 So sort your steps into three kinds before the model goes anywhere near them. Deterministic: code does the sum and returns the same answer every time. Interpretive: something is being described or challenged, and two sensible answers can both be fine. Side-effecting: the world outside the program changes — a file is written, an order leaves the desk. The model works on the interpretive pile. Only that one.
 
-![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
+![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
 **Input from last Friday:** the accepted action-owned alert policy.
 
@@ -52,3 +52,5 @@ Ask the model, in plain words, to change a quantity. The page may print whatever
 **NO-GO:** never let good prose overturn a failed check. Confidence is not evidence — a lesson older than this technology ([CFTC: Learn and Protect](https://www.cftc.gov/LearnAndProtect/EducationCenter/index.htm)), and measurement quality still comes from bias and variability you can quantify ([NIST: Issues for Characterization](https://www.itl.nist.gov/div898/handbook/mpc/section1/mpc11.htm)). Educational, not investment advice.
 
 **Next Friday:** the accepted map goes into Use Adversarial Review as a Release Gate.
+
+> Let the model argue with you. Never let it count for you.

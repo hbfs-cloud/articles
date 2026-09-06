@@ -20,12 +20,12 @@ the price closes above the highest close of the last 20 sessions, and that day's
 times the average of the previous 20 sessions. Vague: it isn't stretched. Written: the price is no more
 than 8% above its 20-day average. Each line on the right answers yes or no. Nothing on the left does.
 
-![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
-
 Keep three words apart, because people use them interchangeably and then argue past each other. A
 **hypothesis** is why a behaviour might keep happening. A **setup** turns it into conditions you can check.
 An **edge** is a favourable distribution measured from a real record, after costs, with the uncertainty
-stated. One winning trade proves none of the three.
+stated. <mark>One winning trade proves none of the three.</mark>
+
+![The smooth curve is the one you fitted](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/forward_vs_backtest.png)
 
 Write the specification in this order:
 

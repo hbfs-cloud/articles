@@ -11,15 +11,15 @@ source_path: "series/plan-de-trading/part4-sizing-risque/index.html"
 Each part stands on its own. This is 4 of 6 in Build a Trading Plan You Can Execute; earlier parts cover the groundwork but you can start here.
 ::end
 
-Calculate position size from a preselected loss budget and an independently chosen invalidation, then reduce it for liquidity, concentration, leverage, and event risk. Never move the invalidation to manufacture the share count you want. The formula produces an arithmetic ceiling, not a promise about the loss a broker will deliver.
+Calculate position size from a preselected loss budget and an independently chosen invalidation, then reduce it for liquidity, concentration, leverage, and event risk. <mark>Never move the invalidation to manufacture the share count you want.</mark> The formula produces an arithmetic ceiling, not a promise about the loss a broker will deliver.
 
 For a long position, start with:
 
 `planned price risk per share = intended entry - invalidation level`
 
-![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
-
 `share ceiling = floor(loss budget / planned price risk per share)`
+
+![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
 
 Suppose, hypothetically, the intended entry is $24.80, invalidation is $24.05, and the trader's own loss budget is $150. Planned price risk is $0.75 per share, giving an arithmetic ceiling of 200 shares. If the trader's liquidity rule allows only 120 shares at that moment, 120 is the operative maximum. If commissions, fees, estimated slippage, or a wider actual fill increase expected loss beyond the budget, size must fall again.
 
@@ -38,11 +38,13 @@ A drawdown rule should reduce uncertainty, not imply recovery. For example, a tr
 
 Use this order of operations:
 
-- Fix thesis invalidation.
-- Estimate loss per unit, including realistic costs.
-- Calculate the arithmetic size ceiling.
-- Apply tighter liquidity and portfolio caps.
-- Stress a gap or correlated move that bypasses planned exits.
+1. Fix thesis invalidation.
+1. Estimate loss per unit, including realistic costs.
+1. Calculate the arithmetic size ceiling.
+1. Apply tighter liquidity and portfolio caps.
+1. Stress a gap or correlated move that bypasses planned exits.
+
+> The smallest of your caps is the only one that counts.
 
 **Limitation:** historical correlation and average liquidity can fail precisely during stress. Stops are instructions, not insurance, and leverage can magnify losses. Position sizing can bound an estimate under stated assumptions; it cannot guarantee a maximum realized loss.
 

@@ -15,13 +15,13 @@ send_email: false
 Each part stands on its own. This is 40 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-Watch somebody open their own desk. They scroll. They scroll again, hunting a chart, then a table, then a badge, and two minutes later they still cannot say whether the plan is live. The first screen, meaning the part visible before any scrolling, has to answer that on its own.
+Watch somebody open their own desk. They scroll. They scroll again, hunting a chart, then a table, then a badge, and two minutes later they still cannot say whether the plan is live. <mark>The first screen, meaning the part visible before any scrolling, has to answer that on its own.</mark>
 
 **Input from last Friday:** the reconciliation report from the broker module.
 
-![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
-
 **Friday deliverable:** A decision-first desktop summary, owned by the desk operator and kept with the week's evidence.
+
+![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
 
 ## Build this
 

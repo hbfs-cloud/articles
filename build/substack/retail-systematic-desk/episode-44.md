@@ -15,11 +15,11 @@ send_email: false
 Each part stands on its own. This is 44 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
 ::end
 
-One reviewer reading your work will mostly agree with it. Not from laziness — from sharing your assumptions. The gaps you cannot see are the gaps a second pair of eyes was hired to find, and a reviewer who thinks like you has the same blind spots in the same places.
+One reviewer reading your work will mostly agree with it. Not from laziness — from sharing your assumptions. <mark>The gaps you cannot see are the gaps a second pair of eyes was hired to find, and a reviewer who thinks like you has the same blind spots in the same places.</mark>
 
 So split the job by role, and let each role attack a different thing. Are the numbers real and traceable? Does the code do what the note says? What if the opposite is true? Can this be executed safely? Would an ordinary reader act on it and get hurt? Four verdicts, five, whatever the desk needs. The harshest one wins. Averaging verdicts defeats the entire point of collecting them.
 
-![Without the record, the loop is just repetition](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/journal_loop.png)
+![Diversification is measured in calm and spent in stress](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/correlation_breaks.png)
 
 **Input from last Friday:** the accepted side-effect boundary map.
 

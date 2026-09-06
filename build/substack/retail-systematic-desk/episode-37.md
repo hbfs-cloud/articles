@@ -19,7 +19,7 @@ Two accounts at the same broker do not do the same things. One accepts an entry 
 
 Discovery is therefore not setup work you do once. It runs at the start of every session and again immediately before anything is placed.
 
-![Every order ends reconciled](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/order_state_machine.png)
+![Two orders, two different ways to be wrong](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/stop_vs_stop_limit.png)
 
 Toy preflight, invented figures: 14 capabilities queried, 11 supported, 2 unsupported, 1 returning nothing at all. Unknown is not a soft yes. It is refused until somebody answers the question.
 
@@ -33,7 +33,7 @@ Before the first real credential exists, the unglamorous half. Least privilege, 
 
 Then query capabilities and account state at run start and again before every change, storing the answers with the run rather than in somebody's memory. Classify precisely: which capability, which account, which venue, which session.
 
-Never approximate a protective exit in silence. A local imitation exists only while your process is alive, and that difference surfaces on exactly the day your process is not.
+Never approximate a protective exit in silence. <mark>A local imitation exists only while your process is alive, and that difference surfaces on exactly the day your process is not.</mark>
 
 ### Minimum record
 

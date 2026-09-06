@@ -19,7 +19,7 @@ A rejected order is the easy case. Silence is the hard one: you sent something, 
 
 Toy run, figures invented to show the shape and nothing else: 40 submissions into a simulator, network cut at a random moment each time. 31 answered normally. 6 timed out and turned up in the broker's history anyway. 3 timed out and never existed. From your side those last two groups look identical for several seconds, and a client that retries on impulse ends up with a double position in 6 cases out of 9.
 
-![Every order ends reconciled](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/order_state_machine.png)
+![Between the event and your screen, time passes](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/information_clock.png)
 
 **Input from last Friday:** the accepted order-state transition suite.
 
@@ -42,7 +42,7 @@ After a timeout, read the broker's whole history: working orders, completed orde
 
 ## Test it before moving on
 
-Drop the response after acceptance. Hide the order for the length of the consistency window. Restart the process. The client has to sit in `unknown`, send nothing, and move only when the broker's own evidence arrives. Run the same test again on a partial fill, where 40 shares of a 100-share intent already exist (quantities illustrative).
+Drop the response after acceptance. Hide the order for the length of the consistency window. Restart the process. <mark>The client has to sit in `unknown`, send nothing, and move only when the broker's own evidence arrives.</mark> Run the same test again on a partial fill, where 40 shares of a 100-share intent already exist (quantities illustrative).
 
 **Operating limit:** simulator only, no live credential anywhere in the loop, no account detail, no production parameter, and no claim of profitability. Educational, not investment advice. On what an execution report is supposed to contain: [Investor.gov: Executing an Order](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/executing-order) and [FINRA: Checking Trade Confirmations](https://www.finra.org/investors/insights/checking-trade-confirmations).
 
@@ -53,3 +53,5 @@ Drop the response after acceptance. Hide the order for the length of the consist
 **NO-GO:** never mint a fresh request identifier for a technical retry of the same intent. New label, new order.
 
 **Next Friday:** carry the accepted drill into Use an Append-Only Decision Ledger.
+
+> A retry is not free. Until the broker's own history answers, unknown is the only honest state.
