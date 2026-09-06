@@ -14,8 +14,10 @@ source_path: "series/anatomie-signal-trade/part3-le-stop/index.html"
 Each part stands on its own. This is 3 of 6 in The 30-Second Trade Signal Check; earlier parts cover the groundwork but you can start here.
 ::end
 
-The August 12 `CLF` screen reported a $12.095 raw entry, $0.645 ATR and an $11.1282 stop exactly 1.50 ATR
-below entry. The final plan shifted to $12.25 and $11.28. It preserved almost the same distance, but that
+The August 12 `CLF` screen reported a $12.095 raw entry, $0.645 ATR and an $11.1282 stop described as 1.50
+ATR below entry. Recompute it from those two published numbers and you get $11.1275 — the screen rounded
+its ATR for display and sized from the unrounded one. Seven ten-thousandths of a dollar changes nothing
+about the trade and everything about whether you can rebuild it. The final plan shifted to $12.25 and $11.28. It preserved almost the same distance, but that
 shift was not rounding and its rule was not recorded.
 
 That history changes the interpretation. The source-screen stop was volatility-derived. The undocumented
