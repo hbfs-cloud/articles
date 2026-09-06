@@ -80,18 +80,23 @@
         {
           "as": "autoscreen_etf",
           "server": "marketdata",
-          "tool": "RunAutoScreener",
+          "tool": "RunScreener",
           "args": {
+            "pass_expr": "rsi14 > 40 && rsi14 < 70 && vol > 500000 && close > 10",
+            "score_expr": "trend_strength(20) * 20 + rsi14",
             "region": "US",
             "asset": "etf",
+            "timeframe": "1d",
             "top_k": 30,
             "force_async": true
           },
+          "job_max_ms": 900000,
           "freshness": {
             "max_age_h": 24,
             "required": true
           },
-          "cache_minutes": 180
+          "cache_minutes": 180,
+          "_tool_reason": "RunAutoScreener reste cassé côté serveur au 2026-09-05 (build 87424cc4) : timeout systématique `phase=screening limit=5m0s`, y compris seul sur un pool idle. Le correctif du jour n'a couvert que RunScreener. On bascule donc sur la MÊME formulation RunScreener que plans/scanner-etf-fallback.json, déjà sanctionnée et vérifiée en journalier. La clé `as` reste `autoscreen_etf` : extract-universe.js sélectionne par NOM DE FICHIER, et les deux outils rendent la même forme screener_results.candidates. À rebasculer sur RunAutoScreener quand le serveur le corrige — c'est lui qui porte la pondération par régime."
         }
       ]
     },
@@ -107,13 +112,15 @@
             "score_expr": "rsi14 + (macd > 0 ? 15 : 0)",
             "region": "US",
             "asset": "stock",
+            "timeframe": "1d",
             "top_k": 40,
             "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
             "required": true
-          }
+          },
+          "job_max_ms": 900000
         }
       ]
     },
@@ -129,13 +136,15 @@
             "score_expr": "rsi14 + (vol_spike45(1.5) ? 20 : 0)",
             "region": "US",
             "asset": "stock",
+            "timeframe": "1d",
             "top_k": 40,
             "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
             "required": true
-          }
+          },
+          "job_max_ms": 900000
         }
       ]
     },
@@ -151,13 +160,15 @@
             "score_expr": "trend_strength(20) * 10 + (65 - rsi14)",
             "region": "US",
             "asset": "stock",
+            "timeframe": "1d",
             "top_k": 25,
             "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
             "required": true
-          }
+          },
+          "job_max_ms": 900000
         }
       ]
     },

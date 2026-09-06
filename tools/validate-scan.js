@@ -287,32 +287,57 @@ async function main() {
     }
   }
 
-  // 2b. Regime score / label coherence (parachute) — DEUX ÉCHELLES dans l'archive :
-  // scans <= juin 2026 = BULLISH 0-100 (65+ = RISK-ON) ; scans >= juillet 2026 =
-  // DÉFENSIVITÉ 0-100 (0 = plein risk-on, convention MCP v5 facet regime).
-  // Canon : défensivité + champ `regimeScoreScale` explicite dans signals.json.
-  // Heuristique legacy (champ absent) : label bullish + score < 35 => défensivité ;
-  // score >= 35 => bullish ; sinon ambigu => skip (pas de faux positif).
+  // 2b. Regime score / label coherence (parachute).
+  //
+  // L'archive porte TROIS échelles incompatibles, publiées en un seul mois d'août 2026 :
+  // bullish 0-100 (« 79 »), défensivité 0-100 (convention facet regime marketdata, 0 = plein
+  // risk-on) et bullish 0-1 (« 0.81 », convention DtxRegime). Le champ `regimeScoreScale`
+  // était du TEXTE LIBRE et l'ancienne heuristique devinait l'échelle quand il manquait :
+  // un `0.81` déclaré « 0-1 (1=risk-on, systematic) » était lu comme un score bullish sur
+  // 100, donc RISK-OFF. Les scans 20260821 et 20260825 sont partis en production dans cet
+  // état. Une échelle ne se devine pas : elle se déclare dans un énuméré fermé, sinon on
+  // refuse.
+  const REGIME_SCALES = {
+    bullish_0_100: s => s,
+    bullish_0_1: s => s * 100,
+    defensiveness_0_100: s => 100 - s,
+  };
+  const SCALE_ALIASES = { bullish: 'bullish_0_100', defensiveness: 'defensiveness_0_100' };
   if (regimeScore != null && regime) {
     const RANK = { 'RISK-OFF': 0, 'EARLY RISK-OFF': 1, 'NEUTRAL': 2, 'RECOVERY': 3, 'RISK-ON': 4 };
     const labelRank = RANK[String(regime).toUpperCase().trim()] ?? 2;
-    const declaredScale = (loadRawSignalsJson(dir) || {}).regimeScoreScale || null;
-    const scale = declaredScale
-      || (labelRank >= 3 && regimeScore < 35 ? 'defensiveness'
-        : regimeScore >= 35 ? 'bullish' : null);
-    if (scale) {
-      const bullishScore = scale === 'defensiveness' ? 100 - regimeScore : regimeScore;
-      const scoreRegime = bullishScore >= 65 ? 'RISK-ON'
-        : bullishScore >= 55 ? 'RECOVERY'
-        : bullishScore >= 45 ? 'NEUTRAL'
-        : bullishScore >= 38 ? 'EARLY RISK-OFF'
-        : 'RISK-OFF';
-      const scoreRank = RANK[scoreRegime] ?? 2;
-      if (labelRank > scoreRank) {
+    const raw = (loadRawSignalsJson(dir) || {}).regimeScoreScale;
+    const declared = raw ? (SCALE_ALIASES[String(raw).trim()] || String(raw).trim()) : null;
+    const enforceFrom = (filters.regime_labels && filters.regime_labels.scale_enum_active_from) || '20260902';
+
+    if (!declared || !REGIME_SCALES[declared]) {
+      if (dirName >= enforceFrom) {
         violations.push({
-          rule: 'regime_score_coherence',
-          message: `Regime label "${regime}" is more bullish than score ${regimeScore} (échelle ${scale}) implies (-> ${scoreRegime}). Use the more defensive label or justify the override.`
+          rule: 'regime_scale_declaration',
+          message: `regimeScoreScale ${raw ? `"${raw}" est hors énuméré` : 'absent'} — valeurs admises : ${Object.keys(REGIME_SCALES).join(', ')}. `
+            + `Une échelle devinée a déjà publié un RISK-ON adossé à un score lu comme RISK-OFF (20260821, 20260825). Fail-closed.`
         });
+      }
+    } else {
+      const bullishScore = REGIME_SCALES[declared](regimeScore);
+      if (!(bullishScore >= 0 && bullishScore <= 100)) {
+        violations.push({
+          rule: 'regime_scale_declaration',
+          message: `regimeScore ${regimeScore} hors bornes une fois converti par l'échelle "${declared}" (-> ${bullishScore}). Échelle déclarée incohérente avec la valeur.`
+        });
+      } else {
+        const scoreRegime = bullishScore >= 65 ? 'RISK-ON'
+          : bullishScore >= 55 ? 'RECOVERY'
+          : bullishScore >= 45 ? 'NEUTRAL'
+          : bullishScore >= 38 ? 'EARLY RISK-OFF'
+          : 'RISK-OFF';
+        const scoreRank = RANK[scoreRegime] ?? 2;
+        if (labelRank > scoreRank) {
+          violations.push({
+            rule: 'regime_score_coherence',
+            message: `Regime label "${regime}" is more bullish than score ${regimeScore} (échelle ${declared} -> ${bullishScore.toFixed(1)}/100 bullish) implies (-> ${scoreRegime}). Use the more defensive label or justify the override.`
+          });
+        }
       }
     }
   }

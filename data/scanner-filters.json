@@ -116,7 +116,19 @@
       "NEUTRAL",
       "RECOVERY"
     ],
-    "_reason": "Stable taxonomy. No 'DEEP RISK-OFF', no 'STRONG RISK-ON', no inventions."
+    "_reason": "Stable taxonomy. No 'DEEP RISK-OFF', no 'STRONG RISK-ON', no inventions.",
+    "authority": "marketdata.GetMarketContext(facets=overview).regime",
+    "cross_check": "systematic.DtxRegime",
+    "max_bullish_divergence_pts": null,
+    "canonical_scale": "bullish_0_100",
+    "scale_enum": [
+      "bullish_0_100",
+      "bullish_0_1",
+      "defensiveness_0_100"
+    ],
+    "scale_enum_active_from": "20260902",
+    "_scale_reason": "Août 2026 a publié TROIS échelles incompatibles pour le même champ (79 bullish/100, 0.81 bullish/1, et la convention défensivité 0-100 où 0 = plein risk-on). Le champ regimeScoreScale était du texte libre et validate-scan devinait l'échelle quand il manquait : 20260821 et 20260825 sont partis avec un label RISK-ON adossé à un score lu comme RISK-OFF. L'énuméré est désormais fermé et l'absence de déclaration est bloquante. active_from grandfathère l'archive.",
+    "_authority_reason": "Décision propriétaire 2026-09-06 : le régime publié est celui de marketdata, point. DtxRegime devient le contradicteur informatif et ne bloque plus (max_bullish_divergence_pts = null).\n\nCE QU'IL FAUT SAVOIR AVANT DE TOUCHER À CE BLOC — marketdata expose DEUX moteurs de régime, de sens OPPOSÉ, et son propre schéma d'outil dit « do not mix the two numerically » :\n  1. GetMarketContext(facets=overview).regime — switcher 5 états, regime_score 0-1, 1 = risk-on. C'EST CELUI-CI L'AUTORITÉ : il est directement comparable à DtxRegime (0,772 contre 0,79 au 2026-09-04, écart 1,8 pt).\n  2. GetMarketContext(facets=regime) — classifieur probabiliste, regime_score 0-100 de DÉFENSIVITÉ, 0 = risk-on. Sens INVERSE.\nUn contrôle de convergence branché par erreur sur le second a produit un faux écart de 21 points le 2026-09-05 et bloqué un scan pour rien. Les composantes concordent en réalité à moins de 0,05 partout (spx 0,77/0,781 · vix 1/0,947 · credit 0,53/0,507), les seuls écarts réels étant des SMA calculées sur des fenêtres de barres légèrement différentes."
   },
   "earnings_window": {
     "exclude_days_before": 3,
