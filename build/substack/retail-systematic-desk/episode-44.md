@@ -15,7 +15,7 @@ One reviewer reading your work will mostly agree with it. Not from laziness — 
 
 So split the job by role, and let each role attack a different thing. Are the numbers real and traceable? Does the code do what the note says? What if the opposite is true? Can this be executed safely? Would an ordinary reader act on it and get hurt? Four verdicts, five, whatever the desk needs. The harshest one wins. Averaging verdicts defeats the entire point of collecting them.
 
-![A layer must fail loudly or not at all](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/layers_fail_safe.png)
+![Without the record, the loop is just repetition](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/journal_loop.png)
 
 **Input from last Friday:** the accepted side-effect boundary map.
 

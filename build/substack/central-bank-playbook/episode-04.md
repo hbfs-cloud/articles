@@ -11,7 +11,7 @@ In December 2021 the median FOMC participant expected the policy rate to finish 
 
 An FOMC day arrives as five documents, spread over weeks, each with a different job.
 
-![How a rate decision reaches an asset price](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/policy_transmission.png)
+![Not all dates are known equally far in advance](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/calendar_certainty.png)
 
 The statement lands at 14:00 ET. It runs 300 to 400 words and every one of them was negotiated. The change from the previous statement is the signal, so read the two side by side rather than reading the new one alone. The implementation note comes with it and carries the actual operating settings — this is where the plumbing from part two shows up. Four of the eight annual meetings — March, June, September and December — also publish the Summary of Economic Projections: growth, unemployment, inflation, and the dots. Nineteen participants submit, so the median is the tenth dot. How tightly the dots cluster tells you about agreement; the shift in the median since the last round tells you about direction.
 
