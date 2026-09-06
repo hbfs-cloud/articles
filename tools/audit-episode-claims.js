@@ -32,7 +32,9 @@ const arg = (n, d = null) => { const i = argv.indexOf(n); return i >= 0 ? argv[i
 const onlySeries = arg('--series');
 const jsonOut = arg('--json');
 
-const SERIES_DIR = path.join(ROOT, 'data/substack/series');
+// `--dir` permet d'auditer la sortie CONSTRUITE et pas seulement la source : sans cela, on ne peut
+// pas vérifier qu'une correction a bien retiré ce qu'elle visait, et on croit avoir corrigé.
+const SERIES_DIR = path.join(ROOT, arg('--dir', 'data/substack/series'));
 
 const MONTHS = { january: 1, february: 2, march: 3, april: 4, may: 5, june: 6, july: 7, august: 8, september: 9, october: 10, november: 11, december: 12 };
 const MONTH_RE = Object.keys(MONTHS).join('|');
@@ -75,7 +77,9 @@ function classify(sentence) {
   return { kind: 'other', percents: pcts };
 }
 
-const series = onlySeries ? [onlySeries] : fs.readdirSync(SERIES_DIR).filter(d => fs.existsSync(path.join(SERIES_DIR, d, 'manifest.json')));
+const series = onlySeries ? [onlySeries]
+  : fs.readdirSync(SERIES_DIR).filter(d => fs.statSync(path.join(SERIES_DIR, d)).isDirectory()
+      && fs.readdirSync(path.join(SERIES_DIR, d)).some(f => f.endsWith('.md')));
 const findings = [];
 
 for (const s of series) {
