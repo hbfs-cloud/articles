@@ -1,0 +1,800 @@
+{
+  "scanDate": "20260908",
+  "referenceClose": "2026-09-04",
+  "regime": "RISK-ON",
+  "regimeScore": 77,
+  "regimeScoreScale": "bullish_0_100",
+  "regimeAuthority": "marketdata.GetMarketContext(facets=overview).regime",
+  "regimeEngine": "switcher_analyzer / modèle dtx / échelle 0-1_risk_on",
+  "_pipelineOrder": {
+    "earnings_screened_at": "2026-09-06T05:24:28Z",
+    "sec_screened_at": "2026-09-06T07:08:19Z",
+    "enrichment_started_at": "2026-09-06T06:59:58Z",
+    "candidates_screened": 105,
+    "method": "Calendrier large collecté en vague 1 (05:24) AVANT tout enrichissement (06:59) : le vivier a été filtré puis enrichi, pas l'inverse. Les dépôts SEC de la sélection finale suivent (07:08), ce qui est leur place — ils portent sur les titres retenus, pas sur le vivier. Les trois screeners actions ont dû être rejoués à 07:24 avec la borne de capitalisation que le DSL de la vague 1 avait omise."
+  },
+  "_editorialNote": "Panier reconstruit le 2026-09-06 après trois revues indépendantes (docs/reviews/scan-20260908-revues.md). La première sélection — huit Momentum, deux Breakout, zéro Pullback, toutes les entrées au-dessus de la clôture — était orientée du mauvais côté des trois axes que notre propre registre scellé mesure. Elle échouait par ailleurs son gate bloquant avec 155 constats. Rien n'en a été publié.",
+  "_scoreMethodology": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement.",
+  "_entryPolicy": "Un prix unique, la clôture de référence — ni zone, ni gate VWAP, ni conditional_next_session. C'est la recommandation n°4 de la revue d'août, classée SOLIDE : sur 99 signaux, 86% se déclenchaient et 78% dès J+0, et ce qu'on ratait ne montait pas (0,33% de médiane). Le contrefactuel « achat à l'ouverture, sans zone » rendait +0,043 R contre −0,045 R pour la zone publiée. Garder le cérémonial revenait à vendre au lecteur une précision qu'on n'a pas. CE QUI A ÉTÉ ÉCARTÉ : la revue contrarian a trouvé un seau à +0,220 R pour les entrées au niveau ou sous la clôture (n=21) contre −0,260 R à +0,5/+1% (n=29). Une première version du panier plaçait la bande d'entrée sous la clôture pour le capter. C'était du sur-ajustement : rien n'établit que ce seau soit causal plutôt qu'un artefact de remplissage, la revue d'août classe explicitement ce levier « fragile, à mesurer avant d'appliquer », et Config Change Backtest l'interdit sans 30 jours de backtest. Voie de validation : 200 lignes scellées, puis validate-config-change.js en régime-aware.",
+  "generatedFrom": "tools/build-scan.js",
+  "universe": {
+    "certified_candidates_rows": 135,
+    "certified_candidates_distinct": 105,
+    "enriched": 43,
+    "note": "135 est un compte de LIGNES sur quatre screeners ; 105 symboles distincts, une trentaine de titres figurant dans deux screeners à la fois. Le premier manifeste publiait 135 comme un nombre de candidats — surévaluation de 28,6%. vars.json avait par ailleurs figé l'univers à 36 tickers alors que rejouer extract-universe.js sur le même dossier _data en rend 60 : 24 candidats certifiés, dont tout le vivier Pullback, n'avaient jamais été enrichis."
+  },
+  "signals": [
+    {
+      "ticker": "AMZN",
+      "name": "Amazon",
+      "score": 80,
+      "scoreFamily": "editorial",
+      "scoreSource": "flat_no_ranking_asserted",
+      "strategy": "Pullback",
+      "price": 258.51,
+      "entry": 258.51,
+      "entry_low": 258.51,
+      "entry_high": 258.51,
+      "stop": 248.47,
+      "tp1": 266.4,
+      "tp2": 271.89,
+      "rr": "1:0.79",
+      "rr_entry": 0.79,
+      "tp1_atr_multiple": 1.179,
+      "horizon": 10,
+      "region": "US",
+      "sector": "Consumer",
+      "sharia": false,
+      "market_cap": 2750293999616,
+      "extension": {
+        "rsi": 49.55,
+        "atr": 6.692,
+        "distance_50dma_pct": 0.88,
+        "distance_200dma_pct": 5.89,
+        "consolidation_bars": 15,
+        "stop_atr_multiple_from_entry_low": 1.5,
+        "stop_pct_from_entry_low": -3.88,
+        "stop_basis": "plancher_bruit",
+        "tp1_basis": "résistance"
+      },
+      "avg_daily_dollar_volume": 8444874132,
+      "earnings_clear": true,
+      "dilution_clear": true,
+      "earnings_source": "8k_item_202",
+      "earnings_forward_evidence": {
+        "checked_at": "2026-09-06T05:24:28Z",
+        "days_ahead": 7,
+        "result": "prochaine publication le 2026-10-29 — hors fenêtre ±3 j et au-delà de l horizon",
+        "event_found": false,
+        "next_earnings": "2026-10-29",
+        "source_artifact": "scanner/20260908/_final/earnings_selected_evidence.json",
+        "source_sha256": "b620e5286df1cb5f6e044b28d6747eaf80577193e97030c27404bc748ec68334"
+      },
+      "issuer_filing_regime": "domestic_issuer",
+      "dilution_scope": "Dépôts SEC officiels revus sur 90 jours; dette classée séparément des offres d’actions.",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260908/_final/sec_selected_evidence.json",
+        "source_sha256": "711da6b6fcedb588992511ea06014b453d3abd8a9d84bb1e4c8dd4e60a069d21",
+        "checked_at": "2026-09-06T07:08:19Z",
+        "dilution_window": {
+          "days": 90,
+          "start": "2026-06-06",
+          "end": "2026-09-04"
+        },
+        "pagination_exhausted": true,
+        "latest_earnings_filing": {
+          "form": "8-K",
+          "date": "2026-07-30",
+          "accession": "0001018724-26-000024",
+          "items": "2.02,9.01"
+        },
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": [
+          {
+            "d": "2026-07-08",
+            "form": "424B5",
+            "acc": "0001104659-26-081786"
+          },
+          {
+            "d": "2026-07-07",
+            "form": "424B5",
+            "acc": "0001104659-26-080950"
+          },
+          {
+            "d": "2026-06-10",
+            "form": "424B5",
+            "acc": "0001104659-26-072332"
+          },
+          {
+            "d": "2026-06-08",
+            "form": "424B5",
+            "acc": "0001104659-26-071190"
+          }
+        ],
+        "classification_evidence": "Quatre 424B5 dans la fenêtre de 90 jours, tous sur l étagère 333-293246. Le 8-K du 2026-06-10 (accession 0001104659-26-072140) porte l item 2.03, « Creation of a Direct Financial Obligation » : c est une émission de DETTE. La série de juillet suit la même étagère et la même séquence. Classé dette, pas dilution — et la classification repose sur un dépôt, pas sur une présomption."
+      },
+      "selection_evidence": {
+        "source_artifact": "scanner/20260908/_final/selection_rows.json",
+        "source_sha256": "7c54ce74760ce30b0c958977ec04979b3b68d8f4e2d6c2414fb806d2608cc13a",
+        "screen_snapshot_as_of": "2026-09-04",
+        "estimated_valid_bars": 9,
+        "source_screen_score": 15.406125514527988,
+        "source_screen": "_data/screen_pullback_us.json",
+        "avg_daily_dollar_volume": 8444874132,
+        "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
+      },
+      "thesis": "Le titre le plus liquide du vivier, 8,4 Md$ échangés par séance, revenu à 0,88% de sa moyenne 50 jours après le décrochage de fin août, avec un RSI à 49,5. C'est la seule ligne du panier dont la cible bute sur une résistance réelle plutôt que sur un multiple d'ATR : 266,40 $, le plus-haut du 19 août, à 1,18 ATR de l'entrée.",
+      "invalidation": "Clôture sous le plus bas de la séance de référence.",
+      "invalidation_level": 255.29,
+      "execution": {
+        "status": "conditional_next_session",
+        "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
+      }
+    },
+    {
+      "ticker": "KO",
+      "name": "Coca-Cola",
+      "score": 80,
+      "scoreFamily": "editorial",
+      "scoreSource": "flat_no_ranking_asserted",
+      "strategy": "Pullback",
+      "price": 88.0699,
+      "entry": 88.07,
+      "entry_low": 88.07,
+      "entry_high": 88.07,
+      "stop": 85.42,
+      "tp1": 90.92,
+      "tp2": 90.99,
+      "rr": "1:1.08",
+      "rr_entry": 1.08,
+      "tp1_atr_multiple": 1.951,
+      "horizon": 10,
+      "region": "US",
+      "sector": "Staples",
+      "sharia": false,
+      "market_cap": 382109351936,
+      "extension": {
+        "rsi": 50.21,
+        "atr": 1.4609,
+        "distance_50dma_pct": 2.01,
+        "distance_200dma_pct": 11.2,
+        "consolidation_bars": 14,
+        "stop_atr_multiple_from_entry_low": 1.81,
+        "stop_pct_from_entry_low": -3.01,
+        "stop_basis": "plancher_bruit",
+        "tp1_basis": "résistance"
+      },
+      "avg_daily_dollar_volume": 1268197753,
+      "earnings_clear": true,
+      "dilution_clear": true,
+      "earnings_source": "8k_item_202",
+      "earnings_forward_evidence": {
+        "checked_at": "2026-09-06T05:24:28Z",
+        "days_ahead": 7,
+        "result": "prochaine publication le 2026-10-20 — hors fenêtre ±3 j et au-delà de l horizon",
+        "event_found": false,
+        "next_earnings": "2026-10-20",
+        "source_artifact": "scanner/20260908/_final/earnings_selected_evidence.json",
+        "source_sha256": "b620e5286df1cb5f6e044b28d6747eaf80577193e97030c27404bc748ec68334"
+      },
+      "issuer_filing_regime": "domestic_issuer",
+      "dilution_scope": "Dépôts SEC officiels revus sur 90 jours; dette classée séparément des offres d’actions.",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260908/_final/sec_selected_evidence.json",
+        "source_sha256": "711da6b6fcedb588992511ea06014b453d3abd8a9d84bb1e4c8dd4e60a069d21",
+        "checked_at": "2026-09-06T07:08:19Z",
+        "dilution_window": {
+          "days": 90,
+          "start": "2026-06-06",
+          "end": "2026-09-04"
+        },
+        "pagination_exhausted": true,
+        "latest_earnings_filing": {
+          "form": "8-K",
+          "date": "2026-07-28",
+          "accession": "0001628280-26-049922",
+          "items": "2.02,9.01"
+        },
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": [],
+        "classification_evidence": "424B5 les plus récents en août 2024, plus de deux ans — hors fenêtre."
+      },
+      "selection_evidence": {
+        "source_artifact": "scanner/20260908/_final/selection_rows.json",
+        "source_sha256": "7c54ce74760ce30b0c958977ec04979b3b68d8f4e2d6c2414fb806d2608cc13a",
+        "screen_snapshot_as_of": "2026-09-04",
+        "estimated_valid_bars": 3,
+        "source_screen_score": 14.857325727429735,
+        "source_screen": "_data/screen_pullback_us.json",
+        "avg_daily_dollar_volume": 1268197753,
+        "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
+      },
+      "thesis": "ATR à 1,66%, la plus faible volatilité du panier, et le meilleur rapport gain/risque des huit lignes (1,08) parce que sa cible s'appuie sur une résistance à 90,92 $, le plus-haut du 20 août, et non sur un multiple. C'est la ligne qui amortit : elle ne fera pas la performance, elle contiendra l'amplitude un jour de restitution générale.",
+      "invalidation": "Clôture sous le plus bas de la séance de référence.",
+      "invalidation_level": 87.85,
+      "execution": {
+        "status": "conditional_next_session",
+        "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
+      }
+    },
+    {
+      "ticker": "DIS",
+      "name": "Walt Disney",
+      "score": 80,
+      "scoreFamily": "editorial",
+      "scoreSource": "flat_no_ranking_asserted",
+      "strategy": "Pullback",
+      "price": 105.3099,
+      "entry": 105.31,
+      "entry_low": 105.31,
+      "entry_high": 105.31,
+      "stop": 101.89,
+      "tp1": 108.72,
+      "tp2": 109.86,
+      "rr": "1:1.00",
+      "rr_entry": 1,
+      "tp1_atr_multiple": 1.498,
+      "horizon": 10,
+      "region": "US",
+      "sector": "Comm",
+      "sharia": false,
+      "market_cap": 185031770112,
+      "extension": {
+        "rsi": 50.46,
+        "atr": 2.2764,
+        "distance_50dma_pct": 1.83,
+        "distance_200dma_pct": -0.02,
+        "consolidation_bars": 14,
+        "stop_atr_multiple_from_entry_low": 1.5,
+        "stop_pct_from_entry_low": -3.25,
+        "stop_basis": "plancher_bruit",
+        "tp1_basis": "optimum_mesuré"
+      },
+      "avg_daily_dollar_volume": 799218420,
+      "earnings_clear": true,
+      "dilution_clear": true,
+      "earnings_source": "8k_item_202",
+      "earnings_forward_evidence": {
+        "checked_at": "2026-09-06T05:24:28Z",
+        "days_ahead": 7,
+        "result": "prochaine publication le 2026-11-12 — hors fenêtre ±3 j et au-delà de l horizon",
+        "event_found": false,
+        "next_earnings": "2026-11-12",
+        "source_artifact": "scanner/20260908/_final/earnings_selected_evidence.json",
+        "source_sha256": "b620e5286df1cb5f6e044b28d6747eaf80577193e97030c27404bc748ec68334"
+      },
+      "issuer_filing_regime": "domestic_issuer",
+      "dilution_scope": "Dépôts SEC officiels revus sur 90 jours; dette classée séparément des offres d’actions.",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260908/_final/sec_selected_evidence.json",
+        "source_sha256": "711da6b6fcedb588992511ea06014b453d3abd8a9d84bb1e4c8dd4e60a069d21",
+        "checked_at": "2026-09-06T07:08:19Z",
+        "dilution_window": {
+          "days": 90,
+          "start": "2026-06-06",
+          "end": "2026-09-04"
+        },
+        "pagination_exhausted": true,
+        "latest_earnings_filing": {
+          "form": "8-K",
+          "date": "2026-08-05",
+          "accession": "0001744489-26-000056",
+          "items": "2.02,9.01"
+        },
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": [],
+        "classification_evidence": "424B5 le plus récent le 2026-02-10, soit J-206 — hors fenêtre."
+      },
+      "selection_evidence": {
+        "source_artifact": "scanner/20260908/_final/selection_rows.json",
+        "source_sha256": "7c54ce74760ce30b0c958977ec04979b3b68d8f4e2d6c2414fb806d2608cc13a",
+        "screen_snapshot_as_of": "2026-09-04",
+        "estimated_valid_bars": 4,
+        "source_screen_score": 14.62363400481094,
+        "source_screen": "_data/screen_pullback_us.json",
+        "avg_daily_dollar_volume": 799218420,
+        "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
+      },
+      "thesis": "Repli depuis le plus-haut du 24 août sur un volume qui décroît : 12,7 M titres au sommet contre 6,1 M à la clôture de référence. Un repli qui perd son volume est une pause, pas une sortie. RSI à 50,5, et le cours reste 1,83% au-dessus de sa moyenne 50 jours.",
+      "invalidation": "Clôture sous le plus bas de la séance de référence.",
+      "invalidation_level": 105.17,
+      "execution": {
+        "status": "conditional_next_session",
+        "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
+      }
+    },
+    {
+      "ticker": "PCAR",
+      "name": "PACCAR",
+      "score": 80,
+      "scoreFamily": "editorial",
+      "scoreSource": "flat_no_ranking_asserted",
+      "strategy": "Pullback",
+      "price": 124.6999,
+      "entry": 124.7,
+      "entry_low": 124.7,
+      "entry_high": 124.7,
+      "stop": 120.34,
+      "tp1": 129.06,
+      "tp2": 130.51,
+      "rr": "1:1.00",
+      "rr_entry": 1,
+      "tp1_atr_multiple": 1.501,
+      "horizon": 10,
+      "region": "US",
+      "sector": "Industrials",
+      "sharia": false,
+      "market_cap": 65537703936,
+      "extension": {
+        "rsi": 42.79,
+        "atr": 2.9038,
+        "distance_50dma_pct": -1.34,
+        "distance_200dma_pct": 6,
+        "consolidation_bars": 15,
+        "stop_atr_multiple_from_entry_low": 1.5,
+        "stop_pct_from_entry_low": -3.5,
+        "stop_basis": "plancher_bruit",
+        "tp1_basis": "optimum_mesuré"
+      },
+      "avg_daily_dollar_volume": 304439218,
+      "earnings_clear": true,
+      "dilution_clear": true,
+      "earnings_source": "8k_item_202",
+      "earnings_forward_evidence": {
+        "checked_at": "2026-09-06T05:24:28Z",
+        "days_ahead": 7,
+        "result": "prochaine publication le 2026-10-27 — hors fenêtre ±3 j et au-delà de l horizon",
+        "event_found": false,
+        "next_earnings": "2026-10-27",
+        "source_artifact": "scanner/20260908/_final/earnings_selected_evidence.json",
+        "source_sha256": "b620e5286df1cb5f6e044b28d6747eaf80577193e97030c27404bc748ec68334"
+      },
+      "issuer_filing_regime": "domestic_issuer",
+      "dilution_scope": "Dépôts SEC officiels revus sur 90 jours; dette classée séparément des offres d’actions.",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260908/_final/sec_selected_evidence.json",
+        "source_sha256": "711da6b6fcedb588992511ea06014b453d3abd8a9d84bb1e4c8dd4e60a069d21",
+        "checked_at": "2026-09-06T07:08:19Z",
+        "dilution_window": {
+          "days": 90,
+          "start": "2026-06-06",
+          "end": "2026-09-04"
+        },
+        "pagination_exhausted": true,
+        "latest_earnings_filing": {
+          "form": "8-K",
+          "date": "2026-07-28",
+          "accession": "0001193125-26-318918",
+          "items": "2.02,9.01"
+        },
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": [],
+        "classification_evidence": "Aucun dépôt d offre sur 100 jours."
+      },
+      "selection_evidence": {
+        "source_artifact": "scanner/20260908/_final/selection_rows.json",
+        "source_sha256": "7c54ce74760ce30b0c958977ec04979b3b68d8f4e2d6c2414fb806d2608cc13a",
+        "screen_snapshot_as_of": "2026-09-04",
+        "estimated_valid_bars": 9,
+        "source_screen_score": 22.095914436908306,
+        "source_screen": "_data/screen_pullback_us.json",
+        "avg_daily_dollar_volume": 304439218,
+        "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
+      },
+      "thesis": "RSI à 42,8, le plus bas du panier, et un cours SOUS sa moyenne 50 jours (−1,34%) — le seul cas où la porte d'extension autorise le négatif, précisément parce que c'est là qu'une stratégie de repli est censée acheter. Les deux dernières séances remontent depuis le creux du 1er septembre.",
+      "invalidation": "Clôture sous le plus bas de la séance de référence.",
+      "invalidation_level": 124.15,
+      "execution": {
+        "status": "conditional_next_session",
+        "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
+      }
+    },
+    {
+      "ticker": "MT",
+      "name": "ArcelorMittal",
+      "score": 80,
+      "scoreFamily": "editorial",
+      "scoreSource": "flat_no_ranking_asserted",
+      "strategy": "Momentum",
+      "price": 78.7399,
+      "entry": 78.74,
+      "entry_low": 78.74,
+      "entry_high": 78.74,
+      "stop": 75.64,
+      "tp1": 81.84,
+      "tp2": 82.87,
+      "rr": "1:1.00",
+      "rr_entry": 1,
+      "tp1_atr_multiple": 1.5,
+      "horizon": 10,
+      "region": "US",
+      "sector": "Materials",
+      "sharia": false,
+      "market_cap": 57359953920,
+      "extension": {
+        "rsi": 68.32,
+        "atr": 2.0661,
+        "distance_50dma_pct": 11.3,
+        "distance_200dma_pct": 33.67,
+        "consolidation_bars": 15,
+        "stop_atr_multiple_from_entry_low": 1.5,
+        "stop_pct_from_entry_low": -3.94,
+        "stop_basis": "plancher_bruit",
+        "tp1_basis": "optimum_mesuré"
+      },
+      "avg_daily_dollar_volume": 108705944,
+      "earnings_clear": true,
+      "dilution_clear": true,
+      "earnings_source": "issuer_calendar_verified",
+      "earnings_forward_evidence": {
+        "checked_at": "2026-09-06T05:24:28Z",
+        "days_ahead": 7,
+        "result": "prochaine publication le 2026-11-05 — hors fenêtre ±3 j et au-delà de l horizon",
+        "event_found": false,
+        "next_earnings": "2026-11-05",
+        "source_artifact": "scanner/20260908/_final/earnings_selected_evidence.json",
+        "source_sha256": "b620e5286df1cb5f6e044b28d6747eaf80577193e97030c27404bc748ec68334"
+      },
+      "issuer_filing_regime": "foreign_private_issuer",
+      "dilution_scope": "Dépôts SEC officiels revus sur 90 jours; dette classée séparément des offres d’actions.",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260908/_final/sec_selected_evidence.json",
+        "source_sha256": "711da6b6fcedb588992511ea06014b453d3abd8a9d84bb1e4c8dd4e60a069d21",
+        "checked_at": "2026-09-06T07:08:19Z",
+        "dilution_window": {
+          "days": 90,
+          "start": "2026-06-06",
+          "end": "2026-09-04"
+        },
+        "pagination_exhausted": true,
+        "issuer_calendar_verified": true,
+        "issuer_calendar_check": {
+          "source": "marketdata.QueryData(types=calendar, end_date=2026-09-04)",
+          "trace": "trace-28df5dbf-d101-43b5-bc7e-e52218a08b44",
+          "next_earnings": "2026-11-05",
+          "calendar_status": "available",
+          "note": "Émetteur privé étranger : dépose des 6-K, jamais de 8-K item 2.02. La fenêtre de résultats est donc établie par le calendrier d émetteur certifié, pas par un dépôt SEC — et le calendrier a bien été relu pour ce titre, avec un statut available."
+        },
+        "latest_earnings_filing": null,
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": [],
+        "classification_evidence": "Émetteur privé étranger (dépôts 6-K, pas de 8-K item 2.02). 424B5 le plus récent le 2026-05-13, soit J-114 — hors fenêtre."
+      },
+      "selection_evidence": {
+        "source_artifact": "scanner/20260908/_final/selection_rows.json",
+        "source_sha256": "7c54ce74760ce30b0c958977ec04979b3b68d8f4e2d6c2414fb806d2608cc13a",
+        "screen_snapshot_as_of": "2026-09-04",
+        "estimated_valid_bars": 10,
+        "source_screen_score": 83.31858544019923,
+        "source_screen": "_data/screen_momentum_us.json",
+        "avg_daily_dollar_volume": 108705944,
+        "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
+      },
+      "thesis": "Acier, et un cas de force relative plutôt que de vent porteur : le secteur des matériaux perd 1,39% sur la semaine au 4 septembre (avant-dernier des onze secteurs) pendant que le titre tient quinze séances de consolidation sur quinze à 11,3% au-dessus de sa moyenne 50 jours. C'est aussi le signal le plus frais du panier, détecté à la clôture de référence elle-même, avec dix séances de validité devant lui.",
+      "invalidation": "Clôture sous le plus bas de la séance de référence.",
+      "invalidation_level": 77.76,
+      "execution": {
+        "status": "conditional_next_session",
+        "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
+      }
+    },
+    {
+      "ticker": "DHT",
+      "name": "DHT Holdings",
+      "score": 80,
+      "scoreFamily": "editorial",
+      "scoreSource": "flat_no_ranking_asserted",
+      "strategy": "Breakout",
+      "price": 20.87,
+      "entry": 20.87,
+      "entry_low": 20.87,
+      "entry_high": 20.87,
+      "stop": 19.82,
+      "tp1": 21.92,
+      "tp2": 22.26,
+      "rr": "1:1.00",
+      "rr_entry": 1,
+      "tp1_atr_multiple": 1.507,
+      "horizon": 10,
+      "region": "US",
+      "sector": "Energy",
+      "sharia": false,
+      "market_cap": 3235997696,
+      "extension": {
+        "rsi": 66.33,
+        "atr": 0.6969,
+        "distance_50dma_pct": 10.99,
+        "distance_200dma_pct": 26.26,
+        "consolidation_bars": 15,
+        "stop_atr_multiple_from_entry_low": 1.51,
+        "stop_pct_from_entry_low": -5.03,
+        "stop_basis": "plancher_bruit",
+        "tp1_basis": "optimum_mesuré"
+      },
+      "avg_daily_dollar_volume": 70572844,
+      "earnings_clear": true,
+      "dilution_clear": true,
+      "earnings_source": "issuer_calendar_verified",
+      "earnings_forward_evidence": {
+        "checked_at": "2026-09-06T05:24:28Z",
+        "days_ahead": 7,
+        "result": "prochaine publication le 2026-10-28 — hors fenêtre ±3 j et au-delà de l horizon",
+        "event_found": false,
+        "next_earnings": "2026-10-28",
+        "source_artifact": "scanner/20260908/_final/earnings_selected_evidence.json",
+        "source_sha256": "b620e5286df1cb5f6e044b28d6747eaf80577193e97030c27404bc748ec68334"
+      },
+      "issuer_filing_regime": "foreign_private_issuer",
+      "dilution_scope": "Dépôts SEC officiels revus sur 90 jours; dette classée séparément des offres d’actions.",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260908/_final/sec_selected_evidence.json",
+        "source_sha256": "711da6b6fcedb588992511ea06014b453d3abd8a9d84bb1e4c8dd4e60a069d21",
+        "checked_at": "2026-09-06T07:08:19Z",
+        "dilution_window": {
+          "days": 90,
+          "start": "2026-06-06",
+          "end": "2026-09-04"
+        },
+        "pagination_exhausted": true,
+        "issuer_calendar_verified": true,
+        "issuer_calendar_check": {
+          "source": "marketdata.QueryData(types=calendar, end_date=2026-09-04)",
+          "trace": "trace-2fd53799-160b-4991-b349-150763c7e9a8",
+          "next_earnings": "2026-10-28",
+          "calendar_status": "available",
+          "note": "Émetteur privé étranger : dépose des 6-K, jamais de 8-K item 2.02. La fenêtre de résultats est donc établie par le calendrier d émetteur certifié, pas par un dépôt SEC — et le calendrier a bien été relu pour ce titre, avec un statut available."
+        },
+        "latest_earnings_filing": null,
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": [],
+        "classification_evidence": "Émetteur privé étranger. Dépôts d offre les plus récents en 2014 — hors fenêtre de plus de dix ans."
+      },
+      "selection_evidence": {
+        "source_artifact": "scanner/20260908/_final/selection_rows.json",
+        "source_sha256": "7c54ce74760ce30b0c958977ec04979b3b68d8f4e2d6c2414fb806d2608cc13a",
+        "screen_snapshot_as_of": "2026-09-04",
+        "estimated_valid_bars": 8,
+        "source_screen_score": 86.33035845736538,
+        "source_screen": "_data/screen_breakout_us.json",
+        "avg_daily_dollar_volume": 70572844,
+        "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
+      },
+      "thesis": "Transport pétrolier. Cassure accompagnée d'un pic de volume — c'est ce pic qui vaut à cette ligne son score brut de 86,3, soit son RSI de 66,3 plus vingt. À déclarer sans détour : la revue d'août mesure Breakout à −0,220 R sur 22 lignes et recommandait de ne plus le publier. Cette ligne est ici parce que les plafonds de concentration du dépôt rendent un panier arithmétiquement impossible avec deux stratégies seulement — Pullback plafonné à 50% et Momentum à 40% ne couvrent que 90% du panier. C'est un conflit de règles, pas une conviction, et c'est la ligne à surveiller en premier.",
+      "invalidation": "Clôture sous le plus bas de la séance de référence.",
+      "invalidation_level": 20.18,
+      "execution": {
+        "status": "conditional_next_session",
+        "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
+      }
+    },
+    {
+      "ticker": "PDBC",
+      "name": "Invesco Optimum Yield Diversified Commodity",
+      "score": 80,
+      "scoreFamily": "editorial",
+      "scoreSource": "flat_no_ranking_asserted",
+      "strategy": "Momentum",
+      "price": 19.01,
+      "entry": 19.01,
+      "entry_low": 19.01,
+      "entry_high": 19.01,
+      "stop": 18.43,
+      "tp1": 19.42,
+      "tp2": 19.55,
+      "rr": "1:0.71",
+      "rr_entry": 0.71,
+      "tp1_atr_multiple": 1.511,
+      "horizon": 10,
+      "region": "ETF",
+      "sector": "Energy",
+      "sharia": false,
+      "market_cap": null,
+      "lookthrough": {
+        "factor": "commodity",
+        "clusters": [
+          "Energy"
+        ]
+      },
+      "extension": {
+        "rsi": 67.86,
+        "atr": 0.2714,
+        "distance_50dma_pct": 6.53,
+        "distance_200dma_pct": 16.63,
+        "consolidation_bars": 15,
+        "stop_atr_multiple_from_entry_low": 2.14,
+        "stop_pct_from_entry_low": -3.05,
+        "stop_basis": "plancher_bruit",
+        "tp1_basis": "optimum_mesuré"
+      },
+      "avg_daily_dollar_volume": 95158658,
+      "earnings_clear": true,
+      "dilution_clear": true,
+      "earnings_source": "n_a_etf",
+      "earnings_forward_evidence": {
+        "checked_at": "2026-09-06T05:24:28Z",
+        "days_ahead": 7,
+        "result": "ETF : pas de résultats d émetteur",
+        "event_found": false,
+        "next_earnings": null,
+        "source_artifact": "scanner/20260908/_final/earnings_selected_evidence.json",
+        "source_sha256": "b620e5286df1cb5f6e044b28d6747eaf80577193e97030c27404bc748ec68334"
+      },
+      "issuer_filing_regime": "exchange_traded_fund",
+      "dilution_scope": "Dépôts SEC officiels revus sur 90 jours; dette classée séparément des offres d’actions.",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260908/_final/sec_selected_evidence.json",
+        "source_sha256": "711da6b6fcedb588992511ea06014b453d3abd8a9d84bb1e4c8dd4e60a069d21",
+        "checked_at": "2026-09-06T07:08:19Z",
+        "dilution_window": {
+          "days": 90,
+          "start": "2026-06-06",
+          "end": "2026-09-04"
+        },
+        "pagination_exhausted": true,
+        "latest_earnings_filing": null,
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": [],
+        "classification_evidence": "Fonds indiciel : pas d émetteur d actions au sens de la porte anti-dilution. La porte est SANS OBJET, et non franchie faute de dépôt trouvé."
+      },
+      "selection_evidence": {
+        "source_artifact": "scanner/20260908/_final/selection_rows.json",
+        "source_sha256": "7c54ce74760ce30b0c958977ec04979b3b68d8f4e2d6c2414fb806d2608cc13a",
+        "screen_snapshot_as_of": "2026-09-04",
+        "estimated_valid_bars": 10,
+        "source_screen_score": 69.54320889339667,
+        "source_screen": "_data/autoscreen_etf.json",
+        "avg_daily_dollar_volume": 95158658,
+        "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
+      },
+      "thesis": "Panier de matières premières, sans formulaire fiscal K-1. Classé Energy et non ETF-Commodity : son exposition est dominée par le pétrole, et l'étiqueter par son enveloppe juridique permettait de loger une ligne énergie de plus sans que le plafond sectoriel s'en aperçoive. Avec DHT, cela fait deux lignes énergie sur huit, comptées comme telles.",
+      "invalidation": "Clôture sous le plus bas de la séance de référence.",
+      "invalidation_level": 18.78,
+      "execution": {
+        "status": "conditional_next_session",
+        "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
+      }
+    },
+    {
+      "ticker": "IBIT",
+      "name": "iShares Bitcoin Trust",
+      "score": 80,
+      "scoreFamily": "editorial",
+      "scoreSource": "flat_no_ranking_asserted",
+      "strategy": "Momentum",
+      "price": 45.2299,
+      "entry": 45.23,
+      "entry_low": 45.23,
+      "entry_high": 45.23,
+      "stop": 43.24,
+      "tp1": 47.21,
+      "tp2": 47.87,
+      "rr": "1:0.99",
+      "rr_entry": 0.99,
+      "tp1_atr_multiple": 1.497,
+      "horizon": 10,
+      "region": "ETF",
+      "sector": "Crypto",
+      "sharia": false,
+      "market_cap": null,
+      "lookthrough": {
+        "factor": "crypto",
+        "clusters": [
+          "Crypto"
+        ]
+      },
+      "extension": {
+        "rsi": 67.33,
+        "atr": 1.3224,
+        "distance_50dma_pct": 13.59,
+        "distance_200dma_pct": 0.62,
+        "consolidation_bars": 14,
+        "stop_atr_multiple_from_entry_low": 1.5,
+        "stop_pct_from_entry_low": -4.4,
+        "stop_basis": "plancher_bruit",
+        "tp1_basis": "optimum_mesuré"
+      },
+      "avg_daily_dollar_volume": 2675827746,
+      "earnings_clear": true,
+      "dilution_clear": true,
+      "earnings_source": "n_a_etf",
+      "earnings_forward_evidence": {
+        "checked_at": "2026-09-06T05:24:28Z",
+        "days_ahead": 7,
+        "result": "ETF : pas de résultats d émetteur",
+        "event_found": false,
+        "next_earnings": null,
+        "source_artifact": "scanner/20260908/_final/earnings_selected_evidence.json",
+        "source_sha256": "b620e5286df1cb5f6e044b28d6747eaf80577193e97030c27404bc748ec68334"
+      },
+      "issuer_filing_regime": "exchange_traded_fund",
+      "dilution_scope": "Dépôts SEC officiels revus sur 90 jours; dette classée séparément des offres d’actions.",
+      "sec_evidence": {
+        "source_artifact": "scanner/20260908/_final/sec_selected_evidence.json",
+        "source_sha256": "711da6b6fcedb588992511ea06014b453d3abd8a9d84bb1e4c8dd4e60a069d21",
+        "checked_at": "2026-09-06T07:08:19Z",
+        "dilution_window": {
+          "days": 90,
+          "start": "2026-06-06",
+          "end": "2026-09-04"
+        },
+        "pagination_exhausted": true,
+        "latest_earnings_filing": null,
+        "equity_offering_hits": [],
+        "non_equity_offering_hits": [],
+        "classification_evidence": "Fonds indiciel adossé au bitcoin au comptant : pas d émetteur d actions au sens de la porte anti-dilution."
+      },
+      "selection_evidence": {
+        "source_artifact": "scanner/20260908/_final/selection_rows.json",
+        "source_sha256": "7c54ce74760ce30b0c958977ec04979b3b68d8f4e2d6c2414fb806d2608cc13a",
+        "screen_snapshot_as_of": "2026-09-04",
+        "estimated_valid_bars": 10,
+        "source_screen_score": 68.17467855282587,
+        "source_screen": "_data/autoscreen_etf.json",
+        "avg_daily_dollar_volume": 2675827746,
+        "score_note": "Le score n'est PAS une hiérarchie de conviction et n'est pas comparable d'une stratégie à l'autre. Momentum vaut exactement RSI+15 (vérifié : GILD 82,70 pour RSI 67,70). Breakout vaut RSI+20 en cas de pic de volume. Pullback vaut trend_strength(20)×10 + (65 − RSI), une grandeur sans rapport avec les deux autres — d'où des scores de 14 à 22 en Pullback contre 80 et plus en Momentum, sur le même vivier. Le champ est conservé parce que tools/sweep.js:285 fait `s.score || 80` et que le retirer mettrait les modes live à zéro candidat. Il ne doit pas être présenté au lecteur comme un classement."
+      },
+      "thesis": "Bitcoin au comptant, sans levier, 2,7 Md$ échangés par séance, de loin le fonds le plus liquide du vivier ETF. Ce qu'il est, sans emballage : une exposition à un actif unique et volatil, pas un diversificateur. Il est ici parce qu'il est, avec PDBC, l'un des deux seuls ETF du vivier certifié à la fois assez frais et assez volatil pour porter un stop conforme à la politique. Sa décorrélation au reste du panier est réelle, sa volatilité aussi.",
+      "invalidation": "Clôture sous le plus bas de la séance de référence.",
+      "invalidation_level": 44.51,
+      "execution": {
+        "status": "conditional_next_session",
+        "gate": "Ordre à cours limité au prix indiqué, valable la séance. Il n'y a ni zone ni condition de VWAP : la revue d'août a mesuré que ce cérémonial ne produisait aucun bénéfice et coûtait 14% des signaux. Si le prix n'est pas touché, il n'y a pas de trade — on ne poursuit pas."
+      }
+    }
+  ],
+  "momentum": [],
+  "breakout": [],
+  "pullback": [],
+  "pre_squeeze": [],
+  "exited_factors": [],
+  "tkl_pool": [],
+  "dtx_pool": [],
+  "fortress_pool": [],
+  "rejected": [],
+  "provenance": [
+    {
+      "file": "_data2/bars_b1.json",
+      "sha256": "a1e854437be35382a91bab17dafdec0086a7c75f91ae0fe6decff0804598a5a4"
+    },
+    {
+      "file": "_data2/bars_b2.json",
+      "sha256": "a49eacee93c26790a2ed173a4de2c79a1457b1c90f8f4c3826f1ea4ddcbdc769"
+    },
+    {
+      "file": "_data2/bars_b3.json",
+      "sha256": "7fd8ebe41ef035a0620c571739f534a318be6e43723730e05c6f148e8bd9e403"
+    },
+    {
+      "file": "_data2/bars_b4.json",
+      "sha256": "eff7a1baadcd53163fce0b5eeaa5cb32a56a3595b5b9146cee033ba7ef6cee5e"
+    },
+    {
+      "file": "_data2/bars_b5.json",
+      "sha256": "2a9f9573ec283ac0f16f5d6c69a965370ad79454d111a8754dedaa3ca2704b19"
+    },
+    {
+      "file": "_data2/tech_b1.json",
+      "sha256": "fda75363fb4102aa0cd58fb5262b69d81819a75b1f934d7c6eb775e274a3727e"
+    },
+    {
+      "file": "_data2/tech_b2.json",
+      "sha256": "3d25737b5ce200913646bd5da363357aec4e8f51e8662a1efef72b25bb7ed516"
+    },
+    {
+      "file": "_data2/tech_b3.json",
+      "sha256": "09016fbad8b2fe2984a0c7e40390643e9bd43bc0afadf32a111d1b7fd8e5941d"
+    },
+    {
+      "file": "_data2/tech_b4.json",
+      "sha256": "8cf694e484d419cef46188449abc67bbddf3afd0b17044482b85bd48f4c11717"
+    },
+    {
+      "file": "_data2/tech_b5.json",
+      "sha256": "6f09d11324f1d85f17cfbcf3c6bd289ebca259202f510e179aaae905a2b783a9"
+    },
+    {
+      "file": "_data2/supp_enrich.json",
+      "sha256": "4136a5595d2e0fad14cac3288057e5ec34c1ab5df18e29bcf51b278aac112325"
+    }
+  ]
+}
