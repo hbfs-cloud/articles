@@ -43,6 +43,20 @@ if (!onlySeries && !has('--all')) {
 }
 
 const MAP = JSON.parse(fs.readFileSync(MAP_FILE, 'utf8'));
+
+// Réécritures de phrases : le jugement vit dans un manifeste relisible, l'application dans le code.
+//
+// Motif : 112 phrases sur 50 épisodes avancent une statistique de population sans étude citée, et
+// les faits datés vérifiables se sont révélés faux de façon SYSTÉMATIQUE — « Meta opened 26.4%
+// lower » est la variation de CLÔTURE ; le titre a ouvert à −24,3 %. Idem Netflix (−29,7 % à
+// l'ouverture, pas −35,1 %) et Nvidia (+26,1 %, pas +24,4 %). Dans une série qui enseigne que
+// c'est l'ÉCART D'OUVERTURE qui vous coûte, publier la clôture sous ce nom vide la leçon.
+//
+// Une réécriture dont le texte source est introuvable fait ÉCHOUER la construction : sans cela une
+// correction obsolète deviendrait un silence, et on croirait avoir corrigé.
+const REWRITES = fs.existsSync(path.join(ROOT, 'data/substack/claim-rewrites.json'))
+  ? JSON.parse(fs.readFileSync(path.join(ROOT, 'data/substack/claim-rewrites.json'), 'utf8'))
+  : { rewrites: {} };
 const FIGURES = JSON.parse(fs.readFileSync(path.join(ROOT, 'substack-assets/schematics/index.json'), 'utf8'));
 const KNOWN = new Set(FIGURES.figures.map(f => f.id));
 const TITLES = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/substack/schematic-titles.json'), 'utf8'));
@@ -64,10 +78,24 @@ function bulletsToTable(lines, headers) {
   return [`| ${headers[0]} | ${headers[1]} |`, '|---|---|', ...rows.map(r => `| ${r[0]} | ${r[1]} |`)].join('\n');
 }
 
-function transform(md, spec) {
+function applyRewrites(body, key) {
+  const list = REWRITES.rewrites[key] || [];
+  let out = body, applied = 0;
+  for (const r of list) {
+    if (!out.includes(r.from)) throw new Error(`${key}: texte à réécrire introuvable — « ${r.from.slice(0, 70)}… »`);
+    out = out.split(r.from).join(r.to);
+    applied++;
+  }
+  return { body: out, applied };
+}
+
+function transform(md, spec, key) {
   const fmMatch = /^---\n([\s\S]*?)\n---\n?/.exec(md);
   const front = fmMatch ? fmMatch[0] : '';
   let body = fmMatch ? md.slice(fmMatch[0].length) : md;
+
+  const rw = applyRewrites(body, key);
+  body = rw.body;
 
   const lines = body.split('\n');
   const out = [];
@@ -97,7 +125,7 @@ function transform(md, spec) {
     body = paras.join('\n\n');
   }
 
-  return { front, body: body.replace(/\n{3,}/g, '\n\n').trim() + '\n', converted, figure: spec.figure || null };
+  return { front, body: body.replace(/\n{3,}/g, '\n\n').trim() + '\n', converted, figure: spec.figure || null, rewrites: rw.applied };
 }
 
 const seriesList = onlySeries ? [onlySeries] : fs.readdirSync(SERIES_DIR).filter(d => fs.existsSync(path.join(SERIES_DIR, d, 'manifest.json')));
@@ -112,12 +140,12 @@ for (const series of seriesList) {
     const spec = MAP[key] || MAP[series] || {};
     const md = fs.readFileSync(path.join(base, file), 'utf8');
     let res;
-    try { res = transform(md, spec); }
+    try { res = transform(md, spec, key); }
     catch (e) { console.error(`[episode] ${key}: ${e.message}`); process.exit(1); }
     const dest = path.join(outDir, series, file);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.writeFileSync(dest, res.front + res.body);
-    report.push({ key, tables: res.converted, figure: res.figure, words: res.body.split(/\s+/).length });
+    report.push({ key, tables: res.converted, figure: res.figure, rewrites: res.rewrites, words: res.body.split(/\s+/).length });
   }
 }
 
@@ -126,6 +154,7 @@ const withTbl = report.filter(r => r.tables > 0).length;
 console.log(`[episode] ${report.length} épisode(s) → ${outRel}`);
 console.log(`  avec figure  : ${withFig}/${report.length}`);
 console.log(`  avec tableau : ${withTbl}/${report.length} (${report.reduce((s, r) => s + r.tables, 0)} tableaux au total)`);
+console.log(`  réécritures  : ${report.reduce((s, r) => s + (r.rewrites || 0), 0)} sur ${report.filter(r => r.rewrites).length} épisode(s)`);
 const naked = report.filter(r => !r.figure && !r.tables);
 if (naked.length) {
   console.log(`  SANS AUCUNE ILLUSTRATION : ${naked.length}`);

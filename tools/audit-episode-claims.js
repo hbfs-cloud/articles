@@ -1,0 +1,107 @@
+#!/usr/bin/env node
+'use strict';
+
+// Extrait et classe toute affirmation chiffrée des épisodes de série.
+//
+// Constat qui motive l'outil : 78 des 129 épisodes citent des pourcentages, et une partie n'est
+// adossée à rien. L'épisode 2 de gap-risk avance « en moyenne 0,35 % pour le tracker S&P, 0,48 %
+// pour le Nasdaq » et « 85 % des week-ends laissent un écart de 2,3 % » en citant quatre pages
+// pédagogiques SEC, OCC et CFTC — dont aucune ne publie ces chiffres.
+//
+// Trois classes, parce qu'elles appellent trois traitements différents :
+//
+//   VÉRIFIABLE   une entité nommée, une date nommée, un pourcentage → confrontable aux barres.
+//                C'est la seule classe qu'une machine peut trancher, et c'est la plus fréquente.
+//   AGRÉGAT      une statistique de population (« 68 % des séances », « en moyenne 0,35 % »)
+//                sans étude citée. Ni vérifiable ni sourcée : à calculer soi-même ou à couper.
+//   INSTITUTION  une règle ou un horaire (« 4:00 à 9:30 ET », « quatre fois par an ») que les
+//                sources citées couvrent réellement.
+//
+// L'outil ne corrige rien : il produit l'inventaire sur lequel décider. Une machine ne sait pas
+// si une source « couvre » une affirmation — mais elle sait dire lesquelles sont testables.
+//
+//   node tools/audit-episode-claims.js
+//   node tools/audit-episode-claims.js --series gap-risk-survival --json /tmp/claims.json
+
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = path.resolve(__dirname, '..');
+const argv = process.argv.slice(2);
+const arg = (n, d = null) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : d; };
+const onlySeries = arg('--series');
+const jsonOut = arg('--json');
+
+const SERIES_DIR = path.join(ROOT, 'data/substack/series');
+
+const MONTHS = { january: 1, february: 2, march: 3, april: 4, may: 5, june: 6, july: 7, august: 8, september: 9, october: 10, november: 11, december: 12 };
+const MONTH_RE = Object.keys(MONTHS).join('|');
+
+// Entités nommées dont on sait retrouver la série. La table est explicite : deviner un symbole
+// depuis un nom propre est exactement la façon dont on finit par vérifier le mauvais instrument.
+const TICKERS = {
+  meta: 'META', facebook: 'META', netflix: 'NFLX', nvidia: 'NVDA', apple: 'AAPL', amazon: 'AMZN',
+  microsoft: 'MSFT', google: 'GOOGL', alphabet: 'GOOGL', tesla: 'TSLA', intel: 'INTC',
+  broadcom: 'AVGO', oracle: 'ORCL', salesforce: 'CRM', dell: 'DELL', boeing: 'BA',
+  qqq: 'QQQ', tqqq: 'TQQQ', spy: 'SPY', iwm: 'IWM', gld: 'GLD', dia: 'DIA',
+};
+const ENTITY_RE = Object.keys(TICKERS).join('|');
+
+// Marqueurs d'agrégat : ce qui décrit une population plutôt qu'un événement.
+const AGGREGATE = /\b(average|averaging|median|typically|typical|roughly|about|approximately|around|per year|a year|of sessions|of weekends|of the time|on average|run largest|ratio near)\b/i;
+
+function classify(sentence) {
+  const hasNumber = /\d+(?:[.,]\d+)?\s?%|\$\s?\d/.test(sentence);
+  if (!hasNumber) return null;
+
+  const dateM = new RegExp(`\\b(\\d{1,2})\\s+(${MONTH_RE})\\s+(\\d{4})\\b|\\b(${MONTH_RE})\\s+(\\d{1,2}),?\\s+(\\d{4})\\b`, 'i').exec(sentence);
+  const entM = new RegExp(`\\b(${ENTITY_RE})\\b`, 'i').exec(sentence);
+  const pcts = [...sentence.matchAll(/([−–—-]?\s?\d+(?:[.,]\d+)?)\s?%/g)].map(m => Number(String(m[1]).replace(/[−–—]/g, '-').replace(/\s/g, '').replace(',', '.')));
+
+  if (dateM && entM && pcts.length) {
+    const day = Number(dateM[1] || dateM[5]);
+    const month = MONTHS[String(dateM[2] || dateM[4]).toLowerCase()];
+    const year = Number(dateM[3] || dateM[6]);
+    return {
+      kind: 'verifiable',
+      symbol: TICKERS[entM[1].toLowerCase()],
+      entity: entM[1],
+      date: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      percents: pcts,
+    };
+  }
+  if (AGGREGATE.test(sentence) && pcts.length) return { kind: 'aggregate', percents: pcts };
+  if (/\b\d{1,2}:\d{2}\b|\bfour times a year\b|\bquarterly\b|\bper quarter\b/i.test(sentence)) return { kind: 'institutional', percents: pcts };
+  return { kind: 'other', percents: pcts };
+}
+
+const series = onlySeries ? [onlySeries] : fs.readdirSync(SERIES_DIR).filter(d => fs.existsSync(path.join(SERIES_DIR, d, 'manifest.json')));
+const findings = [];
+
+for (const s of series) {
+  const base = path.join(SERIES_DIR, s);
+  for (const file of fs.readdirSync(base).filter(f => f.endsWith('.md')).sort()) {
+    const raw = fs.readFileSync(path.join(base, file), 'utf8').replace(/^---\n[\s\S]*?\n---\n/, '');
+    const body = raw.replace(/^\|.*$/gm, ' ').replace(/^Sources?:.*$/gm, ' ');
+    for (const sentence of body.split(/(?<=[.!?])\s+/)) {
+      const c = classify(sentence.replace(/\s+/g, ' ').trim());
+      if (!c) continue;
+      findings.push({ episode: `${s}/${file}`, ...c, sentence: sentence.replace(/\s+/g, ' ').trim().slice(0, 240) });
+    }
+  }
+}
+
+const by = k => findings.filter(f => f.kind === k);
+console.log(`[claims] ${series.length} série(s) · ${findings.length} affirmation(s) chiffrée(s)`);
+console.log(`  vérifiables (entité + date + %) : ${by('verifiable').length}`);
+console.log(`  agrégats sans étude citée       : ${by('aggregate').length}`);
+console.log(`  institutionnelles               : ${by('institutional').length}`);
+console.log(`  autres                          : ${by('other').length}`);
+
+const eps = [...new Set(by('aggregate').map(f => f.episode))];
+console.log(`\népisodes portant au moins un agrégat non sourcé : ${eps.length}`);
+
+if (jsonOut) {
+  fs.writeFileSync(path.resolve(ROOT, jsonOut), JSON.stringify({ findings }, null, 2) + '\n');
+  console.log(`[claims] inventaire → ${jsonOut}`);
+}
