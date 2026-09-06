@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 1 of 3 in Turn Candidates Into Conditional Plans. Lesson 19 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 19 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Three indicators computed from the same closing prices are one piece of evidence wearing three hats. Stack them and the case feels stronger while nothing new has been learned. Certification is the step that asks a candidate to survive checks that do not lean on each other: the chart, the calendar of company events, the filings, how easily the thing trades, and whether the timing is even possible.
 
 **Input from last Friday:** The accepted gate-by-gate rejection report.

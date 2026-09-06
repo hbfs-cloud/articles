@@ -7,13 +7,17 @@ source_path: "series/obligations-et-taux/part6-construire-un-portefeuille/index.
 ---
 *Part 6 of 6 in Bonds and Rates for Equity Traders.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 6 of 6 in Bonds and Rates for Equity Traders; earlier parts cover the groundwork but you can start here.
+::end
+
 2022 settled an old argument. The S&P 500 fell 18%. The US Aggregate bond index fell 13% right alongside it. A 60/40 portfolio lost 17%, its worst year since 1937. The cushion was supposed to soften the fall. It fell too.
 
 Put that next to 2008, when stocks lost 37% and the same bond index gained 5.2%. Or 2020, when stocks dropped 34% at the low and bonds added 7.5%. Same asset class, opposite behaviour. What changed was the reason people were scared. When weak growth is the problem, central banks cut rates and bonds rally. When inflation is the problem, they raise rates, and stocks and bonds sink together.
 
-![The three shapes a yield curve takes](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/yield_curve_shapes.png)
+![Diversification is measured in calm and spent in stress](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/correlation_breaks.png)
 
-So a ratio is a poor starting point. Give the bond sleeve a job instead, and write the job on paper.
+So a ratio is a poor starting point. <mark>Give the bond sleeve a job instead, and write the job on paper.</mark>
 
 There are four jobs, and they need different bonds. Money you will spend on a known date. Income you want to collect. Cover against rising prices. Ballast against a stock crash. One broad bond fund rarely does all four well.
 
@@ -27,16 +31,18 @@ Borrowing magnifies the problem. Risk-parity funds lever bonds, often about thre
 
 Work through the sleeve like this:
 
-- Write one job beside every holding: cash, spending date, income or ballast.
-- Line the maturities and coupons up against dates you truly need the money.
-- Add the durations together, then check how much sits with a single issuer.
-- Read the call terms on individual bonds and the prospectus on funds.
-- Fix the rebalancing rule now, by calendar date or by drift threshold.
-- Check the tax and account rules before, not after, you buy.
+1. Write one job beside every holding: cash, spending date, income or ballast.
+1. Line the maturities and coupons up against dates you truly need the money.
+1. Add the durations together, then check how much sits with a single issuer.
+1. Read the call terms on individual bonds and the prospectus on funds.
+1. Fix the rebalancing rule now, by calendar date or by drift threshold.
+1. Check the tax and account rules before, not after, you buy.
 
 Rebalancing puts the weights back where you set them. It cannot tell you where to set them. Investor.gov ties that decision to time horizon and tolerance for loss, so revisit it when those change, not because one asset class just had a loud year.
 
 Diversification promises nothing. Stocks and bonds can fall together, as 2022 showed. A fund's value can sit below your purchase price on the exact day you need cash. And matching a liability fails the moment the amount or the date moves.
+
+> A bond sleeve without a written job is a slogan, not a plan.
 
 Sources: [Investor.gov asset allocation and diversification](https://www.investor.gov/introduction-investing/getting-started/asset-allocation), [Investor.gov bond-ladder glossary](https://www.investor.gov/introduction-investing/investing-basics/glossary/bond-ladder), [TreasuryDirect TIPS](https://www.treasurydirect.gov/marketable-securities/tips/), [Investor.gov bond funds](https://www.investor.gov/introduction-investing/investing-basics/glossary/bond-funds-and-income-funds).
 

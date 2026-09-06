@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 2 of 3 in Keep an Audit Trail That Survives Incidents. Lesson 35 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 35 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Supersession is a long word for a plain rule. When a new version of the plan takes over, the old version stops existing, all at once. Half a swap is the dangerous state: you inherit the old exit level and the new position size, a combination nobody designed and nobody reviewed.
 
 Recovery is that rule seen from the other side. A process coming back from a crash must be able to say which revision was in charge, what is actually working in the market, and whether every open position still carries its protective exit.

@@ -7,6 +7,10 @@ source_path: "series/piloter-son-portefeuille/part4-scale-up/index.html"
 ---
 *Part 4 of 6 in Operate a Portfolio, Not a Collection of Trades.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 4 of 6 in Operate a Portfolio, Not a Collection of Trades; earlier parts cover the groundwork but you can start here.
+::end
+
 Eight winning trades in a row proves nothing. On a small but real edge, and even on a strategy with no edge at all, that run shows up by chance more often than people expect. It is also the moment most accounts double their size.
 
 So write the ladder while you are bored, not while you are winning.

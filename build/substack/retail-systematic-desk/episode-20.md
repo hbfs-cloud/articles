@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 2 of 3 in Turn Candidates Into Conditional Plans. Lesson 20 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 20 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Every number below is invented to show the shape of the work. Made-up tickers, made-up history, no market data.
 
 In the toy run, SYM_A arrived from certification with a peer file of 41 companies: 6 direct competitors, 4 suppliers, 3 customers, 12 same-sector names of similar size, and 16 that were only there because a screener had grouped them. Twenty-two had enough shared history to compare at all. Nine of those moved in step with SYM_A most of the time. Then I subtracted the part of each move that the whole market already explains, which is what people mean by residualising. Two were left.

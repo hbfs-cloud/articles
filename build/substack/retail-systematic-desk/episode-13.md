@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 1 of 3 in Build Reproducible Market Snapshots. Lesson 13 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 13 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Pick a candidate on Tuesday's close, then check its filings on Wednesday morning, and you have written a plan that was never true at any single moment. Nobody lied. The two halves simply never existed together. A snapshot — one frozen copy of everything you looked at, taken at one instant — is the fix, and it costs almost nothing to build.
 
 **Input from last Friday:** The accepted corporate-action reconciliation runbook.

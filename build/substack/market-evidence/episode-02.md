@@ -7,6 +7,10 @@ source_path: "series/lire-le-marche/part2-options-darkpool/index.html"
 ---
 *Part 2 of 6 in Read Market Evidence Without Inventing a Signal.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 2 of 6 in Read Market Evidence Without Inventing a Signal; earlier parts cover the groundwork but you can start here.
+::end
+
 A big options print tells you a trade happened. It does not tell you who wanted it, or why.
 
 Four questions come before any label. Do the data identify buyer versus seller? Opening versus closing? A single leg, or one leg of a spread? Speculation, or a hedge against something else in the account? Leave any of those blank and intent stays unresolved. Large volume is evidence of activity, not a decoded portfolio.

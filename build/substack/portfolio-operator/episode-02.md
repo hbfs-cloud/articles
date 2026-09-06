@@ -7,6 +7,10 @@ source_path: "series/piloter-son-portefeuille/part2-backtest-forward/index.html"
 ---
 *Part 2 of 6 in Operate a Portfolio, Not a Collection of Trades.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 2 of 6 in Operate a Portfolio, Not a Collection of Trades; earlier parts cover the groundwork but you can start here.
+::end
+
 A backtest is a hypothesis wearing the clothes of a track record. The date you froze the rules decides which results count as evidence and which are just description.
 
 Keep three boxes and never let them touch. In-sample is where you tuned the thresholds and filters. Out-of-sample is history you locked away and look at exactly once. The forward log begins at the timestamp after the final rule version exists. The moment an out-of-sample result changes your method, that period joins in-sample for every claim you make afterwards.

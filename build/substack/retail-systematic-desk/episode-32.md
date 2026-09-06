@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 2 of 3 in Prove Execution in a Simulator. Lesson 32 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 32 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Done or not done. That is how most retail code stores an order, and it is fine right up to the afternoon a cancel request and a fill cross in flight. Then the desk holds a position it believes it cancelled.
 
 A state machine is the boring fix: a written list of the states an order may occupy and the moves allowed between them. Anything outside the list raises an error instead of quietly overwriting what you knew.

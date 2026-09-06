@@ -7,6 +7,10 @@ source_path: "series/journal-et-performance/part2-metriques/index.html"
 ---
 *Part 2 of 6 in Turn a Trading Journal Into a Feedback Loop.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 2 of 6 in Turn a Trading Journal Into a Feedback Loop; earlier parts cover the groundwork but you can start here.
+::end
+
 Define one R as the trade's initial planned dollar risk, frozen when the position is opened, and report realized R from net profit or loss. Do not call a target multiple expectancy. A 2R target describes planned payoff geometry; expectancy also requires outcome probabilities, partial exits, gaps, costs, and every loss.
 
 Use explicit formulas:

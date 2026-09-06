@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 1 of 3 in Make Strategy Decisions Machine-Readable. Lesson 22 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 22 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Rules buried inside code are invisible rules. You nudge a number on a Tuesday, and six weeks later nobody can say which number produced which decision. So move the rules out into a configuration file — a plain settings file the engine reads at startup — give it a version number and a start date, and that question answers itself.
 
 The shape of the file is what this lesson shares. Whatever values you eventually put in it are yours and stay yours.

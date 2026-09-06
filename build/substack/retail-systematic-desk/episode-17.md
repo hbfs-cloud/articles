@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 2 of 3 in Build a Scanner That Can Say No. Lesson 17 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 17 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Zero is an answer. Some days nothing is worth doing, and a desk that cannot say so will manufacture work to fill the screen.
 
 The trap is that a crash also returns nothing. Same empty list, opposite meaning.

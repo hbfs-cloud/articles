@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Constrain AI and Promote Slowly. Lesson 45 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 45 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Forty-four weeks, and the thing you have built is not a robot that trades for you. It is a routine you run, with brakes you installed yourself and can reach in the dark. That distinction is the whole course.
 
 Nothing jumps from a backtest to real money. It walks: replay on old data, then watching live data without acting, then paper orders, then shadow mode where real decisions are recorded but never sent, and only then a small live pilot with a hard ceiling. Each step has an entry rule written before results arrive, a fixed observation window, a way back, and one named person who owns it. Write the promotion evidence first. Deciding what counts as success after seeing the numbers is how every desk fools itself.

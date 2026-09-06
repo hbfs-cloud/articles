@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Keep an Audit Trail That Survives Incidents. Lesson 36 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 36 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Most scheduled runs decide nothing at all. That is normal. It is also why a quiet day and a dead pipeline have to look different in your records, because from the outside both produce the same thing: no orders.
 
 So silence gets written down. Every run opens an envelope and every run closes it. Closed with `no_action` is a result you can trust. No envelope is an incident, and it should wake you as loudly as a stack trace would.

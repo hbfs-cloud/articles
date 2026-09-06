@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 2 of 3 in Connect a Broker Without Losing Control. Lesson 38 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 38 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 One day your connection drops mid-request and you will not know whether the broker received it. That is this week's problem. Idempotent placement means the same instruction can be sent twice and still produce one order, never two.
 
 **Input from last Friday:** the security and capability preflight you signed off on.

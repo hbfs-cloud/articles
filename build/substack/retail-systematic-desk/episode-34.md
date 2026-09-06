@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 1 of 3 in Keep an Audit Trail That Survives Incidents. Lesson 34 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 34 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Something breaks on a Tuesday. By Thursday you understand it, and the tempting move is to reach back and fix the Tuesday row. Do that once and the ledger stops being evidence; it becomes an opinion you keep updating.
 
 Append-only means the file only grows. A correction is a new row pointing at the old one, saying what changed and why. Public companies operate the same way: an error in a filed 8-K comes back as a dated amendment sitting beside the original, never in place of it ([SEC: Form 8-K](https://www.sec.gov/info/edgar/forms/form8-k.pdf)).

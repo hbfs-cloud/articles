@@ -205,7 +205,12 @@ function transform(md, spec, key, meta) {
   if (spec.takeaway) {
     const foreign = foreignNumbers(spec.takeaway, prose);
     if (foreign.length) throw new Error(`${key}: l'exergue apporte un chiffre absent du texte — ${foreign.join(', ')}`);
-    const at = paras.findIndex(p => /^Sources?:/.test(p.trim()));
+    // AVANT la limitation, pas après. Un épisode qui finit par « voilà ce que ceci ne prouve pas »
+    // puis assène une formule en exergue reprend d'une main ce qu'il vient de concéder de l'autre.
+    // La limite doit rester le dernier mot.
+    const lim = paras.findIndex(p => /^\*\*Limitation/i.test(p.trim()));
+    const src = paras.findIndex(p => /^Sources?:/.test(p.trim()));
+    const at = lim >= 0 ? lim : src;
     paras.splice(at < 0 ? paras.length : at, 0, `> ${spec.takeaway}`);
     applied.takeaway = true;
   }

@@ -7,6 +7,10 @@ source_path: "series/piloter-son-portefeuille/part6-arreter/index.html"
 ---
 *Part 6 of 6 in Operate a Portfolio, Not a Collection of Trades.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 6 of 6 in Operate a Portfolio, Not a Collection of Trades; earlier parts cover the groundwork but you can start here.
+::end
+
 The day to write your shutdown rules is the day you start, while nothing hurts. In the middle of a losing run your brain swings between denial and surrender, and neither one is a decision.
 
 Start by separating three things that people call "stopping."

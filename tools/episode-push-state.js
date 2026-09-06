@@ -39,13 +39,22 @@ const bodyOf = key => {
 };
 const digest = s => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
 
+// Marquage GROUPÉ, jamais concurrent. Plusieurs agents qui poussent en parallèle appelaient chacun
+// `--mark`, donc chacun relisait l'état, ajoutait sa ligne et réécrivait le fichier : le dernier
+// écrasait les autres et l'état sous-comptait ce qui était réellement poussé. Les agents renvoient
+// désormais leurs clés, et le marquage se fait ici, en une passe.
 const mark = arg('--mark');
 if (mark) {
-  const body = bodyOf(mark);
-  if (!body) { console.error(`[poussée] pas de build pour ${mark}`); process.exit(1); }
-  state.pushed[mark] = { sha256_16: digest(body), chars: body.length };
+  const keys = mark.split(',').map(k => k.trim()).filter(Boolean);
+  const done = [];
+  for (const k of keys) {
+    const body = bodyOf(k);
+    if (!body) { console.error(`[poussée] pas de build pour ${k}`); process.exit(1); }
+    state.pushed[k] = { sha256_16: digest(body), chars: body.length };
+    done.push(k);
+  }
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2) + '\n');
-  console.log(`[poussée] ${mark} noté (${digest(body)})`);
+  console.log(`[poussée] ${done.length} clé(s) notée(s)`);
   process.exit(0);
 }
 

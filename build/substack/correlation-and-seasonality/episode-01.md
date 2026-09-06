@@ -9,23 +9,25 @@ source_path: "series/correlations-saisonnalites/part1-les-correlations/index.htm
 
 Correlation is one number between minus one and plus one that says how two things moved together in the past. Plus one, they rose and fell in lockstep. Minus one, one zigged whenever the other zagged. Zero, no straight-line link in that sample.
 
-The trouble is that people quote it as if it were a property of the assets. It is a property of the window you chose.
-
-![Diversification is measured in calm and spent in stress](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/correlation_breaks.png)
+The trouble is that people quote it as if it were a property of the assets. <mark>It is a property of the window you chose.</mark>
 
 Take the hedge everyone learns first: US shares against long-dated government bonds. In calm stretches the link runs around minus 0.40 — shares fall, bonds rise, the portfolio holds. Before 2008 it sat near minus 0.35, and through the 2008 crisis it strengthened to about minus 0.55. Then 2022 arrived, inflation pushed rates up, and the same pair read plus 0.50. Both sides fell together. By 2023 and 2024 it had drifted back toward minus 0.30. Nothing about the assets changed. The regime did.
 
 March 2020 made the point more brutally. In the week of the ninth, the S&P 500 dropped 8.8% in a single day, gold fell 3.5% instead of protecting anyone, and bitcoin lost 40% in twenty-four hours. Leveraged funds facing margin calls sold whatever could be sold. When that happens, everything correlates to one, and diversification stops working precisely on the day you needed it.
 
+![Diversification is measured in calm and spent in stress](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/correlation_breaks.png)
+
 There is a second trap, quieter than the first. A high number is not a reason. Cheese consumption tracks bedsheet strangulation deaths at plus 0.95. The NASA budget tracks a category of suicides at plus 0.99. Search a large enough dataset and you will always find something. Before trading a relationship, name the mechanism that would make it hold.
 
 Now the housekeeping that decides whether your number means anything at all.
 
-- Use returns, not prices — two rising price lines look linked simply because both go up.
-- Include dividends when you compare investable performance, and keep the same return type throughout.
-- Line up the sessions, and never carry yesterday's price forward across a closed market.
-- Pick the window length before you look at the answer, then check a second window as a sanity test.
-- Write down what decision would change if the sign flipped, and check that plot regularly.
+### Housekeeping, before you trust the number
+
+1. Use returns, not prices — two rising price lines look linked simply because both go up.
+1. Include dividends when you compare investable performance, and keep the same return type throughout.
+1. Line up the sessions, and never carry yesterday's price forward across a closed market.
+1. Pick the window length before you look at the answer, then check a second window as a sanity test.
+1. Write down what decision would change if the sign flipped, and check that plot regularly.
 
 Window choice is part of the question, not a technical detail. Sixty days reacts fast but rests on few observations. Three years is steadier and blends regimes that have nothing to do with each other. Keep the full-history figure as background colour, never as the verdict.
 

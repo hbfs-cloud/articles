@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Separate Data, Decisions and Execution. Lesson 6 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 6 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Ten symbols requested after the close. Nine daily bars come back, one times out. The options page answers for four of them and hangs on the rest. Invented numbers, ordinary evening.
 
 The dishonest version of that evening reports ten out of ten and writes a zero where the missing bar belongs. Zero is a value. Missing is not a value, and the two must never share a cell. Nor must stale, which deserves its own word: data that is real and correctly recorded and simply too old to act on.

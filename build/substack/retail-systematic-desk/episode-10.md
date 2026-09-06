@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 1 of 3 in Treat Identity and Time as Data. Lesson 10 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 10 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 A ticker is a name printed on a screen. Names get changed, reused and recycled: a company renames itself, disappears in a merger, and three years later a different business is trading under those same letters. Two exchanges can hand the same shorthand to two unrelated instruments on the same afternoon. Build your records around the name and your history quietly becomes a mixture of strangers.
 
 **Input from last Friday:** the accepted batch-integrity fixture pack.

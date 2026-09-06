@@ -7,6 +7,10 @@ source_path: "series/plan-de-trading/part6-execution/index.html"
 ---
 *Part 6 of 6 in Build a Trading Plan You Can Execute.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 6 of 6 in Build a Trading Plan You Can Execute; earlier parts cover the groundwork but you can start here.
+::end
+
 The plan is written. Most people fail here anyway, not for want of rules but for want of a habit that
 carries them out. Fifteen to twenty-five minutes in the evening, when the market is shut, is enough for a
 swing trader. An hour-long intraday ritual is the version people abandon in three weeks.

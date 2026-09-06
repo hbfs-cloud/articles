@@ -7,6 +7,10 @@ source_path: "series/marketwatch-checklist/part2-scanner/index.html"
 ---
 *Part 2 of 7 in The Market Checklist.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 2 of 7 in The Market Checklist; earlier parts cover the groundwork but you can start here.
+::end
+
 A screen exists to throw things away. It is very good at that and very bad at the other job people give it. First place in a ranking means "look at this next." It never means "buy this."
 
 Hunting by hand does not work either, and the reason is not laziness. You go back to the tickers you already know, the ones you traded last month, the ones in your feed. A screen has no memory and no favourites. It walks the whole list with the same indifference every evening.

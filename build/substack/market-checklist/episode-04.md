@@ -7,6 +7,10 @@ source_path: "series/marketwatch-checklist/part4-portfolio/index.html"
 ---
 *Part 4 of 7 in The Market Checklist.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 4 of 7 in The Market Checklist; earlier parts cover the groundwork but you can start here.
+::end
+
 Every new trade has four ceilings: the planned-stop loss, a stressed gap loss, concentration, and liquidity. You take the smallest one. Not the one you like — the smallest.
 
 Work the stop ceiling with real numbers. Account of $100,000, risk budget of 1% per idea, so $1,000. Say the entry is $166 and the recent swing low sits at $159. Putting the stop exactly on the swing low is an invitation: those levels are obvious and they get hunted. Drop it half an ATR below instead — with a 14-day ATR of $4, that is $2 of cushion, so the stop goes at $157. Risk per share is $166 − $157 = $9. Position size is $1,000 ÷ $9 = 111 shares, or $18,426.

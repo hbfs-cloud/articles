@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Build a Scanner That Can Say No. Lesson 18 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 18 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 A score with no reason teaches exactly one behavior: click the top row. Publish the gate that killed the name instead, and readers learn your rules by reading your refusals.
 
 Two toy rejections, invented for teaching and not observations of any listed company. SYM_A fails on liquidity: average spread 0.8% against a ceiling of 0.3%, the spread being the gap between what buyers offer and sellers ask, which you pay on the way in and again on the way out. SYM_K fails on the event gate: earnings due in 3 days against a 5-day exclusion. Two names, two sentences, no mysterious number out of 100.

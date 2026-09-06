@@ -7,6 +7,10 @@ source_path: "series/marketwatch-checklist/part6-timing/index.html"
 ---
 *Part 6 of 7 in The Market Checklist.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 6 of 7 in The Market Checklist; earlier parts cover the groundwork but you can start here.
+::end
+
 A good setup entered at the wrong moment is a planned loss. Timing here has nothing to do with guessing the exact price. It means refusing to act until the written conditions are all present.
 
 Write the order card before the trigger happens, not while it is happening. Trigger, worst acceptable price, size, how long the order lives, what cancels it, and every exit. Leave one field blank and the idea stays on the watchlist. Speed only helps once the thinking is finished.

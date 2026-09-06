@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 2 of 3 in Control the Portfolio Before the Trade. Lesson 29 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 29 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Ten tickers, one bet. That happens whenever the names share a driver underneath: the same interest-rate story, the same oil price, the same crowded growth trade. A shared driver like that is what people mean by a factor. Counting names never finds it. Measuring does.
 
 Two numbers carry most of the work. Correlation says how often two names move the same way at the same time. Beta says how far one name travels when the whole market moves one percent. Both wander over time, so treat them as the input to a limit, never as proof of diversification.

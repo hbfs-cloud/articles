@@ -7,11 +7,15 @@ source_path: "series/calendrier-economique/part6-trader/index.html"
 ---
 *Part 6 of 6 in Read the Economic Calendar.*
 
-Decide before the release, not during it. Hold, reduce, hedge or stand aside: pick one while the screen is still calm and the spread is still normal. If a gap straight through your stop would breach what you can afford to lose, the position is already too big for the event.
+::audience non_sub,free_sub
+Each part stands on its own. This is 6 of 6 in Read the Economic Calendar; earlier parts cover the groundwork but you can start here.
+::end
+
+Decide before the release, not during it. Hold, reduce, hedge or stand aside: pick one while the screen is still calm and the spread is still normal. <mark>If a gap straight through your stop would breach what you can afford to lose, the position is already too big for the event.</mark>
 
 Build the week from the agencies' own calendars, in your own time zone. Mark which of your positions each release actually touches, and note whether it is a first estimate or a revision. A bank, a long-dated bond fund and an oil producer do not share the same sensitivity, so a data provider's generic impact icon is not a ranking. Your exposure is.
 
-![Not all dates are known equally far in advance](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/calendar_certainty.png)
+![Size decides what a bad night costs you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/position_sizing.png)
 
 Then size for the day. On an ordinary session, 1% to 2% of capital per position and a stop around 1.5 times the average daily range is normal practice. On a heavy release day, halve the size to 0.5% or 1% at most, widen the stop to roughly 2.5 or 3 times the range, carry one or two positions rather than three or four, drop leverage to zero, and use limit orders only. Spreads blow out in the seconds around a print. A market order in that window can cost half a percent in slippage before you own anything.
 
@@ -23,12 +27,12 @@ Stop orders deserve their own paragraph. Investor.gov is blunt: a stop order bec
 
 The card, one per event:
 
-- Agency, exact time, reference period, first estimate or revision.
-- Positions with direct or indirect sensitivity.
-- Maximum exposure allowed through publication.
-- Open stops, limits and conditional orders, reviewed.
-- The evidence required before any post-release action.
-- The decision and the fill, logged afterwards.
+1. Agency, exact time, reference period, first estimate or revision.
+1. Positions with direct or indirect sensitivity.
+1. Maximum exposure allowed through publication.
+1. Open stops, limits and conditional orders, reviewed.
+1. The evidence required before any post-release action.
+1. The decision and the fill, logged afterwards.
 
 Do not grade the card by the outcome. A disciplined plan can lose money and an improvised trade can make it. Review three things instead: whether you respected the size limit, whether you used the order type you intended, and whether you read the official release or a headline about it.
 

@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 1 of 3 in Design a Decision-First Retail Desktop. Lesson 40 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 40 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Watch somebody open their own desk. They scroll. They scroll again, hunting a chart, then a table, then a badge, and two minutes later they still cannot say whether the plan is live. The first screen, meaning the part visible before any scrolling, has to answer that on its own.
 
 **Input from last Friday:** the reconciliation report from the broker module.

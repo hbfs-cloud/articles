@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Treat Identity and Time as Data. Lesson 12 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 12 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 A price chart can run smooth and straight while the thing underneath it quietly changed shape. A split — the company cuts each share into several smaller ones — a merger, a one-off cash payment: the line survives, the instrument does not. Adjusted history is fine for measuring past returns. It is not permission to rewrite what your broker is holding right now.
 
 **Input from last Friday:** The accepted temporal-field contract.

@@ -9,11 +9,13 @@ source_path: "series/calendrier-economique/part1-introduction/index.html"
 
 Company results move one stock or one sector. A single inflation print moves shares, bonds, currencies, metals and crypto in the same minute. That is why the calendar comes before the chart.
 
-It also explains why the calendar is a risk tool rather than a crystal ball. The market has already priced the number everyone expects. It reacts to the gap between what arrived and what was expected, and to nothing else.
-
 ![Not all dates are known equally far in advance](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/calendar_certainty.png)
 
+It also explains why the calendar is a risk tool rather than a crystal ball. The market has already priced the number everyone expects. <mark>It reacts to the gap between what arrived and what was expected, and to nothing else.</mark>
+
 Take a real entry. Nonfarm payrolls for March 2026: previous month +151,000, forecast +140,000, actual −92,000. The forecast was already in the price. The 232,000 miss was not, and that is where the movement came from. A reading of 3.5% inflation can push the market up or down depending only on whether the forecast said 3.2% or 3.8%.
+
+![Payrolls, March 2026: the level was expected, the gap was not](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/examples/economic-calendar_episode-01.png)
 
 Most calendars sort events into three tiers, usually with coloured icons. Low impact runs to eighty or a hundred events a month and typically moves the index less than 0.3%. Wholesale inventories, building permits, that sort of thing. Medium impact, fifteen to twenty-five a month, moves 0.3% to 1%: private payroll estimates, producer prices, retail sales, consumer sentiment. High impact, only four to eight a month, moves 1% to 3% or more. That short list is the jobs report, consumer prices, the Fed decision, and GDP.
 

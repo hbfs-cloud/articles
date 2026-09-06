@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Prove Execution in a Simulator. Lesson 33 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 33 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 A rejected order is the easy case. Silence is the hard one: you sent something, the connection died mid-sentence, and now you cannot say whether the broker has it. Nothing on your own machine answers that question. Only the broker's records do.
 
 Toy run, figures invented to show the shape and nothing else: 40 submissions into a simulator, network cut at a random moment each time. 31 answered normally. 6 timed out and turned up in the broker's history anyway. 3 timed out and never existed. From your side those last two groups look identical for several seconds, and a client that retries on impulse ends up with a double position in 6 cases out of 9.

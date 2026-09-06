@@ -7,15 +7,19 @@ source_path: "series/correlations-saisonnalites/part4-crypto-cycles/index.html"
 ---
 *Part 4 of 6 in Correlation and Seasonality Without Storytelling.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 4 of 6 in Correlation and Seasonality Without Storytelling; earlier parts cover the groundwork but you can start here.
+::end
+
 Bitcoin's code does one thing on a schedule: every 210,000 blocks, roughly four years, it halves the reward paid to miners. That is the whole event. The reward went 50 to 25 in 2012, 25 to 12.5 in 2016, 12.5 to 6.25 in 2020, and 6.25 to 3.125 in April 2024. Nothing in the software mentions a bull market, an altcoin season, or a price target.
 
 The price history around those dates is genuinely striking, which is exactly why it needs handling with tongs.
 
-![Diversification is measured in calm and spent in stress](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/correlation_breaks.png)
-
 Count the completed events. Three. November 2012: bitcoin at about $12, peaking near $1,150 twelve months later, then falling to roughly $170, down 85%. July 2016: about $660, peaking near $19,700 seventeen months later, then down to $3,200, a fall of 84%. May 2020: about $8,600, peaking near $69,000 eighteen months later, then down to $15,500, a fall of 78%. The fourth began in April 2024 around $64,000 and is still running.
 
-Three observations. Any average built from three paths is not a law. Remove one and the whole story changes shape, which is the standard test for whether an event study means anything.
+![Drawdown measures the path, not the destination](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/drawdown_path.png)
+
+Three observations. <mark>Any average built from three paths is not a law.</mark> Remove one and the whole story changes shape, which is the standard test for whether an event study means anything.
 
 The three also happened in completely different worlds. Custody, exchange access, leverage, regulation, liquidity and the macro backdrop were unrecognisable between 2012 and 2020, and spot exchange-traded funds only arrived in 2024. Each post-event window also overlaps a broader risk cycle, so you are never measuring the subsidy on its own.
 
@@ -27,12 +31,12 @@ Leverage adds its own layer. The CFTC warns that margined virtual-currency deriv
 
 Running the study properly:
 
-- Verify the event from Bitcoin Core's own parameters, not from a chart annotation.
-- Freeze one price source, the event block, the pre-event window, the post-event windows and the fee assumption before computing.
-- Show each event separately before you average anything.
-- Compare each event window against matched non-event windows chosen by the same rule.
-- Record maximum adverse movement, not just the peak.
-- Check whether dropping the best episode kills the conclusion.
+1. Verify the event from Bitcoin Core's own parameters, not from a chart annotation.
+1. Freeze one price source, the event block, the pre-event window, the post-event windows and the fee assumption before computing.
+1. Show each event separately before you average anything.
+1. Compare each event window against matched non-event windows chosen by the same rule.
+1. Record maximum adverse movement, not just the peak.
+1. Check whether dropping the best episode kills the conclusion.
 
 **Limitation:** three events cannot separate the subsidy from everything else moving at the same time. Protocol code can change, vendors revise classifications, venues fail. Even a sequence that repeated four times would still be probabilistic, and structural change does not announce itself in advance.
 

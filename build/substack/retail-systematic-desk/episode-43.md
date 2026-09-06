@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 1 of 3 in Constrain AI and Promote Slowly. Lesson 43 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 43 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 A language model reads a pile of evidence well. It argues against your thesis well. It is a poor calculator and a worse database, and the trouble is that it never announces which of the three you just asked it to be. It answers in the same confident voice either way.
 
 So sort your steps into three kinds before the model goes anywhere near them. Deterministic: code does the sum and returns the same answer every time. Interpretive: something is being described or challenged, and two sensible answers can both be fine. Side-effecting: the world outside the program changes — a file is written, an order leaves the desk. The model works on the interpretive pile. Only that one.

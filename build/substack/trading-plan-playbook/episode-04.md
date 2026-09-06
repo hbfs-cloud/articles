@@ -7,6 +7,10 @@ source_path: "series/plan-de-trading/part4-sizing-risque/index.html"
 ---
 *Part 4 of 6 in Build a Trading Plan You Can Execute.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 4 of 6 in Build a Trading Plan You Can Execute; earlier parts cover the groundwork but you can start here.
+::end
+
 Calculate position size from a preselected loss budget and an independently chosen invalidation, then reduce it for liquidity, concentration, leverage, and event risk. Never move the invalidation to manufacture the share count you want. The formula produces an arithmetic ceiling, not a promise about the loss a broker will deliver.
 
 For a long position, start with:

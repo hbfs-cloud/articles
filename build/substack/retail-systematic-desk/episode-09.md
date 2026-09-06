@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Make Data Quality Executable. Lesson 9 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 9 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Asking for a hundred things in one request is cheap and sensible. The trouble starts with how most code reads the answer back. Two habits do the damage: matching answers to questions by their position in the list, and treating one bad item as a reason to throw the whole reply away, or worse, to report success with an empty basket.
 
 **Input from last Friday:** the accepted freshness gate test report.

@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Start With a Mandate, Not a Model. Lesson 3 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 3 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Boring is the specification, not a compromise. Your first universe should contain instruments whose identity, trading hours and corporate actions — splits and dividends, the events that rewrite past prices — you can look up and reconcile on a Tuesday evening. Excitement is paid for in plumbing.
 
 A toy funnel, with counts invented to show the shape of the filtering rather than any screen worth running:

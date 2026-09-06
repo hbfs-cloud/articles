@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 1 of 3 in Build a Scanner That Can Say No. Lesson 16 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 16 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 A scanner narrows. It does not advise. Cheap checks run on everything, and only the survivors earn the slow work of reading a filing or checking an earnings date.
 
 Here is a toy run, with counts invented to show the shape rather than measured in any real session. 5,397 symbols go in. A liquidity floor, meaning a minimum on how much stock changes hands on an average day so you can get back out, leaves 2,403. A price and session filter leaves 812. An event gate, which drops anything reporting earnings inside the holding window, leaves 11. Eleven names deserve research. The other 5,386 never cost you a second.

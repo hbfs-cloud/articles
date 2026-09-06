@@ -7,6 +7,10 @@ source_path: "series/marketwatch-checklist/part5-risk/index.html"
 ---
 *Part 5 of 7 in The Market Checklist.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 5 of 7 in The Market Checklist; earlier parts cover the groundwork but you can start here.
+::end
+
 Most people spend nine tenths of their time looking for entries and the rest thinking about losses. Setups come back every week. Capital does not. Lose half of it and you need to double what is left just to return to where you started. That arithmetic is the whole argument.
 
 So a position is not ready until five things are written: the ordinary exit, what you do on a gap, where you take profit, when time runs out, and what happens to the whole account after a bad run. "I'll manage it" is not one of the five.

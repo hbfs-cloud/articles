@@ -7,6 +7,10 @@ source_path: "series/piloter-son-portefeuille/part3-drawdown/index.html"
 ---
 *Part 3 of 6 in Operate a Portfolio, Not a Collection of Trades.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 3 of 6 in Operate a Portfolio, Not a Collection of Trades; earlier parts cover the groundwork but you can start here.
+::end
+
 Drawdown is the distance from your highest recorded equity down to where you sit now. It describes the road behind you. It is not the amount at risk on your next trade.
 
 It earns the attention because recovery is lopsided. Down 10% needs +11% to get level. Down 25% needs +33%. Down 50% needs +100%. Down 80% needs +400%. The deeper the hole, the steeper the climb out, and past a point a drawdown stops costing money and starts costing years.

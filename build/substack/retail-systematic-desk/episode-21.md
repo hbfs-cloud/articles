@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Turn Candidates Into Conditional Plans. Lesson 21 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 21 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 A number on a chart is not a plan. It becomes one when you write down what has to happen before anything is sent, what would prove the idea wrong, and the date after which the whole thing is dead. A trigger is the condition the market must meet first. That is not the same as a resting limit order, which just sits there for weeks and gets filled by whatever bad news arrives.
 
 **Input from last Friday:** the accepted peer map, with its factors written down.

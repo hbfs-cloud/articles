@@ -10,6 +10,10 @@ source_path: "series/anatomie-signal-trade/part5-donnees-couteau/index.html"
 ---
 *Part 5 of 6 in The 30-Second Trade Signal Check.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 5 of 6 in The 30-Second Trade Signal Check; earlier parts cover the groundwork but you can start here.
+::end
+
 "Institutions bought 46% of today's volume" sounds precise. It is not evidence until 46% has a venue,
 time window, denominator and defensible direction.
 

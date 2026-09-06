@@ -10,6 +10,10 @@ source_path: "series/anatomie-signal-trade/part2-risk-reward/index.html"
 ---
 *Part 2 of 6 in The 30-Second Trade Signal Check.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 2 of 6 in The 30-Second Trade Signal Check; earlier parts cover the groundwork but you can start here.
+::end
+
 The `CLF` plan risked $0.97 per share. Its first target, $13.20, sat $0.95 above the $12.25 entry. Its
 second target, $13.85, sat $1.60 above it.
 

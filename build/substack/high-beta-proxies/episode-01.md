@@ -13,7 +13,7 @@ That is the first thing to understand about beta. Beta is a slope. You take the 
 
 ![Amplification is symmetric](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/high_beta.png)
 
-It is a measurement of the past, not a promise about tomorrow.
+<mark>It is a measurement of the past, not a promise about tomorrow.</mark>
 
 So before you write a beta down anywhere, write down four things beside it: which reference you measured against, whether you used daily or weekly returns, which window, and how many days the two series actually share. A beta with no window attached is decoration. A one-year window is roughly 252 trading days, two years about 504, five years about 1,260. The longer window is steadier and slower to notice that something changed. The shorter one is quicker and more easily hijacked by a single bad week.
 
@@ -25,11 +25,11 @@ Rolling estimates expose the rest. Recompute beta every day over a moving 90-day
 
 **Beta report**
 
-- Line both return series up on exactly the same dates.
-- Use one currency, one frequency, one return convention.
-- Record beta, correlation, R-squared, alpha and the shared-day count together.
-- Plot the rolling estimate and check the leftovers, not just the headline slope.
-- Throw out any calculation built on stale prices or mismatched sessions.
+1. Line both return series up on exactly the same dates.
+1. Use one currency, one frequency, one return convention.
+1. Record beta, correlation, R-squared, alpha and the shared-day count together.
+1. Plot the rolling estimate and check the leftovers, not just the headline slope.
+1. Throw out any calculation built on stale prices or mismatched sessions.
 
 **Limitation:** A beta measured in calm trading does not survive earnings, financing stress, a halt or a volatility shock unchanged. Confidence intervals and out-of-sample tests will show you how uncertain the number is. Nothing makes it hold still.
 

@@ -10,6 +10,10 @@ source_path: "series/anatomie-signal-trade/part4-earnings/index.html"
 ---
 *Part 4 of 6 in The 30-Second Trade Signal Check.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 4 of 6 in The 30-Second Trade Signal Check; earlier parts cover the groundwork but you can start here.
+::end
+
 Tapestry (`TPR`) closed at $153.74 on August 12, 2026. The company released results before the next
 opening bell. The stock opened at $132.70, down 13.69%, and closed at $128.39, down 16.49% from the prior
 close.

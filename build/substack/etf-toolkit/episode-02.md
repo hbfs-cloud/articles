@@ -7,13 +7,17 @@ source_path: "series/trader-etf/part2-classes-actifs/index.html"
 ---
 *Part 2 of 6 in The ETF Toolkit.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 2 of 6 in The ETF Toolkit; earlier parts cover the groundwork but you can start here.
+::end
+
 Two funds can both be labelled "US stocks" and still be two completely different bets.
 
 SPY holds 503 companies. QQQ holds 101, and roughly half its money sits in technology. Across 2020 and 2021 QQQ about doubled while SPY gained around half. Then 2022 arrived: QQQ fell 33%, SPY fell 19%. Same country, same wrapper, very different ride.
 
-![A fee compounds against you the way returns compound for you](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/fee_drag.png)
-
 So the useful question is never "what does it own?" It is "what can hurt this?"
+
+![Diversification is measured in calm and spent in stress](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/correlation_breaks.png)
 
 For stock funds, usually two things: how much rides on a handful of names, and what currency the businesses actually earn. A fund priced in dollars can hold companies paid in yen. If Tokyo rises 10% and the yen drops 15% against the dollar, the dollar holder is down about 5%. Currency-hedged versions exist for exactly that, and the hedge is not free.
 
@@ -29,14 +33,14 @@ Property funds are their own animal. REITs borrow heavily, often 30-50% of asset
 
 Run this before comparing returns:
 
-- Write down the asset, the index and the weighting rule.
-- For stocks, check country, sector, single-issuer and currency weights.
-- For bonds, record duration, credit quality, maturity and callable exposure.
-- For commodities, check physical holdings versus futures, then read the roll policy.
-- Track distributions and total return in separate columns.
-- Read the tax section for the fund's legal structure and your own country.
+1. Write down the asset, the index and the weighting rule.
+1. For stocks, check country, sector, single-issuer and currency weights.
+1. For bonds, record duration, credit quality, maturity and callable exposure.
+1. For commodities, check physical holdings versus futures, then read the roll policy.
+1. Track distributions and total return in separate columns.
+1. Read the tax section for the fund's legal structure and your own country.
 
-These labels do not stay in their lanes. In a real panic, rates, credit, currencies and equities move together, and the correlation you measured over a calm five years cannot prove a hedge will work during the next stress. Build the job from mechanics, then push on two or three drivers at once and see what breaks.
+These labels do not stay in their lanes. <mark>In a real panic, rates, credit, currencies and equities move together, and the correlation you measured over a calm five years cannot prove a hedge will work during the next stress.</mark> Build the job from mechanics, then push on two or three drivers at once and see what breaks.
 
 Sources: [SEC Bond Funds and Income Funds](https://www.investor.gov/introduction-investing/investing-basics/glossary/bond-funds-and-income-funds), [CFTC Commodity ETP Advisory](https://www.cftc.gov/LearnAndProtect/AdvisoriesAndArticles/CustomerAdvisory_CommodityETPs.htm), [SEC ETF Investor Bulletin](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-24).
 

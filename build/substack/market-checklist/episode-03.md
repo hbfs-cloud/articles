@@ -7,6 +7,10 @@ source_path: "series/marketwatch-checklist/part3-technique/index.html"
 ---
 *Part 3 of 7 in The Market Checklist.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 3 of 7 in The Market Checklist; earlier parts cover the groundwork but you can start here.
+::end
+
 A scan hands you ten candidates, all scoring 85 or better out of 100. Scoring says interesting. The technical check says now, here, at this price, or not at all. Most of the money in this step is saved by the names you refuse.
 
 The rule used in this checklist: at least three of six signals must agree before anything is entrable.

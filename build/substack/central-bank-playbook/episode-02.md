@@ -7,11 +7,15 @@ source_path: "series/banques-centrales/part2-taux-directeurs/index.html"
 ---
 *Part 2 of 6 in The Central Bank Playbook.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 2 of 6 in The Central Bank Playbook; earlier parts cover the groundwork but you can start here.
+::end
+
 The Fed does not set the federal funds rate. It announces a target range for it — 4.25-4.50% in mid-2026 — and then uses other levers to keep the actual traded rate inside that box. Missing this distinction is the most common beginner error in reading a rate decision.
 
 Three separate levers do the boxing. Interest on reserve balances, or IORB, is what the Fed pays banks to leave money with it, which sets a floor: no bank lends to another bank for less than it earns doing nothing. Overnight reverse repos put a second floor under money-market funds, which do not have Fed accounts. The discount rate, a deliberately unattractive rate for direct emergency borrowing, caps the top. The rate that actually prints each day, the effective federal funds rate, is a volume-weighted average of real overnight loans, and it normally sits just below IORB.
 
-![The headline is an average; the decision is in the layer](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/inflation_layers.png)
+![How a rate decision reaches an asset price](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/policy_transmission.png)
 
 That plumbing changed. Before 2008 the Fed steered the rate by controlling how scarce reserves were. After the crisis, reserves became abundant, so it steers by price instead. Same headline, different machine.
 
@@ -19,14 +23,18 @@ The ECB publishes three key rates, not one, and mid-2026 they sat at 2.75% for t
 
 Run every decision through this, in order.
 
-- Save the official statement and the implementation note as two separate documents.
-- Record the publication time, its time zone, and each effective date.
-- Write down the old and new target range or key rates, and the change in basis points.
-- Name which body decides each tool and who executes the operations.
-- Measure market prices in a window you defined before the release.
-- Keep your explanation in a different paragraph from the facts.
+### The decision log, in order
 
-Then the number that actually matters. A policy rate is a nominal figure; what bites is the real rate, meaning the rate minus inflation. In 2021 the Fed's 0.25% against 7.0% inflation was a real rate of about −6.75%: borrowing was profitable, policy was wildly loose despite looking normal. By 2023, 5.25% against 3.4% inflation gave roughly +1.85% — genuinely restrictive for the first time since 2007. Mid-2026, 4.50% against inflation near 2.8% leaves about +1.7%. Volcker's 20% against 14% inflation was +6%. Judge the stance on that column, never on the headline.
+1. Save the official statement and the implementation note as two separate documents.
+1. Record the publication time, its time zone, and each effective date.
+1. Write down the old and new target range or key rates, and the change in basis points.
+1. Name which body decides each tool and who executes the operations.
+1. Measure market prices in a window you defined before the release.
+1. Keep your explanation in a different paragraph from the facts.
+
+![The real rate is the one that bites](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/examples/central-bank-playbook_episode-02.png)
+
+Then the number that actually matters. A policy rate is a nominal figure; what bites is the real rate, meaning the rate minus inflation. In 2021 the Fed's 0.25% against 7.0% inflation was a real rate of about −6.75%: borrowing was profitable, policy was wildly loose despite looking normal. By 2023, 5.25% against 3.4% inflation gave roughly +1.85% — genuinely restrictive for the first time since 2007. Mid-2026, 4.50% against inflation near 2.8% leaves about +1.7%. Volcker's 20% against 14% inflation was +6%. <mark>Judge the stance on that column, never on the headline.</mark>
 
 Say the Fed cuts by 25 basis points — a quarter of a percentage point — and the two-year Treasury yield rises anyway during the release window. You have two documented facts: a lower target and a higher yield. "Guidance was less dovish than expected" is a story about what people had already priced, and needs evidence about prior expectations before you write it down.
 

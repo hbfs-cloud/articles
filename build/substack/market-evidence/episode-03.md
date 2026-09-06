@@ -7,6 +7,10 @@ source_path: "series/lire-le-marche/part3-short-interest/index.html"
 ---
 *Part 3 of 6 in Read Market Evidence Without Inventing a Signal.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 3 of 6 in Read Market Evidence Without Inventing a Signal; earlier parts cover the groundwork but you can start here.
+::end
+
 Four different numbers get bundled into the phrase "short pressure", and they do not belong in the same sentence. A position. A transaction. A settlement balance. A lending quote. Different units, different coverage, different lags.
 
 FINRA short interest is a position count: shares sold short and not yet bought back, held in customer and proprietary accounts on designated settlement dates. Firms report it twice a month, and FINRA publishes it later on a posted schedule, so what you read is usually a week or two behind the date it describes. Write both dates down. A position opened and closed between two snapshots never appears at all. An old position can sit in report after report long after its original trade left the tape.

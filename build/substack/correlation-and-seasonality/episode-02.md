@@ -7,13 +7,17 @@ source_path: "series/correlations-saisonnalites/part2-or-dollar-taux/index.html"
 ---
 *Part 2 of 6 in Correlation and Seasonality Without Storytelling.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 2 of 6 in Correlation and Seasonality Without Storytelling; earlier parts cover the groundwork but you can start here.
+::end
+
 Gold is priced in dollars, so a stronger dollar usually means a weaker gold price. Over decades that link has sat between minus 0.50 and minus 0.70, often quoted at about minus 0.60, with a rough rule attached: a 10% rise in the dollar has tended to knock some 6% off gold.
 
 Then 2024 and 2025 happened. Gold went from about $1,800 in early 2023 to above $2,800, a rally near 55%, while the dollar stayed firm. The inverse relationship stopped applying.
 
-![The regime sets a ceiling, never a direction](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/regime_map.png)
+It stopped because a new buyer showed up. Central banks bought 1,037 tonnes of gold in 2023 and 1,045 tonnes in 2024, China alone adding more than 300 tonnes across two years. A structural buyer that size overwhelms a currency effect. The rule was never a law. <mark>It was a hypothesis with a shelf life.</mark>
 
-It stopped because a new buyer showed up. Central banks bought 1,037 tonnes of gold in 2023 and 1,045 tonnes in 2024, China alone adding more than 300 tonnes across two years. A structural buyer that size overwhelms a currency effect. The rule was never a law. It was a hypothesis with a shelf life.
+![The regime sets a ceiling, never a direction](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/regime_map.png)
 
 Before interpreting any of these numbers, know exactly what you are holding.
 
@@ -27,13 +31,15 @@ The yield curve is a third dial, answering a different question again. The New Y
 
 How to run this in practice:
 
-- Name the exact index, the gold quote and its fixing time, and the Treasury series before computing anything.
-- Compare changes to changes — never correlate two price levels.
-- Publish the window length and sample dates beside every figure you quote.
-- Keep curve description separate from recession forecasting.
-- Suspend any rule whose sign has flipped, rather than inventing a story for it.
+1. Name the exact index, the gold quote and its fixing time, and the Treasury series before computing anything.
+1. Compare changes to changes — never correlate two price levels.
+1. Publish the window length and sample dates beside every figure you quote.
+1. Keep curve description separate from recession forecasting.
+1. Suspend any rule whose sign has flipped, rather than inventing a story for it.
 
 Suppose gold rises while the dollar and the real yield rise too. Do not call gold wrong. Check timestamps, check units, check whether one outlier drives the result, then mark the inverse rule inactive. A macro dashboard can shrink your size or your confidence. It cannot overrule the market you are actually trading.
+
+> When the sign flips, mark the rule inactive rather than inventing a story that saves it.
 
 **Limitation:** correlation cannot show that the dollar or real yields caused anything. Positioning, event risk, liquidity and unmeasured variables move in the same window. Index weights get revised, curves rest on indicative bids, and markets close at different hours.
 

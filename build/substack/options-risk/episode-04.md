@@ -7,6 +7,10 @@ source_path: "series/options-trading/part4-spreads/index.html"
 ---
 *Part 4 of 6 in Options Without the Hidden Risk.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 4 of 6 in Options Without the Hidden Risk; earlier parts cover the groundwork but you can start here.
+::end
+
 A spread is two options bought and sold together, and it is one trade only while both legs behave. Price it as one thing, then ask what happens when it stops being one thing.
 
 Apple at $210, and you want the move to $225. Buy the $210 call for $6.00, sell the $225 call for $1.50. You paid $4.50 net, so $450 leaves the account. Maximum loss is that $450, if Apple ends below $210 and both calls die. Maximum gain is the $15 gap between strikes minus the $4.50 you paid, so $1,050. You break even at $214.50.
@@ -23,15 +27,15 @@ That mismatch is worse in the "poor man's covered call". Microsoft at $420: buy 
 
 Run this before the ticket goes in:
 
-- Send it as one multi-leg order at a net price whenever the broker allows.
-- Confirm strike, expiry, quantity and exercise style on every leg separately.
-- Recalculate the payoff after commissions and a realistic bid-ask haircut.
-- Decide the closing date in advance, especially near a short strike.
-- Stress an early assignment, and stress one leg filling while the other does not.
+1. Send it as one multi-leg order at a net price whenever the broker allows.
+1. Confirm strike, expiry, quantity and exercise style on every leg separately.
+1. Recalculate the payoff after commissions and a realistic bid-ask haircut.
+1. Decide the closing date in advance, especially near a short strike.
+1. Stress an early assignment, and stress one leg filling while the other does not.
 
 Expiry near a short strike is the specific counter-case. Exercise and assignment outcomes may not be settled until processing finishes, which means you can be short shares on Monday without knowing it on Friday. Closing early removes that, at the cost of paying a spread that is often wide.
 
-Every figure here assumes matching multipliers, both legs intact, and settlement at expiry. Adjusted contracts, cash-settled products and a broken leg all break the formula. Read the specification, not the strategy name.
+Every figure here assumes matching multipliers, both legs intact, and settlement at expiry. Adjusted contracts, cash-settled products and a broken leg all break the formula. <mark>Read the specification, not the strategy name.</mark>
 
 Sources: [OIC Bull Call Spread](https://www.optionseducation.org/strategies/all-strategies/bull-call-spread-debit-call-spread), [OIC Exercising Options](https://prd-web.optionseducation.org/optionsoverview/exercising-options), [OCC Options Disclosure Document](https://www.theocc.com/company-information/documents-and-archives/options-disclosure-document).
 

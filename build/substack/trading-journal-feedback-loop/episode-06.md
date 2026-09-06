@@ -7,6 +7,10 @@ source_path: "series/journal-et-performance/part6-dashboard/index.html"
 ---
 *Part 6 of 6 in Turn a Trading Journal Into a Feedback Loop.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 6 of 6 in Turn a Trading Journal Into a Feedback Loop; earlier parts cover the groundwork but you can start here.
+::end
+
 Build the screen backwards. It is allowed to produce three answers and no others: keep the plan, pause it, or run one written test. Anything on the page that cannot push you toward one of those three is decoration, and decoration is why nobody looks at their own dashboard after week three.
 
 Two sheets. The first holds one row per closed trade: date, plan version, entry, stop, size, fees, result, and a plain yes or no on whether you followed your own rules. The second computes everything from the first. You never type a number into the second sheet. Every hand-copied figure is a wrong figure waiting for its turn.

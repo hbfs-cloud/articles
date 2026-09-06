@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 2 of 3 in Design a Decision-First Retail Desktop. Lesson 41 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 41 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 An empty card teaches the reader that nothing is wrong. That is the failure. On a screen, silence and calm look identical, and only one of the two is safe to act on.
 
 **Input from last Friday:** the decision-first summary you accepted.

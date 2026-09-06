@@ -7,11 +7,15 @@ source_path: "series/correlations-saisonnalites/part5-strategies/index.html"
 ---
 *Part 5 of 6 in Correlation and Seasonality Without Storytelling.*
 
-Write down how the strategy is allowed to fail before you write down how it makes money. If you cannot say what would make you close it, you do not have a strategy.
+::audience non_sub,free_sub
+Each part stands on its own. This is 5 of 6 in Correlation and Seasonality Without Storytelling; earlier parts cover the groundwork but you can start here.
+::end
+
+Write down how the strategy is allowed to fail before you write down how it makes money. <mark>If you cannot say what would make you close it, you do not have a strategy.</mark>
 
 Start with pairs, because the arithmetic is easy and the trap is subtle. You buy the laggard, sell the leader, and wait for the gap between them to close. Popular candidates come with long shared histories: US large caps against tech near plus 0.92, gold against gold miners near plus 0.78, energy shares against crude near plus 0.82, bitcoin against ether near plus 0.88.
 
-![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
+![A spread is one trade only while both legs exist](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/spread_legs.png)
 
 The gap gets measured in standard deviations, called a z-score. A z of 2.0 means the spread sits two standard deviations from its own average, something that happens about 2.3% of the time; 2.5 is nearer 0.6%. A common frame is to enter beyond 2.0, exit as it returns toward zero, and cut at 3.5 on the view that convergence may never arrive.
 
@@ -23,12 +27,12 @@ Seasonal rotation needs the same suspicion, and backtests flatter hardest here. 
 
 So build the failure rules into the design:
 
-- Freeze the universe, the formula, the windows, the thresholds and the costs before running anything.
-- Split the data into training, validation, and one final holdout you use exactly once.
-- Define four exits separately: loss, convergence, time, and structural.
-- Trigger the structural exit on filings — a merger, a spin-off, a restatement — which you can check on EDGAR, the SEC's public filing database.
-- Cap notional exposure, borrowing and concentration outside the model, since a quiet asset can attract a large weight right before it stops being quiet.
-- Keep the rejected tests in the log; they tell you how many things you tried.
+1. Freeze the universe, the formula, the windows, the thresholds and the costs before running anything.
+1. Split the data into training, validation, and one final holdout you use exactly once.
+1. Define four exits separately: loss, convergence, time, and structural.
+1. Trigger the structural exit on filings — a merger, a spin-off, a restatement — which you can check on EDGAR, the SEC's public filing database.
+1. Cap notional exposure, borrowing and concentration outside the model, since a quiet asset can attract a large weight right before it stops being quiet.
+1. Keep the rejected tests in the log; they tell you how many things you tried.
 
 Risk-parity style overlays deserve a specific warning. The bond leg was sized on an assumption that bonds fall when shares rise. In 2022 that link went from about minus 0.30 to plus 0.50 and the diversification vanished, taking both legs down together.
 

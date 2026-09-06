@@ -7,13 +7,17 @@ source_path: "series/correlations-saisonnalites/part3-saisonnalites/index.html"
 ---
 *Part 3 of 6 in Correlation and Seasonality Without Storytelling.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 3 of 6 in Correlation and Seasonality Without Storytelling; earlier parts cover the groundwork but you can start here.
+::end
+
 "Sell in May and go away" has real numbers behind it. Since 1950, the November-to-April half of the year returned an average 7.1% on the S&P 500 and finished higher in 77% of years. May to October returned 1.8% and finished higher 65% of the time. A gap of 5.3 points, over seventy-five years.
 
 Now count the sample honestly. Seventy-five years means seventy-five observations. Not seventy-five thousand daily returns — seventy-five. Every monthly or seasonal pattern gets exactly one occurrence per year, no matter how much price history sits behind it. The Santa Claus rally, the last five sessions of December plus the first two of January, averaged 1.3% and was positive in 79% of years, which sounds strong until you learn that is 34 hits out of 43 tries.
 
-![A calendar pattern is a hypothesis, not a rule](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/seasonality_caution.png)
+<mark>Small samples are why calendar effects look so convincing and behave so badly.</mark>
 
-Small samples are why calendar effects look so convincing and behave so badly.
+![A calendar pattern is a hypothesis, not a rule](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/seasonality_caution.png)
 
 The January effect is the same story with the same trap. Since 1980 the Russell 2000 averaged 2.7% in January against 0.8% in other months; micro caps 4.1% against 0.6%; large caps only 1.2% against 0.9%. The mechanism is plausible — investors sell losers in December for the tax break and buy back in January, and small, beaten-down shares are the ones getting sold. Plausible is not proof. The effect has faded on large caps since 2000, and it was never uniform across tax regimes.
 
@@ -21,12 +25,14 @@ Then there is the trap that ruins more research than any other: testing everythi
 
 Answer it before you look, not after.
 
-- Freeze the bucket, the benchmark, the sample period and the exact entry and exit sessions first.
-- Use total returns, dividends included, and build the buckets from the exchange's official calendar rather than assuming every weekday is a full session.
-- Report the occurrence count, the median, the worst path and the loss frequency, never the average alone.
-- Recompute the result with the single biggest observation removed and see whether the effect survives.
-- Correct for how many patterns you tested, and keep a final stretch of years that played no part in choosing the rule.
-- Log the hypotheses that failed, so next year you remember how wide the search was.
+### Freeze the test before you look at the answer
+
+1. Freeze the bucket, the benchmark, the sample period and the exact entry and exit sessions first.
+1. Use total returns, dividends included, and build the buckets from the exchange's official calendar rather than assuming every weekday is a full session.
+1. Report the occurrence count, the median, the worst path and the loss frequency, never the average alone.
+1. Recompute the result with the single biggest observation removed and see whether the effect survives.
+1. Correct for how many patterns you tested, and keep a final stretch of years that played no part in choosing the rule.
+1. Log the hypotheses that failed, so next year you remember how wide the search was.
 
 A worked version: someone claims month M is unusually strong for an index. Before touching a spreadsheet, they fix the membership treatment, the total-return source, the start date, the trading costs and the discovery period. Each annual return for M gets compared with the other months. The number is recalculated without its largest year, then tested on the untouched years. If the sign vanishes, if costs eat the difference, or if M was picked only after scanning all twelve, it is not an allocation rule. It is a finding about the past.
 

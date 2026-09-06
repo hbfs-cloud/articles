@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 1 of 3 in Make Data Quality Executable. Lesson 7 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 7 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Services change under you. A tool gets renamed, a field quietly disappears, an account loses the right to place one kind of order. If your program is carrying last month's list of what the service can do, it will happily call something that no longer exists, and it will find that out halfway through a run. Ask instead. Every morning, before anything else.
 
 **Input from last Friday:** the accepted partial-failure fixture pack, meaning the file of saved fake responses you replay in tests.

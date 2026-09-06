@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 2 of 3 in Make Strategy Decisions Machine-Readable. Lesson 23 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 23 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Between two runs the engine has to remember things. When a position was opened. Where the trailing reference sits. Whether a cooldown is still counting down, or a risk halt is on. All of that together is the state.
 
 Rebuilding it from what your broker shows is guesswork. The broker knows you hold 30 shares of SYM_K — an invented example — and nothing else. It does not know that those shares came from the second revision of a plan whose cooldown ends Thursday.

@@ -7,6 +7,10 @@ source_path: "series/piloter-son-portefeuille/part5-pause-vacances/index.html"
 ---
 *Part 5 of 6 in Operate a Portfolio, Not a Collection of Trades.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 5 of 6 in Operate a Portfolio, Not a Collection of Trades; earlier parts cover the groundwork but you can start here.
+::end
+
 Two ways exist to stop taking risk, and they cost wildly different amounts.
 
 The frightened way sells everything at once, at whatever price the screen happens to show. The patient way switches off two things only: new positions, and swapping one holding for a supposedly better one. Everything already open keeps its own four guardrails — stop loss, profit target, time limit, trailing stop — and closes when those say so. Exposure then falls like a staircase instead of a cliff. A healthy trade does not become unhealthy because you decided to take a week off.

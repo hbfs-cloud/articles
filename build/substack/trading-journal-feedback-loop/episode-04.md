@@ -7,6 +7,10 @@ source_path: "series/journal-et-performance/part4-la-revue/index.html"
 ---
 *Part 4 of 6 in Turn a Trading Journal Into a Feedback Loop.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 4 of 6 in Turn a Trading Journal Into a Feedback Loop; earlier parts cover the groundwork but you can start here.
+::end
+
 Three horizons, one job each. The daily pass counts. The weekly pass diagnoses behaviour. The monthly pass
 is the only one allowed to judge the method. Swap those jobs around, and you end up rewriting a rule
 because of one bad afternoon, which turns ordinary variation into an unstable system.

@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 1 of 3 in Prove Execution in a Simulator. Lesson 31 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 31 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Most home-built simulators get written to answer the wrong question. They are asked whether the strategy makes money. What they should be asked is whether the code that talks to a broker survives everything a broker does to it: rejections, half-fills, features that simply are not there.
 
 So build one that lies to you as little as possible, and never in your favour. Fills at the price you wanted, always, is a bug pretending to be a result.

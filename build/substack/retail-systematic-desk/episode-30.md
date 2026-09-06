@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Control the Portfolio Before the Trade. Lesson 30 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 30 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 A kill switch is a rule that stops the desk from taking on anything new once a line you drew in advance gets crossed. It is not a guarantee. Orders may not cancel; positions may not close.
 
 Earnings dates, macro releases, a trading halt, a broker whose connection goes quiet — each changes execution risk far faster than a model that recalculates once a day. Those belong in the plan before an order exists, not in your judgement at the moment of placing it.

@@ -7,6 +7,10 @@ source_path: "series/journal-et-performance/part5-corriger-biais/index.html"
 ---
 *Part 5 of 6 in Turn a Trading Journal Into a Feedback Loop.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 5 of 6 in Turn a Trading Journal Into a Feedback Loop; earlier parts cover the groundwork but you can start here.
+::end
+
 Asking yourself mid-session whether you are revenge trading is like asking an angry person whether they are calm. The bias bends the exact faculty that would catch it. The only way out is external: timestamps and sizes you wrote down before you had a story to protect.
 
 So turn the suspicion into a behavior you can count, and define it before you look at the money. Say you suspect that losses trigger unplanned follow-up trades. Define the event: a new order submitted within a stated interval after a losing exit, with no plan record created before the first trade opened. Log prior-trade outcome, elapsed time, setup version, planned-before-entry yes or no, rule adherence, market condition, net realized R. The definition catches profitable follow-ups too — one that only flags losers can be bent into any story you like.

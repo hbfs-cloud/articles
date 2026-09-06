@@ -7,13 +7,17 @@ source_path: "series/trader-etf/part3-thematiques-sectoriels/index.html"
 ---
 *Part 3 of 6 in The ETF Toolkit.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 3 of 6 in The ETF Toolkit; earlier parts cover the groundwork but you can start here.
+::end
+
 A theme fund sounds like diversification. Open the holdings file and it usually isn't.
 
 SMH, the semiconductor fund, holds 25 companies. Its ten largest are about 72% of the money, with NVIDIA near 20%, TSMC 12%, Broadcom 8%, ASML 5%. Buying it is not "owning chips". It is mostly owning four companies, with 21 more along for the ride. SOXX does the same job differently: 30 names, and no company allowed above 8%. Same industry, two different bets.
 
 ![Many tickers can be one bet](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/exposure_lookthrough.png)
 
-Nothing wrong with concentration. The problem is inheriting it without choosing it.
+Nothing wrong with concentration. <mark>The problem is inheriting it without choosing it.</mark>
 
 Sectors are a rule system before they are an idea. GICS sorts the whole market into 11 sectors, and the S&P 500's weights are lopsided: technology near 30%, financials 13%, healthcare 12%, while real estate and materials sit around 2% each. A thematic index cuts across those lines using revenue screens, keywords or an analyst's judgement. Two funds with nearly identical names can end up sharing almost nothing.
 
@@ -25,12 +29,12 @@ Weighting is the last hidden choice. RSP gives every S&P 500 member 0.2% and reb
 
 Audit before you buy:
 
-- Read the stated objective and the index methodology, not the marketing page.
-- Add the top five and top ten weights; above 60% in ten names, you have a basket of five bets.
-- Check overlap against what you already hold — under 30% versus SPY or QQQ is a sane bar.
-- Check size: below $100M in assets the issuer may close the fund, $500M+ is calmer, and a bid-ask spread wider than 0.20% is a warning.
-- Note the rebalance schedule, the caps and the eligibility rules.
-- Write down the one fact about the business that would kill the thesis.
+1. Read the stated objective and the index methodology, not the marketing page.
+1. Add the top five and top ten weights; above 60% in ten names, you have a basket of five bets.
+1. Check overlap against what you already hold — under 30% versus SPY or QQQ is a sane bar.
+1. Check size: below $100M in assets the issuer may close the fund, $500M+ is calmer, and a bid-ask spread wider than 0.20% is a warning.
+1. Note the rebalance schedule, the caps and the eligibility rules.
+1. Write down the one fact about the business that would kill the thesis.
 
 A holdings file is a photograph, and that is the limitation of the whole audit. Index providers revise methodologies, companies get reclassified as their business shifts, and a fund that passed in January can fail in July. So re-run it after each reconstitution and before adding size. Counting tickers cannot tell you how many bets you own — only the combined exposures can.
 

@@ -7,6 +7,10 @@ source_path: "series/journal-et-performance/part3-mae-mfe/index.html"
 ---
 *Part 3 of 6 in Turn a Trading Journal Into a Feedback Loop.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 3 of 6 in Turn a Trading Journal Into a Feedback Loop; earlier parts cover the groundwork but you can start here.
+::end
+
 Measure maximum adverse excursion and maximum favorable excursion with rules fixed before reviewing outcomes. Use them to describe the path of recorded trades, not to claim that a tighter stop or better exit would have worked. Any proposed rule change needs a separate test that includes trades the new rule would remove or alter.
 
 For a long position, maximum adverse excursion, or MAE, is the largest move below the actual entry while the trade is open. Maximum favorable excursion, or MFE, is the largest move above it. Reverse the signs for a short position. State whether the calculation uses trades, bid or ask quotes, or bar highs and lows; regular or extended hours; and whether excursions are measured before the first partial exit or until the entire position closes.

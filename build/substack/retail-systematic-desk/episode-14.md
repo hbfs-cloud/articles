@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 2 of 3 in Build Reproducible Market Snapshots. Lesson 14 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 14 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 "I reviewed the data" is a sentence, not a proof. Bind the review to the exact files instead. A hash is a fingerprint: a short string computed from a file, which changes completely if a single byte inside it moves. Fingerprint each input, then fingerprint the ordered list of fingerprints, and you get one string that stands for the whole evidence set.
 
 Say what that string does not do, because people oversell it. It proves the files match a copy you trusted earlier. It says nothing about whether the files are complete, whether the numbers in them are true, or when they were really created.

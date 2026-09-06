@@ -7,11 +7,15 @@ source_path: "series/risque-de-gap/part2-gap-par-actif/index.html"
 ---
 *Part 2 of 5 in Survive Gap Risk.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 2 of 5 in Survive Gap Risk; earlier parts cover the groundwork but you can start here.
+::end
+
 Between 19 February and 23 March 2020 the Nasdaq-100 tracker QQQ fell 28%. TQQQ, which aims to deliver three times the index's daily move, fell 69%. On 16 March alone QQQ opened 9.3% lower and TQQQ opened 27.9% lower. A $100,000 stake became roughly $31,000 in 23 trading sessions — and climbing back from −69% requires +223%, not +69%.
 
-Same thesis. Same index. Wildly different survival odds. Stress the instrument you own, not the chart you watch.
+Same thesis. Same index. Wildly different survival odds. <mark>Stress the instrument you own, not the chart you watch.</mark>
 
-![Two orders, two different ways to be wrong](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/stop_vs_stop_limit.png)
+![Amplification is symmetric](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/high_beta.png)
 
 Start with plain funds. On an ordinary night a broad tracker moves a fraction of a percent, a narrower index a little more, small caps more again — measure it on the funds you actually hold rather than trusting a figure someone quoted. A fund holding 500 companies dilutes any single blow-up. But in a systemic shock everything moves together and dilution stops helping: in March 2020 the broad trackers all gapped down together, by high single digits, on the same mornings. Read the prospectus and issuer data for holdings, spread, premiums or discounts, and creation-redemption risk. A fund's exchange price can trade above or below net asset value, and some holdings may be closed while it keeps trading. Leveraged and inverse funds target a stated daily result; over longer stretches, especially choppy ones, the outcome drifts far from that multiple.
 
@@ -23,13 +27,17 @@ Futures and retail foreign exchange bring contract-specific sessions and heavy l
 
 **Instrument check**
 
-- Read the prospectus, contract, or options disclosure for the thing you are actually buying.
-- Map its regular, extended, and closed trading periods.
-- Identify embedded leverage, daily reset, expiry, and assignment.
-- Stress the executable price, fees, and margin response.
-- Test venue and custody access before the event, not during it.
+### Five checks, in order
+
+1. Read the prospectus, contract, or options disclosure for the thing you are actually buying.
+1. Map its regular, extended, and closed trading periods.
+1. Identify embedded leverage, daily reset, expiry, and assignment.
+1. Stress the executable price, fees, and margin response.
+1. Test venue and custody access before the event, not during it.
 
 Run one thesis through stock, sector fund, and call option, and write for each: the first session you could exit, a stressed price, maximum capital loss, margin response, spread and depth, any expiry or reset. Reject the expression whose mechanics you cannot model. The smallest cash outlay is not the smallest risk.
+
+> The smallest cash outlay is not the smallest risk.
 
 **Limitation:** structure does not make outcomes predictable. Fund arbitrage can break, option markets can open wide, and a liquid futures contract can gap straight after a trading pause. Official disclosures explain mechanics and risks; they do not forecast your next loss.
 

@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Design a Decision-First Retail Desktop. Lesson 42 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 42 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 The fastest way to make a desk useless is to make it chatty. People mute what cries wolf, they mute it permanently, and the one message that mattered goes down with the rest.
 
 **Input from last Friday:** the missing-data component from last week's build.

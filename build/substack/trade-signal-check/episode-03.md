@@ -10,6 +10,10 @@ source_path: "series/anatomie-signal-trade/part3-le-stop/index.html"
 ---
 *Part 3 of 6 in The 30-Second Trade Signal Check.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 3 of 6 in The 30-Second Trade Signal Check; earlier parts cover the groundwork but you can start here.
+::end
+
 The August 12 `CLF` screen reported a $12.095 raw entry, $0.645 ATR and an $11.1282 stop exactly 1.50 ATR
 below entry. The final plan shifted to $12.25 and $11.28. It preserved almost the same distance, but that
 shift was not rounding and its rule was not recorded.

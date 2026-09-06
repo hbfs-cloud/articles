@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Connect a Broker Without Losing Control. Lesson 39 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 39 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Two lists exist. Yours, and the broker's. When they disagree about a fill, the broker wins, because the broker is the one holding the shares. When they disagree about what you meant to do, your plan wins. Reconciliation is the habit of keeping those two truths apart.
 
 **Input from last Friday:** the deduplication record you accepted.

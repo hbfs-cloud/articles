@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Backtest Without Fooling Yourself. Lesson 27 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 27 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 A backtest score on its own says nothing. It only starts to mean something next to what a dumber choice would have produced: holding cash, holding a broad index, entering on random dates under the very same rules, or leaving the current rule untouched.
 
 The counters below are invented to show the shape of an audit. No prices, no returns, just bookkeeping.

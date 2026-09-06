@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 1 of 3 in Backtest Without Fooling Yourself. Lesson 25 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 25 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 A backtest is a claim about the past: with these rules, this is what I would have done. The claim only holds if the simulation was blind to everything that had not happened yet. Lookahead — letting a test see tomorrow's information while it pretends to be yesterday — is the cheapest way to draw a beautiful curve that means nothing.
 
 Three leaks account for most of it. Index membership taken from today's list and applied to a year when the list was different. Splits and mergers left unadjusted. And company figures stamped with the period they cover instead of the day they became public: a quarter ending in March is not knowable in March.

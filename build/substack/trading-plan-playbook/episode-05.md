@@ -7,6 +7,10 @@ source_path: "series/plan-de-trading/part5-watchlist/index.html"
 ---
 *Part 5 of 6 in Build a Trading Plan You Can Execute.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 5 of 6 in Build a Trading Plan You Can Execute; earlier parts cover the groundwork but you can start here.
+::end
+
 You cannot follow two thousand stocks. You can follow twenty or thirty properly. That gap is the entire argument for a watchlist, and it is why a name earns its slot the day before you need it, never in the minute the price starts moving.
 
 A symbol goes on the list only when it passes your eligibility rules and carries four written fields: context, trigger, invalidation, expiry. A list of interesting tickers is not preparation. No decision attached, no slot.

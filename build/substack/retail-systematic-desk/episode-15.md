@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Build Reproducible Market Snapshots. Lesson 15 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 15 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Something looks wrong in yesterday's run, so you run it again. The data has moved since. Now you are debugging two things at once and can prove neither. A replay has to be offline: it reads the frozen bundle, touches no network, changes nothing outside itself, and gives the same answer at three in the morning as at noon.
 
 Sameness is conditional. Identical bytes only mean something when the language runtime, the libraries, the way numbers are written to disk, and any randomness are all pinned. If one of those differs, the runner should say which, not shrug.

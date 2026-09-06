@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 1 of 3 in Control the Portfolio Before the Trade. Lesson 28 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 28 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 A stop distance tells you what one trade costs when the exit works. Size has to answer the harder question: what the book carries when it doesn't. Prices jump over stops overnight. Fills land worse than the level you asked for. So the loss budget is an aim, not a wall.
 
 Which means you compute the quantity several times, once per ceiling, and keep the smallest.

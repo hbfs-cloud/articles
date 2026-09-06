@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 1 of 3 in Connect a Broker Without Losing Control. Lesson 37 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 37 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Two accounts at the same broker do not do the same things. One accepts an entry with its protective exit attached, handled broker-side. The next accepts the entry and silently drops the exit. Fractional quantities, session hours, which exit types are native: all of it varies by account, by venue, occasionally by the week.
 
 Discovery is therefore not setup work you do once. It runs at the start of every session and again immediately before anything is placed.

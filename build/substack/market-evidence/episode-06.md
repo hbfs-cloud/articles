@@ -7,6 +7,10 @@ source_path: "series/lire-le-marche/part6-dashboard-synthese/index.html"
 ---
 *Part 6 of 6 in Read Market Evidence Without Inventing a Signal.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 6 of 6 in Read Market Evidence Without Inventing a Signal; earlier parts cover the groundwork but you can start here.
+::end
+
 Five facts about the same company, and not one of them is the same age.
 
 A Form 4, the notice an executive files after buying or selling shares of their own company, is due within two business days. A Form 13F, the quarterly list of what a large manager held, can arrive 45 days after the quarter it describes. FINRA publishes short-sale volume on its own delayed calendar. Options volume is one day of trading. Social posts are instant, and prove only that people were typing.

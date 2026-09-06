@@ -7,6 +7,10 @@ source_path: "series/lire-le-marche/part5-earnings-analystes/index.html"
 ---
 *Part 5 of 6 in Read Market Evidence Without Inventing a Signal.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 5 of 6 in Read Market Evidence Without Inventing a Signal; earlier parts cover the groundwork but you can start here.
+::end
+
 A beat is a comparison, and a comparison is only honest when both sides were fixed before the news landed.
 
 So build the timeline first. Official release time. EDGAR acceptance. The conference call. The 10-Q or 10-K. Then the publication time of every analyst note. Compare reported results only with estimates frozen before the release. A screen that shows a raised price target sitting next to last night's earnings has quietly folded a reaction into a forecast.

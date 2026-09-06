@@ -7,6 +7,10 @@ source_path: "series/marketwatch-checklist/part7-retrospective/index.html"
 ---
 *Part 7 of 7 in The Market Checklist.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 7 of 7 in The Market Checklist; earlier parts cover the groundwork but you can start here.
+::end
+
 Grade each trade against the plan that existed before entry, not against what became obvious later. Profit can conceal a rule violation, and a loss can come from a correctly executed process. The review should produce one behavior to keep, stop, or test. It should not rewrite the setup to make the result look inevitable.
 
 Preserve a point-in-time record before the order: regime label, setup, trigger, entry boundary, invalidation, size calculation, event check, expected holding period, and full exit policy. After execution, attach the broker confirmation and record the actual quantity, fill price, fees, partial fills, and timestamps. This separates the planned trade from the trade the market and broker actually delivered.

@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 2 of 3 in Backtest Without Fooling Yourself. Lesson 26 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 26 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Yesterday's close minus today's close is arithmetic. It is not execution. Real orders miss, or fill halfway, or fill somewhere nobody chose. A stop is an instruction to get out once a level trades, and when a market reopens far below that level, the exit lands where the market opens, not where you wrote the number. A simulator that hides this is flattering you.
 
 Partial fills deserve their own paragraph. You asked for 40 shares, you got 15. Those 15 are a real position: they need protection, they need to show up when you reconcile, and the missing 25 need a decision rather than silence.

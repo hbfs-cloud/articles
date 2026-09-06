@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 2 of 3 in Start With a Mandate, Not a Model. Lesson 2 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 2 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Last Friday you signed a mandate, meaning a short written statement of what this desk is for. Today you write the other half: what it refuses to do, and when it has to stop.
 
 "Make money" cannot be coded. A refusal can. Three worth borrowing: no borrowed money in version one, no order sent without a protective exit already attached, no decision computed from a price older than the last close. A kill criterion is not gloom. It is the line where the evidence stops supporting the machine, and where somebody says so out loud before the account says it for you.

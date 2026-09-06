@@ -7,6 +7,10 @@ source_path: "series/lire-le-marche/part4-news-sentiment/index.html"
 ---
 *Part 4 of 6 in Read Market Evidence Without Inventing a Signal.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 4 of 6 in Read Market Evidence Without Inventing a Signal; earlier parts cover the groundwork but you can start here.
+::end
+
 Repetition is not confirmation. A claim copied across forty accounts in ten minutes is still one claim, with good distribution.
 
 So do not act on a headline or a sentiment score until the claim underneath has a named source, a publication time and a primary document behind it. When the primary document cannot be found, the honest label is "unverified", and it stays that way in your notes.

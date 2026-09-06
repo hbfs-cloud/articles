@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 2 of 3 in Make Data Quality Executable. Lesson 8 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 8 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 The clock on a response tells you when the answer arrived at your machine. It says nothing about how old the market observation inside it is. Those are different facts, and only the second one matters for a decision. A file downloaded at seven this morning can easily describe the world as it stood two sessions ago, and the download will look perfectly healthy while it does.
 
 **Input from last Friday:** the accepted capability bootstrap report.

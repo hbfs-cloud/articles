@@ -7,11 +7,15 @@ source_path: "series/correlations-saisonnalites/part6-outils/index.html"
 ---
 *Part 6 of 6 in Correlation and Seasonality Without Storytelling.*
 
-A number you cannot rebuild is not evidence. It is a screenshot.
+::audience non_sub,free_sub
+Each part stands on its own. This is 6 of 6 in Correlation and Seasonality Without Storytelling; earlier parts cover the groundwork but you can start here.
+::end
+
+<mark>A number you cannot rebuild is not evidence.</mark> It is a screenshot.
 
 The test is blunt: hand someone your saved files and your written settings, and they should land on the same number. If they don't, something in the chain was never written down. The dashboard is not the proof. The saved inputs are.
 
-![Diversification is measured in calm and spent in stress](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/correlation_breaks.png)
+![Seal the evidence, not the story](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/evidence_chain.png)
 
 Start with the trap that ruins most first attempts. Correlation measures how closely two things move together, on a scale from -1 to +1. Run it on raw prices and two stocks in the same rising market can score +0.99, which only tells you they both went up. Run the same pair on daily returns, meaning the percentage change from one close to the next, and the score can drop to +0.20. Same data, same window, opposite conclusion. Use returns.
 
@@ -32,6 +36,8 @@ Run this once, end to end. Pick two documented series. Write the configuration f
 Two limits worth stating plainly. Excel copes until roughly 10,000 rows, then it crawls, and multi-asset correlation matrices become painful long before that. And reproducibility itself proves nothing about profit: an official API can change its definitions, vendor price files can carry adjustment errors, and code can apply the wrong formula perfectly every time. Rebuilding a result only means you can now argue about it properly. Independent review, out-of-sample testing and bounded position size still do the rest of the work.
 
 An alert asks for a review. It does not place an order.
+
+> Rebuilding a number tells you where it came from. It never tells you the number is right.
 
 Sources: [FRED: Series Observations API](https://fred.stlouisfed.org/docs/api/fred/series_observations.html), [FRED and ALFRED: Real-Time Periods](https://fred.stlouisfed.org/docs/api/fred/realtime_period.html), [BLS: Public Data API](https://www.bls.gov/developers/api_signature_v2.htm).
 

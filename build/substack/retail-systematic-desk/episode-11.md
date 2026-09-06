@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 2 of 3 in Treat Identity and Time as Data. Lesson 11 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 11 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 One row of data can carry four different dates, and beginners squash them into one column called date. When something happened. When the public could first read about it. When your program looked. When it finally landed in your database. Squash them and your backtest starts reading tomorrow's newspaper, which is the single most flattering bug in this whole craft.
 
 **Input from last Friday:** the accepted effective-dated instrument record.

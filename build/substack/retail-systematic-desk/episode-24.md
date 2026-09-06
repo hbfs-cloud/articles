@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 3 of 3 in Make Strategy Decisions Machine-Readable. Lesson 24 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 24 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 A plan a machine can read has no adjectives in it. It carries the candidate, the side, the quantity, which broker it is meant for, the order type, the protection (the stop that travels with the position), the window during which the order is allowed to exist, the rule that says when a group may move from test to armed, and a plain sentence of reasoning. That sentence is for humans. It never fills a blank the machine needed.
 
 Toy figures, invented for this lesson, on made-up tickers: 3 groups, 7 candidates, 12 fields each. Eighty-four slots, and the validator's only job is to refuse the whole thing if one of them is empty.

@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 1 of 3 in Separate Data, Decisions and Execution. Lesson 4 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 4 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 Four walls, minimum. A fifth thing, the screen, explains the state of the desk and owns none of it.
 
 | Layer | Owns | Must never |

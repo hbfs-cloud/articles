@@ -7,11 +7,15 @@ source_path: "series/calendrier-economique/part4-croissance/index.html"
 ---
 *Part 4 of 6 in Read the Economic Calendar.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 4 of 6 in Read the Economic Calendar; earlier parts cover the groundwork but you can start here.
+::end
+
 Three growth numbers land every month and they do not measure the same thing. Label each one before you use it: how wide is the scope, does it strip out price rises, and is it a first guess or a corrected one. Skip that and you end up stacking figures that were never built to stack.
 
 GDP is the widest measure, the value of what the country finally produced in a quarter. In the United States roughly 68% of it is household spending. Business investment runs near 18%, government near 17%, and net exports usually subtract a little. Consumption dominates, so consumer figures move the total more than anything else.
 
-![The headline is an average; the decision is in the layer](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/inflation_layers.png)
+![Between the event and your screen, time passes](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/information_clock.png)
 
 The same quarter gets published three times. The advance estimate arrives about 30 days after the quarter ends, built on roughly 60% hard data with the rest estimated. The second lands near 60 days, at about 80% hard data. The third, near 90 days, is close to complete. So a later GDP headline is not a repeat. It is a correction, and it should be read against the version it replaces.
 
@@ -21,7 +25,7 @@ One line inside that report does the real work. The control group strips out car
 
 Industrial production, from the Federal Reserve, counts real output from factories, mines and utilities. Its companion, capacity utilization, compares what plants actually made with what they could sustainably make. Above 80%, factories run close to flat out. Below 75%, capacity sits idle. Neither figure covers services, and services are most of the economy, so this pair describes one room, not the house.
 
-Then comes the awkward month: retail sales up, prices up, industrial output down. Record all three in their own words. Wait for the inflation-adjusted consumption figures in the national accounts before claiming households bought more. Do not fuse the releases into one verdict because a verdict reads better.
+Then comes the awkward month: retail sales up, prices up, industrial output down. Record all three in their own words. Wait for the inflation-adjusted consumption figures in the national accounts before claiming households bought more. <mark>Do not fuse the releases into one verdict because a verdict reads better.</mark>
 
 Before filing a growth note, check that it carries:
 

@@ -7,6 +7,10 @@ source_path: "series/plan-de-trading/part2-edge-setups/index.html"
 ---
 *Part 2 of 6 in Build a Trading Plan You Can Execute.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 2 of 6 in Build a Trading Plan You Can Execute; earlier parts cover the groundwork but you can start here.
+::end
+
 Hand your setup to somebody else. If they take a different trade, or ask you what you meant by "strong",
 the setup is not written yet. It is a feeling wearing the clothes of a rule.
 

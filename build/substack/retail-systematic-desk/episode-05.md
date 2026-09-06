@@ -11,6 +11,10 @@ send_email: false
 ---
 *Part 2 of 3 in Separate Data, Decisions and Execution. Lesson 5 of 45 in Build a Retail Systematic Desk, Safely.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 5 of 45 in Build a Retail Systematic Desk, Safely; earlier parts cover the groundwork but you can start here.
+::end
+
 A closing price is a fact. A ranked shortlist is an opinion. An order is an instruction that money obeys. Same evening, same symbol, three objects with three owners — and the accident to prevent is one quietly being promoted into the next.
 
 Toy records, invented, trimmed to the fields that carry weight:

@@ -10,6 +10,10 @@ source_path: "series/anatomie-signal-trade/part6-checklist/index.html"
 ---
 *Part 6 of 6 in The 30-Second Trade Signal Check.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 6 of 6 in The 30-Second Trade Signal Check; earlier parts cover the groundwork but you can start here.
+::end
+
 Run these gates in order before an order exists. During research, complete every field so one early failure
 does not hide the next defect. At execution time, any hard failure stops the trade.
 

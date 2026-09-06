@@ -7,6 +7,10 @@ source_path: "series/plan-de-trading/part3-entrees-sorties/index.html"
 ---
 *Part 3 of 6 in Build a Trading Plan You Can Execute.*
 
+::audience non_sub,free_sub
+Each part stands on its own. This is 3 of 6 in Build a Trading Plan You Can Execute; earlier parts cover the groundwork but you can start here.
+::end
+
 Four decisions hide inside what most people call "the trade". The signal says the conditions are there. The
 order says how you will try to get filled. Invalidation says the reason for the trade has died. The exit
 instruction says what you do about it. Squash them into one price and you lose track of which one failed.
