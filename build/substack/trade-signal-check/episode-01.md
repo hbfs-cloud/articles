@@ -70,7 +70,7 @@ those 97 cents.
 
 Sources: [SEC: Stop, Stop-Limit, and Trailing Stop Orders](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-15); [FINRA: Understanding Risk](https://www.finra.org/investors/investing/investing-basics/risk)
 
-*Case note: `CLF` was picked after the fact to teach the arithmetic, not to suggest what such signals earn
+*Case note: CLF was picked after the fact to teach the arithmetic, not to suggest what such signals earn
 on average. Its archived Yahoo bar closed at $12.095 while the plan's stated entry was $12.25, and the
 adjustment rule was never recorded. The earliest saved version carries a local 13:05 UTC stamp, which is
 not independent proof of when it existed. No issuer paid for this series; DailyTickers and its authors may

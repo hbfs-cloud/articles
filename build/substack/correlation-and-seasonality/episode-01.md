@@ -13,7 +13,7 @@ The trouble is that people quote it as if it were a property of the assets. <mar
 
 Take the hedge everyone learns first: US shares against long-dated government bonds. In calm stretches the link runs around minus 0.40 — shares fall, bonds rise, the portfolio holds. Before 2008 it sat near minus 0.35, and through the 2008 crisis it strengthened to about minus 0.55. Then 2022 arrived, inflation pushed rates up, and the same pair read plus 0.50. Both sides fell together. By 2023 and 2024 it had drifted back toward minus 0.30. Nothing about the assets changed. The regime did.
 
-March 2020 made the point more brutally. In the week of the ninth, the S&P 500 dropped 8.8% in a single day, gold fell 3.5% instead of protecting anyone, and bitcoin lost 40% in twenty-four hours. Leveraged funds facing margin calls sold whatever could be sold. When that happens, everything correlates to one, and diversification stops working precisely on the day you needed it.
+March 2020 made the point more brutally. In the week of the ninth, the S&P 500 lost 8.8%, gold lost 9.1% instead of protecting anyone, and bitcoin lost 39%. Leveraged funds facing margin calls sold whatever could be sold. When that happens, everything correlates to one, and diversification stops working precisely on the day you needed it.
 
 ![Diversification is measured in calm and spent in stress](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/correlation_breaks.png)
 

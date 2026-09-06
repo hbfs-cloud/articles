@@ -30,6 +30,12 @@
       {
         "from": "Digital assets trade around the clock, but continuous timestamps do not mean continuous liquidity: CME bitcoin futures close Friday evening and reopen Sunday, and roughly 85% of weekends leave a gap averaging about 2.3%.",
         "to": "Digital assets trade around the clock, but continuous timestamps do not mean continuous liquidity: CME bitcoin futures close Friday evening and reopen Sunday, and the spot market keeps moving in between. The weekend gap on the futures contract is a recurring feature, not an occasional accident — check the contract specification for the exact halt, and measure the gap distribution yourself before you size around it."
+      },
+      {
+        "why": "« more than 100,000 retail accounts went negative » : aucune source ne publie de décompte de comptes. Ce qui est documenté, ce sont des montants — 225 M$ de soldes débiteurs chez FXCM, ~120 M$ chez Interactive Brokers, plus d'un milliard d'appels de marge sur l'industrie. Remplacer un décompte invérifiable par les montants qui le sont ne coûte rien à la démonstration et lui donne une source.",
+        "verified": "EURCHF=X 15/01/2015 : 1,2010 → plus bas 0,8643 = −28,0 %. Alpari UK insolvable le 16/01, Global Brokers NZ fermé. FXCM : 225 M$ de soldes clients débiteurs, sauvetage Leucadia de 300 M$. Aucune source trouvée ne donne un nombre de comptes.",
+        "from": "One broker failed, another lost $225 million, and more than 100,000 retail accounts went negative.",
+        "to": "One broker failed, another was left with $225 million of client debit balances, and industry-wide margin calls ran past $1 billion."
       }
     ],
     "gap-risk-survival/episode-04.md": [
@@ -44,6 +50,64 @@
         "verified": "QueryData bars_daily BTC-USD 2024-01-05→20 : 12/01 close 42853,17 ; 13/01 high 43234,66 ; 14/01 high 43065,60 ; 15/01 close 42511,97.",
         "from": "**Rejection.** Price cannot hold the gap and falls back into the old range. CME bitcoin futures close Friday at 5 p.m. New York and reopen Sunday at 6 p.m., while spot bitcoin trades straight through. In January 2024 the futures closed Friday at $43,200, spot ran to $45,800 over the weekend on spot-ETF news, and the futures reopened roughly 6% higher. The rejection plan sold near $45,800, aimed at that Friday close of $43,200, and set invalidation at $47,000, one and a half times the size of the gap. Price came back in three days: 2.6% risked, 5.7% made, about 2.2 per unit.",
         "to": "**Rejection.** Price cannot hold the gap and falls back into the old range. The structural case is bitcoin: CME futures close Friday at 5 p.m. New York and reopen Sunday at 6 p.m., while spot trades straight through. Whatever the spot market does in those forty-nine hours arrives at the futures open in a single print. A rejection plan therefore names the level it expects price to fail at, takes its objective from the last price the halted market agreed on — that Friday close — and puts invalidation beyond the gap rather than inside it, because a gap that is going to fill rarely fills in a straight line. What it must never assume is that the gap fills at all. Around the spot-ETF approvals in January 2024, bitcoin closed one Friday at 42,853 and then spent the weekend going nowhere: the two weekend sessions topped out at 43,235 and 43,066, and the following Monday closed lower still, at 42,512. There was no gap to fade. A plan that only works when the gap is large is not a plan."
+      }
+    ],
+    "correlation-and-seasonality/episode-01.md": [
+      {
+        "why": "Des rendements HEBDOMADAIRES décrits avec un vocabulaire journalier, et l'or sur une troisième base encore. Les nombres existent, mais pas sur la fenêtre annoncée : ce sont ceux de la semaine du 6 au 13 mars. Version hebdomadaire retenue, la plus forte factuellement — l'or perd 9,1 % sur la semaine, ce qui sert mieux la démonstration que les 3,5 % d'une seule séance.",
+        "verified": "QueryData 2020-03-06→17 : ^GSPC 2972,37 → 2711,02 (−8,79 % semaine ; pire séance −9,51 % le 12/03). GLD −9,06 % semaine. BTC-USD 9122,55 → 5563,71 (−39,0 % semaine ; −37,2 % sur 24 h le 12/03).",
+        "from": "In the week of the ninth, the S&P 500 dropped 8.8% in a single day, gold fell 3.5% instead of protecting anyone, and bitcoin lost 40% in twenty-four hours.",
+        "to": "In the week of the ninth, the S&P 500 lost 8.8%, gold lost 9.1% instead of protecting anyone, and bitcoin lost 39%."
+      }
+    ],
+    "etf-toolkit/episode-02.md": [
+      {
+        "why": "« about doubled » pour +87 % : l'arrondi flatte de treize points, dans un paragraphe dont les deux autres chiffres tombent au dixième près. Le contraste rend l'approximation d'autant plus visible.",
+        "verified": "QueryData : QQQ 212,61 (31/12/2019) → 397,85 (31/12/2021) = +87,1 %. SPY 321,86 → 474,96 = +47,6 %. 2022 : QQQ −33,07 %, SPY −19,48 % — les deux exacts.",
+        "from": "Across 2020 and 2021 QQQ about doubled while SPY gained around half.",
+        "to": "Across 2020 and 2021 QQQ rose 87% while SPY gained around half."
+      },
+      {
+        "why": "Une même phrase comparait un rendement PRIX (HYG) à un rendement TOTAL (TLT) — d'où les cinq points d'écart. En base prix cohérente, TLT fait +28 % et non +33 %. La leçon — détenir du haut rendement comme lest, c'est détenir du risque actions — ne bouge pas d'un pouce. La corrélation 0,70, elle, est vérifiée à 0,68.",
+        "verified": "QueryData : HYG 100,72 (31/12/2007) → 76,01 (31/12/2008) = −24,53 %. TLT 93,04 → 119,35 = +28,28 % en prix. Corrélation HYG/SPY 0,683 sur 252 séances (Pearson, log-rendements).",
+        "from": "In 2008 HYG lost 25% while TLT gained 33%.",
+        "to": "In 2008 HYG lost 25% while TLT gained 28%."
+      },
+      {
+        "why": "« USO fell 80% » sur avril : le fonds perd 51 % sur le mois, 64 % du pic au creux. Les 80 % n'apparaissent qu'en partant du 1er janvier. Le chiffre était juste, la fenêtre ne l'était pas — et dans un paragraphe qui explique justement le coût du roulement mois après mois, se tromper de fenêtre vide la démonstration.",
+        "verified": "QueryData USO : 102,48 (31/12/2019) → 17,04 (28/04/2020) = −83,4 %. Sur avril seul : 35,04 → 17,04 = −51,4 %. WTI mai réglé à −37,63 $ le 20/04/2020 (CFTC/EIA ; la barre CL=F du 20/04 est absente du store).",
+        "from": "April 2020 settled the argument: WTI printed -$37, USO fell 80% and had to rewrite its own strategy.",
+        "to": "April 2020 settled the argument: WTI printed -$37, and USO — already down 83% since the start of the year — had to rewrite its own strategy."
+      }
+    ],
+    "etf-toolkit/episode-03.md": [
+      {
+        "why": "La concentration a continué de monter : fin 2025 les dix premières valent environ 41 % de l'indice, pas 37 %. Le 37 % correspond à un niveau traversé plus tôt. Erreur bénigne aujourd'hui, mais l'épisode est programmé pour 2027 — un chiffre de concentration non daté vieillit mal, et celui-ci vieillissait déjà.",
+        "verified": "Concentration du top 10 du S&P 500 fin 2025 : ~41 %, plus haut niveau depuis au moins 1972. Pic 2000 : ~26-27 %, donc « tighter than the 2000 peak » reste juste.",
+        "from": "By 2025 the ten largest companies were roughly 37% of the index",
+        "to": "By the end of 2025 the ten largest companies were roughly 41% of the index"
+      }
+    ],
+    "market-checklist/episode-01.md": [
+      {
+        "why": "PASSAGE FABRIQUÉ, le plus grave du corpus. Aucun CPI n'est sorti le 13 mars 2026 — c'était un vendredi ; celui de février est paru le mercredi 11 mars à 8h30 New York, à +2,4 % et non +3,1 %. Le VIX n'a jamais imprimé 29,4 ce jour-là : son plus haut fut 28,47, sa clôture 27,19. Et 14h30 UTC ne correspond à aucun horaire de publication BLS. Réécrit sur la vraie séance — et le passage en sort PLUS COHÉRENT avec la thèse de l'épisode : la publication n'a pas fait le choc (le VIX a clôturé plus bas le 11), c'est la dérive des deux séances suivantes qui a fait le régime.",
+        "verified": "CPI février 2026 publié le 11/03/2026 à 8h30 ET, +2,4 % sur douze mois (cœur +2,5 %). ^VIX : 11/03 plus haut 26,23, clôture 24,23 ; 13/03 ouverture 27,85, plus haut 28,47, plus bas 24,67, clôture 27,19. TLT 13/03 : −0,50 %. UUP : +0,76 %.",
+        "from": "Here is what that looked like on 13 March 2026. Inflation came in at +3.1% at 14:30 UTC. Within the hour the VIX printed 29.4, long Treasuries were sold hard, the dollar bounced, and the score landed at 31 out of 100. The playbook that day was straightforward: no growth exposure, hedges on, cash for the rest, and no new unhedged longs until the VIX settled back under 25.",
+        "to": "Here is what that looked like in the second week of March 2026. Inflation came in at +2.4% at 8:30 New York time on the eleventh — cooler than feared, and the VIX closed that day at 24.2, below where it opened. No shock. Two sessions later, with nothing new published, it closed at 27.2, long Treasuries were drifting lower and the dollar had firmed. The release was not the event. The drift around it was, and the score fell into the low thirties on the back of it. The playbook at that level is straightforward: no growth exposure, hedges on, cash for the rest, and no new unhedged longs until the VIX settles back under 25."
+      },
+      {
+        "why": "Deux des trois relevés VIX de la trajectoire étaient faux de deux à cinq points : 24,1 fin février contre 19,9 réels, 22,8 le 10 mars contre 24,9. Avec les vraies valeurs, le VIX MONTE tout du long, alors que le score du texte montait de 46 à 52 — la trajectoire du score devenait incohérente avec ses propres intrants. Le score étant un composite maison que je ne peux pas reconstruire a posteriori, je retire les valeurs datées que rien ne soutient et garde la seule chose mesurable : la montée continue de la volatilité. Les bandes de score restent au paragraphe suivant, où elles relèvent de la politique de risque et non de la mesure.",
+        "verified": "^VIX clôtures : 27/02/2026 19,86 ; 10/03/2026 24,93 ; 11/03/2026 24,23 ; 13/03/2026 27,19.",
+        "from": "The score had been sliding for weeks before that. Late January it read 68. End of February, 46, with the VIX at 24.1 and liquidity contracting. On 10 March it was 52, VIX 22.8, index caught between its two averages. Nothing dramatic happened on any single day.",
+        "to": "The pressure had been building for weeks before that. At the end of February the VIX sat at 19.9 and liquidity was contracting. By 10 March it had reached 24.9, with the index caught between its two averages. Nothing dramatic happened on any single day."
+      }
+    ],
+    "trade-signal-check/episode-06.md": [
+      {
+        "why": "Le « while » opposait deux valeurs IDENTIQUES : « the archived decision bar closed at $12.095, while the raw screen used $12.095 ». Le fond est juste — l'archive et l'écran disent 12,095, le plan retient 12,25, et c'est cette transformation non tracée que la porte 7 attrape — mais la phrase place le contraste au mauvais endroit et se lit comme une coquille. Reformulée sans introduire aucun chiffre.",
+        "verified": "Aucune donnée de marché en jeu : c'est la structure de la phrase qui était fautive, pas ses valeurs.",
+        "from": "The archived\ndecision bar closed at $12.095, while the raw screen used $12.095 and the final plan used $12.25.",
+        "to": "The archived decision bar and the raw screen both\nshow a close of $12.095, while the final plan used $12.25."
       }
     ]
   }

@@ -20,9 +20,9 @@ I score six things from 0 to 100 and take the average. Above 70 I call it risk-o
 
 ![The regime sets a ceiling, never a direction](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/regime_map.png)
 
-Here is what that looked like on 13 March 2026. Inflation came in at +3.1% at 14:30 UTC. Within the hour the VIX printed 29.4, long Treasuries were sold hard, the dollar bounced, and the score landed at 31 out of 100. The playbook that day was straightforward: no growth exposure, hedges on, cash for the rest, and no new unhedged longs until the VIX settled back under 25.
+Here is what that looked like in the second week of March 2026. Inflation came in at +2.4% at 8:30 New York time on the eleventh — cooler than feared, and the VIX closed that day at 24.2, below where it opened. No shock. Two sessions later, with nothing new published, it closed at 27.2, long Treasuries were drifting lower and the dollar had firmed. The release was not the event. The drift around it was, and the score fell into the low thirties on the back of it. The playbook at that level is straightforward: no growth exposure, hedges on, cash for the rest, and no new unhedged longs until the VIX settles back under 25.
 
-The score had been sliding for weeks before that. Late January it read 68. End of February, 46, with the VIX at 24.1 and liquidity contracting. On 10 March it was 52, VIX 22.8, index caught between its two averages. Nothing dramatic happened on any single day. That slow kind of decay is more dangerous than a shock, because it gives you time to talk yourself out of noticing.
+The pressure had been building for weeks before that. At the end of February the VIX sat at 19.9 and liquidity was contracting. By 10 March it had reached 24.9, with the index caught between its two averages. Nothing dramatic happened on any single day. That slow kind of decay is more dangerous than a shock, because it gives you time to talk yourself out of noticing.
 
 <mark>The label changes what you are allowed to do, not what you predict.</mark> At a score near 31, momentum trades drop to about 10% of the book and hedges do the work. Near 75, momentum can carry half of it. Same trader, same skills, different permissions.
 

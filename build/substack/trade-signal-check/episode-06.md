@@ -17,18 +17,13 @@ Each part stands on its own. This is 6 of 6 in The 30-Second Trade Signal Check;
 Run these gates in order before an order exists. During research, complete every field so one early failure
 does not hide the next defect. <mark>At execution time, any hard failure stops the trade.</mark>
 
-1. **Is the entry rule explicit and still inside its validity window?** Include trigger, order type and
-   maximum acceptable slippage.
+1. **Is the entry rule explicit and still inside its validity window?** Include trigger, order type and maximum acceptable slippage.
 2. **Is the thesis dated and falsifiable?** State what must happen and what invalidates it.
-3. **Is the complete exit policy written?** Fixed targets are optional; a trailing or time exit needs an
-   exact rule too.
-4. **Does independent evidence support positive net results for these exact rules?** In 30 seconds you can
-   verify that the study, sample size and after-cost result exist. You cannot estimate them from a target.
-5. **Does size survive regular and gap-stress fills?** Check maximum dollar loss, notional, liquidity,
-   concentration, correlation, margin and total portfolio exposure.
+3. **Is the complete exit policy written?** Fixed targets are optional; a trailing or time exit needs an exact rule too.
+4. **Does independent evidence support positive net results for these exact rules?** In 30 seconds you can verify that the study, sample size and after-cost result exist. You cannot estimate them from a target.
+5. **Does size survive regular and gap-stress fills?** Check maximum dollar loss, notional, liquidity, concentration, correlation, margin and total portfolio exposure.
 6. **Does the holding window cross earnings or another scheduled event?** Write the treatment before entry.
-7. **Can every decisive number be reproduced point in time?** Record source, timestamp, coverage, version
-   and method.
+7. **Can every decisive number be reproduced point in time?** Record source, timestamp, coverage, version and method.
 
 ![A fact is not a decision, and a decision is not an order](https://raw.githubusercontent.com/hbfs-cloud/articles/main/substack-assets/schematics/decision_flow.png)
 
@@ -45,8 +40,8 @@ The source screen's ATR was $0.645, and the final stop distance was 1.50 ATR. Th
 its stop from that multiple, so later chart commentary could not validate the method after the fact.
 
 The earliest saved plan version is time-stamped 13:05 UTC on August 13, before the 13:30 UTC US open.
-That is chronology inside the case record, not an independently trusted timestamp. The archived
-decision bar closed at $12.095, while the raw screen used $12.095 and the final plan used $12.25. No rule
+That is chronology inside the case record, not an independently trusted timestamp. The archived decision bar and the raw screen both
+show a close of $12.095, while the final plan used $12.25. No rule
 records that transformation, so gate 7 fails. A later Yahoo reconstruction changed the same close and
 volume; it is excluded from the decision snapshot.
 

@@ -65,7 +65,7 @@ quoting only 1.65R overstates what the written plan pays first.
 
 Sources: [FINRA: Evaluating Performance](https://www.finra.org/investors/investing/investing-basics/evaluating-performance); [Investor.gov: Understanding Fees](https://www.investor.gov/introduction-investing/getting-started/understanding-fees)
 
-*`CLF` was purpose-selected as a teaching case, not a random sample or evidence of edge. This episode
+*CLF was purpose-selected as a teaching case, not a random sample or evidence of edge. This episode
 audits the written target geometry; it does not validate how the upstream plan was produced. Calculations
 exclude fees and slippage. No named issuer sponsored or compensated this series; DailyTickers and its
 authors may hold securities discussed. Educational, not investment advice.*

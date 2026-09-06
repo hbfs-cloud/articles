@@ -79,7 +79,7 @@ sources below support only the behavior and limits of stop orders; they do not v
 Sources: [SEC: Stop, Stop-Limit, and Trailing Stop Orders](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-15); [Investor.gov: Understanding Order Types](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-14)
 
 *The source screen, decision bars and final plan were saved as separate records before the August 13 open.
-Those local timestamps establish order inside this case study, not independent external proof. `CLF` was purpose-selected
+Those local timestamps establish order inside this case study, not independent external proof. CLF was purpose-selected
 to show a method conflict, not average performance. Yahoo bars are unadjusted. No named issuer sponsored
 or compensated this series; DailyTickers and its authors may hold securities discussed. Educational, not
 investment advice.*

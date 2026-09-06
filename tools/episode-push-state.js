@@ -27,7 +27,10 @@ const argv = process.argv.slice(2);
 const arg = (n, d = null) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : d; };
 
 const STATE_FILE = path.join(ROOT, 'data/substack/episode-push-state.json');
-const BUILD_DIR = path.join(ROOT, arg('--build', 'build/substack'));
+// `resolve` et non `join` : un chemin ABSOLU passé à `join` est recollé derrière la racine du dépôt
+// et l'outil annonce « pas de build » pour des fichiers qui existent. Utile pour marquer l'état
+// contre une version ANTÉRIEURE du build (git archive), donc contre ce qui a réellement été poussé.
+const BUILD_DIR = path.resolve(ROOT, arg('--build', 'build/substack'));
 
 const state = fs.existsSync(STATE_FILE) ? JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) : { pushed: {} };
 

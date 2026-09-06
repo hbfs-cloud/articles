@@ -111,10 +111,35 @@ function safeSlot(paras, wanted) {
   return at;
 }
 
+// Deux formes que le convertisseur Substack rend MAL, découvertes en relisant les billets poussés.
+// Aucune n'est une faute de l'auteur : c'est du Markdown valide que ce moteur-là traite autrement.
+//
+//  1. UN ITEM DE LISTE COUPÉ SUR DEUX LIGNES CASSE LA NUMÉROTATION. Les sources sont enveloppées à
+//     cent colonnes, avec trois espaces de continuation. Substack ne raccroche pas la suite à son
+//     item : chaque reste devient un paragraphe à lui seul et la liste RECOMMENCE à 1. Une liste de
+//     sept portes s'affichait « 1 / 2,3 / 4 / 5 / 6,7 ». On rejoint donc chaque item sur une ligne.
+//
+//  2. UN ACCENT GRAVE DANS UN PASSAGE EN ITALIQUE RESTE LITTÉRAL. La mention de fin s'écrit
+//     `*`CLF` was purpose-selected…*` et le lecteur voit les accents graves à l'écran. Dans une
+//     mention légale, ça fait négligé. Le code reste du code hors italique ; on ne le retire QUE là.
+function normalizeForSubstack(body) {
+  const lines = body.split('\n');
+  const out = [];
+  for (const line of lines) {
+    const prev = out[out.length - 1];
+    const isItem = prev !== undefined && /^(?:[-*]|\d+\.)\s/.test(prev);
+    if (isItem && /^ {1,5}\S/.test(line)) { out[out.length - 1] = `${prev} ${line.trim()}`; continue; }
+    out.push(line);
+  }
+  return out.join('\n')
+    // Uniquement à l'intérieur d'un passage en italique complet : ailleurs le code doit rester du code.
+    .replace(/(^|\n)\*([^\n*][\s\S]*?)\*(?=\n|$)/g, (m, lead, inner) => `${lead}*${inner.replace(/`/g, '')}*`);
+}
+
 function transform(md, spec, key, meta) {
   const fmMatch = /^---\n([\s\S]*?)\n---\n?/.exec(md);
   const front = fmMatch ? fmMatch[0] : '';
-  let body = fmMatch ? md.slice(fmMatch[0].length) : md;
+  let body = normalizeForSubstack(fmMatch ? md.slice(fmMatch[0].length) : md);
 
   const rw = applyRewrites(body, key);
   body = rw.body;

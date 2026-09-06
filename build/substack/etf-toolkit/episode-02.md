@@ -13,7 +13,7 @@ Each part stands on its own. This is 2 of 6 in The ETF Toolkit; earlier parts co
 
 Two funds can both be labelled "US stocks" and still be two completely different bets.
 
-SPY holds 503 companies. QQQ holds 101, and roughly half its money sits in technology. Across 2020 and 2021 QQQ about doubled while SPY gained around half. Then 2022 arrived: QQQ fell 33%, SPY fell 19%. Same country, same wrapper, very different ride.
+SPY holds 503 companies. QQQ holds 101, and roughly half its money sits in technology. Across 2020 and 2021 QQQ rose 87% while SPY gained around half. Then 2022 arrived: QQQ fell 33%, SPY fell 19%. Same country, same wrapper, very different ride.
 
 So the useful question is never "what does it own?" It is "what can hurt this?"
 
@@ -25,9 +25,9 @@ Size is a rule question too. The Russell 2000 (IWM) takes 2,000 small companies 
 
 Bond funds mix two risks people keep confusing. The first is duration — a number estimating how far the price falls if interest rates rise one point. SHY sits near 1.8 years, IEF near 7.5, TLT near 17. In 2022 the Fed took rates from 0% to 5.25% and TLT lost more than 30%. Safe haven, on paper.
 
-The second is credit: who borrowed the money. High-yield funds lend to shakier companies, so they behave like stocks, not bonds — HYG runs about 0.70 correlation with SPY. In 2008 HYG lost 25% while TLT gained 33%. Anyone holding HYG as ballast was holding equity risk with a coupon stapled on.
+The second is credit: who borrowed the money. High-yield funds lend to shakier companies, so they behave like stocks, not bonds — HYG runs about 0.70 correlation with SPY. In 2008 HYG lost 25% while TLT gained 28%. Anyone holding HYG as ballast was holding equity risk with a coupon stapled on.
 
-Commodity products split on plumbing. GLD keeps real bars in a vault and charges 0.40% a year; IAU charges 0.25%, SGOL 0.17%. USO owns oil futures — contracts with an expiry date, swapped each month for the next one. When the next contract costs more, that swap bleeds 10-20% a year. April 2020 settled the argument: WTI printed -$37, USO fell 80% and had to rewrite its own strategy. Silver carries an industrial layer on top of the precious-metal one, so it swings harder; in March 2020 it took 125 ounces of silver to buy an ounce of gold, against a long-run average nearer 65.
+Commodity products split on plumbing. GLD keeps real bars in a vault and charges 0.40% a year; IAU charges 0.25%, SGOL 0.17%. USO owns oil futures — contracts with an expiry date, swapped each month for the next one. When the next contract costs more, that swap bleeds 10-20% a year. April 2020 settled the argument: WTI printed -$37, and USO — already down 83% since the start of the year — had to rewrite its own strategy. Silver carries an industrial layer on top of the precious-metal one, so it swings harder; in March 2020 it took 125 ounces of silver to buy an ounce of gold, against a long-run average nearer 65.
 
 Property funds are their own animal. REITs borrow heavily, often 30-50% of assets, and must pay out 90% of income by law. Rates going from 0% to 5% in 2022 took VNQ down 28% before a single building changed hands.
 

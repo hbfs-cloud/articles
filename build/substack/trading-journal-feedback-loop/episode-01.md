@@ -20,12 +20,9 @@ out of boredom. Those are exactly the entries worth having.
 
 Four layers cover it:
 
-- **Plan:** timestamp, instrument, direction, setup version, evidence in hand, trigger, invalidation,
-  intended order, risk budget, size ceiling, expiry.
-### What each layer records
-
 | Layer | What goes in it |
 |---|---|
+| Plan | timestamp, instrument, direction, setup version, evidence in hand, trigger, invalidation, intended order, risk budget, size ceiling, expiry. |
 | Execution | submission time, actual fills, quantity, cancellations, rejected orders, exits, fees. |
 | Context | scheduled events, liquidity check, portfolio exposure, any rule that vetoed the trade. |
 | Review | net result, realised R, whether the plan was followed, and a note clearly marked as hindsight. |
@@ -51,11 +48,11 @@ a copy.
 
 Use this closeout check:
 
-1. Reconcile your fills against the broker confirmation.
-1. Enter commissions, fees and other known costs.
-1. Mark unavailable fields as missing rather than estimating them quietly.
-1. Grade rule adherence separately from profit or loss.
-1. Write one short observation. Not a new strategy rule.
+- Reconcile your fills against the broker confirmation.
+- Enter commissions, fees and other known costs.
+- Mark unavailable fields as missing rather than estimating them quietly.
+- Grade rule adherence separately from profit or loss.
+- Write one short observation. Not a new strategy rule.
 
 Investor.gov notes that execution can happen away from the quote you saw when you sent the order,
 especially when price is moving. That is why the broker record settles what goes in the journal, never a

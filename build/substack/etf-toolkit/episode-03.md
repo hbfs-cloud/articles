@@ -25,7 +25,7 @@ Then overlap — how much of a new fund you already own. Add an "AI" fund that i
 
 Past performance does the most damage here, because these funds launch after the story is loud. ARKK rose 150% in 2020, then gave back 75%. ICLN gained 140% in 2020, then lost 60% when rates rose and long-dated projects repriced. The cannabis fund MJ went up 70% and then down 80%, waiting for a federal law that never arrived. Meanwhile CIBR kept compounding on cybersecurity budgets nobody gets to cut.
 
-Weighting is the last hidden choice. RSP gives every S&P 500 member 0.2% and rebalances quarterly; SPY lets the winners grow into the index. In 2023 SPY returned 24% and RSP 12%. That gap was seven stocks, not skill. By 2025 the ten largest companies were roughly 37% of the index — tighter than the 2000 peak. Equal weight removes that concentration and gives up that upside. You pick which risk you'd rather hold.
+Weighting is the last hidden choice. RSP gives every S&P 500 member 0.2% and rebalances quarterly; SPY lets the winners grow into the index. In 2023 SPY returned 24% and RSP 12%. That gap was seven stocks, not skill. By the end of 2025 the ten largest companies were roughly 41% of the index — tighter than the 2000 peak. Equal weight removes that concentration and gives up that upside. You pick which risk you'd rather hold.
 
 Audit before you buy:
 
