@@ -20,6 +20,10 @@
 // L'outil ne corrige rien : il produit l'inventaire sur lequel décider. Une machine ne sait pas
 // si une source « couvre » une affirmation — mais elle sait dire lesquelles sont testables.
 //
+//   EXEMPLE CHIFFRÉ  un PARAGRAPHE nommant une entité, une date et plusieurs prix : un cas
+//                    d'école déroulé. C'est la classe la plus dangereuse et elle a longtemps
+//                    manqué, parce qu'elle ne tient jamais dans une seule phrase.
+//
 //   node tools/audit-episode-claims.js
 //   node tools/audit-episode-claims.js --series gap-risk-survival --json /tmp/claims.json
 
@@ -77,6 +81,36 @@ function classify(sentence) {
   return { kind: 'other', percents: pcts };
 }
 
+// LE CLASSEUR PAR PHRASE NE VOIT PAS UN EXEMPLE DÉROULÉ, ET C'EST CE QUI A COÛTÉ LE PLUS CHER.
+//
+// L'épisode 04 de gap-risk-survival présentait deux trades comme réalisés, résultat compris. Les
+// deux étaient inventés : Nvidia n'a jamais imprimé son objectif (plus haut de séance 39,48 pour un
+// objectif à 39,5), et le week-end bitcoin de janvier 2024 n'a produit aucun gap — le comptant a
+// BAISSÉ. Aucune de ces fabrications n'apparaissait dans l'inventaire, parce qu'elles s'étalent sur
+// quatre phrases : le nom dans la première, la date dans la deuxième, les prix dans la troisième,
+// le résultat dans la quatrième. Le classeur exigeait les trois dans une seule.
+//
+// Un exemple chiffré est donc reconnu AU PARAGRAPHE : une entité nommée, une date, et au moins
+// trois grandeurs. Chacun est vérifiable contre les barres, et chacun doit l'être — c'est la forme
+// qui porte le plus d'autorité auprès du lecteur, donc celle qui doit en mériter le plus.
+function workedExamples(text, episode) {
+  const out = [];
+  for (const para of text.split(/\n\n+/)) {
+    const p = para.replace(/\s+/g, ' ').trim();
+    if (p.length < 80) continue;
+    const ent = new RegExp(`\\b(${ENTITY_RE}|bitcoin|ethereum|gold|oil|treasur\\w+|payrolls?)\\b`, 'i').exec(p);
+    const date = new RegExp(`\\b(${MONTH_RE})\\s+\\d{1,2},?\\s+\\d{4}\\b|\\b\\d{1,2}\\s+(${MONTH_RE})\\s+\\d{4}\\b|\\b(${MONTH_RE})\\s+\\d{4}\\b|\\b\\d{4}\\b`, 'i').exec(p);
+    if (!ent || !date) continue;
+    const nums = p.match(/\$?\d[\d,]*(?:\.\d+)?%?/g) || [];
+    if (nums.length < 3) continue;
+    // Un RÉSULTAT annoncé (« made », « printed », « came back ») rend le paragraphe falsifiable au
+    // sens fort : il ne décrit plus une géométrie, il affirme qu'elle s'est produite.
+    const outcome = /\b(printed|made|came back|returned|paid|hit|reached|delivered|gained|lost)\b/i.test(p);
+    out.push({ episode, kind: 'worked_example', entity: ent[1], outcome, figures: nums.slice(0, 10), sentence: p.slice(0, 300) });
+  }
+  return out;
+}
+
 const series = onlySeries ? [onlySeries]
   : fs.readdirSync(SERIES_DIR).filter(d => fs.statSync(path.join(SERIES_DIR, d)).isDirectory()
       && fs.readdirSync(path.join(SERIES_DIR, d)).some(f => f.endsWith('.md')));
@@ -87,6 +121,7 @@ for (const s of series) {
   for (const file of fs.readdirSync(base).filter(f => f.endsWith('.md')).sort()) {
     const raw = fs.readFileSync(path.join(base, file), 'utf8').replace(/^---\n[\s\S]*?\n---\n/, '');
     const body = raw.replace(/^\|.*$/gm, ' ').replace(/^Sources?:.*$/gm, ' ');
+    findings.push(...workedExamples(body, `${s}/${file}`));
     for (const sentence of body.split(/(?<=[.!?])\s+/)) {
       const c = classify(sentence.replace(/\s+/g, ' ').trim());
       if (!c) continue;
@@ -97,6 +132,7 @@ for (const s of series) {
 
 const by = k => findings.filter(f => f.kind === k);
 console.log(`[claims] ${series.length} série(s) · ${findings.length} affirmation(s) chiffrée(s)`);
+console.log(`  exemples chiffrés (paragraphe) : ${by('worked_example').length}  dont ${by('worked_example').filter(f => f.outcome).length} annonçant un RÉSULTAT`);
 console.log(`  vérifiables (entité + date + %) : ${by('verifiable').length}`);
 console.log(`  agrégats sans étude citée       : ${by('aggregate').length}`);
 console.log(`  institutionnelles               : ${by('institutional').length}`);
@@ -104,6 +140,14 @@ console.log(`  autres                          : ${by('other').length}`);
 
 const eps = [...new Set(by('aggregate').map(f => f.episode))];
 console.log(`\népisodes portant au moins un agrégat non sourcé : ${eps.length}`);
+
+// Un exemple qui annonce son résultat est la forme la plus persuasive et la plus falsifiable :
+// à confronter aux barres EN PRIORITÉ, avant tout agrégat.
+const outcomes = by('worked_example').filter(f => f.outcome);
+if (outcomes.length) {
+  console.log(`\nexemples annonçant un résultat — à confronter aux barres (${outcomes.length}) :`);
+  for (const f of outcomes) console.log(`  ${f.episode}  [${f.entity}]  ${f.figures.join(' ')}`);
+}
 
 if (jsonOut) {
   fs.writeFileSync(path.resolve(ROOT, jsonOut), JSON.stringify({ findings }, null, 2) + '\n');
