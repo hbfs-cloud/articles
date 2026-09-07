@@ -8,7 +8,7 @@ const ROOT=path.resolve(__dirname,'..'),out=process.argv[2],artifact=process.arg
 if(!out||!artifact){console.error('Usage: node tools/eur-evidence.js <external-dir> <article-path>');process.exit(2);}
 const abs=path.resolve(ROOT,out),sha=x=>crypto.createHash('sha256').update(x).digest('hex'),read=f=>JSON.parse(fs.readFileSync(path.join(abs,f),'utf8'));
 const study=read('study.json'),ref=study.spec.reference_close,capture=new Date().toISOString();
-const files=['study.json','universe-resolved.json','facts.json','event-reactions.json'];
+const files=['study.json','universe-resolved.json','facts.json','event-reactions.json','dividends.json'];
 const calls=files.map(file=>({as:path.basename(file,'.json'),server:'local-external-evidence',tool:file==='study.json'?'eur-opportunities.study':'reviewed-archive-import',args:{file:path.join(out,file)},freshness:{required:true}}));
 const plan={schema_version:'eur-external-evidence.v1',workflow:'eur-opportunities',artifact,reference_close:ref,
  authorization:{source_instruction:'trouve des sources alternatives a notre mcp et continue svp',recurring_instruction:'ce travail sera a faire regulierement, generer un article pour les bonnes affaires euro, donc fait des skills, scripts, etc... reutilisable',scope:'EUR opportunities only; no change to other MCP workflow contracts'},
@@ -17,6 +17,8 @@ const planPath=path.join(out,'plan.json');fs.writeFileSync(path.join(ROOT,planPa
 const resolved={artifact,reference_close:ref,as_of_timestamp:capture,waves:plan.waves},inputHash=sha(Buffer.from(stableStringify(resolved)));
 const result=cp.spawnSync('python3',['tools/eur-opportunities.py','study','--out',out,'--refdate',ref,'--anchor',study.spec.anchor],{cwd:ROOT,encoding:'utf8'});
 if(result.status!==0){process.stderr.write(result.stderr);process.exit(result.status||1);}
+const gate=cp.spawnSync('python3',['tools/eur-dividend-gate.py','validate','--input',path.join(out,'dividends.json')],{cwd:ROOT,encoding:'utf8'});
+if(gate.status!==0){process.stderr.write(gate.stdout+gate.stderr);process.exit(gate.status||1);}
 const outputs=files.map((file,i)=>({...calls[i],ok:true,output_sha256:sha(fs.readFileSync(path.join(abs,file))),completed_at:new Date().toISOString()}));
 const common={contract_version:'eur-external-evidence.v1',workflow:'eur-opportunities',plan:planPath,plan_sha256:planHash,input_sha256:inputHash};
 fs.writeFileSync(path.join(abs,'_collect.json'),JSON.stringify({...common,reference_date:ref,resolved_input:resolved,waves:[{name:'external-replay',calls:outputs}],status:'completed',original_collection_manifest:'universe-collection.json',original_collection_sha256:sha(fs.readFileSync(path.join(abs,'universe-collection.json')))},null,2)+'\n');

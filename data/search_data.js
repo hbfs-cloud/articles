@@ -435,7 +435,7 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Swing en euros. Les dossiers qui méritent votre attention.",
-    "desc": "65 actions EUR, dix pays et filtre MSCI Islamic : classement historique net, pertes et coûts inclus, revue contrarienne, capital et repères pour la prochaine séance.",
+    "desc": "65 actions EUR et dix pays : classement du rendement du cours après coûts, dividendes vérifiés, filtre MSCI Islamic, risques et conditions de swing.",
     "tags": "europe,macro,formation",
     "grade": "",
     "href": "/daily/20260907-eur-halal/",

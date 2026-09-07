@@ -1,0 +1,73 @@
+{
+  "schema_version": "eur-publication-check.v1",
+  "status": "PASS",
+  "checked_at": "2026-09-07T18:45:36.782239+00:00",
+  "article_sha256": "c53584b235e71c5eb324bd211095e11c3e95a87dfd43badcac8ec5524cae5222",
+  "review_sha256": "8858a78f727f3e0f372a8af07645ad52edd8e4f9e1ba487d529c4aa31580e2cb",
+  "checker_sha256": "9d75573b460dd197321fe123492e406e28130027bedd48a45bb9336feab3ec6b",
+  "checks": [
+    {
+      "command": [
+        "python3",
+        "tools/eur-dividend-gate.py",
+        "validate",
+        "--input",
+        "daily/20260907-eur-halal/_external/dividends.json"
+      ],
+      "exit_code": 0,
+      "output": "{\"status\": \"PASS\", \"counts\": {\"reviewed\": 22, \"ranked\": 19, \"actionable\": 16, \"research_only_ranked\": 3, \"clear_published_schedule\": 18, \"unknown\": 2, \"ex_in_window\": 2}, \"actionable_symbols\": [\"NESTE.HE\", \"ASML.AS\", \"SAP.DE\", \"MT.AS\", \"LOTB.BR\", \"PRY.MI\", \"ASM.AS\", \"RWE.DE\", \"METSO.HE\", \"ITX.MC\", \"G1A.DE\", \"ELE.MC\", \"OMV.VI\", \"GALP.LS\", \"REP.MC\", \"TEN.MI\"], \"research_only_symbols\": [\"ORNBV.HE\", \"RACE.MI\", \"STMPA.PA\"], \"rebase_required_symbols\": [\"ENI.MI\", \"STMPA.PA\"]}\n"
+    },
+    {
+      "command": [
+        "node",
+        "tools/validate-content-claims.js",
+        "daily/20260907-eur-halal/_data/claims.json"
+      ],
+      "exit_code": 0,
+      "output": "[content-claims] PASS (214 claims)\n"
+    },
+    {
+      "command": [
+        "node",
+        "tools/qa-content.js",
+        "daily/20260907-eur-halal/index.html",
+        "--strict"
+      ],
+      "exit_code": 0,
+      "output": "\n╔══════════════════════════════════════════════════╗\n║      QA Content — articles.dailytickers.com      ║\n╚══════════════════════════════════════════════════╝\n  Date: 2026-09-07T18:45:36.234Z  |  Fichiers: 1\n\n✅ daily/20260907-eur-halal/index.html  [daily]  ✅23 ⚠️0 ❌0\n  ─────────────────────────────────────────────────\n  TOTAL: ✅ 23  |  ⚠️  0  |  ❌ 0  |  fichiers en erreur: 0/1\n  🎉 Aucune anomalie détectée\n\n"
+    },
+    {
+      "command": [
+        "node",
+        "tools/validate-content-hierarchy.js",
+        "daily/20260907-eur-halal/index.html"
+      ],
+      "exit_code": 0,
+      "output": "[hierarchy] PASS daily/20260907-eur-halal/index.html\n"
+    },
+    {
+      "command": [
+        "node",
+        "tools/check-ai-tells.js",
+        "daily/20260907-eur-halal/index.html"
+      ],
+      "exit_code": 0,
+      "output": "\ndaily/20260907-eur-halal/index.html  [3883 words]\n  ✅ no obvious AI tells\n"
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/tests",
+        "-p",
+        "test_eur*.py"
+      ],
+      "exit_code": 0,
+      "output": "...................\n----------------------------------------------------------------------\nRan 19 tests in 0.265s\n\nOK\n"
+    }
+  ],
+  "scope": "Artifact, arithmetic, source, documented review and browser gates. No individual religious certification or trade-order approval."
+}
