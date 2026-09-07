@@ -33,6 +33,17 @@ try {
     evidence: { bars: { path: 'run/bars.json', sha256: hash } },
   };
   assert.deepStrictEqual(validateEvidenceManifest(payload, root, ['bars']), []);
+  // A current plan update must not invalidate an intact historical run. Recovery requires
+  // the byte-identical historical plan, not just a file named after the expected hash.
+  fs.writeFileSync(path.join(root, 'plan.json'), '{"newVersion":true}');
+  assert(validateEvidenceManifest(payload, root, ['bars']).some(error => error.includes('plan file hash mismatch')));
+  const archive = path.join(root, 'data/plan-archive');
+  fs.mkdirSync(archive, { recursive: true });
+  const archivedPlan = path.join(archive, `${sha256(plan)}.json`);
+  fs.writeFileSync(archivedPlan, 'wrong bytes');
+  assert(validateEvidenceManifest(payload, root, ['bars']).some(error => error.includes('plan file hash mismatch')));
+  fs.writeFileSync(archivedPlan, plan);
+  assert.deepStrictEqual(validateEvidenceManifest(payload, root, ['bars']), []);
   fs.writeFileSync(path.join(run, 'bars.json'), '{"bars":[1]}');
   assert(validateEvidenceManifest(payload, root, ['bars']).some(error => error.includes('hash mismatch')));
   assert(validateEvidenceManifest({ reference_close: '2026-08-28', evidence: {} }, root, ['bars']).some(error => error.includes('missing')));

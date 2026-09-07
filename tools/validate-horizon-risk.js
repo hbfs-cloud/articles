@@ -29,6 +29,7 @@
 const fs = require('fs');
 const path = require('path');
 const cal = require('./lib/market-calendar');
+const { JSDOM } = require('jsdom');
 
 const ROOT = path.resolve(__dirname, '..');
 const REGISTRY = path.join(ROOT, 'data/scheduled-events.json');
@@ -57,6 +58,16 @@ function parseDate(raw, yearHint) {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 const iso = d => String(d).slice(0, 10);
+
+function sessionDate(raw) {
+  const value = String(raw || '');
+  const date = /^\d{8}$/.test(value)
+    ? `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}` : value;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !cal.isUSTradingDay(date)) {
+    throw new Error(`date de séance scanner invalide : ${value}`);
+  }
+  return date;
+}
 
 function horizonEnd(sessionDate, sessions) {
   // La séance d'entrée compte pour une. Dix séances depuis le mardi 8 septembre 2026 s'achèvent
@@ -113,7 +124,7 @@ function validate(dirRel) {
   const signals = sig.signals || [];
   if (!signals.length) return { errors: [], notes: ['aucun signal — rien à contrôler'] };
 
-  const session = `${sig.scanDate.slice(0, 4)}-${sig.scanDate.slice(4, 6)}-${sig.scanDate.slice(6, 8)}`;
+  const session = sessionDate(sig.scanDate);
   const maxHorizon = Math.max(...signals.map(s => Number(s.horizon) || 0));
   if (!Number.isFinite(maxHorizon) || maxHorizon < 1) errors.push('horizon de signal illisible');
   const end = horizonEnd(session, maxHorizon);
@@ -240,6 +251,7 @@ function validateCalendarOnly(dir, dirRel, notes) {
   const claimsPath = path.join(dir, '_data/claims.json');
   if (!fs.existsSync(claimsPath)) return { errors: [`${dirRel}: ni signals.json ni _data/claims.json`], notes };
   const html = readProse(dir);
+  const prose = calendarProse(html);
   const year = (/(20\d{2})-\d{2}-\d{2}/.exec(JSON.parse(fs.readFileSync(claimsPath, 'utf8')).reference_close || '') || [])[1] || String(new Date().getUTCFullYear());
   const ref = JSON.parse(fs.readFileSync(claimsPath, 'utf8')).reference_close;
   // Ne retenir que la PROCHAINE occurrence de chaque type d'événement après la clôture de
@@ -251,10 +263,11 @@ function validateCalendarOnly(dir, dirRel, notes) {
     next.set(ev.id, ev);
   }
   for (const ev of next.values()) {
-    const shown = (ev.match || []).some(k => new RegExp(k, 'i').test(html));
+    const shown = ev.id === 'fomc' ? mentionsFomcDecision(prose)
+      : (ev.match || []).some(k => new RegExp(k, 'i').test(prose));
     if (!shown) continue;
     const expect = renderFrenchDateLike(ev.date);
-    if (!html.includes(expect)) {
+    if (!prose.includes(expect)) {
       errors.push(`« ${ev.label_fr} » est nommé dans la page mais pas au ${ev.date} (${expect}) — date de ${reg.sources[ev.source].authority}`);
     } else notes.push(`« ${ev.id} » cité à la date de l'autorité (${expect})`);
   }
@@ -266,6 +279,18 @@ function validateCalendarOnly(dir, dirRel, notes) {
   return { errors, notes };
 }
 
+function calendarProse(html) {
+  const doc = new JSDOM(html).window.document;
+  doc.querySelectorAll('script, style, nav, footer, #sources, .source-ref, .source-refs, .source-meta').forEach(el => el.remove());
+  return (doc.querySelector('main') || doc.body).textContent.replace(/\s+/g, ' ');
+}
+
+function mentionsFomcDecision(text) {
+  // The Fed's name in a bibliography, speech or general policy discussion is not an assertion
+  // that a rate-setting meeting happens during the covered week.
+  return /\bFOMC\b|(?:réunion|décision)[^.]{0,80}(?:\bFed\b|Réserve fédérale)|(?:\bFed\b|Réserve fédérale)[^.]{0,80}(?:réunion|décision)/i.test(text);
+}
+
 const MOIS_LONG = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 function renderFrenchDateLike(iso) {
   const d = new Date(iso + 'T12:00:00Z');
@@ -273,12 +298,9 @@ function renderFrenchDateLike(iso) {
   return `${n} ${MOIS_LONG[d.getUTCMonth()]}`;
 }
 
-let proseCache = null;
 function readProse(dir) {
-  if (proseCache !== null) return proseCache;
   const p = path.join(dir, 'index.html');
-  proseCache = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '';
-  return proseCache;
+  return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '';
 }
 
 if (require.main === module) {
@@ -296,4 +318,4 @@ if (require.main === module) {
   console.log('[horizon-risk] PASS');
 }
 
-module.exports = { validate, horizonEnd, RETIRED_MECHANISMS };
+module.exports = { validate, horizonEnd, sessionDate, calendarProse, mentionsFomcDecision, RETIRED_MECHANISMS };

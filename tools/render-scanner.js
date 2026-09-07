@@ -179,14 +179,16 @@ function describeGeometry(setups) {
   const med = sorted[Math.floor(sorted.length / 2)];
   const clustered = mult.filter(m => Math.abs(m - med) <= 0.05).length;
   if (clustered / mult.length < 0.6) return '';
-  const wide = setups.filter(s => {
-    const tp = Number(s.tp1_atr_multiple), rr = Number(s.rr_entry);
-    return Number.isFinite(tp) && Number.isFinite(rr) && rr > 0 && tp / rr > tp + 0.05;
-  });
-  const widest = wide.map(s => `${s.ticker} (${(Number(s.tp1_atr_multiple) / Number(s.rr_entry)).toFixed(2)} ATR)`).join(', ');
-  return `Ces objectifs ne sortent pas d'une lecture de résistance : ${clustered} sur ${mult.length} sont posés par formule à ${med.toFixed(2)} fois la volatilité moyenne. `
-    + `Le rapport gain/risque voisin de 1 en découle mécaniquement — ce n'est pas une découverte du marché.`
-    + (wide.length ? ` Et le plancher de stop, exprimé en pourcentage, l'élargit au-delà de l'objectif sur les titres les moins volatils : ${widest}. Sur ceux-là, le ratio est inférieur à 1 par construction, avant toute considération de marché.` : '');
+  const wide = setups.map(s => {
+    const atr = Number(s.extension?.atr);
+    const entry = Number(s.entry_high), stop = Number(s.stop), target = Number(s.tp1);
+    if (!(atr > 0 && entry > stop && target > entry)) return null;
+    return { ticker: s.ticker, stopAtr: (entry - stop) / atr, tpAtr: (target - entry) / atr };
+  }).filter(s => s && s.stopAtr > 1.55 && s.stopAtr > s.tpAtr + 0.05);
+  const widest = wide.map(s => `${s.ticker} (${s.stopAtr.toFixed(2).replace('.', ',')} ATR)`).join(', ');
+  return `${clustered} objectifs sur ${mult.length} sont regroupés autour de ${med.toFixed(2).replace('.', ',')} ATR. Cette géométrie ne prouve pas à elle seule une résistance de marché. `
+    + `Lorsque la cible et le stop sont à des distances proches, le rapport gain/risque est mécaniquement voisin de 1.`
+    + (wide.length ? ` Certains stops dépassent 1,55 ATR et la distance à la cible : ${widest}. Leur rapport gain/risque est inférieur à 1.` : '');
 }
 const geometryNote = describeGeometry(d.setups || []);
 
@@ -762,7 +764,7 @@ function strategyTable(title, subtitle, rows) {
         ? ' <span class="badge" style="background:#e2e8f0;color:#334155;border:1px solid #94a3b8;font-size:.68rem">CONV</span>'
         : '';
     return `        <tr data-ticker="${escAttr(s.ticker)}" data-sharia="${s.sharia === true ? 'true' : s.sharia === false ? 'false' : ''}" data-entry="${entry || 0}" data-stop="${s.stop || 0}" data-tp1="${s.tp1 || 0}" data-tp2="${s.tp2 || 0}">`
-      + `<td><strong>${esc(s.ticker)}</strong>${shariaBadge}</td>`
+      + `<td><strong>${esc(s.ticker)}</strong>${shariaBadge}${s.dilution_clear === false ? ' <span class="badge badge-amber">SUSPENDU — SEC</span>' : ''}</td>`
       + `<td class="setup-phrase">${setupPhrase(s)}</td>`
       + `<td>${s.entry_low != null && s.entry_high != null && s.entry_low !== s.entry_high ? `${num(s.entry_low)}&ndash;${num(s.entry_high)}` : num(entry)}</td><td>${num(s.stop)}</td><td>${num(tp)}</td><td><strong>${rrDisplay(s.rr)}</strong></td></tr>`;
   }).join('\n');
@@ -785,6 +787,15 @@ ${civBlocks ? `  <div class="setup-civ-list">\n${civBlocks}\n  </div>` : ''}`;
 
 function buildPage(d) {
   const setups   = d.setups || [];
+  const blockedTickers = new Set(d.review_status?.blocked_tickers || []);
+  const suspended = setups.filter(s => s.dilution_clear === false || blockedTickers.has(s.ticker));
+  const remainingCount = setups.length - suspended.length;
+  const suspensionLabel = suspended.length
+    ? `${suspended.map(s => s.ticker).join(', ')} suspendu${suspended.length > 1 ? 's' : ''} · ${remainingCount} autre${remainingCount > 1 ? 's' : ''} plan${remainingCount > 1 ? 's' : ''} conditionnel${remainingCount > 1 ? 's' : ''}`
+    : '';
+  const reviewSummary = suspended.length
+    ? `${suspensionLabel}. La validation du panier reste bloquée. Les niveaux de la sélection initiale sont conservés pour la traçabilité ; les autres plans restent soumis à leurs contrôles et ne constituent pas un panier certifié.`
+    : '';
   const tagStr   = (d.tags || []).join(',');
   const tickers  = setups.map(s => s.ticker).join(', ');
   const { adjustRegimeLabel } = require('./lib/scanner-parser');
@@ -833,7 +844,7 @@ function buildPage(d) {
   const heroBadges = [
     badge(`${regimeDot} ${regime}`, regimeBadgeColor(regime)),
     badge(d.session_label || d.date || '', 'blue'),
-    badge(`${setups.length} setups conditionnels`, 'green'),
+    badge(suspensionLabel || `${setups.length} setups conditionnels`, suspended.length ? 'amber' : 'green'),
     ...(d.alerts || []).map(a => badge(`&#x26A0; ${a.title}`, 'amber'))
   ].join('\n    ');
 
@@ -863,10 +874,10 @@ function buildPage(d) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Top ${setups.length} conditionnel ${regime} &middot; ${setups.slice(0,10).map(s=>s.ticker).join(', ')} | DailyTickers Scanner</title>
-  <meta name="description" content="Scanner ${d.session_label || d.date} &middot; ${regime} (score ${d.regime_score || 0}). ${setups.length} setups conditionnels, niveaux vérifiés.">
-  <meta property="og:title" content="Scanner DailyTickers &middot; ${d.session_label || d.date} &middot; ${setups.slice(0,10).map(s=>s.ticker).join(', ')}">
-  <meta property="og:description" content="Régime ${regime}. ${d.session_label || d.date}. ${setups.length} setups conditionnels.">
+  <title>${suspensionLabel || `Top ${setups.length} conditionnel ${regime} · ${setups.slice(0,10).map(s=>s.ticker).join(', ')}`} | DailyTickers Scanner</title>
+  <meta name="description" content="Scanner ${d.session_label || d.date} &middot; ${regime} (score ${d.regime_score || 0}). ${suspended.length ? `${suspensionLabel}. Validation du panier bloquée.` : `${setups.length} setups conditionnels, niveaux techniques publiés.`}">
+  <meta property="og:title" content="Scanner DailyTickers &middot; ${d.session_label || d.date} &middot; ${suspensionLabel || setups.slice(0,10).map(s=>s.ticker).join(', ')}">
+  <meta property="og:description" content="Régime ${regime}. ${d.session_label || d.date}. ${suspended.length ? `${suspensionLabel}. Validation du panier bloquée.` : `${setups.length} setups conditionnels.`}">
   <meta property="og:image" content="${ogImage}">
   <meta property="og:url" content="${d.url || `https://articles.dailytickers.com/scanner/${d.date}/`}">
   <meta property="og:type" content="article">
@@ -917,11 +928,11 @@ function buildPage(d) {
     ${heroBadges}
   </div>
   <h1 class="ticker-name">Scanner DailyTickers — ${d.session_label || d.date}</h1>
-  <p class="ticker-subtitle">Top ${setups.length} conditionnel ${regime} — niveaux vérifiés sur données de séance, tableaux compacts par stratégie</p>
+  <p class="ticker-subtitle">${suspensionLabel || `Top ${setups.length} conditionnel ${regime}`} — ${suspended.length ? 'validation du panier bloquée ; niveaux initiaux conservés' : 'niveaux techniques calculés sur données de séance, tableaux compacts par stratégie'}</p>
   <div class="ticker-metrics">
     <div class="ticker-metric"><div class="tm-value" style="color:${regColor};">${regime}</div><div class="tm-label">Régime</div></div>
     <div class="ticker-metric"><div class="tm-value">${avgScore}</div><div class="tm-label">Score moyen</div></div>
-    <div class="ticker-metric"><div class="tm-value">${setups.length}</div><div class="tm-label">Setups</div></div>
+    <div class="ticker-metric"><div class="tm-value">${suspended.length ? remainingCount : setups.length}</div><div class="tm-label">${suspended.length ? 'Autres plans conditionnels' : 'Setups'}</div></div>
     <div class="ticker-metric"><div class="tm-value">${dominantStr || 'Momentum'}</div><div class="tm-label">Dominante</div></div>
     ${vixVal ? `<div class="ticker-metric"><div class="tm-value" style="color:${vixColor};">${vixVal}</div><div class="tm-label">VIX</div></div>` : ''}
     ${spxVal ? `<div class="ticker-metric"><div class="tm-value" style="color:${spxColor};">${spxVal}</div><div class="tm-label">SPX</div></div>` : ''}
@@ -931,6 +942,7 @@ function buildPage(d) {
 
 <!-- INTRO -->
 <div class="content-card" style="margin:1.5rem auto;max-width:960px;">
+  ${reviewSummary ? `<p>${reviewSummary}</p>` : ''}
   ${d.intro || ''}
 ${alertsHtml(d.alerts)}
   <p>${d.regime_prose || ''}</p>
@@ -981,7 +993,7 @@ ${sectorRotationTable(d.sector_rotation)}
 
 <!-- ===================== SIGNAUX (TABLEAUX COMPACTS) ===================== -->
 <section id="synthese" class="section-block">
-  <div class="section-header"><h2><i class="fas fa-table-list"></i> Signaux du jour — ${setups.length} setups par stratégie</h2></div>
+  <div class="section-header"><h2><i class="fas fa-table-list"></i> ${suspended.length ? `Sélection initiale — ${setups.length} lignes, dont ${suspended.length} suspendue${suspended.length > 1 ? 's' : ''}` : `Signaux du jour — ${setups.length} setups par stratégie`}</h2></div>
   <div class="content-card">
     <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés sur la clôture de référence. ${hasEntryZone
       ? `Tous les setups restent non exécutables avant l'observation du VWAP de la prochaine séance.`
@@ -1016,17 +1028,17 @@ ${strategyTablesHtml}
     </div>
     <div class="pedagogy-box">
       <h4>3. Scoring composite</h4>
-      <p>Score interne recalculé sur le snapshot final, combinant le filtre de stratégie et le RSI. Il classe une watchlist conditionnelle; il ne constitue ni une note fondamentale ni une autorisation d'achat.</p>
+      <p>${d.score_methodology || 'Le score reflète la méthode déclarée pour chaque signal ; il ne constitue ni une probabilité de gain ni une autorisation d’achat.'}</p>
     </div>
     <div class="pedagogy-box">
-      <h4>4. Niveaux réels vérifiés</h4>
+      <h4>4. Calcul des niveaux techniques</h4>
       <p>Entrée / stop / TP / R/R calculés sur les données de clôture réelles. ${geometryNote} ${hasEntryZone
         ? `Une ligne ne devient exécutable qu'après confirmation du VWAP de la séance suivante.`
-        : `Une ligne devient exécutable dès l'ouverture de la séance visée, à son prix limite, sans condition supplémentaire.`}</p>
+        : `Un ordre limité est valable uniquement pendant la séance visée et sous réserve des contrôles publiés ; son exécution au prix limite ou à un prix inférieur n’est pas garantie.`}</p>
     </div>
     <div class="pedagogy-box">
       <h4>5. Anti-dilution &amp; ranking</h4>
-      <p>Pour les émetteurs relevant du régulateur américain : registre de dépôts interrogé par type de formulaire (prospectus de placement, enregistrement en étagère, avis d'effet) sur dix ans, fenêtre de contrôle de 90 jours — présence du formulaire ET nature de l'opération (item-level pour les 8-K) sont à vérifier, la seule présence/absence d'un formulaire ne suffit pas à conclure. Hors de ce périmètre — émetteurs étrangers, fonds indiciels — il n'y a pas de registre à interroger : le champ reste vide et la réserve est écrite sur la ligne, jamais remplacée par un feu vert. Diversification secteur/géographie. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Entrées à prix unique sur ce scan (pas de zone) : le R/R affiché est donc déterminé sans ambiguïté de remplissage — ce qui ne dit rien de sa pertinence, seulement qu'il n'y a pas de « pire prix » distinct à envisager. Il s'échelonne de 1:${minRR} à 1:${maxRR} selon les lignes${rrBelowOne}.`}${shariaSentence}</p>
+      <p>Le contrôle SEC doit distinguer les offres d’actions, la dette et les opérations mixtes en lisant les dépôts primaires. Les émetteurs privés étrangers déposent également auprès de la SEC, notamment des 20-F et des 6-K : leur statut ne les dispense pas du contrôle. Les ETF suivent un régime distinct de celui des sociétés opérationnelles. La fenêtre effectivement documentée est celle des preuves de chaque ligne ; un contrôle limité à 90 jours ne permet pas d’exclure des instruments dilutifs plus anciens encore actifs. Toute classification inconnue empêche de certifier la ligne. Diversification sectorielle et géographique. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Entrées à prix unique sur ce scan (pas de zone) : le R/R affiché est donc déterminé sans ambiguïté de remplissage — ce qui ne dit rien de sa pertinence, seulement qu'il n'y a pas de « pire prix » distinct à envisager. Il s'échelonne de 1:${minRR} à 1:${maxRR} selon les lignes${rrBelowOne}.`}${shariaSentence}</p>
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:1rem;">
       <h4 style="margin:0 0 0.5rem;">Sources de données</h4>

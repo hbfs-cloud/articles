@@ -309,11 +309,13 @@ function validate(manifest, root = ROOT) {
     if (claim.formula && typeof claim.formula.result !== 'number') {
       errors.push(`${claim.id}: formula.result must be a number`); continue;
     }
-    // Le pointeur affiché doit être celui du numérateur : c'est lui qu'un relecteur humain suivra.
-    // Sans cette égalité, `source_pointer` pouvait désigner un volume pendant que la formule
-    // portait sur des prix.
-    if (claim.formula && claim.source_pointer !== claim.formula.numerator_pointer) {
-      errors.push(`${claim.id}: source_pointer must be the formula numerator`); continue;
+    // Les ratios ancrent le numérateur. Une somme de primes n'a pas de numérateur unique :
+    // son ancrage est le dénominateur (spot), les primes restant liées par leurs pointeurs.
+    if (claim.formula) {
+      const anchor = claim.formula.operation === 'sum_divide_pct' ? 'denominator' : 'numerator';
+      if (claim.source_pointer !== claim.formula[`${anchor}_pointer`]) {
+        errors.push(`${claim.id}: source_pointer must be the formula ${anchor}`); continue;
+      }
     }
     const formulaValue = claim.formula ? evaluateFormula(source, claim.formula) : observed;
     if (claim.formula && (!Number.isFinite(formulaValue)

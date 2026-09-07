@@ -1,0 +1,126 @@
+{
+  "artifact": "daily/$date/index.html",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "expected_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "focus-evidence",
+      "calls": [
+        {
+          "as": "focus_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$focus_symbols",
+            "end_date": "$refdate",
+            "limit": 90,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        },
+        {
+          "as": "focus_technicals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "quote,technicals,support_resistance,trading_signals",
+            "symbols": "$focus_symbols",
+            "end_date": "$refdate",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "focus_fundamentals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "financials,stats,earnings_quarterly,analyst_actions",
+            "symbols": "$focus_symbols",
+            "end_date": "$refdate",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "focus_events",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "news,sec_filings,flags",
+            "symbols": "$focus_symbols",
+            "end_date": "$refdate",
+            "days": 180,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "focus_flows",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "insider_transactions,unusual_options,dark_pool,max_pain,short_interest",
+            "symbols": "$focus_symbols",
+            "end_date": "$refdate",
+            "days": 90,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "focus_correlation",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$focus_symbols",
+            "end_date": "$refdate",
+            "adjusted": true,
+            "force_async": true,
+            "days": 90
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -81,6 +81,22 @@ try {
     [{ ...claim('vol', '6.0', { operation: 'ratio_to_mean', numerator_pointer: '/bars/2/v', window: 2, offset: 1 }, { scale: 1, decimals: 1 }, { result: 6 }), source_pointer: '/bars/2/v', source_value: 90 }],
   ), root), []);
 
+  // A sum divided by a spot has no single numerator pointer. Its anchor is the denominator;
+  // operands and the resulting percentage must still be independently recomputed.
+  const summed = {
+    ...claim('sum', '30.0%', {
+      operation: 'sum_divide_pct', operands: [{ pointer: '/bars/0/v' }, { pointer: '/bars/1/v' }],
+      denominator_pointer: '/bars/0/c',
+    }, { scale: 1, decimals: 1, suffix: '%' }, { result: 30 }),
+    source_pointer: '/bars/0/c', source_value: 100,
+  };
+  const summedHtml = '<main><p>Ratio <span data-claim="sum">30.0%</span></p></main>';
+  assert.deepStrictEqual(validate(build(summedHtml, [summed]), root), []);
+  assert(validate(build(summedHtml, [{ ...summed, source_pointer: '/bars/2/c', source_value: 110 }]), root)
+    .some(error => error.includes('formula denominator')));
+  assert(validate(build(summedHtml, [{ ...summed, formula: { ...summed.formula, result: 42 } }]), root)
+    .some(error => error.includes('formula result differs')));
+
   // Une formule qui ne produit PAS le nombre déclaré doit être rejetée : c'est le seul garde-fou
   // contre un auteur qui écrirait d'abord le chiffre voulu, puis une formule pour l'habiller.
   assert(validate(build(

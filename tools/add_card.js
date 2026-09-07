@@ -149,7 +149,7 @@ if (tab === 'analyses') {
     // Current scanner pages already expose the canonical conditional title in <title>.
     // Only reconstruct legacy/generic titles, and never re-inject the retired A+ label.
     const ogDesc = doc.querySelector('meta[property="og:description"]');
-    if (!/^Top\s+\d+\s+conditionnel\b/i.test(title) && ogDesc) {
+    if ((!title || /^(?:DailyTickers|Scanner|Scan du)\b/i.test(title)) && ogDesc) {
         const ogText = ogDesc.getAttribute('content');
         const regimeMatch = ogText.match(/\b(EARLY RISK-OFF|RISK-OFF|RISK-ON|RECOVERY|NEUTRAL)\b/i);
         const regime = regimeMatch ? regimeMatch[1].toUpperCase() : '';
@@ -163,7 +163,9 @@ if (tab === 'analyses') {
     }
 } else if (tab === 'daily' || tab === 'weekly') {
     // Prefer hero-title (h1) which is the real article title
-    const heroTitle = doc.querySelector('.hero-title, h1.hero-title');
+    const heroTitle = doc.querySelector('h1.hero-title')
+        || doc.querySelector('.hero-section h1')
+        || doc.querySelector('h1');
     if (heroTitle) {
         title = heroTitle.textContent.trim();
     } else {
@@ -347,6 +349,10 @@ if (tab === 'daily' || tab === 'weekly' || tab === 'scanner') {
     }
     // Ensure French months are lowercase (Mars → mars)
     date = date.replace(/\b(Janvier|Février|Mars|Avril|Mai|Juin|Juillet|Août|Septembre|Octobre|Novembre|Décembre)\b/g, m => m.toLowerCase());
+    // Dated editions use their public route, not a ticker name or a prose session label.
+    // This also avoids timezone-dependent parsing of a UTC midnight as the previous day.
+    const editionDate = href.match(/^\/(?:daily|weekly|scanner)\/(\d{4})(\d{2})(\d{2})\/$/);
+    if (editionDate) date = formatFrenchDate(`${editionDate[1]}-${editionDate[2]}-${editionDate[3]}`);
 }
 
 // Analysis dates can also come from an English <title>; normalize every tab consistently.
@@ -434,9 +440,11 @@ if (fs.existsSync(jsonFile)) {
 const hrefPattern = `href="${href}"`;
 
 if (tab === 'daily') {
-    // Daily: dedup by URL (overwrite if same href already exists)
+    // Correcting an archive must not promote it above the newest briefing.
+    const existingIndex = cards.findIndex(c => c.includes(hrefPattern));
     cards = cards.filter(c => !c.includes(hrefPattern));
-    cards.unshift(cardHtml.trim());
+    if (existingIndex >= 0) cards.splice(existingIndex, 0, cardHtml.trim());
+    else cards.unshift(cardHtml.trim());
 
 } else if (tab === 'analyses') {
     // Analyses: dedup by ticker symbol (not exact href — handles path changes like beginner/fr/ → root)

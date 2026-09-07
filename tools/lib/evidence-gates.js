@@ -6,6 +6,21 @@ const { sha256 } = require('./workflow-contract');
 
 const SHA256_RE = /^[a-f0-9]{64}$/;
 
+function hasCertifiedPlan(root, plan, hash) {
+  if (!SHA256_RE.test(String(hash || '')) || typeof plan !== 'string' || !plan || path.isAbsolute(plan)) return false;
+  const original = path.resolve(root, plan);
+  if (path.relative(root, original).startsWith('..')) return false;
+  // A reusable plan changes over time. An archive is accepted only if its exact bytes match
+  // the original run's hash; neither its journal nor its historical harness is rewritten.
+  for (const candidate of [original, path.join(root, 'data/plan-archive', `${hash}.json`)]) {
+    if (!fs.existsSync(candidate) || !fs.statSync(candidate).isFile()) continue;
+    const relative = path.relative(fs.realpathSync(root), fs.realpathSync(candidate));
+    if (relative.startsWith('..') || path.isAbsolute(relative)) continue;
+    if (sha256(fs.readFileSync(candidate)) === hash) return true;
+  }
+  return false;
+}
+
 function validateCollectedArtifact(abs, expectedHash, expectedReferenceClose, root) {
   const errors = [];
   const dir = path.dirname(abs);
@@ -21,9 +36,7 @@ function validateCollectedArtifact(abs, expectedHash, expectedReferenceClose, ro
   if (!journal.resolved_input || sha256(Buffer.from(require('./workflow-contract').stableStringify(journal.resolved_input))) !== journal.input_sha256
     || journal.input_sha256 !== harness.input_sha256) errors.push('resolved input hash mismatch');
   if (journal.plan !== harness.plan || journal.plan_sha256 !== harness.plan_sha256) errors.push('plan provenance differs across harness/journal');
-  const planPath = path.resolve(root, journal.plan || '');
-  if (path.relative(root, planPath).startsWith('..') || !fs.existsSync(planPath)
-    || sha256(fs.readFileSync(planPath)) !== journal.plan_sha256) errors.push('plan file hash mismatch');
+  if (!hasCertifiedPlan(root, journal.plan, journal.plan_sha256)) errors.push('plan file hash mismatch');
   const call = (journal.waves || []).flatMap(wave => wave.calls || []).find(item => item.as === alias);
   if (!call || call.ok !== true || call.output_sha256 !== expectedHash) errors.push('collector journal has no matching successful output hash');
   const resolvedCall = (journal.resolved_input && journal.resolved_input.waves || []).flatMap(wave => wave.calls || []).find(item => item.as === alias);

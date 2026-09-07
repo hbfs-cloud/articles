@@ -18,7 +18,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { isUSTradingDay, newYorkDateISO, usTradingDaysBetween } = require('./lib/market-calendar');
+const { isUSTradingDay, newYorkDateISO, usTradingDaysBetween, previousUSTradingDay, nextUSTradingDay } = require('./lib/market-calendar');
+const { latestPublishedScan } = require('./lib/published-scan');
 
 const ROOT = path.resolve(__dirname, '..');
 const STRICT = process.argv.includes('--strict');
@@ -162,29 +163,24 @@ check('scanner.json: tile LIVE en position 0', () => {
   if (!d[0].includes('#059669') && !d[0].includes('059669')) return 'tile LIVE sans couleur verte (#059669)';
 });
 
-// 4. Scan du dernier jour ouvré (lun-ven + jours fériés NYSE exclus via market-calendar.js)
+// 4. Dernière édition publiée : le dossier vise la prochaine séance, pas la date de collecte.
 function lastWeekdayStr() {
-  const d = new Date();
-  const isoOf = (dt) => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
-  // Reculer jusqu'au dernier jour de bourse réel (week-end ET jours fériés NYSE)
-  while (!isUSTradingDay(isoOf(d))) {
-    d.setDate(d.getDate() - 1);
-  }
-  return isoOf(d).replace(/-/g, '');
+  const date = newYorkDateISO();
+  return (isUSTradingDay(date) ? date : previousUSTradingDay(date)).replace(/-/g, '');
 }
 
-function isWeekend() {
-  const day = new Date().getDay();
-  return day === 0 || day === 6;
-}
-
-const today = todayStr();
 const lastWeekday = lastWeekdayStr();
-const scanDay = lastWeekday; // le scan attendu = dernier jour ouvré
+let scanDay = null;
+check('scanner: dernière édition indexée, séance valide et récente', () => {
+  scanDay = latestPublishedScan(readJSON('data/scanner.json'));
+  const session = `${scanDay.slice(0, 4)}-${scanDay.slice(4, 6)}-${scanDay.slice(6, 8)}`;
+  if (!isUSTradingDay(session)) return `édition ${scanDay} datée hors séance de bourse`;
+  if (scanDay < lastWeekday) return `édition ${scanDay} antérieure à la dernière séance ${lastWeekday}`;
+  if (session > nextUSTradingDay(newYorkDateISO())) return `édition ${scanDay} au-delà de la prochaine séance`;
+});
 const scanPath = `scanner/${scanDay}/index.html`;
-const weekendNote = isWeekend() ? ` (week-end — dernier scan ouvré attendu: ${scanDay})` : '';
 
-check(`scan dernier jour ouvré (${scanDay})${weekendNote}: taille proportionnelle aux setups`, () => {
+check(`dernier scan publié (${scanDay}): taille proportionnelle aux setups`, () => {
   const size = fileSize(scanPath);
   if (size === 0) return `scanner/${scanDay}/index.html manquant`;
   // Le seuil est un proxy « scan complet, pas tronqué ». Un scan honnêtement plus court
@@ -200,7 +196,7 @@ check(`scan dernier jour ouvré (${scanDay})${weekendNote}: taille proportionnel
   if (size < minSize) return `taille ${Math.round(size/1024)}KB < ${Math.round(minSize/1024)}KB (attendu pour ${nSetups} setups)`;
 });
 
-check(`scan dernier jour ouvré: id="synthese" présent`, () => {
+check(`dernier scan publié (${scanDay}): id="synthese" présent`, () => {
   if (!fs.existsSync(path.join(ROOT, scanPath))) return `scanner/${scanDay}/index.html absent`;
   const html = readFile(scanPath);
   if (!html.includes('id="synthese"')) return 'id="synthese" absent — parser gen-status-page.js cassé';

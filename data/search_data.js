@@ -5,7 +5,7 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "DailyTickers",
+    "title": "Oracle : une médiane rassurante, une queue qui change le risque",
     "desc": "Oracle publie jeudi soir. Les options valorisent un écart de 11,7 % sur une capitalisation de 457 milliards de dollars.",
     "tags": "us,macro,earnings,ai,software,energy,crypto,etf",
     "grade": "",
@@ -32,7 +32,7 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Les actions reculent, la crypto s'envole : la rotation vers les actifs durs",
-    "desc": "Weekly du 17 au 21 août 2026. Les actions refluent (S&P -1,4%, Nasdaq -2,4%) pendant que la santé (+4,3%), l'énergie (+2,8%) et surtout la crypto (Ether +24%, XRP +27%, Bitcoin +16%) s'envolent après le sommet crypto de la Maison-Blanche et le doublement des rachats du Trésor. Le récit d'une baisse de taux a disparu : le marché price une hausse à 56,5% d'ici décembre. Core PCE mercredi 26, Jackson Hole 27-29, NVIDIA le 26. Niveaux, configurations, scénarios.",
+    "desc": "Hebdo du 24 au 28 août 2026. Les actions refluent (S&P -1,4%, Nasdaq -2,4%) pendant que la santé (+4,3%), l'énergie (+2,8%) et la crypto, sur une fenêtre arrêtée au 20 août s'envolent dans un contexte d’annonces politiques et réglementaires. Core PCE mercredi 26, Jackson Hole 27-29, NVIDIA le 26. Niveaux, configurations, scénarios.",
     "tags": "us,crypto,commodity,macro,energy,healthcare,technique,trade-idea,etf,semis,gold",
     "grade": "",
     "href": "/weekly/20260824/",
@@ -435,7 +435,7 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Un bond du pétrole que les actions du secteur n’ont pas suivi",
-    "desc": "Briefing du 7 septembre 2026 : le fonds pétrolier bondit, les actions du secteur n'en prennent qu'un quart, et la semaine apporte deux chiffres de prix puis une décision de taux jouée à pile ou face.",
+    "desc": "Briefing du 7 septembre 2026 : le fonds pétrolier bondit, les actions du secteur n'en prennent qu'un quart, et les chiffres de prix de cette semaine précèdent la décision de la Fed la semaine suivante.",
     "tags": "macro,energy,geopolitique,crypto,earnings,formation",
     "grade": "",
     "href": "/daily/20260907/",
@@ -5738,12 +5738,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 8 conditionnel RISK-ON · AMZN, KO, DIS, PCAR, MT, DHT, PDBC, IBIT",
-    "desc": "Le régime autorise le risque, mais il ne dit rien de la dispersion sectorielle, qui est le vrai fait de la semaine. Deux lignes du panier sont adossées aux matières premières et comptent ensemble dans le plafond sectoriel, y compris le fonds indiciel : le classer par son exposition plutôt que par so...",
+    "title": "AMZN suspendu · 7 autres plans conditionnels",
+    "desc": "AMZN suspendu · 7 autres plans conditionnels. La validation du panier reste bloquée. Les niveaux de la sélection initiale sont conservés pour la traçabilité ; les autres plans restent soumis à leurs contrôles et ne constituent pas un panier certifié.",
     "tags": "us,etf,technique,momentum,commodity",
     "grade": "",
     "href": "/scanner/20260908/",
-    "date": "Séance du mardi 8 septembre 2026"
+    "date": "8 septembre 2026"
   },
   {
     "type": "scanner",
@@ -5756,7 +5756,7 @@ window.searchDataPrebuilt = [
     "tags": "us,etf,technique,trade-idea,risk-on",
     "grade": "",
     "href": "/scanner/20260901/",
-    "date": "Séance du mardi 1er septembre 2026"
+    "date": "1 septembre 2026"
   },
   {
     "type": "scanner",
@@ -5764,12 +5764,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 conditionnel RISK-ON · BDX, RVTY, VLO, NWSA, NDAQ, ADP, DV, EL, IGV, KRE",
+    "title": "Top 9 conditionnel RISK-ON · BDX, RVTY, NWSA, HTGC, PCAR, GE, ELS, IGV, KBE",
     "desc": "Le S&P 500 reste au-dessus de ses moyennes 50, 100 et 200 jours; le VIX est sous sa moyenne 14 jours et ne monte pas. En contrepoint, le dollar a gagné 0,52%, les taux 10 ans atteignent 4,72% et les actifs à bêta élevé ont corrigé. Le régime autorise le risque, pas le relâchement des gates.",
-    "tags": "us,etf,technique,trade-idea,momentum,pullback,industrials,healthcare,energy,software",
+    "tags": "us,etf,technique,trade-idea,momentum,pullback,industrials,healthcare,software",
     "grade": "",
     "href": "/scanner/20260831/",
-    "date": "Séance du lundi 31 août 2026"
+    "date": "31 août 2026"
   },
   {
     "type": "scanner",

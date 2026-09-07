@@ -668,7 +668,7 @@ S.push(sec('macro', 'fa-chart-line', E.macro.title,
   + (() => {
       const syms = [...symsOf(man.tables.sectors)].sort((a, b) => val(`${b}_s`) - val(`${a}_s`));
       return chart('sectorChart', 'Onze secteurs américains, semaine et mois',
-        "Les barres claires sont la semaine, les foncées le mois. Un secteur peut mener la semaine et rester en retard sur le mois : c'est le cas de la technologie.",
+        "Les barres claires sont la semaine, les foncées le mois. Les deux fenêtres décrivent des horizons distincts ; comparer chaque secteur sur les deux.",
         {
           legend: { data: ['semaine', 'mois'], bottom: 0, textStyle: { fontSize: 11 } },
           grid: { left: 150, right: 40, top: 16, bottom: 44 },
@@ -732,7 +732,7 @@ S.push(sec('catalyseur', 'fa-bolt', E.leader.title, paras(E.leader.paragraphs)
 }
 S.push(sec('precedent', 'fa-clock-rotate-left', E.precedent.title, paras(E.precedent.paragraphs)
   + chart('precChart', "D'où vient réellement le mois de Broadcom",
-      "La publication n'explique qu'une fraction du mois. Attribuer l'ensemble à l'événement est une inversion de causalité, et elle se mesure.",
+      "La fenêtre autour de la publication couvre une fraction du mois. Attribuer l'ensemble à l'événement est une inversion de causalité, et elle se mesure.",
       {
         grid: { left: 150, right: 60, top: 16, bottom: 32 },
         xAxis: { type: 'value', name: '%', nameTextStyle: { fontSize: 10 } },
@@ -746,8 +746,8 @@ S.push(sec('precedent', 'fa-clock-rotate-left', E.precedent.title, paras(E.prece
       })
   + (() => {
       const n = REACT.length;
-      return chart('intradayChart', `Sur les ${COUNTS.lead_react_total} réactions passées, l'ouverture a été le bas de la séance`,
-        "Chaque point compare l'écart d'ouverture (horizontal) à ce que la séance a fait ensuite (vertical). Presque tous sont au-dessus de zéro, y compris les réactions négatives : vendre à la cloche d'ouverture a historiquement été le mauvais réflexe sur ce titre.",
+      return chart('intradayChart', `Réactions historiques : rendement entre ouverture et clôture`,
+        "Chaque point compare l'écart d'ouverture (horizontal) à ce que la séance a fait ensuite (vertical). La position verticale mesure le rendement ouverture-clôture ; elle ne localise pas le plus bas de séance et ne valide aucune règle de vente.",
         {
           grid: { left: 56, right: 24, top: 24, bottom: 44 },
           xAxis: { type: 'value', name: 'écart d\'ouverture %', nameLocation: 'middle', nameGap: 26, nameTextStyle: { fontSize: 10 } },
@@ -846,7 +846,7 @@ ${S.join('\n')}
 <div class="fnav">
 <a href="#verdict" title="Verdict"><i class="fas fa-flag-checkered"></i></a>
 <a href="#agenda" title="Agenda"><i class="fas fa-calendar-week"></i></a>
-<a href="#marches" title="Marchés"><i class="fas fa-chart-line"></i></a>
+<a href="#macro" title="Marchés"><i class="fas fa-chart-line"></i></a>
 <a href="#propagation" title="Propagation"><i class="fas fa-diagram-project"></i></a>
 <a href="#plan" title="Plan"><i class="fas fa-list-check"></i></a>
 <a href="#sources" title="Sources"><i class="fas fa-database"></i></a>

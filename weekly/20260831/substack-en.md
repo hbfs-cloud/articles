@@ -2,7 +2,7 @@
 
 Nvidia confirmed that demand for AI compute remains powerful. This week asks a harder question: is that demand spreading into custom chips, networking, servers, cloud consumption, cybersecurity, and power infrastructure?
 
-Broadcom is the central event. It reports Wednesday after the close, alongside Snowflake and HPE. Dell, Palo Alto Networks, MongoDB, and Credo report Tuesday. Ciena and Zscaler follow Thursday. Friday’s US jobs report can then reprice the entire group through interest rates.
+Broadcom is the central event. It reports Wednesday after the close, alongside Snowflake and HPE. Dell, Palo Alto Networks, MongoDB, and Credo report Tuesday. Ciena and Zscaler follow Thursday. Friday’s US jobs report can then reprice the entire group through interest rates. Euro-area flash inflation is due Tuesday, as specified by [Eurostat](https://ec.europa.eu/eurostat/web/products-euro-indicators/w/2-19082026-ap).
 
 ## The decision first
 
