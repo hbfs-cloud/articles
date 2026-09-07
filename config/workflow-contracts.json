@@ -2,7 +2,10 @@
   "version": "1.0",
   "policy": {
     "marketdata_min_build": "0424cf4b",
-    "allowed_servers": ["marketdata", "systematic"],
+    "allowed_servers": [
+      "marketdata",
+      "systematic"
+    ],
     "allowed_tools_by_server": {
       "marketdata": [
         "ExplainSymbolMove",
@@ -32,7 +35,9 @@
     },
     "allowed_args_by_server_tool": {
       "marketdata": {
-        "ExplainSymbolMove": ["symbol"],
+        "ExplainSymbolMove": [
+          "symbol"
+        ],
         "GetEarningsCalendarFiltered": [
           "days_ahead",
           "include_implied_move",
@@ -104,7 +109,9 @@
           "theme",
           "timeout"
         ],
-        "GetSymbolSignals": ["symbol"],
+        "GetSymbolSignals": [
+          "symbol"
+        ],
         "RankBeta": [
           "as_of",
           "direction",
@@ -226,7 +233,9 @@
           "timeout",
           "top_k"
         ],
-        "WatchlistDigest": ["symbols"]
+        "WatchlistDigest": [
+          "symbols"
+        ]
       },
       "systematic": {
         "DtxDecide": [
@@ -246,12 +255,28 @@
           "state"
         ],
         "DtxListConfigs": [],
-        "DtxRegime": ["asof", "bars", "expected_data_date"],
-        "DtxReplay": ["bars", "equity_full", "from", "portfolio", "to"],
-        "GetHealth": ["expected_close"]
+        "DtxRegime": [
+          "asof",
+          "bars",
+          "expected_data_date"
+        ],
+        "DtxReplay": [
+          "bars",
+          "equity_full",
+          "from",
+          "portfolio",
+          "to"
+        ],
+        "GetHealth": [
+          "expected_close"
+        ]
       }
     },
-    "forbidden_server_patterns": ["broker", "broker_live", "trading"],
+    "forbidden_server_patterns": [
+      "broker",
+      "broker_live",
+      "trading"
+    ],
     "forbidden_tool_aliases": [
       "GetHealth",
       "GetMarketOverview",
@@ -281,7 +306,9 @@
       "local strict QA"
     ],
     "command_contract": {
-      "required_references": [".claude/skills/source-policy.md"],
+      "required_references": [
+        ".claude/skills/source-policy.md"
+      ],
       "forbidden_patterns": [
         {
           "pattern": "mcp__claude",
@@ -305,29 +332,65 @@
   "workflows": {
     "daily": {
       "command": ".claude/commands/daily.md",
-      "codex_skills": ["daily"],
+      "codex_skills": [
+        "daily"
+      ],
       "plans": [
         {
           "path": "plans/daily.json",
-          "required_variables": ["date", "equity_reference_close", "crypto_completed_refdate"],
-          "static_symbol_calls": ["bars_indices", "bars_sectors", "bars_crypto"]
+          "required_variables": [
+            "date",
+            "equity_reference_close",
+            "crypto_completed_refdate"
+          ],
+          "static_symbol_calls": [
+            "bars_indices",
+            "bars_sectors",
+            "bars_crypto"
+          ]
+        },
+        {
+          "path": "plans/daily-20260907-secdegraded.json",
+          "required_variables": [
+            "date",
+            "equity_reference_close",
+            "crypto_completed_refdate"
+          ],
+          "static_symbol_calls": [
+            "bars_indices",
+            "bars_sectors",
+            "bars_crypto"
+          ]
         },
         {
           "path": "plans/daily-focus.json",
-          "required_variables": ["date", "refdate", "focus_symbols"],
+          "required_variables": [
+            "date",
+            "refdate",
+            "focus_symbols"
+          ],
           "variable_constraints": {
-            "focus_symbols": { "type": "csv", "min_items": 1, "max_items": 6 }
+            "focus_symbols": {
+              "type": "csv",
+              "min_items": 1,
+              "max_items": 6
+            }
           }
         }
       ]
     },
     "weekly": {
       "command": ".claude/commands/weekly.md",
-      "codex_skills": ["weekly"],
+      "codex_skills": [
+        "weekly"
+      ],
       "plans": [
         {
           "path": "plans/weekly.json",
-          "required_variables": ["date", "refdate"],
+          "required_variables": [
+            "date",
+            "refdate"
+          ],
           "static_symbol_calls": [
             "bars_indices",
             "bars_sectors",
@@ -346,7 +409,11 @@
             "blast_symbols_b"
           ],
           "variable_constraints": {
-            "focus_symbols": { "type": "csv", "min_items": 1, "max_items": 8 },
+            "focus_symbols": {
+              "type": "csv",
+              "min_items": 1,
+              "max_items": 8
+            },
             "blast_symbols_a": {
               "type": "csv",
               "min_items": 2,
@@ -364,9 +431,14 @@
       ]
     },
     "analyse": {
-      "aliases": ["analysis"],
+      "aliases": [
+        "analysis"
+      ],
       "command": ".claude/commands/analyse.md",
-      "codex_skills": ["analyse", "analysis"],
+      "codex_skills": [
+        "analyse",
+        "analysis"
+      ],
       "plans": [
         {
           "path": "plans/analyse.json",
@@ -408,15 +480,24 @@
     },
     "aplus": {
       "command": ".claude/commands/aplus.md",
-      "codex_skills": ["aplus"],
+      "codex_skills": [
+        "aplus"
+      ],
       "plans": [
         {
           "path": "plans/aplus-screen.json",
-          "required_variables": ["date", "refdate"]
+          "required_variables": [
+            "date",
+            "refdate"
+          ]
         },
         {
           "path": "plans/aplus-verify.json",
-          "required_variables": ["date", "refdate", "symbols"],
+          "required_variables": [
+            "date",
+            "refdate",
+            "symbols"
+          ],
           "variable_constraints": {
             "symbols": {
               "type": "csv",
@@ -428,7 +509,11 @@
         },
         {
           "path": "plans/aplus-correlation.json",
-          "required_variables": ["date", "refdate", "symbols"],
+          "required_variables": [
+            "date",
+            "refdate",
+            "symbols"
+          ],
           "variable_constraints": {
             "symbols": {
               "type": "csv",
@@ -442,16 +527,27 @@
     },
     "signals-desk": {
       "command": ".claude/commands/signals-desk.md",
-      "codex_skills": ["signals-desk"],
+      "codex_skills": [
+        "signals-desk"
+      ],
       "plans": [
         {
           "path": "plans/signals-desk.json",
-          "required_variables": ["date", "refdate"],
-          "static_symbol_calls": ["bars_benchmarks"]
+          "required_variables": [
+            "date",
+            "refdate"
+          ],
+          "static_symbol_calls": [
+            "bars_benchmarks"
+          ]
         },
         {
           "path": "plans/signals-desk-verify.json",
-          "required_variables": ["date", "refdate", "symbols"],
+          "required_variables": [
+            "date",
+            "refdate",
+            "symbols"
+          ],
           "variable_constraints": {
             "symbols": {
               "type": "csv",
@@ -465,16 +561,27 @@
     },
     "signals-desk-fire-and-forget": {
       "command": ".claude/commands/signals-desk-fire-and-forget.md",
-      "codex_skills": ["signals-desk-fire-and-forget"],
+      "codex_skills": [
+        "signals-desk-fire-and-forget"
+      ],
       "plans": [
         {
           "path": "plans/signals-desk.json",
-          "required_variables": ["date", "refdate"],
-          "static_symbol_calls": ["bars_benchmarks"]
+          "required_variables": [
+            "date",
+            "refdate"
+          ],
+          "static_symbol_calls": [
+            "bars_benchmarks"
+          ]
         },
         {
           "path": "plans/signals-desk-verify.json",
-          "required_variables": ["date", "refdate", "symbols"],
+          "required_variables": [
+            "date",
+            "refdate",
+            "symbols"
+          ],
           "variable_constraints": {
             "symbols": {
               "type": "csv",
@@ -488,11 +595,17 @@
     },
     "desk": {
       "command": ".claude/commands/desk.md",
-      "codex_skills": ["desk"],
+      "codex_skills": [
+        "desk"
+      ],
       "plans": [
         {
           "path": "plans/socle.json",
-          "required_variables": ["date", "refdate", "crypto_completed_refdate"],
+          "required_variables": [
+            "date",
+            "refdate",
+            "crypto_completed_refdate"
+          ],
           "static_symbol_calls": [
             "bars_indices",
             "bars_sectors",
@@ -502,46 +615,80 @@
         },
         {
           "path": "plans/socle-overview.json",
-          "required_variables": ["date", "refdate"]
+          "required_variables": [
+            "date",
+            "refdate"
+          ]
         }
       ]
     },
     "sector-rotation": {
-      "aliases": ["rotation"],
+      "aliases": [
+        "rotation"
+      ],
       "command": ".claude/commands/sector-rotation.md",
-      "codex_skills": ["sector-rotation"],
+      "codex_skills": [
+        "sector-rotation"
+      ],
       "plans": [
         {
           "path": "plans/rotation.json",
-          "required_variables": ["date", "refdate"],
-          "static_symbol_calls": ["bars_sectors", "bars_bench", "correlations"]
+          "required_variables": [
+            "date",
+            "refdate"
+          ],
+          "static_symbol_calls": [
+            "bars_sectors",
+            "bars_bench",
+            "correlations"
+          ]
         }
       ]
     },
     "macro-event-playbook": {
-      "aliases": ["macro"],
+      "aliases": [
+        "macro"
+      ],
       "command": ".claude/commands/macro-event-playbook.md",
-      "codex_skills": ["macro-event-playbook"],
+      "codex_skills": [
+        "macro-event-playbook"
+      ],
       "plans": [
         {
           "path": "plans/macro.json",
-          "required_variables": ["date", "refdate"],
-          "static_symbol_calls": ["bars_macro"]
+          "required_variables": [
+            "date",
+            "refdate"
+          ],
+          "static_symbol_calls": [
+            "bars_macro"
+          ]
         }
       ]
     },
     "squeeze-radar": {
-      "aliases": ["squeeze"],
+      "aliases": [
+        "squeeze"
+      ],
       "command": ".claude/commands/squeeze-radar.md",
-      "codex_skills": ["squeeze-radar"],
+      "codex_skills": [
+        "squeeze-radar"
+      ],
       "plans": [
         {
           "path": "plans/squeeze-universe.json",
-          "required_variables": ["date", "refdate"]
+          "required_variables": [
+            "date",
+            "refdate"
+          ]
         },
         {
           "path": "plans/squeeze.json",
-          "required_variables": ["date", "refdate", "symbols"],
+          "required_variables": [
+            "date",
+            "refdate",
+            "symbols"
+          ],
           "variable_constraints": {
             "symbols": {
               "type": "csv",
@@ -555,27 +702,68 @@
     },
     "scanner": {
       "command": ".claude/commands/scanner.md",
-      "codex_skills": ["scanner"],
+      "codex_skills": [
+        "scanner"
+      ],
       "plans": [
         {
           "path": "plans/scanner-wave1.json",
-          "required_variables": ["date", "refdate"],
+          "required_variables": [
+            "date",
+            "refdate"
+          ],
           "allow_current_screener_cut": true
         },
         {
           "path": "plans/scanner-etf-fallback.json",
-          "required_variables": ["date", "refdate"],
+          "required_variables": [
+            "date",
+            "refdate"
+          ],
           "allow_current_screener_cut": true
         },
         {
           "path": "plans/scanner-final-evidence.json",
-          "required_variables": ["date", "refdate", "stockcsv", "sec1", "sec2", "sec3", "sec4"],
+          "required_variables": [
+            "date",
+            "refdate",
+            "stockcsv",
+            "sec1",
+            "sec2",
+            "sec3",
+            "sec4"
+          ],
           "variable_constraints": {
-            "stockcsv": { "type": "csv", "min_items": 6, "max_items": 8, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" },
-            "sec1": { "type": "csv", "min_items": 2, "max_items": 2, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" },
-            "sec2": { "type": "csv", "min_items": 2, "max_items": 2, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" },
-            "sec3": { "type": "csv", "min_items": 2, "max_items": 2, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" },
-            "sec4": { "type": "csv", "min_items": 1, "max_items": 2, "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$" }
+            "stockcsv": {
+              "type": "csv",
+              "min_items": 6,
+              "max_items": 8,
+              "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$"
+            },
+            "sec1": {
+              "type": "csv",
+              "min_items": 2,
+              "max_items": 2,
+              "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$"
+            },
+            "sec2": {
+              "type": "csv",
+              "min_items": 2,
+              "max_items": 2,
+              "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$"
+            },
+            "sec3": {
+              "type": "csv",
+              "min_items": 2,
+              "max_items": 2,
+              "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$"
+            },
+            "sec4": {
+              "type": "csv",
+              "min_items": 1,
+              "max_items": 2,
+              "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$"
+            }
           }
         },
         {
@@ -624,22 +812,41 @@
         },
         {
           "path": "plans/scanner-dtx.json",
-          "required_variables": ["date", "refdate", "asof", "request_id"],
-          "allowed_date_literals": ["2021-01-01"]
+          "required_variables": [
+            "date",
+            "refdate",
+            "asof",
+            "request_id"
+          ],
+          "allowed_date_literals": [
+            "2021-01-01"
+          ]
         },
         {
           "path": "plans/scanner-dtx-decide-only.json",
-          "required_variables": ["date", "refdate", "asof", "request_id"]
+          "required_variables": [
+            "date",
+            "refdate",
+            "asof",
+            "request_id"
+          ]
         }
       ]
     },
     "retro": {
       "command": ".claude/commands/retro.md",
-      "codex_skills": ["retro"],
+      "codex_skills": [
+        "retro"
+      ],
       "plans": [
         {
           "path": "plans/retro.json",
-          "required_variables": ["scandate", "startdate", "refdate", "symbols"],
+          "required_variables": [
+            "scandate",
+            "startdate",
+            "refdate",
+            "symbols"
+          ],
           "variable_constraints": {
             "symbols": {
               "type": "csv",
@@ -648,7 +855,9 @@
               "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$"
             }
           },
-          "static_symbol_calls": ["bench"]
+          "static_symbol_calls": [
+            "bench"
+          ]
         }
       ]
     }

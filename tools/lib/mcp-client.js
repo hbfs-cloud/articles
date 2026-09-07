@@ -268,14 +268,22 @@ async function awaitJob(server, jobId, {
   intervalMs = 6000,
   maxMs = 300_000,
   maxPages = 100,
+  // Le défaut serveur (70 000 octets) fait ÉCHOUER une page dont le contenu le
+  // dépasse : `Jobs` renvoie alors une erreur « paginated response too large »
+  // au lieu d'une page, et la boucle voit un statut absent. On demande donc le
+  // plafond serveur (262 144) sur TOUTES les pages — la même valeur partout,
+  // sinon le découpage `_chunk_index` diffère d'une page à l'autre.
+  pageMaxsize = 262_144,
   call = callToolWithRetry,
 } = {}) {
+  const paged = server === 'marketdata' && pollTool === 'Jobs';
+  const pollArgs = () => (paged ? { [idArg]: jobId, maxsize: pageMaxsize } : { [idArg]: jobId });
   const deadline = Date.now() + maxMs;
   for (;;) {
-    const r = await call(server, pollTool, { [idArg]: jobId });
+    const r = await call(server, pollTool, pollArgs());
     const status = r && (r.status || (r.data && r.data.status));
     if (status === 'completed' || status === 'done') {
-      if (server !== 'marketdata' || pollTool !== 'Jobs') return r;
+      if (!paged) return r;
       const firstData = r && r.data;
       let pagination = (r && r.pagination) || (firstData && firstData.pagination);
       if (!pagination || pagination.has_next !== true) return r;
@@ -290,7 +298,7 @@ async function awaitJob(server, jobId, {
         const key = `${nextPage}|${pagination.pagination_token || ''}`;
         if (seen.has(key)) throw new McpCallError(`Job ${jobId}: boucle de pagination détectée (${key})`, { server, tool: pollTool });
         seen.add(key);
-        const pageArgs = { [idArg]: jobId, page: nextPage };
+        const pageArgs = { [idArg]: jobId, page: nextPage, maxsize: pageMaxsize };
         if (pagination.pagination_token) pageArgs.pagination_token = pagination.pagination_token;
         const page = await call(server, pollTool, pageArgs);
         const pageStatus = page && (page.status || (page.data && page.data.status));

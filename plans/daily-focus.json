@@ -48,15 +48,15 @@
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
-            "types": "quote,technicals,support_resistance,trading_signals",
+            "types": "technicals,support_resistance,trading_signals",
             "symbols": "$focus_symbols",
-            "end_date": "$refdate",
             "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
             "required": true
-          }
+          },
+          "temporal_note": "current-only facet on marketdata build 06e115d7+: the server refuses end_date because it cannot reconstruct a point-in-time snapshot, and fails the call rather than serving live data as if it were dated. The read is therefore CURRENT (capture instant), not as-of $refdate; the article must date it as such. Point-in-time bounding stays on the bar facets, which support it. The 'quote' facet was removed: on build 06e115d7 it returns completed_without_data cells for identified symbols (server-side cell-attribution defect), and a live quote must never govern a published percentage move — certified bars from focus_bars do that."
         },
         {
           "as": "focus_fundamentals",
@@ -65,13 +65,13 @@
           "args": {
             "types": "financials,stats,earnings_quarterly,analyst_actions",
             "symbols": "$focus_symbols",
-            "end_date": "$refdate",
             "force_async": true
           },
           "freshness": {
             "max_age_h": 168,
             "required": true
-          }
+          },
+          "temporal_note": "current-only facet on marketdata build 06e115d7+: the server refuses end_date because it cannot reconstruct a point-in-time snapshot, and fails the call rather than serving live data as if it were dated. The read is therefore CURRENT (capture instant), not as-of $refdate; the article must date it as such. Point-in-time bounding stays on the bar facets, which support it."
         },
         {
           "as": "focus_events",
@@ -80,30 +80,30 @@
           "args": {
             "types": "news,sec_filings,flags",
             "symbols": "$focus_symbols",
-            "end_date": "$refdate",
             "days": 180,
             "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
             "required": true
-          }
+          },
+          "temporal_note": "current-only facet on marketdata build 06e115d7+: the server refuses end_date because it cannot reconstruct a point-in-time snapshot, and fails the call rather than serving live data as if it were dated. The read is therefore CURRENT (capture instant), not as-of $refdate; the article must date it as such. Point-in-time bounding stays on the bar facets, which support it."
         },
         {
           "as": "focus_flows",
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
-            "types": "insider_transactions,unusual_options,dark_pool,max_pain,short_interest",
+            "types": "insider_transactions,dark_pool,max_pain,short_interest",
             "symbols": "$focus_symbols",
-            "end_date": "$refdate",
             "days": 90,
             "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
             "required": true
-          }
+          },
+          "temporal_note": "current-only facet on marketdata build 06e115d7+: the server refuses end_date because it cannot reconstruct a point-in-time snapshot, and fails the call rather than serving live data as if it were dated. The read is therefore CURRENT (capture instant), not as-of $refdate; the article must date it as such. Point-in-time bounding stays on the bar facets, which support it. 'unusual_options' moved to a detached wave: marketdata reports a symbol with NO unusual flow as a completed_without_data cell rather than an empty success, so a legitimate absence failed the governing call. Unusual flow colours a name, it never governs a level, a move or a publication decision."
         },
         {
           "as": "focus_correlation",
@@ -125,6 +125,28 @@
             "asset_calendar": "us_equity_exchange_sessions",
             "expected_completed_end": "$refdate"
           }
+        }
+      ]
+    },
+    {
+      "name": "focus-flow-colour",
+      "detached": true,
+      "calls": [
+        {
+          "as": "focus_unusual_options",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "unusual_options",
+            "symbols": "$focus_symbols",
+            "days": 90,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false
+          },
+          "note": "context only: cannot govern a number, a level, a candidate or the publication decision"
         }
       ]
     }
