@@ -1,0 +1,63 @@
+{
+  "schema_version": "eur-external-evidence.v1",
+  "workflow": "eur-opportunities",
+  "artifact": "daily/20260907-eur-halal/index.html",
+  "reference_close": "2026-09-07",
+  "authorization": {
+    "source_instruction": "trouve des sources alternatives a notre mcp et continue svp",
+    "recurring_instruction": "ce travail sera a faire regulierement, generer un article pour les bonnes affaires euro, donc fait des skills, scripts, etc... reutilisable",
+    "scope": "EUR opportunities only; no change to other MCP workflow contracts"
+  },
+  "note": "Replay plan created before this offline run. Original HTTPS captures retain their actual earlier timestamps and journals. Imports are reviewed local archives, not new network requests or MCP certification.",
+  "waves": [
+    {
+      "name": "external-replay",
+      "calls": [
+        {
+          "as": "study",
+          "server": "local-external-evidence",
+          "tool": "eur-opportunities.study",
+          "args": {
+            "file": "daily/20260907-eur-halal/_external/study.json"
+          },
+          "freshness": {
+            "required": true
+          }
+        },
+        {
+          "as": "universe-resolved",
+          "server": "local-external-evidence",
+          "tool": "reviewed-archive-import",
+          "args": {
+            "file": "daily/20260907-eur-halal/_external/universe-resolved.json"
+          },
+          "freshness": {
+            "required": true
+          }
+        },
+        {
+          "as": "facts",
+          "server": "local-external-evidence",
+          "tool": "reviewed-archive-import",
+          "args": {
+            "file": "daily/20260907-eur-halal/_external/facts.json"
+          },
+          "freshness": {
+            "required": true
+          }
+        },
+        {
+          "as": "event-reactions",
+          "server": "local-external-evidence",
+          "tool": "reviewed-archive-import",
+          "args": {
+            "file": "daily/20260907-eur-halal/_external/event-reactions.json"
+          },
+          "freshness": {
+            "required": true
+          }
+        }
+      ]
+    }
+  ]
+}
