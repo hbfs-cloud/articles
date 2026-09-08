@@ -8,6 +8,12 @@
  * Usage: node tools/gen-api.js
  */
 
+// Offline documentary publication must exit before loading normal generators.
+if (process.argv.includes('--publication-only')) {
+  try { require('./lib/scanner-publication-review').runCli('api'); }
+  catch (error) { console.error(error.message); process.exit(1); }
+  process.exit(0);
+}
 const fs = require('fs');
 const path = require('path');
 const ms = require('./lib/mode-status');
@@ -117,6 +123,8 @@ function getStatusFor(modeId) {
 }
 
 function write(filename, content) {
+  // Final current-output guard: covers signals, entry permissions and aggregate counts too.
+  content = require('./lib/scanner-publication-review').applyCurrentApiGate(ROOT, filename, content, scanDir);
   const outPath = path.join(OUT, filename);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify(content, null, 2));
@@ -614,7 +622,8 @@ function writeMode(mode, prefix) {
   // Modes that do not accept new entries (paused, stopped, pausing, liquidated, draft) emit empty orders.
   const ordersAllowed = status.acceptsNewEntries;
   const isEngineMode = _modeCfgFull.assetClass === 'dtx';
-  const modeOrders = (!ordersAllowed || (!isEngineMode && ordersStale)) ? [] : rawOrdersFor(mode, modeId).map(o => o.source === 'engine' ? ({
+  const modeOrders = (!ordersAllowed || (!isEngineMode && ordersStale)
+    || !require('./lib/scanner-publication-review').entryGate(ROOT, scanDir, _modeCfgFull.assetClass)) ? [] : rawOrdersFor(mode, modeId).map(o => o.source === 'engine' ? ({
     ...o, allocPct,
   }) : ({
     ticker: o.ticker, action: o.action || 'BUY', score: o.score, strategy: o.strategy,

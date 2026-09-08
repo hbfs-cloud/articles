@@ -30,3 +30,16 @@ When invoked as `$scanner` or when the user asks to run `/scanner`:
 
 For compatibility, this skill is intentionally a thin pointer. The source of truth remains the Claude
 runbook and scanner-pipeline skill.
+
+## Documentary publication after an incomplete scan
+
+An explicit user request to publish may publish a **review_only surveillance article** while
+trade certification is incomplete. This is a separate product, never a waiver or PASS of the
+ordinary scanner gates. Follow `tools/lib/SCANNER_PUBLICATION_REVIEW.md`: validated public
+evidence, no new order/levels/probability, three independent editorial/contrarian/technical
+reviews, exact renderer validation, and publication-only status/API guards. Preserve the
+original signal files, positions, performance dates and excluded DTX components.
+Run `tools/validate-scanner-review.js ... --publication` in addition to article QA.
+Do not call tracking, reconciliation, normal publish.js or notifications for this mode.
+The 20260908 source adapter and editorial template are date-pinned: a later edition requires
+new event classification and editorial review, not a date substitution.

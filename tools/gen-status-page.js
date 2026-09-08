@@ -5,6 +5,12 @@
  * For each mode: equity+stats → signals → positions → method → trades (collapsed)
  */
 'use strict';
+// Offline documentary publication must exit before loading normal generators.
+if (process.argv.includes('--publication-only')) {
+  try { require('./lib/scanner-publication-review').runCli('status'); }
+  catch (error) { console.error(error.message); process.exit(1); }
+  process.exit(0);
+}
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
@@ -1522,7 +1528,8 @@ async function main() {
       ? ` <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Statut ${cfg.status || 'live'} depuis ${_promo.iso}">live depuis ${_promo.lbl}</span>`
       : '';
 
-    return `<div id="p-${id}" class="mode-panel" data-mode-status="${cfg.status || 'live'}" data-psize="${cfg.portfolioSize || 1}" data-asset-class="${cfg.assetClass || 'equity'}"${isCasablanca ? ' data-market="casablanca" data-nolive="1"' : ''} style="${active ? '' : 'display:none'}">
+    const reviewFrozen = !require('./lib/scanner-publication-review').entryGate(ROOT, scanDir, cfg.assetClass);
+    return `<div id="p-${id}" class="mode-panel" data-mode-status="${cfg.status || 'live'}" data-psize="${cfg.portfolioSize || 1}" data-asset-class="${cfg.assetClass || 'equity'}"${reviewFrozen ? ' data-publication-review="1"' : ''}${isCasablanca ? ' data-market="casablanca" data-nolive="1"' : ''} style="${active ? '' : 'display:none'}">
 ${renderStatusBanner(cfg)}
 <h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> ${cfg.label} Dashboard${staleBadge}${promoBadge}</h2>
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
@@ -1716,7 +1723,8 @@ ${(() => {
         const openTickers = new Set(pos.filter(p => !p._terminal).map(p => p.ticker));
         const sigFiltered = sig.filter(s => !openTickers.has(s.ticker));
         const slotsAvailable = Math.max(0, cfg.portfolioSize - liveCount);
-        const executionWindowOpen = !MARKET_CLOSED_DAY && scanDir === TODAY_KEY;
+        const executionWindowOpen = !MARKET_CLOSED_DAY && scanDir === TODAY_KEY
+          && require('./lib/scanner-publication-review').entryGate(ROOT, scanDir, cfg.assetClass);
 
         // Signals remain visible outside the active session, but must never be
         // represented as executable orders on weekends or from a future scan.
@@ -4139,7 +4147,7 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   }
 
-  fs.writeFileSync(OUT, html);
+  fs.writeFileSync(OUT, require('./lib/scanner-review-live').guardStatusHtml(html));
   console.log(`\u2705 ${OUT} generated (${(html.length / 1024).toFixed(0)}KB, ${'scripts embarqu\u00e9s v\u00e9rifi\u00e9s'})`);
   for (const [id, m] of Object.entries(modes)) {
     console.log(`   ${m.cfg.label}: ${m.m.ret > 0 ? '+' : ''}${m.m.ret}%, DD ${m.m.dd}%, WR ${m.m.wr}%, PF ${m.m.pf == null ? '—' : m.m.pf + 'x'}, ${m.m.trades} trades${m.m.dtxEngine ? ' [dtx]' : ''}`);
@@ -4239,7 +4247,8 @@ document.addEventListener('DOMContentLoaded',function(){
     const openTickers = new Set(activePos.map(p => p.ticker));
     const sigFiltered = sig.filter(s => !openTickers.has(s.ticker));
     const slotsAvailable = Math.max(0, cfg.portfolioSize - activePos.length);
-    const executionWindowOpen = !MARKET_CLOSED_DAY && scanDir === TODAY_KEY;
+    const executionWindowOpen = !MARKET_CLOSED_DAY && scanDir === TODAY_KEY
+          && require('./lib/scanner-publication-review').entryGate(ROOT, scanDir, cfg.assetClass);
     const buyOrders = executionWindowOpen
       ? sigFiltered.slice(0, slotsAvailable).map(s => ({ ...s, action: 'BUY' }))
       : [];

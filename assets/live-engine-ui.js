@@ -8,6 +8,10 @@
   if (!window.LiveEngine) return;
 
   var LE = window.LiveEngine;
+  function reviewFrozen(modeId) {
+    var panel = document.getElementById('p-' + modeId);
+    return !!(panel && panel.dataset.publicationReview === '1');
+  }
   var _v = Date.now();
   var lastToastTs = {};
   var toastContainer = null;
@@ -1110,6 +1114,7 @@
           var modesCfgFlat = {};
 
           Object.keys(cfg.modes).forEach(function (modeId) {
+            if (reviewFrozen(modeId)) return;
             modesCfgFlat[modeId] = cfg.modes[modeId];
             var modeData = snap.modes ? snap.modes[modeId] : null;
             allPositions[modeId] = (modeData && modeData.positions && modeData.positions.length > 0)
@@ -1120,7 +1125,7 @@
           window._leModesCfg = modesCfgFlat;
           window._lePositions = allPositions;
 
-          Object.keys(cfg.modes).forEach(function (modeId) {
+          Object.keys(modesCfgFlat).forEach(function (modeId) {
             createCard(modeId);
             buildPositionRows(modeId, allPositions[modeId]);
             reorganizePanel(modeId);
@@ -1129,6 +1134,8 @@
           // Resize ECharts after grid layout change + flag empty charts for watermark
           setTimeout(function () {
             document.querySelectorAll('.perf-chart').forEach(function (chartEl) {
+              var reviewPanel = chartEl.closest('.mode-panel');
+              if (reviewPanel && reviewPanel.dataset.publicationReview === '1') return;
               var chart = window.echarts && window.echarts.getInstanceByDom(chartEl);
               if (chart) chart.resize();
               // Detect zero-trade equity charts: look at the adjacent perf-stats for "0 Closed Trades"
@@ -1148,6 +1155,7 @@
 
           LE.on('connection', updateConn);
           LE.on('eval', function (data) {
+            if (reviewFrozen(data.modeId)) return;
             updateRow(data.modeId, data.result);
             updateScenarioBar(data.modeId);
             showToast(data.result);
@@ -1219,6 +1227,7 @@
       // On la lit dans le DOM (les panneaux sont générés depuis la config) plutôt que de la
       // coder en dur — une liste figée privait `best` du message d'indisponibilité.
       Array.prototype.forEach.call(document.querySelectorAll('.mode-panel'), function (panel) {
+        if (panel.dataset.publicationReview === '1') return;
         var msg = el('div', 'lp-empty', '<i class="fas fa-exclamation-triangle"></i>Live data unavailable');
         msg.style.margin = '.5rem 0';
         var first = panel.querySelector('.section-card, .perf-hero');

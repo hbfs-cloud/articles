@@ -17,6 +17,14 @@ const fs   = require('fs');
 const path = require('path');
 const { pickOgImage } = require('./lib/og-image.js');
 
+if (process.argv.includes('--review')) {
+  const args = process.argv.slice(2).filter(a => a !== '--review');
+  if (args.length !== 1) throw Error('Usage: render-scanner.js scanner/YYYYMMDD/ --review');
+  require('./render-scanner-review').render(path.resolve(__dirname, '..'), path.join(args[0], 'review.json'));
+  process.exit(0);
+}
+
+
 // ─── CLI ────────────────────────────────────────────────────────────────────
 
 const argv = process.argv.slice(2);
@@ -31,6 +39,7 @@ const isJsonArg = arg.endsWith('.json');
 const dataPath  = isJsonArg ? arg : path.join(arg.replace(/\/$/, ''), 'data.json');
 const outDir    = isJsonArg ? path.dirname(arg) : arg.replace(/\/$/, '');
 const outPath   = path.join(outDir, 'index.html');
+if (fs.existsSync(path.join(outDir, 'review.json'))) throw Error('Documentary review present: use --review; restoring a trading edition requires explicit review.');
 
 if (!fs.existsSync(dataPath)) {
   console.error('Error: data.json not found at', dataPath);

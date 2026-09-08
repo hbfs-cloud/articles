@@ -5751,9 +5751,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "AMZN suspendu · 7 autres plans conditionnels",
-    "desc": "AMZN suspendu · 7 autres plans conditionnels. La validation du panier reste bloquée. Les niveaux de la sélection initiale sont conservés pour la traçabilité ; les autres plans restent soumis à leurs contrôles et ne constituent pas un panier certifié.",
-    "tags": "us,etf,technique,momentum,commodity",
+    "title": "CEG, COP, XOM : surveillance, aucun nouvel ordre validé",
+    "desc": "Aucun nouvel ordre validé. Cette revue remplace la présentation courante de la sélection initiale. Elle ne réactive ni AMZN, ni les sept autres anciens plans conditionnels.",
+    "tags": "us,energy,utilities,etf,technique",
     "grade": "",
     "href": "/scanner/20260908/",
     "date": "8 septembre 2026"
