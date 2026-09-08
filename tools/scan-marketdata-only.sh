@@ -1,22 +1,20 @@
 #!/usr/bin/env bash
-# scan-parallel — lance EN PARALLÈLE les quatre chaînes indépendantes de /scanner.
-#
-#   bash tools/scan-parallel.sh <DATE> <REFDATE> <ASOF>
-#
-# Le pipeline historique enchaînait tout en série alors que seul un lien est réel :
-# le vivier doit précéder l'enrichissement. Le reste ne dépend de rien.
-#
-#   A  vivier ──► enrichissement          (chemin critique, ~200 s)
-#   B  dtx : décisions + backtests        (indépendant du scan du jour)
-#   C  suivi des cours ──► sweep          (ne traite que des trades passés)
-#
-# Le temps mural devient max(A, B, C, D) au lieu de A+B+C+D.
+# Scanner with an explicit, dated user waiver excluding only DTX.
+# Usage: bash tools/scan-marketdata-only.sh <DATE> <REFDATE> <ASOF>
+# A: collection/enrichment; C: historic tracking/sweep; D: rotations/beta.
+# Every non-DTX source and quality gate remains mandatory.
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || { echo "ÉCHEC: racine du dépôt introuvable" >&2; exit 1; }
 
-DATE="${1:?usage: scan-parallel.sh <DATE> <REFDATE> <ASOF>}"; REF="${2:?}"; ASOF="${3:?}"
+DATE="${1:?usage: scan-marketdata-only.sh <DATE> <REFDATE> <ASOF>}"; REF="${2:?}"; ASOF="${3:?}"
 DIR="scanner/$DATE"; mkdir -p "$DIR"
+node - "$DATE" "$REF" <<'JS'
+const date=process.argv[2],ref=process.argv[3];
+const scope=require('./tools/lib/scanner-scope').loadScannerScope(process.cwd(),[`--scope=scanner/${date}/_scope.json`]);
+if(!scope.active||scope.audit.date!==date||scope.audit.refdate!==ref)throw Error('Missing exact run-bound DTX exclusion authorization');
+JS
+if [ "$?" -ne 0 ]; then exit 2; fi
 T0=$(date +%s)
 log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
 TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/dailytickers-scanner-${DATE}.XXXXXX")
@@ -29,23 +27,17 @@ D_LOG="$TMP_ROOT/D.log"; D_STATUS="$TMP_ROOT/D.status"
 # shellcheck source=tools/lib/mcp-auth.sh
 source tools/lib/mcp-auth.sh
 mcp_require_token marketdata || exit $?
-mcp_require_token systematic || exit $?
 
-# Reuse one stable DTX request id across technical retries and process restarts.
-REQ_FILE="$DIR/_dtx/request-id.txt"
-mkdir -p "$DIR/_dtx"
-if [ ! -s "$REQ_FILE" ]; then
-  node -e 'require("fs").writeFileSync(process.argv[1], require("crypto").randomUUID()+"\n", {mode:0o600})' "$REQ_FILE"
-fi
-DTX_REQUEST_ID="$(tr -d '\r\n' < "$REQ_FILE")"
 
 # ── A : vivier puis enrichissement (seule vraie dépendance) ──────────────────
 (
-  node tools/collect.js --plan plans/scanner-wave1.json --out "$DIR/_data" --quiet \
+  node tools/collect.js --plan plans/scanner-wave1-no-dtx.json --out "$DIR/_data" --quiet \
     --var date="$DATE" --var refdate="$REF" > "$A_LOG" 2>&1 || { { echo "A1 ÉCHEC — vivier"; grep -E "✗|ÉCHEC" "$A_LOG"; } > "$A_STATUS"; exit 1; }
   node tools/check-freshness.js "$DIR/_data/harness.json" >> "$A_LOG" 2>&1 \
-    && node tools/validate-workflows.js --run-plan plans/scanner-wave1.json "$DIR/_data" >> "$A_LOG" 2>&1 \
+    && node tools/validate-workflows.js --run-plan plans/scanner-wave1-no-dtx.json "$DIR/_data" >> "$A_LOG" 2>&1 \
     || { echo "A1 ÉCHEC — contrat/fraîcheur" > "$A_STATUS"; exit 1; }
+  node tools/regime-reconcile.js --dir "$DIR" --refdate "$REF" "--scope=$DIR/_scope.json" --json >> "$A_LOG" 2>&1 \
+    || { echo "A1 ÉCHEC — autorité du régime" > "$A_STATUS"; exit 1; }
   node tools/extract-universe.js --in "$DIR/_data" --out "$DIR/_data/vars.json" --limit 150 \
     >> "$A_LOG" 2>&1 || { echo "A2 ÉCHEC — vivier vide" > "$A_STATUS"; exit 1; }
   # Le code retour de l'enrichissement DOIT être testé. Sans ce garde, un
@@ -61,38 +53,6 @@ DTX_REQUEST_ID="$(tr -d '\r\n' < "$REQ_FILE")"
   echo "A OK" > "$A_STATUS"
 ) & PA=$!
 
-# ── B : dtx (aucune dépendance au scan du jour) ──────────────────────────────
-(
-  # The systematic TTL token for scanner runs is minted with scope=refresh. This
-  # call is a no-op when DTX already covers REF; otherwise it starts the bounded,
-  # idempotent server refresh and polls health before any decision/replay call.
-  node tools/dtx-refresh-if-stale.js --expected-close "$REF" > "$B_LOG" 2>&1 \
-    || { echo "B rc=1 (DTX refresh/health blocked)" > "$B_STATUS"; exit 1; }
-  # Le cache décide AVANT la collecte quels backtests méritent d'être rejoués.
-  # Un DtxReplay coûte 300-348 s et n'avance que d'une séance par jour.
-  # --plan : le cache doit connaître le portefeuille ATTENDU, pas seulement ceux
-  # qui ont déjà un fichier dans le staging. Sans ça, un portefeuille jamais rejoué est
-  # invisible, le compte tombe à « 0 à rejouer », on bascule en decide-only et il n'est
-  # JAMAIS collecté (hvep et stockbox_pit, jusqu'au 2026-08-11).
-  DTX_PLAN=plans/scanner-dtx.json
-  node tools/dtx-replay-cache.js --dir "$DIR/_dtx" --asof "$ASOF" --refdate "$REF" --max-age-days 0 --plan "$DTX_PLAN" > "$B_CACHE_LOG" 2>&1 || true
-  PLAN="$DTX_PLAN"
-  if [ -f "$DIR/_dtx/_replay_needed.json" ] && [ "$(node -e "try{console.log((require('./$DIR/_dtx/_replay_needed.json').replay||[]).length)}catch(e){console.log(99)}")" = "0" ]; then
-    PLAN=plans/scanner-dtx-decide-only.json   # tous les backtests sont à jour
-  fi
-  node tools/collect.js --plan "$PLAN" --out "$DIR/_dtx" --quiet \
-    --var date="$DATE" --var refdate="$REF" --var asof="$ASOF" --var request_id="$DTX_REQUEST_ID" > "$B_LOG" 2>&1
-  B_COLLECT_RC=$?
-  if [ "$B_COLLECT_RC" -eq 0 ]; then
-    node tools/check-freshness.js "$DIR/_dtx/harness.json" >> "$B_LOG" 2>&1 \
-      && node tools/validate-workflows.js --run-plan "$PLAN" "$DIR/_dtx" >> "$B_LOG" 2>&1
-    B_COLLECT_RC=$?
-  fi
-  node tools/dtx-replay-cache.js --dir "$DIR/_dtx" --asof "$ASOF" --refdate "$REF" --max-age-days 0 --plan "$DTX_PLAN" >> "$B_CACHE_LOG" 2>&1 || true
-  echo "B rc=$B_COLLECT_RC (plan $PLAN)" > "$B_STATUS"
-  exit "$B_COLLECT_RC"
-) & PB=$!
-
 # ── C : suivi + sweep (ne portent que sur des trades déjà scellés) ───────────
 (
   C_RC=0
@@ -105,7 +65,7 @@ DTX_REQUEST_ID="$(tr -d '\r\n' < "$REQ_FILE")"
   # Le sweep COMPLET (grille 24,7M combos, 120+ scans) dépasse le heap node par défaut (~4 Go)
   # depuis mi-août 2026 : OOM silencieux en pleine pré-sim (constaté le 16/08, exit masqué par un
   # pipe). 8 Go suffisent ; sans effet notable sur --quick.
-  NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=8192}" node tools/sweep.js $SWEEP_MODE >> "$C_LOG" 2>&1
+  NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=8192}" node tools/sweep.js $SWEEP_MODE "--scope=$DIR/_scope.json" >> "$C_LOG" 2>&1
   SWEEP_RC=$?
   [ "$SWEEP_RC" -ne 0 ] && C_RC="$SWEEP_RC"
   # Cycle de vie des analyses (statuts sur clôtures + endpoint du garde-fou JS des pages).
@@ -127,16 +87,18 @@ DTX_REQUEST_ID="$(tr -d '\r\n' < "$REQ_FILE")"
   exit "$D_RC"
 ) & PD=$!
 
-log "4 chaînes lancées (A vivier+enrichissement · B dtx · C suivi+sweep · D rotations/beta)"
+log "3 chaînes lancées (A vivier+enrichissement · C suivi+sweep · D rotations/beta); DTX exclu sur instruction utilisateur"
 # Le verdict vient du CODE RETOUR de la chaîne, pas d'un grep dans un fichier de
 # statut. Un fichier absent (sous-shell tué, /tmp purgé, deux scans concurrents
 # qui se marchent dessus) faisait échouer le grep, donc passer le test : le
 # chemin critique était déclaré sain par défaut. Un rc, lui, existe toujours.
 wait $PA; ARC=$?; log "A terminée (rc=$ARC) — $(cat "$A_STATUS" 2>/dev/null)"
-wait $PB; BRC=$?; log "B terminée (rc=$BRC) — $(cat "$B_STATUS" 2>/dev/null)"
+BRC=0 # DTX excluded by exact user authorization; not a passed DTX check
 wait $PC; CRC=$?; log "C terminée (rc=$CRC) — $(cat "$C_STATUS" 2>/dev/null)"
 wait $PD; DRC=$?; log "D terminée (rc=$DRC) — $(cat "$D_STATUS" 2>/dev/null)"
 if [ "$ARC" -ne 0 ] || grep -q "ÉCHEC" "$A_STATUS" 2>/dev/null; then
+  trap - EXIT HUP INT TERM
+  echo "Journaux conservés dans $TMP_ROOT" >&2
   echo "Chemin critique en échec (rc=$ARC) — on ne poursuit PAS sur des données partielles." >&2
   exit 1
 fi

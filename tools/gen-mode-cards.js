@@ -22,6 +22,8 @@ const fs   = require('fs');
 const path = require('path');
 
 const ROOT      = path.join(__dirname, '..');
+const SCOPE = require('./lib/scanner-scope').loadScannerScope(ROOT);
+if (SCOPE.active) console.log('[scope] ' + JSON.stringify(SCOPE.audit));
 const STATUS_DIR = path.join(ROOT, 'scanner/status');
 
 const DRY_RUN = process.argv.includes('--dry-run');
@@ -557,7 +559,7 @@ async function main() {
   // No more hardcoded 7-mode list: highvol/hybrid/forex etc. appear automatically
   // once they flip out of draft, and any newly-added live mode is picked up too.
   const MODES = Object.entries(modesObj)
-    .filter(([, cfg]) => !CARD_SKIP_STATUSES.has(cfg && cfg.status))
+    .filter(([id, cfg]) => !CARD_SKIP_STATUSES.has(cfg && cfg.status) && !SCOPE.excludesMode(id, cfg))
     .map(([id]) => id);
   console.log(`Modes (non-draft, from config): ${MODES.join(', ')}`);
 
@@ -565,6 +567,9 @@ async function main() {
   const manifestPath = path.join(STATUS_DIR, 'manifest.json');
   let manifest = {};
   try { manifest = JSON.parse(fs.readFileSync(manifestPath)); } catch (_) {}
+  if (SCOPE.active) {
+    for (const id of Object.keys(manifest)) if (SCOPE.excludesMode(id.replace(/^mode-/, ''))) delete manifest[id];
+  }
 
   const ts = Date.now();
 

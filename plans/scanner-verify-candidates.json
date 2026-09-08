@@ -1,0 +1,209 @@
+{
+  "artifact": "scanner/$date/signals.json",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "covers_close": "$refdate",
+            "expected_intraday_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verify-1",
+      "calls": [
+        {
+          "as": "fund_b1",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "profile,financials,stats,calendar",
+            "symbols": "$verify1",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          },
+          "job_max_ms": 600000
+        }
+      ]
+    },
+    {
+      "name": "history-1",
+      "calls": [
+        {
+          "as": "history_b1",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$verify1",
+            "limit": 300,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
+          },
+          "job_max_ms": 600000
+        }
+      ]
+    },
+    {
+      "name": "verify-2",
+      "calls": [
+        {
+          "as": "fund_b2",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "profile,financials,stats,calendar",
+            "symbols": "$verify2",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          },
+          "job_max_ms": 600000
+        }
+      ]
+    },
+    {
+      "name": "history-2",
+      "calls": [
+        {
+          "as": "history_b2",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$verify2",
+            "limit": 300,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
+          },
+          "job_max_ms": 600000
+        }
+      ]
+    },
+    {
+      "name": "verify-3",
+      "calls": [
+        {
+          "as": "fund_b3",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "profile,financials,stats,calendar",
+            "symbols": "$verify3",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          },
+          "job_max_ms": 600000
+        }
+      ]
+    },
+    {
+      "name": "history-3",
+      "calls": [
+        {
+          "as": "history_b3",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$verify3",
+            "limit": 300,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
+          },
+          "job_max_ms": 600000
+        }
+      ]
+    },
+    {
+      "name": "verify-4",
+      "calls": [
+        {
+          "as": "fund_b4",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "profile,financials,stats,calendar",
+            "symbols": "$verify4",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          },
+          "job_max_ms": 600000
+        }
+      ]
+    },
+    {
+      "name": "history-4",
+      "calls": [
+        {
+          "as": "history_b4",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$verify4",
+            "limit": 300,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
+          },
+          "job_max_ms": 600000
+        }
+      ]
+    }
+  ]
+}

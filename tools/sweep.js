@@ -23,13 +23,43 @@ const https = require('https');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
+const SCOPE = require('./lib/scanner-scope').loadScannerScope(ROOT);
+if (SCOPE.active) console.log('[scope] ' + JSON.stringify(SCOPE.audit));
 const SCANNER_DIR = path.join(ROOT, 'scanner');
 const QUICK = process.argv.includes('--quick');
 const VERBOSE = process.argv.includes('--verbose');
 const FULL_SWEEP = process.argv.includes('--full-sweep');
 const FROZEN_ONLY = !FULL_SWEEP;
 const PRIMARY_ONLY = process.argv.includes('--primary-only');
-const { verify: verifyTradeChain, seal: sealTradeChain } = require('./lib/trade-integrity');
+const tradeIntegrity = require('./lib/trade-integrity');
+// Shared files retain the excluded mode's exact JSON values and chain. No DTX reseal.
+function verifyTradeChain() {
+  if (!SCOPE.active) return tradeIntegrity.verify();
+  const chainPath = path.join(ROOT, 'data/trade-chain.json');
+  if (!fs.existsSync(chainPath)) return { ok: true };
+  const chains = JSON.parse(fs.readFileSync(chainPath, 'utf8'));
+  const trades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json'), 'utf8'));
+  const results = {};
+  for (const [id, chain] of Object.entries(chains)) {
+    if (SCOPE.excludesMode(id)) continue;
+    results[id] = tradeIntegrity.verifyChain(id, (trades[id] || []).filter(t => t.status !== 'pending' && t.status !== 'sim2_artifact'), chain);
+  }
+  return { ok: Object.values(results).every(r => r.valid), results };
+}
+function sealTradeChain() {
+  if (!SCOPE.active) return tradeIntegrity.seal();
+  const chainPath = path.join(ROOT, 'data/trade-chain.json');
+  const previous = fs.existsSync(chainPath) ? JSON.parse(fs.readFileSync(chainPath, 'utf8')) : {};
+  const trades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json'), 'utf8'));
+  const chain = {};
+  for (const [id, value] of Object.entries(previous)) if (SCOPE.excludesMode(id)) chain[id] = value;
+  for (const [id, list] of Object.entries(trades)) {
+    if (SCOPE.excludesMode(id) || !Array.isArray(list)) continue;
+    chain[id] = tradeIntegrity.buildChain(list.filter(t => t.status !== 'pending' && t.status !== 'sim2_artifact'));
+  }
+  fs.writeFileSync(chainPath, JSON.stringify(chain, null, 2) + '\n');
+  return chain;
+}
 // Shared DATED price cache (point-in-time, source unique de vérité). Fixes the flat-cache
 // pollution bug (data/.price-cache/TICKER.json without a date getting overwritten across days).
 // sweep only touches the PRICE cache via this helper — trade simulation is untouched.
@@ -369,7 +399,7 @@ function parseScan(dir) {
   // proposé à PLUSIEURS modes scriptés (ex. LASR pour us_highvol ET book_honest ET hvep) →
   // dedup par (ticker, universe) et PAS par ticker global, sinon seul le premier mode garde
   // son candidat. L'isolation inter-modes est déjà garantie par universeFilter === modeId.
-  const dtxPool = (() => {
+  const dtxPool = SCOPE.active ? [] : (() => {
     const seen = new Set();
     return sortCandidates(buildSetups(loaded.dtxPool, 'dtx_pool')
       .filter(s => { const k = `${s.ticker}|${s.universe || ''}`; if (seen.has(k)) return false; seen.add(k); return true; }));
@@ -2222,6 +2252,7 @@ async function backfillExcursions() {
   // Only fetch tickers for trades actually missing the fields (idempotent + cheap re-runs).
   const neededTickers = new Set();
   for (const modeId of Object.keys(trades)) {
+    if (SCOPE.excludesMode(modeId, modesConfig[modeId])) continue;
     for (const t of (trades[modeId] || [])) {
       if (t.status === 'pending' || t.status === 'sim2_artifact') continue;
       if (t.mae_pct !== undefined) continue;
@@ -2234,6 +2265,7 @@ async function backfillExcursions() {
 
   let totalClosed = 0, backfilled = 0, skippedNoHistory = 0, alreadyDone = 0;
   for (const modeId of Object.keys(trades)) {
+    if (SCOPE.excludesMode(modeId, modesConfig[modeId])) continue;
     const cfg = modesConfig[modeId] || {};
     const DF = dayFnsFor(cfg.calendar);
     for (const t of (trades[modeId] || [])) {
@@ -2430,7 +2462,7 @@ async function main() {
     const frozenModes = JSON.parse(fs.readFileSync(FROZEN_CFG_PATH)).modes || {};
     // Skip stopped modes
     for (const id of Object.keys(frozenModes)) {
-      if (frozenModes[id].status === 'stopped') delete frozenModes[id];
+      if (frozenModes[id].status === 'stopped' || SCOPE.excludesMode(id, frozenModes[id])) delete frozenModes[id];
     }
     let frozenExtra = 0;
     for (const [modeId, cfg] of Object.entries(frozenModes)) {
@@ -2957,6 +2989,7 @@ async function main() {
     ];
     for (const id of orderedModeIds) {
       const cfg = modesConfig.modes[id];
+      if (SCOPE.excludesMode(id, cfg)) continue;
       const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleGraceDays || 0}_${cfg.staleRaiseRate ?? 0.001}_${cfg.staleAccel || 'log'}_${cfg.partialTPGain || 0}_${cfg.disableTP2 || false}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}_${cfg.trailMultR ?? 1.5}_${cfg.trailGraceDays ?? 0}`;
       // Config-version-aware immutability: if the current config carries an effectiveFrom (a
       // forward-only change), scans BEFORE it were traded under the prior config — re-sim them
@@ -3427,6 +3460,14 @@ async function main() {
           : '16:00';
       }
     }
+  }
+  // Retain excluded history exactly; never backfill, simulate, or erase it this run.
+  if (SCOPE.active) {
+    for (const [id, trades] of Object.entries(existingTrades)) {
+      if (SCOPE.excludesMode(id)) frozenTrades[id] = trades;
+    }
+    SCOPE.preserveDtxResults(output, existingResults);
+    output.scanner_scope = SCOPE.audit;
   }
   fs.writeFileSync(BACKTEST_TRADES_PATH, JSON.stringify(frozenTrades, null, 2));
   console.log("✅ Trade lists saved to data/backtest-trades.json (frozen modes)");

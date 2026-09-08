@@ -18,7 +18,12 @@ async function main() {
   });
   assert.deepStrictEqual(result.data.items.map(x => x.id), [1, 2, 3]);
   assert.strictEqual(result.pagination.exhausted, true);
-  assert.deepStrictEqual(calls, [{ job_id: 'job-1' }, { job_id: 'job-1' }, { job_id: 'job-1', page: 2 }, { job_id: 'job-1', page: 3 }]);
+  assert.deepStrictEqual(calls, [
+    { job_id: 'job-1', maxsize: 262144 },
+    { job_id: 'job-1', maxsize: 262144 },
+    { job_id: 'job-1', page: 2, maxsize: 262144 },
+    { job_id: 'job-1', page: 3, maxsize: 262144 },
+  ]);
 
   process.env.MCP_TOKEN_MARKETDATA = 'secret-value-never-print';
   const redacted = redactSecrets('Bearer abc.def.ghi secret-value-never-print eyJabcdefgh.abcdefgh.abcdefgh');

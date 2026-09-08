@@ -31,7 +31,7 @@ const seen = new Map(); // symbole -> meilleur score vu
 const isUsUniverseSource = f => /^autoscreen(?:_etf)?\.json$/.test(f) || /^(?:auto)?screen_.+_us\.json$/.test(f);
 const isForeignListing = sym => /\.(AS|BR|DE|F|L|LS|MC|MI|PA|ST|SW|TO|V)$/.test(sym);
 for (const sourceDir of inDirs) {
-  for (const f of fs.readdirSync(sourceDir).filter(isUsUniverseSource)) {
+  for (const f of fs.readdirSync(sourceDir).filter(isUsUniverseSource).sort()) {
     let d; try { d = JSON.parse(fs.readFileSync(path.join(sourceDir, f), 'utf8')); } catch { continue; }
     const items = (d.data && d.data.items) || d.items || [];
     for (const it of items) for (const c of (it.candidates || [])) {
@@ -48,7 +48,7 @@ for (const sourceDir of inDirs) {
     }
   }
 }
-const ranked = [...seen.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([s]) => s);
+const ranked = [...seen.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, limit).map(([s]) => s);
 if (!ranked.length) { console.error('[extract-universe] vivier VIDE — screeners en échec ou aucun candidat. Ne pas poursuivre en silence.'); process.exit(1); }
 
 // Découpage en lots pour les appels multi-symboles (QueryData accepte un CSV).

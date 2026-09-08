@@ -444,6 +444,7 @@ if (gate && signals.length) {
   else {
     const ov = JSON.parse(fs.readFileSync(ovPath, 'utf8'));
     for (const pol of (ov.policies || [])) {
+      if (pol.status !== 'active') continue;
       if (pol.effective_from && manifest.scan_date < pol.effective_from) continue;
       if (pol.expires_after && manifest.scan_date > pol.expires_after) continue;
       const cap = Math.floor(signals.length * Number(pol.max_share_pct) / 100);

@@ -28,6 +28,8 @@
  *   MCP_SERVER_<NOM>                override d'URL par serveur
  */
 
+const { reassembleJobResponse } = require('./mcp-chunks');
+
 const SERVERS = {
   marketdata: process.env.MCP_SERVER_MARKETDATA || 'https://mcp.dailytickers.com/mcp',
   systematic: process.env.MCP_SERVER_SYSTEMATIC || 'https://systematic.dailytickers.com/mcp',
@@ -185,6 +187,11 @@ async function callTool(server, tool, args = {}, opts = {}) {
   if (payload.error) {
     throw new McpCallError(`Erreur MCP : ${redactSecrets(payload.error.message || JSON.stringify(payload.error))}`, { server, tool });
   }
+  if (payload.result && payload.result.isError === true) {
+    const detail = unwrap(payload.result);
+    const reason = redactSecrets(typeof detail === 'string' ? detail : JSON.stringify(detail)).slice(0, 1000);
+    throw new McpCallError(`Erreur outil MCP : ${reason || 'erreur sans détail'}`, { server, tool, body: reason });
+  }
   return unwrap(payload.result);
 }
 
@@ -286,7 +293,7 @@ async function awaitJob(server, jobId, {
       if (!paged) return r;
       const firstData = r && r.data;
       let pagination = (r && r.pagination) || (firstData && firstData.pagination);
-      if (!pagination || pagination.has_next !== true) return r;
+      if (!pagination || pagination.has_next !== true) return reassembleJobResponse(r);
       if (!Array.isArray(firstData.items)) throw new McpCallError(`Job ${jobId}: pagination annoncée sans data.items[]`, { server, tool: pollTool });
 
       const merged = { ...r, data: { ...firstData, items: [...firstData.items] } };
@@ -315,7 +322,7 @@ async function awaitJob(server, jobId, {
       const exhausted = { ...pagination, has_next: false, pages_fetched: fetched, exhausted: true };
       merged.pagination = exhausted;
       if (firstData.pagination) merged.data.pagination = exhausted;
-      return merged;
+      return reassembleJobResponse(merged);
     }
     if (status === 'failed' || status === 'error') {
       // Remonter la RAISON du serveur : « job en échec » sans motif oblige à

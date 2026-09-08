@@ -12,6 +12,10 @@
  * Sorties :
  *   <out>/<as>.json          une par appel réussi
  *   <out>/_collect.json      journal complet (durées, échecs, appels rejoués)
+ * Offline replay: add --replay-dir <original> with the same plan/variables and a NEW --out.
+ * Original timestamps and hashes are retained; semantic validations are rerun without auth/network/cache.
+ * Optional --replay-journal-sha256 pins the original journal to a separately recorded digest.
+ *
  *   <out>/harness.json       manifeste de fraîcheur prêt pour check-freshness.js
  *
  * ── Ce que ce script REND AU LLM ────────────────────────────────────────────
@@ -54,6 +58,7 @@ const { validateDtxDecision, validateDtxReplay } = require('./lib/dtx-content-ga
 const workflowContract = require('./lib/workflow-contract');
 const marketdataBarsContract = require('./lib/marketdata-bars-contract');
 const { latestCompletedUSClose } = require('./lib/market-calendar');
+const { loadReplay } = require('./lib/collect-replay');
 
 const CURRENT_ONLY_TOOLS = new Set(['GetMarketContext', 'GetEarningsCalendarFiltered', 'GetInsiderActivity', 'OptionsAnalytics']);
 
@@ -70,11 +75,11 @@ const CURRENT_ONLY_TOOLS = new Set(['GetMarketContext', 'GetEarningsCalendarFilt
  * en rendant `null`, donc en désarmant la garde, ce qui est le pire mode de panne possible.
  * `null` signifie « aucune date lisible », jamais « à jour ».
  */
-function maxObservedDate(value) {
+function maxObservedDate(value, observedBy = new Date().toISOString()) {
   let s;
   try { s = JSON.stringify(value); } catch (_) { return null; }
   if (!s) return null;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = observedBy.slice(0, 10);
   let best = null;
   const re = /\d{4}-\d{2}-\d{2}/g;
   let m;
@@ -238,6 +243,10 @@ const has = (n) => process.argv.includes(n);
 
 const planPath = arg('--plan');
 const outDir = arg('--out');
+const replayDir = arg('--replay-dir');
+if (replayDir && ['--plan-only', '--token-stdin', '--token-bundle-stdin', '--socle'].some(has)) {
+  console.error('[collect] Replay is offline and cannot combine with plan-only, token stdin or socle flags.'); process.exit(2);
+}
 // --socle <dir>[:<dir>…] : réutiliser les sources déjà collectées par le socle de
 // la séance au lieu de les rappeler. Optionnel et strictement additif — sans ce
 // drapeau, le comportement historique est inchangé.
@@ -414,13 +423,13 @@ function cacheKey(c) {
     .update(`${c.server}|${c.tool}|${JSON.stringify(c.args || {})}`).digest('hex').slice(0, 24);
 }
 function cacheRead(c) {
-  if (!c.cache_minutes) return null;
+  if (has('--no-cache') || !c.cache_minutes) return null;
   try {
     const f = path.join(CACHE_DIR, cacheKey(c) + '.json');
-    const st = fs.statSync(f);
-    const ageMin = (Date.now() - st.mtimeMs) / 60000;
-    if (ageMin > c.cache_minutes) return null;
-    return { value: JSON.parse(fs.readFileSync(f, 'utf8')), ageMin };
+    const value = JSON.parse(fs.readFileSync(f, 'utf8'));
+    const ageMin = require('./lib/collect-cache-age').cacheAgeMinutes(value);
+    if (ageMin == null || ageMin > c.cache_minutes) return null;
+    return { value, ageMin };
   } catch { return null; }
 }
 function cacheWrite(c, value) {
@@ -446,7 +455,7 @@ function cacheWrite(c, value) {
  *     socle. Si le consommateur est plus exigeant, il rappelle.
  * Tout écart → appel normal, jamais de dégradation silencieuse.
  */
-const SOCLES = socleDirs.map(dir => {
+const SOCLES = (replayDir ? [] : socleDirs).map(dir => {
   try { return { dir, index: JSON.parse(fs.readFileSync(path.join(dir, '_socle.json'), 'utf8')) }; }
   catch { console.error(`[collect] socle ${dir} : index absent ou illisible — les appels concernés seront rejoués.`); return null; }
 }).filter(Boolean);
@@ -489,7 +498,9 @@ function socleRead(c) {
       process.exit(2);
     }
   }
-  const collectionTimestamp = new Date().toISOString();
+  const replay = replayDir ? loadReplay({ originalDir: replayDir, outDir, planPath, expectedJournalSha256: arg('--replay-journal-sha256') }) : null;
+  const collectionTimestamp = replay ? replay.timestamp : new Date().toISOString();
+  if (replay && cliVars.as_of_timestamp != null && cliVars.as_of_timestamp !== collectionTimestamp) throw new Error('Replay as_of_timestamp override differs from original');
   const equityReferenceClose = cliVars.equity_reference_close || cliVars.refdate || plan.reference_date || null;
   const cryptoCompletedRefdate = cliVars.crypto_completed_refdate || cliVars.crypto_refdate || null;
   const refdate = equityReferenceClose;
@@ -511,7 +522,7 @@ function socleRead(c) {
   if (cryptoCompletedRefdate && cryptoCompletedRefdate > new Date().toISOString().slice(0, 10)) throw new Error(`crypto_completed_refdate future interdite: ${cryptoCompletedRefdate}`);
   const artifact = substitute(plan.artifact || '', vars);
   const waves = (plan.waves || []).map(wave => ({ ...wave, calls: expandCalls(wave, vars) }));
-  const latestClose = latestCompletedUSClose();
+  const latestClose = latestCompletedUSClose(replay ? new Date(collectionTimestamp) : new Date());
   const currentOnly = waves.flatMap(wave => wave.calls || []).filter(call => CURRENT_ONLY_TOOLS.has(call.tool));
   if (refdate && refdate !== latestClose && currentOnly.length) {
     throw new Error(`refdate historique ${refdate}: outils current-only interdits (${[...new Set(currentOnly.map(call => call.tool))].join(', ')}); derniere cloture complete ${latestClose}`);
@@ -538,7 +549,7 @@ function socleRead(c) {
     process.exit(0);
   }
 
-  if (tokenStdin) {
+  if (!replay && tokenStdin) {
     if (neededServers.length !== 1) {
       console.error('[collect] --token-stdin est réservé à un plan mono-serveur; utiliser --token-bundle-stdin.');
       process.exit(3);
@@ -548,13 +559,13 @@ function socleRead(c) {
     process.env.MCP_ACCESS_TOKEN = t;
     process.env.MCP_ACCESS_TOKEN_SERVER = neededServers[0];
   }
-  if (tokenBundleStdin) {
+  if (!replay && tokenBundleStdin) {
     const raw = readTokenFromStdin();
     if (!raw) { console.error('[collect] --token-bundle-stdin demandé mais stdin est vide.'); process.exit(3); }
     installTokenBundle(raw);
   }
 
-  const missing = neededServers.filter(s => !canCallDirectly(s));
+  const missing = replay ? [] : neededServers.filter(s => !canCallDirectly(s));
   if (missing.length) {
     console.error(
       `[collect] Aucun jeton utilisable pour : ${missing.join(", ")} — collecte directe impossible.\n` +
@@ -564,8 +575,7 @@ function socleRead(c) {
     process.exit(3);
   }
 
-  fs.mkdirSync(outDir, { recursive: true });
-  const startedAt = collectionTimestamp;
+  const startedAt = replay ? replay.journal.started_at : collectionTimestamp;
   // HACHER EXACTEMENT CE QU'ON ENREGISTRE.
   // Jusqu'au 2026-09-06, l'empreinte portait ICI sur `{artifact, refdate, waves}` tandis que le
   // journal enregistrait `{artifact, equity_reference_close, crypto_completed_refdate,
@@ -585,6 +595,8 @@ function socleRead(c) {
     waves,
   };
   const inputSha256 = workflowContract.sha256(workflowContract.stableStringify(resolvedInput));
+  if (replay) replay.assertInput(resolvedInput, path.relative(workflowContract.ROOT, path.resolve(planPath)).replace(/\\/g, '/'), configured ? configured.workflow : null);
+  fs.mkdirSync(outDir, { recursive: true });
   const journal = {
     contract_version: '1.0',
     workflow: configured ? configured.workflow : null,
@@ -597,6 +609,7 @@ function socleRead(c) {
     equity_reference_close: equityReferenceClose,
     crypto_completed_refdate: cryptoCompletedRefdate,
     started_at: startedAt,
+    ...(replay ? { replay: replay.provenance } : {}),
     waves: [],
   };
   const sources = [];
@@ -621,7 +634,7 @@ function socleRead(c) {
     // Servir d'abord ce qui est en cache frais, n'appeler que le reste.
     const cached = new Map();
     const toCall = [];
-    for (const c of calls) {
+    for (const c of (replay ? [] : calls)) {
       const soc = socleRead(c);
       if (soc) { cached.set(c.as, { ...soc, fromSocle: true }); log(`   ♻︎ ${c.as} (socle, ${soc.ageMin.toFixed(0)} min)`); continue; }
       const hit = cacheRead(c);
@@ -630,7 +643,8 @@ function socleRead(c) {
     }
 
     let results;
-    try {
+    if (replay) results = calls.map(c => replay.result(c));
+    else try {
       // Le délai doit ANNULER les requêtes, pas seulement cesser de les regarder :
       // une promesse en vol garde la boucle d'événements vivante et le process
       // attend quand même. On propage donc le budget en timeoutMs par appel, ce
@@ -670,7 +684,7 @@ function socleRead(c) {
     // soumission. Journaliser seulement la soumission donnait « 0,5 s » sur un
     // screener qui tourne 5 minutes — diagnostic inutilisable.
     await Promise.all(results.map(async (r, i) => {
-      if (!r.ok) return;
+      if (!r.ok || replay) return;
       const tw = Date.now();
       try { r.value = await resolveAsync(calls[i].server, r.value, calls[i].job_max_ms); }
       catch (e) { r.ok = false; r.error = `job async : ${e.message}`; }
@@ -734,7 +748,7 @@ function socleRead(c) {
         log(`   ✗ ${r.as} — ${semanticError}`);
         failures++; continue;
       }
-      if (!r.fromCache) cacheWrite(c, r.value);
+      if (!replay && !r.fromCache) cacheWrite(c, r.value);
       if (c.freshness) {
         const sourceReferenceClose = c.freshness.expected_completed_end || c.freshness.reference_close || equityReferenceClose || null;
         const barsProof = c.server === 'marketdata' && c.tool === 'QueryData'
@@ -748,7 +762,7 @@ function socleRead(c) {
         sources.push({
           name: r.as,
           sha256: workflowContract.sha256(sourceBody),
-          as_of: r.asOf || new Date().toISOString(),
+          as_of: r.asOf || (replay ? replay.journal.started_at : new Date().toISOString()),
           // SÉANCE RÉELLEMENT DÉCRITE par la charge utile — distincte de l'heure de collecte.
           //
           // POURQUOI (incident du 2026-08-12) : la collecte est partie 9 minutes après la clôture
@@ -758,7 +772,7 @@ function socleRead(c) {
           // se présentant comme celui du jour, et rien dans le harnais ne l'aurait dit : l'âge de
           // la collecte et la date du contenu sont deux grandeurs différentes, et seule la
           // première était mesurée.
-          data_through: c.freshness.expects_close ? barsProof?.completedDataThrough || null : maxObservedDate(r.value),
+          data_through: c.freshness.expects_close ? barsProof?.completedDataThrough || null : maxObservedDate(r.value, replay ? collectionTimestamp : new Date().toISOString()),
           max_age_h: c.freshness.max_age_h,
           required: c.freshness.required !== false,
           // Opt-in : cette source DOIT atteindre la clôture de référence. Réservé aux séries de
@@ -787,7 +801,8 @@ function socleRead(c) {
     }
   }
 
-  journal.finished_at = new Date().toISOString();
+  if (replay) replay.assertUnchanged();
+  journal.finished_at = replay ? replay.journal.finished_at : new Date().toISOString();
   journal.failures = failures;
   journal.executed_calls = journal.waves.reduce((n, wave) => n + wave.calls.length, 0);
   journal.skipped_calls = totalCalls - journal.executed_calls;

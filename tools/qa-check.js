@@ -22,6 +22,7 @@ const { isUSTradingDay, newYorkDateISO, usTradingDaysBetween, previousUSTradingD
 const { latestPublishedScan } = require('./lib/published-scan');
 
 const ROOT = path.resolve(__dirname, '..');
+const SCOPE = require('./lib/scanner-scope').loadScannerScope(ROOT);
 const STRICT = process.argv.includes('--strict');
 const DISCORD = process.argv.includes('--discord');
 
@@ -43,6 +44,15 @@ const DISCORD = process.argv.includes('--discord');
   }
 }
 
+const waived = [];
+function dtxCheck(label, fn) {
+  if (SCOPE.active) waived.push(`WAIVED ${label} — ${SCOPE.audit.path} sha256:${SCOPE.audit.sha256}`);
+  else check(label, fn);
+}
+function dtxWarn(label, fn) {
+  if (SCOPE.active) waived.push(`WAIVED ${label} — ${SCOPE.audit.path} sha256:${SCOPE.audit.sha256}`);
+  else warn(label, fn);
+}
 const errors = [];
 const warnings = [];
 const ok = [];
@@ -78,7 +88,15 @@ function warn(label, fn) {
 function readJSON(relPath) {
   const full = path.join(ROOT, relPath);
   if (!fs.existsSync(full)) throw new Error(`File not found: ${relPath}`);
-  return JSON.parse(fs.readFileSync(full, 'utf8'));
+  const value = JSON.parse(fs.readFileSync(full, 'utf8'));
+  if (!SCOPE.active) return value;
+  // A scoped QA sees only in-scope modes; files and archived DTX values remain untouched.
+  if (['data/modes-config.json', 'data/risk-snapshots.json'].includes(relPath)) {
+    return { ...value, modes: SCOPE.filterModes(value.modes) };
+  }
+  if (relPath === 'data/backtest-trades.json') return SCOPE.filterModes(value);
+  if (relPath === 'data/backtest-results.json') return Object.fromEntries(Object.entries(value).filter(([key]) => !SCOPE.isDtxResultKey(key)));
+  return value;
 }
 
 function readFile(relPath) {
@@ -105,6 +123,18 @@ function isFresh(isoDate, maxAgeHours = 48) {
 }
 
 // ─── Checks ─────────────────────────────────────────────────────────────────
+
+if (SCOPE.active) check('scope: DTX absent des nouveaux signaux et du rendu courant', () => {
+  const signals = readJSON(`scanner/${SCOPE.audit.date}/signals.json`);
+  if ((signals.dtx_pool || []).length || (signals.signals || []).some(s => s.source === 'dtx_pool' || s.assetClass === 'dtx')) {
+    return 'le scan sous dérogation contient encore des signaux DTX';
+  }
+  const html = readFile('scanner/status/index.html');
+  const config = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/modes-config.json'), 'utf8'));
+  for (const id of Object.keys(config.modes || {})) {
+    if (SCOPE.excludesMode(id) && html.includes(`id="p-${id}"`)) return `panneau DTX ${id} encore présent`;
+  }
+});
 
 // 1. scanner/status/index.html — signaux présents + taille
 check('scanner/status: fichier existe et > 20KB', () => {
@@ -352,7 +382,7 @@ warn('scanner: modes live scriptés — marqueur présent mais 0 signal (jour ca
 // qui a eu lieu aujourd'hui (generatedAt = aujourd'hui). Pas de marqueur / marqueur ancien → skip (pas de
 // faux ❌ hors run). C'est la porte de complétude : une nuit où le MCP dtx était injoignable et où l'agent
 // n'a pas pu régénérer un mode est ATTRAPÉE ici, jamais passée en silence.
-check('dtx: staging scriptés complets (portefeuilles MCP frais — pas de skip silencieux)', () => {
+dtxCheck('dtx: staging scriptés complets (portefeuilles MCP frais — pas de skip silencieux)', () => {
   const markerPath = path.join(ROOT, 'data', 'dtx', '_staging-completeness.json');
   const today = new Date().toISOString().slice(0, 10);
   let marker = null;
@@ -408,7 +438,7 @@ check('dtx: staging scriptés complets (portefeuilles MCP frais — pas de skip 
 // dtx-mcp-ingest marque alors le staging `metricsSuspect:true` + `_sanityWarning[…]` (bornes dans
 // config/dtx/_sanity-baselines.json). On ESCALADE ici en ❌ tout staging FRAIS (généré aujourd'hui) marqué
 // suspect — un DD aberrant ne repart JAMAIS en publication en silence. Staging ancien → skip (pas de faux ❌).
-check('dtx: métriques replay saines (AUCUN staging corrompu — frais OU stale — DD/trades/sharpe dans les bornes)', () => {
+dtxCheck('dtx: métriques replay saines (AUCUN staging corrompu — frais OU stale — DD/trades/sharpe dans les bornes)', () => {
   const dir = path.join(ROOT, 'data', 'dtx');
   let files;
   try { files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_')); }
@@ -439,7 +469,7 @@ check('dtx: métriques replay saines (AUCUN staging corrompu — frais OU stale 
     + `Re-appeler DtxReplay (from=2021-01-01) séquentiellement, vérifier trades vs config/dtx/_sanity-baselines.json, ré-ingérer, alerter 'alerts'.`;
 });
 
-check('dtx: fenêtres Contract V2 appliquées aux pools et ordres publics', () => {
+dtxCheck('dtx: fenêtres Contract V2 appliquées aux pools et ordres publics', () => {
   const now = Date.now();
   const issues = [];
   const scanDirs = fs.readdirSync(path.join(ROOT, 'scanner')).filter(d => /^\d{8}$/.test(d)).sort();
@@ -474,7 +504,7 @@ check('dtx: fenêtres Contract V2 appliquées aux pools et ordres publics', () =
   if (issues.length) return issues.join(' | ');
 });
 
-check('dtx: courbe, headline et provenance décrivent le même replay', () => {
+dtxCheck('dtx: courbe, headline et provenance décrivent le même replay', () => {
   const issues = [];
   for (const id of ['best']) {
     let stg, api;
@@ -518,6 +548,7 @@ check('frozen: avance append-only à jour (aucun trade clôturé au-delà de la 
   const TOL_DAYS = 3; // tolérance : le frozen peut légitimement traîner de qq séances (sweep différé)
   const stale = [];
   for (const [mode, trades] of Object.entries(T)) {
+    if (SCOPE.excludesMode(mode)) continue;
     const f = R['frozen_' + mode];
     if (!f || !Array.isArray(f.equityCurve) || !f.equityCurve.length) continue;
     const closed = (trades || []).filter(x => x && x.exitDate && !x._premature);
@@ -924,7 +955,7 @@ check('scanner (dernier scan): engine_meta.risk_gating non vide (corrélation + 
 // Deux semaines de modes dtx live sans historique accumulé ni drift : ne doit JAMAIS se
 // reproduire. La série data/dtx-live-track.json doit exister et porter, pour chacun des 6
 // modes, un dernier point de moins de 72h (tolérance week-end).
-warn('dtx-live-track.json: série live des modes scriptés fraîche (<72h)', () => {
+dtxWarn('dtx-live-track.json: série live des modes scriptés fraîche (<72h)', () => {
   const DTX = ['best'];
   let track;
   try { track = readJSON('data/dtx-live-track.json'); } catch { return 'fichier absent — lancer dtx-live-track.js --backfill puis gen-status-page'; }
@@ -1373,6 +1404,7 @@ warn('backtest-trades: pending exitPrice matches sweep cache', () => {
   const drifts = [];
 
   for (const mode of Object.keys(bt)) {
+    if (SCOPE.excludesMode(mode)) continue;
     for (const t of bt[mode]) {
       if (t.status !== 'pending' && t.status !== 'open') continue;
       if (t.exitPrice == null) continue;
@@ -1405,6 +1437,7 @@ check('backtest-trades: no breakeven artifacts (pnlPct=0 with exitPrice!=actualE
   const bt = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json'), 'utf8'));
   let artifacts = 0;
   for (const mode of Object.keys(bt)) {
+    if (SCOPE.excludesMode(mode)) continue;
     artifacts += bt[mode].filter(t =>
       t.status === 'breakeven' &&
       t.pnlPct === 0 &&
@@ -1438,7 +1471,9 @@ check('signals.json (last 5 scans): regime field present in ≥50%', () => {
 // 2026-08-12 avec les modes eux-mêmes (cf en-tête de parity-check.js). N'échoue JAMAIS ce check
 // (--warn-only) — un vrai DRIFT devient un warning, jamais une erreur bloquante. Skip silencieux
 // si ../systematic-tss est absent (routines cloud/CI n'ont pas accès à ce repo).
-try {
+if (SCOPE.active) {
+  waived.push(`WAIVED parity Go↔articles (systematic-tss) — ${SCOPE.audit.path} sha256:${SCOPE.audit.sha256}`);
+} else try {
   const { execSync } = require('child_process');
   const parityOut = execSync(`node ${JSON.stringify(path.join(ROOT, 'tools/parity-check.js'))} --warn-only`, {
     cwd: ROOT,
@@ -1586,6 +1621,10 @@ console.log('║        QA Check — articles.dailytickers.com      ║');
 console.log('╚══════════════════════════════════════════════════╝');
 console.log(`  Date: ${new Date().toISOString()}`);
 console.log(`  Checks: ${total} | ✅ ${ok.length} | ⚠️  ${warnings.length} | ❌ ${errors.length}`);
+if (SCOPE.active) {
+  console.log(`  Scope: ${SCOPE.audit.date} / close ${SCOPE.audit.refdate} | ${waived.length} WAIVED (excluded from PASS/check totals)`);
+  waived.forEach(line => console.log('  ' + line));
+}
 console.log('');
 
 if (ok.length > 0 && (errors.length > 0 || warnings.length > 0)) {
@@ -1631,6 +1670,8 @@ if (DISCORD) {
     }
     msg = lines.join('\n');
   }
+
+  if (waived.length) msg += '\n' + waived.join('\n');
 
   // Write to a temp file for the caller to pick up
   const outPath = '/tmp/qa-discord-report.txt';

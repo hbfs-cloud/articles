@@ -1,0 +1,67 @@
+{
+  "artifact": "scanner/$date/signals.json",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "covers_close": "$refdate",
+            "expected_intraday_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "fundamentals-final",
+      "calls": [
+        {
+          "as": "fund_selected",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "profile,financials,stats,calendar",
+            "symbols": "$stockcsv",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          },
+          "job_max_ms": 600000
+        }
+      ]
+    },
+    {
+      "name": "quotes-single-symbol",
+      "calls": [
+        {
+          "as": "quote",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "foreach": {
+            "var": "stockcsv",
+            "max": 8
+          },
+          "args": {
+            "types": "quote",
+            "symbols": "$item"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        }
+      ]
+    }
+  ]
+}

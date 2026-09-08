@@ -53,6 +53,29 @@ performance and analysis status. D is required for the rotation/API outputs dist
 its failure cannot alter editorial selection but blocks distribution rather than leaving stale pages.
 The script validates freshness and run provenance immediately after each collection.
 
+### Large MCP responses and replay
+
+Exhaust every Jobs page before consuming a result. The MCP client reconstructs root
+`json-utf8` fragments with strict sequence/count checks; it preserves the older array-field
+chunk format. A large response is not missing data merely because its transport is fragmented.
+
+`collect.js --replay-dir <original> --out <new-directory>` revalidates archived complete
+responses offline with the exact original plan, variables, hashes and capture timestamp.
+Keep the original directory. Replay is not a new market capture and cannot refresh stale data.
+Use `--no-cache` for a requested fresh rerun; cache age comes from `captured_at`, never checkout mtime.
+
+For scanner enrichment, discover all three stock families plus ETFs before applying selection
+quotas. Collect 300 completed sessions for the full discovery universe. Run
+`derive-scanner-technicals.js --source-dir _data2` and
+`audit-scanner-universe.js build --derived` with the exact reference close. Check actual session
+continuity even when source coverage says complete. Retain valid symbols and record rejected
+histories separately; an individually usable history is not a fully validated trade.
+
+Rotation now stages locally via `gen-rotation-beta.js --out-dir scanner/<session>/_rotation`.
+Its failure receipt is a failure, never a refreshed public rotation. Legacy tracking/lifecycle
+and sweep fallback paths still need a source-policy review before execution; an explicit DTX
+waiver does not authorize Yahoo/Binance fallback, synthetic bars, or a waived C gate.
+
 ### Authentication
 
 - Marketdata token: mint with `GetReadOnlyToken` from the authenticated MCP session.

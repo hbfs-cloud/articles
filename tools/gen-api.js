@@ -14,6 +14,8 @@ const ms = require('./lib/mode-status');
 const { isPlanActive } = require('./lib/dtx-plan-window');
 
 const ROOT = path.resolve(__dirname, '..');
+const SCOPE = require('./lib/scanner-scope').loadScannerScope(ROOT);
+if (SCOPE.active) console.log('[scope] ' + JSON.stringify(SCOPE.audit));
 const OUT = path.join(ROOT, 'portfolio', 'v1');
 // Resolved trade statuses (same set the frozen stats use) — defined early because
 // reconcileStoppedMode() runs in the main loop and calls computeStreaks() before the
@@ -148,6 +150,10 @@ if (!snapshots.length) {
 }
 const latestFile = path.join(HISTORY, snapshots[snapshots.length - 1]);
 const snap = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
+if (SCOPE.active) {
+  snap.modes = SCOPE.filterModes(snap.modes);
+  snap.scanner_scope = SCOPE.audit;
+}
 const now = new Date().toISOString();
 const todayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' })
   .format(new Date()).replace(/-/g, '');
@@ -833,7 +839,7 @@ function reconcileStoppedMode(id) {
 // not yet operational). stopped modes (tkl/alpha) stay published for their track record.
 const NON_PUBLIC_API_STATUSES = new Set(['draft']);
 const MODE_IDS = Object.entries(require('../data/modes-config.json').modes)
-  .filter(([, cfg]) => !NON_PUBLIC_API_STATUSES.has(cfg.status))
+  .filter(([id, cfg]) => !NON_PUBLIC_API_STATUSES.has(cfg.status) && !SCOPE.excludesMode(id, cfg))
   .map(([id]) => id);
 let count = 0;
 
@@ -992,7 +998,7 @@ count++;
 
 // ─── Mode status aggregate (lightweight integrations) ──────────────────────
 const allModeIds = (modesConfigFull && modesConfigFull.modes ? Object.keys(modesConfigFull.modes) : MODE_IDS)
-  .filter(id => { const c = modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[id]; return !(c && NON_PUBLIC_API_STATUSES.has(c.status)); });
+  .filter(id => { const c = modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[id]; return !(c && NON_PUBLIC_API_STATUSES.has(c.status)) && !SCOPE.excludesMode(id, c); });
 const statusByMode = {};
 for (const id of allModeIds) statusByMode[id] = getStatusFor(id);
 let recentTransitions = [];

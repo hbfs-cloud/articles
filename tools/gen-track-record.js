@@ -100,13 +100,14 @@ function latestSnapshot() {
   return { file: f, date: snap.date || null, updatedAt: snap.updatedAt || null };
 }
 
-function collectModes() {
+function collectModes(scope = null) {
   const results = readJSON(path.join(ROOT, 'data/backtest-results.json'));
   if (!results) throw new Error('data/backtest-results.json illisible — registre scellé introuvable');
   const status = readJSON(path.join(ROOT, 'portfolio/v1/status.json')) || { modes: {} };
 
   const out = [];
   for (const id of PUBLIC_MODES) {
+    if (scope && scope.excludesMode(id)) continue;
     const st = (status.modes || {})[id];
     if (!st) continue;
     if (st.state !== 'live') continue;
@@ -669,7 +670,8 @@ ${fabItems}
 // ─── Entrée programmatique ───────────────────────────────────────────────────
 function generate(opts = {}) {
   const outPath = opts.out || OUT_DEFAULT;
-  const modes = collectModes();
+  const scope = opts.scope || require('./lib/scanner-scope').loadScannerScope(ROOT);
+  const modes = collectModes(scope);
   if (!modes.length) throw new Error('aucun carnet live publiable — page non écrite');
   const snap = latestSnapshot();
   const html = buildHTML(modes, snap);

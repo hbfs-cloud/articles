@@ -119,6 +119,8 @@ function addBizDays(dateStr, n) {
 }
 
 const ROOT = path.join(__dirname, '..');
+const SCOPE = require('./lib/scanner-scope').loadScannerScope(ROOT);
+if (SCOPE.active) console.log('[scope] ' + JSON.stringify(SCOPE.audit));
 const MODES_CFG = path.join(ROOT, 'data/modes-config.json');
 const TRADES = path.join(ROOT, 'data/backtest-trades.json');
 const RESULTS = path.join(ROOT, 'data/backtest-results.json');
@@ -148,6 +150,7 @@ const OUT = path.join(ROOT, 'scanner/status/index.html');
 const DTX_STAGING_MAP = { best: 'best' };
 const _dtxStagingCache = {};
 function loadDtxStaging(id) {
+  if (SCOPE.active) return null;
   const f = DTX_STAGING_MAP[id];
   if (!f) return null;
   if (f in _dtxStagingCache) return _dtxStagingCache[f];
@@ -437,6 +440,7 @@ function emitRetroHeartbeat() {
 async function main() {
   let config;
   try { config = JSON.parse(fs.readFileSync(MODES_CFG)); } catch (e) { console.error(`[gen-status-page] Cannot read modes-config: ${e.message}`); process.exit(1); }
+  config.modes = SCOPE.filterModes(config.modes);
   let allTrades = {};
   try { allTrades = JSON.parse(fs.readFileSync(TRADES)); } catch (_) { }
   let results = {};
@@ -482,6 +486,7 @@ async function main() {
       const dateKey = f.replace('.json', '');
       const dateLabel = dateKey.slice(4, 6) + '/' + dateKey.slice(6, 8);
       for (const [mId, mData] of Object.entries(snap.modes || {})) {
+        if (SCOPE.excludesMode(mId)) continue;
         if (!modeEquityHistory[mId]) modeEquityHistory[mId] = [];
         const ret = mData.stats && mData.stats.ret != null ? mData.stats.ret : null;
         if (ret != null) {
@@ -4160,9 +4165,10 @@ document.addEventListener('DOMContentLoaded',function(){
 
   // Registre du moteur charge UNE fois pour tout le snapshot (lecture seule).
   let _dxhStore = null;
-  try { _dxhStore = dxh.load(); } catch (e) { console.error('  [warn] registre moteur illisible :', e.message); }
+  try { if (!SCOPE.active) _dxhStore = dxh.load(); } catch (e) { console.error('  [warn] registre moteur illisible :', e.message); }
 
   const snapshot = { date: todayISO, updatedAt, scanDir };
+  if (SCOPE.active) snapshot.scanner_scope = SCOPE.audit;
   snapshot.modes = {};
   // NOTE: each mode is an independent alternative strategy — a user replicating
   // Dynamic is not replicating Balanced/Secured in parallel, so the same ticker
@@ -4309,7 +4315,16 @@ document.addEventListener('DOMContentLoaded',function(){
   // Attach the global (market-wide) regime probability once per snapshot.
   snapshot.regimeProbability = getGlobalRegimeProb();
 
-  fs.writeFileSync(path.join(historyDir, todayKey + '.json'), JSON.stringify(snapshot));
+  const snapshotPath = path.join(historyDir, todayKey + '.json');
+  if (SCOPE.active && fs.existsSync(snapshotPath)) {
+    const previous = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
+    // Keep excluded archive entries byte-equivalent as JSON values on a same-day rerun.
+    // The live page and gen-api filter them; this is preservation, never a fresh DTX result.
+    for (const [id, value] of Object.entries(previous.modes || {})) {
+      if (SCOPE.excludesMode(id)) snapshot.modes[id] = value;
+    }
+  }
+  fs.writeFileSync(snapshotPath, JSON.stringify(snapshot));
 
   // Registre du moteur publie comme artefact consultable par la page (Time Machine incluse).
   // On NE reecrit PAS les snapshots passes pour y injecter la decision moteur : ce serait
@@ -4347,7 +4362,7 @@ document.addEventListener('DOMContentLoaded',function(){
   // Non bloquant : un échec ici ne doit pas invalider le status page déjà écrit.
   try {
     const { generate: genTrackRecord } = require('./gen-track-record.js');
-    const tr = genTrackRecord();
+    const tr = genTrackRecord({ scope: SCOPE });
     console.log(`   Track record: ${tr.path} (${tr.modes} carnets, ${tr.sealed} scellés)`);
   } catch (e) {
     console.error(`  [warn] track record non régénéré : ${e.message}`);
@@ -4528,6 +4543,7 @@ function backfillHistory() {
   console.log(`\n✅ Backfill complete — ${histFiles.length} snapshots updated`);
 }
 
+if (SCOPE.active && process.argv.includes('--backfill')) throw new Error('A per-run DTX scope cannot authorize a historical backfill');
 if (process.argv.includes('--backfill')) {
   backfillHistory();
 } else {

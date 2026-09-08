@@ -160,7 +160,7 @@ assert(
   'GetSymbolSignals must not receive a CSV',
 );
 
-// GetMarketContext refuse as_of sur TOUS ses facets depuis le build a51481d9 :
+// Overview is current-only; the current regime facet supports a historical as_of:
 // « its data is current-only; historical requests are refused to prevent lookahead ».
 // L'ancienne règle EXIGEAIT as_of=$refdate sur overview, ce qui rendait l'appel impossible :
 // la réponse n'était plus qu'un refus de 121 octets. On vérifie donc l'inverse — un overview
@@ -194,9 +194,15 @@ fakeHistoricalRegime.waves[1].calls[0] = {
   freshness: { max_age_h: 6, required: true },
 };
 assert(
-  contract.validatePlan(fakeHistoricalRegime, spec, config.policy).some(e => e.includes('supported only for the overview')),
-  'regime must not pretend to support point-in-time as_of',
+  contract.validatePlan(fakeHistoricalRegime, { required_variables: ['date', 'refdate'] }, config.policy).length === 0,
+  'regime alone supports point-in-time as_of on the documented current surface',
 );
+
+for (const facets of ['regime,prediction_markets', 'prediction_markets', 'cot', 'seasonality']) {
+  const mixed = structuredClone(fakeHistoricalRegime);
+  mixed.waves[1].calls[0].args.facets = facets;
+  assert(contract.validatePlan(mixed, spec, config.policy).some(e => e.includes('regime facet alone')));
+}
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'workflow-contract-'));
 try {
