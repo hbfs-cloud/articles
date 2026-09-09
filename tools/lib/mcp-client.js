@@ -60,10 +60,10 @@ class McpAuthError extends Error {
   }
 }
 class McpCallError extends Error {
-  constructor(msg, { server, tool, status, body } = {}) {
+  constructor(msg, { server, tool, status, body, retryAfterMs } = {}) {
     super(redactSecrets(msg));
     this.name = 'McpCallError';
-    Object.assign(this, { server, tool, status, body: redactSecrets(body) });
+    Object.assign(this, { server, tool, status, body: redactSecrets(body), retryAfterMs });
   }
 }
 
@@ -139,6 +139,56 @@ function serverUrl(server) {
 
 let _rpcId = 0;
 
+// One process-wide lane per server: submissions, polls and pages share the same
+// request budget, including a cooldown learned by any concurrent worker.
+const requestLanes = new Map();
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+function requestLane(server) {
+  if (!requestLanes.has(server)) requestLanes.set(server, { tail: Promise.resolve(), nextAt: 0, blockedUntil: 0 });
+  return requestLanes.get(server);
+}
+async function waitForRequestSlot(server, deadline, intervalMs) {
+  const lane = requestLane(server);
+  const previous = lane.tail;
+  let release;
+  lane.tail = new Promise(resolve => { release = resolve; });
+  try {
+    let timer;
+    try {
+      await Promise.race([previous, new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new McpCallError('Budget de reprise MCP épuisé', { server })), Math.max(0, deadline - Date.now()));
+      })]);
+    } finally { clearTimeout(timer); }
+    for (;;) {
+      const now = Date.now();
+      if (now >= deadline) throw new McpCallError('Budget de reprise MCP épuisé', { server });
+      const wait = Math.max(lane.nextAt, lane.blockedUntil) - now;
+      if (wait <= 0) break;
+      await sleep(Math.min(wait, deadline - now));
+    }
+    lane.nextAt = Date.now() + intervalMs;
+  } finally { previous.then(release); }
+}
+function retryHintMs(header, text) {
+  const candidates = [];
+  if (header != null && String(header).trim() !== '') {
+    const seconds = Number(header);
+    const ms = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(header) - Date.now();
+    if (Number.isFinite(ms) && ms >= 0) candidates.push(ms);
+  }
+  try {
+    const body = JSON.parse(text || '{}');
+    const raw = body.retry_after_seconds ?? body.retryAfterSeconds ?? body.error?.retry_after_seconds ?? body.error?.data?.retry_after_seconds;
+    const seconds = raw == null ? NaN : Number(raw);
+    if (Number.isFinite(seconds) && seconds >= 0) candidates.push(seconds * 1000);
+  } catch { /* Non-JSON edge refusals can still carry Retry-After. */ }
+  if (!candidates.length) {
+    const match = String(text || '').match(/retry[_ -]?after(?:[_ -]?seconds)?[^0-9]{0,8}(\d+(?:\.\d+)?)/i);
+    if (match && Number.isFinite(Number(match[1]))) candidates.push(Number(match[1]) * 1000);
+  }
+  return candidates.length ? Math.ceil(Math.max(...candidates)) : undefined;
+}
+
 /**
  * Un appel d'outil MCP (JSON-RPC 2.0 sur HTTP).
  * Retourne le contenu déjà déballé : si l'outil renvoie du JSON on le parse.
@@ -146,11 +196,13 @@ let _rpcId = 0;
 async function callTool(server, tool, args = {}, opts = {}) {
   const token = requireToken(server);
   const url = serverUrl(server);
-  const timeout = opts.timeoutMs || DEFAULT_TIMEOUT_MS;
+  const deadline = Math.min(opts.deadlineMs || Infinity, Date.now() + (opts.timeoutMs || DEFAULT_TIMEOUT_MS));
+  await waitForRequestSlot(server, deadline, opts.requestIntervalMs ?? (server === 'marketdata' ? 1000 : 0));
+  const timeout = Math.max(1, deadline - Date.now());
 
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), timeout);
-  let res;
+  let res, text;
   try {
     res = await fetch(url, {
       method: 'POST',
@@ -167,6 +219,7 @@ async function callTool(server, tool, args = {}, opts = {}) {
         params: { name: tool, arguments: args },
       }),
     });
+    text = await res.text();
   } catch (e) {
     clearTimeout(timer);
     if (e.name === 'AbortError') throw new McpCallError(`Timeout ${timeout}ms`, { server, tool });
@@ -177,14 +230,24 @@ async function callTool(server, tool, args = {}, opts = {}) {
   if (res.status === 401 || res.status === 403) {
     throw new McpAuthError(`Jeton refusé (${res.status}) sur ${server}/${tool}. Redemander un jeton.`);
   }
-  const text = await res.text();
-  if (!res.ok) throw new McpCallError(`HTTP ${res.status}`, { server, tool, status: res.status, body: redactSecrets(text.slice(0, 400)) });
+  if (!res.ok) {
+    const retryAfterMs = retryHintMs(res.headers.get('retry-after'), text);
+    if (res.status === 429) {
+      const lane = requestLane(server);
+      lane.blockedUntil = Math.max(lane.blockedUntil, Date.now() + Math.max(1000, retryAfterMs ?? 5000));
+    }
+    throw new McpCallError(`HTTP ${res.status}`, { server, tool, status: res.status, body: text.slice(0, 1000), retryAfterMs });
+  }
 
   let payload;
   try { payload = JSON.parse(text); }
   catch { throw new McpCallError('Réponse non-JSON', { server, tool, body: text.slice(0, 400) }); }
 
   if (payload.error) {
+    if (payload.error.code === -32002 && payload.error.data?.type === 'rate_limited') {
+      throw new McpCallError('Quota de calcul MCP épuisé', { server, tool, status: 429,
+        body: JSON.stringify(payload.error), retryAfterMs: retryHintMs(null, text) });
+    }
     throw new McpCallError(`Erreur MCP : ${redactSecrets(payload.error.message || JSON.stringify(payload.error))}`, { server, tool });
   }
   if (payload.result && payload.result.isError === true) {
@@ -197,27 +260,28 @@ async function callTool(server, tool, args = {}, opts = {}) {
 
 function rateLimitDelayMs(error) {
   if (!(error instanceof McpCallError) || error.status !== 429) return null;
-  let seconds = null;
-  try {
-    const body = JSON.parse(error.body || '{}');
-    seconds = Number(body.retry_after_seconds ?? body.retryAfterSeconds ?? body.error?.retry_after_seconds);
-  } catch { /* fall through to text */ }
-  if (!Number.isFinite(seconds)) {
-    const match = String(error.body || '').match(/retry[_ -]?after(?:[_ -]?seconds)?[^0-9]{0,8}(\d+(?:\.\d+)?)/i);
-    if (match) seconds = Number(match[1]);
-  }
-  if (!Number.isFinite(seconds)) seconds = 5;
-  return Math.max(1000, Math.min(60_000, Math.ceil(seconds * 1000)));
+  const hint = error.retryAfterMs ?? retryHintMs(null, error.body);
+  // Never shorten a server deadline: an excessive delay exhausts the caller's
+  // bounded budget and remains an error for the quality gate.
+  return Math.max(1000, hint ?? 5000);
 }
 
 async function callToolWithRetry(server, tool, args = {}, opts = {}) {
-  const retries = Number.isInteger(opts.rateLimitRetries) ? opts.rateLimitRetries : 2;
+  const retries = Number.isInteger(opts.rateLimitRetries) ? Math.max(0, Math.min(8, opts.rateLimitRetries)) : 4;
+  const deadline = Math.min(opts.deadlineMs || Infinity, Date.now() + (opts.timeoutMs || DEFAULT_TIMEOUT_MS));
+  const callArgs = { ...args };
+  if (server === 'marketdata' && ['RunScreener', 'RunAutoScreener', 'RunBacktest', 'GetInstruments', 'GetTradingSnapshot', 'GetMarketOverview'].includes(tool)
+      && !callArgs.intent_id && !callArgs.pagination_token) {
+    callArgs.intent_id = require('crypto').randomUUID();
+  }
   for (let attempt = 0; ; attempt++) {
-    try { return await callTool(server, tool, args, opts); }
+    try { return await callTool(server, tool, callArgs, { ...opts, deadlineMs: deadline }); }
     catch (error) {
-      const delay = rateLimitDelayMs(error);
-      if (delay == null || attempt >= retries) throw error;
-      await new Promise(resolve => setTimeout(resolve, delay));
+      const hint = rateLimitDelayMs(error);
+      if (hint == null || attempt >= retries) throw error;
+      const delay = Math.max(hint, Math.min(30_000, 1000 * 2 ** attempt)) + Math.floor(Math.random() * 250);
+      if (Date.now() + delay >= deadline) throw error;
+      await sleep(delay);
     }
   }
 }
@@ -286,8 +350,12 @@ async function awaitJob(server, jobId, {
   const paged = server === 'marketdata' && pollTool === 'Jobs';
   const pollArgs = () => (paged ? { [idArg]: jobId, maxsize: pageMaxsize } : { [idArg]: jobId });
   const deadline = Date.now() + maxMs;
+  const read = args => {
+    if (Date.now() >= deadline) throw new McpCallError(`Job ${jobId}: budget de récupération épuisé`, { server, tool: pollTool });
+    return call(server, pollTool, args, { deadlineMs: deadline });
+  };
   for (;;) {
-    const r = await call(server, pollTool, pollArgs());
+    const r = await read(pollArgs());
     const status = r && (r.status || (r.data && r.data.status));
     if (status === 'completed' || status === 'done') {
       if (!paged) return r;
@@ -307,7 +375,7 @@ async function awaitJob(server, jobId, {
         seen.add(key);
         const pageArgs = { [idArg]: jobId, page: nextPage, maxsize: pageMaxsize };
         if (pagination.pagination_token) pageArgs.pagination_token = pagination.pagination_token;
-        const page = await call(server, pollTool, pageArgs);
+        const page = await read(pageArgs);
         const pageStatus = page && (page.status || (page.data && page.data.status));
         if (pageStatus !== 'completed' && pageStatus !== 'done') {
           throw new McpCallError(`Job ${jobId}: page ${nextPage} dans un état inattendu (${pageStatus || 'absent'})`, { server, tool: pollTool });
@@ -333,7 +401,9 @@ async function awaitJob(server, jobId, {
         { server, tool: pollTool, body: JSON.stringify(d).slice(0, 500) });
     }
     if (Date.now() > deadline) throw new McpCallError(`Job ${jobId} non terminé après ${maxMs}ms`, { server, tool: pollTool });
-    await new Promise(r => setTimeout(r, intervalMs));
+    const hinted = Number(r?.retry_after_seconds ?? r?.data?.retry_after_seconds);
+    const delay = Math.max(intervalMs, Number.isFinite(hinted) && hinted >= 0 ? hinted * 1000 : 0);
+    await sleep(Math.min(delay, Math.max(0, deadline - Date.now())));
   }
 }
 
