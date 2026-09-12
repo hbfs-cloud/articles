@@ -60,6 +60,40 @@ stop, cible, horizon, performance, ni ce que la selection pouvait connaitre a l'
 `tools/build-mono-retro.js` est un outil daily forensic archive et refuse l'execution normale. Il ne
 peut jamais produire la retro active ni une note de performance gouvernante.
 
+### Compléter une couverture intraday tronquée
+
+Une réponse `completed` ne prouve pas la continuité de chaque série. Si le cache 15 minutes est
+tronqué, utiliser le plan `plans/retro-intraday-supplement.json` avec les symboles et la fenêtre
+manquants : il collecte `QueryData(types="bars_intraday", timeframe="5m")` par le MCP.
+Ce chemin fournit des observations nouvelles ; il ne réécrit pas les preuves initiales.
+
+Après les gates du harnais, `tools/build-retro-intraday-supplement.js` agrège uniquement trois
+bougies de cinq minutes exactes et consécutives en une bougie de quinze minutes. Une séance ne
+remplace une séance incomplète que si tous ses timestamps réguliers sont présents. Aucun prix
+interpolé, aucune substitution daily et aucun effacement des séances initiales complètes.
+Le manifeste `--required-sessions` lie les séances à compléter au résultat diagnostique source
+(`source_results.path` et SHA-256), avec `reference_close` et `sessions: {date: [tickers]}`.
+Utiliser une nouvelle sortie et conserver chaque état intermédiaire :
+
+```bash
+node tools/build-retro-intraday-supplement.js \
+  --in scanner/retrospective/RUNDATE/_data/supplement-5m/bars_intraday_5m.json \
+  --base scanner/retrospective/ORIGINAL/_data/intraday-bars-15m.json \
+  --out scanner/retrospective/RUNDATE/_data/intraday-bars-15m.json \
+  --reference-close YYYY-MM-DD \
+  --required-sessions scanner/retrospective/RUNDATE/_data/required-sessions.json
+```
+
+Le convertisseur refuse les secondes/millisecondes décalées et toute incohérence OHLC supérieure
+au quantum de sérialisation MCP de 0,0001. Dans cette seule tolérance, la borne high/low est
+ramenée à l’enveloppe open/close et chaque correction est journalisée, sans modifier la source.
+
+Conserver les diagnostics de chevauchement et les empreintes des deux sources. Une nouvelle
+révision peut utiliser le suffixe `YYYYMMDD-completed`, en laissant la publication initiale intacte.
+
+La couverture des cours et la maturité des propositions sont deux contrôles distincts : les
+horizons non terminés, même avec une sortie déjà observée, restent hors statistiques finales.
+
 ## Simulation
 
 - Appliquer exactement entry zone, side, stop, TP1/TP2, horizon, session et regles publiees.

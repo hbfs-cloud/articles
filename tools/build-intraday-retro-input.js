@@ -4,10 +4,9 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { validateCollectedArtifact } = require('./lib/evidence-gates');
-const { expectedRthTimes, newYorkDateTime } = require('./lib/retro-intraday');
+const { contractForTicker, dateTimeInZone } = require('./lib/retro-intraday');
 const ROOT = path.resolve(__dirname, '..');
 const sha256 = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
-const rthTimes = new Set(expectedRthTimes);
 
 function toIsoTimestamp(timestamp) {
   if (typeof timestamp === 'number') {
@@ -22,12 +21,14 @@ function normalizedBar(raw, ticker) {
   const timestamp = row && toIsoTimestamp(row.timestamp || row.datetime || row.time || row.date);
   if (!timestamp || ![row.open, row.high, row.low, row.close].every(Number.isFinite)
     || row.open <= 0 || row.low <= 0 || row.high < row.low) return null;
-  const ny = newYorkDateTime(timestamp);
-  if (!ny) return null;
-  const isUsSessionContract = !ticker.includes('.');
-  if (isUsSessionContract && !rthTimes.has(ny.time)) return null;
+  const contract = contractForTicker(ticker);
+  const local = contract && dateTimeInZone(timestamp, contract.timeZone);
+  if (contract && (!local || !contract.expectedTimes.includes(local.time))) return null;
   return {
-    date: isUsSessionContract ? ny.date : new Date(timestamp).toISOString().slice(0, 10),
+    // GLEN.L is grouped by the London session date and never passed through the
+    // New York 26-bar filter. Unknown non-US listings retain the old raw-date
+    // behavior and remain unsupported by the measurement engine.
+    date: local ? local.date : new Date(timestamp).toISOString().slice(0, 10),
     bar: { timestamp, open: row.open, high: row.high, low: row.low, close: row.close, volume: row.volume ?? null }
   };
 }

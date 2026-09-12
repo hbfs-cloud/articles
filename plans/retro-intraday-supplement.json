@@ -1,0 +1,48 @@
+{
+  "artifact": "scanner/retrospective/$rundate/index.html",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "covers_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execution-supplement",
+      "calls": [
+        {
+          "as": "bars_intraday_5m",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_intraday",
+            "timeframe": "5m",
+            "symbols": "$symbols",
+            "start_date": "$startdate",
+            "end_date": "$refdate",
+            "limit": 20000,
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "note": "Source 5 minutes r\u00e9elle ; agr\u00e9gation exacte 3 vers 1 sans interpolation pour compl\u00e9ter les sessions 15 minutes manquantes."
+          }
+        }
+      ]
+    }
+  ]
+}

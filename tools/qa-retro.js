@@ -39,7 +39,7 @@
  * docs/scanner-gates.md) pour que page et record ne puissent plus diverger.
  *
  * Branché dans publish.js --type retro (Step 4b). Utilisable seul :
- *   node tools/qa-retro.js scanner/retrospective/YYYYMMDD/
+ *   node tools/qa-retro.js scanner/retrospective/YYYYMMDD[-completed]/
  */
 
 const fs = require('fs');
@@ -50,7 +50,7 @@ const { CHASE_TOLERANCE_PCT, decideFill } = require('./lib/fill-policy');
 const ROOT = path.join(__dirname, '..');
 
 function usage() {
-  console.error('Usage: node tools/qa-retro.js <scanner/retrospective/YYYYMMDD/ ou index.html>');
+  console.error('Usage: node tools/qa-retro.js <scanner/retrospective/YYYYMMDD[-completed]/ ou index.html>');
   process.exit(2);
 }
 
@@ -179,16 +179,28 @@ function coverageReviewMain(dir, html) {
 
   const excluded = new Set(['no_fill', 'data_error', 'open_unverified', 'ambiguous']);
   const filled = outcomes.filter(outcome => !excluded.has(outcome.status));
-  const resolved = filled.filter(outcome => outcome.status !== 'pending');
+  const maturityAware = Number.isInteger(summary.mature_filled);
+  const resolved = filled.filter(outcome => outcome.status !== 'pending'
+    && (!maturityAware || (outcome.status !== 'tp1_pending' && outcome.horizon_end <= summary.reference_close)));
   const fullyClosed = resolved.filter(outcome => outcome.status !== 'tp1_pending');
+  const pendingCount = maturityAware ? filled.filter(outcome => outcome.status === 'pending').length : filled.length - resolved.length;
+  const runnerCount = maturityAware ? filled.filter(outcome => outcome.status === 'tp1_pending').length : resolved.length - fullyClosed.length;
   const count = status => outcomes.filter(outcome => outcome.status === status).length;
   expect(summary.filled === filled.length, `summary.filled=${summary.filled}, calcul=${filled.length}.`);
   expect(summary.resolved === resolved.length, `summary.resolved=${summary.resolved}, calcul=${resolved.length}.`);
   expect(summary.fully_closed === fullyClosed.length, `summary.fully_closed=${summary.fully_closed}, calcul=${fullyClosed.length}.`);
-  expect(summary.pending === filled.length - resolved.length, `summary.pending=${summary.pending}, calcul=${filled.length - resolved.length}.`);
-  expect(summary.open_runners === resolved.length - fullyClosed.length, `summary.open_runners=${summary.open_runners}, calcul=${resolved.length - fullyClosed.length}.`);
-  for (const key of ['no_fill', 'data_error', 'open_unverified', 'ambiguous', 'stopped']) {
+  expect(summary.pending === pendingCount, `summary.pending=${summary.pending}, calcul=${pendingCount}.`);
+  expect(summary.open_runners === runnerCount, `summary.open_runners=${summary.open_runners}, calcul=${runnerCount}.`);
+  for (const key of ['no_fill', 'data_error', 'open_unverified', 'ambiguous']) {
     expect(summary[key] === count(key), `summary.${key}=${summary[key]}, calcul=${count(key)}.`);
+  }
+  expect(summary.stopped === (maturityAware ? resolved.filter(o => o.status === 'stopped').length : count('stopped')), 'summary.stopped diverge du périmètre statistique.');
+  if (maturityAware) {
+    expect(summary.mature_filled === filled.filter(o => o.horizon_end <= summary.reference_close).length, 'summary.mature_filled divergent.');
+    expect(summary.non_mature_filled === filled.filter(o => o.horizon_end > summary.reference_close).length, 'summary.non_mature_filled divergent.');
+    expect(summary.measurement_coverage_complete === (count('data_error') === 0 && count('open_unverified') === 0), 'measurement_coverage_complete contredit les statuts.');
+    const rate = resolved.length ? Math.round(resolved.filter(o => o.status === 'tp2' || o.status.startsWith('tp1')).length / resolved.length * 1000) / 10 : null;
+    expect(summary.hit_rate_pct === rate, 'summary.hit_rate_pct divergent du périmètre mûr.');
   }
   const winners = resolved.filter(outcome => outcome.status === 'tp2' || outcome.status.startsWith('tp1'));
   expect(summary.tp1_or_better === winners.length, `summary.tp1_or_better=${summary.tp1_or_better}, calcul=${winners.length}.`);
@@ -211,8 +223,14 @@ function coverageReviewMain(dir, html) {
   }
 
   expect(html.includes('data-retro-publication="coverage_review"'), 'HTML: flag data-retro-publication=coverage_review absent.');
-  expect(html.includes('Couverture de mesure incomplète'), 'HTML: alerte de couverture absente.');
-  expect(html.includes(`${summary.resolved} résultats résolus sur ${summary.proposed} propositions`), 'HTML: compteur de couverture divergent ou absent.');
+  if (summary.measurement_coverage_complete === true) {
+    expect(html.includes('Couverture de mesure complète') && html.includes('Données complètes ; maturité partielle.'), 'HTML: couverture complète et maturité doivent être distinguées.');
+    expect(html.includes(`Les ${summary.resolved} résultats clos à horizon mûr`), 'HTML: compteur de résultats mûrs divergent.');
+    expect(outcomes.every(o => !o.missing_sessions?.length), 'Couverture complète malgré séances manquantes.');
+  } else {
+    expect(html.includes('Couverture de mesure incomplète'), 'HTML: alerte de couverture absente.');
+    expect(html.includes(`${summary.resolved} résultats résolus sur ${summary.proposed} propositions`), 'HTML: compteur de couverture divergent ou absent.');
+  }
   expect(html.includes('Statistiques diagnostiques, sans verdict') && html.includes('ne permettent aucun verdict sur la cohorte scanner'), 'HTML: absence du cadrage documentaire sans verdict de cohorte.');
 
   const input = results.measurement_input;
@@ -277,8 +295,8 @@ function main() {
       process.exit(2);
     }
     retroCompact = monoScanDate;
-  } else if (!/^\d{8}$/.test(retroCompact)) {
-    console.error(`❌ qa-retro: dossier "${retroCompact}" — attendu scanner/retrospective/YYYYMMDD/ ou scanner/YYYYMMDD/retro/.`);
+  } else if (!/^\d{8}(?:-completed)?$/.test(retroCompact)) {
+    console.error(`❌ qa-retro: dossier "${retroCompact}" — attendu scanner/retrospective/YYYYMMDD[-completed]/ ou scanner/YYYYMMDD/retro/.`);
     process.exit(2);
   }
   const htmlPath = path.join(dir, 'index.html');

@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { decideFill } = require('./lib/fill-policy');
 const { isUSTradingDay } = require('./lib/market-calendar');
-const { normalizeIntradayBars, sessionCoverageError } = require('./lib/retro-intraday');
+const { normalizeIntradayBars, sessionCoverageError, contractForTicker, isTradingDayForTicker, performancePopulation } = require('./lib/retro-intraday');
 
 const ROOT = path.join(__dirname, '..');
 const args = process.argv.slice(2);
@@ -18,11 +18,11 @@ const argValue = name => {
 const runCompact = argValue('--run-date') || referenceClose;
 const cohortArg = argValue('--cohort');
 if (![startCompact, endCompact, referenceClose].every(v => /^\d{8}$/.test(v || ''))) {
-  console.error('Usage: node tools/build-period-retro.js YYYYMMDD YYYYMMDD YYYYMMDD [--run-date YYYYMMDD] [--cohort path]');
+  console.error('Usage: node tools/build-period-retro.js YYYYMMDD YYYYMMDD YYYYMMDD [--run-date YYYYMMDD[-suffix]] [--cohort path]');
   process.exit(2);
 }
-if (!/^\d{8}$/.test(runCompact || '')) {
-  console.error('--run-date must be YYYYMMDD');
+if (!/^\d{8}(?:-[a-z0-9]+)*$/.test(runCompact || '')) {
+  console.error('--run-date must start YYYYMMDD and may use lowercase publication suffixes');
   process.exit(2);
 }
 
@@ -57,9 +57,10 @@ function addTradingDays(dateStr, days, region, ticker) {
   while (added < days) {
     date.setUTCDate(date.getUTCDate() + 1);
     const next = date.toISOString().slice(0, 10);
+    const contract = contractForTicker(ticker);
     const day = date.getUTCDay();
-    const isEuropeanListing = region === 'EU' && ticker.includes('.');
-    const isSession = isEuropeanListing ? day !== 0 && day !== 6 : isUSTradingDay(next);
+    const isSession = contract ? isTradingDayForTicker(next, ticker)
+      : (region === 'EU' && ticker.includes('.') ? day !== 0 && day !== 6 : isUSTradingDay(next));
     if (isSession) added++;
   }
   return date.toISOString().slice(0, 10);
@@ -112,14 +113,17 @@ function expectedSessions(start, end, region, ticker) {
   while (cursor <= finish) {
     const date = cursor.toISOString().slice(0, 10);
     const day = cursor.getUTCDay();
-    const isEuropeanListing = region === 'EU' && ticker.includes('.');
-    if (isEuropeanListing ? day !== 0 && day !== 6 : isUSTradingDay(date)) result.push(date);
+    const contract = contractForTicker(ticker);
+    const isSession = contract ? isTradingDayForTicker(date, ticker)
+      : (region === 'EU' && ticker.includes('.') ? day !== 0 && day !== 6 : isUSTradingDay(date));
+    if (isSession) result.push(date);
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
   return result;
 }
 
 function evaluate(signal) {
+  const contract = contractForTicker(signal.ticker);
   const horizon = signal.horizon || 10;
   const horizonEnd = addTradingDays(signal.scan_date, horizon, signal.region, signal.ticker);
   const cutoff = horizonEnd < refDate ? horizonEnd : refDate;
@@ -139,9 +143,10 @@ function evaluate(signal) {
     tp1: signal.tp1,
     tp2: signal.tp2 ?? null,
     horizon,
-    horizon_end: horizonEnd
+    horizon_end: horizonEnd,
+    measurement_calendar: contract?.id || 'non_us_listing_requires_exchange_specific_15m_contract'
   };
-  if (signal.region === 'EU' && signal.ticker.includes('.')) {
+  if (signal.region === 'EU' && signal.ticker.includes('.') && !contract) {
     return {
       ...base,
       status: 'data_error',
@@ -154,7 +159,7 @@ function evaluate(signal) {
     date,
     bars: normalizeIntradayBars(intradaySessions[date]?.[signal.ticker]),
   }));
-  const missingSessions = sessions.map(session => ({ date: session.date, error: sessionCoverageError(session.bars, session.date) }))
+  const missingSessions = sessions.map(session => ({ date: session.date, error: sessionCoverageError(session.bars, session.date, contract) }))
     .filter(session => session.error);
   if (missingSessions.length) {
     return {
@@ -321,9 +326,12 @@ function evaluate(signal) {
 
 const outcomes = signals.map(evaluate);
 const isWinner = outcome => outcome.status === 'tp2' || outcome.status.startsWith('tp1');
-const filled = outcomes.filter(o => !['no_fill', 'data_error', 'open_unverified', 'ambiguous'].includes(o.status));
-const resolved = filled.filter(o => o.status !== 'pending');
-const fullyClosed = resolved.filter(o => o.status !== 'tp1_pending');
+// A completed trade may be observed before its published horizon, but it must
+// not enter performance diagnostics until that horizon has elapsed. This also
+// keeps a TP1 runner open until its remaining half is deterministically closed.
+const performance = performancePopulation(outcomes, refDate);
+const { filled, resolved, fullyClosed, pending, openRunners, matureFilled, nonMatureFilled, performanceExclusions } = performance;
+const isPerformanceResolved = outcome => resolved.includes(outcome);
 const winners = resolved.filter(isWinner);
 const stopped = resolved.filter(o => o.status === 'stopped');
 const gains = fullyClosed.filter(o => o.r_multiple > 0).reduce((sum, o) => sum + o.r_multiple, 0);
@@ -338,8 +346,8 @@ function groupBy(key) {
   }
   return [...groups.entries()].map(([name, rows]) => {
     const ok = rows.filter(o => !['no_fill', 'data_error', 'open_unverified', 'ambiguous'].includes(o.status));
-    const done = ok.filter(o => o.status !== 'pending');
-    const closed = done.filter(o => o.status !== 'tp1_pending');
+    const done = ok.filter(isPerformanceResolved);
+    const closed = done;
     const hits = done.filter(isWinner);
     const positive = closed.filter(o => o.r_multiple > 0).reduce((s, o) => s + o.r_multiple, 0);
     const negative = Math.abs(closed.filter(o => o.r_multiple < 0).reduce((s, o) => s + o.r_multiple, 0));
@@ -349,8 +357,10 @@ function groupBy(key) {
       filled: ok.length,
       resolved: done.length,
       fully_closed: closed.length,
-      open_runners: done.length - closed.length,
-      pending: ok.length - done.length,
+      open_runners: ok.filter(o => o.status === 'tp1_pending').length,
+      pending: ok.filter(o => o.status === 'pending').length,
+      mature_filled: ok.filter(o => o.horizon_end <= refDate).length,
+      non_mature_filled: ok.filter(o => o.horizon_end > refDate).length,
       tp_hits: hits.length,
       stopped: done.filter(o => o.status === 'stopped').length,
       hit_rate_pct: done.length ? round((hits.length / done.length) * 100, 1) : null,
@@ -371,15 +381,19 @@ const summary = {
   scans: scanDirs.length,
   proposed: outcomes.length,
   filled: filled.length,
+  mature_filled: matureFilled.length,
+  non_mature_filled: nonMatureFilled.length,
   resolved: resolved.length,
   fully_closed: fullyClosed.length,
-  open_runners: resolved.length - fullyClosed.length,
-  pending: filled.length - resolved.length,
-  no_fill: outcomes.filter(o => o.status === 'no_fill').length,
-  data_error: outcomes.filter(o => o.status === 'data_error').length,
-  open_unverified: outcomes.filter(o => o.status === 'open_unverified').length,
-  non_mature: outcomes.filter(o => o.horizon_end > refDate).length,
-  ambiguous: outcomes.filter(o => o.status === 'ambiguous').length,
+  open_runners: openRunners.length,
+  pending: pending.length,
+  no_fill: performanceExclusions.no_fill,
+  data_error: performanceExclusions.data_error,
+  open_unverified: performanceExclusions.open_unverified,
+  non_mature: performanceExclusions.non_mature,
+  ambiguous: performanceExclusions.ambiguous,
+  measurement_coverage_complete: performanceExclusions.data_error === 0 && performanceExclusions.open_unverified === 0,
+  performance_exclusions: performanceExclusions,
   tp1_or_better: winners.length,
   stopped: stopped.length,
   hit_rate_pct: resolved.length ? round((winners.length / resolved.length) * 100, 1) : null,
@@ -393,7 +407,7 @@ const summary = {
 
 const ranked = resolved.slice().sort((a, b) => b.r_multiple - a.r_multiple);
 const output = {
-  methodology: 'Published primary signals[] only. For US listings, complete regular-session 15-minute coverage is mandatory for every session in the horizon; fill must be demonstrated in the first regular 15-minute bar with the shared 2% chase tolerance; gap-down through stop is no-fill; events are evaluated chronologically on 15-minute bars; bars containing incompatible stop/target events are ambiguous and excluded from performance statistics; 50% exits at TP1 and the runner moves to breakeven for TP2; overnight stop gaps execute at the open; expiry at scan_date plus N trading sessions; unresolved runners are marked at the reference close. A non-US listing without an exchange-specific intraday contract is retained in the denominator as data_error and is not evaluated on a New York session.',
+  methodology: 'Published primary signals[] only. Complete regular-session 15-minute coverage is mandatory for every session in the published horizon: US listings use the New York 09:30–15:45 contract and .L listings use the LSE 08:00–16:15 London contract. Fill must be demonstrated in the first regular 15-minute bar with the shared 2% chase tolerance; gap-down through stop is no-fill; events are evaluated chronologically on 15-minute bars; bars containing incompatible stop/target events are ambiguous and excluded from performance statistics; 50% exits at TP1 and the runner moves to breakeven for TP2; overnight stop gaps execute at the open; expiry is scan_date plus N exchange trading sessions. Diagnostics include only fills whose full published horizon has elapsed; non-mature outcomes, including an early observed stop or target, remain reported but excluded. A non-US listing without an exchange-specific intraday contract is retained in the denominator as data_error.',
   summary,
   publication: {
     type: 'coverage_review',
