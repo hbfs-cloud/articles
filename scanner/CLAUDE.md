@@ -19,8 +19,8 @@ source contract is `.claude/skills/source-policy.md`. Those files override histo
 ## Required Sequence
 
 1. `node tools/validate-workflows.js --workflow scanner`.
-2. Resolve `date`, `refdate` (last completed US close) and DTX `asof` explicitly.
-3. Run `tools/scan-parallel.sh`; it performs the marketdata, enrichment, systematic, tracking and beta
+2. Resolve `date`, `refdate` (last completed US close) explicitly (the third legacy collector argument remains accepted).
+3. Run `tools/scan-parallel.sh`; it performs the marketdata, enrichment, tracking and beta
    chains. Required chains fail closed.
 4. Read the generated harnais and source files. Never replay the same MCP calls manually just to obtain a
    different answer.
@@ -32,12 +32,12 @@ source contract is `.claude/skills/source-policy.md`. Those files override histo
 
 ## Data Integrity
 
-- The first collection wave is a health gate: marketdata `GetStatus` and systematic
-  `GetHealth(expected_close=refdate)`.
-- DTX data comes from the deployed `best` config and Contract V2 output. `execution_plan.groups` is the
-  structured source; prose in `reason` is never interpreted as an operational field.
+- The first collection wave is a health gate: marketdata `GetStatus`.
+- DTX is excluded by `config/scanner-components.json`; the scanner does not depend on its curve or
+  systematic authentication. Propagate the generated dated `_scope.json` through downstream tools.
 - Async MCP results must be polled once and paginated to exhaustion. Partial pages are a failed source.
-- Every dated bar set is bounded by `end_date=refdate` and proves `data_through=refdate`.
+- Every daily bar request uses the immutable `as_of_timestamp`, `completion_policy=completed_only`,
+  its explicit asset calendar, and `expected_completed_end=refdate`; `end_date` is not close certification.
 - SEC discovery uses MCP `sec_filings,flags`; every equity-offering hit is classified from the primary
   filing. Debt is not dilution. Unknown classification blocks the candidate.
 - Web access is limited to primary SEC/IR/macro documents and attributed current news. It never replaces
@@ -49,8 +49,7 @@ source contract is `.claude/skills/source-policy.md`. Those files override histo
   or reject an eligible name; it cannot create a candidate or alter a numeric gate.
 - Recompute all entry/stop/target/R-R fields from structured inputs. Enforce target reachability before
   R/R, and calculate R/R from `entry_high` (worst allowed fill).
-- Never turn a LIMIT into MARKET, promote an alternate without its structured cause, or publish a DTX
-  plan outside `valid_from`/`valid_until`.
+- Never turn a LIMIT into MARKET or promote a candidate without its structured cause.
 - Recent-performance overlays can cap or down-weight a family; they are hash-bound to mature evidence.
   A weak strategy cannot dominate the editorial basket.
 - A future scan never becomes an open position or an actionable status order before its session.
@@ -74,11 +73,10 @@ At minimum, a publish run must pass:
 node tools/validate-workflows.js --workflow scanner
 node tools/check-freshness.js scanner/YYYYMMDD/_data/harness.json
 node tools/check-freshness.js scanner/YYYYMMDD/_data2/harness.json
-node tools/check-freshness.js scanner/YYYYMMDD/_dtx/harness.json
 node tools/validate-scan.js scanner/YYYYMMDD/
-node tools/qa-check.js scanner/YYYYMMDD/ --strict
+node tools/qa-check.js scanner/YYYYMMDD/ --strict --scope=scanner/YYYYMMDD/_scope.json
 node tools/check-ai-tells.js scanner/YYYYMMDD/index.html --strict
-node tools/test-scanner-quality-gates.js
+node tools/test-scanner-quality-gates.js --scope=scanner/YYYYMMDD/_scope.json
 ```
 
 Any failure is a stop, not a warning to explain away.

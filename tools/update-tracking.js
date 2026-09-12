@@ -2,10 +2,11 @@
 'use strict';
 
 const fs = require('fs');
-const https = require('https');
 const path = require('path');
 const parser = require('./lib/scanner-parser');
 const sharedCfg = require('./config');
+const { runArgs, fetchCertifiedDailyBars, barsToHistory } = require('./lib/mcp-daily-bars');
+const { validateReview } = require('./lib/scanner-publication-review');
 
 const ROOT = path.join(__dirname, '..');
 const METRICS_FILE = path.join(ROOT, 'data', 'scanner-metrics.json');
@@ -26,46 +27,6 @@ function addBusinessDays(dateStr, days) {
   return d.toISOString().slice(0, 10);
 }
 
-// Fetch daily OHLC bars for a ticker — returns { history: {dateStr: {open,high,low,close}}, lastPrice }
-// Range covers up to ~60 trading days back (enough for 35d window in main).
-function fetchOHLC(ticker) {
-  return new Promise((resolve) => {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=60d`;
-    const opts = { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 };
-    https.get(url, opts, (res) => {
-      if (res.statusCode === 429 || res.statusCode >= 500) {
-        console.warn(`  ⚠ ${ticker}: Yahoo HTTP ${res.statusCode} — skipped`);
-        res.resume();
-        return resolve({ history: {}, lastPrice: null, error: `http_${res.statusCode}` });
-      }
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(data);
-          if (j?.chart?.error) {
-            console.warn(`  ⚠ ${ticker}: Yahoo API error ${j.chart.error.code || ''} — skipped`);
-            return resolve({ history: {}, lastPrice: null, error: 'api_error' });
-          }
-          const result = j?.chart?.result?.[0];
-          if (!result) return resolve({ history: {}, lastPrice: null });
-          const ts = result.timestamp || [];
-          const q = result.indicators?.quote?.[0] || {};
-          const history = {};
-          for (let i = 0; i < ts.length; i++) {
-            if (q.open?.[i] != null && q.high?.[i] != null && q.low?.[i] != null && q.close?.[i] != null) {
-              const dateStr = new Date(ts[i] * 1000).toISOString().slice(0, 10);
-              history[dateStr] = { open: q.open[i], high: q.high[i], low: q.low[i], close: q.close[i] };
-            }
-          }
-          const lastPrice = result.meta?.regularMarketPrice ?? null;
-          resolve({ history, lastPrice });
-        } catch { resolve({ history: {}, lastPrice: null }); }
-      });
-    }).on('error', () => resolve({ history: {}, lastPrice: null })).on('timeout', () => resolve({ history: {}, lastPrice: null }));
-  });
-}
-
 function parseMidpoint(entryStr) {
   if (!entryStr) return null;
   const nums = String(entryStr).replace(/[$,]/g, '').match(/[\d.]+/g);
@@ -84,7 +45,18 @@ function parseNumber(s) {
 // Returns up to 10 signals, sorted by score desc. Was top-3-only — now full slate
 // so feedback loop covers the entire published universe (P1 audit fix).
 
+// A surveillance review may retain its original signals for audit, but it explicitly
+// certifies no actionability. Validate its signed local evidence before excluding it;
+// a malformed review is a hard stop rather than an invitation to trade the old basket.
+function isActionableScanDir(dir) {
+  const reviewPath = path.join(SCANNER_DIR, dir, 'review.json');
+  if (!fs.existsSync(reviewPath)) return true;
+  const { review } = validateReview(ROOT, reviewPath);
+  return review.actionability_certified === true;
+}
+
 function extractAllFromDir(dir) {
+  if (!isActionableScanDir(dir)) return [];
   const loaded = parser.loadSignals(dir);
   if (!loaded || !loaded.signals.length) return [];
 
@@ -105,22 +77,11 @@ function extractAllFromDir(dir) {
     }));
 }
 
-// ─── Yahoo ticker mapping ─────────────────────────────────────────────────────
-
-// Yahoo override map — only list tickers that actually need remapping
-// (e.g. European listings that Yahoo serves under a suffixed symbol).
-// If a ticker is not in the map it's used as-is.
-const YAHOO_MAP = {
-  // (empty for now — all local tickers resolve directly on Yahoo)
-};
-function yahooTicker(t) {
-  return YAHOO_MAP[t] || t;
-}
-
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  const today = new Date().toISOString().slice(0, 10);
+  const run = runArgs(process.argv);
+  const today = run.refdate;
 
   // Get all scan dirs (YYYYMMDD, not retrospective)
   const scanDirs = fs.readdirSync(SCANNER_DIR)
@@ -161,7 +122,7 @@ async function main() {
         scan: dir,
         rank: i + 1,
         ticker: t.ticker,
-        ticker_yahoo: yahooTicker(t.ticker),
+        ticker_marketdata: t.ticker,
         strategy: t.strategy || 'Momentum',
         chart_url: `https://finviz.com/chart.ashx?t=${t.ticker}&ty=c&ta=1&p=d&s=l`,
         entry: t.entry,
@@ -187,22 +148,26 @@ async function main() {
   console.log(`\nTotal trades: ${allTrades.length}`);
 
   // Fetch OHLC bars for every traded ticker (batched by unique symbol)
-  const tickers = [...new Set(allTrades.map(t => t.ticker_yahoo))];
-  console.log(`\nFetching OHLC for: ${tickers.join(', ')}`);
+  const tickers = [...new Set(allTrades.map(t => t.ticker_marketdata))];
+  console.log(`\nFetching certified MCP OHLC for: ${tickers.join(', ')}`);
   const ohlcData = {};
-  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  const certified = await fetchCertifiedDailyBars({
+    symbols: tickers, refdate: run.refdate, cryptoRefdate: run.cryptoRefdate,
+    asOfTimestamp: run.asOfTimestamp, limit: 160,
+  });
   for (const tkr of tickers) {
-    ohlcData[tkr] = await fetchOHLC(tkr);
-    const bars = Object.keys(ohlcData[tkr].history).length;
-    console.log(`  ${tkr}: last=${ohlcData[tkr].lastPrice}, ${bars} bars`);
-    await sleep(150); // Throttle — Yahoo rate-limits at ~15 rps
+    const history = barsToHistory(certified.get(tkr));
+    const last = history[run.refdate];
+    if (!last) throw new Error(`${tkr}: certified bars missing ${run.refdate}`);
+    ohlcData[tkr] = { history, lastPrice: last.close };
+    console.log(`  ${tkr}: last=${last.close}, ${Object.keys(history).length} certified bars`);
   }
 
   // Determine status for each trade — walk OHLC bars day by day. A plan is not a
   // position until its published entry zone trades. Daily bars cannot prove VWAP or
   // opening-window gates, so activation is explicitly labelled unverified.
   for (const trade of allTrades) {
-    const ticker = trade.ticker_yahoo;
+    const ticker = trade.ticker_marketdata;
     const data = ohlcData[ticker];
     const lastPrice = data?.lastPrice ?? null;
     trade.current_price = lastPrice;
@@ -516,4 +481,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { extractAllFromDir };
+module.exports = { extractAllFromDir, isActionableScanDir };

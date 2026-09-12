@@ -13,6 +13,7 @@ const { isPlanActive } = require('./lib/dtx-plan-window');
 const { isUSTradingDay, newYorkDateISO } = require('./lib/market-calendar');
 
 const ROOT = path.join(__dirname, '..');
+const SCOPE = require('./lib/scanner-scope').loadScannerScope(ROOT);
 const read = rel => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
 
 const loaded = parser.loadSignals('20260831');
@@ -43,13 +44,16 @@ if (isMarketClosedDay) {
   for (const [mode, payload] of Object.entries(snapshot.modes || {})) {
     assert.strictEqual((payload.orders || []).length, 0, `${mode}: closed-session snapshot orders must be empty`);
   }
-  for (const mode of ['best', 'turbo', 'dynamic', 'balanced', 'fortress']) {
+  for (const mode of ['best', 'turbo', 'dynamic', 'balanced', 'fortress'].filter(id => !SCOPE.excludesMode(id))) {
     assert.strictEqual((read(`portfolio/v1/${mode}/orders.json`).orders || []).length, 0, `${mode}: closed-session API orders must be empty`);
   }
 }
+if (!SCOPE.active) {
 const bestMethod = (statusHtml.split('<div id="p-best"')[1] || '').split('<!-- ══ 2bis.')[0];
 assert(!/market order/i.test(bestMethod), 'DTX public method must never prescribe LIMIT-to-MARKET conversion');
 assert(/rank 1 only/i.test(bestMethod) && /engine_managed/i.test(bestMethod), 'DTX public method must describe grouped execution and exact protection');
+
+}
 
 const sec = read('scanner/20260831/_data2/sec_selected_evidence.json');
 assert.strictEqual(sec.pagination_exhausted, true, 'SEC pagination must be exhausted');
@@ -86,6 +90,7 @@ assert.deepStrictEqual(summarize(momentumMature), {
 assert.deepStrictEqual(summarize(momentumMature.filter(x => ['US', 'ETF'].includes(x.region))), policy.us_listed_plus_etf_sensitivity, 'Momentum US-listed+ETF sensitivity drift');
 assert.deepStrictEqual(summarize(momentumMature.filter(x => x.region === 'US')), policy.strict_us_sensitivity, 'Momentum strict-US sensitivity drift');
 
+if (!SCOPE.active) {
 const dtxBest = read('data/dtx/best.json');
 const decideEnvelope = read('scanner/20260831/_dtx/decide_best.json');
 const decideV2 = decideEnvelope.result || decideEnvelope;
@@ -149,6 +154,10 @@ if (dtxBest.actionable !== false && (now < Date.parse(dtxBest.decisionProvenance
   const bestOrdersApi = read('portfolio/v1/best/orders.json');
   assert.strictEqual((bestOrdersApi.orders || []).length, 0, 'DTX API orders must be empty outside plan window');
   assert.deepStrictEqual(bestOrdersApi.decisionProvenance, dtxBest.decisionProvenance, 'DTX API must disclose the gated plan provenance even when it publishes zero orders');
+}
+
+} else {
+  console.log('DTX quality checks excluded by the dated product scope; not counted as PASS.');
 }
 
 const validation = spawnSync(process.execPath, ['tools/validate-scan.js', 'scanner/20260831/', '--skip-edgar'], {

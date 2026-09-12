@@ -82,10 +82,14 @@ function publishReview({ root, reviewPath, target, now = new Date() }) {
   const writes = new Map();
   if (target === 'status') {
     const rel = 'scanner/status/index.html', html = fs.readFileSync(safe(root,rel),'utf8');
-    if (!/<body\b[^>]*>/i.test(html)) fail('status body missing');
     const banner = `\n<!-- scanner-publication-review:start --><aside id="scanner-publication-review" role="note" lang="fr" class="scanner-publication-review"><strong>Revue de surveillance du ${escaped(r.review_date)} — aucun nouvel ordre validé</strong><p>${escaped(r.headline)}. Cette revue ne valide aucune nouvelle entrée ni rotation du scanner. Les positions, performances et instantanés affichés conservent leurs dates historiques ; ils ne sont pas recalculés par cette publication. Les composants DTX sont exclus de cette revue.</p><a href="${escaped(r.article_url)}">Lire la revue et les contrôles encore manquants</a></aside><!-- scanner-publication-review:end -->\n`;
     const clean = html.replace(/\n?<!-- scanner-publication-review:start -->[\s\S]*?<!-- scanner-publication-review:end -->\n?/g, '');
-    writes.set(rel, require('./scanner-review-live').freezeStatusHtml(clean.replace(/<body\b[^>]*>/i, m => m + banner)));
+    // Ignore raw-text elements and comments: a CSS comment can mention <body>.
+    const masked = clean.replace(/<!--[\s\S]*?-->|<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, text => ' '.repeat(text.length));
+    const body = /<body\b[^>]*>/i.exec(masked);
+    if (!body) fail('status body missing');
+    const insertion = body.index + body[0].length;
+    writes.set(rel, require('./scanner-review-live').freezeStatusHtml(clean.slice(0, insertion) + banner + clean.slice(insertion)));
     writes.set('scanner/status/publication.json', JSON.stringify(metadata,null,2)+'\n');
   } else {
     const config = json(root,'data/modes-config.json').modes;

@@ -4,30 +4,45 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { validateCollectedArtifact } = require('./lib/evidence-gates');
+const { expectedRthTimes, newYorkDateTime } = require('./lib/retro-intraday');
 const ROOT = path.resolve(__dirname, '..');
 const sha256 = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+const rthTimes = new Set(expectedRthTimes);
 
-function nyDate(timestamp) {
-  const date = new Date(timestamp);
-  if (!Number.isFinite(date.getTime())) return null;
-  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).formatToParts(date).filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
-  return `${parts.year}-${parts.month}-${parts.day}`;
+function toIsoTimestamp(timestamp) {
+  if (typeof timestamp === 'number') {
+    const date = new Date(timestamp > 1e12 ? timestamp : timestamp * 1000);
+    return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+  }
+  if (typeof timestamp !== 'string' || !Number.isFinite(Date.parse(timestamp))) return null;
+  return timestamp;
+}
+function normalizedBar(raw, ticker) {
+  const row = Array.isArray(raw) ? { timestamp: raw[0], open: raw[1], high: raw[2], low: raw[3], close: raw[4], volume: raw[5] } : raw;
+  const timestamp = row && toIsoTimestamp(row.timestamp || row.datetime || row.time || row.date);
+  if (!timestamp || ![row.open, row.high, row.low, row.close].every(Number.isFinite)
+    || row.open <= 0 || row.low <= 0 || row.high < row.low) return null;
+  const ny = newYorkDateTime(timestamp);
+  if (!ny) return null;
+  const isUsSessionContract = !ticker.includes('.');
+  if (isUsSessionContract && !rthTimes.has(ny.time)) return null;
+  return {
+    date: isUsSessionContract ? ny.date : new Date(timestamp).toISOString().slice(0, 10),
+    bar: { timestamp, open: row.open, high: row.high, low: row.low, close: row.close, volume: row.volume ?? null }
+  };
 }
 function collect(value, inheritedTicker = null, output = []) {
   if (!value || typeof value !== 'object') return output;
   const ticker = String(value.ticker || value.symbol || inheritedTicker || '').toUpperCase();
-  if (ticker && Array.isArray(value.bars)) {
-    for (const raw of value.bars) {
-      const row = Array.isArray(raw) ? { timestamp: raw[0], open: raw[1], high: raw[2], low: raw[3], close: raw[4], volume: raw[5] } : raw;
-      const timestamp = row && (row.timestamp || row.datetime || row.time || row.date);
-      const isoTimestamp = typeof timestamp === 'number' ? new Date(timestamp > 1e12 ? timestamp : timestamp * 1000).toISOString() : String(timestamp || '');
-      const date = nyDate(isoTimestamp);
-      if (date) output.push({ date, ticker, bar: { timestamp: isoTimestamp, open: row.open, high: row.high, low: row.low, close: row.close, volume: row.volume ?? null } });
+  const series = Array.isArray(value.bars) ? value.bars : Array.isArray(value.data) && value.data.every(Array.isArray) ? value.data : null;
+  if (ticker && series) {
+    for (const raw of series) {
+      const normalized = normalizedBar(raw, ticker);
+      if (normalized) output.push({ ...normalized, ticker });
     }
   }
-  for (const [key, child] of Object.entries(value)) if (key !== 'bars') collect(child, ticker || inheritedTicker, output);
+  for (const [key, child] of Object.entries(value)) if (key !== 'bars' && key !== 'data') collect(child, ticker || inheritedTicker, output);
+  if (!series && value.data && typeof value.data === 'object') collect(value.data, ticker || inheritedTicker, output);
   return output;
 }
 function build(input, existing = { sessions: {} }, sourceArtifact = null) {

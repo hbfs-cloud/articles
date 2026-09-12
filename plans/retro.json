@@ -1,5 +1,5 @@
 {
-  "artifact": "scanner/$scandate/retro/index.html",
+  "artifact": "scanner/retrospective/$rundate/index.html",
   "waves": [
     {
       "name": "preflight",
@@ -29,7 +29,7 @@
           "tool": "QueryData",
           "args": {
             "types": "bars_daily",
-            "symbols": "$symbols",
+            "symbols": "$us_symbols",
             "start_date": "$startdate",
             "limit": 80,
             "force_async": true,
@@ -51,10 +51,10 @@
           "tool": "QueryData",
           "args": {
             "types": "bars_15m",
-            "symbols": "$symbols",
+            "symbols": "$us_symbols",
             "start_date": "$startdate",
             "end_date": "$refdate",
-            "limit": 5000,
+            "limit": 20000,
             "force_async": true
           },
           "freshness": {
@@ -87,56 +87,54 @@
       ]
     },
     {
-      "name": "missed-risks",
+      "name": "current-risk-corpus",
+      "detached": true,
       "calls": [
         {
-          "as": "sec_evidence",
+          "as": "sec_evidence_current",
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
             "types": "sec_filings,flags",
             "symbols": "$symbols",
-            "start_date": "$startdate",
-            "end_date": "$refdate",
             "days": 365,
             "force_async": true
           },
           "freshness": {
             "max_age_h": 168,
-            "required": true
+            "required": false,
+            "note": "Current corpus only: sec_filings is not a historical point-in-time source. It may identify accepted-date-attributed risks only and never governs fills, outcomes, or selection knowledge."
           }
         },
         {
-          "as": "events",
+          "as": "events_current",
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
             "types": "calendar,news,analyst_actions",
             "symbols": "$symbols",
-            "start_date": "$startdate",
-            "end_date": "$refdate",
             "force_async": true
           },
           "freshness": {
             "max_age_h": 24,
-            "required": true
+            "required": false,
+            "note": "Current corpus only: event/news/analyst records require an explicit record-level accepted or published date before they may be described as a dated risk; they are not point-in-time execution evidence."
           }
         },
         {
-          "as": "insiders",
+          "as": "insiders_current",
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
             "types": "insider_transactions",
             "symbols": "$symbols",
-            "start_date": "$startdate",
-            "end_date": "$refdate",
             "days": 365,
             "force_async": true
           },
           "freshness": {
             "max_age_h": 96,
-            "required": true
+            "required": false,
+            "note": "Current corpus only: issuer transaction records may be dated for risk context but are not historical snapshots and cannot change execution truth."
           }
         }
       ]

@@ -39,21 +39,21 @@ immutable for the run. Do not infer one from the other inside a plan.
    the lifecycle sweep and US-only rotation:
 
    ```bash
-   bash tools/scan-parallel.sh YYYYMMDD YYYY-MM-DD YYYY-MM-DD
+   AS_OF_TIMESTAMP=YYYY-MM-DDTHH:MM:SSZ bash tools/scan-parallel.sh YYYYMMDD YYYY-MM-DD YYYY-MM-DD
    ```
 
 3. Validate every required harness with `check-freshness.js` and
    `validate-workflows.js --run-plan`. A missing artifact, stale close, source error, pagination error or
-   systematic health failure stops the run. Do not substitute web data or model knowledge.
+   marketdata health failure stops the run. Do not substitute web data or model knowledge.
 
 4. Build the eligible set only from the immutable collected snapshot. Apply the executable scanner
    filters, SEC/earnings evidence, recent-family overlay, open-position exclusions and diversification.
    Rank with a stable ticker tie-breaker. The universe is US-listed stocks and US-listed ETFs only.
 
-5. Consume DTX Contract V2 exactly as described by `scanner-pipeline.md`. Capture authenticated
-   `DtxBookEquity({portfolio:"best"})` to the dated `_dtx` staging file and verify its portfolio and exact
-   close offline with `dtx-book-equity-ingest.js --expected-close <refdate>`. Never merge metrics from a
-   different-vintage `DtxStats` response.
+5. DTX is excluded from the scanner product by `config/scanner-components.json` (owner instruction,
+   2026-09-12). `scan-parallel.sh` creates an immutable dated `_scope.json` and uses the marketdata-only
+   collection plans. Pass `--scope=scanner/YYYYMMDD/_scope.json` to scope-aware QA, sweep, status/API and
+   regime tools. Do not collect, render or refresh the obsolete DTX curve; preserve its standalone history.
 
 6. Write structured `signals.json`/`data.json`, then render. Preserve the existing Finviz chart source
    unless the user explicitly requests a chart-provider change.
@@ -63,9 +63,9 @@ immutable for the run. Do not infer one from the other inside a plan.
    ```bash
    node tools/validate-scan.js scanner/YYYYMMDD/
    node tools/validate-horizon-risk.js scanner/YYYYMMDD/
-   node tools/qa-check.js scanner/YYYYMMDD/ --strict
+   node tools/qa-check.js scanner/YYYYMMDD/ --strict --scope=scanner/YYYYMMDD/_scope.json
    node tools/check-ai-tells.js scanner/YYYYMMDD/index.html --strict
-   node tools/test-scanner-quality-gates.js
+   node tools/test-scanner-quality-gates.js --scope=scanner/YYYYMMDD/_scope.json
    ```
 
 8. Give the same hashed snapshot to three independent reviews: Senior QA, Contrarian and Retail War

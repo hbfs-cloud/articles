@@ -19,7 +19,6 @@
 'use strict';
 
 const fs = require('fs');
-const https = require('https');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
@@ -64,6 +63,8 @@ function sealTradeChain() {
 // pollution bug (data/.price-cache/TICKER.json without a date getting overwritten across days).
 // sweep only touches the PRICE cache via this helper — trade simulation is untouched.
 const priceCacheLib = require('./lib/price-cache');
+const { runArgs, fetchCertifiedDailyBars, barsToHistory, isCryptoSymbol } = require('./lib/mcp-daily-bars');
+const { validateReview } = require('./lib/scanner-publication-review');
 const SWEEP_SHARD = +(process.env.SWEEP_SHARD ?? -1);
 const SWEEP_SHARDS = +(process.env.SWEEP_SHARDS ?? 1);
 const SHARD_OUT = process.env.SWEEP_SHARD_OUT || '';
@@ -268,6 +269,11 @@ function parseScan(dir) {
   const dm = dir.match(/^(\d{4})(\d{2})(\d{2})/);
   if (!dm) return null;
   const scanDate = `${dm[1]}-${dm[2]}-${dm[3]}`;
+  const reviewPath = path.join(SCANNER_DIR, dir, 'review.json');
+  if (fs.existsSync(reviewPath)) {
+    const { review } = validateReview(ROOT, reviewPath);
+    if (review.actionability_certified !== true) return null;
+  }
 
   const loaded = scannerParser.loadSignals(dir);
   if (!loaded || !loaded.signals.length) return null;
@@ -708,251 +714,54 @@ function normalizeRegime(regime) {
   return String(regime).toLowerCase().replace(/[\s-]+/g, '_');
 }
 
-// ─── Fetch Yahoo Finance OHLCV (file-cached) ─────────────────────────────────
-
-const PRICE_CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
-fs.mkdirSync(PRICE_CACHE_DIR, { recursive: true });
-
+// ─── Certified Marketdata MCP OHLCV ──────────────────────────────────────────
+//
+// Chain C never consumes a public quote, a provider cache, or an unfinished bar.
+// The run clock is explicit: a caller must bind the session close and capture time.
 const priceCache = {};
+let RUN = null;
+let REF_DATE = null;
 
-// Reference date for the price-cache layer = the day the sweep runs. sweep fetches live
-// data up to "now", so its snapshot is a point-in-time as of today. A re-run tomorrow reads
-// data/.price-cache/<tomorrow>/… → cannot overwrite/pollute today's snapshot (the root bug).
-// The helper's anti-look-ahead truncation (bar.date <= REF_DATE) is a no-op in this forward
-// path → zero stat regression vs the old flat cache.
-const REF_DATE = priceCacheLib.todayISO();
-const marketForTicker = (t) =>
-  isCryptoTicker(t) ? priceCacheLib.MARKETS.CRYPTO : priceCacheLib.MARKETS.US;
-
-function loadCachedPrice(ticker) {
-  // 1. DATED snapshot (the fix). readHistory applies the 12h TTL only for REF_DATE==today
-  //    (today's bar may still move); a past date would be immutable. allowLegacyFallback:false
-  //    so the helper's generic flat fallback (which prefers *_ohlcv.json) can't silently swap
-  //    the data source vs the pre-existing sweep behavior — we do our OWN legacy fallback below,
-  //    byte-for-byte identical to the old logic, to guarantee no stat drift.
-  const market = marketForTicker(ticker);
-  try {
-    const dated = priceCacheLib.readHistory(ticker, { date: REF_DATE, market, allowLegacyFallback: false });
-    if (dated && Object.keys(dated).length) return dated;
-  } catch { /* never let a cache read break the sim */ }
-
-  // 2. Legacy flat ${ticker}.json (date-keyed, sweep's own) — EXACT pre-existing behavior incl. 12h TTL.
-  const fp = path.join(PRICE_CACHE_DIR, `${ticker}.json`);
-  if (fs.existsSync(fp)) {
-    const stat = fs.statSync(fp);
-    // Cache valid for 12 hours (today's bar may update during session)
-    if (Date.now() - stat.mtimeMs <= 12 * 3600 * 1000) {
-      try {
-        const h = JSON.parse(fs.readFileSync(fp, 'utf8'));
-        if (h && Object.keys(h).length) return h;
-      } catch { /* fall through to BVC */ }
-    }
+function runContext() {
+  if (!RUN) {
+    RUN = runArgs(process.argv);
+    REF_DATE = RUN.refdate;
   }
-  // 3. BVC (Casablanca) fallback: Moroccan tickers are NOT on Yahoo, so ${ticker}.json is empty.
-  // bvc-fetcher writes ${ticker}_ohlcv.json as an ARRAY of bars — convert it to the date-keyed
-  // priceHistory the simulator expects so casablanca-universe setups can actually be traded.
-  const bvcFp = path.join(PRICE_CACHE_DIR, 'CVA', `${ticker}_ohlcv.json`);
-  if (fs.existsSync(bvcFp)) {
-    try {
-      const bars = JSON.parse(fs.readFileSync(bvcFp, 'utf8'));
-      if (Array.isArray(bars) && bars.length) {
-        const h = {};
-        for (const b of bars) if (b && b.date) h[b.date] = { open: b.open, high: b.high, low: b.low, close: b.close, volume: b.volume };
-        if (Object.keys(h).length) return h;
-      }
-    } catch { /* no usable BVC bars */ }
-  }
-  return null;
+  return RUN;
 }
-
-function saveCachedPrice(ticker, history) {
-  // Primary: DATED snapshot via the shared helper (truncates to date<=REF_DATE = no-op forward).
-  try {
-    priceCacheLib.writeHistory(ticker, history, { date: REF_DATE, market: marketForTicker(ticker) });
-  } catch { /* never let a cache write break the sim */ }
-  // Compat shadow: keep the flat ${ticker}.json so other read-only consumers (qa-check.js MtM
-  // drift check, optimize-param.js) keep working unchanged. sweep always writes current-to-today
-  // data here, so this flat write never carries a stale past-dated snapshot.
-  const fp = path.join(PRICE_CACHE_DIR, `${ticker}.json`);
-  fs.writeFileSync(fp, JSON.stringify(history));
+function marketForTicker(ticker) {
+  return isCryptoSymbol(ticker) ? priceCacheLib.MARKETS.CRYPTO : priceCacheLib.MARKETS.US;
 }
-
-// Crypto OHLCV via Binance klines (crypto is Binance-native, NOT on Yahoo).
-// Tickers use the project's BTC-USD convention; Binance wants BTCUSDT.
-const isCryptoTicker = t => /-USD$/.test(t);
-function fetchBinanceOHLCV(ticker) {
-  const sym = ticker.replace(/-USD$/, '') + 'USDT';
-  const url = `https://api.binance.com/api/v3/klines?symbol=${encodeURIComponent(sym)}&interval=1d&limit=250`;
-  return new Promise((resolve) => {
-    const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000 }, (res) => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try {
-          const arr = JSON.parse(data);
-          if (!Array.isArray(arr) || !arr.length) return resolve(null); // {code:-1121} for unlisted alts
-          const history = {};
-          for (const k of arr) {
-            // kline: [openTime, open, high, low, close, volume, ...]
-            const dateStr = new Date(k[0]).toISOString().slice(0, 10);
-            history[dateStr] = { open: +k[1], high: +k[2], low: +k[3], close: +k[4] };
-          }
-          priceCache[ticker] = history;
-          saveCachedPrice(ticker, history);
-          resolve(history);
-        } catch { resolve(null); }
-      });
-    });
-    req.on('error', () => resolve(null));
-    req.on('timeout', () => { req.destroy(); resolve(null); });
-  });
+function saveCertifiedPrice(ticker, history) {
+  priceCacheLib.writeHistory(ticker, history, { date: REF_DATE, market: marketForTicker(ticker) });
 }
-
-
-// ── Préchargement OHLCV EN MASSE via le MCP ──────────────────────────────────
-// Le sweep récupérait les barres ticker par ticker chez Yahoo, avec une pause de
-// 120 ms entre chacun : sur quelques centaines de titres, >10 min mesurés le
-// 2026-08-10 — le poste n°1 de /scanner, sans rapport avec le MCP.
-//
-// Or QueryData accepte un CSV de symboles et sert depuis un cache chaud. Depuis
-// les jetons read-only, un subprocess peut l'appeler. On préremplit donc
-// priceCache en quelques appels groupés ; les boucles fetchOHLCV existantes
-// deviennent des no-op (elles retournent tout de suite si le ticker est en cache).
-//
-// Sans jeton, la fonction ne fait rien et le chemin Yahoo historique s'applique
-// à l'identique : aucune régression, seulement l'ancienne lenteur.
-const BULK_SIZE = Number(process.env.SWEEP_BULK_SIZE || 20);
 async function prefetchBulkMCP(tickers, label) {
-  let mcp;
-  try { mcp = require('./lib/mcp-client'); } catch { return 0; }
-  if (!mcp.canCallDirectly('marketdata')) {
-    console.log('  [bulk] pas de jeton MCP — repli sur la récupération unitaire (lente)');
-    return 0;
-  }
-  const todo = [...new Set(tickers)].filter(t => t && !priceCache[t] && !isCryptoTicker(t));
-  if (!todo.length) return 0;
-  const batches = [];
-  for (let i = 0; i < todo.length; i += BULK_SIZE) batches.push(todo.slice(i, i + BULK_SIZE));
-  console.log(`  [bulk] ${todo.length} tickers en ${batches.length} appel(s) group\u00e9(s)${label ? ' — ' + label : ''}...`);
-  const t0 = Date.now();
-  const calls = batches.map(b => ({
-    server: 'marketdata', tool: 'QueryData', as: b[0],
-    args: { types: 'bars_daily', symbols: b.join(','), limit: 140 },
-  }));
-  let filled = 0, dropped = 0;
-  try {
-    const results = await mcp.callMany(calls, { concurrency: 4 });
-    for (let bi = 0; bi < results.length; bi++) {
-      const r = results[bi];
-      if (!r || !r.ok) continue;
-      const res = (r.value && r.value.results && r.value.results[0]) || null;
-      if (!res) continue;
-      const syms = res.symbols || batches[bi];
-      const data = res.data || [];
-      // ⛔ APPARIEMENT FAIL-CLOSED — vérifié le 2026-08-11.
-      // Le serveur renvoie `symbols` = la liste DEMANDÉE, mais `data` = seulement
-      // les symboles TROUVÉS. Sur AAPL,ZZZZFAKE,MSFT,QQQFAKE2,SPY il renvoie
-      // 5 symboles et 3 séries. Apparier par index écrirait l'historique de MSFT
-      // sous ZZZZFAKE et celui de SPY sous MSFT — une corruption SILENCIEUSE des
-      // prix, donc des trades simulés faux, sans aucune erreur levée.
-      // Les entrées de `data` ne portent pas de champ `symbol` : on ne peut pas
-      // réapparier. Donc si les longueurs diffèrent, on JETTE le lot entier et on
-      // laisse le chemin unitaire le traiter. Lent, mais juste.
-      if (data.length !== syms.length) {
-        dropped += syms.length;
-        continue;
-      }
-      for (let i = 0; i < data.length; i++) {
-        const sym = syms[i];
-        const bars = (data[i] && data[i].bars) || (Array.isArray(data[i]) ? data[i] : null);
-        if (!sym || !Array.isArray(bars) || !bars.length) continue;
-        const hist = {};
-        for (const b of bars) {
-          // forme tableau [date,o,h,l,c,v] ou objet {date,open,...}
-          if (Array.isArray(b) && b.length >= 6) hist[b[0]] = { open: b[1], high: b[2], low: b[3], close: b[4], volume: b[5] };
-          else if (b && b.date) hist[b.date] = { open: b.open, high: b.high, low: b.low, close: b.close, volume: b.volume };
-        }
-        if (!Object.keys(hist).length) continue;
-        priceCache[sym] = hist;
-        try { saveCachedPrice(sym, hist); } catch { /* le cache disque n'est pas critique */ }
-        filled++;
-      }
-    }
-  } catch (e) {
-    console.log(`  [bulk] \u00e9chec (${String(e.message).slice(0, 90)}) — repli unitaire`);
-    return 0;
-  }
-  console.log(`  [bulk] ${filled}/${todo.length} servis en ${((Date.now() - t0) / 1000).toFixed(1)}s` +
-    (dropped ? ` — ${dropped} écartés (lot incomplet : appariement impossible, repli unitaire)` : ''));
-  return filled;
-}
-
-
-// Repli parallèle borné pour ce que le MCP ne couvre pas (délistés, EU, exotiques).
-// ~60% des tickers d'historique ne sont pas servis en masse ; les récupérer un par
-// un avec 120 ms de pause était le reliquat des 10 minutes.
-const FETCH_CONCURRENCY = Number(process.env.SWEEP_FETCH_CONCURRENCY || 8);
-async function fetchOHLCVMany(tickers, label) {
   const list = [...new Set(tickers)].filter(t => t && !priceCache[t]);
-  if (!list.length) return;
-  console.log(`  [repli] ${list.length} tickers${label ? ' — ' + label : ''}, ${FETCH_CONCURRENCY} en parallèle...`);
-  const t0 = Date.now(); let done = 0, cursor = 0;
-  async function worker() {
-    for (;;) {
-      const i = cursor++; if (i >= list.length) return;
-      try { await fetchOHLCV(list[i]); } catch { /* un ticker manquant ne casse pas le sweep */ }
-      done++; if (done % 25 === 0) process.stdout.write(`  ${done}/${list.length}\r`);
-      await sleep(30);
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(FETCH_CONCURRENCY, list.length) }, worker));
-  console.log(`  [repli] ${done}/${list.length} en ${((Date.now() - t0) / 1000).toFixed(1)}s`);
-}
-
-async function fetchOHLCV(ticker) {
-  if (priceCache[ticker]) return priceCache[ticker];
-  // Try file cache first
-  const cached = loadCachedPrice(ticker);
-  if (cached) { priceCache[ticker] = cached; return cached; }
-  // Crypto → Binance (not Yahoo)
-  if (isCryptoTicker(ticker)) return fetchBinanceOHLCV(ticker);
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=120d`;
-  return new Promise((resolve) => {
-    const req = https.get(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000,
-    }, (res) => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(data);
-          const result = j?.chart?.result?.[0];
-          if (!result) return resolve(null);
-          const timestamps = result.timestamp || [];
-          const q = result.indicators?.quote?.[0] || {};
-          const rmp = result.meta?.regularMarketPrice;
-          const history = {};
-          for (let i = 0; i < timestamps.length; i++) {
-            const dateStr = toDateStr(timestamps[i]);
-            if (q.open?.[i] != null && q.high?.[i] != null && q.low?.[i] != null && q.close?.[i] != null) {
-              history[dateStr] = { open: q.open[i], high: q.high[i], low: q.low[i], close: q.close[i] };
-            } else if (i === timestamps.length - 1 && rmp != null) {
-              // Last bar may have null OHLC before Yahoo finalizes — use regularMarketPrice
-              const o = q.open?.[i] ?? rmp;
-              const h = q.high?.[i] ?? rmp;
-              const l = q.low?.[i] ?? rmp;
-              history[dateStr] = { open: o, high: h, low: l, close: rmp };
-            }
-          }
-          priceCache[ticker] = history;
-          saveCachedPrice(ticker, history);
-          resolve(history);
-        } catch { resolve(null); }
-      });
-    });
-    req.on('error', () => resolve(null));
-    req.on('timeout', () => { req.destroy(); resolve(null); });
+  if (!list.length) return 0;
+  const run = runContext();
+  console.log(`  [marketdata] ${list.length} ticker(s)${label ? ' — ' + label : ''}`);
+  const barsBySymbol = await fetchCertifiedDailyBars({
+    symbols: list,
+    refdate: run.refdate,
+    cryptoRefdate: run.cryptoRefdate,
+    asOfTimestamp: run.asOfTimestamp,
+    limit: 400,
   });
+  for (const ticker of list) {
+    const history = barsToHistory(barsBySymbol.get(ticker));
+    const expected = isCryptoSymbol(ticker) ? run.cryptoRefdate : run.refdate;
+    if (!history[expected]) throw new Error(`${ticker}: certified close missing ${expected}`);
+    priceCache[ticker] = history;
+    saveCertifiedPrice(ticker, history);
+  }
+  return list.length;
+}
+async function fetchOHLCVMany(tickers, label) {
+  return prefetchBulkMCP(tickers, label);
+}
+async function fetchOHLCV(ticker) {
+  if (!priceCache[ticker]) await prefetchBulkMCP([ticker], 'single');
+  return priceCache[ticker] || null;
 }
 
 // ─── Simulate a single trade (enhanced with partial TP + trailing stop) ───────
@@ -2300,6 +2109,7 @@ async function backfillExcursions() {
 
 async function main() {
   console.log('=== DailyTickers Scanner — Enhanced Sweep Optimizer v2 ===\n');
+  runContext(); // reject an unbound/live run before parsing or mutating any output
 
   // 1. Parse all scans
   const scanDirs = fs.readdirSync(SCANNER_DIR)
@@ -2921,47 +2731,18 @@ async function main() {
     try {
       const spData = JSON.parse(fs.readFileSync(SCANNER_POS_PATH, 'utf8'));
       livePositions = spData.open_positions || [];
-      if (livePositions.length > 0) {
-        console.log(`\nLoaded ${livePositions.length} live positions for MtM injection`);
-        const liveTickers = [...new Set(livePositions.map(p => p.ticker))];
-        // Force-refresh ALL live position tickers — bypass 12h TTL cache.
-        // Stale cache caused TSM MtM to lag by a full trading day (2026-06-19 incident).
-        console.log(`  Force-refreshing ${liveTickers.length} live tickers (bypass cache TTL)...`);
-        const liveRefetch = [];
-        for (const t of liveTickers) delete priceCache[t];
-        await prefetchBulkMCP(liveTickers, 'live positions');
-        for (const t of liveTickers) {
-          delete priceCache[t];
-          // Purge BOTH the dated snapshot (TTL would otherwise serve a <12h file) and the
-          // legacy flat file, so fetchOHLCV is forced to re-fetch live.
-          try {
-            const dc = priceCacheLib.cacheFile(t, { date: REF_DATE, market: marketForTicker(t) });
-            if (fs.existsSync(dc)) fs.unlinkSync(dc);
-          } catch { /* ignore */ }
-          const fp = path.join(PRICE_CACHE_DIR, `${t}.json`);
-          if (fs.existsSync(fp)) fs.unlinkSync(fp);
-          liveRefetch.push(t);
-        }
-        await fetchOHLCVMany(liveRefetch, 'live positions');
-        // Seed priceCache from scanner-positions.json current_price for dates
-        // where Yahoo hasn't delivered a bar yet (entry day = nextBizDay of scan,
-        // which may be today or tomorrow depending on timing).
-        let seeded = 0;
-        for (const p of livePositions) {
-          if (!p.current_price || p.current_price <= 0) continue;
-          if (!priceCache[p.ticker]) priceCache[p.ticker] = {};
-          const entryDay = nextBizDay(p.scan_date);
-          if (!priceCache[p.ticker][entryDay]) {
-            priceCache[p.ticker][entryDay] = {
-              open: p.current_price, high: p.current_price,
-              low: p.current_price, close: p.current_price,
-            };
-            seeded++;
-          }
-        }
-        if (seeded > 0) console.log(`  Seeded ${seeded} tickers with live price for entry day`);
-      }
-    } catch(e) { console.log('⚠️ Could not load scanner-positions.json:', e.message); }
+    } catch(e) {
+      throw new Error(`cannot read scanner-positions.json for certified MtM: ${e.message}`);
+    }
+    if (livePositions.length > 0) {
+      console.log(`\nLoaded ${livePositions.length} live positions for MtM injection`);
+      const liveTickers = [...new Set(livePositions.map(p => p.ticker))];
+      // Force-refresh all live positions from the same certified reference close.
+      // An absent or partial cell is a hard failure; no cached or provider price is reused.
+      console.log(`  Refreshing ${liveTickers.length} live tickers from certified Marketdata MCP...`);
+      for (const t of liveTickers) delete priceCache[t];
+      await prefetchBulkMCP(liveTickers, 'live positions');
+    }
   }
 
   if (fs.existsSync(MODES_CFG_PATH)) {

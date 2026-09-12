@@ -9,9 +9,20 @@ const { isUSTradingDay } = require('./lib/market-calendar');
 const { normalizeIntradayBars, sessionCoverageError } = require('./lib/retro-intraday');
 
 const ROOT = path.join(__dirname, '..');
-const [startCompact, endCompact, referenceClose = endCompact] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const [startCompact, endCompact, referenceClose = endCompact] = args;
+const argValue = name => {
+  const index = args.indexOf(name);
+  return index < 0 ? null : args[index + 1];
+};
+const runCompact = argValue('--run-date') || referenceClose;
+const cohortArg = argValue('--cohort');
 if (![startCompact, endCompact, referenceClose].every(v => /^\d{8}$/.test(v || ''))) {
-  console.error('Usage: node tools/build-period-retro.js YYYYMMDD YYYYMMDD YYYYMMDD');
+  console.error('Usage: node tools/build-period-retro.js YYYYMMDD YYYYMMDD YYYYMMDD [--run-date YYYYMMDD] [--cohort path]');
+  process.exit(2);
+}
+if (!/^\d{8}$/.test(runCompact || '')) {
+  console.error('--run-date must be YYYYMMDD');
   process.exit(2);
 }
 
@@ -19,7 +30,7 @@ const iso = compact => `${compact.slice(0, 4)}-${compact.slice(4, 6)}-${compact.
 const startDate = iso(startCompact);
 const endDate = iso(endCompact);
 const refDate = iso(referenceClose);
-const outputDir = path.join(ROOT, 'scanner', 'retrospective', referenceClose);
+const outputDir = path.join(ROOT, 'scanner', 'retrospective', runCompact);
 const intradayBarsPath = path.join(outputDir, '_data', 'intraday-bars-15m.json');
 const intradayPayload = fs.existsSync(intradayBarsPath) ? JSON.parse(fs.readFileSync(intradayBarsPath, 'utf8')) : {};
 const intradaySessions = intradayPayload.sessions || {};
@@ -54,16 +65,27 @@ function addTradingDays(dateStr, days, region, ticker) {
   return date.toISOString().slice(0, 10);
 }
 
-const scanDirs = fs.readdirSync(path.join(ROOT, 'scanner'))
+const cohortPath = cohortArg && path.resolve(ROOT, cohortArg);
+const cohort = cohortPath && JSON.parse(fs.readFileSync(cohortPath, 'utf8'));
+const cohortScanDirs = cohort?.certified_trade_cohort?.scan_folders;
+if (cohortPath && (!Array.isArray(cohortScanDirs) || !cohortScanDirs.every(value => /^\d{8}$/.test(value)))) {
+  console.error('cohort manifest lacks certified_trade_cohort.scan_folders');
+  process.exit(3);
+}
+const scanDirs = (cohortScanDirs || fs.readdirSync(path.join(ROOT, 'scanner'))
   .filter(d => /^\d{8}$/.test(d) && d >= startCompact && d <= endCompact)
   .filter(d => fs.existsSync(path.join(ROOT, 'scanner', d, 'signals.json')))
   .filter(d => fs.existsSync(path.join(ROOT, 'scanner', d, 'index.html')))
-  .sort();
+  .sort()).filter(d => d >= startCompact && d <= endCompact);
 
 const sourceFiles = [];
 const signals = [];
 for (const scanDir of scanDirs) {
   const file = path.join(ROOT, 'scanner', scanDir, 'signals.json');
+  if (!fs.existsSync(file) || !fs.existsSync(path.join(ROOT, 'scanner', scanDir, 'index.html'))) {
+    console.error('certified cohort source missing: scanner/' + scanDir);
+    process.exit(3);
+  }
   const payload = JSON.parse(fs.readFileSync(file, 'utf8'));
   sourceFiles.push(file);
   sourceFiles.push(path.join(ROOT, 'scanner', scanDir, 'index.html'));
@@ -74,9 +96,14 @@ for (const scanDir of scanDirs) {
     signals.push({ ...signal, scan_date: payloadDate || iso(scanDir), scan_dir: scanDir, regime: payload.regime || 'UNKNOWN' });
   }
 }
+if (cohort && signals.length !== cohort.certified_trade_cohort.proposals) {
+  console.error('cohort denominator mismatch: manifest=' + cohort.certified_trade_cohort.proposals + ', signals=' + signals.length);
+  process.exit(3);
+}
 
 if (fs.existsSync(intradayBarsPath)) sourceFiles.push(intradayBarsPath);
 for (const source of intradaySources) sourceFiles.push(path.resolve(ROOT, source.path));
+if (cohortPath) sourceFiles.push(cohortPath);
 
 function expectedSessions(start, end, region, ticker) {
   const result = [];
@@ -96,6 +123,7 @@ function evaluate(signal) {
   const horizon = signal.horizon || 10;
   const horizonEnd = addTradingDays(signal.scan_date, horizon, signal.region, signal.ticker);
   const cutoff = horizonEnd < refDate ? horizonEnd : refDate;
+  const isMature = horizonEnd <= refDate;
   const base = {
     scan_date: signal.scan_date,
     ticker: signal.ticker,
@@ -113,6 +141,14 @@ function evaluate(signal) {
     horizon,
     horizon_end: horizonEnd
   };
+  if (signal.region === 'EU' && signal.ticker.includes('.')) {
+    return {
+      ...base,
+      status: 'data_error',
+      reason: 'intraday_calendar_not_supported_for_listing',
+      measurement_calendar: 'non_us_listing_requires_exchange_specific_15m_contract'
+    };
+  }
   const requiredSessions = expectedSessions(signal.scan_date, cutoff, signal.region, signal.ticker);
   const sessions = requiredSessions.map(date => ({
     date,
@@ -121,7 +157,12 @@ function evaluate(signal) {
   const missingSessions = sessions.map(session => ({ date: session.date, error: sessionCoverageError(session.bars, session.date) }))
     .filter(session => session.error);
   if (missingSessions.length) {
-    return { ...base, status: 'data_error', reason: 'incomplete_intraday_15m_coverage', missing_sessions: missingSessions };
+    return {
+      ...base,
+      status: isMature ? 'data_error' : 'open_unverified',
+      reason: isMature ? 'incomplete_intraday_15m_coverage' : 'horizon_not_elapsed_incomplete_intraday_15m_coverage',
+      missing_sessions: missingSessions
+    };
   }
   const eventBars = sessions.flatMap(session => session.bars.map(bar => ({ ...bar, date: session.date })));
   const opening = eventBars[0];
@@ -280,7 +321,7 @@ function evaluate(signal) {
 
 const outcomes = signals.map(evaluate);
 const isWinner = outcome => outcome.status === 'tp2' || outcome.status.startsWith('tp1');
-const filled = outcomes.filter(o => !['no_fill', 'data_error', 'ambiguous'].includes(o.status));
+const filled = outcomes.filter(o => !['no_fill', 'data_error', 'open_unverified', 'ambiguous'].includes(o.status));
 const resolved = filled.filter(o => o.status !== 'pending');
 const fullyClosed = resolved.filter(o => o.status !== 'tp1_pending');
 const winners = resolved.filter(isWinner);
@@ -296,7 +337,7 @@ function groupBy(key) {
     groups.get(value).push(o);
   }
   return [...groups.entries()].map(([name, rows]) => {
-    const ok = rows.filter(o => !['no_fill', 'data_error', 'ambiguous'].includes(o.status));
+    const ok = rows.filter(o => !['no_fill', 'data_error', 'open_unverified', 'ambiguous'].includes(o.status));
     const done = ok.filter(o => o.status !== 'pending');
     const closed = done.filter(o => o.status !== 'tp1_pending');
     const hits = done.filter(isWinner);
@@ -323,7 +364,8 @@ function groupBy(key) {
 const averageReturn = fullyClosed.length ? fullyClosed.reduce((sum, o) => sum + o.return_pct, 0) / fullyClosed.length : 0;
 const summary = {
   period_start: startDate,
-  period_end: endDate,
+  period_end: refDate,
+  scan_period_end: endDate,
   reference_close: refDate,
   generated_at: new Date().toISOString(),
   scans: scanDirs.length,
@@ -335,6 +377,8 @@ const summary = {
   pending: filled.length - resolved.length,
   no_fill: outcomes.filter(o => o.status === 'no_fill').length,
   data_error: outcomes.filter(o => o.status === 'data_error').length,
+  open_unverified: outcomes.filter(o => o.status === 'open_unverified').length,
+  non_mature: outcomes.filter(o => o.horizon_end > refDate).length,
   ambiguous: outcomes.filter(o => o.status === 'ambiguous').length,
   tp1_or_better: winners.length,
   stopped: stopped.length,
@@ -349,8 +393,24 @@ const summary = {
 
 const ranked = resolved.slice().sort((a, b) => b.r_multiple - a.r_multiple);
 const output = {
-  methodology: 'published primary signals[] only; complete regular-session 15-minute coverage is mandatory for every session in the horizon; fill must be demonstrated in the first regular 15-minute bar with the shared 2% chase tolerance; gap-down through stop is no-fill; events are evaluated chronologically on 15-minute bars; bars containing incompatible stop/target events are ambiguous and excluded from performance statistics; 50% exits at TP1 and the runner moves to breakeven for TP2; overnight stop gaps execute at the open; expiry at scan_date plus N trading sessions; unresolved runners are marked at the reference close',
+  methodology: 'Published primary signals[] only. For US listings, complete regular-session 15-minute coverage is mandatory for every session in the horizon; fill must be demonstrated in the first regular 15-minute bar with the shared 2% chase tolerance; gap-down through stop is no-fill; events are evaluated chronologically on 15-minute bars; bars containing incompatible stop/target events are ambiguous and excluded from performance statistics; 50% exits at TP1 and the runner moves to breakeven for TP2; overnight stop gaps execute at the open; expiry at scan_date plus N trading sessions; unresolved runners are marked at the reference close. A non-US listing without an exchange-specific intraday contract is retained in the denominator as data_error and is not evaluated on a New York session.',
   summary,
+  publication: {
+    type: 'coverage_review',
+    cohort_performance_certified: false
+  },
+  measurement_input: {
+    type: 'bars_15m',
+    path: path.relative(ROOT, intradayBarsPath),
+    sha256: sha256(intradayBarsPath),
+    reference_close: refDate
+  },
+  cohort: cohort ? {
+    path: path.relative(ROOT, cohortPath),
+    sha256: sha256(cohortPath),
+    certified_proposals: cohort.certified_trade_cohort.proposals,
+    review_only_records_preserved: cohort.review_only_exclusion?.structured_records_preserved_not_trade_certified ?? 0
+  } : null,
   scan_dates: scanDirs.map(iso),
   by_scan: groupBy('scan_date'),
   by_strategy: groupBy('strategy'),

@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Semaine FOMC : le calendrier reprend la main",
+    "desc": "La réunion du FOMC se termine le mercredi 16 septembre. Le VIX, indicateur annualisé de volatilité implicite des grandes actions américaines, vaut 15,84. Ce calme relatif coexiste avec un recul des actions et des obligations, tandis que le pétrole progresse nettement. La décision de la semaine : gar...",
+    "tags": "us,macro,earnings,etf,crypto,commodities",
+    "grade": "",
+    "href": "/weekly/20260914/",
+    "date": "14 septembre 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Oracle : une médiane rassurante, une queue qui change le risque",
     "desc": "Oracle publie jeudi soir. Les options valorisent un écart de 11,7 % sur une capitalisation de 457 milliards de dollars.",
     "tags": "us,macro,earnings,ai,software,energy,crypto,etf",
@@ -5744,6 +5757,32 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/status/",
     "date": "Updated continuously"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Avant le FOMC : contrôles incomplets, aucun nouvel ordre validé",
+    "desc": "Le vivier a bien été recherché parmi les actions et ETF cotés aux États-Unis. Les familles de cassure, de momentum et de repli ont toutes été examinées avant le choix d’un panier. Le principal obstacle est la qualité vérifiable des séries et des contrôles encore nécessaires. Il ne serait pas exact d...",
+    "tags": "us,etf,macro,technique",
+    "grade": "",
+    "href": "/scanner/20260912/",
+    "date": "12 septembre 2026"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Rétrospective de couverture scanner",
+    "desc": "Couverture de la cohorte scanner : 56 propositions, 16 résultats résolus. Sans verdict de performance global.",
+    "tags": "scanner,retrospective,marche",
+    "grade": "",
+    "href": "/scanner/retrospective/20260912/",
+    "date": "Semaine du 12 septembre 2026"
   },
   {
     "type": "scanner",

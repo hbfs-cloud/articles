@@ -50,4 +50,28 @@ function loadScannerScope(root, argv = process.argv.slice(2)) {
   };
   return Object.freeze({ active, audit, excludesMode, filterModes, isDtxResultKey, preserveDtxResults });
 }
-module.exports = { loadScannerScope };
+function initializeScannerScope(root, date, refdate) {
+  if (!/^\d{8}$/.test(date || '')) throw Error('Invalid scanner date');
+  const policy = JSON.parse(fs.readFileSync(path.join(root, 'config/scanner-components.json'), 'utf8'));
+  const relative = `scanner/${date}/_scope.json`;
+  const target = path.join(root, relative);
+  const doc = { date, refdate, excluded_components: policy.excluded_components,
+    user_instruction: policy.user_instruction, all_other_gates_required: policy.all_other_gates_required };
+  if (fs.existsSync(target)) {
+    const previous = JSON.parse(fs.readFileSync(target, 'utf8'));
+    if (JSON.stringify(previous) !== JSON.stringify(doc)) throw Error('Existing scanner scope differs; preserving it');
+  } else {
+    const iso = `${date.slice(0,4)}-${date.slice(4,6)}-${date.slice(6,8)}`;
+    if (!isUSTradingDay(iso) || refdate !== previousUSTradingDay(iso) || iso < policy.effective_from) throw Error('Invalid product scope session');
+    if (JSON.stringify(policy.excluded_components) !== '["dtx"]' || policy.all_other_gates_required !== true) throw Error('Policy may exclude only DTX');
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, JSON.stringify(doc, null, 2) + '\n', { flag: 'wx' });
+  }
+  return loadScannerScope(root, [`--scope=${relative}`]);
+}
+if (require.main === module) {
+  if (process.argv[2] !== '--initialize' || process.argv.length !== 5) throw Error('Usage: scanner-scope.js --initialize YYYYMMDD YYYY-MM-DD');
+  const scope = initializeScannerScope(path.resolve(__dirname, '../..'), process.argv[3], process.argv[4]);
+  console.log(`[scope] DTX excluded; other gates required (${scope.audit.date})`);
+}
+module.exports = { loadScannerScope, initializeScannerScope };

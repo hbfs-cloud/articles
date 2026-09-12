@@ -25,29 +25,37 @@ Pour chaque lot de 1 a 60 symboles et chaque fenetre complete:
 
 ```bash
 node tools/validate-workflows.js --workflow retro
-bash tools/run-collect.sh retro scanner/SCANDATE/retro/_data \
-  --var scandate=SCANDATE --var startdate=YYYY-MM-DD \
-  --var refdate=YYYY-MM-DD --var symbols=A,B,C
+bash tools/run-collect.sh retro scanner/retrospective/RUNDATE/_data/collections-v2/SCANDATE \
+  --var rundate=RUNDATE --var startdate=YYYY-MM-DD \
+  --var refdate=YYYY-MM-DD --var symbols=A,B,C --var us_symbols=A,B,C
 ```
 
 Apres chaque lot, normaliser et fusionner les barres collectees vers l'unique entree gouvernante:
 
 ```bash
 node tools/build-intraday-retro-input.js \
-  --in scanner/SCANDATE/retro/_data/bars_intraday.json \
-  --out scanner/retrospective/REFDATE/_data/intraday-bars-15m.json \
+  --in scanner/retrospective/RUNDATE/_data/collections-v2/SCANDATE/bars_intraday.json \
+  --out scanner/retrospective/RUNDATE/_data/intraday-bars-15m.json \
   --reference-close YYYY-MM-DD --append
 ```
 
-Le calcul refuse toute session qui n'a pas exactement les 26 timestamps 15 minutes RTH, de 09:30 a
-15:45 America/New_York, avec timezone explicite, sans doublon ni trou.
+Le calcul refuse toute session US qui n'a pas exactement les 26 timestamps 15 minutes RTH, de 09:30 a
+15:45 America/New_York, avec timezone explicite, sans doublon ni trou. Le paramètre symbols conserve toutes les
+propositions publiées; us_symbols est le sous-ensemble mesurable avec ce contrat. Une cotation non-US
+reste dans le dénominateur et est signalée non mesurée tant qu'un calendrier intraday propre n'est pas certifié.
 
 `startdate` couvre la premiere session d'execution possible; `refdate` couvre la derniere session
-de l'horizon publie, calculee en seances. Le plan collecte enveloppe daily, ordre des evenements en 15
-minutes, benchmarks, SEC, evenements et insiders. Les lots utilisent le chemin async/pagine.
+de l'horizon publie, calculee en seances. Le plan separe l'execution truth (enveloppe daily, ordre des
+evenements en 15 minutes et benchmarks, tous bornes a la fenetre) d'un corpus de risques courant
+(SEC, evenements, news, analystes et insiders). Les lots utilisent le chemin async/pagine.
 Le preflight historique exige que le service couvre au moins `refdate`; il n'exige pas que la derniere
 date globale du service soit egale a cette ancienne cloture. Les requetes restent bornees exactement et
 le harnais refuse toute barre posterieure.
+
+Les facettes courant-only ne recoivent jamais de bornes historiques fictives. Elles ne sont pas des
+snapshots point-in-time: un enregistrement de risque ne peut etre cite qu'avec sa date
+d'acceptation/publication explicite et comme corpus observe aujourd'hui; il ne gouverne jamais fill,
+stop, cible, horizon, performance, ni ce que la selection pouvait connaitre a l'epoque.
 
 `tools/build-mono-retro.js` est un outil daily forensic archive et refuse l'execution normale. Il ne
 peut jamais produire la retro active ni une note de performance gouvernante.

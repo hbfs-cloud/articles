@@ -6,7 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const cp = require('node:child_process');
 const ROOT = path.resolve(__dirname, '../..');
-const { loadScannerScope } = require('../lib/scanner-scope');
+const { loadScannerScope, initializeScannerScope } = require('../lib/scanner-scope');
 const ARG = '--scope=scanner/20260908/_scope.json';
 const scopeDoc = { date: '20260908', refdate: '2026-09-04', excluded_components: ['dtx'],
   user_instruction: 'skip cette partie du scanner fait le reste en dehors de dtx', all_other_gates_required: true };
@@ -40,6 +40,17 @@ test('default does not infer a waiver from a scope file; DTX remains in scope', 
   assert.equal(scope.excludesMode('best', { assetClass: 'dtx' }), false);
   const modes = { best: { assetClass: 'dtx' }, balanced: { assetClass: 'equity' } };
   assert.equal(scope.filterModes(modes), modes);
+});
+test('canonical product policy initializes a dated scope without overwriting prior decisions', t => {
+  const root = fixture(t);
+  write(root, 'config/scanner-components.json', { ...scopeDoc, effective_from: '2026-09-12' });
+  const scope = initializeScannerScope(root, '20260914', '2026-09-11');
+  assert.equal(scope.active, true);
+  assert.equal(scope.excludesMode('best'), true);
+  assert.equal(scope.excludesMode('balanced'), false);
+  assert.equal(initializeScannerScope(root, '20260914', '2026-09-11').audit.sha256, scope.audit.sha256);
+  assert.throws(() => initializeScannerScope(root, '20260914', '2026-09-10'), /preserving/);
+  assert.throws(() => initializeScannerScope(root, '20260913', '2026-09-11'), /session/);
 });
 test('scope binds the calendar, folder, instruction and exact DTX-only boundary', t => {
   const root = fixture(t);

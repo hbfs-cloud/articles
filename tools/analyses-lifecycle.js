@@ -4,7 +4,7 @@
  *
  * Chaque soir (chaîne C de scan-parallel / publish-daily-card) :
  *   1. charge les dossiers OUVERTS (active/pending/watch/tp1-hit) de data/analyses-data/,
- *   2. récupère les clôtures quotidiennes depuis la publication (Yahoo v8, proxy en repli),
+ *   2. récupère les clôtures quotidiennes certifiées depuis Marketdata MCP,
  *   3. applique les transitions déterministes du plan publié (tradeIdea) :
  *        - déclenchement : première clôture qui atteint la zone d'entrée,
  *        - invalidation : clôture au-delà du stop APRÈS déclenchement → `stopped`,
@@ -23,7 +23,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
+const { runArgs, fetchCertifiedDailyBars } = require('./lib/mcp-daily-bars');
 
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'data', 'analyses-data');
@@ -40,41 +40,17 @@ const HORIZON_DEFAULT = 20, HORIZON_MIN = 5, HORIZON_MAX = 60;
 
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 
-function httpGet(url) {
-  return new Promise((resolve, reject) => {
-    https.get(url, { headers: { 'User-Agent': 'DailyTickers/1.0' }, timeout: 15000 }, res => {
-      if (res.statusCode >= 400) { res.resume(); return reject(new Error('HTTP ' + res.statusCode)); }
-      let s = ''; res.on('data', d => s += d); res.on('end', () => resolve(s));
-    }).on('error', reject).on('timeout', function () { this.destroy(new Error('timeout')); });
-  });
-}
-
-/** Clôtures quotidiennes [{date, close}] triées — Yahoo direct puis proxy allorigins. */
-async function fetchCloses(ticker, sinceISO) {
-  const ageDays = Math.ceil((Date.now() - new Date(sinceISO)) / 86400000);
-  const range = ageDays <= 55 ? '3mo' : '6mo';
-  const yurl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=${range}&interval=1d`;
-  let raw;
-  try { raw = await httpGet(yurl); }
-  catch { raw = await httpGet('https://api.allorigins.win/raw?url=' + encodeURIComponent(yurl)); }
-  const j = JSON.parse(raw);
-  const r = j?.chart?.result?.[0];
-  const ts = r?.timestamp || [], closes = r?.indicators?.quote?.[0]?.close || [];
-  const out = [];
-  for (let i = 0; i < ts.length; i++) {
-    if (closes[i] == null) continue;
-    const d = new Date(ts[i] * 1000).toISOString().slice(0, 10);
-    out.push({ date: d, close: closes[i] });
-  }
-  // CLÔTURES RÉGLÉES uniquement : la barre datée d'aujourd'hui n'est un close qu'une fois TOUS
-  // les marchés fermés (US 20h/21h UTC selon DST → cutoff 21h05 UTC ; l'Europe ferme avant).
-  // Avant ce cutoff, Yahoo sert la barre du jour EN COURS — un « close » qui bouge encore, sur
-  // lequel on ne prend AUCUNE décision (leçon du 26/08 : valeurs EU cotantes entrées en close).
-  const today = todayISO();
-  const settledToday = new Date().getUTCHours() * 60 + new Date().getUTCMinutes() >= 21 * 60 + 5;
-  return out
-    .filter(b => b.date > sinceISO && (b.date < today || (b.date === today && settledToday)))
+/** Convertit uniquement les barres MCP déjà validées en clôtures de replay. */
+function closesSince(bars, ticker, sinceISO, refdate) {
+  if (!Array.isArray(bars)) throw new Error(`${ticker}: certified MCP bars missing`);
+  const out = bars
+    .filter(bar => bar.date > sinceISO && bar.date <= refdate)
+    .map(bar => ({ date: bar.date, close: bar.close }))
     .sort((a, b) => a.date.localeCompare(b.date));
+  if (bars.length && bars[bars.length - 1].date !== refdate) {
+    throw new Error(`${ticker}: certified MCP bars do not end at ${refdate}`);
+  }
+  return out;
 }
 
 function parseHorizonSessions(h) {
@@ -158,10 +134,14 @@ const DISPLAY = {
 };
 
 async function main() {
+  const run = runArgs(process.argv);
   const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json') && !f.endsWith('.harness.json'));
   const registry = {}; const transitions = []; const failures = [];
   let checked = 0, stamped = 0;
   const nowISO = new Date().toISOString();
+  const replayTickers = new Set();
+  let certifiedBars = new Map();
+  const pendingCleanupWrites = new Map();
 
   // Petite parallélisation bornée pour rester poli avec la source.
   const queue = [];
@@ -201,7 +181,9 @@ async function main() {
       stamped++;
       cleanupChanged = true;
     }
-    if (cleanupChanged && !DRY) fs.writeFileSync(path.join(DATA_DIR, f), JSON.stringify(d, null, 2));
+    // Do not persist even a status cleanup before the certified bars preflight
+    // has completed. A missing/stale MCP source must leave public outputs intact.
+    if (cleanupChanged) pendingCleanupWrites.set(f, d);
 
     const entryReg = {
       status, display: DISPLAY[status] || status,
@@ -218,9 +200,11 @@ async function main() {
       && (!ONLY.length || ONLY.includes(slug));
     if (!inScope) continue;
 
+    replayTickers.add(slug);
+
     queue.push(async () => {
       let closes;
-      try { closes = await fetchCloses(slug, meta.date); }
+      try { closes = closesSince(certifiedBars.get(slug), slug, meta.date, run.refdate); }
       catch (e) { failures.push(`${slug}: ${e.message}`); return; }
       checked++;
       if (!closes.length) { // publié aujourd'hui / pas encore de clôture postérieure : vérifié, rien à rejouer
@@ -245,11 +229,19 @@ async function main() {
     });
   }
 
+  if (replayTickers.size) {
+    certifiedBars = await fetchCertifiedDailyBars({
+      symbols: [...replayTickers], refdate: run.refdate, cryptoRefdate: run.cryptoRefdate,
+      asOfTimestamp: run.asOfTimestamp, limit: Math.max(160, MAX_AGE_DAYS + 10),
+    });
+  }
+
+  if (!DRY) {
+    for (const [f, d] of pendingCleanupWrites) fs.writeFileSync(path.join(DATA_DIR, f), JSON.stringify(d, null, 2));
+  }
+
   const POOL = 6;
   for (let i = 0; i < queue.length; i += POOL) await Promise.all(queue.slice(i, i + POOL).map(fn => fn()));
-
-  const agg = { generatedAt: nowISO, closeDateMax: Object.values(registry).reduce((m, e) => e.closeDate > m ? e.closeDate : m, ''), entries: registry };
-  if (!DRY) fs.writeFileSync(OUT, JSON.stringify(agg, null, 1));
 
   const counts = {};
   for (const e of Object.values(registry)) counts[e.status] = (counts[e.status] || 0) + 1;
@@ -257,6 +249,9 @@ async function main() {
   console.log(`[lifecycle] statuts: ${Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + '=' + v).join(' ')}`);
   transitions.forEach(x => console.log('  ↪ TRANSITION ' + x));
   failures.forEach(x => console.log('  ⚠ cotation KO — non vérifié: ' + x));
+  if (failures.length) throw new Error(`${failures.length} certified marketdata replay failure(s); no numerical fallback is permitted`);
+  const agg = { generatedAt: nowISO, closeDateMax: Object.values(registry).reduce((m, e) => e.closeDate > m ? e.closeDate : m, ''), entries: registry };
+  if (!DRY) fs.writeFileSync(OUT, JSON.stringify(agg, null, 1));
   if (!transitions.length) console.log('  (aucune transition ce soir)');
 }
 

@@ -92,3 +92,13 @@ test('normal generator final write guard cannot re-promote signals, orders or cu
  assert.strictEqual(applyCurrentApiGate(f.root,'positions.json',f.endpoint,'20260908',now),f.endpoint);
 });
 test('status banner uses stylesheet class without inline style',t=>{const f=fixture(t);f.run('status');const html=fs.readFileSync(path.join(f.root,'scanner/status/index.html'),'utf8');assert.match(html,/class="scanner-publication-review"/);assert.doesNotMatch(html,/<aside[^>]+style=/);});
+
+ test('status banner follows the real body, never a body mention in CSS or script',t=>{
+ const f=fixture(t);
+ f.put('scanner/status/index.html','<!doctype html><html><head><style>/* scoped to <body> only */ body{color:black}</style><script>const example="<body>";</script><!-- <body> --></head><body class="real"><main>Historical</main></body></html>');
+ f.run('status');
+ const html=fs.readFileSync(path.join(f.root,'scanner/status/index.html'),'utf8');
+ assert.match(html,/<body class="real">\s*<!-- scanner-publication-review:start -->/);
+ assert.ok(html.indexOf('id="scanner-publication-review"')>html.indexOf('</head>'));
+ assert.match(html,/<style>\/\* scoped to <body> only \*\/ body\{color:black\}<\/style>/);
+ });

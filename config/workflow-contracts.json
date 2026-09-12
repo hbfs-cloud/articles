@@ -942,13 +942,20 @@
         {
           "path": "plans/retro.json",
           "required_variables": [
-            "scandate",
+            "rundate",
             "startdate",
             "refdate",
-            "symbols"
+            "symbols",
+            "us_symbols"
           ],
           "variable_constraints": {
             "symbols": {
+              "type": "csv",
+              "min_items": 1,
+              "max_items": 60,
+              "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$"
+            },
+            "us_symbols": {
               "type": "csv",
               "min_items": 1,
               "max_items": 60,
@@ -957,7 +964,11 @@
           },
           "static_symbol_calls": [
             "bench"
-          ]
+          ],
+          "evidence_semantics": {
+            "execution-truth": "Only timestamp-bounded daily and 15-minute bars, plus same-window benchmarks, govern fills, stops, targets, horizons and performance.",
+            "current-risk-corpus": "SEC, event/news/analyst and insider facets are collected without historical date bounds when the provider is current-only. They are non-PIT and may be reported solely as current-corpus records with explicit accepted/published-date attribution; they never alter execution truth or imply prior availability."
+          }
         }
       ]
     }

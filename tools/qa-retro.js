@@ -44,6 +44,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { CHASE_TOLERANCE_PCT, decideFill } = require('./lib/fill-policy');
 
 const ROOT = path.join(__dirname, '..');
@@ -116,6 +117,142 @@ function addBusinessDays(dateStr, days) {
   return date.toISOString().slice(0, 10);
 }
 
+function sha256(file) {
+  return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+}
+
+function underRoot(relativePath) {
+  if (typeof relativePath !== 'string' || !relativePath) return null;
+  const resolved = path.resolve(ROOT, relativePath);
+  return resolved === ROOT || resolved.startsWith(ROOT + path.sep) ? resolved : null;
+}
+
+function renderedGroupRows(html, heading) {
+  const headingAt = html.indexOf(`<h2>${heading}</h2>`);
+  if (headingAt < 0) return null;
+  const sectionEnd = html.indexOf('</section>', headingAt);
+  const body = html.slice(headingAt, sectionEnd < 0 ? html.length : sectionEnd).match(/<tbody>([\s\S]*?)<\/tbody>/);
+  if (!body) return null;
+  const rows = [];
+  for (const match of body[1].matchAll(/<tr>([\s\S]*?)<\/tr>/g)) {
+    const cells = [...match[1].matchAll(/<td>([\s\S]*?)<\/td>/g)].map(cell => cell[1].replace(/<[^>]+>/g, '').trim());
+    if (cells.length !== 7 || !Number.isInteger(Number(cells[1])) || !Number.isInteger(Number(cells[2])) || !Number.isInteger(Number(cells[3]))) return null;
+    rows.push({ name: cells[0], proposed: Number(cells[1]), resolved: Number(cells[2]), pending: Number(cells[3]) });
+  }
+  return rows;
+}
+
+function coverageReviewMain(dir, html) {
+  const failures = [];
+  const resultsPath = path.join(dir, 'retro-results.json');
+  let results;
+  try {
+    results = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+  } catch (error) {
+    console.error(`❌ qa-retro coverage_review: retro-results.json illisible (${error.message}).`);
+    process.exit(1);
+  }
+  const summary = results.summary || {};
+  const outcomes = Array.isArray(results.outcomes) ? results.outcomes : [];
+  const expect = (condition, message) => { if (!condition) failures.push(message); };
+
+  expect(results.publication?.type === 'coverage_review', 'retro-results.publication.type doit être coverage_review.');
+  expect(results.publication?.cohort_performance_certified === false, 'retro-results doit déclarer cohort_performance_certified:false.');
+  expect(results.cohort?.path && results.cohort?.sha256 && Number.isInteger(results.cohort?.certified_proposals), 'référence de cohorte ou empreinte absente de retro-results.json.');
+  const cohortPath = underRoot(results.cohort?.path);
+  let cohort;
+  if (!cohortPath || !fs.existsSync(cohortPath)) {
+    failures.push('manifeste de cohorte introuvable ou hors dépôt.');
+  } else {
+    try {
+      cohort = JSON.parse(fs.readFileSync(cohortPath, 'utf8'));
+      expect(sha256(cohortPath) === results.cohort.sha256, 'empreinte du manifeste de cohorte divergente.');
+    } catch (error) {
+      failures.push(`manifeste de cohorte illisible (${error.message}).`);
+    }
+  }
+  const proposed = cohort?.certified_trade_cohort?.proposals;
+  expect(Number.isInteger(proposed), 'compteur certified_trade_cohort.proposals absent du manifeste.');
+  expect(summary.proposed === proposed, `summary.proposed=${summary.proposed} diffère de la cohorte=${proposed}.`);
+  expect(results.cohort?.certified_proposals === proposed, `cohort.certified_proposals=${results.cohort?.certified_proposals} diffère de la cohorte=${proposed}.`);
+  expect(outcomes.length === proposed, `outcomes=${outcomes.length} diffère de la cohorte=${proposed}.`);
+
+  const excluded = new Set(['no_fill', 'data_error', 'open_unverified', 'ambiguous']);
+  const filled = outcomes.filter(outcome => !excluded.has(outcome.status));
+  const resolved = filled.filter(outcome => outcome.status !== 'pending');
+  const fullyClosed = resolved.filter(outcome => outcome.status !== 'tp1_pending');
+  const count = status => outcomes.filter(outcome => outcome.status === status).length;
+  expect(summary.filled === filled.length, `summary.filled=${summary.filled}, calcul=${filled.length}.`);
+  expect(summary.resolved === resolved.length, `summary.resolved=${summary.resolved}, calcul=${resolved.length}.`);
+  expect(summary.fully_closed === fullyClosed.length, `summary.fully_closed=${summary.fully_closed}, calcul=${fullyClosed.length}.`);
+  expect(summary.pending === filled.length - resolved.length, `summary.pending=${summary.pending}, calcul=${filled.length - resolved.length}.`);
+  expect(summary.open_runners === resolved.length - fullyClosed.length, `summary.open_runners=${summary.open_runners}, calcul=${resolved.length - fullyClosed.length}.`);
+  for (const key of ['no_fill', 'data_error', 'open_unverified', 'ambiguous', 'stopped']) {
+    expect(summary[key] === count(key), `summary.${key}=${summary[key]}, calcul=${count(key)}.`);
+  }
+  const winners = resolved.filter(outcome => outcome.status === 'tp2' || outcome.status.startsWith('tp1'));
+  expect(summary.tp1_or_better === winners.length, `summary.tp1_or_better=${summary.tp1_or_better}, calcul=${winners.length}.`);
+  expect(summary.filled + summary.no_fill + summary.data_error + summary.open_unverified + summary.ambiguous === proposed, 'les catégories de cohorte ne totalisent pas le dénominateur certifié.');
+
+  for (const [heading, groups] of [['Par scan', results.by_scan], ['Par stratégie', results.by_strategy]]) {
+    const rendered = renderedGroupRows(html, heading);
+    expect(Array.isArray(groups), `${heading}: agrégat absent de retro-results.json.`);
+    expect(rendered !== null, `${heading}: table HTML absente ou structure invalide.`);
+    if (Array.isArray(groups) && rendered) {
+      expect(groups.reduce((sum, group) => sum + group.proposed, 0) === proposed, `${heading}: les propositions agrégées ne totalisent pas ${proposed}.`);
+      expect(rendered.length === groups.length, `${heading}: nombre de lignes HTML divergent.`);
+      groups.forEach((group, index) => {
+        const line = rendered[index];
+        if (!line || line.name !== group.name || line.proposed !== group.proposed || line.resolved !== group.resolved || line.pending !== group.pending) {
+          failures.push(`${heading}: ligne HTML ${index + 1} divergente de retro-results.json.`);
+        }
+      });
+    }
+  }
+
+  expect(html.includes('data-retro-publication="coverage_review"'), 'HTML: flag data-retro-publication=coverage_review absent.');
+  expect(html.includes('Couverture de mesure incomplète'), 'HTML: alerte de couverture absente.');
+  expect(html.includes(`${summary.resolved} résultats résolus sur ${summary.proposed} propositions`), 'HTML: compteur de couverture divergent ou absent.');
+  expect(html.includes('Statistiques diagnostiques, sans verdict') && html.includes('ne permettent aucun verdict sur la cohorte scanner'), 'HTML: absence du cadrage documentaire sans verdict de cohorte.');
+
+  const input = results.measurement_input;
+  expect(input?.type === 'bars_15m' && typeof input.path === 'string' && typeof input.sha256 === 'string', 'measurement_input (bars_15m, path, sha256) absent de retro-results.json.');
+  const inputPath = underRoot(input?.path);
+  if (inputPath && fs.existsSync(inputPath)) expect(sha256(inputPath) === input.sha256, 'empreinte de measurement_input divergente.');
+  else if (input?.path) console.warn('⚠️  qa-retro coverage_review: measurement_input local indisponible; empreinte non recalculée.');
+
+  const entriesCache = {};
+  for (const outcome of resolved) {
+    const scanDate = String(outcome.scan_date || '').replaceAll('-', '');
+    if (!/^\d{8}$/.test(scanDate)) {
+      failures.push(`${outcome.ticker}: scan_date invalide pour la vérification de fill.`);
+      continue;
+    }
+    if (entriesCache[scanDate] === undefined) entriesCache[scanDate] = loadPublishedEntries(scanDate);
+    const record = entriesCache[scanDate]?.[outcome.ticker];
+    const published = typeof record === 'object' ? record.high : record;
+    if (!record || typeof published !== 'number' || (typeof record === 'object' && record.source === 'AMBIGU')) {
+      failures.push(`${outcome.ticker} (${scanDate}): borne haute publiée indisponible ou ambiguë.`);
+      continue;
+    }
+    const fill = decideFill(published, outcome.effective_entry);
+    if (fill.status === 'no_fill') {
+      failures.push(`${outcome.ticker} (${scanDate}): entrée ${outcome.effective_entry} hors tolérance de la borne haute ${published} (${fill.deviationPct}% > ${CHASE_TOLERANCE_PCT}%).`);
+    } else if (fill.status === 'chase' && outcome.fill_policy !== 'chase') {
+      failures.push(`${outcome.ticker} (${scanDate}): chase ${fill.deviationPct}% sans fill_policy=chase.`);
+    } else if (fill.status === 'filled' && outcome.fill_policy === 'chase') {
+      failures.push(`${outcome.ticker} (${scanDate}): fill_policy=chase alors que l’entrée est dans la zone.`);
+    }
+  }
+
+  if (failures.length) {
+    console.error(`\n❌ qa-retro COVERAGE_REVIEW FAILED — ${failures.length} contrôle(s) bloquant(s) :\n`);
+    failures.forEach((failure, index) => console.error(`  ${index + 1}. ${failure}`));
+    process.exit(1);
+  }
+  console.log(`✅ qa-retro COVERAGE_REVIEW PASSED — publication_review=PASS, cohort_performance_certified=false, ${resolved.length} fills conformes, cohorte ${proposed}.`);
+}
+
 function main() {
   const argv = process.argv.slice(2);
   const arg = argv.find(a => !a.startsWith('--'));
@@ -146,6 +283,13 @@ function main() {
   }
   const htmlPath = path.join(dir, 'index.html');
   const html = fs.readFileSync(htmlPath, 'utf8');
+
+  // Publication documentaire multi-scans : vérifier le résultat structuré et les
+  // tableaux rendus, puis conserver la branche historique ci-dessous inchangée.
+  if (html.includes('data-retro-publication="coverage_review"')) {
+    coverageReviewMain(dir, html);
+    return;
+  }
 
   // Lignes notées : jour, ticker, présence du tag chase, entrée effective (décimale FR).
   // Deux schémas acceptés : hebdo (colonne « lun. 13 ») et mono-scan (pas de colonne jour).

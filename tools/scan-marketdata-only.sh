@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Scanner with an explicit, dated user waiver excluding only DTX.
+# Scanner with a dated product scope excluding only DTX.
 # Usage: bash tools/scan-marketdata-only.sh <DATE> <REFDATE> <ASOF>
 # A: collection/enrichment; C: historic tracking/sweep; D: rotations/beta.
 # Every non-DTX source and quality gate remains mandatory.
@@ -15,12 +15,14 @@ const scope=require('./tools/lib/scanner-scope').loadScannerScope(process.cwd(),
 if(!scope.active||scope.audit.date!==date||scope.audit.refdate!==ref)throw Error('Missing exact run-bound DTX exclusion authorization');
 JS
 if [ "$?" -ne 0 ]; then exit 2; fi
+# Fix the request instant and crypto completed day once for all chain C calls.
+AS_OF_TIMESTAMP="${AS_OF_TIMESTAMP:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
+CRYPTO_REF=$(node -e 'const d=new Date(process.argv[1]);d.setUTCHours(0,0,0,0);d.setUTCDate(d.getUTCDate()-1);console.log(d.toISOString().slice(0,10))' "$AS_OF_TIMESTAMP")
 T0=$(date +%s)
 log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
 TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/dailytickers-scanner-${DATE}.XXXXXX")
 trap 'rm -rf "$TMP_ROOT"' EXIT HUP INT TERM
 A_LOG="$TMP_ROOT/A.log"; A_STATUS="$TMP_ROOT/A.status"
-B_LOG="$TMP_ROOT/B.log"; B_CACHE_LOG="$TMP_ROOT/B-cache.log"; B_STATUS="$TMP_ROOT/B.status"
 C_LOG="$TMP_ROOT/C.log"; C_STATUS="$TMP_ROOT/C.status"
 D_LOG="$TMP_ROOT/D.log"; D_STATUS="$TMP_ROOT/D.status"
 
@@ -55,8 +57,7 @@ mcp_require_token marketdata || exit $?
 
 # ── C : suivi + sweep (ne portent que sur des trades déjà scellés) ───────────
 (
-  C_RC=0
-  node tools/update-tracking.js > "$C_LOG" 2>&1 || C_RC=$?
+  node tools/update-tracking.js --refdate "$REF" --asof "$AS_OF_TIMESTAMP" > "$C_LOG" 2>&1 || { echo "C ÉCHEC — tracking" > "$C_STATUS"; exit 1; }
   # --quick : 1m27 contre 6m47 en complet, pour des stats frozen_* IDENTIQUES
   # (A/B du 2026-08-11, 14/14). 362 des 403 trades sont scellés et immuables par
   # règle projet — les re-simuler chaque soir ne change rien. Le sweep COMPLET
@@ -65,23 +66,23 @@ mcp_require_token marketdata || exit $?
   # Le sweep COMPLET (grille 24,7M combos, 120+ scans) dépasse le heap node par défaut (~4 Go)
   # depuis mi-août 2026 : OOM silencieux en pleine pré-sim (constaté le 16/08, exit masqué par un
   # pipe). 8 Go suffisent ; sans effet notable sur --quick.
-  NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=8192}" node tools/sweep.js $SWEEP_MODE "--scope=$DIR/_scope.json" >> "$C_LOG" 2>&1
+  NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=8192}" node tools/sweep.js $SWEEP_MODE --refdate "$REF" --crypto-refdate "$CRYPTO_REF" --asof "$AS_OF_TIMESTAMP" "--scope=$DIR/_scope.json" >> "$C_LOG" 2>&1
   SWEEP_RC=$?
-  [ "$SWEEP_RC" -ne 0 ] && C_RC="$SWEEP_RC"
+  [ "$SWEEP_RC" -ne 0 ] && { echo "C ÉCHEC — sweep" > "$C_STATUS"; exit "$SWEEP_RC"; }
   # Cycle de vie des analyses (statuts sur clôtures + endpoint du garde-fou JS des pages).
   # Le cycle de vie est une sortie publiée du scanner : un échec bloque le run.
-  node tools/analyses-lifecycle.js >> "$C_LOG" 2>&1
+  node tools/analyses-lifecycle.js --refdate "$REF" --asof "$AS_OF_TIMESTAMP" >> "$C_LOG" 2>&1
   LIFECYCLE_RC=$?
-  [ "$LIFECYCLE_RC" -ne 0 ] && C_RC="$LIFECYCLE_RC"
-  echo "C rc=$C_RC (tracking/sweep/lifecycle)" > "$C_STATUS"
-  exit "$C_RC"
+  [ "$LIFECYCLE_RC" -ne 0 ] && { echo "C ÉCHEC — lifecycle" > "$C_STATUS"; exit "$LIFECYCLE_RC"; }
+  echo "C rc=0 (tracking/sweep/lifecycle)" > "$C_STATUS"
+  exit 0
 ) & PC=$!
 
 # ── D : rotations sectorielles + plus hauts beta par sous-jacent (page /rotation/) ──
 # Indépendant du panier, mais publication-critical : RankBeta + barres sectorielles alimentent une
 # sortie publique. Un échec ou une preuve stale bloque donc le run au même titre que les autres chaînes.
 (
-  REFDATE="$REF" node tools/gen-rotation-beta.js > "$D_LOG" 2>&1
+  REFDATE="$REF" node tools/gen-rotation-beta.js --out-dir "$DIR/_rotation" > "$D_LOG" 2>&1
   D_RC=$?
   echo "D rc=$D_RC" > "$D_STATUS"
   exit "$D_RC"
@@ -93,7 +94,6 @@ log "3 chaînes lancées (A vivier+enrichissement · C suivi+sweep · D rotation
 # qui se marchent dessus) faisait échouer le grep, donc passer le test : le
 # chemin critique était déclaré sain par défaut. Un rc, lui, existe toujours.
 wait $PA; ARC=$?; log "A terminée (rc=$ARC) — $(cat "$A_STATUS" 2>/dev/null)"
-BRC=0 # DTX excluded by exact user authorization; not a passed DTX check
 wait $PC; CRC=$?; log "C terminée (rc=$CRC) — $(cat "$C_STATUS" 2>/dev/null)"
 wait $PD; DRC=$?; log "D terminée (rc=$DRC) — $(cat "$D_STATUS" 2>/dev/null)"
 if [ "$ARC" -ne 0 ] || grep -q "ÉCHEC" "$A_STATUS" 2>/dev/null; then
@@ -103,8 +103,7 @@ if [ "$ARC" -ne 0 ] || grep -q "ÉCHEC" "$A_STATUS" 2>/dev/null; then
   exit 1
 fi
 # Chaque chaîne alimente une sortie publiée. Une seule chaîne stale interdit la publication.
-if [ "$BRC" -ne 0 ] || [ "$CRC" -ne 0 ] || [ "$DRC" -ne 0 ]; then
-  [ "$BRC" -ne 0 ] && log "chaîne dtx en échec (rc=$BRC) — décisions/replay absents ou invalides"
+if [ "$CRC" -ne 0 ] || [ "$DRC" -ne 0 ]; then
   [ "$CRC" -ne 0 ] && log "chaîne suivi+sweep+lifecycle en échec (rc=$CRC) — stats/statuts non rafraîchis"
   [ "$DRC" -ne 0 ] && log "chaîne rotations/beta en échec (rc=$DRC) — sortie non rafraîchie"
   trap - EXIT HUP INT TERM

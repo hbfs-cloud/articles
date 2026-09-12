@@ -31,7 +31,9 @@ def build_index():
     index = []
     
     for d in dirs:
-        for root, _, files in os.walk(d):
+        for root, subdirs, files in os.walk(d):
+            # Evidence, captures and publication archives are private workspace inputs.
+            subdirs[:] = [name for name in subdirs if not name.startswith(("_", ".")) and name != "archive"]
             if 'index.html' in files and 'archive' not in root.split(os.sep):
                 filepath = os.path.join(root, 'index.html')
                 with open(filepath, 'r', encoding='utf-8') as f:

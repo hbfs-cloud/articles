@@ -6,6 +6,9 @@ const ROOT = path.resolve(__dirname, '..');
 const escape = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function render(root, reviewPath, { write = true } = {}) {
   const { review: r, dir: relativeDir } = validateReview(root, reviewPath);
+  if (r.review_date === '2026-09-12' && r.reference_close === '2026-09-11') {
+    return require('./lib/scanner-review-20260912').render(root, r, relativeDir, { write });
+  }
   if (r.review_date !== '2026-09-08' || r.reference_close !== '2026-09-04') throw Error('A new session requires a new editorial review; this template is dated 2026-09-08');
   const dir = path.join(root, relativeDir);
   if (r.watchlist.map(x => x.ticker).join(',') !== 'CEG,COP,XOM') throw Error('Watchlist changed: a new editorial review is required');
