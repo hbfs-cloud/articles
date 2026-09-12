@@ -6,15 +6,15 @@
  * This helper deliberately has no cache or public-data fallback.  A caller gets
  * bars only after the Marketdata MCP has proved the requested completed close
  * for every requested symbol.  It is intentionally small so chain C tools use
- * the same completed-bar contract as the collectors without writing a run
- * artifact of their own.
+ * the same completed-bar contract as the collectors. Raw responses, including
+ * failed cells and async job IDs, are retained in a private receipt directory.
  */
 
 const contract = require('./marketdata-bars-contract');
-const { nextUSTradingDay } = require('./market-calendar');
-
-const EQUITY_CALENDAR = 'us_equity_exchange_sessions';
-const CRYPTO_CALENDAR = 'crypto_24_7_utc';
+const { EQUITY_CALENDAR, CRYPTO_CALENDAR, calendarForSymbol, isSession, nextSession } = require('./equity-session-calendars');
+const fs = require('fs');
+const path = require('path');
+const { randomUUID } = require('crypto');
 
 function argValue(argv, name, envName) {
   const i = argv.indexOf(name);
@@ -52,12 +52,6 @@ function isValidIsoDate(date) {
     && new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) === date;
 }
 
-function nextCryptoDay(date) {
-  const next = new Date(`${date}T00:00:00Z`);
-  next.setUTCDate(next.getUTCDate() + 1);
-  return next.toISOString().slice(0, 10);
-}
-
 function normalizeBars(row, symbol, calendar) {
   const raw = row && row.bars;
   if (!Array.isArray(raw) || raw.length === 0) throw new Error(`${symbol}: bars_daily returned no bars`);
@@ -79,12 +73,13 @@ function normalizeBars(row, symbol, calendar) {
       || high < Math.max(open, low, close) || low > Math.min(open, high, close)) {
       throw new Error(`${symbol}: invalid OHLCV bounds`);
     }
+    if (!isSession(date, calendar)) throw new Error(`${symbol}: bar on a non-session date ${date} (${calendar})`);
     out.push({ date, open, high, low, close, volume });
   }
   for (let i = 1; i < out.length; i++) {
     const prior = out[i - 1].date, current = out[i].date;
     if (current <= prior) throw new Error(`${symbol}: duplicate or non-monotonic bar date ${current}`);
-    const expected = calendar === CRYPTO_CALENDAR ? nextCryptoDay(prior) : nextUSTradingDay(prior);
+    const expected = nextSession(prior, calendar);
     if (current !== expected) throw new Error(`${symbol}: incomplete ${calendar} bar sequence (${prior} → ${current}, expected ${expected})`);
   }
   return out;
@@ -95,22 +90,43 @@ function jobId(value) {
   return value.job_id || value.jobId || value.data && (value.data.job_id || value.data.jobId) || null;
 }
 
-async function completedResponse(client, args) {
+async function completedResponse(client, args, recordReceipt) {
   const initial = await client.callToolWithRetry('marketdata', 'QueryData', args);
   const id = jobId(initial);
-  return id ? client.awaitJob('marketdata', id) : initial;
+  recordReceipt({ phase: 'initial', args, job_id: id, response: initial });
+  if (!id) return initial;
+  try {
+    const terminal = await client.awaitJob('marketdata', id);
+    recordReceipt({ phase: 'terminal', args, job_id: id, response: terminal });
+    return terminal;
+  } catch (error) {
+    recordReceipt({ phase: 'error', args, job_id: id, error: error.message });
+    throw error;
+  }
 }
 
 /**
  * Returns Map<symbol, [{date,open,high,low,close,volume}]>.
  * Every returned series is bounded by, and proves, its requested completed end.
  */
-async function fetchCertifiedDailyBars({ symbols, refdate, cryptoRefdate, asOfTimestamp, limit = 160, batchSize = 25, client = require('./mcp-client') }) {
+async function fetchCertifiedDailyBars({ symbols, refdate, cryptoRefdate, asOfTimestamp, limit = 160, batchSize = 25, client = require('./mcp-client'), receiptDir = path.resolve(__dirname, '../../.agent/mcp-daily-bars') }) {
   const requested = [...new Set((symbols || []).map(String).map(s => s.trim()).filter(Boolean))];
   if (!requested.length) return new Map();
   refdate = requireIsoDate(refdate, '--refdate');
   asOfTimestamp = requireTimestamp(asOfTimestamp);
-  const equities = requested.filter(s => !isCryptoSymbol(s));
+  const groups = new Map();
+  for (const symbol of requested) {
+    const calendar = calendarForSymbol(symbol);
+    if (!groups.has(calendar)) groups.set(calendar, []);
+    groups.get(calendar).push(symbol);
+  }
+  const equities = groups.get(EQUITY_CALENDAR) || [];
+  const recordReceipt = receipt => {
+    if (!receiptDir) return;
+    fs.mkdirSync(receiptDir, { recursive: true });
+    const redact = require('./mcp-client').redactSecrets;
+    fs.writeFileSync(path.join(receiptDir, `${Date.now()}-${randomUUID()}.json`), redact(JSON.stringify({ captured_at: new Date().toISOString(), ...receipt }, null, 2)));
+  };
   const crypto = requested.filter(isCryptoSymbol);
   if (crypto.length) cryptoRefdate = requireIsoDate(cryptoRefdate, '--crypto-refdate');
   if (!client.canCallDirectly('marketdata')) {
@@ -128,23 +144,21 @@ async function fetchCertifiedDailyBars({ symbols, refdate, cryptoRefdate, asOfTi
   }
 
   const result = new Map();
-  for (const group of [
-    { symbols: equities, calendar: EQUITY_CALENDAR, expected: refdate },
-    { symbols: crypto, calendar: CRYPTO_CALENDAR, expected: cryptoRefdate },
-  ]) {
+  for (const [calendar, symbols] of groups) {
+    const group = { symbols, calendar, expected: calendar === CRYPTO_CALENDAR ? cryptoRefdate : refdate };
     if (!group.symbols.length) continue;
     for (let offset = 0; offset < group.symbols.length; offset += batchSize) {
       const symbolsBatch = group.symbols.slice(offset, offset + batchSize);
       const response = await completedResponse(client, {
         types: 'bars_daily', symbols: symbolsBatch.join(','), limit,
         as_of_timestamp: asOfTimestamp, completion_policy: 'completed_only',
-      });
+      }, recordReceipt);
       const check = contract.validateQueryData(response, {
         symbols: symbolsBatch.join(','), assetCalendar: group.calendar,
         expectedCompletedEnd: group.expected,
       });
       if (check.errors.length) {
-        throw new Error(`marketdata bars rejected: ${check.errors.join('; ')}`);
+        throw new Error(`marketdata bars rejected: ${check.errors.join('; ')}${check.retryAt ? `; retry_at=${check.retryAt}` : ''}${receiptDir ? `; receipt_dir=${receiptDir}` : ''}`);
       }
       for (const item of check.healthyCells) {
         if (item.status !== 'completed' || !item.row) throw new Error(`${item.id}: no completed daily-bar row`);

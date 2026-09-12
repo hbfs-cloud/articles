@@ -1,7 +1,7 @@
 'use strict';
 
 const MIN_MARKETDATA_BUILD = '0424cf4b';
-const ASSET_CALENDARS = new Set(['us_equity_exchange_sessions', 'crypto_24_7_utc']);
+const ASSET_CALENDARS = new Set(['us_equity_exchange_sessions', 'crypto_24_7_utc', 'euronext_cash_2025_2026', 'borsa_italiana_cash_2025_2026', 'bme_cash_2025_2026', 'gpw_cash_2025_2026', 'lse_cash_2025_2026', 'xetra_cash_2025_2026', 'nasdaq_helsinki_cash_2025_2026']);
 
 function scalar(value, keys) {
   if (!value || typeof value !== 'object') return null;
@@ -130,7 +130,11 @@ function validateQueryData(value, options = {}) {
       continue;
     }
     if (status !== 'completed') {
-      errors.push(`${id}: non-terminal or unknown cell status ${status || '(missing)'}`);
+      const candidates = rowsById.get(id) || [];
+      const proof = proofFor(cell, candidates.length === 1 ? candidates[0] : null);
+      if (proof.retryAt && (!retryAt || String(proof.retryAt) < retryAt)) retryAt = String(proof.retryAt);
+      const reason = structuredReason(cell) || (candidates.length === 1 ? structuredReason(candidates[0]) : null);
+      errors.push(`${id}: non-terminal or unknown cell status ${status || '(missing)'}${reason ? `: ${reason}` : ''}`);
       continue;
     }
     const matches = rowsById.get(id) || [];

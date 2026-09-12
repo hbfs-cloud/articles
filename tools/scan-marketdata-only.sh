@@ -33,7 +33,7 @@ mcp_require_token marketdata || exit $?
 
 # ── A : vivier puis enrichissement (seule vraie dépendance) ──────────────────
 (
-  node tools/collect.js --plan plans/scanner-wave1-no-dtx.json --out "$DIR/_data" --quiet \
+  node tools/collect.js --plan plans/scanner-wave1-no-dtx.json --out "$DIR/_data" --quiet --no-cache \
     --var date="$DATE" --var refdate="$REF" > "$A_LOG" 2>&1 || { { echo "A1 ÉCHEC — vivier"; grep -E "✗|ÉCHEC" "$A_LOG"; } > "$A_STATUS"; exit 1; }
   node tools/check-freshness.js "$DIR/_data/harness.json" >> "$A_LOG" 2>&1 \
     && node tools/validate-workflows.js --run-plan plans/scanner-wave1-no-dtx.json "$DIR/_data" >> "$A_LOG" 2>&1 \
@@ -46,7 +46,7 @@ mcp_require_token marketdata || exit $?
   # sous-shell dont l'avant-dernière commande échoue sort en 0 et écrivait « A OK » :
   # deux lots dilution sur cinq perdus (MCP capricieux, 429, job en timeout)
   # devenaient un scan réputé complet, sur lequel on publiait.
-  node tools/collect.js --plan plans/scanner-wave2.json --out "$DIR/_data2" --quiet \
+  node tools/collect.js --plan plans/scanner-wave2.json --out "$DIR/_data2" --quiet --no-cache \
     --vars-file "$DIR/_data/vars.json" --var date="$DATE" --var refdate="$REF" >> "$A_LOG" 2>&1 \
     || { { echo "A3 ÉCHEC — enrichissement incomplet"; grep -E "✗|ÉCHEC" "$A_LOG"; } > "$A_STATUS"; exit 1; }
   node tools/check-freshness.js "$DIR/_data2/harness.json" >> "$A_LOG" 2>&1 \
