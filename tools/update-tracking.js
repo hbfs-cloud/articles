@@ -9,6 +9,7 @@ const { runArgs, fetchCertifiedDailyBars, barsToHistory } = require('./lib/mcp-d
 const { validateReview } = require('./lib/scanner-publication-review');
 
 const ROOT = path.join(__dirname, '..');
+const SYMBOL_EXCLUSIONS = require('./lib/scanner-symbol-exclusions').loadScannerSymbolExclusions(ROOT);
 const METRICS_FILE = path.join(ROOT, 'data', 'scanner-metrics.json');
 const POSITIONS_FILE = path.join(ROOT, 'data', 'scanner-positions.json');
 const BACKTEST_TRADES = path.join(ROOT, 'data', 'backtest-trades.json');
@@ -82,6 +83,9 @@ function extractAllFromDir(dir) {
 async function main() {
   const run = runArgs(process.argv);
   const today = run.refdate;
+  SYMBOL_EXCLUSIONS.assertReference(run.refdate);
+  if (SYMBOL_EXCLUSIONS.active) console.log('[symbol exclusions] ' + JSON.stringify(SYMBOL_EXCLUSIONS.audit));
+  const previousPositions = fs.existsSync(POSITIONS_FILE) ? JSON.parse(fs.readFileSync(POSITIONS_FILE, 'utf8')) : {};
 
   // Get all scan dirs (YYYYMMDD, not retrospective)
   const scanDirs = fs.readdirSync(SCANNER_DIR)
@@ -115,6 +119,7 @@ async function main() {
 
     for (let i = 0; i < setups.length; i++) {
       const t = setups[i];
+      if (SYMBOL_EXCLUSIONS.excludesSymbol(t.ticker)) continue;
       const expireDate = addBusinessDays(scanDate, t.horizon_days || 20);
       allTrades.push({
         id: `${dir}-${t.ticker}-${i + 1}`,
@@ -352,6 +357,7 @@ async function main() {
 
   const metrics = {
     updated_at: new Date().toISOString(),
+    ...(SYMBOL_EXCLUSIONS.active ? { symbol_exclusions: SYMBOL_EXCLUSIONS.audit, coverage_status: 'scoped_exclusions' } : {}),
     measurement_basis: 'daily_zone_touch_proxy_unverified_vwap',
     execution_verified: false,
     performance_label: 'Diagnostic proxy only; sealed 15-minute retrospective is the execution-performance reference.',
@@ -468,7 +474,10 @@ async function main() {
   metrics.available_cash_pct = +Math.max(0, 100 - metrics.working_capital_pct - metrics.pending_orders_pct).toFixed(1);
 
   fs.writeFileSync(METRICS_FILE, JSON.stringify(metrics, null, 2));
-  fs.writeFileSync(POSITIONS_FILE, JSON.stringify({ updated_at: metrics.updated_at, open_positions: activePositions }, null, 2));
+  const excludedPositions = [...(previousPositions.excluded_positions || []),
+    ...(previousPositions.open_positions || []).filter(p => SYMBOL_EXCLUSIONS.excludesSymbol(p.ticker))];
+  fs.writeFileSync(POSITIONS_FILE, JSON.stringify({ updated_at: metrics.updated_at, open_positions: activePositions,
+    ...(SYMBOL_EXCLUSIONS.active ? { symbol_exclusions: SYMBOL_EXCLUSIONS.audit, excluded_positions: excludedPositions } : {}) }, null, 2));
 
   console.log('\n✅ scanner-metrics.json:', metrics);
   console.log(`✅ scanner-positions.json: ${activePositions.length} open positions`);

@@ -26,6 +26,7 @@ const path = require('path');
 const { runArgs, fetchCertifiedDailyBars } = require('./lib/mcp-daily-bars');
 
 const ROOT = path.resolve(__dirname, '..');
+const SYMBOL_EXCLUSIONS = require('./lib/scanner-symbol-exclusions').loadScannerSymbolExclusions(ROOT);
 const DATA_DIR = path.join(ROOT, 'data', 'analyses-data');
 const OUT = path.join(ROOT, 'data', 'analyses-status.json');
 
@@ -135,6 +136,8 @@ const DISPLAY = {
 
 async function main() {
   const run = runArgs(process.argv);
+  SYMBOL_EXCLUSIONS.assertReference(run.refdate);
+  if (SYMBOL_EXCLUSIONS.active) console.log('[symbol exclusions] ' + JSON.stringify(SYMBOL_EXCLUSIONS.audit));
   const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json') && !f.endsWith('.harness.json'));
   const registry = {}; const transitions = []; const failures = [];
   let checked = 0, stamped = 0;
@@ -153,7 +156,7 @@ async function main() {
     const meta = d.meta || {}, t = d.tradeIdea || null;
     let status = (t && t.status) || meta.status || (t ? 'active' : 'info');
     const hasPlan = !!(t && t.entry && t.stop);
-    const inOnlyScope = !ONLY.length || ONLY.includes(slug);
+    const inOnlyScope = (!ONLY.length || ONLY.includes(slug)) && !SYMBOL_EXCLUSIONS.excludesSymbol(slug);
     let cleanupChanged = false;
 
     // Registry cleanup: old generated analyses often carried `meta.status:"active"` while
@@ -197,7 +200,7 @@ async function main() {
 
     const ageDays = meta.date ? (Date.now() - new Date(meta.date)) / 86400000 : Infinity;
     const inScope = hasPlan && OPEN_STATUSES.has(status) && ageDays <= MAX_AGE_DAYS
-      && (!ONLY.length || ONLY.includes(slug));
+      && inOnlyScope;
     if (!inScope) continue;
 
     replayTickers.add(slug);
@@ -250,7 +253,7 @@ async function main() {
   transitions.forEach(x => console.log('  ↪ TRANSITION ' + x));
   failures.forEach(x => console.log('  ⚠ cotation KO — non vérifié: ' + x));
   if (failures.length) throw new Error(`${failures.length} certified marketdata replay failure(s); no numerical fallback is permitted`);
-  const agg = { generatedAt: nowISO, closeDateMax: Object.values(registry).reduce((m, e) => e.closeDate > m ? e.closeDate : m, ''), entries: registry };
+  const agg = { ...(SYMBOL_EXCLUSIONS.active ? { symbol_exclusions: SYMBOL_EXCLUSIONS.audit } : {}), generatedAt: nowISO, closeDateMax: Object.values(registry).reduce((m, e) => e.closeDate > m ? e.closeDate : m, ''), entries: registry };
   if (!DRY) fs.writeFileSync(OUT, JSON.stringify(agg, null, 1));
   if (!transitions.length) console.log('  (aucune transition ce soir)');
 }

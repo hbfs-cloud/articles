@@ -9,6 +9,10 @@ cd "$(dirname "$0")/.." || { echo "ÉCHEC: racine du dépôt introuvable" >&2; e
 
 DATE="${1:?usage: scan-marketdata-only.sh <DATE> <REFDATE> <ASOF>}"; REF="${2:?}"; ASOF="${3:?}"
 DIR="scanner/$DATE"; mkdir -p "$DIR"
+SYMBOL_ARGS=()
+if [ -f "$DIR/_symbol-exclusions.json" ]; then
+  SYMBOL_ARGS=("--symbol-exclusions=$DIR/_symbol-exclusions.json")
+fi
 node - "$DATE" "$REF" <<'JS'
 const date=process.argv[2],ref=process.argv[3];
 const scope=require('./tools/lib/scanner-scope').loadScannerScope(process.cwd(),[`--scope=scanner/${date}/_scope.json`]);
@@ -57,7 +61,7 @@ mcp_require_token marketdata || exit $?
 
 # ── C : suivi + sweep (ne portent que sur des trades déjà scellés) ───────────
 (
-  node tools/update-tracking.js --refdate "$REF" --asof "$AS_OF_TIMESTAMP" > "$C_LOG" 2>&1 || { echo "C ÉCHEC — tracking" > "$C_STATUS"; exit 1; }
+  node tools/update-tracking.js "${SYMBOL_ARGS[@]}" --refdate "$REF" --asof "$AS_OF_TIMESTAMP" > "$C_LOG" 2>&1 || { echo "C ÉCHEC — tracking" > "$C_STATUS"; exit 1; }
   # --quick : 1m27 contre 6m47 en complet, pour des stats frozen_* IDENTIQUES
   # (A/B du 2026-08-11, 14/14). 362 des 403 trades sont scellés et immuables par
   # règle projet — les re-simuler chaque soir ne change rien. Le sweep COMPLET
@@ -66,12 +70,12 @@ mcp_require_token marketdata || exit $?
   # Le sweep COMPLET (grille 24,7M combos, 120+ scans) dépasse le heap node par défaut (~4 Go)
   # depuis mi-août 2026 : OOM silencieux en pleine pré-sim (constaté le 16/08, exit masqué par un
   # pipe). 8 Go suffisent ; sans effet notable sur --quick.
-  NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=8192}" node tools/sweep.js $SWEEP_MODE --refdate "$REF" --crypto-refdate "$CRYPTO_REF" --asof "$AS_OF_TIMESTAMP" "--scope=$DIR/_scope.json" >> "$C_LOG" 2>&1
+  NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=8192}" node tools/sweep.js $SWEEP_MODE "${SYMBOL_ARGS[@]}" --refdate "$REF" --crypto-refdate "$CRYPTO_REF" --asof "$AS_OF_TIMESTAMP" "--scope=$DIR/_scope.json" >> "$C_LOG" 2>&1
   SWEEP_RC=$?
   [ "$SWEEP_RC" -ne 0 ] && { echo "C ÉCHEC — sweep" > "$C_STATUS"; exit "$SWEEP_RC"; }
   # Cycle de vie des analyses (statuts sur clôtures + endpoint du garde-fou JS des pages).
   # Le cycle de vie est une sortie publiée du scanner : un échec bloque le run.
-  node tools/analyses-lifecycle.js --refdate "$REF" --asof "$AS_OF_TIMESTAMP" >> "$C_LOG" 2>&1
+  node tools/analyses-lifecycle.js "${SYMBOL_ARGS[@]}" --refdate "$REF" --asof "$AS_OF_TIMESTAMP" >> "$C_LOG" 2>&1
   LIFECYCLE_RC=$?
   [ "$LIFECYCLE_RC" -ne 0 ] && { echo "C ÉCHEC — lifecycle" > "$C_STATUS"; exit "$LIFECYCLE_RC"; }
   echo "C rc=0 (tracking/sweep/lifecycle)" > "$C_STATUS"

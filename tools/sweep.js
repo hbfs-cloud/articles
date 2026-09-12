@@ -23,6 +23,8 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const SCOPE = require('./lib/scanner-scope').loadScannerScope(ROOT);
+const SYMBOL_EXCLUSIONS = require('./lib/scanner-symbol-exclusions').loadScannerSymbolExclusions(ROOT);
+if (SYMBOL_EXCLUSIONS.active) console.log('[symbol exclusions] ' + JSON.stringify(SYMBOL_EXCLUSIONS.audit));
 if (SCOPE.active) console.log('[scope] ' + JSON.stringify(SCOPE.audit));
 const SCANNER_DIR = path.join(ROOT, 'scanner');
 const QUICK = process.argv.includes('--quick');
@@ -726,6 +728,7 @@ function runContext() {
   if (!RUN) {
     RUN = runArgs(process.argv);
     REF_DATE = RUN.refdate;
+    SYMBOL_EXCLUSIONS.assertReference(REF_DATE);
   }
   return RUN;
 }
@@ -736,7 +739,7 @@ function saveCertifiedPrice(ticker, history) {
   priceCacheLib.writeHistory(ticker, history, { date: REF_DATE, market: marketForTicker(ticker) });
 }
 async function prefetchBulkMCP(tickers, label) {
-  const list = [...new Set(tickers)].filter(t => t && !priceCache[t]);
+  const list = [...new Set(tickers)].filter(t => t && !priceCache[t] && !SYMBOL_EXCLUSIONS.excludesSymbol(t));
   if (!list.length) return 0;
   const run = runContext();
   console.log(`  [marketdata] ${list.length} ticker(s)${label ? ' — ' + label : ''}`);
@@ -2137,6 +2140,7 @@ async function main() {
     }
     return list.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir, regime: s.regime, regimeScore: s.regimeScore }));
   });
+  allSetups = allSetups.filter(s => !SYMBOL_EXCLUSIONS.excludesSymbol(s.ticker));
   const tklPoolCount = allSetups.filter(s => s.source === 'tkl_pool').length;
   const assetCounts = ALL_ASSET_POOL_SOURCES.map(src => `${allSetups.filter(s => s.source === src).length} ${src}`).join(' + ');
   const equityCount = allSetups.filter(s => !s.source || s.source === 'signals').length;
@@ -2706,6 +2710,7 @@ async function main() {
   if (fs.existsSync(BACKTEST_TRADES_PATH)) {
     try { existingTrades = JSON.parse(fs.readFileSync(BACKTEST_TRADES_PATH, 'utf8')); } catch(e) {}
   }
+  const excludedTradeSnapshot = SYMBOL_EXCLUSIONS.active ? JSON.parse(JSON.stringify(existingTrades)) : null;
   let existingResults = {};
   const RESULTS_PATH = path.join(ROOT, 'data', 'backtest-results.json');
   if (fs.existsSync(RESULTS_PATH)) {
@@ -2730,7 +2735,7 @@ async function main() {
   if (FROZEN_ONLY && fs.existsSync(SCANNER_POS_PATH)) {
     try {
       const spData = JSON.parse(fs.readFileSync(SCANNER_POS_PATH, 'utf8'));
-      livePositions = spData.open_positions || [];
+      livePositions = (spData.open_positions || []).filter(p => !SYMBOL_EXCLUSIONS.excludesSymbol(p.ticker));
     } catch(e) {
       throw new Error(`cannot read scanner-positions.json for certified MtM: ${e.message}`);
     }
@@ -3249,6 +3254,13 @@ async function main() {
     }
     SCOPE.preserveDtxResults(output, existingResults);
     output.scanner_scope = SCOPE.audit;
+  }
+  if (SYMBOL_EXCLUSIONS.active) {
+    for (const [id, previous] of Object.entries(excludedTradeSnapshot)) {
+      if (Array.isArray(previous) && !SCOPE.excludesMode(id))
+        frozenTrades[id] = SYMBOL_EXCLUSIONS.preserveExcludedRecords(frozenTrades[id] || [], previous);
+    }
+    output.symbol_exclusions = SYMBOL_EXCLUSIONS.audit;
   }
   fs.writeFileSync(BACKTEST_TRADES_PATH, JSON.stringify(frozenTrades, null, 2));
   console.log("✅ Trade lists saved to data/backtest-trades.json (frozen modes)");
