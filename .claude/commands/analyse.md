@@ -101,12 +101,41 @@ Faire ensuite trois revues independantes sur le meme JSON et les memes preuves h
 - Contrarian: dilution/capacite, valorisation, causalite, risques omis et invalidation.
 - Retail war room: actionnabilite, gap, liquidite/slippage, sizing et no-chase.
 
-La revue externe AQ-1 finale exige au moins deux reviewers nommes, les 38 checks attestes, zero echec,
-score >=80 et le SHA-256 exact du JSON dans
-`data/analysis-editorial-reviews/YYYYMMDD.json`. Apres creation du manifeste:
+La revue externe AQ-1.1 finale exige au moins deux reviewers nommes et distincts, couvrant ensemble
+`senior_qa`, `contrarian` et `retail_war_room`. Chaque soumission doit viser le meme JSON et sidecar de
+preuves hashes, et contenir les 38 IDs AQ-1 exactement une fois avec `PASS`, `BLOCK` ou `N/A`, une raison
+et des renvois de preuves. Une soumission `PASS` a un score de 80 a 100 et ne garde aucun `BLOCK`.
+
+Le fichier d'attestation passe a `record-analysis-editorial-reviews.js` a cette forme :
+
+```json
+{
+  "schemaVersion": "AQ-1.1-attestation",
+  "reviews": [{
+    "schemaVersion": "AQ-1.1-attestation",
+    "ticker": "TICKER",
+    "analysisPath": "data/analyses-data/TICKER.json",
+    "analysisSha256": "<sha256 du JSON relu>",
+    "evidencePath": "data/analyses-evidence/TICKER.json",
+    "evidenceSha256": "<sha256 du sidecar relu>",
+    "reviewerId": "reviewer-unique",
+    "reviewerName": "Nom du reviewer",
+    "roles": ["contrarian"],
+    "reviewedAt": "2026-09-12T12:00:00.000Z",
+    "status": "PASS",
+    "score": 90,
+    "checks": [{"id":"AQ-VRD-001","status":"PASS","rationale":"...","evidenceRefs":["..."]}]
+  }]
+}
+```
+
+Le recorder conserve les soumissions et hashes d'attestation dans
+`data/analysis-editorial-reviews/YYYYMMDD.json`; il refuse les hashes faux, les IDs manquants/dupliques,
+les reviewers non nommes ou non independants, les roles incomplets et tout ecrasement incoherent d'un
+ticker deja enregistre. Apres creation du manifeste:
 
 ```bash
-node tools/check-analysis-editorial-quality.js --strict data/analyses-data/TICKER.json
+node tools/check-analysis-editorial-quality.js --strict --require-current-attestation data/analyses-data/TICKER.json
 ```
 
 Toute modification ulterieure du JSON invalide le hash et impose une nouvelle revue.

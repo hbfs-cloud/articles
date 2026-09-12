@@ -61,12 +61,12 @@
           "tool": "QueryData",
           "args": {
             "types": "profile,financials,stats,earnings_quarterly,earnings_reactions,earnings_surprises,earnings_yearly,calendar,analyst_actions,analyst_trend,holders,dividends",
-            "symbols": "$symbol",
-            "end_date": "$refdate"
+            "symbols": "$symbol"
           },
           "freshness": {
             "max_age_h": 168,
-            "required": true
+            "required": true,
+            "note": " Current-only snapshot: disclose collection time; never represent as reconstructed at refdate. Filing dates must be checked individually."
           }
         },
         {
@@ -74,13 +74,27 @@
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
-            "types": "technicals,support_resistance,volume_profile,obv,vwap,trends,trading_signals,correlations",
+            "types": "technicals,support_resistance,volume_profile,obv,vwap,trading_signals",
             "symbols": "$symbol",
             "end_date": "$refdate"
           },
           "freshness": {
             "max_age_h": 24,
             "required": true
+          }
+        },
+        {
+          "as": "current_correlations",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "correlations",
+            "symbols": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "note": "Current-only context, not reconstructed at refdate; price correlations are separately calculated on certified comparison bars."
           }
         }
       ]
@@ -223,13 +237,12 @@
           "args": {
             "types": "sec_filings,sec_catalysts,insider_coverage,flags",
             "symbols": "$symbol",
-            "end_date": "$refdate",
             "days": 365
           },
           "freshness": {
             "max_age_h": 168,
             "required": true,
-            "note": "Primary anti-dilution input: offerings, ATM, shelf, warrants and convertibles."
+            "note": "Primary anti-dilution input: offerings, ATM, shelf, warrants and convertibles. Current-only snapshot: disclose collection time; never represent as reconstructed at refdate. Filing dates must be checked individually."
           }
         },
         {
@@ -379,6 +392,20 @@
             "max_age_h": 168,
             "required": false,
             "note": "Current-only discovery input; never use as point-in-time evidence."
+          }
+        },
+        {
+          "as": "search_trends",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "trends",
+            "symbols": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false,
+            "note": "Optional Google search interest, not price trend. Missing coverage must be disclosed and never replaced by zero."
           }
         }
       ]

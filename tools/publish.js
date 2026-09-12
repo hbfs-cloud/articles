@@ -12,6 +12,7 @@
 const { execSync, spawnSync } = require('child_process');
 const fs   = require('fs');
 const path = require('path');
+const { assertAnalysisPublicationReady } = require('./lib/analysis-publication-gate');
 
 const ROOT = path.join(__dirname, '..');
 
@@ -102,6 +103,18 @@ if (type === 'scanner') {
     console.error('Fix the signals.json / scan HTML above, or override with --skip-validate.\n');
     if (!process.argv.includes('--skip-validate')) process.exit(e.status || 1);
     console.warn('⚠️  --skip-validate set — publishing non-compliant scan (NOT RECOMMENDED).');
+  }
+}
+
+if (type === 'analysis') {
+  console.log('\nStep 2b/7 — Verifying analysis evidence and contrarian review...');
+  const match = /^analyses\/([A-Z][A-Z0-9.-]{0,14})\/index\.html$/.exec(artPath);
+  try {
+    if (!match) throw new Error('Analysis publication requires a canonical ticker path');
+    assertAnalysisPublicationReady(`data/analyses-data/${match[1]}.json`, { htmlPath: artPath });
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    process.exit(1);
   }
 }
 

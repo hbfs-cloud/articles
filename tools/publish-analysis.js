@@ -29,6 +29,7 @@
 const { execSync } = require('child_process');
 const fs   = require('fs');
 const path = require('path');
+const { assertAnalysisPublicationReady } = require('./lib/analysis-publication-gate');
 
 const ROOT     = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'data', 'analyses-data');
@@ -137,6 +138,14 @@ function renderFile(jsonPath, dryRun) {
   if (dryRun) {
     console.log(`[DRY] ${ticker} (${data.meta.grade}) — valid, would render to analyses/${ticker}/index.html`);
     return ticker;
+  }
+
+  try {
+    assertAnalysisPublicationReady(jsonPath);
+  } catch (error) {
+    console.error(`[BLOCKED] ${ticker}: ${error.message}`);
+    process.exitCode = 1;
+    return null;
   }
 
   archiveIfExists(ticker, data.meta.date);

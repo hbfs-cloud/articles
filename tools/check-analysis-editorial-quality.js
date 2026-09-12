@@ -4,12 +4,15 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { rubricCheckIds, validateReviewRecord } = require('./lib/analysis-review-attestation');
 
 const ROOT = path.resolve(__dirname, '..');
 const args = process.argv.slice(2).filter(x => !x.startsWith('--'));
 const strict = process.argv.includes('--strict');
 const preReview = process.argv.includes('--pre-review');
+const requireCurrentAttestation = process.argv.includes('--require-current-attestation');
 const files = args.length ? args : [];
+const AQ_CHECK_IDS = rubricCheckIds(ROOT);
 
 const strip = value => String(value || '')
   .replace(/<[^>]+>/g, ' ')
@@ -70,15 +73,25 @@ function check(file) {
     const reviewDate = String(d.meta?.date || '').replace(/-/g, '');
     const reviewFile = path.join(ROOT, 'data', 'analysis-editorial-reviews', `${reviewDate}.json`);
     const manifest = fs.existsSync(reviewFile) ? JSON.parse(fs.readFileSync(reviewFile, 'utf8')) : {};
-    const review = (manifest.reviews || []).find(x => x.ticker === ticker);
+    const reviewMatches = (manifest.reviews || []).filter(x => x.ticker === ticker);
+    const review = reviewMatches.length === 1 ? reviewMatches[0] : undefined;
     const digest = crypto.createHash('sha256').update(raw).digest('hex');
-    require(review?.rubricVersion === 'AQ-1', 'missing AQ-1 external review manifest entry');
-    require(review?.status === 'PASS', 'external editorial review is not PASS');
-    require(Number(review?.score) >= 80, `external editorial score below 80 (${review?.score ?? 'missing'})`);
-    require(Array.isArray(review?.reviewers) && review.reviewers.length >= 2, 'external review needs at least two named reviewers');
-    require(Array.isArray(review?.passedCheckIds) && review.passedCheckIds.length === 38, 'external review lacks all 38 AQ-1 per-check attestations');
-    require(Array.isArray(review?.failedCheckIds) && review.failedCheckIds.length === 0, 'external review retains failed AQ checks');
-    require(review?.fileSha256 === digest, 'external review hash does not match dossier JSON');
+    const analysisPath = path.relative(ROOT, path.resolve(file));
+    require(reviewMatches.length === 1, `external review manifest must contain exactly one ${ticker} entry (${reviewMatches.length})`);
+    if (review?.schemaVersion === 'AQ-1.1' || requireCurrentAttestation) {
+      if (requireCurrentAttestation) require(manifest?.schemaVersion === 'AQ-1.1', 'current publication requires an AQ-1.1 review manifest');
+      for (const error of validateReviewRecord(review, { ticker, analysisPath, analysisSha256: digest, checkIds: AQ_CHECK_IDS, requireCurrent: requireCurrentAttestation, root: ROOT })) require(false, error);
+    } else {
+      // Historical manifests remain readable for archival QA. New publication
+      // callers pass --require-current-attestation and cannot use this branch.
+      require(review?.rubricVersion === 'AQ-1', 'missing AQ-1 external review manifest entry');
+      require(review?.status === 'PASS', 'external editorial review is not PASS');
+      require(Number(review?.score) >= 80, `external editorial score below 80 (${review?.score ?? 'missing'})`);
+      require(Array.isArray(review?.reviewers) && review.reviewers.length >= 2, 'external review needs at least two named reviewers');
+      require(Array.isArray(review?.passedCheckIds) && review.passedCheckIds.length === 38, 'external review lacks all 38 AQ-1 per-check attestations');
+      require(Array.isArray(review?.failedCheckIds) && review.failedCheckIds.length === 0, 'external review retains failed AQ checks');
+      require(review?.fileSha256 === digest, 'external review hash does not match dossier JSON');
+    }
   }
   require(words(summary).length >= 90, `verdict summary too short (${words(summary).length} words)`);
   require(words(summary).length <= 210, `verdict summary too long (${words(summary).length} words)`);
@@ -173,16 +186,17 @@ function check(file) {
   require(!(d.header?.badges || []).some(x => /pending/i.test(x?.text || '')), 'header retains a stale pending badge');
   require((trade.catalysts || []).length >= 3, 'trade catalysts need >=3 items');
   require((trade.invalidation || []).length >= 3, 'trade invalidations need >=3 items');
-  require([entry, stop, tp1, tp2].every(Number.isFinite), 'trade geometry contains a non-numeric level');
-  if ([entry, stop, tp1, tp2].every(Number.isFinite)) {
+  const hasTp2 = trade.tp2 != null;
+  require([entry, stop, tp1].every(Number.isFinite) && (!hasTp2 || Number.isFinite(tp2)), 'trade geometry contains a non-numeric level');
+  if ([entry, stop, tp1].every(Number.isFinite) && (!hasTp2 || Number.isFinite(tp2))) {
     const side = tp1 > entry ? 1 : -1;
-    require(side > 0 ? stop < entry && entry < tp1 && tp1 <= tp2 : stop > entry && entry > tp1 && tp1 >= tp2, 'trade levels are directionally inconsistent');
+    require(side > 0 ? stop < entry && entry < tp1 && (!hasTp2 || tp1 <= tp2) : stop > entry && entry > tp1 && (!hasTp2 || tp1 >= tp2), 'trade levels are directionally inconsistent');
     const risk = Math.abs(entry - stop);
     const rr1 = risk ? Math.abs(tp1 - entry) / risk : NaN;
     const publishedRr = Number((String(trade.rr || '').match(/1:([\d.]+)/) || [])[1]);
     require(risk > 0 && Number.isFinite(rr1), 'trade risk denominator is zero');
     require(Number.isFinite(publishedRr) && Math.abs(publishedRr - rr1) <= 0.03, `published R/R does not match levels (${publishedRr || 'missing'} vs ${rr1.toFixed(2)})`);
-    for (const [label, value, textValue] of [['stop', stop, trade.stopPct], ['tp1', tp1, trade.tp1Pct], ['tp2', tp2, trade.tp2Pct]]) {
+    for (const [label, value, textValue] of [['stop', stop, trade.stopPct], ['tp1', tp1, trade.tp1Pct], ...(hasTp2 ? [['tp2', tp2, trade.tp2Pct]] : [])]) {
       const publishedPct = Number((String(textValue || '').match(/-?[\d.]+/) || [])[0]);
       const calculatedPct = (value / entry - 1) * 100;
       require(Number.isFinite(publishedPct) && Math.abs(publishedPct - calculatedPct) <= 0.15, `${label} percentage does not match levels (${publishedPct || 'missing'} vs ${calculatedPct.toFixed(1)}%)`);
@@ -243,7 +257,7 @@ function check(file) {
 }
 
 if (!files.length) {
-  console.error('Usage: node tools/check-analysis-editorial-quality.js [--strict] data/analyses-data/TICKER.json ...');
+  console.error('Usage: node tools/check-analysis-editorial-quality.js [--strict] [--require-current-attestation] data/analyses-data/TICKER.json ...');
   process.exit(2);
 }
 

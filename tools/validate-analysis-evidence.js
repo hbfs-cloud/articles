@@ -37,6 +37,55 @@ function validatePrimarySecManifest(source, root) {
   return errors;
 }
 
+// Editorial judgments and preserved research metadata are not market observations.
+// Their use is field-scoped: declaring this kind can never bypass MCP checks for prices or results.
+function validateNonMarketInput(input, payload, calculation, analysis, ticker) {
+  if (!['archived_analysis', 'editorial_judgment'].includes(input.kind)) return null;
+  const errors = [];
+  const archived = input.kind === 'archived_analysis';
+  if ((archived ? payload?.header?.ticker : payload?.ticker) !== ticker) errors.push('non-market input ticker mismatch');
+  const usages = Object.entries(calculation.claim_provenance || {}).filter(([, p]) => p.input_path === input.path);
+  if (!usages.length) errors.push('non-market input has no declared claims');
+  for (const [dotted, provenance] of usages) {
+    const derivedArchive = archived && /^(?:tradeIdea\.(?:stopPct|tp1Pct|tp2Pct|rr|thesis|statusNote|invalidation\.\d+)|technicals\.setupNote)$/.test(dotted);
+    const permitted = archived
+      ? derivedArchive || /^meta\.(?:statusHistory\.\d+\.|lastEvent\.)/.test(dotted) || /^tradeIdea\.(?:entry|stop|tp1|tp2)$/.test(dotted)
+      : /^(?:verdict\.score|risks\.riskScore|meta\.(?:version|date|dateDisplay)|blastRadius\.groups\.\d+\.order)$/.test(dotted);
+    if (!permitted) { errors.push(`non-market input cannot support ${dotted}`); continue; }
+    const actual = get(analysis, dotted);
+    if (derivedArchive) {
+      const t = payload.tradeIdea || {}, numbers = [1, t.entry, t.stop, t.tp1, t.tp2].filter(Number.isFinite);
+      if (Number.isFinite(t.entry) && t.entry !== 0) {
+        for (const level of [t.stop, t.tp1, t.tp2].filter(Number.isFinite)) numbers.push((level / t.entry - 1) * 100);
+        if (t.entry !== t.stop) numbers.push(Math.abs((t.tp1 - t.entry) / (t.entry - t.stop)));
+      }
+      if (dotted === 'tradeIdea.statusNote') {
+        for (const e of [...(payload.meta?.statusHistory || []), payload.meta?.lastEvent].filter(Boolean)) {
+          if (Number.isFinite(e.close)) numbers.push(e.close);
+        }
+      }
+      const allowed = new Set(numbers.map(x => Math.abs(Number(x.toFixed(2)))));
+      const claimed = typeof actual === 'string' ? (actual.match(/-?\d+(?:[.,]\d+)?/g) || []).map(x => Math.abs(Number(x.replace(',', '.')))) : [NaN];
+      if (provenance.derivation !== 'archived_trade_geometry' || !['', '/tradeIdea', '/meta'].includes(provenance.source_pointer)
+        || !claimed.length || claimed.some(x => !allowed.has(x))) errors.push(`unsupported archived trade derivation for ${dotted}`);
+    } else if (archived) {
+      if (JSON.stringify(get(payload, dotted)) !== JSON.stringify(actual)
+        || JSON.stringify(pointerGet(payload, provenance.source_pointer)) !== JSON.stringify(actual)) errors.push(`archived value differs for ${dotted}`);
+    } else {
+      const judgment = payload?.judgments?.[dotted];
+      if (!judgment || JSON.stringify(judgment.value) !== JSON.stringify(actual)
+        || typeof judgment.reason !== 'string' || judgment.reason.trim().length < 20) errors.push(`editorial value/rationale missing for ${dotted}`);
+      if (JSON.stringify(pointerGet(payload, provenance.source_pointer)) !== JSON.stringify(actual)) errors.push(`editorial value pointer differs for ${dotted}`);
+      if (dotted === 'verdict.score') {
+        const components = Object.values(payload.score_components || {});
+        if (components.length < 2 || components.some(x => !Number.isFinite(x))
+          || components.reduce((sum, x) => sum + x, 0) !== actual) errors.push('editorial score components do not reproduce score');
+      }
+    }
+  }
+  return errors;
+}
+
 function validateDeterministicCalculation(source, abs, expectedHash, manifest, root) {
   const errors = [];
   if (source.kind !== 'deterministic_analysis_calculation_v1') return null;
@@ -82,14 +131,16 @@ function validateDeterministicCalculation(source, abs, expectedHash, manifest, r
   for (const dotted of numericPaths(analysis || {})) if (!source.methods?.[dotted]) errors.push(`calculation method missing for ${dotted}`);
   for (const input of source.inputs || []) {
     const inputAbs = path.resolve(root, input.path || '');
-    if (!fs.existsSync(inputAbs) || hash(fs.readFileSync(inputAbs)) !== input.sha256) {
+    if (path.relative(root, inputAbs).startsWith('..') || !fs.existsSync(inputAbs) || hash(fs.readFileSync(inputAbs)) !== input.sha256) {
       errors.push(`calculation input hash mismatch: ${input.name || input.path}`);
       continue;
     }
     let inputSource;
     try { inputSource = JSON.parse(fs.readFileSync(inputAbs, 'utf8')); } catch { inputSource = null; }
+    const nonMarketErrors = validateNonMarketInput(input, inputSource, source, analysis, manifest.ticker);
     const primarySecErrors = inputSource ? validatePrimarySecManifest(inputSource, root) : null;
-    const inputErrors = primarySecErrors === null ? validateCollectedArtifact(inputAbs, input.sha256, manifest.reference_close, root) : primarySecErrors;
+    const inputErrors = nonMarketErrors !== null ? nonMarketErrors : primarySecErrors === null
+      ? validateCollectedArtifact(inputAbs, input.sha256, manifest.reference_close, root) : primarySecErrors;
     for (const error of inputErrors) errors.push(`calculation input ${input.name || input.path}: ${error}`);
   }
   return errors;
@@ -193,4 +244,4 @@ if (require.main === module) {
   console.log(`[analysis-evidence] PASS (${manifest.claims.length} claims)`);
 }
 
-module.exports = { numericPaths, validate };
+module.exports = { numericPaths, validate, validateNonMarketInput };

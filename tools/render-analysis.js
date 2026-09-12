@@ -279,8 +279,12 @@ function renderHead(d) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+      body.analysis-refresh .content-card p, body.analysis-refresh .content-card li { font-size:16px!important; line-height:1.6; }
+      .ticker-decision { max-width:850px; margin:0 auto 1rem; text-align:left; font-size:16px!important; line-height:1.5; color:#334155; }
+    </style>
 </head>
-<body>
+<body${Number(meta.version) >= 3 ? ' class="analysis-refresh"' : ''}>
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>`;
 }
 
@@ -364,6 +368,7 @@ function renderHeader(d) {
 ${halalBadge ? `        ${halalBadge}` : ''}
 ${(d.archiveHistory && d.archiveHistory.length) ? `        <button type="button" onclick="document.getElementById('historyModal').style.display='flex'" style="background:none;border:1px solid #e2e8f0;color:#64748b;cursor:pointer;padding:0.3rem 0.7rem;border-radius:8px;font-size:0.8rem;display:inline-flex;align-items:center;gap:0.4rem;"><i class="fa-solid fa-clock-rotate-left"></i>Historique</button>` : ''}
       </div>
+${Number(meta.version) >= 3 && meta.description ? `      <p class="ticker-decision">${esc(meta.description)}</p>` : ''}
       <div class="ticker-metrics" style="display:flex;flex-wrap:wrap;gap:1rem;">
 ${metrics.map(([label, val]) => `        <div class="ticker-metric"><div class="tm-value">${esc(val)}</div><div class="tm-label">${esc(label)}</div></div>`).join('\n')}
       </div>
@@ -382,7 +387,7 @@ function renderVerdict(d) {
   return `
       <div id="verdict" class="content-card">
         <h2><i class="fa-solid fa-gavel"></i> Verdict Express</h2>
-        ${checklist ? `<div class="decision-cockpit"><div class="decision-cockpit-title"><div><span class="eyebrow-label">DÉCISION PRIORITAIRE</span><h3>ATTENDRE — aucun achat avant les résultats</h3></div><span class="decision-pill decision-pill-blocked"><i class="fa-solid fa-ban"></i> Entrée bloquée</span></div><p class="decision-cockpit-note">La qualité de l’entreprise est élevée, mais le timing est non validé. Les niveaux historiques sont des repères d’audit, pas des ordres.</p><div class="decision-check-grid">${checklist}</div></div>` : ''}
+${checklist ? `        <div class="decision-cockpit"><div class="decision-cockpit-title"><div><span class="eyebrow-label">DÉCISION PRIORITAIRE</span><h3>ATTENDRE — aucun achat avant les résultats</h3></div><span class="decision-pill decision-pill-blocked"><i class="fa-solid fa-ban"></i> Entrée bloquée</span></div><p class="decision-cockpit-note">La qualité de l’entreprise est élevée, mais le timing est non validé. Les niveaux historiques sont des repères d’audit, pas des ordres.</p><div class="decision-check-grid">${checklist}</div></div>` : ''}
         <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem;">
           <div style="text-align:center;">
             <div id="gaugeScore" class="echart-box" style="width:180px;height:180px;"></div>
@@ -685,7 +690,7 @@ function renderBlastRadius(d) {
   return `
       <div id="blast-radius" class="content-card">
         <h2><i class="fa-solid fa-diagram-project"></i> Rayon de propagation : qui bouge avec ${esc(d.header.ticker)} ?</h2>
-        <div class="interpretation-band"><strong>À retenir :</strong> Le rayon de propagation décrit des liens économiques et statistiques, pas des ordres. La confirmation utile exige AVGO, les pairs directs et SOXX; un proxy isolé ne suffit pas.</div><div id="blastChart" class="echart-box blast-chart" aria-label="Comparaison des corrélations résiduelles des pairs"></div>
+        <div class="interpretation-band"><strong>À retenir :</strong> Les comparaisons ci-dessous associent liens économiques et mesures statistiques. Une corrélation ne démontre pas une causalité; les contradictions propres à chaque société restent déterminantes.</div><div id="blastChart" class="echart-box blast-chart" aria-label="Comparaison des valeurs absolues des corrélations disponibles"></div>
         <p>${esc(blast.methodology)}</p>
         <p style="font-size:0.78rem;color:#64748b;"><strong>Clôture de référence :</strong> ${esc(blast.asOf)} · <strong>Observation :</strong> ${esc(blast.observationTime)} · <strong>Fenêtre :</strong> ${esc(blast.window)}</p>
 ${blast.groups.map(group => `        <section style="margin-top:1.35rem;">
@@ -1092,7 +1097,7 @@ ${d.risks.riskRadarValues ? `    (function(){var el=document.getElementById('ris
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){['chartModal','historyModal'].forEach(function(id){var m=document.getElementById(id);if(m)m.style.display='none';});}});
     (function(){var btn=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),open=false;if(!btn||!menu)return;btn.addEventListener('click',function(){open=!open;menu.classList.toggle('open',open);});menu.querySelectorAll('.fnav-item').forEach(function(a){a.addEventListener('click',function(){var target=document.querySelector(a.getAttribute('href'));var details=target&&target.closest('details');if(details)details.open=true;open=false;menu.classList.remove('open');});});var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var id=e.target.id;menu.querySelectorAll('.fnav-item').forEach(function(a){a.classList.toggle('active',a.getAttribute('data-section')===id);});}});},{threshold:0.3});document.querySelectorAll('[id]').forEach(function(el){if(menu.querySelector('[data-section="'+el.id+'"]'))obs.observe(el);});})();
     </script>
-    <script src="/assets/core.js"></script>
+    <script src="/assets/core.js?v=20260912"></script>
     <script src="/assets/tag-renderer.js"></script>
     <script src="/assets/echarts-responsive.js"></script>`;
 }

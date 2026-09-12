@@ -1627,6 +1627,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "TSM",
+    "exchange": "NYSE · Semiconductors",
+    "name": "TSM — suivi des résultats, risques, niveaux et invalidation.",
+    "title": "TSM — suivi des résultats, risques, niveaux et invalidation.",
+    "desc": "TSM reste en watch : les revenus d’août progressent de 53,3 %, mais la marge brute guidée à 65–67 % contre 67,7 % au T2 impose de ne pas poursuivre le cours. L’invalidation de recherche reste définie à la clôture.",
+    "tags": "us,equities,trade-idea,technology",
+    "grade": "B+",
+    "href": "/analyses/TSM/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "AVGO",
     "exchange": "NASDAQ · Technologie / Semiconducteurs",
     "name": "AVGO — Broadcom : fondamentaux, résultats, SEC, technique et plan conditionnel avant publication.",
@@ -2519,19 +2532,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,trade-idea,basic-materials",
     "grade": "C",
     "href": "/analyses/AMRZ/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "TSM",
-    "exchange": "NYSE · Technology",
-    "name": "TSM — verdict, risks, confirmation, invalidation and current trade levels.",
-    "title": "TSM — verdict, risks, confirmation, invalidation and current trade levels.",
-    "desc": "TSM: Watch; target remains too distant. Fresh review of fundamentals, capital structure, technicals and trade levels.",
-    "tags": "us,equities,trade-idea,technology",
-    "grade": "B+",
-    "href": "/analyses/TSM/",
     "date": ""
   },
   {

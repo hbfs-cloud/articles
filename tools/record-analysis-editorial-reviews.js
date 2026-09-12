@@ -3,8 +3,15 @@
 
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 const { execFileSync } = require('child_process');
+const {
+  ATTESTATION_SCHEMA_VERSION,
+  buildReviewRecord,
+  mergeManifest,
+  normalizeSubmission,
+  rubricCheckIds,
+  sha256
+} = require('./lib/analysis-review-attestation');
 
 const ROOT = path.resolve(__dirname, '..');
 const argv = process.argv.slice(2);
@@ -21,46 +28,65 @@ if (!/^\d{8}$/.test(date || '') || !attestationArg || !files.length) {
   process.exit(2);
 }
 
-const rubricPath = path.join(ROOT, 'plans', 'analysis-quality-rubric-20260828.md');
-const rubric = fs.readFileSync(rubricPath, 'utf8');
-const checkIds = [...new Set(rubric.match(/AQ-[A-Z]+-\d{3}/g) || [])].sort();
-if (checkIds.length !== 38) throw new Error(`AQ-1 rubric must expose 38 checks, found ${checkIds.length}`);
+const checkIds = rubricCheckIds(ROOT);
+const safeRepoPath = file => {
+  const abs = path.resolve(file);
+  const relative = path.relative(ROOT, abs);
+  if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) throw new Error(`attestation must be inside repository: ${file}`);
+  return { abs, relative };
+};
 
 const attestations = attestationArg.split(',').flatMap(file => {
-  const payload = JSON.parse(fs.readFileSync(path.resolve(file), 'utf8'));
-  return payload.reviews || [];
+  const source = safeRepoPath(file);
+  const bytes = fs.readFileSync(source.abs);
+  const payload = JSON.parse(bytes);
+  if (payload.schemaVersion !== ATTESTATION_SCHEMA_VERSION || !Array.isArray(payload.reviews)) {
+    throw new Error(`${source.relative}: expected ${ATTESTATION_SCHEMA_VERSION} with reviews[]`);
+  }
+  return payload.reviews.map(review => normalizeSubmission(review, { path: source.relative, sha256: sha256(bytes) }));
 });
 
 const reviews = [];
+const seenTickers = new Set();
 for (const file of files) {
   const abs = path.resolve(file);
   const raw = fs.readFileSync(abs, 'utf8');
   const dossier = JSON.parse(raw);
-  const ticker = dossier.header?.ticker || path.basename(file, '.json');
-  const panel = attestations.find(x => x.ticker === ticker);
-  if (!panel) throw new Error(`${ticker}: no external panel attestation`);
-  if (panel.status !== 'PASS' || Number(panel.score) < 80 || (panel.failedCheckIds || []).length) {
-    throw new Error(`${ticker}: panel did not clear AQ-1 (${panel.status}, score ${panel.score})`);
+  const ticker = String(dossier.header?.ticker || path.basename(file, '.json')).toUpperCase();
+  if (seenTickers.has(ticker)) throw new Error(`${ticker}: duplicate dossier ticker in recording request`);
+  seenTickers.add(ticker);
+  const analysisPath = path.relative(ROOT, abs);
+  if (analysisPath.startsWith('..') || path.isAbsolute(analysisPath)) throw new Error(`${ticker}: dossier must be inside repository`);
+  const analysisSha256 = sha256(raw);
+  const submissions = attestations.filter(review => String(review.ticker || '').toUpperCase() === ticker);
+  if (!submissions.length) throw new Error(`${ticker}: no AQ-1.1 reviewer submissions`);
+  const evidencePath = submissions[0].evidencePath;
+  const evidenceAbs = path.resolve(ROOT, evidencePath || '');
+  if (!evidencePath || path.relative(ROOT, evidenceAbs).startsWith('..') || path.isAbsolute(path.relative(ROOT, evidenceAbs)) || !fs.existsSync(evidenceAbs)) {
+    throw new Error(`${ticker}: submitted evidencePath is missing or outside repository`);
   }
+  const evidenceSha256 = sha256(fs.readFileSync(evidenceAbs));
+
+  const review = buildReviewRecord({
+    ticker,
+    analysisPath,
+    analysisSha256,
+    evidencePath,
+    evidenceSha256,
+    submissions,
+    checkIds
+  });
   execFileSync(process.execPath, [path.join(ROOT, 'tools', 'render-analysis.js'), abs, '--dry'], { stdio: 'pipe' });
   execFileSync(process.execPath, [path.join(ROOT, 'tools', 'check-analysis-editorial-quality.js'), '--strict', '--pre-review', abs], { stdio: 'pipe' });
-  reviews.push({
-    ticker,
-    rubricVersion: 'AQ-1',
-    status: 'PASS',
-    score: Number(panel.score),
-    reviewers: ['AQ-1 deterministic gate', panel.reviewer],
-    reviewedAt: new Date().toISOString(),
-    passedCheckIds: checkIds,
-    failedCheckIds: [],
-    notes: panel.notes || '',
-    fileSha256: crypto.createHash('sha256').update(raw).digest('hex')
-  });
+  reviews.push(review);
 }
 
-reviews.sort((a, b) => a.ticker.localeCompare(b.ticker));
 const outDir = path.join(ROOT, 'data', 'analysis-editorial-reviews');
 fs.mkdirSync(outDir, { recursive: true });
 const out = path.join(outDir, `${date}.json`);
-fs.writeFileSync(out, JSON.stringify({ rubricVersion: 'AQ-1', generatedAt: new Date().toISOString(), reviews }, null, 2) + '\n');
-console.log(`[AQ-1] wrote ${reviews.length} hash-bound reviews to ${path.relative(ROOT, out)}`);
+const existing = fs.existsSync(out) ? JSON.parse(fs.readFileSync(out, 'utf8')) : { reviews: [] };
+const merged = mergeManifest(existing, reviews);
+const temp = `${out}.tmp-${process.pid}`;
+fs.writeFileSync(temp, JSON.stringify(merged, null, 2) + '\n');
+fs.renameSync(temp, out);
+console.log(`[AQ-1.1] wrote ${reviews.length} current hash-bound review(s) to ${path.relative(ROOT, out)}; ${merged.reviews.length} total review(s) preserved`);
