@@ -1640,6 +1640,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "GEV",
+    "exchange": "NYSE · Industrie — équipements électriques",
+    "name": "GEV — suivi historique au 11 septembre. Demande réseau solide, mais conversion, cash et bénéf...",
+    "title": "GEV — suivi historique au 11 septembre. Demande réseau solide, mais conversion, cash et bénéf...",
+    "desc": "GEV reste un suivi historique : RPO et réseau soutiennent la demande, mais les réservations, les gains non récurrents et une valorisation non qualifiable imposent d’attendre.",
+    "tags": "us,equities,ai-chain,power,industrials",
+    "grade": "B",
+    "href": "/analyses/GEV/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "AMZN",
     "exchange": "NASDAQ · Consumer Cyclical",
     "name": "AMZN — résultats T2, AWS, risques, niveaux et invalidation.",
@@ -1895,19 +1908,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,ai-chain,crypto,technology",
     "grade": "C",
     "href": "/analyses/MSTR/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "GEV",
-    "exchange": "NYSE · Industrials",
-    "name": "GEV — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "title": "GEV — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "desc": "GEV: individual second-order power confirmation dossier with official SEC review and actionable trade state.",
-    "tags": "us,equities,ai-chain,power,industrials",
-    "grade": "B",
-    "href": "/analyses/GEV/",
     "date": ""
   },
   {
