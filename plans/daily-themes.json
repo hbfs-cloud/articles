@@ -1,0 +1,49 @@
+{
+  "artifact": "daily/$date/index.html",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "equity_reference_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "theme-close",
+      "calls": [
+        {
+          "as": "bars_themes",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$symbols",
+            "limit": 15,
+            "force_async": true,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
+          }
+        }
+      ]
+    }
+  ]
+}

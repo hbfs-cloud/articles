@@ -447,6 +447,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Plan de recherche : continuation, repli et risque Fed",
+    "desc": "Plan de recherche pour la semaine du 14 au 18 septembre 2026 : niveaux préparés, protocole continuation ou repli, calendrier Fed et gestion du risque.",
+    "tags": "macro,earnings,trade-idea,formation,energy",
+    "grade": "",
+    "href": "/daily/20260912/",
+    "date": "12 septembre 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Swing en euros. Les dossiers qui méritent votre attention.",
     "desc": "65 actions EUR et dix pays : classement du rendement du cours après coûts, dividendes vérifiés, filtre MSCI Islamic, risques et conditions de swing.",
     "tags": "europe,macro,formation",
@@ -1627,6 +1640,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "AMZN",
+    "exchange": "NASDAQ · Consumer Cyclical",
+    "name": "AMZN — résultats T2, AWS, risques, niveaux et invalidation.",
+    "title": "AMZN — résultats T2, AWS, risques, niveaux et invalidation.",
+    "desc": "AMZN reste en watch à $256.78 : AWS accélère, mais le résultat net T2 est dopé par un poste hors exploitation et le cours n’a pas reconquis le déclencheur historique.",
+    "tags": "us,equities,trade-idea,consumer-cyclical",
+    "grade": "B",
+    "href": "/analyses/AMZN/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "TSM",
     "exchange": "NYSE · Semiconductors",
     "name": "TSM — suivi des résultats, risques, niveaux et invalidation.",
@@ -2532,19 +2558,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,trade-idea,basic-materials",
     "grade": "C",
     "href": "/analyses/AMRZ/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "AMZN",
-    "exchange": "NASDAQ · Consumer Cyclical",
-    "name": "AMZN — verdict, risks, confirmation, invalidation and current trade levels.",
-    "title": "AMZN — verdict, risks, confirmation, invalidation and current trade levels.",
-    "desc": "AMZN: Watch; initial plan rejected. Fresh review of fundamentals, capital structure, technicals and trade levels.",
-    "tags": "us,equities,trade-idea,consumer-cyclical",
-    "grade": "B",
-    "href": "/analyses/AMZN/",
     "date": ""
   },
   {

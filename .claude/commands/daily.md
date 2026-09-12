@@ -46,6 +46,22 @@ jamais la clôture certifiée et son horodatage doit rester visible. La vague
 `daily-focus` gouverne toute affirmation chiffre concernant les noms choisis. Le contexte optionnel
 `overview` ne peut gouverner ni chiffre, ni selection, ni niveau.
 
+## Édition de préparation fournie par le propriétaire
+
+Quand la demande fournit explicitement une liste, des niveaux préparés et un protocole, conserver ces
+paramètres et l’ordre demandé. La sélection utilisateur prévaut alors sur la sélection automatique du
+socle et sa limite éditoriale. Déclarer cette origine dans `selection.json`; ne pas présenter les niveaux
+comme des observations MCP ni des entrées déjà validées. `daily-focus` couvre les noms US concernés
+par les assertions numériques nouvelles. Les repères européens fournis restent des paramètres à
+revalider, sans certification d’entrée implicite. Une variation thématique supplémentaire se collecte
+via `daily-themes` avec `symbols` explicite. Le socle et les sources effectivement utilisées gardent
+leurs gates de provenance et fraîcheur. Le layout s’adapte au sujet demandé.
+
+DTX est exclu du socle daily à la demande du propriétaire : aucun régime ni santé systematic ne gouverne
+le produit. Une préparation pédagogique conditionnelle ne constitue pas un payload d’ordre validé.
+Les règles chiffrées choisies se déclarent comme littéraux relus ; toute mesure de marché garde une
+preuve MCP. Les annonces et dates primaires restent sourcées.
+
 ## Selection Et Calcul
 
 1. Ecrire une courte decision de selection: symbole, source du socle, catalyseur observe, raison de
