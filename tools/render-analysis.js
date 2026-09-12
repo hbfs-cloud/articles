@@ -82,7 +82,9 @@ function validate(data, schema, loc, rootSchema) {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-const safeEditorialHtml = s => esc(s).replace(/&lt;(\/?)(p|strong|em)&gt;/gi, '<$1$2>');
+const safeEditorialHtml = s => esc(s)
+  .replace(/&lt;(\/?)(p|strong|em|caption|thead|tbody|tr|th|td|table)&gt;/gi, '<$1$2>')
+  .replace(/&lt;table class=&quot;coverage-matrix&quot;&gt;/g, '<table class="coverage-matrix">');
 const isFrench = d => d?.meta?.lang === 'fr';
 const tx = (d, en, fr) => isFrench(d) ? fr : en;
 function safeUrl(value) {
@@ -154,9 +156,11 @@ function metricTile(value, label) {
 // « Already the case ») était injectée telle quelle dans style="width:...%",
 // déclaration invalide donc barre cassée et légende invisible — six par page sur
 // EONR. On ne laisse plus passer que du numérique borné ; la prose part en verdict.
-function pct(v) {
-  const n = typeof v === 'number' ? v : parseFloat(v);
-  return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 50;
+function riskMeters(d, card) {
+  const meters = [[card.probability, tx(d, 'Probability', 'Score de scénario')], [card.impact, 'Impact']]
+    .filter(([value]) => (typeof value === 'number' || (typeof value === 'string' && /^\s*\d+(?:\.\d+)?\s*%?\s*$/.test(value))) && Number.isFinite(parseFloat(value)))
+    .map(([value, label]) => `<div class="risk-meter"><div class="risk-meter-label">${label}</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${Math.max(0, Math.min(100, parseFloat(value)))}%;"></div></div></div>`);
+  return meters.length ? `<div class="risk-meters">${meters.join('')}</div>` : '';
 }
 
 function riskIcon(icon) {
@@ -438,6 +442,9 @@ ${b.segments.map(s => `            <tr><td><strong>${esc(s.name)}</strong></td><
           </tbody>
         </table>`;
   }
+  if (Array.isArray(b.coverageMatrix) && b.coverageMatrix.length) {
+    html += `<table class="coverage-matrix"><caption>Couverture des sources</caption><thead><tr><th>Facette</th><th>État</th><th>Lecture retenue</th></tr></thead><tbody>${b.coverageMatrix.map(row => `<tr><td>${esc(row.facet)}</td><td>${esc(row.status)}</td><td>${esc(row.decision)}</td></tr>`).join('')}</tbody></table>`;
+  }
   html += `${sourceRefsHtml(b.sourceRefs)}\n      </div>`;
   return html;
 }
@@ -467,7 +474,7 @@ function renderFundamentals(d) {
         <table class="data-table">
           <thead><tr><th>${tx(d, 'Metric', 'Métrique')}</th><th>${tx(d, 'Value', 'Valeur')}</th><th>Signal</th></tr></thead>
           <tbody>
-${f.rows.map(r => `            <tr><td>${esc(r.metric)}</td><td><strong>${esc(r.value)}</strong></td><td>${r.signal ? `<span class="badge ${signalBadgeClass(r.signalColor)}">${esc(r.signal)}</span>` : ''}</td></tr>`).join('\n')}
+${f.rows.map(r => `            <tr><td>${esc(r.metric)}</td><td><strong>${esc(r.value)}</strong></td><td>${r.signal ? `<span class="badge ${signalBadgeClass(r.signalColor)}">${esc(r.signal)}</span>` : ''}${r.note ? `<p>${esc(r.note)}</p>` : ''}${r.comparison ? `<p>${esc(r.comparison)}</p>` : ''}</td></tr>`).join('\n')}
           </tbody>
         </table>${sourceRefsHtml(f.sourceRefs)}
       </div>`;
@@ -641,7 +648,7 @@ function renderPerformance(d) {
 ${p.benchmarks.map(b => `            <tr><td>${esc(b.name)}</td><td>${esc(b.ticker||'')}</td><td>${esc(b.ytd)}</td>${b.oneYear ? `<td>${esc(b.oneYear)}</td>` : ''}</tr>`).join('\n')}
           </tbody></table>`;
   } else {
-    html += `\n        <div class="data-empty-state"><i class="fa-solid fa-chart-line"></i><div><strong>Comparaison non publiée</strong><p>Les séries alignées AVGO / QQQ / SOXX ne sont pas complètes dans ce snapshot. Aucun alpha n’est donc inventé.</p></div></div>`;
+    html += `\n        <div class="data-empty-state"><i class="fa-solid fa-chart-line"></i><div><strong>Comparaison non publiée</strong><p>Les séries alignées du titre et de ses indices de référence ne sont pas complètes dans ce snapshot. Aucun alpha n’est donc calculé.</p></div></div>`;
   }
   html += sourceRefsHtml(p.sourceRefs);
   html += `\n      </div>`;
@@ -696,7 +703,7 @@ function renderBlastRadius(d) {
 ${blast.groups.map(group => `        <section style="margin-top:1.35rem;">
           <h3 style="font-size:1rem;margin-bottom:0.35rem;">${esc(group.name)} <span class="badge badge-${group.order === 1 ? 'blue' : 'gray'}">Ordre ${esc(group.order)}</span></h3>
           <p style="margin-top:0;color:#475569;">${esc(group.transmission)}</p>
-          <div class="blast-table-wrap"><table class="data-table blast-table"><thead><tr><th>Ticker</th><th>Rôle</th><th>Corr. hors QQQ</th><th>Bêta résiduel</th><th>R² résiduel</th><th>Obs.</th><th>5 séances</th><th>21 séances</th><th>Lecture</th><th>Risque propre</th></tr></thead><tbody>
+          <div class="blast-table-wrap"><table class="data-table blast-table"><thead><tr><th>Ticker</th><th>Rôle</th><th>Corrélation</th><th>Bêta</th><th>R²</th><th>Obs.</th><th>5 séances</th><th>21 séances</th><th>Lecture</th><th>Risque propre</th></tr></thead><tbody>
 ${group.symbols.map(symbol => `            <tr><td><strong>${esc(symbol.ticker)}</strong><br><span style="font-size:0.72rem;color:#64748b;">${esc(relationLabel(symbol.relationClass))}</span></td><td>${esc(symbol.role)}<br><span style="font-size:0.72rem;color:#64748b;">Confiance ${esc(confidenceLabel(symbol.confidence).toLowerCase())}</span></td><td>${esc(metric(symbol.correlation, 3))}</td><td>${esc(metric(symbol.beta, 3))}</td><td>${esc(metric(symbol.r2, 3))}</td><td>${esc(Number.isFinite(symbol.observations) ? symbol.observations : 'INDISPONIBLE')}</td><td>${esc(returnPct(symbol.return5d))}</td><td>${esc(returnPct(symbol.return21d))}</td><td>${esc(symbol.readThrough)}</td><td>${esc(symbol.eventRisk)}</td></tr>`).join('\n')}
           </tbody></table></div>
         </section>`).join('\n')}
@@ -740,7 +747,7 @@ ${r.riskRadarValues ? `        <div style="display:flex;justify-content:center;m
 ${r.riskCards.map(rc => `          <div class="risk-card ${severityClass(rc.severity)}">
             <div class="risk-card-header"><div class="risk-card-icon"><i class="fa-solid ${riskIcon(rc.icon)}"></i></div><h4>${esc(rc.title)}</h4><span class="risk-severity">${esc(severityLabel(rc.severity))}</span></div>
             <div class="risk-card-body"><ul>${(rc.points||[]).map(p => `<li>${esc(p)}</li>`).join('')}</ul>
-              <div class="risk-meters"><div class="risk-meter"><div class="risk-meter-label">${tx(d, 'Probability', 'Score de scénario')}</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${pct(rc.probability)}%;"></div></div></div><div class="risk-meter"><div class="risk-meter-label">Impact</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${pct(rc.impact)}%;"></div></div></div></div>
+              ${riskMeters(d, rc)}
             </div>
             ${(rc.verdict || (typeof rc.impact === 'string' ? rc.impact : '')) ? `<div class="risk-verdict"><i class="fa-solid ${severityIcon(rc.severity)}"></i> ${esc(rc.verdict || rc.impact)}</div>` : ''}
           </div>`).join('\n')}
@@ -749,14 +756,19 @@ ${r.pedagogy ? `        <div class="pedagogy-box"><h4><i class="fa-solid fa-ligh
       </div>`;
 }
 
+function socialPlatforms(d) {
+  return (d.social?.platforms || []).filter(p => !(/^(indisponible|unavailable|n\/a|n\/d)$/i.test(String(p.trend || '').trim()) && /^(indisponible|unavailable|n\/a|n\/d)\b/i.test(String(p.mentions || '').trim())));
+}
+
 function renderSocial(d) {
-  if (!d.social || !d.social.platforms || !d.social.platforms.length) return '';
+  const platforms = socialPlatforms(d);
+  if (!platforms.length) return '';
   const soc = d.social;
   return `
       <div id="social" class="content-card">
         <h2><i class="fa-solid fa-satellite-dish"></i> ${tx(d, 'Social Radar', 'Radar social')}</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
-${soc.platforms.map(p => `          <div style="padding:1rem;border:1px solid #e2e8f0;border-radius:12px;text-align:center;">
+${platforms.map(p => `          <div style="padding:1rem;border:1px solid #e2e8f0;border-radius:12px;text-align:center;">
             <i class="${esc(p.icon)}" style="font-size:1.5rem;color:#64748b;"></i>
             <div style="font-weight:600;font-size:0.85rem;margin:0.5rem 0 0.25rem;">${esc(p.platform)}</div>
             <div style="font-size:0.8rem;color:#64748b;">${esc(p.mentions||'-')}</div>
@@ -1005,7 +1017,7 @@ function renderFab(d) {
     d.sectorComparison  && d.sectorComparison.peers && { id: 'peers', icon: 'fa-building', label: tx(d, 'Sector', 'Secteur') },
     d.blastRadius && d.blastRadius.groups && { id: 'blast-radius', icon: 'fa-diagram-project', label: 'Propagation' },
     d.risks             && { id: 'risques',       icon: 'fa-shield-halved',            label: tx(d, 'Risks', 'Risques') },
-    d.social && d.social.platforms && { id: 'social', icon: 'fa-satellite-dish',       label: 'Social' },
+    socialPlatforms(d).length > 0 && { id: 'social', icon: 'fa-satellite-dish',       label: 'Social' },
     d.bottomEstimation  && { id: 'bottom-estimation', icon: 'fa-bullseye',            label: 'Bottom' },
     d.manipulations     && { id: 'manipulations', icon: 'fa-magnifying-glass-dollar',  label: 'Integrity' },
     d.capitalFlow       && { id: 'capitalflow',   icon: 'fa-water',                    label: 'Flow' },

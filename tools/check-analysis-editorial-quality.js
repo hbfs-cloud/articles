@@ -107,7 +107,8 @@ function check(file) {
   require(hasNumber(beatNote), 'earnings synthesis has no numeric KPI');
   require(/guidance|outlook|forecast|next quarter|full.year/i.test(beatNote), 'earnings synthesis lacks guidance/outlook');
   const nextEarnings = String(d.earnings?.nextEarnings || '');
-  require(/^\d{4}-\d{2}-\d{2}$/.test(nextEarnings) || (/not confirmed|unavailable|not announced/i.test(nextEarnings) && /not confirmed|unavailable|not announced|no confirmed.*date/i.test(beatNote)), `next earnings date is neither confirmed nor explicitly unavailable (${nextEarnings || 'missing'})`);
+  const unconfirmedDate = /not confirmed|unavailable|not announced|non confirm[ée]e?|indisponible|non annonc[ée]e?/i;
+  require(/^\d{4}-\d{2}-\d{2}$/.test(nextEarnings) || (unconfirmedDate.test(nextEarnings) && (unconfirmedDate.test(beatNote) || /no confirmed.*date|aucune date.*confirm[ée]e?/i.test(beatNote))), `next earnings date is neither confirmed nor explicitly unavailable (${nextEarnings || 'missing'})`);
   require(rows.length >= 14, `fundamental table needs >=14 rows (${rows.length})`);
   require(usableValuationRows.length >= 2 || (usableValuationRows.length >= 1 && /scenario|NAV|sum.of.parts|SOTP/i.test(valuationText)), `valuation needs two numeric measures or one numeric scenario/NAV framework (${usableValuationRows.length})`);
   require(/trailing|forward|GAAP|non-GAAP|scenario|NAV|SOTP|enterprise value|free.cash.flow/i.test(valuationText), 'valuation basis is not identified');
