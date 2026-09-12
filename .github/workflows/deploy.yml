@@ -46,6 +46,17 @@ jobs:
           cp -f data/*.json data/*.js _site/data/ 2>/dev/null || true
           [ -d data/trading-plans ] && cp -r data/trading-plans _site/data/trading-plans
 
+          # Published dossiers with a provenance sidecar, plus their review records.
+          mkdir -p _site/data/analyses-data _site/data/analyses-evidence
+          for evidence in data/analyses-evidence/*.json; do
+            [ -f "$evidence" ] || continue
+            ticker="$(basename "$evidence" .json)"
+            [ -f "analyses/$ticker/index.html" ] || continue
+            cp -f "$evidence" _site/data/analyses-evidence/
+            cp -f "data/analyses-data/$ticker.json" _site/data/analyses-data/
+          done
+          [ -d data/analysis-editorial-reviews ] && cp -r data/analysis-editorial-reviews _site/data/
+
           # Portfolio API (all modes + root endpoints)
           cp -r portfolio/ _site/portfolio/
 
