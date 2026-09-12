@@ -10,6 +10,10 @@ const { normalizeIntradayBars, sessionCoverageError, contractForTicker, isTradin
 
 const ROOT = path.join(__dirname, '..');
 const args = process.argv.slice(2);
+const { requireLevelsDiagnostic } = require('./lib/retro-execution-mode');
+let executionMode;
+try { executionMode = requireLevelsDiagnostic(args); }
+catch (error) { console.error(error.message); process.exit(3); }
 const [startCompact, endCompact, referenceClose = endCompact] = args;
 const argValue = name => {
   const index = args.indexOf(name);
@@ -18,7 +22,7 @@ const argValue = name => {
 const runCompact = argValue('--run-date') || referenceClose;
 const cohortArg = argValue('--cohort');
 if (![startCompact, endCompact, referenceClose].every(v => /^\d{8}$/.test(v || ''))) {
-  console.error('Usage: node tools/build-period-retro.js YYYYMMDD YYYYMMDD YYYYMMDD [--run-date YYYYMMDD[-suffix]] [--cohort path]');
+  console.error('Usage: node tools/build-period-retro.js YYYYMMDD YYYYMMDD YYYYMMDD --levels-only [--run-date YYYYMMDD[-suffix]] [--cohort path]');
   process.exit(2);
 }
 if (!/^\d{8}(?:-[a-z0-9]+)*$/.test(runCompact || '')) {
@@ -410,6 +414,7 @@ const output = {
   methodology: 'Published primary signals[] only. Complete regular-session 15-minute coverage is mandatory for every session in the published horizon: US listings use the New York 09:30–15:45 contract and .L listings use the LSE 08:00–16:15 London contract. Fill must be demonstrated in the first regular 15-minute bar with the shared 2% chase tolerance; gap-down through stop is no-fill; events are evaluated chronologically on 15-minute bars; bars containing incompatible stop/target events are ambiguous and excluded from performance statistics; 50% exits at TP1 and the runner moves to breakeven for TP2; overnight stop gaps execute at the open; expiry is scan_date plus N exchange trading sessions. Diagnostics include only fills whose full published horizon has elapsed; non-mature outcomes, including an early observed stop or target, remain reported but excluded. A non-US listing without an exchange-specific intraday contract is retained in the denominator as data_error.',
   summary,
   publication: {
+    ...executionMode,
     type: 'coverage_review',
     cohort_performance_certified: false
   },

@@ -29,6 +29,24 @@ try {
   assert.strictEqual(valid.status, 0, valid.stdout + valid.stderr);
   assert.match(valid.stdout, /publication_review=PASS, cohort_performance_certified=false/);
 
+  const missingActivationDisclosure = fixture('missing-activation-disclosure');
+  const modeFile = path.join(missingActivationDisclosure, 'retro-results.json');
+  const modeData = JSON.parse(fs.readFileSync(modeFile));
+  modeData.publication.performance_basis = 'hypothetical_published_levels_without_activation_confirmation';
+  modeData.publication.execution_certified = false;
+  fs.writeFileSync(modeFile, JSON.stringify(modeData));
+  const missingDisclosure = qa(missingActivationDisclosure);
+  assert.strictEqual(missingDisclosure.status, 1);
+  assert.match(missingDisclosure.stderr, /conditions d’activation absentes/);
+  const htmlFile = path.join(missingActivationDisclosure, 'index.html');
+  fs.appendFileSync(htmlFile, '<h2>Simulation des niveaux, exécution non certifiée</h2>');
+  assert.strictEqual(qa(missingActivationDisclosure).status, 0);
+  modeData.publication.execution_certified = true;
+  fs.writeFileSync(modeFile, JSON.stringify(modeData));
+  const falseCertification = qa(missingActivationDisclosure);
+  assert.strictEqual(falseCertification.status, 1);
+  assert.match(falseCertification.stderr, /présentée comme exécution certifiée/);
+
   const badCount = fixture('bad-count');
   const countResults = JSON.parse(fs.readFileSync(path.join(badCount, 'retro-results.json'), 'utf8'));
   countResults.summary.proposed += 1;

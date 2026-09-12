@@ -1,0 +1,13 @@
+'use strict';
+const assert = require('assert');
+const { spawnSync } = require('child_process');
+const { requireLevelsDiagnostic } = require('./lib/retro-execution-mode');
+assert.throws(() => requireLevelsDiagnostic([]), /Execution certification unavailable/);
+assert.throws(() => requireLevelsDiagnostic(['--publish']), /Execution certification unavailable/);
+const mode = requireLevelsDiagnostic(['--levels-only']);
+assert.strictEqual(mode.execution_certified, false);
+assert.match(mode.performance_basis, /^hypothetical_/);
+const result = spawnSync(process.execPath, ['tools/build-period-retro.js', '20260824', '20260911', '20260911'], { encoding: 'utf8' });
+assert.notStrictEqual(result.status, 0);
+assert.match(result.stderr, /Execution certification unavailable/);
+console.log('retro execution mode: PASS; implicit certification and publication flag cannot bypass the guard');

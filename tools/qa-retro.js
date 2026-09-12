@@ -223,6 +223,10 @@ function coverageReviewMain(dir, html) {
   }
 
   expect(html.includes('data-retro-publication="coverage_review"'), 'HTML: flag data-retro-publication=coverage_review absent.');
+  if (results.publication?.performance_basis === 'hypothetical_published_levels_without_activation_confirmation') {
+    expect(results.publication.execution_certified === false, 'Simulation de niveaux présentée comme exécution certifiée.');
+    expect(html.includes('Simulation des niveaux, exécution non certifiée'), 'HTML: limites des conditions d’activation absentes.');
+  }
   if (summary.measurement_coverage_complete === true) {
     expect(html.includes('Couverture de mesure complète') && html.includes('Données complètes ; maturité partielle.'), 'HTML: couverture complète et maturité doivent être distinguées.');
     expect(html.includes(`Les ${summary.resolved} résultats clos à horizon mûr`), 'HTML: compteur de résultats mûrs divergent.');

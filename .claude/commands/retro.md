@@ -96,6 +96,13 @@ horizons non terminés, même avec une sortie déjà observée, restent hors sta
 
 ## Simulation
 
+Le moteur `build-period-retro.js` ne rejoue pas les confirmations publiées VWAP/EMA/capacité.
+Il refuse désormais une exécution implicite : `--levels-only` est obligatoire pour ses diagnostics
+hypothétiques. Sa sortie porte `publication.execution_certified:false` et une base de performance
+explicite. Ces chiffres ne certifient ni l’activation ni les fills réels, même avec une couverture
+OHLCV parfaite. Une performance exécutable exige des observations d’activation horodatées et des
+règles structurées correspondant à la publication originale. Ne pas inventer ces preuves a posteriori.
+
 - Appliquer exactement entry zone, side, stop, TP1/TP2, horizon, session et regles publiees.
 - Les barres daily ne prouvent jamais l'ordre entry/stop/target.
 - Une barre 15 min qui contient plusieurs evenements incompatibles est
