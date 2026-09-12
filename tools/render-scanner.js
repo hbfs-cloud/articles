@@ -128,7 +128,8 @@ function guardDataQuality(data, strict) {
     console.error(`${strict ? '[render-scanner] STRICT — BLOQUANT' : '[render-scanner] WARNING'}: ${msg}`);
     if (strict) process.exit(1);
   }
-  const strings = collectStrings(data, []);
+  // Lint visible prose, never URL paths or HTML attributes; keep anchor labels.
+  const strings = collectStrings(data, []).map(s => s.replace(/<[^>]*>/g, ' ').replace(/https?:\/\/[^\s<>"']+/g, ' '));
   let text = strings.join('\n');
   for (const re of PROPER_NOUN_EXCEPTIONS) text = text.replace(re, ' ');
   text = text.replace(RULE_SLUG_RE, ' ');
@@ -555,7 +556,7 @@ function setupCard(s, idx) {
     ${shariaBadge}
   </div>
 
-  <img class="finviz-chart" src="https://finviz.com/chart.ashx?t=${escAttr(s.ticker)}&amp;ty=c&amp;ta=1&amp;p=d&amp;s=l" alt="${escAttr(s.ticker)} FinViz Chart" loading="lazy">
+  <img class="finviz-chart" src="${fs.existsSync(path.join(outDir, 'assets', `finviz-${s.ticker}-${String(d.engine_meta?.reference_close || '').replace(/-/g, '')}.png`)) ? `assets/finviz-${escAttr(s.ticker)}-${String(d.engine_meta.reference_close).replace(/-/g, '')}.png` : `https://charts2.finviz.com/chart.ashx?t=${escAttr(s.ticker)}&amp;ty=c&amp;ta=1&amp;p=d&amp;s=l`}" alt="${escAttr(s.ticker)} FinViz Chart" loading="lazy">
 
   <div class="chart-grid-2col">
     <div>${echartDiv(gaugeId, 250)}</div>
@@ -750,13 +751,14 @@ function confirmInvalidDetails(s) {
   const confirmItems = (s.confirmations || []).map(c => `<li>${esc(c)}</li>`).join('');
   const invalidItems = (s.invalidations || []).map(c => `<li>${esc(c)}</li>`).join('');
   if (!confirmItems && !invalidItems) return '';
-  return `        <details class="setup-civ-details" style="margin:.2rem 0 .6rem;">
-          <summary style="cursor:pointer;font-size:.82rem;font-weight:600;color:#334155;">${esc(s.ticker)} — Thèse, confirmations et invalidations${s.score ? ` · score ${esc(s.score)}/100` : ''}${s.horizon_days ? ` · ${esc(s.horizon_days)} séances` : ''}</summary>
-${s.thesis ? `          <p style="margin:.5rem 0 .2rem;font-size:.85rem;line-height:1.5;">${esc(s.thesis)}</p>` : ''}
-${s.tp2 ? `          <p style="margin:.2rem 0 .5rem;font-size:.8rem;color:#475569;">Deuxième objectif : ${esc(num(s.tp2))} · Horizon : ${esc(s.horizon_days || 10)} séances</p>` : ''}
+  return `        <details class="setup-civ-details" id="thesis-${escAttr(s.ticker)}" style="margin:.2rem 0 .6rem;">
+          <summary style="cursor:pointer;font-size:1rem;font-weight:600;color:#334155;">${esc(s.ticker)} — Thèse, confirmations et invalidations${s.horizon_days ? ` · ${esc(s.horizon_days)} séances` : ''}</summary>
+${s.thesis ? `          <p style="margin:.5rem 0 .2rem;font-size:1rem;line-height:1.6;">${esc(s.thesis)}</p>` : ''}
+<a href="https://finviz.com/quote.ashx?t=${escAttr(s.ticker)}" target="_blank" rel="noopener"><img class="finviz-chart" style="max-width:100%;height:auto" src="${fs.existsSync(path.join(outDir, 'assets', `finviz-${s.ticker}-${String(d.engine_meta?.reference_close || '').replace(/-/g, '')}.png`)) ? `assets/finviz-${escAttr(s.ticker)}-${String(d.engine_meta.reference_close).replace(/-/g, '')}.png` : `https://charts2.finviz.com/chart.ashx?t=${escAttr(s.ticker)}&amp;ty=c&amp;ta=1&amp;p=d&amp;s=l`}" alt="Graphique quotidien Finviz de ${escAttr(s.ticker)}" loading="lazy"></a>
+${s.tp2 ? `          <p style="margin:.2rem 0 .5rem;font-size:1rem;color:#475569;">Deuxième objectif : ${esc(num(s.tp2))} · Horizon : ${esc(s.horizon_days || 10)} séances</p>` : ''}
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.6rem;margin-top:.5rem;">
-${confirmItems ? `            <div class="confirm-box" style="margin:0;"><h4>&#x2705; Confirmations</h4><ul style="margin:0;padding-left:1.1rem;font-size:.82rem;">${confirmItems}</ul></div>` : ''}
-${invalidItems ? `            <div class="invalid-box" style="margin:0;"><h4>&#x274C; Invalidations</h4><ul style="margin:0;padding-left:1.1rem;font-size:.82rem;">${invalidItems}</ul></div>` : ''}
+${confirmItems ? `            <div class="confirm-box" style="margin:0;"><h4>&#x2705; Confirmations</h4><ul style="margin:0;padding-left:1.1rem;font-size:1rem;">${confirmItems}</ul></div>` : ''}
+${invalidItems ? `            <div class="invalid-box" style="margin:0;"><h4>&#x274C; Invalidations</h4><ul style="margin:0;padding-left:1.1rem;font-size:1rem;">${invalidItems}</ul></div>` : ''}
           </div>
         </details>`;
 }
@@ -838,8 +840,8 @@ function buildPage(d) {
     .join('\n\n');
 
   // ── KPI boxes ──────────────────────────────────────────────────────────────
-  const dominantStr = (d.kpis && d.kpis.dominant_patterns || []).join(' + ');
-  const vixVal   = (d.kpis && d.kpis.vix)  ? `${d.kpis.vix.value} (${d.kpis.vix.label})` : '';
+  const dominantStr = (d.kpis && d.kpis.dominant_patterns || []).join(' / ');
+  const vixVal   = (d.kpis && d.kpis.vix)  ? `${d.kpis.vix.value}` : '';
   const vixColor = (d.kpis && d.kpis.vix && d.kpis.vix.color) || 'var(--pos)';
   const spxVal   = (d.kpis && d.kpis.spx)  ? `${d.kpis.spx.value}` : '';
   const spxColor = (d.kpis && d.kpis.spx && d.kpis.spx.color) || 'var(--pos)';
@@ -898,6 +900,9 @@ function buildPage(d) {
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     .content-card, .chart-grid-2col > *, .ticker-metric { min-width: 0; }
+    .content-card p, .content-card li, .setup-civ-details summary { font-size: 16px !important; line-height: 1.6; }
+    .ticker-header h1 { font-size: clamp(26px, 3vw, 38px); font-weight: 750; line-height: 1.2; color: #0f172a; }
+    .ticker-header .ticker-subtitle { font-size: 16px; }
     .content-card { max-width: 100%; box-sizing: border-box; }
     .data-table-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .setups-table td, .setups-table th { vertical-align: middle; }
@@ -937,12 +942,12 @@ function buildPage(d) {
     ${heroBadges}
   </div>
   <h1 class="ticker-name">Scanner DailyTickers — ${d.session_label || d.date}</h1>
-  <p class="ticker-subtitle">${suspensionLabel || `Top ${setups.length} conditionnel ${regime}`} — ${suspended.length ? 'validation du panier bloquée ; niveaux initiaux conservés' : 'niveaux techniques calculés sur données de séance, tableaux compacts par stratégie'}</p>
+  <p class="ticker-subtitle">${suspensionLabel || `Top ${setups.length} conditionnel ${regime}`} — ${suspended.length ? 'validation du panier bloquée ; niveaux initiaux conservés' : `${setups.length} thèses, leurs objections et les niveaux à surveiller`}</p>
   <div class="ticker-metrics">
     <div class="ticker-metric"><div class="tm-value" style="color:${regColor};">${regime}</div><div class="tm-label">Régime</div></div>
-    <div class="ticker-metric"><div class="tm-value">${avgScore}</div><div class="tm-label">Score moyen</div></div>
+    <div class="ticker-metric"><div class="tm-value">${Math.max(...setups.map(s => s.horizon_days || 10))}</div><div class="tm-label">Séances max.</div></div>
     <div class="ticker-metric"><div class="tm-value">${suspended.length ? remainingCount : setups.length}</div><div class="tm-label">${suspended.length ? 'Autres plans conditionnels' : 'Setups'}</div></div>
-    <div class="ticker-metric"><div class="tm-value">${dominantStr || 'Momentum'}</div><div class="tm-label">Dominante</div></div>
+    <div class="ticker-metric"><div class="tm-value">${new Set(setups.map(s => s.pattern)).size}</div><div class="tm-label">Stratégies</div></div>
     ${vixVal ? `<div class="ticker-metric"><div class="tm-value" style="color:${vixColor};">${vixVal}</div><div class="tm-label">VIX</div></div>` : ''}
     ${spxVal ? `<div class="ticker-metric"><div class="tm-value" style="color:${spxColor};">${spxVal}</div><div class="tm-label">SPX</div></div>` : ''}
   </div>
@@ -1014,11 +1019,11 @@ ${strategyTablesHtml}
         ? `Entrée = zone conditionnelle à l'ouverture (9h30–9h45 ET), uniquement si le prix s'y trouve et tient le VWAP observé.`
         : `Entrée = un prix unique, en ordre à cours limité valable la séance. Pas de zone, pas de condition de VWAP, pas de poursuite : si le marché ouvre au-dessus et n'y revient pas, la ligne ne se déclenche simplement pas.`} Le stop est un ordre dur, pas mental. ${hasEntryZone
         ? `Le R/R du tableau est calculé au HAUT de la zone d'entrée, soit le pire remplissage autorisé; le plancher du scan est 1:${minRR}.`
-        : `Entrée = prix unique (pas de zone) sur ce scan : le R/R affiché ne dépend donc pas de l'endroit où l'on est rempli dans une fourchette. C'est une propriété arithmétique de niveaux posés par formule, pas une mesure de ce que le marché offre — il n'y a simplement pas de « pire remplissage » distinct à anticiper.`
-      } Aucun sizing individuel n'est fourni tant que le sizing portefeuille reste rejeté. ${hasEntryZone
+        : `L’ordre a un plafond unique ; le prix moyen réellement payé peut être inférieur. Le calcul utilise le prix limite, soit le prix maximal autorisé ; un remplissage inférieur modifie le risque réel et le rapport gain/risque.`
+      } Aucune quantité n’est proposée : le budget de perte, le cash et les expositions doivent être vérifiés avant achat. ${hasEntryZone
         ? `Si l'ouverture dépasse le haut de la zone de 2%, l'entrée directe est annulée et seul un retour au VWAP peut réarmer la ligne.`
         : `Si le prix n'est pas touché pendant la séance, la ligne expire : elle n'est pas reportée au lendemain.`} Une entrée est également nulle si son filtre de surextension est franchi avant l'exécution.</p>
-      <p style="font-size:0.85rem;color:#64748b;margin-top:0.5rem;">Badges : <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span> ligne dont le secteur d'activité est conforme aux critères de finance islamique retenus ici (l'endettement, quand vérifié, est précisé ligne par ligne dans les invalidations — non systématiquement audité) — <span class="badge" style="background:#e2e8f0;color:#334155;border:1px solid #94a3b8;font-size:.68rem">CONV</span> ligne conventionnelle, non conforme.</p>
+      <p style="font-size:0.85rem;color:#64748b;margin-top:0.5rem;">${(d.setups || []).some(s => typeof s.sharia === 'boolean') ? `Badges : <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span> ligne dont le secteur d'activité est conforme aux critères de finance islamique retenus ici (l'endettement, quand vérifié, est précisé ligne par ligne dans les invalidations — non systématiquement audité) — <span class="badge" style="background:#e2e8f0;color:#334155;border:1px solid #94a3b8;font-size:.68rem">CONV</span> ligne conventionnelle, non conforme.` : 'Aucun contrôle de conformité à la finance islamique n’a été réalisé pour cette sélection.'}</p>
     </div>
   </div>
 </section>
@@ -1029,7 +1034,7 @@ ${strategyTablesHtml}
   <div class="content-card">
     <div class="pedagogy-box">
       <h4>1. Détection du régime</h4>
-      <p>Score composite sur 6 composantes (VIX, largeur SPX, crédit HYG, DXY, liquidité Fed, TLT). Le score publié monte avec l&rsquo;appétit pour le risque : &gt;0,70 = RISK-ON, 0,50–0,70 = RECOVERY ou NEUTRAL, 0,30–0,50 = EARLY RISK-OFF, &lt;0,30 = RISK-OFF.</p>
+      <p>Le régime publié vient du moteur identifié dans les preuves, avec ses propres composantes et seuils. Son score mesure un état de marché ; il ne représente pas une probabilité de réussite du panier. La lecture et les limites utiles sont précisées dans le contexte de marché ci-dessus.</p>
     </div>
     <div class="pedagogy-box">
       <h4>2. Screening multi-stratégie</h4>
@@ -1047,7 +1052,7 @@ ${strategyTablesHtml}
     </div>
     <div class="pedagogy-box">
       <h4>5. Anti-dilution &amp; ranking</h4>
-      <p>Le contrôle SEC doit distinguer les offres d’actions, la dette et les opérations mixtes en lisant les dépôts primaires. Les émetteurs privés étrangers déposent également auprès de la SEC, notamment des 20-F et des 6-K : leur statut ne les dispense pas du contrôle. Les ETF suivent un régime distinct de celui des sociétés opérationnelles. La fenêtre effectivement documentée est celle des preuves de chaque ligne ; un contrôle limité à 90 jours ne permet pas d’exclure des instruments dilutifs plus anciens encore actifs. Toute classification inconnue empêche de certifier la ligne. Diversification sectorielle et géographique. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Entrées à prix unique sur ce scan (pas de zone) : le R/R affiché est donc déterminé sans ambiguïté de remplissage — ce qui ne dit rien de sa pertinence, seulement qu'il n'y a pas de « pire prix » distinct à envisager. Il s'échelonne de 1:${minRR} à 1:${maxRR} selon les lignes${rrBelowOne}.`}${shariaSentence}</p>
+      <p>Le contrôle SEC doit distinguer les offres d’actions, la dette et les opérations mixtes en lisant les dépôts primaires. Les émetteurs privés étrangers déposent également auprès de la SEC, notamment des 20-F et des 6-K : leur statut ne les dispense pas du contrôle. Les ETF suivent un régime distinct de celui des sociétés opérationnelles. La fenêtre effectivement documentée est celle des preuves de chaque ligne ; un contrôle limité à 90 jours ne permet pas d’exclure des instruments dilutifs plus anciens encore actifs. Toute classification inconnue empêche de certifier la ligne. Diversification sectorielle et géographique. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Le R/R affiché est calculé au plafond d’achat ; un prix payé inférieur modifie ce rapport, avant frais et glissement. Il s'échelonne de 1:${minRR} à 1:${maxRR} selon les lignes${rrBelowOne}.`}${shariaSentence}</p>
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:1rem;">
       <h4 style="margin:0 0 0.5rem;">Sources de données</h4>

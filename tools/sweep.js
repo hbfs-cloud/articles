@@ -67,6 +67,7 @@ function sealTradeChain() {
 const priceCacheLib = require('./lib/price-cache');
 const { runArgs, fetchCertifiedDailyBars, barsToHistory, isCryptoSymbol } = require('./lib/mcp-daily-bars');
 const { validateReview } = require('./lib/scanner-publication-review');
+const { buildFrozenFetchScope } = require('./lib/sweep-frozen-fetch-scope');
 const SWEEP_SHARD = +(process.env.SWEEP_SHARD ?? -1);
 const SWEEP_SHARDS = +(process.env.SWEEP_SHARDS ?? 1);
 const SHARD_OUT = process.env.SWEEP_SHARD_OUT || '';
@@ -2157,6 +2158,45 @@ async function main() {
   }
   console.log(`Total setups parsed: ${allSetups.length} across ${scans.length} scans`);
 
+  // A frozen run appends from the current frontier only. Load the immutable state
+  // before fetching so sealed historical setups never become an implicit market-data
+  // dependency. The full sweep deliberately keeps its historical fetch below.
+  const MODES_CFG_PATH = process.env.MODES_CFG_OVERRIDE || path.join(ROOT, 'data', 'modes-config.json');
+  const HISTORY_PATH = path.join(ROOT, 'data', 'modes-config-history.json');
+  const BACKTEST_TRADES_PATH = path.join(ROOT, 'data', 'backtest-trades.json');
+  const RESULTS_PATH = path.join(ROOT, 'data', 'backtest-results.json');
+  let existingTrades = {};
+  let existingResults = {};
+  let excludedTradeSnapshot = null;
+  let livePositions = [];
+  let inheritedClosedRecords = new WeakSet();
+  let frozenFetchScope = null;
+  if (FROZEN_ONLY) {
+    if (fs.existsSync(BACKTEST_TRADES_PATH)) {
+      existingTrades = JSON.parse(fs.readFileSync(BACKTEST_TRADES_PATH, 'utf8'));
+      for (const rows of Object.values(existingTrades)) {
+        for (const trade of Array.isArray(rows) ? rows : []) {
+          if (trade && trade.status !== 'pending' && trade.status !== 'sim2_artifact') inheritedClosedRecords.add(trade);
+        }
+      }
+    }
+    if (fs.existsSync(RESULTS_PATH)) existingResults = JSON.parse(fs.readFileSync(RESULTS_PATH, 'utf8'));
+    excludedTradeSnapshot = SYMBOL_EXCLUSIONS.active ? structuredClone(existingTrades) : null;
+    const positionsPath = path.join(ROOT, 'data', 'scanner-positions.json');
+    if (fs.existsSync(positionsPath)) {
+      const positions = JSON.parse(fs.readFileSync(positionsPath, 'utf8'));
+      livePositions = (positions.open_positions || []).filter(position => !SYMBOL_EXCLUSIONS.excludesSymbol(position.ticker));
+    }
+    if (!fs.existsSync(MODES_CFG_PATH)) throw new Error('Frozen fetch scope requires modes-config.json');
+    const modes = JSON.parse(fs.readFileSync(MODES_CFG_PATH, 'utf8')).modes;
+    frozenFetchScope = buildFrozenFetchScope({
+      scans, allSetups, modes, existingTrades, existingResults, livePositions,
+      excludesMode: (id, cfg) => SCOPE.excludesMode(id, cfg),
+    });
+    allSetups = [...frozenFetchScope.setups];
+    console.log(`[frozen fetch scope] ${frozenFetchScope.tickers.length} ticker(s), ${frozenFetchScope.scanDates.length} append/purged scan date(s), ${frozenFetchScope.overlappingTickers.length} overlap(s), ${frozenFetchScope.liveTickers.length} live position(s)`);
+  }
+
   // Cohérence éditorial ↔ tracker sur le R/R. Le gate de simulateTrade est ALIGNÉ par ère sur le
   // plancher publié (1,5 avant le 2026-08-10, 0,7 depuis — décision user du 16/08 après l'incident
   // « 43/43 signaux publiés invisibles au tracker »). Ce bloc détecte toute RÉCIDIVE : un scan dont
@@ -2175,8 +2215,12 @@ async function main() {
     }
   }
 
-  // 2. Fetch all ticker histories
-  const tickers = [...new Set(allSetups.map(t => t.ticker))];
+  // 2. A full sweep retains the complete universe. A frozen append fetches
+  // only the auditable frontier derived above, including each complete pool
+  // on a required date and positions that can still affect the next curve.
+  const tickers = FROZEN_ONLY
+    ? frozenFetchScope.tickers
+    : [...new Set(allSetups.map(t => t.ticker))];
   console.log(`\nFetching price history for ${tickers.length} tickers...`);
   await prefetchBulkMCP(tickers, 'setups');
   await fetchOHLCVMany(tickers, 'setups');
@@ -2221,16 +2265,16 @@ async function main() {
     * Object.keys(STRATEGY_FILTERS).length * ROTATIONS.length * HORIZONS.length
     * tpCombos.length * TRAIL_MODES.length * MAX_STOP_PCTS.length * ATR_STOP_MULTS.length
     * DAILY_TRAIL_PCTS.length * BREAKEVEN_PCTS.length * ENTRY_GATE_PCTS.length;
-  console.log(`\n=== GRID SEARCH (${total} combinations) ===\n`);
+  if (!FROZEN_ONLY) console.log(`\n=== GRID SEARCH (${total} combinations) ===\n`);
 
   // Pre-simulate all trades for each unique trade-level config
   const tradesByKey = {};
   const preSimTotal = HORIZONS.length * tpCombos.length * TRAIL_MODES.length
     * MAX_STOP_PCTS.length * ATR_STOP_MULTS.length * DAILY_TRAIL_PCTS.length
     * BREAKEVEN_PCTS.length * ENTRY_GATE_PCTS.length;
-  console.log(`Pre-simulating ${preSimTotal} trade sets...`);
+  if (!FROZEN_ONLY) console.log(`Pre-simulating ${preSimTotal} trade sets...`);
   let preSimDone = 0;
-  for (const horizon of HORIZONS) {
+  if (!FROZEN_ONLY) for (const horizon of HORIZONS) {
     for (const [ptp, ptpPct] of tpCombos) {
       for (const trail of TRAIL_MODES) {
         for (const maxStop of MAX_STOP_PCTS) {
@@ -2268,10 +2312,13 @@ async function main() {
       }
     }
   }
-  console.log(`Pre-simulated ${preSimDone} trade sets`);
+  if (!FROZEN_ONLY) console.log(`Pre-simulated ${preSimDone} trade sets`);
 
   // Pre-simulate frozen mode configs that fall outside the grid dimensions
-  const FROZEN_CFG_PATH = path.join(ROOT, "data", "modes-config.json");
+  // The frozen pre-simulation must use the same config whose frontier defined
+  // the fetch scope (including a test/repair override). Full-sweep retains its
+  // historical canonical-path behaviour.
+  const FROZEN_CFG_PATH = FROZEN_ONLY ? MODES_CFG_PATH : path.join(ROOT, "data", "modes-config.json");
   if (fs.existsSync(FROZEN_CFG_PATH)) {
     const frozenModes = JSON.parse(fs.readFileSync(FROZEN_CFG_PATH)).modes || {};
     // Skip stopped modes
@@ -2682,10 +2729,21 @@ async function main() {
   };
 
 
+  // A frozen append does not rerun the optimizer. Preserve its dated global
+  // summary, grid and universe instead of relabelling them as today's 53-name
+  // fetch scope; record this append separately.
+  if (FROZEN_ONLY) {
+    Object.assign(output, existingResults);
+    output.frozenUpdate = {
+      captured_at: new Date().toISOString(),
+      reference_close: RUN.refdate,
+      fetched_tickers: frozenFetchScope.tickers,
+      scan_dates: frozenFetchScope.scanDates,
+      overlapping_tickers: frozenFetchScope.overlappingTickers,
+    };
+  }
+
   // Save trade lists for all FROZEN modes (from modes-config.json)
-  const MODES_CFG_PATH = process.env.MODES_CFG_OVERRIDE || path.join(ROOT, "data", "modes-config.json");
-  const HISTORY_PATH = path.join(ROOT, "data", "modes-config-history.json");
-  const BACKTEST_TRADES_PATH = path.join(ROOT, "data", "backtest-trades.json");
   const frozenTrades = {};
   // Load config version history for trade tagging
   let configHistory = [];
@@ -2705,16 +2763,17 @@ async function main() {
     return ver;
   }
 
-  // Always load existing trades and results — history is never rewritten
-  let existingTrades = {};
-  if (fs.existsSync(BACKTEST_TRADES_PATH)) {
-    try { existingTrades = JSON.parse(fs.readFileSync(BACKTEST_TRADES_PATH, 'utf8')); } catch(e) {}
-  }
-  const excludedTradeSnapshot = SYMBOL_EXCLUSIONS.active ? JSON.parse(JSON.stringify(existingTrades)) : null;
-  let existingResults = {};
-  const RESULTS_PATH = path.join(ROOT, 'data', 'backtest-results.json');
-  if (fs.existsSync(RESULTS_PATH)) {
-    try { existingResults = JSON.parse(fs.readFileSync(RESULTS_PATH, 'utf8')); } catch(e) {}
+  // The frozen branch loaded this immutable state before the market-data fetch
+  // to derive its scope. Keep the legacy tolerant loading behaviour for the
+  // full optimizer only.
+  if (!FROZEN_ONLY) {
+    if (fs.existsSync(BACKTEST_TRADES_PATH)) {
+      try { existingTrades = JSON.parse(fs.readFileSync(BACKTEST_TRADES_PATH, 'utf8')); } catch(e) {}
+    }
+    excludedTradeSnapshot = SYMBOL_EXCLUSIONS.active ? structuredClone(existingTrades) : null;
+    if (fs.existsSync(RESULTS_PATH)) {
+      try { existingResults = JSON.parse(fs.readFileSync(RESULTS_PATH, 'utf8')); } catch(e) {}
+    }
   }
 
   // Preserve advisor_* values when daily run (FROZEN_ONLY) does not regenerate them.
@@ -2730,24 +2789,10 @@ async function main() {
   // Load live positions from scanner-positions.json for MtM injection.
   // These are REAL open positions tracked by update-tracking.js — they must
   // contribute to returnUnrealized so stats match the status page.
-  const SCANNER_POS_PATH = path.join(ROOT, 'data', 'scanner-positions.json');
-  let livePositions = [];
-  if (FROZEN_ONLY && fs.existsSync(SCANNER_POS_PATH)) {
-    try {
-      const spData = JSON.parse(fs.readFileSync(SCANNER_POS_PATH, 'utf8'));
-      livePositions = (spData.open_positions || []).filter(p => !SYMBOL_EXCLUSIONS.excludesSymbol(p.ticker));
-    } catch(e) {
-      throw new Error(`cannot read scanner-positions.json for certified MtM: ${e.message}`);
-    }
-    if (livePositions.length > 0) {
-      console.log(`\nLoaded ${livePositions.length} live positions for MtM injection`);
-      const liveTickers = [...new Set(livePositions.map(p => p.ticker))];
-      // Force-refresh all live positions from the same certified reference close.
-      // An absent or partial cell is a hard failure; no cached or provider price is reused.
-      console.log(`  Refreshing ${liveTickers.length} live tickers from certified Marketdata MCP...`);
-      for (const t of liveTickers) delete priceCache[t];
-      await prefetchBulkMCP(liveTickers, 'live positions');
-    }
+  if (FROZEN_ONLY && livePositions.length > 0) {
+    // These tickers were already included in frozenFetchScope before the
+    // certified batch fetch; do not perform a second, divergent fetch here.
+    console.log(`\nLoaded ${livePositions.length} live positions for MtM injection`);
   }
 
   if (fs.existsSync(MODES_CFG_PATH)) {
@@ -3219,6 +3264,7 @@ async function main() {
   // never the entry day's bar (its close is unknown at the open).
   for (const id of Object.keys(frozenTrades)) {
     for (const t of frozenTrades[id]) {
+      if (FROZEN_ONLY && inheritedClosedRecords.has(t)) continue;
       if (t.vwap != null) continue;
       const bars = priceCache[t.ticker];
       if (!bars) continue;
@@ -3235,6 +3281,7 @@ async function main() {
   // Backfill entryTime/exitTime on all trades (including legacy ones lacking them)
   for (const id of Object.keys(frozenTrades)) {
     for (const t of frozenTrades[id]) {
+      if (FROZEN_ONLY && inheritedClosedRecords.has(t)) continue;
       if (!t.entryTime && t.entryDate) t.entryTime = '09:30';
       if (!t.exitTime && t.exitDate) {
         t.exitTime = ['expired','pending'].includes(t.status) ? '16:00'

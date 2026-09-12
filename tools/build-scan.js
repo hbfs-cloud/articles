@@ -159,8 +159,26 @@ function readEvidence(rel) {
   return { data: JSON.parse(fs.readFileSync(p, 'utf8')), sha256: sha(p), rel };
 }
 
-ingestWave2();
-ingestSupplement();
+if (manifest.technicals_source === 'derived_completed_window') {
+  // Use the same date-bound calculation as preselection. Current server
+  // technicals have a different EMA seed and no certified observation date.
+  const { deriveAll, validateArtifact } = require('./derive-scanner-technicals');
+  const { stableStringify } = require('./lib/workflow-contract');
+  const derived = readEvidence('_derived/verified-technicals.json');
+  const errors = validateArtifact(derived.data, ROOT, REF, '_verify');
+  if (errors.length) throw new Error('Derived technicals: ' + errors.join('; '));
+  const recomputed = deriveAll({ root: ROOT, dir: dirRel, referenceClose: REF, sourceDir: '_verify' });
+  if (stableStringify(recomputed) !== stableStringify(derived.data)) throw new Error('Derived technicals: deterministic recomputation mismatch');
+  addProv(derived.rel);
+  for (const [symbol, value] of Object.entries(derived.data.symbols)) {
+    tech[symbol] = value;
+    bars[symbol] = value.bars;
+  }
+} else {
+  if (manifest.technicals_source != null) throw new Error('Unsupported technicals_source');
+  ingestWave2();
+  ingestSupplement();
+}
 const SEC = readEvidence('_final/sec_selected_evidence.json');
 const EARN = readEvidence('_final/earnings_selected_evidence.json');
 const SEL = readEvidence('_final/selection_rows.json');
@@ -394,7 +412,7 @@ for (const pick of manifest.picks) {
         next_earnings: earn.next_earnings || null,
         source_artifact: `${dirRel}/${EARN.rel}`, source_sha256: EARN.sha256 },
       issuer_filing_regime: sec.issuer_filing_regime,
-      dilution_scope: 'Dépôts SEC officiels revus sur 90 jours; dette classée séparément des offres d’actions.',
+      dilution_scope: `Dépôts SEC officiels revus du ${SEC.data.dilution_window.start} au ${SEC.data.dilution_window.end} ; dette classée séparément des offres d’actions.`,
       sec_evidence: { source_artifact: `${dirRel}/${SEC.rel}`, source_sha256: SEC.sha256,
         checked_at: SEC.data.checked_at, dilution_window: SEC.data.dilution_window,
         pagination_exhausted: true,

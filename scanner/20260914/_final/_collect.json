@@ -1,0 +1,295 @@
+{
+  "contract_version": "1.0",
+  "workflow": "scanner",
+  "plan": "plans/scanner-final-no-dtx.json",
+  "plan_sha256": "0ecbb10678cd1745e988c805a46dc862af6b6f9cf44ab4d9a4007482f47e3abf",
+  "input_sha256": "fee333d46666c7d537d76a44e11e408f9f2947658af1bc807df5a0160de623ba",
+  "resolved_input": {
+    "artifact": "scanner/20260914/signals.json",
+    "equity_reference_close": "2026-09-11",
+    "crypto_completed_refdate": null,
+    "as_of_timestamp": "2026-09-12T21:40:47.427Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "covers_close": "2026-09-11",
+              "expected_intraday_close": "2026-09-11"
+            }
+          }
+        ]
+      },
+      {
+        "name": "earnings-final",
+        "calls": [
+          {
+            "as": "earnings_selected",
+            "server": "marketdata",
+            "tool": "GetEarningsCalendarFiltered",
+            "args": {
+              "symbols": "META,AAPL,BDX,EMR,COP,MTDR,JNJ,KDP",
+              "days_ahead": 14,
+              "min_expected_move_pct": 0
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "fundamentals-final",
+        "calls": [
+          {
+            "as": "fund_selected",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "profile,financials,stats,calendar,quote",
+              "symbols": "META,AAPL,BDX,EMR,COP,MTDR,JNJ,KDP",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "job_max_ms": 600000
+          }
+        ]
+      },
+      {
+        "name": "sec-final-b1",
+        "calls": [
+          {
+            "as": "sec_selected_b1",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "sec_filings,flags",
+              "symbols": "META,AAPL",
+              "days": 180,
+              "force_async": true
+            },
+            "job_max_ms": 600000,
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "sec-final-b2",
+        "calls": [
+          {
+            "as": "sec_selected_b2",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "sec_filings,flags",
+              "symbols": "BDX,EMR",
+              "days": 180,
+              "force_async": true
+            },
+            "job_max_ms": 600000,
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "sec-final-b3",
+        "calls": [
+          {
+            "as": "sec_selected_b3",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "sec_filings,flags",
+              "symbols": "COP,MTDR",
+              "days": 180,
+              "force_async": true
+            },
+            "job_max_ms": 600000,
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "sec-final-b4",
+        "calls": [
+          {
+            "as": "sec_selected_b4",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "sec_filings,flags",
+              "symbols": "JNJ,KDP",
+              "days": 180,
+              "force_async": true
+            },
+            "job_max_ms": 600000,
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "scanner/20260914/signals.json",
+  "reference_date": "2026-09-11",
+  "equity_reference_close": "2026-09-11",
+  "crypto_completed_refdate": null,
+  "started_at": "2026-09-12T21:40:47.427Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 297,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 296,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "c1e3781a4e3b8c1c05554287bdf8790532b06d5893a0c3934a9200d9f39c753e"
+        }
+      ]
+    },
+    {
+      "name": "earnings-final",
+      "ms": 2645,
+      "calls": [
+        {
+          "as": "earnings_selected",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2645,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "2897959822a1613f04a33026d31857a2a17a700cdebc46e9d9496e0d7f423b04"
+        }
+      ]
+    },
+    {
+      "name": "fundamentals-final",
+      "ms": 7154,
+      "calls": [
+        {
+          "as": "fund_selected",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 7154,
+          "wait_ms": 7107,
+          "error": null,
+          "output_sha256": "e2bdb90da0ea9218691161fb60be878175067df7fcb553cc4fac7812e434bbf5"
+        }
+      ]
+    },
+    {
+      "name": "sec-final-b1",
+      "ms": 8062,
+      "calls": [
+        {
+          "as": "sec_selected_b1",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 8062,
+          "wait_ms": 7106,
+          "error": null,
+          "output_sha256": "b5d67098659b2d44a805781dc5a5a8bc50eb40dffbf1694d1937a53e9b374d74"
+        }
+      ]
+    },
+    {
+      "name": "sec-final-b2",
+      "ms": 1947,
+      "calls": [
+        {
+          "as": "sec_selected_b2",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1947,
+          "wait_ms": 1012,
+          "error": null,
+          "output_sha256": "e821d0464362cbf9097880d9b2713876d8ff9983a9e0d400178a08a71fca24a9"
+        }
+      ]
+    },
+    {
+      "name": "sec-final-b3",
+      "ms": 1995,
+      "calls": [
+        {
+          "as": "sec_selected_b3",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1995,
+          "wait_ms": 1009,
+          "error": null,
+          "output_sha256": "66aaf03edf4c82e7c6746083e1a9422b649a7a2c1340b9dd676646db5fa1416b"
+        }
+      ]
+    },
+    {
+      "name": "sec-final-b4",
+      "ms": 1994,
+      "calls": [
+        {
+          "as": "sec_selected_b4",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1994,
+          "wait_ms": 1007,
+          "error": null,
+          "output_sha256": "e85f3a8936bba7a07dddaba4312b22a0dfbffe3b4d1cf255ed8aab20d5fa3928"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-09-12T21:41:11.553Z",
+  "failures": 0,
+  "executed_calls": 7,
+  "skipped_calls": 0
+}

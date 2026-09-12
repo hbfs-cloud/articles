@@ -1640,6 +1640,32 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "MTDR",
+    "exchange": "NYSE · Energy",
+    "name": "MTDR — résultats, risques, comparables et suivi de veille au 11 septembre 2026.",
+    "title": "MTDR — résultats, risques, comparables et suivi de veille au 11 septembre 2026.",
+    "desc": "MTDR reste en veille : le 5 août, matador a publié un t2 avec un record de production pétrolière et une hausse de sa guidance annuelle. Les résultats primaires éclairent la qualité économique ; les repères conditionnels exigent une actualisation avant toute décision.",
+    "tags": "énergie,résultats,watch",
+    "grade": "B-",
+    "href": "/analyses/MTDR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "EMR",
+    "exchange": "NYSE · Industrials",
+    "name": "EMR — résultats, risques, comparables et suivi de veille au 11 septembre 2026.",
+    "title": "EMR — résultats, risques, comparables et suivi de veille au 11 septembre 2026.",
+    "desc": "EMR reste en veille : le 4 août, emerson a publié son t3 fiscal et relevé ses perspectives 2026. Les résultats primaires éclairent la qualité économique ; les repères conditionnels exigent une actualisation avant toute décision.",
+    "tags": "industrie,résultats,watch",
+    "grade": "B",
+    "href": "/analyses/EMR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "GEV",
     "exchange": "NYSE · Industrie — équipements électriques",
     "name": "GEV — suivi historique au 11 septembre. Demande réseau solide, mais conversion, cash et bénéf...",
@@ -5770,6 +5796,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/status/",
     "date": "Updated continuously"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 8 conditionnel RECOVERY · META, AAPL, EMR, MTDR, JNJ, NWSA, XLE, BITO",
+    "desc": "Huit configurations pour lundi, avec deux arbitrages prioritaires. Apple possède le rendez-vous produit le plus proche ; Emerson, JNJ et News Corp préparent des replis. Meta reste un rebond à confronter au coût de ses investissements. Dans l’énergie, Matador et XLE expriment largement le même risque...",
+    "tags": "us,etf,technique,macro,energy",
+    "grade": "",
+    "href": "/scanner/20260914/",
+    "date": "14 septembre 2026"
   },
   {
     "type": "scanner",

@@ -27,6 +27,7 @@ if (SCOPE.active) console.log('[scope] ' + JSON.stringify(SCOPE.audit));
 const STATUS_DIR = path.join(ROOT, 'scanner/status');
 
 const DRY_RUN = process.argv.includes('--dry-run');
+const escHtml = value => String(value).replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));
 
 // ─── Mode emoji (presentation-only override; label/color come from config) ──────
 // The config has no emoji field, so this small map supplies one per known mode.
@@ -36,6 +37,17 @@ const MODE_EMOJI = {
   fortress: '🏰', tkl: '🎯', alpha: '🎯', aplus: '💎', bull: '🐂',
 };
 const DEFAULT_EMOJI = '📊';
+const FRENCH_GOALS = {
+  'Risk-Adjusted Growth': 'Croissance ajustée du risque',
+  'Maximum Return': 'Rendement maximal',
+  'Maximum Capital Preservation': 'Préservation maximale du capital',
+  'Maximum Short-Term Alpha': 'Alpha maximal à court terme',
+};
+const FRENCH_RISK_PROFILES = {
+  'Ultra-Low': 'très faible', Low: 'faible', Medium: 'modéré', High: 'élevé', Extreme: 'extrême',
+};
+const frenchGoal = goal => FRENCH_GOALS[goal] || goal || 'Objectif non précisé';
+const frenchRiskProfile = profile => FRENCH_RISK_PROFILES[profile] || profile || 'non précisé';
 // Draft modes are config-only (never run) — skip them exactly like the public API
 // surface (gen-api.js NON_PUBLIC_API_STATUSES). They appear automatically once live.
 const CARD_SKIP_STATUSES = new Set(['draft']);
@@ -77,8 +89,8 @@ function readStatusMetrics(modeKey) {
   // de trades) au lieu de +19,87 % et -4,43 % — un rendement doublé et un drawdown 25× pire que la
   // réalité, sur une image poussée en Telegram/Discord et servie en Open Graph.
   // On n'indexe plus par POSITION mais par LIBELLÉ : un ajout, un retrait ou un réordonnancement
-  // de cellule dans gen-status-page.js ne peut plus décaler silencieusement les chiffres — au pire
-  // un libellé inconnu rend 0, ce qui se voit, au lieu de rendre la valeur du voisin, qui ne se voit pas.
+  // de cellule dans gen-status-page.js ne peut plus décaler silencieusement les chiffres. Un
+  // libellé inconnu reste indisponible, plutôt que de publier 0 ou la valeur du voisin.
   const byLabel = {};
   const cellRe = /<span class="ps-v[^"]*"[^>]*>([\s\S]*?)<\/span>\s*<span class="ps-l"[^>]*>([\s\S]*?)<\/span>/g;
   for (let m; (m = cellRe.exec(perfHtml));) {
@@ -93,7 +105,7 @@ function readStatusMetrics(modeKey) {
       const k = Object.keys(byLabel).find(x => x === n || x.startsWith(n + ' '));
       if (k) return byLabel[k];
     }
-    return 0;
+    return null;
   };
 
   const worstM = html.match(/Worst:\s*([+\-]?[\d.]+)%/);
@@ -106,103 +118,145 @@ function readStatusMetrics(modeKey) {
     wr:     L('win rate'),
     pf:     L('profit factor'),
     trades: L('closed trades', 'trades'),
-    worst:  worstM ? parseFloat(worstM[1]) : 0,
-    now:    nowM   ? parseFloat(nowM[1])   : 0,
-    best:   bestM  ? parseFloat(bestM[1])  : 0,
+    // A missing scenario is unknown, not a neutral 0% scenario. The card
+    // deliberately renders an unavailable state instead of fabricated values.
+    worst:  worstM ? parseFloat(worstM[1]) : null,
+    now:    nowM   ? parseFloat(nowM[1])   : null,
+    best:   bestM  ? parseFloat(bestM[1])  : null,
   };
 }
 
-// ─── Build open positions per mode (mirrors notify-scanner-status.js) ─────────
-const SF_CARDS = {
-  all: () => true, no_sq: s => !/short.?squeeze/i.test(s),
-  momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout/i.test(s),
-  no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
-  mom_bo: s => /momentum|breakout/i.test(s),
-};
-function buildPositions(cfg, modeKey) {
-  const tradesPath    = path.join(ROOT, 'data/backtest-trades.json');
-  const positionsPath = path.join(ROOT, 'data/scanner-positions.json');
-  if (!fs.existsSync(tradesPath) || !fs.existsSync(positionsPath)) return [];
+// ─── Canonical open positions per mode ──────────────────────────────────────
+// Cards are a public snapshot.  They must use the exact per-mode artifact made
+// by gen-api, never infer an "open" position from an old terminal trade.
+function latestStatusSnapshotDate() {
+  const datesPath = path.join(STATUS_DIR, 'history', 'dates.json');
+  if (!fs.existsSync(datesPath)) return null;
+  let dates;
+  try { dates = JSON.parse(fs.readFileSync(datesPath, 'utf8')); } catch (_) { return null; }
+  if (!Array.isArray(dates)) return null;
+  const valid = dates.filter(d => /^\d{8}$/.test(String(d))).sort();
+  if (!valid.length) return null;
+  const d = valid[valid.length - 1];
+  return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
+}
 
-  const allTrades     = JSON.parse(fs.readFileSync(tradesPath));
-  const livePositions = (JSON.parse(fs.readFileSync(positionsPath)).open_positions || []);
-  const liveLookup    = {};
-  for (const p of livePositions) liveLookup[p.ticker] = p;
+function unavailablePositions(reason) {
+  return { positions: [], available: false, snapshotDate: null, reason };
+}
 
-  const raw    = allTrades[modeKey] || [];
-  const trades = raw.map(t =>
-    (t.status === 'expired' && t.holdDays < cfg.horizon) ? { ...t, _premature: true } : t
-  );
-  let pending = trades.filter(t => t._premature);
+function canonicalPositions(modeKey) {
+  if (!/^[a-z0-9_]+$/i.test(modeKey)) return unavailablePositions('identifiant de mode invalide');
+  const expectedDate = latestStatusSnapshotDate();
+  if (!expectedDate) return unavailablePositions('date du snapshot de statut indisponible');
+  const positionsPath = path.join(ROOT, 'portfolio', 'v1', modeKey, 'positions.json');
+  if (!fs.existsSync(positionsPath)) return unavailablePositions('snapshot canonique des positions absent');
 
-  const seen = new Set();
-  return pending.map(t => {
-    const live         = liveLookup[t.ticker];
-    const currentPrice = live ? live.current_price : (t.exitPrice || 0);
-    const entry        = t.actualEntry || 0;
-    const ret          = entry > 0 ? +((currentPrice - entry) / entry * 100).toFixed(2) : 0;
-    const ageD         = t.entryDate ? Math.round((new Date() - new Date(t.entryDate)) / 86400000) : 0;
-    const left         = Math.max(0, cfg.horizon - Math.round(ageD * 5 / 7));
-    const stopDist     = (entry > 0 && live && live.stop)
-      ? +((entry - live.stop) / entry * 100).toFixed(2) : 0;
-    return {
-      ticker:       t.ticker,
+  let doc;
+  try { doc = JSON.parse(fs.readFileSync(positionsPath, 'utf8')); }
+  catch (_) { return unavailablePositions('snapshot canonique des positions illisible'); }
+  if (!doc || doc.mode !== modeKey || !/^\d{4}-\d{2}-\d{2}$/.test(String(doc.date || ''))) {
+    return unavailablePositions('snapshot canonique des positions invalide');
+  }
+  if (doc.date !== expectedDate) {
+    return unavailablePositions(`snapshot positions ${doc.date} ≠ snapshot statut ${expectedDate}`);
+  }
+  if (!Array.isArray(doc.positions)) return unavailablePositions('liste canonique des positions absente');
+
+  const toFinite = value => Number.isFinite(Number(value)) ? Number(value) : null;
+  const positions = [];
+  for (const position of doc.positions) {
+    if (!position || typeof position.ticker !== 'string' || !position.ticker) {
+      return unavailablePositions('une position canonique ne porte pas de ticker');
+    }
+    const entry = toFinite(position.entry);
+    const currentPrice = toFinite(position.currentPrice ?? position.current_price);
+    const declaredReturn = toFinite(position.returnPct ?? position.return_pct);
+    const returnPct = declaredReturn ?? (entry !== null && currentPrice !== null && entry > 0
+      ? +(((currentPrice - entry) / entry * 100).toFixed(2)) : null);
+    const stop = toFinite(position.stop);
+    const tp1 = toFinite(position.tp1);
+    const daysRemaining = toFinite(position.daysRemaining ?? position.days_remaining);
+    positions.push({
+      ticker: position.ticker,
       entry,
       current_price: currentPrice,
-      return_pct:   ret,
-      stop:         live ? live.stop : 0,
-      tp1:          live ? live.tp1  : 0,
-      left,
-      stopDist,
-    };
-  }).filter(p => { if (seen.has(p.ticker)) return false; seen.add(p.ticker); return true; })
-    .sort((a, b) => b.return_pct - a.return_pct)
-    .slice(0, cfg.portfolioSize);
+      return_pct: returnPct,
+      stop,
+      tp1,
+      left: daysRemaining,
+      stopDist: entry !== null && stop !== null && entry > 0 ? +((entry - stop) / entry * 100).toFixed(2) : null,
+    });
+  }
+  return { positions: positions.sort((a, b) => (b.return_pct ?? -Infinity) - (a.return_pct ?? -Infinity)), available: true, snapshotDate: doc.date, reason: null };
 }
 
 // ─── Generate HTML for one mode card ─────────────────────────────────────────
-function buildCardHtml(modeKey, cfg, metrics, positions) {
+function buildCardHtml(modeKey, cfg, metrics, positionState) {
+  const positions = positionState.positions;
   const meta     = metaFor(modeKey, cfg);
-  const today    = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const generatedToday = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
   const modeColor = cfg.color || '#888';
 
   // KPI formatting helpers
-  const fmtPct  = v => (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
-  const fmtDD   = v => '-' + Math.abs(v).toFixed(2) + '%';
-  const fmtWR   = v => v.toFixed(1) + '%';
-  const fmtPF   = v => v.toFixed(2) + 'x';
+  const known = Number.isFinite;
+  const fmtPct  = v => known(v) ? (v >= 0 ? '+' : '') + v.toFixed(2) + '%' : 'N/D';
+  const fmtDD   = v => known(v) ? '-' + Math.abs(v).toFixed(2) + '%' : 'N/D';
+  const fmtWR   = v => known(v) ? v.toFixed(1) + '%' : 'N/D';
+  const fmtPF   = v => known(v) ? v.toFixed(2) + 'x' : 'N/D';
 
-  const retColor = metrics.ret >= 0 ? '#10b981' : '#ef4444';
+  const retColor = !known(metrics.ret) ? '#94a3b8' : metrics.ret >= 0 ? '#10b981' : '#ef4444';
   const ddColor  = '#ef4444';
-  const wrColor  = metrics.wr >= 55 ? '#10b981' : metrics.wr >= 45 ? '#f59e0b' : '#ef4444';
-  const pfColor  = metrics.pf >= 1.5 ? '#10b981' : metrics.pf >= 1 ? '#f59e0b' : '#ef4444';
+  const wrColor  = !known(metrics.wr) ? '#94a3b8' : metrics.wr >= 55 ? '#10b981' : metrics.wr >= 45 ? '#f59e0b' : '#ef4444';
+  const pfColor  = !known(metrics.pf) ? '#94a3b8' : metrics.pf >= 1.5 ? '#10b981' : metrics.pf >= 1 ? '#f59e0b' : '#ef4444';
 
   // Scenario bar
   const worstNum = metrics.worst;
   const nowNum   = metrics.now;
   const bestNum  = metrics.best;
-  const allVals  = [worstNum, nowNum, bestNum, 0];
+  const scenarioAvailable = [worstNum, nowNum, bestNum].every(Number.isFinite);
+  const allVals  = scenarioAvailable ? [worstNum, nowNum, bestNum, 0] : [0];
   const minV     = Math.min(...allVals) - 2;
   const maxV     = Math.max(...allVals) + 2;
   const range    = maxV - minV || 1;
   const pct      = v => ((v - minV) / range * 100).toFixed(1);
-  const nowPct   = pct(nowNum);
-  const nowColor = nowNum >= 0 ? '#10b981' : '#ef4444';
+  const nowColor = scenarioAvailable && nowNum >= 0 ? '#10b981' : '#64748b';
 
   // Positions rows
-  const posRows = positions.length === 0
-    ? `<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:18px 0;font-size:13px;">No open positions</td></tr>`
-    : positions.slice(0, 6).map(p => {
-        const rc = p.return_pct >= 0 ? '#10b981' : '#ef4444';
-        const sign = p.return_pct >= 0 ? '+' : '';
-        return `<tr>
-          <td style="font-weight:700;color:#f1f5f9;font-size:15px;">${p.ticker}</td>
-          <td style="color:${rc};font-weight:700;font-size:15px;">${sign}${p.return_pct.toFixed(2)}%</td>
-          <td style="color:#94a3b8;font-size:13px;">${p.left}d left</td>
-          <td style="color:#6b7280;font-size:13px;">${p.stopDist > 0 ? p.stopDist.toFixed(1) + '% stop' : '—'}</td>
-          <td style="color:#94a3b8;font-size:13px;">${p.tp1 > 0 ? 'TP1: $' + p.tp1.toFixed(2) : '—'}</td>
-        </tr>`;
-      }).join('\n');
+  const posRows = !positionState.available
+    ? `<tr><td colspan="5" style="text-align:center;color:#fbbf24;padding:18px 0;font-size:13px;">Positions indisponibles — ${escHtml(positionState.reason)}</td></tr>`
+    : positions.length === 0
+      ? `<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:18px 0;font-size:13px;">Aucune position ouverte dans le snapshot canonique</td></tr>`
+      : positions.slice(0, 6).map(p => {
+          const knownReturn = Number.isFinite(p.return_pct);
+          const rc = !knownReturn ? '#94a3b8' : p.return_pct >= 0 ? '#10b981' : '#ef4444';
+          const returnText = knownReturn ? `${p.return_pct >= 0 ? '+' : ''}${p.return_pct.toFixed(2)}%` : 'N/D';
+          return `<tr>
+            <td style="font-weight:700;color:#f1f5f9;font-size:15px;">${escHtml(p.ticker)}</td>
+            <td style="color:${rc};font-weight:700;font-size:15px;">${returnText}</td>
+            <td style="color:#94a3b8;font-size:13px;">${Number.isFinite(p.left) ? `${p.left} j restants` : 'N/D'}</td>
+            <td style="color:#6b7280;font-size:13px;">${Number.isFinite(p.stopDist) && p.stopDist > 0 ? p.stopDist.toFixed(1) + '% jusqu’au stop' : '—'}</td>
+            <td style="color:#94a3b8;font-size:13px;">${Number.isFinite(p.tp1) && p.tp1 > 0 ? 'TP1: $' + p.tp1.toFixed(2) : '—'}</td>
+          </tr>`;
+        }).join('\n');
+  const positionsTitle = positionState.available
+    ? `Positions ouvertes (${positions.length}) · snapshot du ${positionState.snapshotDate}`
+    : 'Positions ouvertes — indisponibles';
+  const scenarioHtml = scenarioAvailable
+    ? `<div class="scenario-wrap">
+      <div class="scenario-title">Scénario de portefeuille (défavorable / actuel / favorable)</div>
+      <div class="scenario-bar-bg">
+        <div class="scenario-bar-fill"></div>
+        <div class="scenario-bar-marker" style="left:${pct(0)}%;background:#475569;"></div>
+        <div class="scenario-bar-marker" style="left:${pct(nowNum)}%;background:${nowColor};"></div>
+      </div>
+      <div class="scenario-labels">
+        <span>Défavorable : ${worstNum >= 0 ? '+' : ''}${worstNum.toFixed(2)}%</span>
+        <span class="scenario-now">Actuel : ${nowNum >= 0 ? '+' : ''}${nowNum.toFixed(2)}%</span>
+        <span>Favorable : ${bestNum >= 0 ? '+' : ''}${bestNum.toFixed(2)}%</span>
+      </div>
+    </div>`
+    : `<div class="scenario-wrap"><div class="scenario-title">Scénario de portefeuille indisponible</div><p style="color:#94a3b8;font-size:15px">Les métriques canoniques du scénario sont absentes ; la carte ne remplace pas ces valeurs par 0 %.</p></div>`;
 
   return `<!DOCTYPE html>
 <html>
@@ -404,13 +458,13 @@ body {
     <div class="header-left">
       <div>
         <div class="mode-badge">${meta.emoji} ${meta.label}</div>
-        <div class="mode-goal">${cfg.goal || ''} — ${cfg.riskProfile || ''} Risk</div>
+        <div class="mode-goal">${frenchGoal(cfg.goal)} — risque ${frenchRiskProfile(cfg.riskProfile)}</div>
       </div>
     </div>
     <div class="header-right">
       <div class="brand">DailyTickers</div>
-      <div class="date">${today}</div>
-      <div style="color:#475569;font-size:14px;margin-top:4px;">Portfolio Mode Card</div>
+      <div class="date">Généré le ${generatedToday}</div>
+      <div style="color:#475569;font-size:14px;margin-top:4px;">Carte de mode portefeuille</div>
     </div>
   </div>
 
@@ -418,37 +472,37 @@ body {
   <div class="kpi-row">
     <div class="kpi-card">
       <div class="kpi-value" style="color:${retColor}">${fmtPct(metrics.ret)}</div>
-      <div class="kpi-label">Total Return</div>
+      <div class="kpi-label">Rendement total</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-value" style="color:${ddColor}">${fmtDD(metrics.dd)}</div>
-      <div class="kpi-label">Max Drawdown</div>
+      <div class="kpi-value" style="color:${known(metrics.dd) ? ddColor : '#94a3b8'}">${fmtDD(metrics.dd)}</div>
+      <div class="kpi-label">Perte maximale</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-value" style="color:${wrColor}">${fmtWR(metrics.wr)}</div>
-      <div class="kpi-label">Win Rate</div>
+      <div class="kpi-label">Taux de réussite</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-value" style="color:${pfColor}">${fmtPF(metrics.pf)}</div>
-      <div class="kpi-label">Profit Factor</div>
+      <div class="kpi-label">Facteur de profit</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-value" style="color:#94a3b8">${metrics.trades}</div>
-      <div class="kpi-label"># Trades</div>
+      <div class="kpi-value" style="color:#94a3b8">${known(metrics.trades) ? metrics.trades : 'N/D'}</div>
+      <div class="kpi-label">Transactions closes</div>
     </div>
   </div>
 
   <!-- Open Positions -->
   <div>
-    <div class="section-title">Open Positions (${positions.length})</div>
+    <div class="section-title">${positionsTitle}</div>
     <table class="positions-table">
       <thead>
         <tr>
           <th>Ticker</th>
-          <th>Return</th>
-          <th>Time Left</th>
+          <th>Rendement</th>
+          <th>Temps restant</th>
           <th>Stop</th>
-          <th>Target</th>
+          <th>Objectif</th>
         </tr>
       </thead>
       <tbody>
@@ -458,25 +512,13 @@ body {
   </div>
 
   <!-- Scenario -->
-  <div class="scenario-wrap">
-    <div class="scenario-title">Portfolio Scenario (Worst / Now / Best)</div>
-    <div class="scenario-bar-bg">
-      <div class="scenario-bar-fill"></div>
-      <div class="scenario-bar-marker" style="left:${pct(0)}%;background:#475569;"></div>
-      <div class="scenario-bar-marker" style="left:${pct(nowNum)}%;background:${nowColor};"></div>
-    </div>
-    <div class="scenario-labels">
-      <span>Worst: ${worstNum >= 0 ? '+' : ''}${worstNum.toFixed(2)}%</span>
-      <span class="scenario-now">Now: ${nowNum >= 0 ? '+' : ''}${nowNum.toFixed(2)}%</span>
-      <span>Best: ${bestNum >= 0 ? '+' : ''}${bestNum.toFixed(2)}%</span>
-    </div>
-  </div>
+  ${scenarioHtml}
 
   <!-- Footer -->
   <div class="footer">
     <span>articles.dailytickers.com/scanner/status/</span>
-    <span>For informational purposes only. Not financial advice.</span>
-    <span>H${cfg.horizon || '?'} · ${cfg.filterName || ''} · ${cfg.portfolioSize || 1} slot${cfg.portfolioSize > 1 ? 's' : ''}</span>
+    <span>Information générale, pas un conseil financier.</span>
+    <span>H${cfg.horizon || '?'} · ${cfg.filterName || ''} · ${cfg.portfolioSize || 1} emplacement${cfg.portfolioSize > 1 ? 's' : ''}</span>
   </div>
 
 </div>
@@ -493,7 +535,7 @@ async function generatePNG(html, outputPath) {
   // Chrome for Testing 146 on macOS can hang indefinitely in
   // Page.captureScreenshot. The Playwright CLI uses the installed browser
   // channel and avoids that protocol regression.
-  if (process.platform === 'darwin') {
+  if (process.platform === 'darwin' && !process.env.PUPPETEER_EXECUTABLE_PATH) {
     const { execFileSync } = require('child_process');
     const os = require('os');
     const tmp = path.join(os.tmpdir(), `dtx-mode-card-${process.pid}-${Date.now()}.html`);
@@ -511,9 +553,9 @@ async function generatePNG(html, outputPath) {
     }
   }
 
-  let executablePath;
+  let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
   const playwrightBase = '/home/ci/.cache/ms-playwright';
-  if (fsSync.existsSync(playwrightBase)) {
+  if (!executablePath && fsSync.existsSync(playwrightBase)) {
     try {
       const dirs = fsSync.readdirSync(playwrightBase)
         .filter(d => d.startsWith('chromium-')).sort().reverse();
@@ -580,30 +622,20 @@ async function main() {
     const cfg = { id: modeKey, ...cfgRaw };
 
     // Metrics from status page
-    const metrics = readStatusMetrics(modeKey) || { ret: 0, dd: 0, wr: 0, pf: 0, trades: 0, worst: 0, now: 0, best: 0 };
+    const metrics = readStatusMetrics(modeKey) || { ret: null, dd: null, wr: null, pf: null, trades: null, worst: null, now: null, best: null };
     console.log(`  metrics: ret=${metrics.ret} dd=${metrics.dd} wr=${metrics.wr} pf=${metrics.pf}`);
 
     // Open positions
-    const positions = buildPositions(cfg, modeKey);
-    console.log(`  positions: ${positions.length}`);
+    const positionState = canonicalPositions(modeKey);
+    console.log(`  positions: ${positionState.available ? positionState.positions.length : 'unavailable (' + positionState.reason + ')'}`);
 
     if (DRY_RUN) {
       console.log('  [dry-run] skipping PNG');
       continue;
     }
 
-    // Clean old mode-{modeKey}-*.png files
-    try {
-      fs.readdirSync(STATUS_DIR)
-        .filter(f => new RegExp(`^mode-${modeKey}-\\d+\\.png$`).test(f))
-        .forEach(f => {
-          fs.unlinkSync(path.join(STATUS_DIR, f));
-          console.log(`  Removed old: ${f}`);
-        });
-    } catch (_) {}
-
     // Build HTML
-    const html     = buildCardHtml(modeKey, cfg, metrics, positions);
+    const html     = buildCardHtml(modeKey, cfg, metrics, positionState);
     const filename = `mode-${modeKey}-${ts}.png`;
     const outPath  = path.join(STATUS_DIR, filename);
 
@@ -611,7 +643,15 @@ async function main() {
     try {
       await generatePNG(html, outPath);
       manifest[`mode-${modeKey}`] = filename;
+      // Retain the previous usable card if rendering fails. Prune only after
+      // the replacement exists, and never remove the just-generated image.
+      for (const f of fs.readdirSync(STATUS_DIR)) {
+        if (f !== filename && new RegExp(`^mode-${modeKey}-\\d+\\.png$`).test(f)) {
+          fs.unlinkSync(path.join(STATUS_DIR, f));
+        }
+      }
     } catch (err) {
+      process.exitCode = 1;
       if (err.code === 'MODULE_NOT_FOUND') {
         console.warn(`  Puppeteer not available — skipping PNG for ${modeKey}`);
       } else {
@@ -629,4 +669,6 @@ async function main() {
   console.log('\nDone.');
 }
 
-main().catch(e => { console.error('Fatal:', e.message); process.exit(1); });
+if (require.main === module) main().catch(e => { console.error('Fatal:', e.message); process.exit(1); });
+
+module.exports = { latestStatusSnapshotDate, canonicalPositions, buildCardHtml, readStatusMetrics };

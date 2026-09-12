@@ -1,0 +1,59 @@
+{
+  "artifact": "scanner/$date/signals.json",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "covers_close": "$refdate",
+            "expected_intraday_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "final-basket-risk",
+      "calls": [
+        {
+          "as": "correlation",
+          "server": "marketdata",
+          "tool": "PortfolioRisk",
+          "args": {
+            "action": "correlation",
+            "symbols": "$symbols",
+            "lookback_days": 120,
+            "method": "pearson",
+            "returns_type": "log"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "nwsa_quote",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "quote",
+            "symbols": "NWSA"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        }
+      ]
+    }
+  ]
+}

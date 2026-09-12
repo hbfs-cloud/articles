@@ -1,0 +1,392 @@
+{
+  "contract_version": "1.0",
+  "workflow": "scanner",
+  "plan": "plans/scanner-verify-candidates.json",
+  "plan_sha256": "8bdfae714e5a7917f728c3095c1df8ad81bb907d84176753ae5a1343b79e1001",
+  "input_sha256": "d29381cf7507fcc0a28cd1ff1c4ffb841f726032ae3baec80022c9b3c7d5816f",
+  "resolved_input": {
+    "artifact": "scanner/20260914/signals.json",
+    "equity_reference_close": "2026-09-11",
+    "crypto_completed_refdate": null,
+    "as_of_timestamp": "2026-09-12T21:40:48.651Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "covers_close": "2026-09-11",
+              "expected_intraday_close": "2026-09-11"
+            }
+          }
+        ]
+      },
+      {
+        "name": "verify-1",
+        "calls": [
+          {
+            "as": "fund_b1",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "profile,financials,stats,calendar",
+              "symbols": "META,QCOM,AAPL,VTR,BDX",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "job_max_ms": 600000
+          }
+        ]
+      },
+      {
+        "name": "history-1",
+        "calls": [
+          {
+            "as": "history_b1",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "META,QCOM,AAPL,VTR,BDX",
+              "limit": 300,
+              "as_of_timestamp": "2026-09-12T21:40:48.651Z",
+              "completion_policy": "completed_only",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-11"
+            },
+            "job_max_ms": 600000
+          }
+        ]
+      },
+      {
+        "name": "verify-2",
+        "calls": [
+          {
+            "as": "fund_b2",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "profile,financials,stats,calendar",
+              "symbols": "EMR,COP,MTDR,JNJ,KDP",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "job_max_ms": 600000
+          }
+        ]
+      },
+      {
+        "name": "history-2",
+        "calls": [
+          {
+            "as": "history_b2",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "EMR,COP,MTDR,JNJ,KDP",
+              "limit": 300,
+              "as_of_timestamp": "2026-09-12T21:40:48.651Z",
+              "completion_policy": "completed_only",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-11"
+            },
+            "job_max_ms": 600000
+          }
+        ]
+      },
+      {
+        "name": "verify-3",
+        "calls": [
+          {
+            "as": "fund_b3",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "profile,financials,stats,calendar",
+              "symbols": "NWSA,ADM,RBLX,T",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "job_max_ms": 600000
+          }
+        ]
+      },
+      {
+        "name": "history-3",
+        "calls": [
+          {
+            "as": "history_b3",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "NWSA,ADM,RBLX,T",
+              "limit": 300,
+              "as_of_timestamp": "2026-09-12T21:40:48.651Z",
+              "completion_policy": "completed_only",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-11"
+            },
+            "job_max_ms": 600000
+          }
+        ]
+      },
+      {
+        "name": "verify-4",
+        "calls": [
+          {
+            "as": "fund_b4",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "profile,financials,stats,calendar",
+              "symbols": "XOM,MUFG,XLE,BITO",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "job_max_ms": 600000
+          }
+        ]
+      },
+      {
+        "name": "history-4",
+        "calls": [
+          {
+            "as": "history_b4",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "XOM,MUFG,XLE,BITO",
+              "limit": 300,
+              "as_of_timestamp": "2026-09-12T21:40:48.651Z",
+              "completion_policy": "completed_only",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-11"
+            },
+            "job_max_ms": 600000
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "scanner/20260914/signals.json",
+  "reference_date": "2026-09-11",
+  "equity_reference_close": "2026-09-11",
+  "crypto_completed_refdate": null,
+  "started_at": "2026-09-12T21:40:48.651Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 332,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 332,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "f845d46c6653e41f82aef05aac311cda05271167c027b99cf25e20e7cda1dfe2"
+        }
+      ]
+    },
+    {
+      "name": "verify-1",
+      "ms": 7826,
+      "calls": [
+        {
+          "as": "fund_b1",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 7826,
+          "wait_ms": 7095,
+          "error": null,
+          "output_sha256": "85e3bc172d0df6b6550c496e64895fb76388fa0e505dd4df9070831f221545c9"
+        }
+      ]
+    },
+    {
+      "name": "history-1",
+      "ms": 8121,
+      "calls": [
+        {
+          "as": "history_b1",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 8121,
+          "wait_ms": 6977,
+          "error": null,
+          "output_sha256": "6d47b14f4b8be10ab9de441017df8f9364b34bc1c18ea3729b4388e185727caa"
+        }
+      ]
+    },
+    {
+      "name": "verify-2",
+      "ms": 1909,
+      "calls": [
+        {
+          "as": "fund_b2",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1909,
+          "wait_ms": 1027,
+          "error": null,
+          "output_sha256": "8066f8a7ef0f7676f3f8cab2ad6d2233ad74206ba9076ead8463b3d8da4a8c6c"
+        }
+      ]
+    },
+    {
+      "name": "history-2",
+      "ms": 2044,
+      "calls": [
+        {
+          "as": "history_b2",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2043,
+          "wait_ms": 1069,
+          "error": null,
+          "output_sha256": "762baa5efda54c012131193943b7b0a4dadd7d59138014c6594ebbcfcf8abeef"
+        }
+      ]
+    },
+    {
+      "name": "verify-3",
+      "ms": 1938,
+      "calls": [
+        {
+          "as": "fund_b3",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1937,
+          "wait_ms": 1007,
+          "error": null,
+          "output_sha256": "e5cb2cccf5e376f78006417e6e6eaa6b7082f46077aff62469ec72e23f635fe4"
+        }
+      ]
+    },
+    {
+      "name": "history-3",
+      "ms": 2016,
+      "calls": [
+        {
+          "as": "history_b3",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2016,
+          "wait_ms": 1025,
+          "error": null,
+          "output_sha256": "eb748b9e6032e981f0921c41dd7c7d3f39dcd7ee07aca67e5ec2d31b479ce3f8"
+        }
+      ]
+    },
+    {
+      "name": "verify-4",
+      "ms": 1988,
+      "calls": [
+        {
+          "as": "fund_b4",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1988,
+          "wait_ms": 981,
+          "error": null,
+          "output_sha256": "b00dc728a756fc9e44d0507c368c5e55fcaca00aedda7148589b64191a0a40b9"
+        }
+      ]
+    },
+    {
+      "name": "history-4",
+      "ms": 2017,
+      "calls": [
+        {
+          "as": "history_b4",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2017,
+          "wait_ms": 1025,
+          "error": null,
+          "output_sha256": "8e207147a748561689375de7f324c4287dd69643007ff9ca46d905b35d76c9e6"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-09-12T21:41:16.880Z",
+  "failures": 0,
+  "executed_calls": 9,
+  "skipped_calls": 0
+}

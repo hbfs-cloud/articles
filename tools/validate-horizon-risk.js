@@ -30,6 +30,7 @@ const fs = require('fs');
 const path = require('path');
 const cal = require('./lib/market-calendar');
 const { JSDOM } = require('jsdom');
+const { primaryCorrection } = require('./lib/calendar-primary-corrections');
 
 const ROOT = path.resolve(__dirname, '..');
 const REGISTRY = path.join(ROOT, 'data/scheduled-events.json');
@@ -177,7 +178,11 @@ function validate(dirRel) {
       if (rescued) { notes.push(`« ${ev.id} » du ${ev.date} manquait au flux collecté ; le registre l'a fourni et la page le porte à la bonne date`); continue; }
       errors.push(`le flux collecté ne contient pas « ${ev.id} » du ${ev.date}, pourtant dans sa propre fenêtre — l'absence dans un flux n'est pas une absence dans le monde`);
     } else if (match.date !== ev.date) {
-      errors.push(`le flux collecté date « ${ev.id} » du ${match.date}, l'autorité du ${ev.date} (${reg.sources[ev.source].authority}) — artefact certifié mais faux`);
+      if (primaryCorrection({ dir, registryPath: REGISTRY, registry: reg, event: ev, row: match, prose: readProse(dir) })) {
+        notes.push(`« ${ev.id} » : erreur brute ${match.date} corrigée publiquement au ${ev.date}, preuves source et registre liées par empreintes`);
+      } else {
+        errors.push(`le flux collecté date « ${ev.id} » du ${match.date}, l'autorité du ${ev.date} (${reg.sources[ev.source].authority}) — artefact certifié mais faux`);
+      }
     }
   }
 

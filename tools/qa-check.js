@@ -20,6 +20,7 @@ const fs = require('fs');
 const path = require('path');
 const { isUSTradingDay, newYorkDateISO, usTradingDaysBetween, previousUSTradingDay, nextUSTradingDay } = require('./lib/market-calendar');
 const { latestPublishedScan } = require('./lib/published-scan');
+const { classifyRetroPublication } = require('./lib/retro-publication');
 
 const ROOT = path.resolve(__dirname, '..');
 const SCOPE = require('./lib/scanner-scope').loadScannerScope(ROOT);
@@ -109,6 +110,32 @@ function fileSize(relPath) {
   const full = path.join(ROOT, relPath);
   if (!fs.existsSync(full)) return 0;
   return fs.statSync(full).size;
+}
+
+function retroDirectoryFromHref(href) {
+  const match = String(href || '').match(/^\/scanner\/retrospective\/([a-z0-9-]+)\/?$/i);
+  return match ? match[1] : null;
+}
+
+function classifyRetroDirectory(dir) {
+  const base = path.join(ROOT, 'scanner', 'retrospective', dir);
+  const indexPath = path.join(base, 'index.html');
+  const resultsPath = path.join(base, 'retro-results.json');
+  const html = fs.existsSync(indexPath) ? fs.readFileSync(indexPath, 'utf8') : '';
+  let results = null;
+  if (fs.existsSync(resultsPath)) {
+    try { results = JSON.parse(fs.readFileSync(resultsPath, 'utf8')); }
+    catch (error) { return { kind: 'invalid_coverage_review', reason: `retro-results.json illisible: ${error.message}` }; }
+  }
+  return classifyRetroPublication(html, results);
+}
+
+function retrospectiveDirectories() {
+  const retroDir = path.join(ROOT, 'scanner', 'retrospective');
+  if (!fs.existsSync(retroDir)) return [];
+  return fs.readdirSync(retroDir)
+    .filter(dir => /^\d{8}(?:-[a-z0-9]+)*$/i.test(dir))
+    .sort();
 }
 
 function todayStr() {
@@ -711,8 +738,8 @@ check('radar.json: events et opportunities présents (pas que risks)', () => {
   if (missing.length) return missing.join(', ') + ' — radar affichera uniquement les risques';
 });
 
-// 11. scanner.json — tiles retro : style amber (f59e0b) + grade présent + date non-fallback + pas de doublons
-check('scanner.json: tiles retro — amber + grade + date réelle + pas de doublons', () => {
+// 11. scanner.json — tiles retro : style amber (f59e0b) + grade performance + date réelle + pas de doublons
+check('scanner.json: tiles retro — amber + grade performance ou couverture prouvée + date réelle + pas de doublons', () => {
   const d = readJSON('data/scanner.json');
   const retroTiles = d.filter(t => t.includes('RÉTROSPECTIVE'));
   if (retroTiles.length === 0) return true; // pas de retro indexée → skip
@@ -725,11 +752,24 @@ check('scanner.json: tiles retro — amber + grade + date réelle + pas de doubl
     issues.push(`${noAmber.length} sans style amber: ${hrefs.join(', ')}`);
   }
 
-  // Grade présent (data-grade="B+" etc., including provisional "C*")
-  const noGrade = retroTiles.filter(t => !t.match(/data-grade="[A-F][+\-*]?"/));
+  // Une vraie rétro conserve une note obligatoire. Une revue documentaire ne
+  // peut l'omettre que si sa page ET son résultat JSON déclarent explicitement
+  // coverage_review / non certifiée.
+  const noGrade = [];
+  for (const tile of retroTiles) {
+    if (tile.match(/data-grade="[A-F][+\-*]?"/)) continue;
+    const href = (tile.match(/href="([^"]+)"/) || [])[1];
+    const dir = retroDirectoryFromHref(href);
+    const publication = dir ? classifyRetroDirectory(dir) : { kind: 'performance' };
+    if (publication.kind === 'coverage_review') continue;
+    if (publication.kind === 'invalid_coverage_review') {
+      noGrade.push(`${href || '(lien absent)'} (${publication.reason})`);
+    } else {
+      noGrade.push(href || '(lien absent)');
+    }
+  }
   if (noGrade.length) {
-    const hrefs = noGrade.map(t => { const m = t.match(/href="([^"]+)"/); return m && m[1]; });
-    issues.push(`${noGrade.length} sans grade: ${hrefs.join(', ')}`);
+    issues.push(`${noGrade.length} sans grade de performance: ${noGrade.join(', ')}`);
   }
 
   // Date non-fallback (ne doit pas afficher aujourd'hui)
@@ -748,20 +788,28 @@ check('scanner.json: tiles retro — amber + grade + date réelle + pas de doubl
   if (issues.length) return issues.join(' | ');
 });
 
-// 12. index.html — bloc "Performance du Scanner" à jour avec la dernière rétro
-check('index.html: Performance du Scanner — Updated date en phase avec dernière rétro', () => {
+// 12. index.html — bloc "Performance du Scanner" à jour avec la dernière rétro de performance
+check('index.html: Performance du Scanner — Updated date en phase avec dernière rétro de performance', () => {
   const html = readFile('index.html');
   if (!html) return 'index.html absent';
   // Extraire la date "Updated: DD Mon YYYY" du bloc scanner-perf
   const updatedMatch = html.match(/Updated:\s*([A-Za-z]+\s+\d+\s+\d{4})\s*—\s*Period:/);
   if (!updatedMatch) return 'Bloc "Performance du Scanner" introuvable dans index.html';
 
-  // Trouver la date de la dernière rétro dans scanner/retrospective/
-  const retroDir = path.join(ROOT, 'scanner', 'retrospective');
-  if (!fs.existsSync(retroDir)) return 'Dossier scanner/retrospective/ absent';
-  const retroDates = fs.readdirSync(retroDir).filter(d => /^\d{8}$/.test(d)).sort();
-  if (!retroDates.length) return 'Aucune rétro trouvée';
-  const lastRetroDate = retroDates[retroDates.length - 1]; // ex: "20260327"
+  // Une coverage_review documente la couverture sans publier une performance
+  // de cohorte. Elle ne doit donc ni vieillir le tableau de performance ni
+  // forcer une date de fraîcheur. Tout faux marqueur reste bloquant.
+  const retroDirs = retrospectiveDirectories();
+  if (!retroDirs.length) return 'Aucune rétro trouvée';
+  const invalidCoverage = retroDirs
+    .map(dir => ({ dir, publication: classifyRetroDirectory(dir) }))
+    .filter(({ publication }) => publication.kind === 'invalid_coverage_review');
+  if (invalidCoverage.length) {
+    return invalidCoverage.map(({ dir, publication }) => `${dir}: ${publication.reason}`).join(' | ');
+  }
+  const performanceDirs = retroDirs.filter(dir => classifyRetroDirectory(dir).kind === 'performance');
+  if (!performanceDirs.length) return 'Aucune rétrospective de performance trouvée';
+  const lastRetroDate = performanceDirs[performanceDirs.length - 1].slice(0, 8); // ex: "20260327"
   const lastRetroYear = lastRetroDate.slice(0, 4);
   const lastRetroMonth = parseInt(lastRetroDate.slice(4, 6)) - 1;
   const lastRetroDay = parseInt(lastRetroDate.slice(6, 8));
@@ -774,10 +822,11 @@ check('index.html: Performance du Scanner — Updated date en phase avec derniè
   if (!updatedStr.includes(expectedMonth) || !updatedStr.includes(expectedYear)) {
     return `Performance du Scanner affiche "${updatedStr}" mais dernière rétro = ${expectedMonth} ${expectedDay} ${expectedYear} — relancer tools/update-scanner-perf.js`;
   }
-  // Le nombre de rétros doit correspondre
+  // Le nombre affiché porte uniquement sur les rétros de performance, jamais
+  // sur une revue documentaire de couverture.
   const nRetrosMatch = html.match(/\((\d+) rétros cumulées\)/);
-  if (nRetrosMatch && parseInt(nRetrosMatch[1]) !== retroDates.length) {
-    return `${nRetrosMatch[1]} rétros cumulées dans index.html mais ${retroDates.length} dans scanner/retrospective/`;
+  if (nRetrosMatch && parseInt(nRetrosMatch[1]) !== performanceDirs.length) {
+    return `${nRetrosMatch[1]} rétros cumulées dans index.html mais ${performanceDirs.length} rétros de performance (les coverage_review sont exclues)`;
   }
 });
 

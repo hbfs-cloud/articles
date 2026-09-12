@@ -1,0 +1,47 @@
+{
+  "ticker": "MTDR",
+  "reference_close": "2026-09-11",
+  "scope": "Scénario conditionnel : LIMIT plafond le lundi 14 septembre seulement ; aucun ordre, fill ou taille de position.",
+  "scanner_signal_path": "scanner/20260914/signals.json",
+  "scanner_signal_sha256": "25728fe515937d52cf761ebf5699fd12806e7c5b8dd9025f04a123378ebce500",
+  "verified_technicals_path": "scanner/20260914/_derived/verified-technicals.json",
+  "verified_technicals_sha256": "f267c769f5a6a7b99b54eedc64fa51b99d1286b971a3c1004ff75f6ce82e2595",
+  "signal": {
+    "entry": 61.05,
+    "stop": 58.45,
+    "invalidation_level": 60.42,
+    "tp1": 63.65,
+    "tp2": 64.52,
+    "rr_entry": 1,
+    "horizon": 10,
+    "strategy": "Momentum"
+  },
+  "technical_window": {
+    "close": 61.05,
+    "atr": 1.7329148121910865,
+    "rsi": 67.27176281616867,
+    "bars_used": 300,
+    "window": {
+      "start": "2025-07-03",
+      "end": "2026-09-11",
+      "observations": 300,
+      "input_observations": 300,
+      "calendar": "us_equity",
+      "contiguous": true
+    }
+  },
+  "constraints": [
+    "LIMIT plafond le lundi 14 septembre, sans poursuite du prix.",
+    "Ouverture sous le stop dur : aucun ordre préparé.",
+    "Stop dur intraday et invalidation de clôture sont distincts ; ne déplacer aucun niveau.",
+    "Aucun ordre envoyé, fill observé ou taille validée."
+  ],
+  "execution_protocol": {
+    "entry": "LIMIT plafond $61.05 le lundi 14 septembre ; aucune poursuite.",
+    "open_below_hard_stop": "Ouverture sous $58.45 : aucun ordre envoyé.",
+    "hard_stop": "$58.45 pendant la séance, distinct de l’invalidation de clôture.",
+    "close_invalidation": "Clôture sous $60.42 : abandon du scénario.",
+    "fed": "Choisir maintien pendant Fed oui/non avant achat ; sans maintien, pas de nouvelle entrée après 19 h 50 Paris et sortie avant 19 h 55 le 16 septembre.",
+    "exits": "Après remplissage réel de T1 $63.65, alléger la moitié puis remonter le stop du solde au prix d’entrée réellement obtenu ; T2 $64.52 ou fermeture au plus tard le 25 septembre."
+  }
+}

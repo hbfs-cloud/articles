@@ -55,7 +55,7 @@ const setups = sig.signals.map(s => ({
   score: s.score, pattern: s.strategy,
   region: s.region, region_flag: s.region === 'ETF' ? 'ETF' : 'US',
   region_label: s.region === 'ETF' ? 'ETF coté aux États-Unis' : 'États-Unis',
-  sector: s.sector, sharia: false, extra_badges: [],
+  sector: s.sector, sharia: s.sharia ?? null, extra_badges: [],
   entry_low: s.entry_low, entry_high: s.entry_high,
   entry_display: `${nbFR(s.entry, 2)} $ en ordre à cours limité, valable la séance. Pas de zone : si le prix n'est pas touché, il n'y a pas de trade.`,
   stop: s.stop, tp1: s.tp1, tp2: s.tp2,
