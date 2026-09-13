@@ -125,7 +125,6 @@ function getStatusFor(modeId) {
 function write(filename, content) {
   // Final current-output guard: covers signals, entry permissions and aggregate counts too.
   content = require('./lib/scanner-publication-review').applyCurrentApiGate(ROOT, filename, content, scanDir);
-  if (nextSession && /^(?:orders|signals|all|status|modes)\.json$/.test(filename)) content.next_session = nextSession;
   const outPath = path.join(OUT, filename);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify(content, null, 2));
@@ -167,7 +166,6 @@ const now = new Date().toISOString();
 const todayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' })
   .format(new Date()).replace(/-/g, '');
 const scanDir = snap.scanDir || '';
-const nextSession = require('./lib/scanner-next-session').loadNextSession(ROOT);
 const nextBizDay = (() => {
   const d = new Date(todayKey.slice(0,4) + '-' + todayKey.slice(4,6) + '-' + todayKey.slice(6) + 'T12:00:00Z');
   do { d.setDate(d.getDate() + 1); } while (d.getDay() === 0 || d.getDay() === 6);

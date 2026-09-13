@@ -174,11 +174,11 @@ requires explicit user instruction.
 
 After structured validation:
 
-1. Render scanner HTML/variants and update the scanner index for the edition being published.
-2. Run tracking and status/API generation after that index update. The next-session preview reads only indexed editions; regenerate status/API if the index changed after their previous run.
-3. Ensure future scans appear as a separate non-executable preparation, never in open positions or actionable status orders. Use the New York session date consistently.
-4. Preserve excluded DTX history and endpoints.
-5. Generate visual assets and inspect them when the publish command requires them. Verify the visible route from `/?tab=scanner` to `/scanner/status/` on desktop and mobile.
+1. Render scanner HTML/variants.
+2. Run tracking and status/API generation.
+3. Ensure future scans do not enter open positions or actionable status orders.
+4. Update scanner indexes; preserve excluded DTX history and endpoints.
+5. Generate visual assets and inspect them when the publish command requires them.
 
 Do not rerun the full sweep twice. `scan-parallel.sh` owns the sweep for the run; downstream publication
 uses its no-sweep path.
