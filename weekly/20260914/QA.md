@@ -86,3 +86,24 @@ documentées ci-dessous plutôt que réécrites en silence.
 Depuis la racine : `node weekly/20260914/_build.cjs`, puis les gates du runbook Weekly. Graphiques :
 `node tools/render-charts-png.js --article weekly/20260914/index.html --out weekly/20260914/_img`,
 et la variante anglaise avec `--out weekly/20260914/_img/en --labels weekly/20260914/_img/labels-en.json`.
+
+## Substack anglais
+
+Brouillon créé, **non publié** : `draft_id` 215564667, « Wednesday's rate rise is priced. The sentence
+after it isn't. » `validate_draft` renvoie zéro erreur. Quatre graphiques anglais et quatre tableaux
+rendus en images sur le CDN Substack ; les images sont servies depuis
+`raw.githubusercontent.com/…/fix/weekly-20260914-corrections/weekly/20260914/_img/en/`, donc la branche
+doit rester en place tant que le brouillon n'est pas publié.
+
+Verdict du panel sur ce livrable : **FIXED, composite 78, aucun bloquant**. Le reviewer quantitatif y a
+corrigé deux points, tous deux vérifiés et retenus : la semaine compte quatre séances et non cinq
+(Labor Day), et « Labour Day » s'écrit « Labor Day ». Deux réserves non bloquantes subsistent : la
+longueur (1 900 mots contre ~1 200 conseillés) et l'absence de manifeste de claims propre au Substack —
+`claims.json` ne couvre que `index.html`, donc les chiffres du Substack ont été recoupés à la main
+contre le socle certifié (62 des 67 valeurs numériques correspondent à une claim ou à un littéral
+déclaré ; les cinq autres sont des faits attribués : convertible Trip.com, gazole GasBuddy, deux points
+de la courbe de volatilité, borne basse de la bande d'intérêt court).
+
+**La publication reste à décider.** Elle n'a pas été faite : le contrat de publication traite le canal
+Substack comme une autorisation distincte, et le verdict de porte du weekly français a été rendu avant
+les deux derniers correctifs.

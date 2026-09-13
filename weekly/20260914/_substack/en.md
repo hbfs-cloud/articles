@@ -45,7 +45,11 @@ Friday 4 September close to Friday 11 September close, using funds anyone can bu
 | TLT | Long US government bonds | $80.87 | −1.6% |
 | USO | Oil futures | $154.90 | +9.1% |
 
+![Oil walked away from everything else](https://substack-post-media.s3.amazonaws.com/public/images/6fd1b5e8-94e1-46de-b23a-3520a593fd83_2400x1240.png)
+
 Eight of eleven US sectors lost ground. Energy led at +1.7%, health care came last at −3.6%, technology added 0.2% and communications 0.5%. Exxon gained 4.1% in the same four sessions while Nvidia lost 5.2%.
+
+![Eleven US sectors, one week](https://substack-post-media.s3.amazonaws.com/public/images/15ef5a61-9dd1-4743-b66c-ee3878b32993_2400x1240.png)
 
 Gold's the interesting one. It fell 2.0% during a military escalation in the Middle East. So the cost of money outweighed the war premium last week. I'll stop there — going further, to real rates, needs a breakeven series I don't have, and a supply shock usually pushes breakevens up, which pulls real rates the other way. What's usable: gold tracked long bonds, not fear.
 
@@ -74,6 +78,8 @@ Trip.com reports Tuesday 15 September after the close. Lennar reports Wednesday 
 Those percentages are priced to options expiring Friday 18 September — a window holding the Trip.com report, the Fed, and the Lennar report. Neither is a clean earnings number, Lennar's least of all.
 
 The shape is still striking. On both stocks the move being paid for is larger than the distance left to the lowest price of the past year. If either falls anything like the amount priced, it makes a new one-year low that week. Nothing underneath.
+
+![The options cost more than the floor is worth](https://substack-post-media.s3.amazonaws.com/public/images/d67b12e2-47ae-4005-983e-c431c2957048_2400x1240.png)
 
 **Trip.com** trades at 9.2 times expected earnings, below its 20-, 50- and 200-day averages of $42.70, $44.29 and $52.77. Over 90 days it took three broker downgrades and zero upgrades, the latest on 3 September. Two cautions. The unusual options activity flagged on it is deep in-the-money puts, which is as often plumbing as a directional bet. And I don't have a history of how this stock reacts to its own results — that's not the same as a reassuring history. It carries a $1.5bn convertible bond due June 2029 settling its principal in cash, so potential dilution is capped, and it's a Cayman company trading as depositary shares with its China exposure held through a contractual structure. None of that moves Tuesday's print. All of it sits in the multiple.
 
@@ -108,6 +114,8 @@ All times New York.
 | Friday 18 | Industrial production 9:15am; Fed official Bowman speaks 9:30am |
 
 Wednesday holds nearly all of it.
+
+![The week is stacked on Wednesday](https://substack-post-media.s3.amazonaws.com/public/images/74e78b47-64d4-4379-84c6-1eedd1899036_2400x1240.png)
 
 ## Method and limits
 
