@@ -45,7 +45,7 @@ Friday 4 September close to Friday 11 September close, using funds anyone can bu
 | TLT | Long US government bonds | $80.87 | −1.6% |
 | USO | Oil futures | $154.90 | +9.1% |
 
-Eight of eleven US sectors lost ground. Energy led at +1.7%, health care came last at −3.6%, technology added 0.2% and communications 0.5%. Exxon gained 4.1% in the same five sessions while Nvidia lost 5.2%.
+Eight of eleven US sectors lost ground. Energy led at +1.7%, health care came last at −3.6%, technology added 0.2% and communications 0.5%. Exxon gained 4.1% in the same four sessions while Nvidia lost 5.2%.
 
 Gold's the interesting one. It fell 2.0% during a military escalation in the Middle East. So the cost of money outweighed the war premium last week. I'll stop there — going further, to real rates, needs a breakeven series I don't have, and a supply shock usually pushes breakevens up, which pulls real rates the other way. What's usable: gold tracked long bonds, not fear.
 
@@ -111,7 +111,7 @@ Wednesday holds nearly all of it.
 
 ## Method and limits
 
-Prices are daily closes through Friday 11 September. Weekly changes compare the previous Friday's close to that one. Labour Day made it a four-session week. Returns ignore dividends and fees. USO holds oil futures, so its return drifts from the price of crude.
+Prices are daily closes through Friday 11 September. Weekly changes compare the previous Friday's close to that one. Labor Day made it a four-session week. Returns ignore dividends and fees. USO holds oil futures, so its return drifts from the price of crude.
 
 The crypto funds — Bitcoin −3.2%, Ethereum +3.5%, Solana +0.5% — close with the US stock market, so they miss the weekend.
 
