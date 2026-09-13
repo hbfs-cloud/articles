@@ -597,9 +597,10 @@ async function main() {
   let dirs = [];
   try {
     const todayCompact = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const scanCutoff = MARKET_CLOSED_DAY ? addUSTradingDays(TODAY_ISO, 1).replace(/-/g, '') : todayCompact;
     dirs = fs.readdirSync(SCANNER_DIR)
       .filter(d => sharedCfg.RE_SCAN_DIR.test(d))
-      .filter(d => d.slice(0, 8) <= todayCompact)
+      .filter(d => d.slice(0, 8) <= scanCutoff)
       .sort().reverse();
     // Pick the most recent scan dir that has a valid scan
     for (const d of dirs) {
@@ -1206,7 +1207,7 @@ async function main() {
     const clamped = +(entry * (1 - maxStopPct / 100)).toFixed(2);
     return Math.max(stop, clamped);
   }
-  function signalsFor(cfg) {
+  function signalsFor(cfg, options = {}) {
     const f = SF[cfg.filterName] || (() => true);
     const uf = cfg.universeFilter || null;
     const cur = curOf(cfg); // MAD for casablanca, USD otherwise
@@ -1221,7 +1222,7 @@ async function main() {
     // own source tag ('<class>_pool') so each renders ONLY its scanner's pool, never equity signals.
     const POOL_ASSET_CLASSES = new Set(['forex', 'crypto', 'metals', 'pead', 'filings', 'gap']);
     const isAssetMode = POOL_ASSET_CLASSES.has(ac);
-    return signals.filter(s => f(s.strategy || '')).filter(s => !isAssetMode || (s.source || '') === ac + '_pool').filter(s => !uf || (s.universe || '') === uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || (s.sharia === true && !isHaramForHalalMode(s))).slice(0, cfg.topN).map(s => {
+    return signals.filter(s => f(s.strategy || '')).filter(s => !isAssetMode || (s.source || '') === ac + '_pool').filter(s => !uf || (s.universe || '') === uf).filter(s => options.pending || cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || (s.sharia === true && !isHaramForHalalMode(s))).slice(0, cfg.topN).map(s => {
       const stop = clampStop(s.entry, s.stop, cfg.maxStopPct);
       // Return display-ready strings for HTML rendering, keep numeric _raw for computations
       const vwapRef = signalVwap[s.ticker] || null;
@@ -1361,9 +1362,12 @@ async function main() {
 
   // ── Panel builder ──
   function panel(id, cfg, m, trades, ec, chartId, active) {
+    const pendingNextSession = MARKET_CLOSED_DAY && scanDir && scanDir !== TODAY_KEY;
     // SCRIPTED modes: Orders to Place come from the dtx engine (decide CREATE); fall back to the
     // JS-scanner signal pool when no dtx staging exists (e.g. hybrid, or dtx not yet run).
-    const sig = dtxSignalsFor(id, cfg) || signalsFor(cfg);
+    const sig = pendingNextSession && cfg.assetClass !== 'dtx'
+      ? signalsFor(cfg, { pending: true })
+      : (dtxSignalsFor(id, cfg) || signalsFor(cfg));
     const signalsHeading = MARKET_CLOSED_DAY || (scanDir && scanDir !== TODAY_KEY)
       ? 'Last Session Signals'
       : "Today's Signals";
@@ -1726,9 +1730,9 @@ ${(() => {
         const executionWindowOpen = !MARKET_CLOSED_DAY && scanDir === TODAY_KEY
           && require('./lib/scanner-publication-review').entryGate(ROOT, scanDir, cfg.assetClass);
 
-        // Signals remain visible outside the active session, but must never be
-        // represented as executable orders on weekends or from a future scan.
-        const buyOrders = executionWindowOpen ? sigFiltered.slice(0, slotsAvailable) : [];
+        // On a closed day, carry the next-session scan into the existing orders table as
+        // pending preparation. It remains informational until the execution window opens.
+        const buyOrders = (executionWindowOpen || pendingNextSession) ? sigFiltered.slice(0, slotsAvailable) : [];
 
         // ROTATION candidates (for all rotation modes when portfolio full):
         const rotationCandidates = [];
@@ -1790,7 +1794,7 @@ ${(() => {
       <td class="neg">${s.stop}</td>
       <td class="pos">${s.tp1}<span class="hide-m"> / ${s.tp2}</span></td>
       <td class="am hide-m">${s.rr}</td><td class="m hide-m">${alloc}%</td>
-      <td><span class="pill pos">BUY</span></td>
+      <td><span class="pill ${executionWindowOpen ? 'pos' : 'am'}">${executionWindowOpen ? 'BUY' : 'PENDING'}</span></td>
     </tr>${s.thesis ? `<tr class="thesis-row"><td colspan="${thesisCols}"><div class="thesis-text">${s.thesis}</div></td></tr>` : ''}`);
         }
         for (const { signal: s, replaces, scoreDelta } of rotationCandidates) {
@@ -1855,7 +1859,9 @@ ${(() => {
         // (each order can push 1-3 <tr> for main+comparison+thesis).
         const totalActions = buyOrders.length + rotationCandidates.length;
         const occupied = liveCount;
-        const statusLine = !executionWindowOpen
+        const statusLine = !executionWindowOpen && pendingNextSession
+          ? 'Marché fermé — pending orders préparés pour la prochaine séance'
+          : !executionWindowOpen
           ? 'Marché fermé — les signaux restent informatifs jusqu’à leur fenêtre d’exécution'
           : slotsAvailable > 0
           ? `${occupied}/${cfg.portfolioSize} open — <b>${slotsAvailable} slot${slotsAvailable > 1 ? 's' : ''} free</b> — place at next open`
