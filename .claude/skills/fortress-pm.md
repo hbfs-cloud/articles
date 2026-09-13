@@ -62,6 +62,15 @@ Prérequis : connecteurs MCP marketdata + broker branchés dans ce chat.
   t'arrêtes sur ce point, tu ne combles **jamais**. Ne transcris jamais de barres à la main pour
   un backtest maison (la transcription EST une source de fabrication) : test programmatique en
   **relatif** via RunBacktest, ou rien.
+- **FALLBACK AUTONOME OBLIGATOIRE** : si un MCP ne fournit pas un champ nécessaire, le PM doit
+  rechercher une source primaire indépendante (SEC/IR de l'émetteur, document réglementaire ou
+  donnée de marché vérifiable), extraire le fait et sa date, puis recalculer localement. Chaque
+  valeur porte sa source et son empreinte ; aucune estimation ne remplace une preuve. Si cette
+  recherche échoue, conserver `unknown` avec le motif précis.
+- **CONTRE-REVUE CONTRARIENNE** : avant toute promotion en `FortressA+` ou en watchlist, relire les
+  preuves comme un vendeur à découvert : opération corporate, dette/activité impure, guidance non
+  comparable, consensus révisé ou série EPS incomplète. La contre-revue peut dégrader ou rejeter,
+  jamais inventer une preuve manquante.
 - **ANTI-LOOK-AHEAD** (faute grave) : une décision à la date D n'utilise QUE l'info ≤ D. Choisir
   ou justifier un trade par sa perf future est interdit. Scan/backtest/remplacement via `as_of=D`.
 - **SANITY PRIX** : entry/stop/TP à la MÊME échelle que le quote live. Écart ≥2× = split/quote
