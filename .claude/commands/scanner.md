@@ -72,10 +72,15 @@ immutable for the run. Do not infer one from the other inside a plan.
    Room. Reviewers may identify faults but may not recollect data or waive a script failure. Fix every
    blocker, rerun affected checks, and require zero blockers.
 
-9. Run downstream compute locally. Diff the hashes of structured inputs before and after review; rerun
+9. Before downstream compute, invoke `Skill(skill="fortress-pm")` and write the resulting
+   `fortress_pool` into `scanner/YYYYMMDD/signals.json`. The pool is limited to fact-checked A+
+   Halal candidates (`strategy:"FortressA+"`, `sharia:true`); `[]` is valid only after the PM ran.
+   A missing key silently falls back to `fortress_fallback` and starves Fortress.
+
+10. Run downstream compute locally. Diff the hashes of structured inputs before and after review; rerun
    compute whenever they changed. Inspect required generated images.
 
-10. The default output is local. Distribute only with `--publish` or an explicit publication/push request
+11. The default output is local. Distribute only with `--publish` or an explicit publication/push request
     in the current user message, and only after all gates pass. Stage explicit scanner/status/API files,
     never `.mcp.json`, tokens, `_data*`, `_dtx`, request IDs or unrelated work. Verify the reachable page
     before sending a notification.
