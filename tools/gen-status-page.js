@@ -593,10 +593,11 @@ async function main() {
   } catch (_) { /* default 8.0 */ }
   let signals = [];
   let scanDir = '';
+  const nextSession = require('./lib/scanner-next-session').loadNextSession(ROOT);
   const thesisMap = {};
   let dirs = [];
   try {
-    const todayCompact = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const todayCompact = TODAY_KEY; // Same New York session clock as execution and preview.
     dirs = fs.readdirSync(SCANNER_DIR)
       .filter(d => sharedCfg.RE_SCAN_DIR.test(d))
       .filter(d => d.slice(0, 8) <= todayCompact)
@@ -2639,13 +2640,15 @@ details[open] summary::after{transform:rotate(90deg)}
     <div class="hero-inner">
       <div class="hero-left">
         <h1>${MARKET_CLOSED_DAY ? '<i class="fas fa-moon" style="font-size:.82rem;color:var(--muted);margin-right:.35rem"></i>Portefeuille · Marché fermé' : '<span class="live-dot"></span>Portefeuille en direct'} <button class="tm-btn-header" id="tmFab" onclick="tmToggle()" title="Historique"><i class="fas fa-clock-rotate-left"></i> Historique</button></h1>
-        <p>${MARKET_CLOSED_DAY ? 'Last completed session, open positions &amp; performance — future plans remain gated until their execution window' : 'Signals, open positions &amp; performance — updated every weekday'}</p>
+        <p>${MARKET_CLOSED_DAY ? 'Dernière séance terminée, positions et performances ; préparation de la prochaine séance ci-dessous' : 'Signals, open positions &amp; performance — updated every weekday'}</p>
         <div class="hero-meta">
           <span class="ts"><i class="fas fa-clock-rotate-left"></i> ${updatedAt}</span>
         </div>
       </div>
     </div>
   </div>
+
+  ${require('./lib/scanner-next-session').renderNextSession(nextSession)}
 
   <div class="tm-banner" id="tmBanner"></div>
 

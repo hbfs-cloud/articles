@@ -40,7 +40,7 @@ paths:
   /signals.json:
     get:
       summary: Latest scanner signals
-      description: Current scan picks with entry, stop, and target levels for the selected mode.
+      description: Current scan picks with entry, stop, and target levels for the selected mode. The root endpoint may additionally expose next_session, an editorial preparation for the next published US session; it is never an order or a mode allocation.
       responses:
         "200":
           description: Current scan picks with levels
@@ -52,6 +52,18 @@ paths:
                   updatedAt: { type: string, format: date-time }
                   date: { type: string, format: date }
                   mode: { type: string, example: "balanced" }
+                  next_session:
+                    type: object
+                    description: Optional next-session editorial preview, separate from current signals and orders. Present only on root endpoints signals, orders, all, status and modes. Never consumed for execution.
+                    properties:
+                      state: { type: string, enum: [preview_non_executable] }
+                      scan_date: { type: string, example: "20260914" }
+                      session_date: { type: string, format: date }
+                      reference_close: { type: string, format: date }
+                      new_entries_allowed: { type: boolean, enum: [false] }
+                      article_url: { type: string }
+                      source: { type: object }
+                      candidates: { type: array, items: { type: object } }
                   signals:
                     type: array
                     items:
