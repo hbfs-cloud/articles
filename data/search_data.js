@@ -5,9 +5,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Semaine FOMC : le calendrier reprend la main",
-    "desc": "La réunion du FOMC se termine le mercredi 16 septembre. Le VIX, indicateur annualisé de volatilité implicite des grandes actions américaines, vaut 15,84. Ce calme relatif coexiste avec un recul des actions et des obligations, tandis que le pétrole progresse nettement. La décision de la semaine : gar...",
-    "tags": "us,macro,earnings,etf,crypto,commodities",
+    "title": "Une hausse de taux attendue, dans un choc d’offre",
+    "desc": "La réunion du FOMC se termine le mercredi 16 septembre, et les marchés de prédiction — les contrats cotés sur Polymarket qui portent sur l’issue de la réunion — ne traitent pas cette décision comme une inconnue : ils donnent 78,5 % à une hausse de 25 points de base et 20,5 % au statu quo. Une baisse...",
+    "tags": "us,macro,earnings,etf,crypto,commodity",
     "grade": "",
     "href": "/weekly/20260914/",
     "date": "14 septembre 2026"

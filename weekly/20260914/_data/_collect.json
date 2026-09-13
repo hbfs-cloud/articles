@@ -1,0 +1,455 @@
+{
+  "contract_version": "1.0",
+  "workflow": "weekly",
+  "plan": "plans/weekly.json",
+  "plan_sha256": "99aa48abd0cc5f0a92e237bf04bb58757b2aa2f7c3015d99f7553c9142efa37a",
+  "input_sha256": "6cc026fe5bb19439a09ffbbf891097bd222685967726494fca2d46c0e5ef77d7",
+  "resolved_input": {
+    "artifact": "weekly/20260914/index.html",
+    "equity_reference_close": "2026-09-11",
+    "crypto_completed_refdate": null,
+    "as_of_timestamp": "2026-09-12T08:29:57.907Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "equity_reference_close": "2026-09-11"
+            }
+          },
+          {
+            "as": "dtx_health",
+            "server": "systematic",
+            "tool": "GetHealth",
+            "args": {
+              "expected_close": "2026-09-11"
+            },
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "week-close",
+        "calls": [
+          {
+            "as": "regime",
+            "server": "marketdata",
+            "tool": "GetMarketContext",
+            "args": {
+              "facets": "regime,prediction_markets",
+              "horizon_days": 10,
+              "limit": 20
+            },
+            "freshness": {
+              "max_age_h": 6,
+              "required": true
+            }
+          },
+          {
+            "as": "regime_systematic",
+            "server": "systematic",
+            "tool": "DtxRegime",
+            "args": {
+              "asof": "2026-09-11",
+              "expected_data_date": "2026-09-11"
+            },
+            "freshness": {
+              "max_age_h": 6,
+              "required": true
+            }
+          },
+          {
+            "as": "bars_indices",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "SPY,QQQ,IWM,DIA,GLD,SLV,TLT,USO",
+              "limit": 30,
+              "as_of_timestamp": "2026-09-12T08:29:57.907Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 72,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-11"
+            }
+          },
+          {
+            "as": "bars_sectors",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "XLK,XLB,XLF,XLE,XLV,XLI,XLY,XLP,XLU,XLC,XLRE",
+              "limit": 30,
+              "as_of_timestamp": "2026-09-12T08:29:57.907Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 72,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-11"
+            }
+          },
+          {
+            "as": "bars_crypto",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "IBIT,ETHA,SOLZ",
+              "limit": 30,
+              "as_of_timestamp": "2026-09-12T08:29:57.907Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 72,
+              "required": true,
+              "expects_close": true,
+              "note": "US-listed crypto proxies aligned to the reference close; stale spot data must never govern publication.",
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-11"
+            }
+          },
+          {
+            "as": "correlations",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "SPY,QQQ,IWM,GLD,SLV,TLT,USO",
+              "days": 90,
+              "adjusted": true,
+              "force_async": true,
+              "as_of_timestamp": "2026-09-12T08:29:57.907Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 72,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-11"
+            }
+          }
+        ]
+      },
+      {
+        "name": "week-ahead",
+        "calls": [
+          {
+            "as": "earnings_calendar",
+            "server": "marketdata",
+            "tool": "GetEarningsCalendarFiltered",
+            "args": {
+              "days_ahead": 7,
+              "min_expected_move_pct": 3
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "earnings_systemic",
+            "server": "marketdata",
+            "tool": "GetEarningsCalendarFiltered",
+            "args": {
+              "days_ahead": 7,
+              "include_implied_move": true,
+              "min_expected_move_pct": 0,
+              "min_market_cap_usd": 250000000000
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "note": "Systemic large-cap catalysts cannot be excluded by a missing or malformed implied move."
+            }
+          },
+          {
+            "as": "economic_events",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "economic_events",
+              "days": 10
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "options_sentiment",
+            "server": "marketdata",
+            "tool": "OptionsAnalytics",
+            "args": {
+              "action": "sentiment"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "short_interest",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "short_interest",
+              "symbols": "IWM,SLV,GLD",
+              "end_date": "2026-09-11",
+              "days": 365
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "context-only",
+        "detached": true,
+        "deadline_ms": 120000,
+        "calls": [
+          {
+            "as": "overview",
+            "server": "marketdata",
+            "tool": "GetMarketContext",
+            "args": {
+              "facets": "overview",
+              "timeout": 90,
+              "analysis_depth": "standard"
+            },
+            "freshness": {
+              "max_age_h": 6,
+              "required": false,
+              "note": "Context only; never governs a number, selection or publication decision."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "weekly/20260914/index.html",
+  "reference_date": "2026-09-11",
+  "equity_reference_close": "2026-09-11",
+  "crypto_completed_refdate": null,
+  "started_at": "2026-09-12T08:29:57.907Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 154,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 152,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "72dd149a386aff0c4b83fb48bd1a589234d6fc55d5942a4e8f1e688de527cc7e"
+        },
+        {
+          "as": "dtx_health",
+          "server": "systematic",
+          "tool": "GetHealth",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 150,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "8db81299e8ca57781851ffba39b68451cbabfd60b7fef78765ccdb57ad0aaec2"
+        }
+      ]
+    },
+    {
+      "name": "week-close",
+      "ms": 9343,
+      "calls": [
+        {
+          "as": "regime",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2725,
+          "wait_ms": 1,
+          "error": null,
+          "output_sha256": "285a36a0d32adf5f2891d6590e3a764a7536af7bcdab244196e113701bca8d0d"
+        },
+        {
+          "as": "regime_systematic",
+          "server": "systematic",
+          "tool": "DtxRegime",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 9216,
+          "wait_ms": 1,
+          "error": null,
+          "output_sha256": "c2ab102489cc45f29cbc45e2dc8312a2fe02420c50eebf354aa0946e2c008202"
+        },
+        {
+          "as": "bars_indices",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1943,
+          "wait_ms": 1,
+          "error": null,
+          "output_sha256": "af4c3a653cc3bc365ef07f62e2f75879ae90647c6446b36c7046bf4e839864a5"
+        },
+        {
+          "as": "bars_sectors",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2912,
+          "wait_ms": 1,
+          "error": null,
+          "output_sha256": "2f7735fefd39bae366563cbfae0717b29f25acd9f10cddb5bb6a5817b98e8c40"
+        },
+        {
+          "as": "bars_crypto",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 3902,
+          "wait_ms": 1,
+          "error": null,
+          "output_sha256": "741441115b1e8548426d2c935fea1d223539abc2c1afae1341d132971ad2e295"
+        },
+        {
+          "as": "correlations",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 5033,
+          "wait_ms": 128,
+          "error": null,
+          "output_sha256": "a879f43f5d277abdb1e7c7b63d1cfba34ffd5c48198c51611766339fea219438"
+        }
+      ]
+    },
+    {
+      "name": "week-ahead",
+      "ms": 5921,
+      "calls": [
+        {
+          "as": "earnings_calendar",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1339,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "78129bcd670bb5ad221bccfae08c675797ca695f6f30f80994a2916861ce3bcf"
+        },
+        {
+          "as": "earnings_systemic",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2037,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "82c09c0d9406a6f063974e61dc78c6bb2968381ac354a84296e124a5293424ec"
+        },
+        {
+          "as": "economic_events",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 3046,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "4560e513061e4380636488a21132770c2404166fdd5845765e1d0b6407f03ea4"
+        },
+        {
+          "as": "options_sentiment",
+          "server": "marketdata",
+          "tool": "OptionsAnalytics",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 4436,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "5c69090ce67d1fd368eb9012898235f9538b8ce1b9e853ff8fae911db75b1ceb"
+        },
+        {
+          "as": "short_interest",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 5921,
+          "wait_ms": 988,
+          "error": null,
+          "output_sha256": "7a450e63aa9846e1a75aca429566935bd7d8b3bac8404e279f6917622b4e0bd0"
+        }
+      ]
+    },
+    {
+      "name": "context-only",
+      "ms": 1000,
+      "calls": [
+        {
+          "as": "overview",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "required": false,
+          "detached": true,
+          "ok": false,
+          "ms": 1000,
+          "wait_ms": 0,
+          "error": "Erreur outil MCP : GetMarketContext does not support parameter \"analysis_depth\" because it does not scope or alter the composite; remove it and use QueryData or GetTradingSnapshot for scoped reads"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-09-12T08:30:14.349Z",
+  "failures": 0,
+  "executed_calls": 14,
+  "skipped_calls": 0
+}

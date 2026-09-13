@@ -95,6 +95,11 @@ fs.mkdirSync(outDir, { recursive: true });
 // La bibliothèque est chargée depuis le disque quand elle y est, sinon depuis le réseau. Un rendu
 // qui dépend d'une requête au moment de la capture échoue en silence sur une ligne lente, et rend
 // une image vide qu'on ne remarque qu'après publication.
+// La bibliothèque locale est INLINÉE, pas liée. `setContent` sert la page depuis `about:blank` :
+// un `<script src="file://…">` y est refusé par Chrome (« Not allowed to load local resource »),
+// et l'échec est silencieux — `window.__ready` n'arrive jamais et le rendu expire au bout de
+// quinze secondes sans dire pourquoi. Vérifié le 2026-09-13, après l'installation du paquet
+// `echarts` qui a fait basculer le chemin local et cassé un rendu qui passait par le CDN.
 const LOCAL_ECHARTS = ['node_modules/echarts/dist/echarts.min.js']
   .map(p => path.join(ROOT, p)).find(p => fs.existsSync(p));
 
@@ -114,7 +119,7 @@ const page = spec => `<!doctype html><meta charset="utf-8">
   <p>${escapeHtml(spec.note || '')}</p>
   <div class="brand"><span class="dot"></span> DailyTickers</div>
 </div>
-<script src="${LOCAL_ECHARTS ? 'file://' + LOCAL_ECHARTS : 'https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js'}"></script>
+${LOCAL_ECHARTS ? `<script>${fs.readFileSync(LOCAL_ECHARTS, 'utf8')}</script>` : '<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>'}
 <script>
   const inst = echarts.init(document.getElementById('c'), null, { renderer: 'canvas' });
   inst.setOption(Object.assign({ animation:false, textStyle:{ fontFamily:'Inter, system-ui, sans-serif', fontSize:12 } }, ${JSON.stringify(spec.spec)}));
