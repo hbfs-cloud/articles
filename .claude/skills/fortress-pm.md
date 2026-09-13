@@ -101,7 +101,8 @@ Propriétés établies par backtest relatif (2 ans, univers neutres, 600+ trades
   d'un univers à l'autre. Ce book est mid-cap.
 - **Contrarian pur (RSI<40, achat du survendu) = perdant** sur cet univers, tous régimes. Exclu.
 - **Guidance relevée (#1 discriminant du scan) n'est PAS backtestable** (pas de champ fondamental
-  ni de flag historique dans le moteur). Reste un **gate live à l'entrée** (§3.3 ①), assumé.
+  ni de flag historique dans le moteur). Elle reste décisive pour A+ ; une valeur `unknown` est
+  conservée en watchlist et ne peut jamais devenir un ordre.
 
 ---
 
@@ -206,10 +207,14 @@ Badge par ligne retenue : ✅ Halal / ❓ Débattu (crypto) — jamais de ⚠️
 macd/atr/vol. Post-filtre : market_cap 2-20 G$ ; restreindre aux LEADING GROUPS ; retirer tickers
 déjà au book / couverts le mois passé.
 
-**3.3 LES 4 ÉLIMINATOIRES** — par-ticker, données réelles (un KO = plafond A, 0 passe-droit)
+**3.3 LES 4 ÉLIMINATOIRES** — par-ticker, données réelles
+Les quatre gates restent obligatoires pour `FortressA+`. Si une preuve est indisponible mais que
+la conformité Sharia est explicitement confirmée, le dossier peut rejoindre séparément
+`fortress_watch_pool` avec `grade:"A"` et les champs manquants listés. Un échec démontré reste
+un rejet ; une watchlist ne produit jamais d'ordre.
 1. **GUIDANCE RELEVÉE** au dernier trimestre (QueryData earnings/news). #1 discriminant (100% des
-   A+, 91% des A ne l'ont pas). *Gate live, non backtestable — assumé.*
-2. **≥5 BEATS EPS consécutifs** (QueryData earnings_quarterly limit=8).
+   A+, 91% des A ne l'ont pas). Preuve absente → watchlist, jamais A+.
+2. **≥5 BEATS EPS consécutifs** (QueryData earnings_quarterly limit=8). Série incomplète → watchlist.
 3. **PE forward < 35** (QueryData stats forwardPE). Exception : monopole techno mondial + EPS
    >25%/an + PEG<2.
 4. **EXTENSION EMA20 ≤ 3%** : ext% = (price/ema20−1)×100. >3% = watchlist, PAS A+ au spot.

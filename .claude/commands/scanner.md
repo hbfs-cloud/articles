@@ -75,6 +75,8 @@ immutable for the run. Do not infer one from the other inside a plan.
 9. Before downstream compute, invoke `Skill(skill="fortress-pm")` and write the resulting
    `fortress_pool` into `scanner/YYYYMMDD/signals.json`. The pool is limited to fact-checked A+
    Halal candidates (`strategy:"FortressA+"`, `sharia:true`); `[]` is valid only after the PM ran.
+   Store incomplete but explicitly Halal candidates separately in `fortress_watch_pool` with
+   `grade:"A"` and field-level missing-proof reasons; watch entries never become orders.
    A missing key silently falls back to `fortress_fallback` and starves Fortress.
 
 10. Run downstream compute locally. Diff the hashes of structured inputs before and after review; rerun

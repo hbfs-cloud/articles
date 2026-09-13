@@ -201,6 +201,7 @@ function loadSignalsRaw(dir) {
       // legitimate "0 signals today" from the skill — NO fallback in that case (both fortress and
       // aplus consume this exact same array, so both stay consistent).
       const hasFortressPool = Object.prototype.hasOwnProperty.call(data, 'fortress_pool');
+      const fortressWatchPool = poolFrom('fortress_watch_pool');
       let fortressPool, fortressPoolSource;
       if (hasFortressPool) {
         fortressPool = poolFrom('fortress_pool');
@@ -222,7 +223,7 @@ function loadSignalsRaw(dir) {
       // regimeScore: numeric regime strength (0-100). Used by the regime-score override
       // (proactive de-risk when the score deteriorates even if the label still says RISK-ON).
       const regimeScore = (data.regimeScore ?? data.regime_score ?? null);
-      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, casablancaPool, euSmallcapPool, factorPool, peadPool, filingsPool, gapPool, dtxPool, filingsFlags, fortressPool, fortressPoolSource, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
+      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, casablancaPool, euSmallcapPool, factorPool, peadPool, filingsPool, gapPool, dtxPool, filingsFlags, fortressPool, fortressPoolSource, fortressWatchPool, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
     } catch (_) { /* fall through to HTML */ }
   }
 
@@ -356,7 +357,7 @@ const CONTRACT_POOL_KEYS = [
   ['metalsPool', 'metals_pool'], ['forexPool', 'forex_pool'], ['casablancaPool', 'casablanca_pool'],
   ['euSmallcapPool', 'eu_smallcap_pool'], ['factorPool', 'factor_pool'], ['peadPool', 'pead_pool'],
   ['filingsPool', 'filings_pool'], ['gapPool', 'gap_pool'], ['dtxPool', 'dtx_pool'],
-  ['fortressPool', 'fortress_pool'],
+  ['fortressPool', 'fortress_pool'], ['fortressWatchPool', 'fortress_watch_pool'],
 ];
 
 function loadSignals(dir) {
