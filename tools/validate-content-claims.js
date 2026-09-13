@@ -31,11 +31,26 @@ const pointerGet = (value, pointer) => {
 // Détecteur de texte numérique. Élargi le 2026-09-06 à tous les chiffres Unicode : la version
 // ASCII laissait passer « Objectif ٤٢ % », « ４２ % », « ½ point » et « ²⁵ % », qui s'affichent
 // exactement comme des chiffres à l'écran.
-// LIMITE CONNUE, non couverte : les nombres écrits en toutes lettres (« quatre points », « dix-huit
-// pour cent ») échappent encore. Voir docs/BACKLOG.md §9 — ce n'est pas théorique, la page du
-// 2026-09-07 en contient.
+// TROU FERMÉ le 2026-09-13 : les nombres écrits en toutes lettres. La version précédente ne
+// regardait que les chiffres, et le contrôle se contournait donc en écrivant « vingt heures
+// trente » au lieu de « 20h30 » — sans rien falsifier, mais sans rien prouver non plus. Ce n'était
+// pas théorique : l'hebdo du 2026-09-14 passait TOUS ses horaires de calendrier et sa fenêtre de
+// « vingt et une séances » par cette porte, et affichait 42 claims vérifiées pendant que ses
+// mesures les plus consultables n'étaient reliées à rien.
+//
+// « un »/« une » sont EXCLUS : ce sont les articles indéfinis du français, et les inclure
+// rendrait toute phrase suspecte, donc le contrôle inutilisable. Les ordinaux (« premier »,
+// « deuxième ») aussi : ils désignent un rang, pas une mesure. Tout le reste — cardinaux,
+// fractions courantes — doit être lié à une source ou DÉCLARÉ en `data-literal`, exactement comme
+// un chiffre.
+const NOMBRES_FR = ['deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix',
+  'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'vingt', 'vingts', 'trente',
+  'quarante', 'cinquante', 'soixante', 'cent', 'cents', 'mille', 'demi', 'demie', 'quart',
+  'quarts', 'tiers', 'moitié'];
+const SPELLED_FR = new RegExp(`(?<!\\p{L})(?:${NOMBRES_FR.join('|')})(?!\\p{L})`, 'iu');
 const hasNumber = text => /(?:^|[^A-Za-z])[-+]?(?:[\p{Nd}]{1,3}(?:[ ,.'][\p{Nd}]{3})+|[\p{Nd}]+)(?:[.,][\p{Nd}]+)?%?/u.test(text)
-  || /[\p{No}]/u.test(text);
+  || /[\p{No}]/u.test(text)
+  || SPELLED_FR.test(text);
 // Groupement français : espace fine insécable pour les milliers, virgule décimale, signe moins
 // typographique. Écrit à la main plutôt que délégué à `toLocaleString`, pour que le rendu ne
 // dépende pas de la version d'ICU de la machine qui contrôle.
@@ -93,7 +108,28 @@ function renderFrenchDate(value, parts) {
 const SCALES = new Set([1, 100, 0.01, 1e-3, 1e-6, 1e-9, 1e-12]);
 const UNITS = new Set(['', '%', ' %', '$', ' $', '€', ' €', ' pts', ' fois', '×', ' ×', ' Md$', ' T$', ' M$', ' j']);
 
+// Un HORAIRE est une affirmation vérifiable au même titre qu'une date, et la conversion de fuseau
+// est précisément l'endroit où une saisie à la main se trompe : 14:00 à New York se lit 20h00 à
+// Paris, et l'erreur d'une heure ne se voit pas à la relecture. `fr_time` rend l'instant porté par
+// la source — un ISO 8601 avec décalage — dans un fuseau pris dans une LISTE CLOSE. Les parties
+// sont assemblées à la main plutôt que laissées à un format localisé : le séparateur choisi par
+// ICU varie d'une machine à l'autre, et la sortie publiée ne doit pas en dépendre.
+const ZONES = new Set(['Europe/Paris', 'America/New_York', 'UTC']);
+function renderFrenchTime(value, zone) {
+  if (typeof value !== 'string' || !ZONES.has(zone)) return null;
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(Z|[+-]\d{2}:\d{2})$/.test(value)) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const parts = new Intl.DateTimeFormat('fr-FR', { timeZone: zone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+    .formatToParts(date);
+  const hour = parts.find(p => p.type === 'hour');
+  const minute = parts.find(p => p.type === 'minute');
+  if (!hour || !minute) return null;
+  return `${hour.value.padStart(2, '0')}h${minute.value.padStart(2, '0')}`;
+}
+
 function renderValue(value, render) {
+  if (render && render.format === 'fr_time') return renderFrenchTime(value, render.zone);
   if (render && render.format === 'fr_date') return renderFrenchDate(value, render.parts);
   if (typeof value !== 'number' || !Number.isFinite(value) || !render || !Number.isInteger(render.decimals)
     || render.decimals < 0 || render.decimals > 8 || typeof render.scale !== 'number') return null;
@@ -175,6 +211,43 @@ function evaluateFormula(source, formula) {
   // fenêtres possibles, un sous-ensemble libre en offre 2ⁿ — de quoi atteindre la valeur voulue à
   // la décimale près, en mélangeant au besoin des prix et des volumes. Vérifié le 2026-09-06 :
   // cinq prix et un volume produisaient « 10,7 fois la moyenne des séances précédentes ».
+  // Corrélation de Pearson entre les rendements de DEUX séries du même artefact, sur une fenêtre
+  // DÉCRITE et reconstruite ici. Ajoutée le 2026-09-13 : sans elle, toute affirmation de
+  // diversification ne pouvait être publiée que comme un littéral déclaré — c'est-à-dire un nombre
+  // que personne ne peut recalculer, sur exactement le sujet où l'auteur a le plus intérêt à se
+  // tromper. Les dates sont vérifiées paire à paire : deux séries mal alignées produisent une
+  // corrélation qui a l'air d'une mesure et n'en est pas une.
+  if (formula.operation === 'pearson_window') {
+    const { numerator_pointer: np, denominator_pointer: dp, window } = formula;
+    if (typeof np !== 'string' || typeof dp !== 'string') return null;
+    if (!Number.isInteger(window) || window < 5 || window > 500) return null;
+    const A = splitSeriesPointer(np), B = splitSeriesPointer(dp);
+    if (!A || !B || A.column !== B.column || A.prefix === B.prefix) return null;
+    if (A.index < window || B.index < window) return null;
+    const closes = (S, i) => num(source, `${S.prefix}/${i}/${S.column}`);
+    const dateAt = (S, i) => pointerGet(source, `${S.prefix}/${i}/0`);
+    const ra = [], rb = [];
+    for (let k = window; k >= 0; k--) {
+      const ia = A.index - k, ib = B.index - k;
+      const da = dateAt(A, ia), db = dateAt(B, ib);
+      if (typeof da !== 'string' || da !== db) return null;
+      if (k === window) continue;
+      const a0 = closes(A, ia - 1), a1 = closes(A, ia);
+      const b0 = closes(B, ib - 1), b1 = closes(B, ib);
+      if (a0 === null || a1 === null || b0 === null || b1 === null || a0 === 0 || b0 === 0) return null;
+      ra.push(a1 / a0 - 1); rb.push(b1 / b0 - 1);
+    }
+    if (ra.length !== window) return null;
+    const mean = v => v.reduce((s, x) => s + x, 0) / v.length;
+    const ma = mean(ra), mb = mean(rb);
+    let cov = 0, va = 0, vb = 0;
+    for (let i = 0; i < ra.length; i++) {
+      cov += (ra[i] - ma) * (rb[i] - mb); va += (ra[i] - ma) ** 2; vb += (rb[i] - mb) ** 2;
+    }
+    const den = Math.sqrt(va * vb);
+    return den === 0 ? null : cov / den;
+  }
+
   if (formula.operation === 'ratio_to_mean') {
     const { numerator_pointer: np, window, offset } = formula;
     if (typeof np !== 'string' || !Number.isInteger(window) || window < 2 || window > 500) return null;

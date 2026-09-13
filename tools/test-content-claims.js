@@ -260,5 +260,103 @@ try {
     assert(validate(man, root).some(e => e.includes('declared literal is absent')));
   }
 
+  // A12 — nombres écrits en toutes lettres. Le contrôle ne voyait que les chiffres, et s'évitait
+  // donc en écrivant l'heure en français. L'hebdo du 2026-09-14 faisait passer TOUT son calendrier
+  // par cette porte.
+  for (const bad of ['décision Fed à vingt heures trente', 'fenêtre de vingt et une séances',
+    'rotation des onze secteurs', 'une hausse de trois quarts de point', 'la moitié des secteurs']) {
+    assert(fails(`<!doctype html><main><p>${bad}</p></main>`, [], bad).some(e => e.includes('unbound numeric')), bad);
+  }
+  // …sans rendre le français impubliable : articles indéfinis et ordinaux restent du texte.
+  for (const ok of ['une décision proche des attentes', 'un message plus restrictif',
+    'la première séance de la semaine prochaine', 'aucun scénario de trade validé']) {
+    const html = `<!doctype html><main><p>${ok}</p></main>`;
+    assert.deepStrictEqual(validate(build(html, []), root).filter(e => e.includes('unbound numeric')), [], ok);
+  }
+
+  // A13 — `fr_time` : un horaire est une affirmation, et la conversion de fuseau est l'endroit où
+  // une saisie manuelle se trompe d'une heure sans que cela se voie.
+  {
+    const src = JSON.stringify({ at: '2026-09-16T14:00:00-04:00' });
+    const hash = crypto.createHash('sha256').update(src).digest('hex');
+    fs.writeFileSync(path.join(root, 'source.json'), src);
+    const input = { artifact: 'article', refdate: '2026-08-28', waves: [{ calls: [{ as: 'source', server: 'marketdata', tool: 'QueryData' }] }] };
+    const ih = crypto.createHash('sha256').update(stableStringify(input)).digest('hex');
+    fs.writeFileSync(path.join(root, 'harness.json'), JSON.stringify({
+      reference_close: '2026-08-28', plan: 'plan.json', plan_sha256: crypto.createHash('sha256').update(plan).digest('hex'),
+      input_sha256: ih, sources: [{ name: 'source', sha256: hash, required: true }] }));
+    fs.writeFileSync(path.join(root, '_collect.json'), JSON.stringify({
+      reference_date: '2026-08-28', plan: 'plan.json', plan_sha256: crypto.createHash('sha256').update(plan).digest('hex'),
+      input_sha256: ih, resolved_input: input,
+      waves: [{ calls: [{ as: 'source', server: 'marketdata', tool: 'QueryData', ok: true, output_sha256: hash }] }] }));
+    const write = html => { fs.writeFileSync(path.join(root, 'article.html'), html); return crypto.createHash('sha256').update(html).digest('hex'); };
+    const timeClaim = extra => Object.assign({ id: 't', rendered_text: '20h00', source_artifact: 'source.json',
+      source_sha256: hash, source_pointer: '/at', source_value: '2026-09-16T14:00:00-04:00',
+      render: { format: 'fr_time', zone: 'Europe/Paris' } }, extra);
+    const html = '<!doctype html><main><p><span data-claim="t">20h00</span></p></main>';
+    assert.deepStrictEqual(validate({ reference_close: '2026-08-28', article_path: 'article.html',
+      article_sha256: write(html), claims: [timeClaim()] }, root), []);
+    // 14:00 à New York n'est pas 14h00 à Paris : l'erreur d'une heure doit être refusée.
+    const wrong = '<!doctype html><main><p><span data-claim="t">14h00</span></p></main>';
+    assert(validate({ reference_close: '2026-08-28', article_path: 'article.html', article_sha256: write(wrong),
+      claims: [timeClaim({ rendered_text: '14h00' })] }, root).some(e => e.includes('deterministic rendering')));
+    // Un fuseau hors de la liste close est un refus, pas une extension improvisée.
+    const html2 = '<!doctype html><main><p><span data-claim="t">20h00</span></p></main>';
+    assert(validate({ reference_close: '2026-08-28', article_path: 'article.html', article_sha256: write(html2),
+      claims: [timeClaim({ render: { format: 'fr_time', zone: 'Europe/Lisbon' } })] }, root).some(e => e.includes('deterministic rendering')));
+  }
+
+  // A14 — `pearson_window` : une affirmation de diversification est la plus intéressée de toutes,
+  // donc celle qui doit le moins reposer sur un littéral que personne ne recalcule.
+  {
+    // deux séries parfaitement opposées -> r = -1, et deux séries identiques -> r = +1
+    const mk = (vals) => vals.map((c, i) => [`2026-01-${String(i + 1).padStart(2, '0')}`, 0, 0, 0, c]);
+    const upC = [100, 101, 103.5, 102.2, 105.8, 104.1, 107.9];
+    // la seconde série porte EXACTEMENT le rendement opposé de la première : r = −1 par construction,
+    // ce qui teste le calcul sans dépendre d'une valeur recopiée à la main.
+    const downC = upC.reduce((acc, c, i) => i === 0 ? [100] : [...acc, acc[i - 1] * (1 - (c / upC[i - 1] - 1))], []);
+    const up = mk(upC);
+    const down = mk(downC);
+    const src = JSON.stringify({ a: { bars: up }, b: { bars: down } });
+    const hash = crypto.createHash('sha256').update(src).digest('hex');
+    fs.writeFileSync(path.join(root, 'source.json'), src);
+    const input = { artifact: 'article', refdate: '2026-08-28', waves: [{ calls: [{ as: 'source', server: 'marketdata', tool: 'QueryData' }] }] };
+    const ih = crypto.createHash('sha256').update(stableStringify(input)).digest('hex');
+    fs.writeFileSync(path.join(root, 'harness.json'), JSON.stringify({
+      reference_close: '2026-08-28', plan: 'plan.json', plan_sha256: crypto.createHash('sha256').update(plan).digest('hex'),
+      input_sha256: ih, sources: [{ name: 'source', sha256: hash, required: true }] }));
+    fs.writeFileSync(path.join(root, '_collect.json'), JSON.stringify({
+      reference_date: '2026-08-28', plan: 'plan.json', plan_sha256: crypto.createHash('sha256').update(plan).digest('hex'),
+      input_sha256: ih, resolved_input: input,
+      waves: [{ calls: [{ as: 'source', server: 'marketdata', tool: 'QueryData', ok: true, output_sha256: hash }] }] }));
+    const write = html => { fs.writeFileSync(path.join(root, 'article.html'), html); return crypto.createHash('sha256').update(html).digest('hex'); };
+    const corrClaim = over => Object.assign({
+      id: 'r', rendered_text: '−1,00', source_artifact: 'source.json', source_sha256: hash,
+      source_pointer: '/a/bars/6/4', source_value: 106,
+      render: { scale: 1, decimals: 2, sign: 'always', format: 'fr' },
+      formula: { operation: 'pearson_window', numerator_pointer: '/a/bars/6/4', denominator_pointer: '/b/bars/6/4', window: 6, result: -1 },
+    }, over);
+    const html = '<!doctype html><main><p><span data-claim="r">−1,00</span></p></main>';
+    const errs = validate({ reference_close: '2026-08-28', article_path: 'article.html', article_sha256: write(html), claims: [corrClaim()] }, root);
+    assert.deepStrictEqual(errs.filter(e => e.includes('formula') || e.includes('deterministic')), [], JSON.stringify(errs));
+    // un résultat annoncé qui ne correspond pas aux séries est refusé
+    const bad = corrClaim({ formula: { operation: 'pearson_window', numerator_pointer: '/a/bars/6/4', denominator_pointer: '/b/bars/6/4', window: 6, result: 0.9 } });
+    assert(validate({ reference_close: '2026-08-28', article_path: 'article.html', article_sha256: write(html), claims: [bad] }, root)
+      .some(e => e.includes('formula result differs')));
+    // deux séries mal alignées dans le temps ne peuvent pas produire une corrélation
+    const src2 = JSON.stringify({ a: { bars: up }, b: { bars: down.map((r, i) => [`2025-02-${String(i + 1).padStart(2, '0')}`, 0, 0, 0, r[4]]) } });
+    const h2 = crypto.createHash('sha256').update(src2).digest('hex');
+    fs.writeFileSync(path.join(root, 'source.json'), src2);
+    fs.writeFileSync(path.join(root, 'harness.json'), JSON.stringify({
+      reference_close: '2026-08-28', plan: 'plan.json', plan_sha256: crypto.createHash('sha256').update(plan).digest('hex'),
+      input_sha256: ih, sources: [{ name: 'source', sha256: h2, required: true }] }));
+    fs.writeFileSync(path.join(root, '_collect.json'), JSON.stringify({
+      reference_date: '2026-08-28', plan: 'plan.json', plan_sha256: crypto.createHash('sha256').update(plan).digest('hex'),
+      input_sha256: ih, resolved_input: input,
+      waves: [{ calls: [{ as: 'source', server: 'marketdata', tool: 'QueryData', ok: true, output_sha256: h2 }] }] }));
+    assert(validate({ reference_close: '2026-08-28', article_path: 'article.html', article_sha256: write(html),
+      claims: [corrClaim({ source_sha256: h2 })] }, root).some(e => e.includes('formula result differs')));
+  }
+
   console.log('content claims tests: PASS');
 } finally { fs.rmSync(root, { recursive: true, force: true }); }

@@ -1,28 +1,88 @@
-# Weekly 14–18 septembre 2026 — livraison
+# Weekly 14–18 septembre 2026 — livraison (révision du 13/09)
 
-**PASS local avec limites documentées.** Clôture de référence : 11 septembre. Aucun trade validé (`no_setup`). Publication autorisée par l’utilisateur ; aucune notification à des tiers.
+**Édition corrigée après audit approfondi.** Clôture de référence : 11 septembre. Aucun trade validé
+(`no_setup`). La première publication du 12/09 portait deux erreurs de fond, corrigées ici et
+documentées ci-dessous plutôt que réécrites en silence.
+
+## Ce qui a changé depuis la publication du 12/09
+
+- **Thèse de une refaite.** La version initiale titrait sur un « calme » déduit d'une volatilité à
+  9 jours inférieure à celle à 30 jours. C'est du contango, l'état ordinaire de la courbe :
+  `_data/options_sentiment.json` porte lui-même `shape:"contango"` et une interprétation de régime
+  calme. Le point court est le moins cher toutes les semaines. La lecture corrigée s'appuie sur le
+  déplacement du rapport 9j/30j — 0,82 la semaine précédente, 0,91 ici — qui dit un
+  renchérissement du court terme, et sur les marchés de prédiction collectés.
+- **Marchés de prédiction intégrés.** `_data/regime.json` portait, non utilisé, le partage de la
+  décision du 16 : 78,5 % pour une hausse de 25 pb, 20,5 % pour un statu quo. La page écrivait
+  « sans inférer le sens de la décision » alors que le sens était price dans son propre socle.
+- **Contexte de guerre ajouté.** La version initiale décrivait le choc pétrolier par une variation
+  de transits. Ormuz est fermé au trafic commercial depuis le 2 mars ; l'oléoduc saoudien Est-Ouest,
+  seule route de contournement (~5 Mb/j vers Yanbu), a été frappé le 10 septembre puis **fermé** par
+  l'Arabie saoudite. Vérifié par sources multiples (Bloomberg, CNN, CNBC, Al Jazeera). L'attribution
+  des dommages aux stations de pompage est explicitement présentée comme rapportée par la presse,
+  l'élément de première main étant de la fumée à proximité.
+- **Superlatif faux corrigé (Lennar).** « 7,4 jours de volume moyen — le relevé le plus haut » était
+  faux : les jours de couverture étaient à 9,01 au relevé du 14 août. Le texte dit maintenant que le
+  pourcentage de flottant est le plus élevé de la série *mais* dans une bande étroite, et que les
+  jours de couverture ont baissé.
+- **Volume hors carnet requalifié.** La charge porte `directional_flow_available:false` : le sens du
+  flux n'est pas inférable. Le graphique reste, avec cette limite écrite, et la ligne correspondante
+  a été retirée des signaux de contrôle de la matrice des risques.
+- **Contrôle dilution exécuté** sur les deux noms du dossier, ce qui n'avait pas été fait : le filtre
+  de formes du socle exclut les S-3, d'où l'invisibilité du prospectus universel de Lennar
+  (10/04/2026) et de l'emprunt convertible de 1,5 Md$ de Trip.com (juin 2029, règlement du principal
+  en numéraire). Structure Caïmans/ADS/VIE de Trip.com également déclarée.
+- **Données du dossier publiées.** Niveaux, moyennes mobiles, RSI, valorisation, actions d'analystes,
+  point d'aimantation des options, intérêt court : collectés depuis le départ, ils étaient absents de
+  la page. Une conclusion « aucun trade » sans niveaux demande au lecteur de croire sur parole.
+- **Contournement de contrôle fermé.** Tous les horaires du calendrier étaient écrits en toutes
+  lettres (« vingt heures trente »), ce qui les faisait échapper au détecteur de chiffres non liés.
+  `tools/validate-content-claims.js` détecte désormais les cardinaux français et accepte un format
+  de rendu `fr_time` ; deux tests couvrent le cas. Les horaires du FOMC, des ventes au détail, des
+  inscriptions au chômage et de Bowman sont liés au flux collecté.
+- **Source Census remplacée.** L'URL citée pour les ventes au détail était un index de programmes
+  sans aucune date. Remplacée par le calendrier en liste, qui fixe la publication au 16/09 à 8h30 ET.
+  Correction consignée dans `_data/primary-calendar.json`.
+- **Couche de publication.** Tag `commodities` → `commodity` (seul fichier du site à porter la forme
+  fautive, absente des deux registres de tags, donc chip en anglais dans une page française et
+  filtre `?tags=commodity` inopérant) ; `og:image` et `og:description` rétablis ; marqueurs internes
+  `data-status`/`data-quality` retirés du rendu public ; classes `hero-title`/`hero-subtitle`
+  rétablies ; conteneurs de graphiques rendus responsives ; grille de synthèse portée à six cartes.
 
 ## Validation
 
-- Socle gouvernant : 13 sources, plan et fraîcheur PASS. Focus : 11 sources, plan et fraîcheur PASS. Le contexte optionnel `overview` déprécié ne gouverne aucun chiffre.
-- 42 claims : valeur, pointeur, empreinte et rendu validés. Les données des graphiques sont calculées par `_build.cjs` à partir des sources conservées ; huit empreintes d’entrées vérifiées.
-- `validate-content-claims`, `check-ai-tells --strict`, `validate-horizon-risk`, `validate-content-hierarchy` : PASS.
-- `qa-content --strict` : 20 contrôles PASS, aucune erreur, un avertissement `min-size` assumé. La page fait 28 950 octets, 19 sections, 2 106 mots, sans paragraphe répété. La dérogation du mécanisme existant `.qa-content-waivers.json` cible exclusivement le proxy de taille pour cette édition. Aucun contrôle de données n’est dispensé.
-- Sept ECharts rendus et exportés sans canvas vide : `_img/charts.json`. Captures desktop 1440 px et mobile 390 px : `_review/`. Aucun débordement, erreur JavaScript, titre hors écran ou ancre cassée. Tables adaptées ; menu ouvre et ferme aux deux tailles. Le premier test mobile cliquait pendant l’animation ; le test stabilisé est PASS.
-- Senior QA par le principal, Contrarian par le worker rétro, Retail par le rédacteur initial après l’intégration du principal : revues du même snapshot final, sans refetch séparé. Détails et limites de rôle dans `_review/reviews.json`, empreintes dans `_review/snapshot.json`.
+- 109 claims : valeur, pointeur, empreinte et rendu déterministe validés, dont quatre corrélations recalculées
+  par le gate lui-même (nouvelle opération `pearson_window`). 37 littéraux déclarés.
+- `validate-content-claims`, `qa-content --strict` (21 contrôles, 0 avertissement), `check-ai-tells
+  --strict`, `validate-content-hierarchy`, `validate-horizon-risk` : PASS.
+- La dérogation de taille `min-size` est **supprimée** : la page fait 51 858 octets, 19 sections,
+  ~4 300 mots, 8 graphiques exportés sans canvas vide, 11 références en ligne.
+- Empreintes : article `775a98fd2fb52527…`, claims `d62e6de6ff58b3b7…`, Substack anglais `75727c9fbfa3b7c6…`.
+- Panel senior rejoué sur le build révisé (`wf_948c4a41-7e0`) : QA 93, trader 74, risk 78, strategist 72,
+  editor 56→68, anti-slop 63-68. Le reviewer quantitatif n'a pas pu tourner (MCP marketdata non authentifié
+  + limite de dépense) : les chiffres reposent donc sur le gate déterministe et sur des recalculs manuels,
+  pas sur une re-collecte indépendante. Détail et arbitrages dans `_review/reviews.json`.
 
-## Arbitrages de sources
+## Limites assumées
 
-- Trip.com : mardi 15 septembre après clôture selon le dépôt SEC, contre BMO dans le calendrier agrégé.
-- PPI : publication août le 10 septembre selon le BLS, contre entrée agrégée erronée le 14 ; elle est exclue de la semaine à venir.
-- ZEW : mardi 15 à 11 h 05 Paris selon le calendrier officiel, contre 11 h dans l’agrégateur.
-- La décision Fed et sa conférence sont deux rendez-vous ; le doublon de la décision est éliminé. Les sources officielles sont conservées dans `_data/primary-calendar.json` et liées dans l’article.
-- Les options de TCOM/LEN expirent le 18 septembre, après leurs publications ; l’amplitude de LEN comprend notamment macro, Fed et résultats. Aucun mouvement futur garanti n’est inféré.
-
-## Limites
-
-Le panorama de prix couvre les ETF américains collectés ; Europe et Asie ne sont pas couvertes quantitativement. Le bilan de l’hypothèse Oracle de l’édition précédente reste non évalué, faute de barres correspondantes. Les deux calendriers agrégés bruts et la sélection initiale sont conservés intacts, avec corrections primaires séparées. Les rendements hebdomadaires comparent le 4 au 11 septembre, soit quatre séances après Labor Day, et excluent distributions/frais.
+- **Bilan Oracle non tenu.** L'édition du 07/09 posait une condition falsifiable chiffrée et
+  promettait le verdict ici. La fenêtre de mesure est complète (publication le 10/09 après clôture,
+  clôture de référence le 11/09) : c'est une omission de collecte, pas une donnée indisponible. Elle
+  est déclarée comme telle dans la page et reportée à la prochaine édition.
+- Le panorama de prix couvre les ETF américains collectés ; Europe et Asie ne sont pas couvertes
+  quantitativement.
+- Les rendements hebdomadaires comparent le 4 au 11 septembre, soit quatre séances après Labor Day,
+  et excluent distributions et frais.
+- La revue anti-slop maintient que la prose de liaison gagnerait à être reprise par un humain, malgré
+  l'ajout de la première personne et la suppression des amorces de signalisation, des aphorismes de
+  clôture et des gloses répétées. Elle vise aussi ~2 200 mots contre ~4 300 ici ; l'écart est assumé,
+  le supplément étant de la matière vérifiée et non du remplissage.
+- Le taux réel n'est plus invoqué : l'inférence « obligations en baisse + or en baisse donc taux réels
+  en hausse » saute l'étape des points morts d'inflation, qu'un choc d'offre pousse dans l'autre sens,
+  et aucune série de points morts n'est disponible ici.
 
 ## Reproduction
 
-Depuis la racine : `node weekly/20260914/_build.cjs`, puis les gates du runbook Weekly. Les graphiques s’exportent avec `node tools/render-charts-png.js --article weekly/20260914/index.html --out weekly/20260914/_img`. Le renderer est borné à cette édition ; aucune refonte des outils globaux n’a été engagée.
+Depuis la racine : `node weekly/20260914/_build.cjs`, puis les gates du runbook Weekly. Graphiques :
+`node tools/render-charts-png.js --article weekly/20260914/index.html --out weekly/20260914/_img`,
+et la variante anglaise avec `--out weekly/20260914/_img/en --labels weekly/20260914/_img/labels-en.json`.
