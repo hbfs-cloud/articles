@@ -357,7 +357,7 @@ const CONTRACT_POOL_KEYS = [
   ['metalsPool', 'metals_pool'], ['forexPool', 'forex_pool'], ['casablancaPool', 'casablanca_pool'],
   ['euSmallcapPool', 'eu_smallcap_pool'], ['factorPool', 'factor_pool'], ['peadPool', 'pead_pool'],
   ['filingsPool', 'filings_pool'], ['gapPool', 'gap_pool'], ['dtxPool', 'dtx_pool'],
-  ['fortressPool', 'fortress_pool'], ['fortressWatchPool', 'fortress_watch_pool'],
+  ['fortressPool', 'fortress_pool'],
 ];
 
 function loadSignals(dir) {

@@ -208,10 +208,10 @@ macd/atr/vol. Post-filtre : market_cap 2-20 G$ ; restreindre aux LEADING GROUPS 
 déjà au book / couverts le mois passé.
 
 **3.3 LES 4 ÉLIMINATOIRES** — par-ticker, données réelles
-Les quatre gates restent obligatoires pour `FortressA+`. Si une preuve est indisponible mais que
-la conformité Sharia est explicitement confirmée, le dossier peut rejoindre séparément
-`fortress_watch_pool` avec `grade:"A"` et les champs manquants listés. Un échec démontré reste
-un rejet ; une watchlist ne produit jamais d'ordre.
+Les quatre gates restent obligatoires pour `FortressA+`. Si une preuve est indisponible, y compris
+la conformité Sharia, le dossier reste dans `fortress_watch_pool` avec `grade:"A"` ou
+`compliance_status:"unknown"` et les champs manquants listés. Seule une non-conformité démontrée
+exclut le dossier. Une watchlist ne produit jamais d'ordre.
 1. **GUIDANCE RELEVÉE** au dernier trimestre (QueryData earnings/news). #1 discriminant (100% des
    A+, 91% des A ne l'ont pas). Preuve absente → watchlist, jamais A+.
 2. **≥5 BEATS EPS consécutifs** (QueryData earnings_quarterly limit=8). Série incomplète → watchlist.
