@@ -1543,13 +1543,13 @@ async function main() {
     return `<div id="p-${id}" class="mode-panel" data-mode-status="${cfg.status || 'live'}" data-psize="${cfg.portfolioSize || 1}" data-asset-class="${cfg.assetClass || 'equity'}"${reviewFrozen ? ' data-publication-review="1"' : ''}${isCasablanca ? ' data-market="casablanca" data-nolive="1"' : ''} style="${active ? '' : 'display:none'}">
 ${renderStatusBanner(cfg)}
 <h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> ${cfg.label} Dashboard${staleBadge}${promoBadge}</h2>
+${cfg.strategyNote ? `<p class="mode-strategy-note">${cfg.strategyNote}</p>` : ''}
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
     <summary class="sc-summary">
       <span class="sc-sum-title"><i class="fas fa-book-open" style="color:${cfg.color};font-size:.78rem"></i> How to trade this mode</span>
       <span style="font-size:.72rem;color:var(--muted);margin-left:.5rem">${cfg.goal}${cfg.riskProfile ? ' · ' + cfg.riskProfile + ' risk' : ''}</span>
-      ${cfg.strategyNote ? `<p style="font-size:.72rem;color:var(--muted);margin:.4rem 0 0;line-height:1.5">${cfg.strategyNote}</p>` : ''}
     </summary>
     <div style="margin-top:.75rem;padding:.7rem .85rem;background:${cfg.color}0a;border:1px solid ${cfg.color}33;border-radius:var(--r-s);font-size:.82rem;color:var(--ink-2)">
       ${buildTagline(id, cfg)}
@@ -2261,6 +2261,10 @@ ${pos.length ? `    <span class="sc-meta" title="Moyenne simple par position ouv
 *{box-sizing:border-box}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .panel-section-title{font-size:1rem;font-weight:700;color:var(--ink);margin:0 0 1rem;display:flex;align-items:center;gap:.5rem}
+/* Réserve de stratégie, toujours visible. Elle vivait auparavant dans le <summary> du bloc méthode,
+   ce qui était deux fois faux : un <p> dans un <summary> est du HTML invalide, et une réserve du
+   type « lifecycle=pilot » repliée par défaut n'est pas une réserve, c'est une note de bas de page. */
+.mode-strategy-note{font-size:.76rem;line-height:1.55;color:var(--muted);margin:-.5rem 0 1rem;max-width:78ch}
 .panel-section-title i{font-size:.85rem;opacity:.6}
 html,body{overflow-x:hidden;max-width:100vw}
 body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);margin:0;-webkit-font-smoothing:antialiased}
