@@ -65,10 +65,12 @@ documentées ci-dessous plutôt que réécrites en silence.
 
 ## Limites assumées
 
-- **Bilan Oracle non tenu.** L'édition du 07/09 posait une condition falsifiable chiffrée et
-  promettait le verdict ici. La fenêtre de mesure est complète (publication le 10/09 après clôture,
-  clôture de référence le 11/09) : c'est une omission de collecte, pas une donnée indisponible. Elle
-  est déclarée comme telle dans la page et reportée à la prochaine édition.
+- **Bilan Oracle : rendu le 14/09.** La condition posée le 07/09 — sortie à la hausse au-delà de
+  +11,7 % — n'est pas atteinte : réaction clôture-à-clôture −1,74 %, plus haut de séance +8,54 %.
+  Le scénario de mouvement contenu tient. La page relève aussi que l'observation secondaire de cette
+  édition (« la clôture a souvent dépassé l'ouverture ») s'est inversée sur cette réaction précise.
+  Chiffres déclarés en `data-literal` et non liés par le gate : la collecte, faite après coup, ne
+  porte pas la provenance de plan exigée. Réponse brute conservée dans `_verdict/orcl.json`.
 - Le panorama de prix couvre les ETF américains collectés ; Europe et Asie ne sont pas couvertes
   quantitativement.
 - Les rendements hebdomadaires comparent le 4 au 11 septembre, soit quatre séances après Labor Day,
