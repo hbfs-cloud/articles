@@ -217,7 +217,24 @@ Avant de générer un article ou d'appeler `add_card.js`, **TOUJOURS lire le fic
 
 Tags méta tech-vertical (cat `theme`, réservés à `/tech`, usage rare) : `architecture`, `sql`, `snowflake`, `singer`, `opensource`, `societe`, `securite` — déjà reconnus par `assets/core.js` (`tagMeta`) mais absents de la liste courte ci-dessus.
 
-⚠️ **Double registre non synchronisé** : `assets/core.js` (`tagMeta`, rendu tag-chips sur la page article) et `index.html` (`tagMeta` local, rendu tag-chips sur les cartes listing) sont deux copies indépendantes de la même taxonomie. `index.html` n'a PAS `software`, `societe`, `securite`, `architecture`, `sql`, `snowflake`, `singer`, `opensource` → ces tags ne s'affichent jamais en chip sur les cartes de la landing page (seulement sur la page article elle-même). Un tag absent des DEUX registres (ex: `trading`, `automation`, `data` utilisés dans `data/tech.json`) est silencieusement omis PARTOUT (pas de chip, pas d'erreur, pas de fallback couleur) — à corriger en synchronisant les deux `tagMeta` si ces tags doivent rester.
+⚠️ **Explorateur de tags et registre** (vérifié le 2026-09-14). Les deux copies de `tagMeta`
+(`assets/core.js` pour la puce sur la page article, `index.html` pour la puce sur les cartes) sont
+aujourd'hui **identiques** — 68 clés de chaque côté, aucun écart. `trading`, `automation`, `data`,
+`software`, `societe`, `securite`, `architecture`, `sql`, `snowflake`, `singer`, `opensource` sont
+enregistrés dans les DEUX. La note précédente, qui décrivait une désynchronisation et des tags
+« silencieusement omis PARTOUT », est périmée : les deux fichiers portent un repli explicite, donc
+un tag hors registre rend bien une puce neutre de catégorie `theme`.
+
+Ce qui reste vrai, et qu'il faut connaître : **le tableau de taxonomie ci-dessus est lui-même en
+retard** sur les registres (il omet `breakout`, `coal`, `gene-therapy`, `glp1`, `inflation`, `lng`,
+`mash`, `obesity`, `oil`, `refining`, `scanner`, entre autres), et **110 tags distincts sont portés
+par les cartes contre 68 enregistrés** — `equities` ×70, `ai-chain` ×56, `technology` ×39,
+`hardware` ×14, `financial-services` ×11 en tête, avec des variantes non normalisées (`technology`
+vs `tech`, `énergie` vs `energy`, `résultats` vs `earnings`, `or` vs `gold`, `cyber` vs
+`cybersecurity`). Depuis le 2026-09-14, `renderTagCloud()` déduit son univers des tags réellement
+présents sur les cartes au lieu de `Object.keys(tagMeta)` : les 45 tags hors registre sont donc
+filtrables, là où ils étaient auparavant visibles sur l'article mais absents du panneau de filtres.
+Enregistrer un tag reste préférable — il y gagne un libellé et une catégorie plutôt que son slug brut.
 
 ## Format date `report-card-meta`
 TOUJOURS `DD mois YYYY` en français minuscule (ex: `14 mars 2026`). JAMAIS anglais ("March 14"), JAMAIS majuscule mois, JAMAIS suffixe textuel ("— Vendredi"), JAMAIS espaces superflus.

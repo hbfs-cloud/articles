@@ -44,7 +44,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <!-- ECharts lazy-loaded on radar/scanner tab -->
-  <script src="/data/search_data.js?v=202609140817"></script>
+  <script src="/data/search_data.js?v=202609140830"></script>
   <style>
     /* Landing Specific Overrides */
     body {
@@ -3748,13 +3748,20 @@
       var selectedChips = document.getElementById('tagExplorerSelectedChips');
       var data = window.searchDataPrebuilt || [];
       // Count articles per tag
+      // L'univers du panneau de filtres se déduit des tags RÉELLEMENT portés par les cartes, pas du
+      // seul registre. Avant, il partait de Object.keys(tagMeta) et ne comptait qu'un tag déjà
+      // enregistré : 45 tags sur les 110 utilisés — equities ×70, ai-chain ×56, technology ×39 —
+      // affichaient bien leur puce sur la carte, grâce au repli, mais n'apparaissaient nulle part
+      // comme filtre. Un tag qu'on voit sur un article et qu'on ne peut pas cliquer est un filtre
+      // qui ment sur sa propre couverture.
       var tagCounts = {};
       Object.keys(tagMeta).forEach(function(t) { tagCounts[t] = 0; });
       data.forEach(function(item) {
         if (!item.tags) return;
         item.tags.split(',').forEach(function(t) {
           t = t.trim();
-          if (tagCounts[t] !== undefined) tagCounts[t]++;
+          if (!t) return;
+          tagCounts[t] = (tagCounts[t] || 0) + 1;
         });
       });
 
@@ -3788,15 +3795,16 @@
         var chips = [];
         var activeChips = [];
         var tagCount = 0;
-        Object.keys(tagMeta).forEach(function(t) {
-          if (tagMeta[t].cat !== cat.key) return;
-          if (tagCounts[t] === 0) return;
+        Object.keys(tagCounts).forEach(function(t) {
+          var m = tagMeta[t] || { label: t, cat: 'theme' };
+          if ((m.cat || 'theme') !== cat.key) return;
+          if (!tagCounts[t]) return;
           tagCount++;
           var isActive = explorerTags.indexOf(t) !== -1;
           var chip = '<span class="tag-explorer-chip' + (isActive ? ' active' : '') +
             '" data-cat="' + cat.key +
             '" onclick="event.stopPropagation();toggleExplorerTag(\'' + t + '\')">' +
-            (tagMeta[t].label || t) +
+            ((tagMeta[t] && tagMeta[t].label) || t) +
             '<span class="chip-count">' + tagCounts[t] + '</span></span>';
           chips.push(chip);
           if (isActive) {
