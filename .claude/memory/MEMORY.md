@@ -180,3 +180,4 @@
 - [Committer le socle de preuves](feedback_commit_the_evidence_base.md) — le commit du weekly 20260914 n'a poussé que HTML+PNG ; `_data/claims.json`, `_focus/`, `_build.cjs` non suivis rendent la provenance invérifiable pour les routines cloud.
 - [Scanner : exécution non certifiée](project_scanner_execution_not_certified.md) — performances publiées hypothétiques (0 fill attesté) ET brutes (zéro coût dans sweep.js) ; P0 = coûts + champs TCA avant tout réglage de stratégie.
 - [Stack de données à 0 € / forensic BH](reference_zero_euro_data_stack_bh.md) — règle de décision §20 pour tout dataset/signal + recette TCA gratuite complète ; aucun alpha dedans, c'est un plan d'ingénierie.
+- [Un job DTX bloque le moteur entier](feedback_dtx_job_blocks_single_slot.md) — un DtxReplay resté RUNNING > 1 h malgré job_timeout_seconds=1800 ; max_concurrent=1 donc il gèle tout le moteur pour tous les clients. DtxCancel libère le créneau.
