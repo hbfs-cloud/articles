@@ -32,6 +32,20 @@ const { loadUniverse: loadSAUniverse } = require('./lib/stockanalysis');
 
 const GO_BIN = path.join('/Users/marketwatchxyz/GolandProjects/systematic-tss/bin/ab-scan-history');
 
+// ─── Le binaire de référence Go n'existe plus ───
+// Cut-over du 2026-07-08 : le binaire dtx local et son bundle ont été supprimés du dépôt, le MCP
+// « dtx » est le moteur unique et il n'y a plus aucun repli binaire. Ce harnais compare donc contre
+// une référence absente. On le déclare au lieu d'échouer : un test rouge en permanence devient du
+// bruit qu'on apprend à ignorer, et c'est ce qui l'a laissé pourrir — il n'était branché sur aucun
+// hook, aucune CI, aucun script npm, donc personne ne voyait ni le rouge ni la cause.
+// Pour comparer aujourd'hui : DtxReplay via le MCP systematic, même filtrage en aval.
+if (!fs.existsSync(GO_BIN)) {
+  console.log(`SKIP ${__filename.split('/').pop()} — référence Go absente (${GO_BIN}).`);
+  console.log('       Supprimée au cut-over du 2026-07-08 ; la parité se vérifie désormais via DtxReplay (MCP systematic).');
+  process.exit(0);
+}
+
+
 const args = process.argv.slice(2);
 function getArg(name, def) { const i = args.indexOf(`--${name}`); return i >= 0 && args[i + 1] ? args[i + 1] : def; }
 function hasFlag(name) { return args.includes(`--${name}`); }
