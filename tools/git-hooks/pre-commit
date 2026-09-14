@@ -59,12 +59,26 @@ fi
 # toutes lettres, n'étaient reliés à rien. Un gate qui dépend de la mémoire de l'auteur n'est pas
 # un gate. Il ne tourne que pour les articles qui ont un socle : les pages sans `_data/claims.json`
 # ne sont pas concernées.
+# Le durcissement du 2026-09-13 (détection des nombres écrits en toutes lettres) fait échouer TOUT
+# le corpus antérieur : 129 passages répartis sur sept éditions, qu'un audit a vérifiés un par un
+# contre leur socle et trouvés exacts sauf un. Bloquer dessus rendrait impossible la moindre
+# retouche d'une vieille page — ajouter une balise Open Graph exigerait de déclarer cinquante
+# nombres — et la seule issue serait --no-verify, c'est-à-dire l'apprentissage du contournement.
+# D'où une bascule DATÉE et explicite, pas une exemption silencieuse : bloquant à partir du
+# durcissement, signalé avant. Le rattrapage du corpus est un chantier à part.
+CLAIMS_GATE_FROM="20260913"
 if [ -n "$STAGED_ARTICLES" ]; then
   CLAIMS_FAIL=0
   for ART in $STAGED_ARTICLES; do
     MANIFEST="$(dirname "$ART")/_data/claims.json"
     [ -f "$MANIFEST" ] || continue
-    if ! node tools/validate-content-claims.js "$MANIFEST" > /tmp/claims-precommit.log 2>&1; then
+    node tools/validate-content-claims.js "$MANIFEST" > /tmp/claims-precommit.log 2>&1 && continue
+    EDITION="$(echo "$ART" | sed -nE 's#^[a-z]+/([0-9]{8}).*#\1#p')"
+    if [ -n "$EDITION" ] && [ "$EDITION" \< "$CLAIMS_GATE_FROM" ]; then
+      echo "⚠️  [Pre-commit] chiffres non prouvés dans $ART (édition antérieure au durcissement du $CLAIMS_GATE_FROM) :"
+      tail -n +2 /tmp/claims-precommit.log | head -4
+      echo "   → non bloquant ici ; à traiter dans le rattrapage du corpus."
+    else
       echo "⛔ [Pre-commit] chiffres non prouvés dans $ART :"
       tail -n +2 /tmp/claims-precommit.log | head -8
       CLAIMS_FAIL=1

@@ -307,6 +307,20 @@ function validate(file) {
   check('GTM-T5Z595CW présent', () => {
     if (!html.includes('GTM-T5Z595CW')) return 'tag GTM absent — page non trackée';
   });
+  // ── COMMUN : aperçu social ──
+  // Rien ne vérifiait les balises Open Graph, et c'est ce qui a laissé la section daily dériver :
+  // 37 pages sur 104 portent une og:image, contre 25 weekly consécutifs à 100 %. Les quatre dailys
+  // de septembre n'avaient AUCUNE balise og, donc un aperçu nu partout où le lien est partagé — or
+  // le contrat de langue pousse justement ces liens sur Telegram. Averti plutôt que bloquant : le
+  // retard est historique et une erreur dure bloquerait toute retouche d'une page ancienne.
+  warn('balises Open Graph présentes (aperçu partagé)', () => {
+    const miss = ['og:title', 'og:description', 'og:image', 'og:url'].filter(
+      t => !new RegExp(`property=["']${t}["']`).test(html));
+    if (miss.length) return `balise(s) absente(s): ${miss.join(', ')} — aperçu nu sur Telegram et réseaux`;
+    const img = (/property=["']og:image["'][^>]*content=["']([^"']+)["']/.exec(html) || [])[1] || '';
+    if (img && !/^https?:\/\//.test(img)) return `og:image relative (${img}) — les robots d'aperçu la rejettent, URL absolue requise`;
+  });
+
   check('scripts core.js + tag-renderer.js présents', () => {
     const miss = [];
     if (!/assets\/core\.js/.test(html)) miss.push('core.js');
