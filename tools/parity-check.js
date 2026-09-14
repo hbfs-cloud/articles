@@ -238,31 +238,51 @@ const modes = (modesConfig && modesConfig.modes) || {};
 const PARITY_MAP = [
   {
     id: 'best',
-    goFile: 'config/dtx/portfolio_best.yaml',
+    goFile: 'config/dtx/portfolio_etf_us.yaml',
     run(ctx) {
-      const { text } = ctx.go('config/dtx/portfolio_best.yaml');
+      // CIBLE : portfolio_etf_us.yaml, PAS portfolio_best.yaml. Depuis le 2026-09-14 le mode `best`
+      // suit la seule stratégie etf_us (data/modes-config.json → enginePortfolio). Tant que ce bloc
+      // pointait sur portfolio_best.yaml, le garde-fou rendait 21 OK / 0 DRIFT en certifiant
+      // l'alignement du mode sur un livre qu'il ne suit plus : un vert qui ne mesurait rien. Les
+      // DRIFT que ce bloc remonte désormais sont RÉELS et attendent un arbitrage produit — ne pas
+      // les faire taire en recopiant la valeur du mode dans la colonne moteur.
+      const GO = 'config/dtx/portfolio_etf_us.yaml';
+      const { text } = ctx.go(GO);
       const art = modes.best || {};
+      const engineId = art.enginePortfolio || 'best';
       if (!text) {
         return [row('best', 'file', null, null, {
           gap: true,
-          note: 'config/dtx/portfolio_best.yaml absent localement (clone systematic-tss partiel) — comparaison impossible',
+          note: `${GO} absent localement (clone systematic-tss partiel) — comparaison impossible`,
         })];
       }
-      const carrier = allocationBlock(text, 'uhv_tp999');
+      const carrier = allocationBlock(text, 'etf_us');
       const rows = [];
 
-      // ── Câblage : c'est ici qu'a cassé le refactor du 2026-08-12 ─────────────
-      rows.push(row('best', 'yaml portfolios[].id ↔ mode id (modes-config)',
-        getScalar(text, 'id'), 'best'));
-      const staging = readArticlesJSON('data/dtx/best.json');
-      rows.push(row('best', 'staging data/dtx/best.json portfolioId ↔ yaml id',
+      // ── Câblage ─────────────────────────────────────────────────────────────
+      rows.push(row('best', 'yaml portfolios[].id ↔ enginePortfolio du mode',
+        getScalar(text, 'id'), engineId,
+        { note: 'le mode et le portefeuille du moteur ne portent PLUS le même nom — cette ligne est ce qui les relie' }));
+      const staging = readArticlesJSON(`data/dtx/${engineId}.json`);
+      rows.push(row('best', `staging data/dtx/${engineId}.json portfolioId ↔ yaml id`,
         getScalar(text, 'id'), staging ? staging.portfolioId : null,
-        { note: staging ? '' : 'staging data/dtx/best.json absent (gitignore ? ingestion non jouée ?)' }));
-      // universeFilter est comparé par ÉGALITÉ STRICTE dans sweep.js (t.universe === config.universeFilter)
-      // et dtx-pool-bridge tague universe = id du mode : toute autre valeur = 0 trade, sans log.
-      rows.push(row('best', 'universeFilter ↔ id du mode (partition dtx-pool-bridge)',
+        { note: staging ? '' : `staging data/dtx/${engineId}.json absent (gitignore ? ingestion non jouée ?)` }));
+      // Anti-régression du 2026-09-14 : dtx-pool-bridge lisait data/dtx/<modeId>.json en dur, donc
+      // best.json — l'ANCIEN panier à quatre poches. Les gardes asof/validFrom ne rattrapent pas ça :
+      // un staging `best` frais est frais, il est juste faux. Les deux consommateurs doivent lire le
+      // même champ de configuration, sinon l'affiché et le tradé divergent en silence.
+      rows.push(row('best', 'enginePortfolio lu par le pont ET par la page (source unique)',
+        'enginePortfolio', (() => {
+          const bridge = ctx.articles('tools/dtx-pool-bridge.js') || '';
+          const page = ctx.articles('tools/gen-status-page.js') || '';
+          const okB = /enginePortfolio/.test(bridge);
+          const okP = /enginePortfolio/.test(page) && !/DTX_STAGING_MAP/.test(page);
+          return okB && okP ? 'enginePortfolio' : `pont:${okB ? 'ok' : 'EN DUR'} page:${okP ? 'ok' : 'EN DUR'}`;
+        })(),
+        { note: 'une table en dur d\'un côté = le mode affiche une stratégie et en trade une autre' }));
+      rows.push(row('best', 'universeFilter ↔ id du MODE (partition sweep.js)',
         'best', art.universeFilter,
-        { note: 'égalité stricte dans sweep.js — une valeur périmée rejette 100% des signaux en silence' }));
+        { note: 'égalité stricte dans sweep.js — partition par MODE, pas par portefeuille moteur' }));
       rows.push(row('best', 'assetClass ↔ pool moteur', 'dtx', art.assetClass));
       rows.push(row('best', 'filterName ↔ STRATEGY_FILTERS_MAP sweep.js',
         (() => {
@@ -273,103 +293,44 @@ const PARITY_MAP = [
         { note: 'filtre stratégie déclaré côté sweep — absent = tous les signaux du moteur filtrés' }));
 
       if (!carrier) {
-        rows.push(row('best', 'allocation uhv_tp999', null, null,
-          { note: 'poche porteuse uhv_tp999 introuvable dans le yaml — la structure du book a changé' }));
+        rows.push(row('best', 'allocation etf_us', null, null,
+          { note: 'allocation etf_us introuvable dans le yaml — la structure du book a changé' }));
         return rows;
       }
 
-      // ── Paramètres de la poche PORTEUSE (70%) que le tracker ré-implémente ───
-      rows.push(row('best', 'uhv.dynamic_max_positions.risk_on ↔ portfolioSize',
-        getNestedScalar(carrier, 'dynamic_max_positions', 'risk_on'), art.portfolioSize));
-      rows.push(row('best', 'uhv.dynamic_max_positions ↔ regimeParams.maxPositions',
+      // ── Paramètres que le tracker ré-implémente ─────────────────────────────
+      rows.push(row('best', 'etf_us.max_open_positions ↔ portfolioSize',
+        getScalar(carrier, 'max_open_positions'), art.portfolioSize));
+      rows.push(row('best', 'etf_us.dynamic_max_positions ↔ regimeParams.maxPositions',
         regimeDictFromGo(carrier, 'dynamic_max_positions'),
         regimeDictFromArticles(art.regimeParams && art.regimeParams.maxPositions)));
-      rows.push(row('best', 'uhv.timeout_days ↔ horizon',
-        getScalar(carrier, 'timeout_days'), art.horizon));
-      rows.push(row('best', 'uhv.max_correlation ↔ correlationCap',
-        getScalar(carrier, 'max_correlation'), art.correlationCap));
-      rows.push(row('best', 'uhv.trail_trigger_pct (×100) ↔ trailTriggerPct',
-        pctFromFraction(getScalar(carrier, 'trail_trigger_pct')), art.trailTriggerPct));
-      rows.push(row('best', 'uhv.trail_atr_mult ↔ trailMultR',
-        getScalar(carrier, 'trail_atr_mult'), art.trailMultR));
-      rows.push(row('best', 'uhv.limit_price_markup ((x-1)×100) ↔ limitMarkupPct',
-        (() => { const v = getScalar(carrier, 'limit_price_markup'); return v !== null ? +((parseFloat(v) - 1) * 100).toFixed(6) : null; })(),
-        art.limitMarkupPct));
-      // ÉCART VOULU (2026-08-12). `scanner_filters.min_score` est le filtre INTERNE du moteur,
-      // appliqué à SON scan de candidats AVANT qu'il n'émette le moindre ordre — et il est
-      // déclaré PAR POCHE : uhv_tp999=50, ep=40 puis 50, mx=0, etf_us aucun. Un `minScore`
-      // unique côté tracker ne peut pas en être le miroir : best agrège les quatre poches.
-      // Surtout, le re-seuiller en aval ne filtre PAS la même grandeur. Mesure sur les 18 ordres
-      // du 2026-08-12 (data/dtx/best.json) : le `Score=` écrit dans le motif se partitionne
-      // EXACTEMENT selon le nombre de features que le moteur n'a pas pu calculer —
-      //   0 feature manquante  → 95        (NN)
-      //   1 feature manquante  → 62, 70    (NIQ, RNW)
-      //   3 features manquantes→ 16..31    (IAUX BTG TIC OWL STGW DV OTF TGB)
-      // Un seuil à 50 rejetait 8 ordres sur 8 à features incomplètes et ZÉRO ordre à features
-      // complètes : ce n'était pas un filtre de qualité mais un filtre de complétude de données,
-      // qui jetait des décisions que le moteur avait déjà prises et validées avec SON seuil.
-      // Le tracker ne re-seuille donc pas (minScore 0) ; il classe par engineNotional et garde
-      // tous ses garde-fous de risque. Voir data/modes-config.json → best._scoreGateReason.
-      rows.push(row('best', 'uhv.scanner_filters.min_score ↔ minScore',
-        getNestedScalar(carrier, 'scanner_filters', 'min_score'), art.minScore,
-        { gap: true, note: 'seuil INTERNE au moteur, par poche (uhv 50 / ep 40-50 / mx 0 / etf aucun), '
-          + 'appliqué avant émission ; le Score= des ordres mesure la complétude des features, pas la qualité' }));
-      // ── SORTIES PAR POCHE (R2, fermé le 2026-08-12) ─────────────────────────
-      // Avant : une seule ligne comparait la poche porteuse au `partialTPGain` du mode, et sortait
-      // en DRIFT perpétuel. C'était la bonne alarme pour la mauvaise raison — le vrai défaut n'est
-      // pas qu'un chiffre diffère, c'est que le tracker portait UN jeu de sorties là où le livre en
-      // a QUATRE (uhv aucun · ep 20 · etf_us aucun · mx 25, sortie TOTALE dans les quatre cas, pas
-      // partielle). Le tracker applique désormais la règle de chaque poche par position, depuis
-      // data/dtx-sleeve-exits.json. Cette table étant une TRANSCRIPTION du yaml, c'est elle qu'on
-      // compare, poche par poche : si le moteur change un take-profit et que la transcription ne
-      // suit pas, la ligne concernée sort en DRIFT au lieu de passer inaperçue.
-      const sleeveExits = readArticlesJSON('data/dtx-sleeve-exits.json');
-      const sxs = (sleeveExits && sleeveExits.sleeves) || {};
-      // `take_profit_pct: 999` = seuil injoignable, transcrit en `null` (« aucune prise de profit »).
-      const goTP = (blk) => {
-        const v = getScalar(blk, 'take_profit_pct');
-        if (v == null) return null;              // clé absente = poche sans take-profit
-        const n = Number(v);
-        return Number.isFinite(n) && n >= 999 ? null : n;
-      };
-      const goInt = (blk, key) => {
-        const v = getScalar(blk, key);
-        const n = v == null ? null : Number(v);
-        return Number.isFinite(n) ? n : null;
-      };
-      const fmt = (v) => (v == null ? 'aucun' : String(v));
-      for (const name of ['uhv_tp999', 'ep', 'etf_us', 'mx']) {
-        const blk = allocationBlock(text, name);
-        const art2 = sxs[name] || null;
-        if (!blk) {
-          rows.push(row('best', `poche ${name} — introuvable dans le yaml`, null, null,
-            { note: 'la structure du book a changé — la table des sorties ne couvre plus cette poche' }));
-          continue;
-        }
-        if (!art2) {
-          rows.push(row('best', `poche ${name} — absente de dtx-sleeve-exits.json`, 'présente au yaml', null,
-            { note: 'poche du livre sans transcription : ses positions retomberaient sur les sorties du MODE' }));
-          continue;
-        }
-        rows.push(row('best', `${name}.take_profit_pct ↔ sleeve takeProfitPct`,
-          fmt(goTP(blk)), fmt(art2.takeProfitPct != null ? art2.takeProfitPct : null),
-          { note: 'sortie TOTALE (pm_base.go exitReason=TAKE_PROFIT), appliquée par position' }));
-        rows.push(row('best', `${name}.timeout_days ↔ sleeve timeoutDays`,
-          fmt(goInt(blk, 'timeout_days')), fmt(art2.timeoutDays != null ? art2.timeoutDays : null),
-          { note: 'aucun ⇒ le tracker retombe sur horizon du mode, déclaré comme SON garde-fou' }));
-      }
-      // Le mode ne doit plus porter de prise PARTIELLE : aucune des 4 poches n'en fait.
-      rows.push(row('best', 'aucune poche ne prend de profit partiel ↔ partialTPGain',
-        0, art.partialTPGain,
-        { note: 'les take-profit du livre sont des sorties totales, par poche — pas un seuil de mode' }));
+      rows.push(row('best', 'etf_us.risk_per_trade_pct ↔ targetRiskPct',
+        getScalar(carrier, 'risk_per_trade_pct'), art.targetRiskPct));
+      rows.push(row('best', 'etf_us.circuit_breaker.max_stops_before_pause ↔ circuitBreakerStops',
+        getNestedScalar(carrier, 'circuit_breaker', 'max_stops_before_pause'), art.circuitBreakerStops));
+      rows.push(row('best', 'etf_us.circuit_breaker.stop_period_days ↔ circuitBreakerWindow',
+        getNestedScalar(carrier, 'circuit_breaker', 'stop_period_days'), art.circuitBreakerWindow));
+      rows.push(row('best', 'etf_us.circuit_breaker.base_pause_days ↔ circuitBreakerPause',
+        getNestedScalar(carrier, 'circuit_breaker', 'base_pause_days'), art.circuitBreakerPause));
+      rows.push(row('best', 'etf_us.dynamic_max_loss (×100) ↔ ddBreakerPct',
+        maxLossPctFromGo(carrier), art.ddBreakerPct));
 
-      // ── Écarts VOULUS (voir en-tête) ────────────────────────────────────────
-      rows.push(row('best', 'uhv.base_stop_atr ↔ atrStopMult',
+      // ── Écarts VOULUS, ou structurels à la stratégie de rotation ────────────
+      rows.push(row('best', 'etf_us.base_stop_atr ↔ atrStopMult',
         getScalar(carrier, 'base_stop_atr'), art.atrStopMult,
         { gap: true, note: '0 = le tracker honore le stop DU MOTEUR (décision 2026-08-07)' }));
-      rows.push(row('best', 'uhv.dynamic_max_loss (min ×100) ↔ maxStopPct',
-        maxLossPctFromGo(carrier), art.maxStopPct,
+      rows.push(row('best', 'replafonnement du stop moteur ↔ maxStopPct',
+        0, art.maxStopPct,
         { gap: true, note: '0 = pas de replafonnement du stop moteur (décision 2026-08-07)' }));
+      rows.push(row('best', 'aucun max_correlation dans le yaml ↔ correlationCap',
+        null, art.correlationCap,
+        { gap: true, note: 'etf_us ne pose AUCUN plafond de corrélation : 0.8 est un garde-fou du tracker, hérité de la poche uhv supprimée. Sur un panier majoritairement crypto il mord côté maison, pas côté moteur.' }));
+      rows.push(row('best', 'aucun timeout_days dans le yaml ↔ horizon',
+        null, art.horizon,
+        { gap: true, note: 'la ROTATION est la sortie du moteur. horizon 14 est le garde-fou du tracker — et à ce jour la SEULE sortie qui ait jamais fermé une position de ce mode en live (4/4 en expired).' }));
+      rows.push(row('best', 'yaml sans notion de secteur (etfs: true) ↔ sectorCapMax',
+        null, art.sectorCapMax,
+        { gap: true, note: 'DÉFAUT OPÉRATIONNEL : getSector() rend \'Other\' pour les 7 tickers du plan courant, donc sectorCapMax 2 n\'admet que 2 candidats sur 7 dans un livre déclaré à 15 positions. Le plafond traite « secteur inconnu » comme « même secteur ».' }));
 
       return rows;
     },

@@ -160,11 +160,21 @@ const OUT = path.join(ROOT, 'scanner/status/index.html');
 // Instruction complète dans scanner/_probes/. Les trades scellés d'avant la bascule mesurent une
 // AUTRE stratégie sous le même identifiant : ils sont déclarés non poolables dans
 // data/invalid-cohorts.json, jamais supprimés.
-const DTX_STAGING_MAP = { best: 'etf_us' };
+// La liaison mode → portefeuille du moteur se déclare dans modes-config (`enginePortfolio`),
+// PAS ici : dtx-pool-bridge lit le même champ. Deux tables en dur finissent toujours par diverger,
+// et celle-ci contrôle ce qui s'affiche pendant que l'autre contrôle ce qui se trade.
 const _dtxStagingCache = {};
+function dtxEnginePortfolio(id) {
+  try {
+    const m = JSON.parse(fs.readFileSync(MODES_CFG, 'utf8')).modes || {};
+    const cfg = m[id];
+    if (!cfg || cfg.assetClass !== 'dtx') return null;
+    return cfg.enginePortfolio || id;
+  } catch (_) { return null; }
+}
 function loadDtxStaging(id) {
   if (SCOPE.active) return null;
-  const f = DTX_STAGING_MAP[id];
+  const f = dtxEnginePortfolio(id);
   if (!f) return null;
   if (f in _dtxStagingCache) return _dtxStagingCache[f];
   let data = null;

@@ -54,10 +54,23 @@ function parseArgs(argv) {
   return o;
 }
 
-/** Modes scriptés = modes-config avec assetClass 'dtx' (source de vérité du câblage). */
+/**
+ * Modes scriptés = modes-config avec assetClass 'dtx' (source de vérité du câblage).
+ *
+ * Rend {id, engine} : `engine` est le PORTEFEUILLE DU MOTEUR que le mode suit, et il n'est pas
+ * toujours égal à l'id du mode. Le mode `best` suit `etf_us` depuis le 2026-09-14. Résoudre le
+ * staging par `data/dtx/<modeId>.json` en dur — ce que faisait cette fonction — lisait alors
+ * `best.json`, c'est-à-dire l'ANCIEN panier à quatre poches (uhv_tp999, ep, etf_us, mx), et
+ * l'aurait réarmé au premier rafraîchissement sous un libellé qui n'en annonce qu'une. Les gardes
+ * asof/validFrom ne rattrapent pas ça : un staging `best` frais est frais, il est juste faux.
+ * La liaison se déclare donc UNE fois, dans modes-config (`enginePortfolio`), et gen-status-page
+ * lit le même champ — une seule vérité, pas deux tables à garder d'accord.
+ */
 function scriptedModes() {
   const cfg = JSON.parse(fs.readFileSync(MODES_CFG, 'utf8')).modes || {};
-  return Object.keys(cfg).filter((id) => cfg[id].assetClass === 'dtx' && cfg[id].status !== 'stopped');
+  return Object.keys(cfg)
+    .filter((id) => cfg[id].assetClass === 'dtx' && cfg[id].status !== 'stopped')
+    .map((id) => ({ id, engine: cfg[id].enginePortfolio || id }));
 }
 
 // Stratégies ROTATION (stockbox_pit, etf_us, …) : le moteur n'émet PAS de stop — la rotation EST
@@ -163,8 +176,8 @@ function main() {
   const pool = [];
   const skipped = [];
   const ingested = [];
-  for (const id of modes) {
-    const p = path.join(STAGING_DIR, `${id}.json`);
+  for (const { id, engine } of modes) {
+    const p = path.join(STAGING_DIR, `${engine}.json`);
     let stg;
     try { stg = JSON.parse(fs.readFileSync(p, 'utf8')); }
     catch (_) { skipped.push(`${id} (staging manquant)`); continue; }
