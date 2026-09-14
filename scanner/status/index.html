@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portefeuille · Marché fermé &mdash; DailyTickers</title>
+  <title>Portefeuille en direct &mdash; DailyTickers</title>
   <meta name="description" content="Signaux du jour, positions ouvertes et performance en direct du portefeuille.">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
-  <link rel="stylesheet" href="/assets/report.css?v=1789299701719">
+  <link rel="stylesheet" href="/assets/report.css?v=1789367864648">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
@@ -437,10 +437,10 @@ details[open] summary::after{transform:rotate(90deg)}
   <div class="hero">
     <div class="hero-inner">
       <div class="hero-left">
-        <h1><i class="fas fa-moon" style="font-size:.82rem;color:var(--muted);margin-right:.35rem"></i>Portefeuille · Marché fermé <button class="tm-btn-header" id="tmFab" onclick="tmToggle()" title="Historique"><i class="fas fa-clock-rotate-left"></i> Historique</button></h1>
-        <p>Last completed session, open positions &amp; performance — future plans remain gated until their execution window</p>
+        <h1><span class="live-dot"></span>Portefeuille en direct <button class="tm-btn-header" id="tmFab" onclick="tmToggle()" title="Historique"><i class="fas fa-clock-rotate-left"></i> Historique</button></h1>
+        <p>Signals, open positions &amp; performance — updated every weekday</p>
         <div class="hero-meta">
-          <span class="ts"><i class="fas fa-clock-rotate-left"></i> Sat 22:13 UTC</span>
+          <span class="ts"><i class="fas fa-clock-rotate-left"></i> Mon 06:37 UTC</span>
         </div>
       </div>
     </div>
@@ -450,7 +450,7 @@ details[open] summary::after{transform:rotate(90deg)}
 
   <h2 class="sr-only">Portfolio Modes</h2>
   <div class="mode-tabs" role="tablist" aria-label="Portfolio modes">
-    <button type="button" role="tab" aria-pressed="false" aria-label="Afficher le mode Turbo" class="mode-tab" data-mode="turbo" data-mode-status="live" onclick="switchMode('turbo')" style="--mc:#f59e0b"><span class="mode-dot" style="background:#f59e0b"></span>Turbo</button><button type="button" role="tab" aria-pressed="false" aria-label="Afficher le mode Dynamic" class="mode-tab" data-mode="dynamic" data-mode-status="live" onclick="switchMode('dynamic')" style="--mc:#dc2626"><span class="mode-dot" style="background:#dc2626"></span>Dynamic</button><button type="button" role="tab" aria-pressed="true" aria-label="Afficher le mode Balanced" class="mode-tab active" data-mode="balanced" data-mode-status="live" onclick="switchMode('balanced')" style="--mc:#059669"><span class="mode-dot" style="background:#059669"></span>Balanced <span class="tab-rec hide-m">★ Rec.</span></button><button type="button" role="tab" aria-pressed="false" aria-label="Afficher le mode Fortress" class="mode-tab" data-mode="fortress" data-mode-status="live" onclick="switchMode('fortress')" style="--mc:#6d28d9"><span class="mode-dot" style="background:#6d28d9"></span>Fortress</button><button type="button" class="mode-tab mode-picker-btn" onclick="openModePicker()" aria-label="Sélectionner les modes"><i class="fas fa-sliders"></i></button>
+    <span class="mode-class-label" data-class="llm"><i class="fas fa-brain" style="font-size:.62rem;margin-right:.28rem"></i>LLM</span><button type="button" role="tab" aria-pressed="false" aria-label="Afficher le mode Turbo" class="mode-tab" data-mode="turbo" data-mode-status="live" onclick="switchMode('turbo')" style="--mc:#f59e0b"><span class="mode-dot" style="background:#f59e0b"></span>Turbo</button><button type="button" role="tab" aria-pressed="false" aria-label="Afficher le mode Dynamic" class="mode-tab" data-mode="dynamic" data-mode-status="live" onclick="switchMode('dynamic')" style="--mc:#dc2626"><span class="mode-dot" style="background:#dc2626"></span>Dynamic</button><button type="button" role="tab" aria-pressed="true" aria-label="Afficher le mode Balanced" class="mode-tab active" data-mode="balanced" data-mode-status="live" onclick="switchMode('balanced')" style="--mc:#059669"><span class="mode-dot" style="background:#059669"></span>Balanced <span class="tab-rec hide-m">★ Rec.</span></button><button type="button" role="tab" aria-pressed="false" aria-label="Afficher le mode Fortress" class="mode-tab" data-mode="fortress" data-mode-status="live" onclick="switchMode('fortress')" style="--mc:#6d28d9"><span class="mode-dot" style="background:#6d28d9"></span>Fortress</button><span class="mode-class-label" data-class="engine"><i class="fas fa-gears" style="font-size:.62rem;margin-right:.28rem"></i>Engine</span><button type="button" role="tab" aria-pressed="false" aria-label="Afficher le mode Best" class="mode-tab" data-mode="best" data-mode-status="live" onclick="switchMode('best')" style="--mc:#2563eb"><span class="mode-dot" style="background:#2563eb"></span>Best</button><button type="button" class="mode-tab mode-picker-btn" onclick="openModePicker()" aria-label="Sélectionner les modes"><i class="fas fa-sliders"></i></button>
   </div>
   <!-- Mode picker modal -->
   <div class="mp-overlay" id="mpOverlay" onclick="if(event.target===this)closeModePicker()">
@@ -511,16 +511,13 @@ details[open] summary::after{transform:rotate(90deg)}
 <!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <!-- Modes scriptés: 'Today's Signals' est redondant avec 'Orders to Place' (les signaux SONT les ordres) → masqué -->
 <div class="section-card">
-  <details open>
+  <details>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Last Session Signals <span class="count">1 setup</span><span class="sc-preview"><b>META</b> <span style="color:var(--muted)">80</span></span></span>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
       <a href="/scanner/20260914/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
-    <table class="t" style="margin-top:.75rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
-      <tbody><tr data-sig-ticker="META" data-sig-entry="648.03" data-sig-stop="615.97" data-sig-tp1="680.08" data-sig-tp2="690.76" data-sig-vwap="652.82" data-sig-rank="primary" data-sig-open="653.510009765625" data-sig-high="664.239990234375" data-sig-low="646.2000122070312" data-sig-price="648.03"><td><img src="https://assets.parqet.com/logos/symbol/META?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>META</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--warn)">80</span></td><td class="m">Breakout</td><td>$648.03</td><td class="neg">$615.97</td><td class="pos">$680.08 / $690.76</td><td class="am">1:1.00</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr></tbody>
-    </table>
+    <p class="empty"><i class="fas fa-inbox"></i>8 signals matched filter <b>All strategies</b> but none reached minScore <b>90</b>. Existing positions remain active.</p>
   </details>
 </div>
 
@@ -571,30 +568,14 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders" data-section="orders" data-scan-date="20260914">
+<div class="section-card " data-section="orders" data-scan-date="20260914">
   <div class="sc-head">
-    <h3><i class="fas fa-bolt"></i> 1 Order to Place</h3>
-    <span class="sc-meta">Marché fermé — pending orders préparés pour la prochaine séance</span>
-    <div style="flex:0 0 100%;margin:.35rem 0 0;padding:.4rem .65rem;background:var(--warn-wk);border:1px solid var(--warn);border-radius:var(--r-s);font-size:.7rem;color:var(--warn-ink);display:flex;gap:.4rem;align-items:flex-start" role="note">
-      <i class="fas fa-circle-info" style="color:var(--warn-ink);margin-top:.12rem;flex-shrink:0"></i>
-      <span><b>VWAP gate active:</b> orders fill only if next open ≤ pivot × 1.01. Gap-up above pivot ⇒ skip (by design).</span>
-    </div>
+    <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
+    <span class="sc-meta">0/1 open — <b>1 slot free</b> — place at next open</span>
+
   </div>
 
-  <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
-    <tbody><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/META?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>META</b> <span class="pill am" style="background:var(--muted);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Conventional">CONV</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=META&ty=c&ta=1&p=d&s=l" alt="META" class="fv-thumb" onclick="fvOpen('META','')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--warn)">80</span></td>
-      <td class="m hide-m">Breakout</td><td><b>$648.03</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$652.82</td>
-      <td class="neg">$615.97</td>
-      <td class="pos">$680.08<span class="hide-m"> / $690.76</span></td>
-      <td class="am hide-m">1:1.00</td><td class="m hide-m">100%</td>
-      <td><span class="pill am">PENDING</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">La publicité progresse, mais le cash disponible se contracte. Au deuxième trimestre, le chiffre d’affaires augmente de 28 %, alors que la marge opérationnelle descend à 31 %, contre 43 % un an plus tôt. Les investissements, loyers financiers inclus, absorbent presque tout le flux d’exploitation : le flux de trésorerie disponible annoncé ressort à 784 millions de dollars. Des charges juridiques et de restructuration pèsent également ; attribuer toute la baisse de marge à l’IA serait faux. La configuration cherche une poursuite du rebond malgré ce coût d’investissement. L’objection est forte : une bonne monétisation publicitaire ne suffit pas si l’actionnaire attend longtemps sa conversion en cash. Le prochain résultat est hors de l’horizon du plan ; aucun nouveau catalyseur de bénéfice n’est attendu cette semaine. Une hausse des rendements après la Fed pourrait donc faire reprendre au marché cette prime de croissance. <a href="https://www.sec.gov/Archives/edgar/data/1326801/000162828026050596/meta-06302026xexhibit991.htm" target="_blank" rel="noopener">Source de l’émetteur</a> <strong>Lecture du prix :</strong> clôture 648,03 $, moyenne exponentielle 20 séances 602,53 $, 50 séances 597,23 $ et 200 séances 624,81 $ ; RSI 67,2. Ces moyennes exponentielles utilisent 300 séances continues. Le graphique Finviz affiche des moyennes simples (SMA) : ces deux calculs ne sont pas interchangeables. Un historique plus long peut aussi modifier l’amorçage des moyennes exponentielles.</div></td></tr></tbody>
-  </table>
+  <div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">Aucune action aujourd’hui.</div>
 </div>
 
 
@@ -1218,16 +1199,13 @@ details[open] summary::after{transform:rotate(90deg)}
 <!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <!-- Modes scriptés: 'Today's Signals' est redondant avec 'Orders to Place' (les signaux SONT les ordres) → masqué -->
 <div class="section-card">
-  <details open>
+  <details>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Last Session Signals <span class="count">1 setup</span><span class="sc-preview"><b>META</b> <span style="color:var(--muted)">80</span></span></span>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
       <a href="/scanner/20260914/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
-    <table class="t" style="margin-top:.75rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
-      <tbody><tr data-sig-ticker="META" data-sig-entry="648.03" data-sig-stop="615.97" data-sig-tp1="680.08" data-sig-tp2="690.76" data-sig-vwap="652.82" data-sig-rank="primary" data-sig-open="653.510009765625" data-sig-high="664.239990234375" data-sig-low="646.2000122070312" data-sig-price="648.03"><td><img src="https://assets.parqet.com/logos/symbol/META?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>META</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--warn)">80</span></td><td class="m">Breakout</td><td>$648.03</td><td class="neg">$615.97</td><td class="pos">$680.08 / $690.76</td><td class="am">1:1.00</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr></tbody>
-    </table>
+    <p class="empty"><i class="fas fa-inbox"></i>5 signals matched filter <b>Momentum + Breakout</b> but none reached minScore <b>88</b>. Existing positions remain active.</p>
   </details>
 </div>
 
@@ -1278,30 +1256,14 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders" data-section="orders" data-scan-date="20260914">
+<div class="section-card " data-section="orders" data-scan-date="20260914">
   <div class="sc-head">
-    <h3><i class="fas fa-bolt"></i> 1 Order to Place</h3>
-    <span class="sc-meta">Marché fermé — pending orders préparés pour la prochaine séance</span>
-    <div style="flex:0 0 100%;margin:.35rem 0 0;padding:.4rem .65rem;background:var(--warn-wk);border:1px solid var(--warn);border-radius:var(--r-s);font-size:.7rem;color:var(--warn-ink);display:flex;gap:.4rem;align-items:flex-start" role="note">
-      <i class="fas fa-circle-info" style="color:var(--warn-ink);margin-top:.12rem;flex-shrink:0"></i>
-      <span><b>VWAP gate active:</b> orders fill only if next open ≤ pivot × 1.01. Gap-up above pivot ⇒ skip (by design).</span>
-    </div>
+    <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
+    <span class="sc-meta">0/1 open — <b>1 slot free</b> — place at next open</span>
+
   </div>
 
-  <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
-    <tbody><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/META?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>META</b> <span class="pill am" style="background:var(--muted);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Conventional">CONV</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=META&ty=c&ta=1&p=d&s=l" alt="META" class="fv-thumb" onclick="fvOpen('META','')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--warn)">80</span></td>
-      <td class="m hide-m">Breakout</td><td><b>$648.03</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$652.82</td>
-      <td class="neg">$615.97</td>
-      <td class="pos">$680.08<span class="hide-m"> / $690.76</span></td>
-      <td class="am hide-m">1:1.00</td><td class="m hide-m">100%</td>
-      <td><span class="pill am">PENDING</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">La publicité progresse, mais le cash disponible se contracte. Au deuxième trimestre, le chiffre d’affaires augmente de 28 %, alors que la marge opérationnelle descend à 31 %, contre 43 % un an plus tôt. Les investissements, loyers financiers inclus, absorbent presque tout le flux d’exploitation : le flux de trésorerie disponible annoncé ressort à 784 millions de dollars. Des charges juridiques et de restructuration pèsent également ; attribuer toute la baisse de marge à l’IA serait faux. La configuration cherche une poursuite du rebond malgré ce coût d’investissement. L’objection est forte : une bonne monétisation publicitaire ne suffit pas si l’actionnaire attend longtemps sa conversion en cash. Le prochain résultat est hors de l’horizon du plan ; aucun nouveau catalyseur de bénéfice n’est attendu cette semaine. Une hausse des rendements après la Fed pourrait donc faire reprendre au marché cette prime de croissance. <a href="https://www.sec.gov/Archives/edgar/data/1326801/000162828026050596/meta-06302026xexhibit991.htm" target="_blank" rel="noopener">Source de l’émetteur</a> <strong>Lecture du prix :</strong> clôture 648,03 $, moyenne exponentielle 20 séances 602,53 $, 50 séances 597,23 $ et 200 séances 624,81 $ ; RSI 67,2. Ces moyennes exponentielles utilisent 300 séances continues. Le graphique Finviz affiche des moyennes simples (SMA) : ces deux calculs ne sont pas interchangeables. Un historique plus long peut aussi modifier l’amorçage des moyennes exponentielles.</div></td></tr></tbody>
-  </table>
+  <div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">Aucune action aujourd’hui.</div>
 </div>
 
 
@@ -1903,16 +1865,13 @@ details[open] summary::after{transform:rotate(90deg)}
 <!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <!-- Modes scriptés: 'Today's Signals' est redondant avec 'Orders to Place' (les signaux SONT les ordres) → masqué -->
 <div class="section-card">
-  <details open>
+  <details>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Last Session Signals <span class="count">3 setups</span><span class="sc-preview"><b>META</b> <span style="color:var(--muted)">80</span> · <b>AAPL</b> <span style="color:var(--muted)">80</span> · <b>MTDR</b> <span style="color:var(--muted)">80</span></span></span>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
       <a href="/scanner/20260914/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
-    <table class="t" style="margin-top:.75rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
-      <tbody><tr data-sig-ticker="META" data-sig-entry="648.03" data-sig-stop="615.97" data-sig-tp1="680.08" data-sig-tp2="690.76" data-sig-vwap="652.82" data-sig-rank="primary" data-sig-open="653.510009765625" data-sig-high="664.239990234375" data-sig-low="646.2000122070312" data-sig-price="648.03"><td><img src="https://assets.parqet.com/logos/symbol/META?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>META</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--warn)">80</span></td><td class="m">Breakout</td><td>$648.03</td><td class="neg">$615.97</td><td class="pos">$680.08 / $690.76</td><td class="am">1:1.00</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="AAPL" data-sig-entry="332.27" data-sig-stop="320.2" data-sig-tp1="344.57" data-sig-tp2="348.36" data-sig-vwap="331.6" data-sig-rank="primary" data-sig-open="327.45001220703125" data-sig-high="336.2200012207031" data-sig-low="326.29998779296875" data-sig-price="332.27"><td><img src="https://assets.parqet.com/logos/symbol/AAPL?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>AAPL</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--warn)">80</span></td><td class="m">Breakout</td><td>$332.27</td><td class="neg">$320.20</td><td class="pos">$344.57 / $348.36</td><td class="am">1:1.02</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="MTDR" data-sig-entry="61.05" data-sig-stop="58.45" data-sig-tp1="63.65" data-sig-tp2="64.52" data-sig-vwap="61.05" data-sig-rank="primary" data-sig-open="61.060001373291016" data-sig-high="61.689998626708984" data-sig-low="60.41999816894531" data-sig-price="61.05"><td><img src="https://assets.parqet.com/logos/symbol/MTDR?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>MTDR</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--warn)">80</span></td><td class="m">Momentum</td><td>$61.05</td><td class="neg">$58.45</td><td class="pos">$63.65 / $64.52</td><td class="am">1:1.00</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr></tbody>
-    </table>
+    <p class="empty"><i class="fas fa-inbox"></i>5 signals matched filter <b>Momentum + Breakout</b> but none reached minScore <b>85</b>. Existing positions remain active.</p>
   </details>
 </div>
 
@@ -1963,47 +1922,14 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders" data-section="orders" data-scan-date="20260914">
+<div class="section-card " data-section="orders" data-scan-date="20260914">
   <div class="sc-head">
-    <h3><i class="fas fa-bolt"></i> 3 Orders to Place</h3>
-    <span class="sc-meta">Marché fermé — pending orders préparés pour la prochaine séance</span>
+    <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
+    <span class="sc-meta">0/3 open — <b>3 slots free</b> — place at next open</span>
 
   </div>
 
-  <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
-    <tbody><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/META?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>META</b> <span class="pill am" style="background:var(--muted);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Conventional">CONV</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=META&ty=c&ta=1&p=d&s=l" alt="META" class="fv-thumb" onclick="fvOpen('META','')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--warn)">80</span></td>
-      <td class="m hide-m">Breakout</td><td><b>$648.03</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$652.82</td>
-      <td class="neg">$615.97</td>
-      <td class="pos">$680.08<span class="hide-m"> / $690.76</span></td>
-      <td class="am hide-m">1:1.00</td><td class="m hide-m">33%</td>
-      <td><span class="pill am">PENDING</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">La publicité progresse, mais le cash disponible se contracte. Au deuxième trimestre, le chiffre d’affaires augmente de 28 %, alors que la marge opérationnelle descend à 31 %, contre 43 % un an plus tôt. Les investissements, loyers financiers inclus, absorbent presque tout le flux d’exploitation : le flux de trésorerie disponible annoncé ressort à 784 millions de dollars. Des charges juridiques et de restructuration pèsent également ; attribuer toute la baisse de marge à l’IA serait faux. La configuration cherche une poursuite du rebond malgré ce coût d’investissement. L’objection est forte : une bonne monétisation publicitaire ne suffit pas si l’actionnaire attend longtemps sa conversion en cash. Le prochain résultat est hors de l’horizon du plan ; aucun nouveau catalyseur de bénéfice n’est attendu cette semaine. Une hausse des rendements après la Fed pourrait donc faire reprendre au marché cette prime de croissance. <a href="https://www.sec.gov/Archives/edgar/data/1326801/000162828026050596/meta-06302026xexhibit991.htm" target="_blank" rel="noopener">Source de l’émetteur</a> <strong>Lecture du prix :</strong> clôture 648,03 $, moyenne exponentielle 20 séances 602,53 $, 50 séances 597,23 $ et 200 séances 624,81 $ ; RSI 67,2. Ces moyennes exponentielles utilisent 300 séances continues. Le graphique Finviz affiche des moyennes simples (SMA) : ces deux calculs ne sont pas interchangeables. Un historique plus long peut aussi modifier l’amorçage des moyennes exponentielles.</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/AAPL?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>AAPL</b> <span class="pill am" style="background:var(--muted);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Conventional">CONV</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=AAPL&ty=c&ta=1&p=d&s=l" alt="AAPL" class="fv-thumb" onclick="fvOpen('AAPL','')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--warn)">80</span></td>
-      <td class="m hide-m">Breakout</td><td><b>$332.27</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$331.60</td>
-      <td class="neg">$320.20</td>
-      <td class="pos">$344.57<span class="hide-m"> / $348.36</span></td>
-      <td class="am hide-m">1:1.02</td><td class="m hide-m">33%</td>
-      <td><span class="pill am">PENDING</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">La semaine produit donne à Apple un rendez-vous observable : précommandes de l’iPhone 18 Pro le 12 septembre, iOS 27 le 14 et disponibilité commerciale le 18. La thèse porte sur la capacité du lancement à prolonger l’intérêt pour le titre, puis à se traduire en demande et en mix produit. À ce stade, les dates et les fonctionnalités annoncées ne démontrent ni volumes vendus ni marge supplémentaire. Les délais de livraison isolés peuvent aussi refléter la disponibilité de l’offre ; ils ne mesurent pas seuls la demande. Le risque contrarien est donc une prise de bénéfices sur une annonce déjà anticipée. La hausse technique reste recevable seulement au prix limite préparé : une ouverture au-dessus ne justifie pas de relever l’entrée. Apple et Meta gardent une sensibilité commune aux taux et aux dépenses technologiques, malgré leurs métiers différents. <a href="https://www.apple.com/newsroom/2026/09/apple-debuts-iphone-18-pro-and-iphone-18-pro-max/" target="_blank" rel="noopener">Source de l’émetteur</a> <strong>Lecture du prix :</strong> clôture 332,27 $, moyenne exponentielle 20 séances 319,03 $, 50 séances 314,05 $ et 200 séances 287,94 $ ; RSI 62,8. Ces moyennes exponentielles utilisent 300 séances continues. Le graphique Finviz affiche des moyennes simples (SMA) : ces deux calculs ne sont pas interchangeables. Un historique plus long peut aussi modifier l’amorçage des moyennes exponentielles.</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/MTDR?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>MTDR</b> <span class="pill am" style="background:var(--muted);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Conventional">CONV</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=MTDR&ty=c&ta=1&p=d&s=l" alt="MTDR" class="fv-thumb" onclick="fvOpen('MTDR','')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--warn)">80</span></td>
-      <td class="m hide-m">Momentum</td><td><b>$61.05</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$61.05</td>
-      <td class="neg">$58.45</td>
-      <td class="pos">$63.65<span class="hide-m"> / $64.52</span></td>
-      <td class="am hide-m">1:1.00</td><td class="m hide-m">33%</td>
-      <td><span class="pill am">PENDING</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">Matador associe hausse de production et discipline financière à démontrer. Le communiqué du 5 août relève la prévision annuelle de production et estime le flux de trésorerie disponible ajusté de 2026 autour de 900 millions de dollars, sous les hypothèses de prix à terme du pétrole et du gaz de fin juillet. Ce montant est une projection conditionnelle, pas une réserve acquise. L’intégration des actifs achetés et le remboursement de dette restent décisifs : produire davantage ne crée pas automatiquement davantage de valeur par action. Le mouvement déjà engagé explique la sélection momentum, mais réduit l’intérêt de poursuivre un gap. L’objection principale combine baisse du pétrole, coûts d’intégration et levier financier. Avec XLE, le risque énergie se cumule fortement ; les deux lignes sont des alternatives de mise en œuvre, pas deux sources indépendantes de diversification. <a href="https://www.matadorresources.com/news-releases/news-release-details/matador-resources-company-reports-second-quarter-2026-results" target="_blank" rel="noopener">Source de l’émetteur</a> <strong>Lecture du prix :</strong> clôture 61,05 $, moyenne exponentielle 20 séances 57,89 $, 50 séances 55,45 $ et 200 séances 52,88 $ ; RSI 67,3. Ces moyennes exponentielles utilisent 300 séances continues. Le graphique Finviz affiche des moyennes simples (SMA) : ces deux calculs ne sont pas interchangeables. Un historique plus long peut aussi modifier l’amorçage des moyennes exponentielles.</div></td></tr></tbody>
-  </table>
+  <div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">Aucune action aujourd’hui.</div>
 </div>
 
 
@@ -2913,7 +2839,7 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="section-card">
   <details>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Last Session Signals <span class="count">0 setups</span></span>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
       <a href="/scanner/20260914/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
@@ -2971,11 +2897,11 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="section-card " data-section="orders" data-scan-date="20260914">
   <div class="sc-head">
     <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
-    <span class="sc-meta">Marché fermé — pending orders préparés pour la prochaine séance</span>
+    <span class="sc-meta">0/10 open — <b>10 slots free</b> — place at next open</span>
 
   </div>
 
-  <div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">Marché fermé — aucun ordre n’est exécutable.</div>
+  <div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">Aucune action aujourd’hui.</div>
 </div>
 
 
@@ -4210,6 +4136,203 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
 
 </div>
+<div id="p-best" class="mode-panel" data-mode-status="live" data-psize="15" data-asset-class="dtx" style="display:none">
+
+<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> Best Dashboard <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Stats figées (sweep) — dernier point d'équité: 2026-09-04">stats as of 09/04</span></h2>
+<!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
+<div class="section-card" data-static="1">
+  <details>
+    <summary class="sc-summary">
+      <span class="sc-sum-title"><i class="fas fa-book-open" style="color:#2563eb;font-size:.78rem"></i> How to trade this mode</span>
+      <span style="font-size:.72rem;color:var(--muted);margin-left:.5rem">Panier multi-poches du moteur : porteur haute volatilité sans TP, poche défensive episodic-pivot, ETF momentum, explosion de momentum · High risk</span>
+    </summary>
+    <div style="margin-top:.75rem;padding:.7rem .85rem;background:#2563eb0a;border:1px solid #2563eb33;border-radius:var(--r-s);font-size:.82rem;color:var(--ink-2)">
+      Best, H14, Engine orders, ATR trailing stop, circuit breaker 3SL/5d→3d pause, Risk layer: DD breaker 8%, VIX kill 35, inverse-ATR sizing, sector cap 2, correlation 0.8
+    </div>
+    <div class="method-steps" style="margin-top:.85rem">
+      <div class="step"><span class="step-n" style="background:#2563eb">1</span><div>DTX Contract V2 is the only source of orders, sizing, levels, execution gates and exits. A plan is actionable only inside its exact <b>validFrom–validUntil</b> window.</div></div>
+
+      <div class="step"><span class="step-n" style="background:#2563eb">2</span><div>Within each opportunity group, arm <b>rank 1 only</b>. Submit the exact symbol, quantity, order type and limit from the plan. A LIMIT order is never converted to MARKET.</div></div>
+      <div class="step"><span class="step-n" style="background:#2563eb">3</span><div>Apply the candidate's structured protection exactly. For <b>engine_managed</b>, the stop and exit-policy reference must be active before or atomically with the fill when required; otherwise reject the candidate.</div></div>
+      <div class="step"><span class="step-n" style="background:#2563eb">4</span><div>Any partial fill ends the group search. Cancel or disarm all alternates, preserve <b>max_winners=1</b>, and apply only structured UPDATE/CANCEL actions to their identified target order.</div></div>
+
+      <div class="step"><span class="step-n" style="background:#2563eb">5</span><div>Never infer an exit, alternate or promotion from prose. If the plan is expired, incomplete or cannot be protected exactly, emit no order.</div></div>
+
+      
+    </div>
+    <div class="method-footer">
+      <span><i class="fas fa-layer-group"></i> DTX grouped plan · one winner per group</span>
+      <span><i class="fas fa-calendar-days"></i> Exact plan validity window</span>
+      
+      
+    </div>
+  </details>
+</div>
+
+<!-- ══ 2bis. DÉCISIONS DU MOTEUR — modes scriptés uniquement ══ -->
+<!-- Ce que le moteur systematic a dit CHAQUE JOUR, historisé et point-in-time. Le staging
+     data/dtx/<mode>.json est un instantané écrasé à chaque ingestion : sans ce registre, les
+     ordres d'hier sont perdus. Source : data/dtx-engine-history.json, publié en
+     /scanner/status/engine-history.json. Immuable par (mode, date). -->
+<div class="section-card">
+  <details>
+    <summary class="sc-summary">
+      <span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Décisions du moteur <span class="count" id="engHistCount-best">—</span></span>
+    </summary>
+    <div style="margin-top:.7rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+      <label style="font-size:.74rem;color:var(--muted)">Séance</label>
+      <select id="engHistSel-best" onchange="engHistRender('best')" style="font-size:.76rem;padding:.25rem .4rem;border:1px solid var(--line);border-radius:var(--r-s);background:var(--bg-1);color:var(--ink-1)"></select>
+      <span id="engHistMeta-best" style="font-size:.72rem;color:var(--muted)"></span>
+    </div>
+    <div id="engHistBody-best" style="margin-top:.6rem"></div>
+  </details>
+</div>
+<!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
+<!-- Modes scriptés: 'Today's Signals' est redondant avec 'Orders to Place' (les signaux SONT les ordres) → masqué -->
+<div class="section-card hide-section">
+  <details>
+    <summary class="sc-summary">
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
+      <a href="/scanner/20260914/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+    </summary>
+    
+    <p class="empty"><i class="fas fa-inbox"></i>Filter <b>Engine orders</b> excluded all 8 signals today — available strategies: <b>Breakout</b>, <b>Pullback</b>, <b>Momentum</b>. Existing positions remain active.</p>
+  </details>
+</div>
+
+<!-- ══ 3. PERF + STATS (equity curve) ══ -->
+<div class="perf-hero" style="border-top:3px solid #2563eb">
+  <div class="perf-chart-wrap">
+    <div class="perf-hero-left">
+      <span class="perf-hero-label"><i class="fas fa-chart-line" style="color:#2563eb;margin-right:.3rem"></i>Equity Curve</span>
+    </div>
+    <div class="perf-chart" id="chart-best"></div>
+    
+  </div>
+  <div class="perf-stats">
+    <div class="ps" title="Cumulative percent gain of the portfolio since inception. Includes mark-to-market on open positions.">
+      <span class="ps-v neg" style="color:#2563eb">-0.86%</span><span class="ps-l">Total Return <small style="opacity:.6">(incl. -0.16% MtM)</small></span>
+    </div>
+    <div class="ps" title="Largest peak-to-trough drop on the equity curve. Lower is better; measures worst pain experienced.">
+      <span class="ps-v neg">-1.76%</span><span class="ps-l">Max Drawdown</span>
+    </div>
+    <div class="ps" title="Share of resolved trades that ended profitable. 50% with high R:R is normal for momentum strategies.">
+      <span class="ps-v">25%</span><span class="ps-l">Win Rate</span>
+    </div>
+    <div class="ps" title="Sum of winning P&amp;L divided by sum of losing P&amp;L. >1 = profitable. >2 = robust. >5 = small-sample inflated. Sample 4<50 trades — point estimate only, treat as fragile.">
+      <span class="ps-v"><span class="ps-num">0.08x</span></span><span class="ps-l">Profit Factor <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span></span>
+    </div>
+    <div class="ps" title="Number of fully-closed trades counted in the stats above. Pending/open positions excluded.">
+      <span class="ps-v">4</span><span class="ps-l">Trades clôturés</span>
+    </div>
+    <div class="ps" title="Average number of trading days each closed trade was held.">
+      <span class="ps-v">15d</span><span class="ps-l">Avg Hold</span>
+    </div>
+    <div class="ps" title="R-squared: how closely the equity curve follows a straight line. 1.0 = perfect linear growth, 0 = random.">
+      <span class="ps-v">0.295</span><span class="ps-l">R²</span>
+    </div>
+    <div class="ps" title="Compound Annual Growth Rate: annualized return extrapolated from the equity curve.">
+      <span class="ps-v">-14.3%</span><span class="ps-l">CAGR</span>
+    </div>
+    <div class="ps" title="Annualized Sharpe Ratio: risk-adjusted return (daily returns × √252). >1 = good, >2 = excellent, >3 = elite.">
+      <span class="ps-v">-1.55</span><span class="ps-l">Sharpe</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 4. CLOSE NOW ══ -->
+
+
+<!-- ══ 5. ORDERS CTA ══ -->
+
+
+
+<div class="section-card " data-section="orders" data-scan-date="20260914">
+  <div class="sc-head">
+    <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
+    <span class="sc-meta">2/15 open — <b>13 slots free</b> — place at next open</span>
+
+  </div>
+
+  <div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">Aucune action aujourd’hui.</div>
+</div>
+
+
+<!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
+<div class="section-card" id="sec-pos-best">
+  <div class="sc-head">
+    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">2/15</span></h3>
+    <span class="sc-meta" title="Moyenne simple par position ouverte (non pondérée portefeuille)">avg/pos: <b class="neg">-1.1%</b></span>
+  </div>
+  
+  <div class="scenario-bar-wrap">
+  <div class="scenario-labels">
+    <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -2.8%</span>
+    <span class="neg"><i class="fas fa-circle-dot"></i> Now (pondéré): -0.2%</span>
+    <span class="pos"><i class="fas fa-bullseye"></i> Best: +-0.2%</span>
+  </div>
+  <div class="scenario-bar">
+    <div class="scenario-fill-bad" style="width:100.0%"></div>
+    <div class="scenario-fill-good" style="width:0.0%"></div>
+    <div class="scenario-cursor" style="left:100.0%"></div>
+  </div>
+</div>
+  <table class="t">
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Pivot</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/SBET?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>SBET</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=SBET&ty=c&ta=1&p=d&s=l" alt="SBET" class="fv-thumb" onclick="fvOpen('SBET','')"></td><td class="m hide-m">08-28</td><td class="hide-m">$8.65</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$8.78</td><td class="hide-m">$8.88</td><td class="pos" data-format="pct"><b>+2.66%</b></td><td class="neg hide-m">$6.20</td><td class="pos hide-m">—</td><td class="m">4d</td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/GDX?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>GDX</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=GDX&ty=c&ta=1&p=d&s=l" alt="GDX" class="fv-thumb" onclick="fvOpen('GDX','')"></td><td class="m hide-m">08-27</td><td class="hide-m">$102.14</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$102.96</td><td class="hide-m">$97.10</td><td class="neg" data-format="pct"><b>-4.93%</b></td><td class="neg hide-m">$81.12</td><td class="pos hide-m">—</td><td class="m">3d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Cassure nette : +9,40 % sur la s&eacute;ance (88,95 $ &agrave; 97,31 $), volume &agrave; 43,5 M titres contre ~22,5 M la veille (proche du double). L'ETF cl&ocirc;ture &agrave; 17,6 % au-dessus de sa MME50 (82,72 $) &mdash; &eacute;tendu mais encore sous le plafond de 25 % retenu pour la strat&eacute;gie Breakout. RSI14 &agrave; 70,8, juste sous le plafond de surextension de 72 : &agrave; surveiller de tr&egrave;s pr&egrave;s, la marge est fine. Meilleur score parmi les ETF non lev&eacute;s du vivier.</div></td></tr></tbody>
+  </table>
+</div>
+
+<!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
+<div class="section-card" id="sec-hist-best">
+  <details>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Trade History <span class="count">4 closed</span></span></summary>
+  <div class="th-scroll">
+  <table class="t" style="margin-top:.6rem">
+    <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
+    <tbody><tr>
+          <td><img src="https://assets.parqet.com/logos/symbol/OWL?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>OWL</b></td>
+          <td class="m hide-m">08-17<br><span style="font-size:.6rem;color:var(--muted)">09:30 ET</span></td>
+          <td class="m hide-m">09-04<br><span style="font-size:.6rem;color:var(--muted)">16:00 ET</span></td>
+          <td class="hide-m">$12.12</td>
+          <td class="hide-m">$11.75</td>
+          <td class="neg" data-format="pct"><b>-3.05%</b></td>
+          <td class="m hide-m">15d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><img src="https://assets.parqet.com/logos/symbol/SKYY?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>SKYY</b></td>
+          <td class="m hide-m">08-17<br><span style="font-size:.6rem;color:var(--muted)">09:30 ET</span></td>
+          <td class="m hide-m">09-04<br><span style="font-size:.6rem;color:var(--muted)">16:00 ET</span></td>
+          <td class="hide-m">$163.98</td>
+          <td class="hide-m">$161.56</td>
+          <td class="neg" data-format="pct"><b>-1.48%</b></td>
+          <td class="m hide-m">15d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><img src="https://assets.parqet.com/logos/symbol/DV?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>DV</b></td>
+          <td class="m hide-m">08-12<br><span style="font-size:.6rem;color:var(--muted)">09:30 ET</span></td>
+          <td class="m hide-m">09-01<br><span style="font-size:.6rem;color:var(--muted)">16:00 ET</span></td>
+          <td class="hide-m">$13.24</td>
+          <td class="hide-m">$13.36</td>
+          <td class="pos" data-format="pct"><b>+0.91%</b></td>
+          <td class="m hide-m">15d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><img src="https://assets.parqet.com/logos/symbol/STGW?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>STGW</b></td>
+          <td class="m hide-m">08-12<br><span style="font-size:.6rem;color:var(--muted)">09:30 ET</span></td>
+          <td class="m hide-m">09-01<br><span style="font-size:.6rem;color:var(--muted)">16:00 ET</span></td>
+          <td class="hide-m">$9.19</td>
+          <td class="hide-m">$8.56</td>
+          <td class="neg" data-format="pct"><b>-6.86%</b></td>
+          <td class="m hide-m">15d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr></tbody>
+  </table>
+  </div>
+  </details>
+</div>
+
+</div>
 
   <h2 class="sr-only">Disclaimer</h2>
   <div class="disc">
@@ -4269,14 +4392,14 @@ function fvClose(){
 document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
 </script>
 
-<script src="/assets/core.js?v=1789299701719"></script>
-<script src="/assets/tag-renderer.js?v=1789299701719"></script>
-<script src="/assets/mode-panel-binder.js?v=1789299701719"></script>
-<script>window.__BP={"NVDA":{"p":218.29,"o":221.24000549316406,"h":222,"l":218.14999389648438,"pc":218.36000061035156},"CVX":{"p":214.06,"o":212.02000427246094,"h":215.5500030517578,"l":212.02000427246094,"pc":212.75999450683594},"GDX":{"p":97.1,"o":98.20999908447266,"h":99.08000183105469,"l":96.2300033569336,"pc":96.02999877929688},"ANET":{"p":199.59,"o":192.22999572753906,"h":200.25,"l":192.10499572753906,"pc":188.99000549316406},"GOOGL":{"p":338.5,"o":335.0299987792969,"h":342.9800109863281,"l":335.0299987792969,"pc":332.6000061035156},"MS":{"p":214.38,"o":215.10000610351562,"h":217.75999450683594,"l":211.24000549316406,"pc":212.66000366210938},"NSRGY":{"p":94.9,"o":95.83999633789062,"h":96.04000091552734,"l":94.86000061035156,"pc":95.33000183105469},"ABNB":{"p":170.19,"o":170.02999877929688,"h":170.42999267578125,"l":167.64999389648438,"pc":167.64999389648438},"FAST":{"p":49.32,"o":49.61000061035156,"h":49.90999984741211,"l":49.0099983215332,"pc":49.0099983215332},"GEN":{"p":30.26,"o":30.06999969482422,"h":30.690000534057617,"l":30,"pc":29.969999313354492},"META":{"p":648.03,"o":653.510009765625,"h":664.239990234375,"l":646.2000122070312,"pc":648.030029296875},"AAPL":{"p":332.27,"o":327.45001220703125,"h":336.2200012207031,"l":326.29998779296875,"pc":332.2699890136719},"EMR":{"p":152.19,"o":150.92999267578125,"h":152.27999877929688,"l":149.9199981689453,"pc":152.19000244140625},"MTDR":{"p":61.05,"o":61.060001373291016,"h":61.689998626708984,"l":60.41999816894531,"pc":61.04999923706055},"JNJ":{"p":265.58,"o":268.0299987792969,"h":270.3999938964844,"l":265.25,"pc":265.5799865722656},"NWSA":{"p":29.44,"o":29.469999313354492,"h":29.68000030517578,"l":29.229999542236328,"pc":29.440000534057617},"XLE":{"p":65.14,"o":64.88999938964844,"h":65.7300033569336,"l":64.70999908447266,"pc":65.13999938964844},"BITO":{"p":10.37,"o":10.399999618530273,"h":10.720000267028809,"l":10.324999809265137,"pc":10.369999885559082}}</script>
-<script src="/assets/live-engine.js?v=1789299701719"></script>
-<script src="/assets/live-engine-ui.js?v=1789299701719"></script>
+<script src="/assets/core.js?v=1789367864648"></script>
+<script src="/assets/tag-renderer.js?v=1789367864648"></script>
+<script src="/assets/mode-panel-binder.js?v=1789367864648"></script>
+<script>window.__BP={"GDX":{"p":97.1,"o":98.20999908447266,"h":99.08000183105469,"l":96.2300033569336,"pc":96.02999877929688},"SBET":{"p":8.88,"o":8.710000038146973,"h":9.489999771118164,"l":8.529999732971191,"pc":8.430000305175781},"NVDA":{"p":218.29,"o":221.24000549316406,"h":222,"l":218.14999389648438,"pc":218.36000061035156},"CVX":{"p":214.06,"o":212.02000427246094,"h":215.5500030517578,"l":212.02000427246094,"pc":212.75999450683594},"ANET":{"p":199.59,"o":192.22999572753906,"h":200.25,"l":192.10499572753906,"pc":188.99000549316406},"GOOGL":{"p":338.5,"o":335.0299987792969,"h":342.9800109863281,"l":335.0299987792969,"pc":332.6000061035156},"MS":{"p":214.38,"o":215.10000610351562,"h":217.75999450683594,"l":211.24000549316406,"pc":212.66000366210938},"NSRGY":{"p":94.9,"o":95.83999633789062,"h":96.04000091552734,"l":94.86000061035156,"pc":95.33000183105469},"ABNB":{"p":170.19,"o":170.02999877929688,"h":170.42999267578125,"l":167.64999389648438,"pc":167.64999389648438},"FAST":{"p":49.32,"o":49.61000061035156,"h":49.90999984741211,"l":49.0099983215332,"pc":49.0099983215332},"GEN":{"p":30.26,"o":30.06999969482422,"h":30.690000534057617,"l":30,"pc":29.969999313354492},"META":{"p":648.03,"o":653.510009765625,"h":664.239990234375,"l":646.2000122070312,"pc":648.030029296875},"AAPL":{"p":332.27,"o":327.45001220703125,"h":336.2200012207031,"l":326.29998779296875,"pc":332.2699890136719},"EMR":{"p":152.19,"o":150.92999267578125,"h":152.27999877929688,"l":149.9199981689453,"pc":152.19000244140625},"MTDR":{"p":61.05,"o":61.060001373291016,"h":61.689998626708984,"l":60.41999816894531,"pc":61.04999923706055},"JNJ":{"p":265.58,"o":268.0299987792969,"h":270.3999938964844,"l":265.25,"pc":265.5799865722656},"NWSA":{"p":29.44,"o":29.469999313354492,"h":29.68000030517578,"l":29.229999542236328,"pc":29.440000534057617},"XLE":{"p":65.14,"o":64.88999938964844,"h":65.7300033569336,"l":64.70999908447266,"pc":65.13999938964844},"BITO":{"p":10.37,"o":10.399999618530273,"h":10.720000267028809,"l":10.324999809265137,"pc":10.369999885559082}}</script>
+<script src="/assets/live-engine.js?v=1789367864648"></script>
+<script src="/assets/live-engine-ui.js?v=1789367864648"></script>
 <script>
-var _v='1789299701719';
+var _v='1789367864648';
 document.addEventListener('DOMContentLoaded',function(){
   function mk(el,dates,vals,color,sinceLbl,simDates,simVals,liveFrom){
     if(!document.getElementById(el))return null;
@@ -4489,15 +4612,15 @@ document.addEventListener('DOMContentLoaded',function(){
     tmUpdateLabel();
     tmLoadIdx(tmCurrentIdx);
   };
-  var VALID_MODES=["turbo","dynamic","balanced","fortress"];
+  var VALID_MODES=["best","turbo","dynamic","balanced","fortress"];
   // The SSR markup opens Balanced by default. Initialize the same mode in JS;
   // otherwise the first hidden mode gets a chart while the visible panel stays blank.
   var activeMode="balanced";
-  var MODE_CATALOG=[{"ac":"llm","label":"LLM","icon":"brain","modes":[{"id":"turbo","label":"Turbo","color":"#f59e0b","status":"live"},{"id":"dynamic","label":"Dynamic","color":"#dc2626","status":"live"},{"id":"balanced","label":"Balanced","color":"#059669","status":"live"},{"id":"fortress","label":"Fortress","color":"#6d28d9","status":"live"}]}];
+  var MODE_CATALOG=[{"ac":"llm","label":"LLM","icon":"brain","modes":[{"id":"turbo","label":"Turbo","color":"#f59e0b","status":"live"},{"id":"dynamic","label":"Dynamic","color":"#dc2626","status":"live"},{"id":"balanced","label":"Balanced","color":"#059669","status":"live"},{"id":"fortress","label":"Fortress","color":"#6d28d9","status":"live"}]},{"ac":"engine","label":"Engine","icon":"gears","modes":[{"id":"best","label":"Best","color":"#2563eb","status":"live"}]}];
   // Les 5 modes du catalogue, tous affichés au premier passage. Depuis le
   // 2026-08-12 le catalogue EST la sélection par défaut — il n'y a plus de
   // longue traîne à masquer.
-  var DEFAULT_FAVS=["turbo","dynamic","balanced","fortress"];
+  var DEFAULT_FAVS=["best","turbo","dynamic","balanced","fortress"];
   var MAX_FAVS=VALID_MODES.length; // pas de limite artificielle — l'utilisateur peut sélectionner tous les modes
   function getFavs(){try{var s=localStorage.getItem('dt-fav-modes');if(s){var a=JSON.parse(s);if(Array.isArray(a)&&a.length){var k=a.filter(function(m){return VALID_MODES.includes(m)}).slice(0,MAX_FAVS);if(k.length)return k}}}catch(_){}return DEFAULT_FAVS.filter(function(m){return VALID_MODES.includes(m)})}
   function setFavs(a){try{localStorage.setItem('dt-fav-modes',JSON.stringify(a))}catch(_){}}
@@ -4542,7 +4665,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(sel.length<1||sel.length>MAX_FAVS)return;
     setFavs(sel);applyFavs(sel);closeModePicker();
   };
-  var modeCharts={"turbo":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/04"],"v":[101.38,100.99,102.13,98.57,98.87,102.05,117.53,115.48,127.88,126.36,127.36,126.78,126.36,128.64,129.99,130.33,130.95,132.05,133.66,134.69,140.76,143.74,144.63,142.61,144.21,145.34,145.34,147.79,147.5,150.92,151.1,152.77,153.24,157.08,156.86,158.21,166.46,164.32,162.72,164.8,164.32,162.5,163.74,183.73,181.62,185.33,192.75,190.61,191.76,194.26,193,194.13,194.25,193.15,194.68,194.45,195.14,194.33,194.71,194.58,192.41,197.17,197.17,204.19,200.94,201.69,198.03,199.97,198.46,199.83,204.18,204.76,208.63,208.4,207.46,206.71,207.29,206.1,206.21,205.96,206.13,206.13,205.41,205.8,208.49,212.24,212.24,212.24,212.24,210.44,210.44,210.44,210.44,210.44,210.44,210.44,208.24,208.24,208.24,200.57,206.77,209.41,207.21,208.53,206.92,203.07,203.11,200.57,198.26,194.4,194.93,195.62,192.89,192.12,194.14,194.58,193.12,193.49,193.49,193.49,193.49,193.49,193.49,193.49,193.49,193.29,194.77,194.28,197.99,196.05,196.05,199.07,199.25,203.78,204.63,204.63],"c":"#f59e0b","s":null,"sD":null,"sV":null,"pit":false,"lf":null},"dynamic":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04"],"v":[101.15,101.54,108.47,111.02,110.63,114.66,131.22,130.19,129.43,131.54,135.19,134.54,134.55,135.13,135.45,135.45,135.45,138.53,140.63,141.13,143.23,147.43,144.44,141.31,143.19,140.66,140.66,140.84,142.68,146.1,146.28,147.95,149.13,151.28,154.06,153.23,154.91,154.91,153.31,155.39,155.39,155.39,154.81,151.61,153.42,155.86,164.32,160.2,174.16,176.66,175.4,176.53,176.65,175.55,175.28,175.02,172.24,172.13,172.45,172.34,171.33,177.68,177.68,184.7,181.45,182.2,178.54,180.48,178.97,180.34,184.69,185.27,186.93,186.51,185.73,188.04,185.42,185.08,183.41,187.76,187.93,187.93,187.21,187.6,190.29,191.85,191.18,177.25,177.25,175.45,175.45,175.45,175.45,175.45,175.45,173.99,171.79,171.79,171.79,171.12,172.5,173.24,175.51,171.89,166.66,165.69,164.86,163.96,161.65,157.79,158.32,159.01,156.28,155.51,157.53,157.97,155.69,155.22,157.71,155.93,154.02,156.58,156.14,155.2,159,158.44,160.05,160.69,161,161.37,158.4,161.76,160.03,155.64,159.61,161.22,159.01],"c":"#dc2626","s":null,"sD":null,"sV":null,"pit":false,"lf":null},"balanced":{"d":["03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04","09/13"],"v":[99.86,96.92,98.78,106.04,103.96,103.76,118.3,118.89,118.89,118.89,118.89,118.76,108.52,116.88,115.94,108.79,109.54,113.07,128.88,130.79,131.88,135.73,136.4,136.4,136.4,136.4,136.4,136.4,136.68,136.67,135.65,135.3,134.08,144.86,143.03,152.12,151.66,152.84,151.67,152.93,152.92,152.23,152.95,156.15,157.24,156.89,159.67,159.36,157.73,158.78,159.05,158.03,158.31,158.87,159.03,159.99,159.47,160.57,161.28,161.55,161.55,161.81,162.88,163.1,161.33,161.25,162.12,159.37,158.75,154.23,155.32,153.94,153.37,153.88,153.32,152.12,151.67,149.88,149.72,149.72,149.73,149.7,149.67,150.38,149.64,145.65,144.13,144.13,145.36,145.36,145.36,145.36,142.53,142.53,142.53,142.04,140.47,143.89,143.7,142.37,142.85,141.99,144.44,144.47,145.04,144.19,143.84,142.92,143.44,143.55,144.66,144.75,143.87,144.59,144.73,145.04,144.91,144.36,143,142.84,146.61,146.37,148.72,147.7,150.69,153.06,155.86,154.51,154.13,156.34,155.86,153.64,153.96,154.7,153.96,154.12],"c":"#059669","s":null,"sD":null,"sV":null,"pit":false,"lf":null},"fortress":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04"],"v":[100.19,100.19,100.95,100.89,101.37,102.84,106.16,105.76,105,104.93,106.12,106.24,106.28,106.72,107.02,107.42,107.18,107.26,108.63,108.86,109.63,110.62,109.98,109.69,108.85,109.31,109.31,109.71,109.68,110.18,110.49,110.54,111.13,111.62,111.14,113.87,115.97,115.33,114.92,115.58,115.31,115.35,116.12,119.75,119.03,117.66,120.96,120.52,120.58,120.79,120.41,120.86,121.1,120.91,121.36,121.12,121,121.64,121.45,121.89,122.15,122.53,122.53,123.06,122.59,123.04,123.58,122.98,122.38,120.24,119.64,119.4,119.34,119.5,119.17,119.14,118.92,118.64,118.11,118.16,119.14,119.14,119.88,118.66,118.96,119.31,119.01,119.15,121.75,121.75,121.75,121.75,121.75,121.5,121.04,120.52,120.52,120.52,120.52,120.52,120.42,120.42,120.42,120.42,120.49,120.21,120.21,120.21,120.21,120.21,120.21,120.21,120.41,120.73,120.48,119.99,120.2,119.88,119.87,120,119.96,120.02,120.2,119.86,120.18,120.52,120.66,120.47,120.53,120.33,120.32,120.18,120.24,119.91,119.69,119.75,119.69],"c":"#6d28d9","s":null,"sD":null,"sV":null,"pit":false,"lf":null}};
+  var modeCharts={"best":{"d":["08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04","09/14"],"v":[100.11,100.12,99.97,99.35,99.37,99.37,98.96,99.34,99.36,99.29,99.29,99.98,99.23,99.58,98.36,98.41,99.66,99.14,98.98],"c":"#2563eb","s":null,"sD":null,"sV":null,"pit":false,"lf":null},"turbo":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/04"],"v":[101.38,100.99,102.13,98.57,98.87,102.05,117.53,115.48,127.88,126.36,127.36,126.78,126.36,128.64,129.99,130.33,130.95,132.05,133.66,134.69,140.76,143.74,144.63,142.61,144.21,145.34,145.34,147.79,147.5,150.92,151.1,152.77,153.24,157.08,156.86,158.21,166.46,164.32,162.72,164.8,164.32,162.5,163.74,183.73,181.62,185.33,192.75,190.61,191.76,194.26,193,194.13,194.25,193.15,194.68,194.45,195.14,194.33,194.71,194.58,192.41,197.17,197.17,204.19,200.94,201.69,198.03,199.97,198.46,199.83,204.18,204.76,208.63,208.4,207.46,206.71,207.29,206.1,206.21,205.96,206.13,206.13,205.41,205.8,208.49,212.24,212.24,212.24,212.24,210.44,210.44,210.44,210.44,210.44,210.44,210.44,208.24,208.24,208.24,200.57,206.77,209.41,207.21,208.53,206.92,203.07,203.11,200.57,198.26,194.4,194.93,195.62,192.89,192.12,194.14,194.58,193.12,193.49,193.49,193.49,193.49,193.49,193.49,193.49,193.49,193.29,194.77,194.28,197.99,196.05,196.05,199.07,199.25,203.78,204.63,204.63],"c":"#f59e0b","s":null,"sD":null,"sV":null,"pit":false,"lf":null},"dynamic":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04"],"v":[101.15,101.54,108.47,111.02,110.63,114.66,131.22,130.19,129.43,131.54,135.19,134.54,134.55,135.13,135.45,135.45,135.45,138.53,140.63,141.13,143.23,147.43,144.44,141.31,143.19,140.66,140.66,140.84,142.68,146.1,146.28,147.95,149.13,151.28,154.06,153.23,154.91,154.91,153.31,155.39,155.39,155.39,154.81,151.61,153.42,155.86,164.32,160.2,174.16,176.66,175.4,176.53,176.65,175.55,175.28,175.02,172.24,172.13,172.45,172.34,171.33,177.68,177.68,184.7,181.45,182.2,178.54,180.48,178.97,180.34,184.69,185.27,186.93,186.51,185.73,188.04,185.42,185.08,183.41,187.76,187.93,187.93,187.21,187.6,190.29,191.85,191.18,177.25,177.25,175.45,175.45,175.45,175.45,175.45,175.45,173.99,171.79,171.79,171.79,171.12,172.5,173.24,175.51,171.89,166.66,165.69,164.86,163.96,161.65,157.79,158.32,159.01,156.28,155.51,157.53,157.97,155.69,155.22,157.71,155.93,154.02,156.58,156.14,155.2,159,158.44,160.05,160.69,161,161.37,158.4,161.76,160.03,155.64,159.61,161.22,159.01],"c":"#dc2626","s":null,"sD":null,"sV":null,"pit":false,"lf":null},"balanced":{"d":["03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04","09/14"],"v":[99.86,96.92,98.78,106.04,103.96,103.76,118.3,118.89,118.89,118.89,118.89,118.76,108.52,116.88,115.94,108.79,109.54,113.07,128.88,130.79,131.88,135.73,136.4,136.4,136.4,136.4,136.4,136.4,136.68,136.67,135.65,135.3,134.08,144.86,143.03,152.12,151.66,152.84,151.67,152.93,152.92,152.23,152.95,156.15,157.24,156.89,159.67,159.36,157.73,158.78,159.05,158.03,158.31,158.87,159.03,159.99,159.47,160.57,161.28,161.55,161.55,161.81,162.88,163.1,161.33,161.25,162.12,159.37,158.75,154.23,155.32,153.94,153.37,153.88,153.32,152.12,151.67,149.88,149.72,149.72,149.73,149.7,149.67,150.38,149.64,145.65,144.13,144.13,145.36,145.36,145.36,145.36,142.53,142.53,142.53,142.04,140.47,143.89,143.7,142.37,142.85,141.99,144.44,144.47,145.04,144.19,143.84,142.92,143.44,143.55,144.66,144.75,143.87,144.59,144.73,145.04,144.91,144.36,143,142.84,146.61,146.37,148.72,147.7,150.69,153.06,155.86,154.51,154.13,156.34,155.86,153.64,153.96,154.7,153.96,154.12],"c":"#059669","s":null,"sD":null,"sV":null,"pit":false,"lf":null},"fortress":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04"],"v":[100.19,100.19,100.95,100.89,101.37,102.84,106.16,105.76,105,104.93,106.12,106.24,106.28,106.72,107.02,107.42,107.18,107.26,108.63,108.86,109.63,110.62,109.98,109.69,108.85,109.31,109.31,109.71,109.68,110.18,110.49,110.54,111.13,111.62,111.14,113.87,115.97,115.33,114.92,115.58,115.31,115.35,116.12,119.75,119.03,117.66,120.96,120.52,120.58,120.79,120.41,120.86,121.1,120.91,121.36,121.12,121,121.64,121.45,121.89,122.15,122.53,122.53,123.06,122.59,123.04,123.58,122.98,122.38,120.24,119.64,119.4,119.34,119.5,119.17,119.14,118.92,118.64,118.11,118.16,119.14,119.14,119.88,118.66,118.96,119.31,119.01,119.15,121.75,121.75,121.75,121.75,121.75,121.5,121.04,120.52,120.52,120.52,120.52,120.52,120.42,120.42,120.42,120.42,120.49,120.21,120.21,120.21,120.21,120.21,120.21,120.21,120.41,120.73,120.48,119.99,120.2,119.88,119.87,120,119.96,120.02,120.2,119.86,120.18,120.52,120.66,120.47,120.53,120.33,120.32,120.18,120.24,119.91,119.69,119.75,119.69],"c":"#6d28d9","s":null,"sD":null,"sV":null,"pit":false,"lf":null}};
   var _regimeMap={"04/16":"RISK-ON","04/17":"RISK-ON","04/18":"RISK-ON","04/22":"EARLY RISK-OFF","04/23":"EARLY RISK-OFF","04/24":"EARLY RISK-OFF","04/27":"RECOVERY","04/28":"RISK-ON","04/29":"RISK-ON","04/30":"RECOVERY","05/01":"RISK-ON","05/04":"RECOVERY","05/05":"RECOVERY","05/06":"RECOVERY","05/07":"RECOVERY","05/08":"RECOVERY","05/11":"RISK-ON","05/12":"RISK-ON","05/13":"RISK-ON","05/14":"RECOVERY","05/15":"RECOVERY","05/18":"RECOVERY","05/19":"RISK-ON","05/20":"EARLY RISK-OFF","05/21":"EARLY RISK-OFF","05/22":"RISK-ON","05/26":"RISK-ON","05/27":"RISK-ON","05/28":"RISK-ON","05/29":"RISK-ON","06/01":"RISK-ON","06/02":"RISK-ON","06/03":"RISK-ON","06/04":"RISK-ON","06/05":"NEUTRAL","06/09":"EARLY RISK-OFF","06/10":"EARLY RISK-OFF","06/11":"RISK-OFF","06/12":"EARLY RISK-OFF","06/15":"NEUTRAL","06/16":"RISK-ON","06/17":"RISK-ON","06/18":"EARLY RISK-OFF","06/22":"NEUTRAL","06/23":"EARLY RISK-OFF","06/24":"EARLY RISK-OFF","06/25":"EARLY RISK-OFF","06/26":"EARLY RISK-OFF","06/29":"EARLY RISK-OFF","06/30":"RISK-ON","07/01":"RISK-ON","07/02":"RISK-ON","07/06":"RISK-ON","07/07":"RISK-ON","07/08":"RISK-ON","07/09":"RISK-ON","07/10":"RISK-ON","07/13":"RISK-ON","07/14":"RISK-ON","07/15":"RISK-ON","07/16":"RISK-ON","07/17":"RISK-ON","07/20":"NEUTRAL","07/21":"NEUTRAL","07/22":"RISK-ON","07/23":"RISK-ON","07/24":"RISK-ON","07/27":"RECOVERY","07/28":"NEUTRAL","07/29":"RECOVERY","07/30":"NEUTRAL","07/31":"RECOVERY","08/03":"RECOVERY","08/04":"RECOVERY","08/05":"RISK-ON","08/06":"RISK-ON","08/07":"RISK-ON","08/10":"RISK-ON","08/11":"RISK-ON","08/12":"RISK-ON","08/13":"RISK-ON","08/14":"RISK-ON","08/17":"RISK-ON","08/20":"RISK-ON","08/21":"RISK-ON","08/24":"RISK-ON","08/25":"RISK-ON","08/27":"RISK-ON","08/28":"RISK-ON","08/31":"RISK-ON","09/01":"RISK-ON","09/08":"RISK-ON","09/14":"RECOVERY"};
   var _spyData={"03/12":100,"03/13":99.43,"03/16":100.45,"03/17":100.71,"03/18":99.3,"03/19":99.06,"03/20":97.37,"03/23":98.4,"03/24":98.07,"03/25":98.61,"03/26":96.85,"03/27":95.2,"03/30":94.88,"03/31":97.64,"04/01":98.38,"04/02":98.46,"04/06":98.93,"04/07":98.97,"04/08":101.49,"04/09":102.08,"04/10":102.01,"04/13":103.01,"04/14":104.26,"04/15":105.09,"04/16":105.34,"04/17":106.62,"04/20":106.4,"04/21":105.71,"04/22":106.78,"04/23":106.36,"04/24":107.19,"04/27":107.37,"04/28":106.85,"04/29":106.83,"04/30":107.9,"05/01":108.2,"05/04":107.8,"05/05":108.66,"05/06":110.17,"05/07":109.84,"05/08":110.74,"05/11":111,"05/12":110.83,"05/13":111.45,"05/14":112.33,"05/15":110.98,"05/18":110.9,"05/19":110.16,"05/20":111.29,"05/21":111.51,"05/22":111.95,"05/26":112.69,"05/27":112.67,"05/28":113.29,"05/29":113.58,"06/01":113.88,"06/02":114.04,"06/03":113.24,"06/04":113.67,"06/05":110.73,"06/08":110.98,"06/09":110.66,"06/10":108.91,"06/11":110.76,"06/12":111.36,"06/15":113.33,"06/16":112.65,"06/17":111.25,"06/18":112.11,"06/22":111.76,"06/23":110.14,"06/24":110.09,"06/25":110.25,"06/26":109.45,"06/29":111.25,"06/30":112.12,"07/01":111.97,"07/02":111.82,"07/06":112.79,"07/07":112.26,"07/08":111.91,"07/09":112.86,"07/10":113.35,"07/13":112.48,"07/14":112.88,"07/15":113.32,"07/16":112.71,"07/17":111.6,"07/20":111.41,"07/21":112.34,"07/22":112.21,"07/23":110.83,"07/24":110.94,"07/27":110.96,"07/28":111.23,"07/29":109.52,"07/30":111.35,"07/31":112.16,"08/03":113.75,"08/04":115.8,"08/05":115.57,"08/06":115.39,"08/07":116.09,"08/10":116.06,"08/11":115.69,"08/12":115.98,"08/13":116.79,"08/14":116.56,"08/17":116.01,"08/18":115.22,"08/19":115.46,"08/20":114.49,"08/21":114.96,"08/24":114.62,"08/25":114.99,"08/26":115.02,"08/27":115.77,"08/28":115.51,"08/31":115.16,"09/01":114.37,"09/02":114.88,"09/03":116.08,"09/04":115.63,"09/08":115,"09/09":114.46,"09/10":113.78,"09/11":114.75};
   var _RCOL={'RISK-ON':'rgba(16,185,129,.07)','RECOVERY':'rgba(59,130,246,.07)','NEUTRAL':'rgba(148,163,184,.04)','EARLY RISK-OFF':'rgba(245,158,11,.07)','RISK-OFF':'rgba(239,68,68,.07)'};
@@ -5573,7 +5696,7 @@ document.addEventListener('DOMContentLoaded',function(){
         var eq=modeCharts[modeId];
         var lastEq=eq.v[eq.v.length-1]||100;
         // Simple: adjust last equity point by avg position MtM delta
-        var _pSizeMap={"turbo":1,"dynamic":1,"balanced":3,"fortress":10};
+        var _pSizeMap={"best":15,"turbo":1,"dynamic":1,"balanced":3,"fortress":10};
         var weight=1/(_pSizeMap[modeId]||1);
         var liveEq=lastEq+(totalMtm*weight);
         // Update or append today's point

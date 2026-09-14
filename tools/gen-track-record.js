@@ -295,7 +295,7 @@ function buildHTML(modes, snap) {
         })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
     <!-- End Google Tag Manager -->
     <link rel="icon" href="/favicon.ico">
-    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="/assets/report.css?v=20260831-2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
@@ -600,7 +600,7 @@ ${fabItems}
         <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
     </footer>
 
-    <script src="/assets/core.js"></script>
+    <script src="/assets/core.js?v=20260831-2"></script>
     <script src="/assets/tag-renderer.js"></script>
 
     <script>

@@ -1,0 +1,30 @@
+name: Tests
+
+# Les 42 suites de tools/test-*.js n'étaient branchées sur rien : ni hook, ni CI, ni script npm.
+# Constaté le 2026-09-14 en les lançant pour la première fois — deux échouaient sur un binaire
+# supprimé en juillet, une sur une régression réelle du générateur de la page track-record, sans
+# que personne le sache. Un test qu'aucune machine ne lance ne protège rien.
+#
+# Mode rapide : les suites navigateur (puppeteer) sont ignorées ici et restent couvertes par le hook
+# local via test:content-ux. Mieux vaut une CI qui tourne vite et toujours qu'une CI qu'on désactive.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  suites:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Dépendances
+        run: npm ci --ignore-scripts || npm install --no-audit --no-fund --ignore-scripts
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: '1'
+      - name: Suites de tests
+        run: npm run test:quick
