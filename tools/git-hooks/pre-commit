@@ -1,4 +1,17 @@
 #!/bin/bash
+
+# ─── Garde-fou anti-dérive du hook lui-même ───
+# `.git/hooks/` n'est pas versionné : rien ne copiait ce fichier dedans, et aucun installeur
+# n'existait. Constaté le 2026-09-14 : la copie active datait du 3 juillet et avait deux mois de
+# retard — `test-series-ux`, `gen-tech-catalog` et le gate des chiffres n'avaient donc JAMAIS tourné
+# localement, alors que le fichier versionné les contenait. Un garde-fou qu'on croit actif est pire
+# qu'un garde-fou absent. Ce bloc compare la copie active à la source et le dit.
+HOOK_SRC="tools/git-hooks/pre-commit"
+HOOK_ACTIVE="$(git rev-parse --git-path hooks/pre-commit 2>/dev/null)"
+if [ -f "$HOOK_SRC" ] && [ -f "$HOOK_ACTIVE" ] && ! cmp -s "$HOOK_SRC" "$HOOK_ACTIVE"; then
+  echo "⚠️  [Pre-commit] le hook actif a dérivé de sa source versionnée."
+  echo "   → bash tools/install-hooks.sh   (sinon les gates ajoutés depuis ne tournent pas)"
+fi
 # Pre-commit hook: secret guard + generate search index and sitemap
 #
 # Version-controlled reference copy. Install with:
@@ -34,6 +47,31 @@ if [ -n "$STAGED_ARTICLES" ]; then
   if ! echo "$STAGED_ARTICLES" | xargs node tools/qa-content.js --strict > /tmp/qa-content-precommit.log 2>&1; then
     grep -E "❌" /tmp/qa-content-precommit.log | head -20
     echo "⛔ [Pre-commit] qa-content --strict a échoué — commit bloqué. Détails: /tmp/qa-content-precommit.log"
+    echo "   (bypass exceptionnel: git commit --no-verify, à justifier)"
+    exit 1
+  fi
+fi
+
+# ─── Preuve des chiffres : tout article qui porte un manifeste de claims le fait vérifier ───
+# Ce gate existe depuis longtemps mais n'était invoqué QUE par les contrats de commande, donc
+# seulement si l'auteur y pensait. Le 2026-09-13 un hebdo est parti avec un titre bâti sur une
+# lecture fausse et 42 « claims vérifiées » pendant que tous ses horaires de calendrier, écrits en
+# toutes lettres, n'étaient reliés à rien. Un gate qui dépend de la mémoire de l'auteur n'est pas
+# un gate. Il ne tourne que pour les articles qui ont un socle : les pages sans `_data/claims.json`
+# ne sont pas concernées.
+if [ -n "$STAGED_ARTICLES" ]; then
+  CLAIMS_FAIL=0
+  for ART in $STAGED_ARTICLES; do
+    MANIFEST="$(dirname "$ART")/_data/claims.json"
+    [ -f "$MANIFEST" ] || continue
+    if ! node tools/validate-content-claims.js "$MANIFEST" > /tmp/claims-precommit.log 2>&1; then
+      echo "⛔ [Pre-commit] chiffres non prouvés dans $ART :"
+      tail -n +2 /tmp/claims-precommit.log | head -8
+      CLAIMS_FAIL=1
+    fi
+  done
+  if [ "$CLAIMS_FAIL" = "1" ]; then
+    echo "   Chaque nombre publié doit être lié à sa source (data-claim) ou déclaré (data-literal)."
     echo "   (bypass exceptionnel: git commit --no-verify, à justifier)"
     exit 1
   fi
