@@ -181,3 +181,4 @@
 - [Scanner : exécution non certifiée](project_scanner_execution_not_certified.md) — performances publiées hypothétiques (0 fill attesté) ET brutes (zéro coût dans sweep.js) ; P0 = coûts + champs TCA avant tout réglage de stratégie.
 - [Stack de données à 0 € / forensic BH](reference_zero_euro_data_stack_bh.md) — règle de décision §20 pour tout dataset/signal + recette TCA gratuite complète ; aucun alpha dedans, c'est un plan d'ingénierie.
 - [Un job DTX bloque le moteur entier](feedback_dtx_job_blocks_single_slot.md) — un DtxReplay resté RUNNING > 1 h malgré job_timeout_seconds=1800 ; max_concurrent=1 donc il gèle tout le moteur pour tous les clients. DtxCancel libère le créneau.
+- [Label change without routing](feedback_label_change_without_routing.md) — changer la stratégie affichée d'un mode ne change pas ce qu'il trade : router le staging par `enginePortfolio` déclaré, jamais par l'id du mode en dur ; et vérifier CONTRE QUOI un gate de parité rend son vert.
