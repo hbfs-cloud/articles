@@ -91,9 +91,9 @@ et la variante anglaise avec `--out weekly/20260914/_img/en --labels weekly/2026
 
 Brouillon créé, **non publié** : `draft_id` 215564667, « Wednesday's rate rise is priced. The sentence
 after it isn't. » `validate_draft` renvoie zéro erreur. Quatre graphiques anglais et quatre tableaux
-rendus en images sur le CDN Substack ; les images sont servies depuis
-`raw.githubusercontent.com/…/fix/weekly-20260914-corrections/weekly/20260914/_img/en/`, donc la branche
-doit rester en place tant que le brouillon n'est pas publié.
+rendus en images. `upload_image` les a ré-hébergées sur le CDN Substack : le corps du brouillon ne
+contient que des URL `substack-post-media…`, aucune vers `raw.githubusercontent`. La branche n'est donc
+PAS une dépendance du brouillon — elle ne servirait qu'à un ré-upload.
 
 Verdict du panel sur ce livrable : **FIXED, composite 78, aucun bloquant**. Le reviewer quantitatif y a
 corrigé deux points, tous deux vérifiés et retenus : la semaine compte quatre séances et non cinq
