@@ -1239,7 +1239,7 @@ async function main() {
     // own source tag ('<class>_pool') so each renders ONLY its scanner's pool, never equity signals.
     const POOL_ASSET_CLASSES = new Set(['forex', 'crypto', 'metals', 'pead', 'filings', 'gap']);
     const isAssetMode = POOL_ASSET_CLASSES.has(ac);
-    return signals.filter(s => f(s.strategy || '')).filter(s => !isAssetMode || (s.source || '') === ac + '_pool').filter(s => !uf || (s.universe || '') === uf).filter(s => options.pending || cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || (s.sharia === true && !isHaramForHalalMode(s))).slice(0, cfg.topN).map(s => {
+    return signals.filter(s => f(s.strategy || '')).filter(s => !isAssetMode || (s.source || '') === ac + '_pool').filter(s => !uf || (s.universe || '') === uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || (s.sharia === true && !isHaramForHalalMode(s))).slice(0, cfg.topN).map(s => {
       const stop = clampStop(s.entry, s.stop, cfg.maxStopPct);
       // Return display-ready strings for HTML rendering, keep numeric _raw for computations
       const vwapRef = signalVwap[s.ticker] || null;
@@ -1257,6 +1257,34 @@ async function main() {
       };
     });
   }
+  /**
+   * Candidats écartés PAR LE SEUL SEUIL DE SCORE — c'est-à-dire ceux qui passent la stratégie,
+   * la classe d'actif, l'univers et le filtre Sharia, et que seul minScore rejette.
+   *
+   * Sans ça, un mode affamé affiche « No new orders », mot pour mot la même chose qu'un jour
+   * sans aucun candidat. Les deux situations sont pourtant opposées : l'une est un marché calme,
+   * l'autre un seuil que plus aucun signal n'atteint. Le scanner sort des scores plats à 80
+   * (scoreSource 'flat_no_ranking_asserted' : le producteur déclare n'affirmer AUCUN classement)
+   * depuis le 2026-09-08, face à des seuils de 85 à 90 — donc zéro entrée éligible, pour tous les
+   * modes, pendant une semaine, sans que rien ne le dise. La dernière entrée scellée remonte au
+   * 1er septembre. Un silence qui ressemble à du calme est le pire des affichages.
+   */
+  function belowScoreGate(cfg) {
+    if (!(cfg.minScore > 0)) return { n: 0, best: null };
+    const f = SF[cfg.filterName] || (() => true);
+    const uf = cfg.universeFilter || null;
+    const ac = cfg.assetClass;
+    const isAssetMode = new Set(['forex', 'crypto', 'metals', 'pead', 'filings', 'gap']).has(ac);
+    const eligible = signals
+      .filter(s => f(s.strategy || ''))
+      .filter(s => !isAssetMode || (s.source || '') === ac + '_pool')
+      .filter(s => !uf || (s.universe || '') === uf)
+      .filter(s => !cfg.shariaOnly || (s.sharia === true && !isHaramForHalalMode(s)));
+    const rejected = eligible.filter(s => !(s.score >= cfg.minScore));
+    if (!rejected.length) return { n: 0, best: null };
+    return { n: rejected.length, best: Math.max(...rejected.map(s => Number(s.score) || 0)) };
+  }
+
   // dtx (systematic-tss) Orders to Place — SCRIPTED modes. Builds display-ready "signals" (the
   // dashboard's signals ARE the orders) from the dtx `decide` CREATE set (data/dtx/<mode>.json).
   // Same display shape as signalsFor() so the Orders table / signal cards render unchanged.
@@ -1382,9 +1410,14 @@ async function main() {
     const pendingNextSession = MARKET_CLOSED_DAY && scanDir && scanDir !== TODAY_KEY;
     // SCRIPTED modes: Orders to Place come from the dtx engine (decide CREATE); fall back to the
     // JS-scanner signal pool when no dtx staging exists (e.g. hybrid, or dtx not yet run).
-    const sig = pendingNextSession && cfg.assetClass !== 'dtx'
-      ? signalsFor(cfg, { pending: true })
-      : (dtxSignalsFor(id, cfg) || signalsFor(cfg));
+    // L'aperçu de week-end (pendingNextSession) change l'ÉTIQUETTE des ordres, jamais leur
+    // ÉLIGIBILITÉ. Le 2026-09-13 il portait `signalsFor(cfg, {pending:true})`, dont le court-circuit
+    // `options.pending ||` sautait le seuil minScore du mode : la page publiait « 1 Order to Place :
+    // META » pour un signal à 80 face à un seuil de 90, pendant que l'instantané JSON du même scan
+    // (ligne ~4214, qui appelle signalsFor sans pending) portait 0 ordre. Deux surfaces du même
+    // produit se contredisaient, et le zéro réel — aucun signal classé depuis le 08/09 — restait
+    // invisible. Un aperçu montre en avance ce qui VA se passer ; il n'invente pas une éligibilité.
+    const sig = dtxSignalsFor(id, cfg) || signalsFor(cfg);
     const signalsHeading = MARKET_CLOSED_DAY || (scanDir && scanDir !== TODAY_KEY)
       ? 'Last Session Signals'
       : "Today's Signals";
@@ -1877,7 +1910,15 @@ ${(() => {
         // (each order can push 1-3 <tr> for main+comparison+thesis).
         const totalActions = buyOrders.length + rotationCandidates.length;
         const occupied = liveCount;
-        const statusLine = !executionWindowOpen && pendingNextSession
+        // Un « No new orders » dû à un seuil que PLUS AUCUN signal n'atteint doit se lire comme tel,
+        // et jamais comme une séance calme. Voir belowScoreGate().
+        const under = totalActions === 0 ? belowScoreGate(cfg) : { n: 0, best: null };
+        const underLine = under.n
+          ? `${under.n} ${under.n > 1 ? 'signaux écartés' : 'signal écarté'} par le seuil de score — meilleur ${under.best} pour un minimum de ${cfg.minScore}`
+          : null;
+        const statusLine = underLine
+          ? underLine
+          : !executionWindowOpen && pendingNextSession
           ? 'Marché fermé — pending orders préparés pour la prochaine séance'
           : !executionWindowOpen
           ? 'Marché fermé — les signaux restent informatifs jusqu’à leur fenêtre d’exécution'

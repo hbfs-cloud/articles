@@ -443,9 +443,27 @@ dtxCheck('dtx: staging scriptés complets (portefeuilles MCP frais — pas de sk
   const latest = scanDirs[scanDirs.length - 1];
   const latestISO = `${latest.slice(0, 4)}-${latest.slice(4, 6)}-${latest.slice(6, 8)}`;
   const stale = [];
+  // Ne contrôler QUE les stagings réellement consommés par un mode vivant. La liaison
+  // mode → portefeuille du moteur se déclare dans modes-config (`enginePortfolio`) et n'est plus
+  // l'identité : depuis le 2026-09-14 le mode `best` lit data/dtx/etf_us.json. data/dtx/best.json
+  // subsiste en orphelin, figé au 08/09 — et faisait échouer ce gate alors que PLUS AUCUN mode ne
+  // le lit. Un fichier que personne ne consomme ne peut pas faire tourner un mode sur des ordres
+  // périmés, or c'est exactement ce que cette check est censée attraper. Les orphelins sont donc
+  // signalés à part, sans bloquer.
+  const consumed = (() => {
+    try {
+      const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8')).modes || {};
+      return new Set(Object.keys(cfg)
+        .filter(id => cfg[id].assetClass === 'dtx' && cfg[id].status !== 'stopped')
+        .map(id => cfg[id].enginePortfolio || id));
+    } catch { return null; }
+  })();
+  const orphans = [];
   try {
     const dir = path.join(ROOT, 'data', 'dtx');
     for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_') && !f.includes('@'))) {
+      const id = f.replace(/\.json$/, '');
+      if (consumed && !consumed.has(id)) { orphans.push(id); continue; }
       try {
         const j = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
         const asof = String(j.asof || '').slice(0, 10);
@@ -453,7 +471,10 @@ dtxCheck('dtx: staging scriptés complets (portefeuilles MCP frais — pas de sk
       } catch { /* staging illisible → couvert par 4e */ }
     }
   } catch { return; }
-  if (!stale.length) return;
+  if (!stale.length) {
+    if (orphans.length) console.log(`    ℹ️  staging dtx non consommé (aucun mode ne le lit) : ${orphans.join(', ')}`);
+    return;
+  }
   return `staging dtx STALE vs scan ${latestISO} (marqueur Step 4d ${marker ? 'ancien' : 'ABSENT — le filet primaire n\'a pas tourné'}): `
     + `${stale.join(', ')}. Les modes scriptés tournent sur des ordres/métriques d'une séance passée. `
     + `Régénérer via DtxReplay+DtxDecide → dtx-mcp-ingest → dtx-pool-bridge, PUIS relancer gen-status-page.`;
