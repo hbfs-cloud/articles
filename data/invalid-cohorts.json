@@ -29,6 +29,23 @@
       "declaredBy": "assainissement-modes",
       "declaredAt": "2026-08-07",
       "reviewNote": "Fenêtre fermée le 2026-07-13 : c'est la date du cut-over dtx v15 (cost-honest) qui a re-statué l'ensemble des modes scriptés. Ne pas étendre la borne haute sans preuve que le filtre est resté inopérant après cette date."
+    },
+    {
+      "id": "best-strategie-changee-20260914",
+      "field": "scanDate",
+      "from": "2020-01-01",
+      "to": "2026-09-13",
+      "inclusive": true,
+      "modes": ["best"],
+      "action": "exclude-from-stats",
+      "severity": "invalid",
+      "label": "Bascule du mode best vers la seule stratégie etf_us",
+      "reason": "Le 2026-09-14, sur décision du propriétaire, le mode best a cessé de suivre le panier multi-poches du moteur (porteur haute volatilité sans TP, episodic-pivot, ETF momentum, explosion de momentum) pour ne suivre que la stratégie etf_us. Les trades scellés antérieurs mesurent donc une AUTRE stratégie sous le même identifiant de mode. Les agréger avec les suivants produirait un taux de gain, une espérance et un profit factor qui ne décrivent aucune stratégie réellement suivie. Ils ne sont ni supprimés ni corrigés — règle d'immutabilité et chaîne SHA-256 de data/trade-chain.json — mais déclarés non exploitables statistiquement.",
+      "evidence": "6 trades scellés sous best, scanDate du 2026-08-12 au 2026-08-28, filterName dtx_engine et dtx_rotation : DV, STGW, OWL, SKYY, GDX, SBET. Le staging d'alors (data/dtx/best.json, asof 2026-09-08) portait quatre poches — uhv_tp999, ep, etf_us, mx — contre une seule désormais (data/dtx/etf_us.json).",
+      "impact": "Deux de ces six trades étaient encore pending au moment de la bascule (GDX du 2026-08-27, SBET du 2026-08-28). Ils suivent leur sortie naturelle et ne sont pas liquidés : la bascule change la stratégie des entrées FUTURES, elle ne ferme pas les positions existantes.",
+      "declaredBy": "bascule-etf_us",
+      "declaredAt": "2026-09-14",
+      "reviewNote": "Borne haute au 2026-09-13 : le premier plan etf_us porte la séance du 2026-09-14 (plan-etf_us-f4909a7e3dd125862009a8fe). Ne pas étendre cette borne — les trades postérieurs mesurent bien la stratégie annoncée."
     }
   ]
 }

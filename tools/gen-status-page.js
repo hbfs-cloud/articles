@@ -153,7 +153,14 @@ const OUT = path.join(ROOT, 'scanner/status/index.html');
 // s'affichait VIDE sur la page publiée, alors que le staging portait 4 577
 // trades et sa courbe d'equity. Une table figée qui survit à son référentiel
 // ne lève aucune erreur : elle rend juste du néant.
-const DTX_STAGING_MAP = { best: 'best' };
+// 2026-09-14, décision du propriétaire : « je veux etf_us, mon choix est clair ». Le mode ne
+// consomme plus le panier de quatre poches mais la seule stratégie ETF momentum. À fenêtre
+// identique (2024-2026), etf_us seul bat le panier sur toutes les mesures de risque ajusté :
+// Sharpe 1,80 contre 1,10, repli maximal 15,90 % contre 23,82 %, Calmar 3,50 contre 0,92.
+// Instruction complète dans scanner/_probes/. Les trades scellés d'avant la bascule mesurent une
+// AUTRE stratégie sous le même identifiant : ils sont déclarés non poolables dans
+// data/invalid-cohorts.json, jamais supprimés.
+const DTX_STAGING_MAP = { best: 'etf_us' };
 const _dtxStagingCache = {};
 function loadDtxStaging(id) {
   if (SCOPE.active) return null;
@@ -1542,6 +1549,7 @@ ${renderStatusBanner(cfg)}
     <summary class="sc-summary">
       <span class="sc-sum-title"><i class="fas fa-book-open" style="color:${cfg.color};font-size:.78rem"></i> How to trade this mode</span>
       <span style="font-size:.72rem;color:var(--muted);margin-left:.5rem">${cfg.goal}${cfg.riskProfile ? ' · ' + cfg.riskProfile + ' risk' : ''}</span>
+      ${cfg.strategyNote ? `<p style="font-size:.72rem;color:var(--muted);margin:.4rem 0 0;line-height:1.5">${cfg.strategyNote}</p>` : ''}
     </summary>
     <div style="margin-top:.75rem;padding:.7rem .85rem;background:${cfg.color}0a;border:1px solid ${cfg.color}33;border-radius:var(--r-s);font-size:.82rem;color:var(--ink-2)">
       ${buildTagline(id, cfg)}
