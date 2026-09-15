@@ -78,7 +78,15 @@ fallback or synthetic bar is permitted. Chain C stops at its first failed stage.
 
 ### Authentication
 
-- Marketdata token: mint with `GetReadOnlyToken` from the authenticated MCP session.
+Full standing procedure: `.claude/skills/mcp-token-procedure.md`. Execute it; never ask the user how
+to supply a token.
+
+- Marketdata token: mint with `GetReadOnlyToken(minutes=60)` from the authenticated MCP session.
+- Inject it by path only: write the value to a session-scratchpad file outside the repository,
+  `chmod 600`, and pass `MCP_TOKEN_FILE_MARKETDATA=<path>`. `tools/lib/mcp-auth.sh` reads the file and
+  exports the per-server variable for child processes. Delete the file when the run ends.
+- A token literal inside the command is forbidden: the harness persists approved commands into
+  `permissions.allow`, and `VAR="$(cat file)"` is refused outright by the credential classifier.
 - No systematic token is required by the scanner. DTX standalone workflows retain their own authentication.
 - Never echo, print, paste into argv, persist or commit token values.
 - Propagate `--scope=scanner/<date>/_scope.json` to scope-aware downstream and QA tools.
