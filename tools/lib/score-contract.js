@@ -178,6 +178,21 @@ const FAMILY_LIST = [
     observed: { min: 85, max: 92, n: 26 },
   },
   {
+    // Le contrat /scanner impose un `fortress_watch_pool` : des dossiers que le gérant a examinés
+    // mais qu'il ne peut pas promouvoir faute de preuve (guidance, série de dépassements, PE à
+    // terme). Ces entrées ne portent PAS de note — leur donner un score reviendrait à fabriquer la
+    // conviction que l'absence de preuve interdit précisément d'avoir. La famille est donc déclarée
+    // non notable, ce que `checkSignal` sait déjà traiter (score null + scoreSource 'none'), et le
+    // pool ne produit jamais d'ordre.
+    id: 'fortress_watchlist',
+    producer: 'skill fortress-pm → fortress_watch_pool (dossiers incomplets)',
+    unit: 'aucune note : un dossier en attente de preuve ne se classe pas',
+    min: 0, max: 0, bounded: true, unscorable: true,
+    pools: ['fortress_watch_pool'],
+    strategies: [],
+    observed: { min: null, max: null, n: 0 },
+  },
+  {
     id: 'eu_smallcap',
     producer: 'agent MCP → eu_smallcap_pool',
     unit: 'conviction 0-100',

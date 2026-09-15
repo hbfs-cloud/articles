@@ -1,0 +1,479 @@
+{
+  "contract_version": "1.0",
+  "workflow": "scanner",
+  "plan": "plans/scanner-wave2.json",
+  "plan_sha256": "f4fe8726dfdcf61ff0c3d89f3f7a1badbd46d9ec88fe6a062839ee9640592136",
+  "input_sha256": "4d4b25a24ba1c06d9f2b66da4e30d5c5b4f7cc50c93013b3f3aaf7b8031cecb0",
+  "resolved_input": {
+    "artifact": "scanner/20260915/signals.json",
+    "equity_reference_close": "2026-09-14",
+    "crypto_completed_refdate": null,
+    "as_of_timestamp": "2026-09-15T05:15:50.226Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "covers_close": "2026-09-14",
+              "expected_intraday_close": "2026-09-14"
+            }
+          }
+        ]
+      },
+      {
+        "name": "enrichissement-technique-b1",
+        "calls": [
+          {
+            "as": "tech_b1",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "technicals,support_resistance,trading_signals",
+              "symbols": "NTSK,CRGY,CRWD,VLO,PEGA,ASO,ZS,DINO,PSX,ROIV,DOCU,BBY,T,BWIN,SM,MTDR,HTFL,VRNS,GTLB,KR,CNH,AVTR",
+              "end_date": "2026-09-14",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "job_max_ms": 900000
+          }
+        ]
+      },
+      {
+        "name": "enrichissement-technique-b2",
+        "calls": [
+          {
+            "as": "tech_b2",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "technicals,support_resistance,trading_signals",
+              "symbols": "GEN,CAI,ACN,REXR,AI,TALO,COP,FUBO,UNM,HELP,AAPL,CRBG,OXY,CHKP,AMPL,CVX,CNC,TTEK,NET,BP,QCOM,XP",
+              "end_date": "2026-09-14",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "job_max_ms": 900000
+          }
+        ]
+      },
+      {
+        "name": "enrichissement-technique-b3",
+        "calls": [
+          {
+            "as": "tech_b3",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "technicals,support_resistance,trading_signals",
+              "symbols": "BTI,META,SMMT,TXG,LFST,ETHT,BCI,HGER,BKLN,KMLM,TWM,BSOL,SOLZ,DBMF,SRTY,FTGC,TZA,CTA,AAPU,XRPZ,XRP,BTC",
+              "end_date": "2026-09-14",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "job_max_ms": 900000
+          }
+        ]
+      },
+      {
+        "name": "enrichissement-technique-b4",
+        "calls": [
+          {
+            "as": "tech_b4",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "technicals,support_resistance,trading_signals",
+              "symbols": "IBIT,GBTC,FBTC,XOP,BITO,BUG,XLC,MFG,BTAL,ADM,PAGP,MUFG,CRWL,GUSH,MSFT,HACK,BTCI,SAP,CIBR,PBA,UBS,SYF",
+              "end_date": "2026-09-14",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "job_max_ms": 900000
+          }
+        ]
+      },
+      {
+        "name": "enrichissement-technique-b5",
+        "calls": [
+          {
+            "as": "tech_b5",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "technicals,support_resistance,trading_signals",
+              "symbols": "JPM,ACAD,QGEN,OBDC,BEN,IBN,SBRA,BMY,AMZN,TSM,STT,NWG,EPD,CZR,DB,KDP,JNJ,CLBK,FAST,CFG,CTAS,DRH",
+              "end_date": "2026-09-14",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "job_max_ms": 900000
+          }
+        ]
+      },
+      {
+        "name": "enrichissement-barres-b1",
+        "calls": [
+          {
+            "as": "bars_b1",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "NTSK,CRGY,CRWD,VLO,PEGA,ASO,ZS,DINO,PSX,ROIV,DOCU,BBY,T,BWIN,SM,MTDR,HTFL,VRNS,GTLB,KR,CNH,AVTR",
+              "limit": 300,
+              "force_async": true,
+              "as_of_timestamp": "2026-09-15T05:15:50.226Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-14"
+            },
+            "job_max_ms": 900000
+          }
+        ]
+      },
+      {
+        "name": "enrichissement-barres-b2",
+        "calls": [
+          {
+            "as": "bars_b2",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "GEN,CAI,ACN,REXR,AI,TALO,COP,FUBO,UNM,HELP,AAPL,CRBG,OXY,CHKP,AMPL,CVX,CNC,TTEK,NET,BP,QCOM,XP",
+              "limit": 300,
+              "force_async": true,
+              "as_of_timestamp": "2026-09-15T05:15:50.226Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-14"
+            },
+            "job_max_ms": 900000
+          }
+        ]
+      },
+      {
+        "name": "enrichissement-barres-b3",
+        "calls": [
+          {
+            "as": "bars_b3",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "BTI,META,SMMT,TXG,LFST,ETHT,BCI,HGER,BKLN,KMLM,TWM,BSOL,SOLZ,DBMF,SRTY,FTGC,TZA,CTA,AAPU,XRPZ,XRP,BTC",
+              "limit": 300,
+              "force_async": true,
+              "as_of_timestamp": "2026-09-15T05:15:50.226Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-14"
+            },
+            "job_max_ms": 900000
+          }
+        ]
+      },
+      {
+        "name": "enrichissement-barres-b4",
+        "calls": [
+          {
+            "as": "bars_b4",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "IBIT,GBTC,FBTC,XOP,BITO,BUG,XLC,MFG,BTAL,ADM,PAGP,MUFG,CRWL,GUSH,MSFT,HACK,BTCI,SAP,CIBR,PBA,UBS,SYF",
+              "limit": 300,
+              "force_async": true,
+              "as_of_timestamp": "2026-09-15T05:15:50.226Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-14"
+            },
+            "job_max_ms": 900000
+          }
+        ]
+      },
+      {
+        "name": "enrichissement-barres-b5",
+        "calls": [
+          {
+            "as": "bars_b5",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "JPM,ACAD,QGEN,OBDC,BEN,IBN,SBRA,BMY,AMZN,TSM,STT,NWG,EPD,CZR,DB,KDP,JNJ,CLBK,FAST,CFG,CTAS,DRH",
+              "limit": 300,
+              "force_async": true,
+              "as_of_timestamp": "2026-09-15T05:15:50.226Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-14"
+            },
+            "job_max_ms": 900000
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "scanner/20260915/signals.json",
+  "reference_date": "2026-09-14",
+  "equity_reference_close": "2026-09-14",
+  "crypto_completed_refdate": null,
+  "started_at": "2026-09-15T05:15:50.226Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 256,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 254,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "6c551cc6acc2fe272f6b6f7e74ae00f942f7867ae36c71cc501fb41c713c715b"
+        }
+      ]
+    },
+    {
+      "name": "enrichissement-technique-b1",
+      "ms": 26245,
+      "calls": [
+        {
+          "as": "tech_b1",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 26245,
+          "wait_ms": 25450,
+          "error": null,
+          "output_sha256": "bd23735ed12775f9aef939c2c7a2958bbfc57ccfbb5bd88717d5d4cdfebf1e8f"
+        }
+      ]
+    },
+    {
+      "name": "enrichissement-technique-b2",
+      "ms": 26396,
+      "calls": [
+        {
+          "as": "tech_b2",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 26396,
+          "wait_ms": 25484,
+          "error": null,
+          "output_sha256": "6e930270689635354455b36b238e1de39d6c8cfe58731c893578aab682a3bbe7"
+        }
+      ]
+    },
+    {
+      "name": "enrichissement-technique-b3",
+      "ms": 26336,
+      "calls": [
+        {
+          "as": "tech_b3",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 26336,
+          "wait_ms": 25390,
+          "error": null,
+          "output_sha256": "e5335de6eb57d6c091e25ec609dbdc604da663d0ce9c59b7f819a499c07172c8"
+        }
+      ]
+    },
+    {
+      "name": "enrichissement-technique-b4",
+      "ms": 26363,
+      "calls": [
+        {
+          "as": "tech_b4",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 26363,
+          "wait_ms": 25405,
+          "error": null,
+          "output_sha256": "18f8a31a9ff5ffe963f6ae3baa16e97e483ae026d50392a8d93918c7e92e9b32"
+        }
+      ]
+    },
+    {
+      "name": "enrichissement-technique-b5",
+      "ms": 26377,
+      "calls": [
+        {
+          "as": "tech_b5",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 26374,
+          "wait_ms": 25427,
+          "error": null,
+          "output_sha256": "ab3900de4fff65525b95e81ce105b4387b0ebd382ea24a9e3537b4f82ac4bd3c"
+        }
+      ]
+    },
+    {
+      "name": "enrichissement-barres-b1",
+      "ms": 9175,
+      "calls": [
+        {
+          "as": "bars_b1",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 9175,
+          "wait_ms": 8225,
+          "error": null,
+          "output_sha256": "557dff73e223c76fdfc94d5e96e41656c8a470e33661aa1d2f8790fd6d2e2fba"
+        }
+      ]
+    },
+    {
+      "name": "enrichissement-barres-b2",
+      "ms": 9059,
+      "calls": [
+        {
+          "as": "bars_b2",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 9058,
+          "wait_ms": 8242,
+          "error": null,
+          "output_sha256": "8c314b703148f9e8f30af3109fb19069965afe45e4782d166de3fb4b99401562"
+        }
+      ]
+    },
+    {
+      "name": "enrichissement-barres-b3",
+      "ms": 9017,
+      "calls": [
+        {
+          "as": "bars_b3",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 9016,
+          "wait_ms": 8215,
+          "error": null,
+          "output_sha256": "d0ac03b123be51743284cb43fe53880cf76374b8f85369611106e3e3781783b2"
+        }
+      ]
+    },
+    {
+      "name": "enrichissement-barres-b4",
+      "ms": 9034,
+      "calls": [
+        {
+          "as": "bars_b4",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 9034,
+          "wait_ms": 8219,
+          "error": null,
+          "output_sha256": "197838b88708cd6b944b12855240bf20c70566585a893468c24022927827940e"
+        }
+      ]
+    },
+    {
+      "name": "enrichissement-barres-b5",
+      "ms": 9044,
+      "calls": [
+        {
+          "as": "bars_b5",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 9044,
+          "wait_ms": 8238,
+          "error": null,
+          "output_sha256": "41fb60bc1aa613cf4d634368ae7009cc6143c3e4b8f5edf364944700300f80e7"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-09-15T05:18:47.657Z",
+  "failures": 0,
+  "executed_calls": 11,
+  "skipped_calls": 0
+}

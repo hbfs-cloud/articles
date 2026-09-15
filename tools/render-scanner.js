@@ -217,7 +217,7 @@ const rrValues = (d.setups || [])
 const maxRR = (rrValues.length ? Math.max(...rrValues).toFixed(2) : '1.50').replace('.', ',');
 const nBelowOne = rrValues.filter(x => x < 1).length;
 const rrBelowOne = nBelowOne
-  ? ` — ${nBelowOne} ligne${nBelowOne > 1 ? 's' : ''} sur ${rrValues.length} vise${nBelowOne > 1 ? 'nt' : ''} moins qu'elle${nBelowOne > 1 ? 's ne risquent' : ' ne risque'}, ce qui est la contrepartie d'une cible placée à une distance réellement parcourue`
+  ? ` — mesuré AVANT l'arrondi d'affichage, ${nBelowOne} ligne${nBelowOne > 1 ? 's' : ''} sur ${rrValues.length} vise${nBelowOne > 1 ? 'nt' : ''} un peu moins qu'elle${nBelowOne > 1 ? 's ne risquent' : ' ne risque'} ; le tableau les affiche arrondies à deux décimales, ce qui en montre moins. C'est la contrepartie d'une cible placée à une distance réellement parcourue`
   : '';
 
 /** Le dimensionnement n'est affirmé que s'il a été calculé. `sizing_status: not_run` signifiait
@@ -886,7 +886,7 @@ function buildPage(d) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${suspensionLabel || `Top ${setups.length} conditionnel ${regime} · ${setups.slice(0,10).map(s=>s.ticker).join(', ')}`} | DailyTickers Scanner</title>
-  <meta name="description" content="Scanner ${d.session_label || d.date} &middot; ${regime} (score ${d.regime_score || 0}). ${suspended.length ? `${suspensionLabel}. Validation du panier bloquée.` : `${setups.length} setups conditionnels, niveaux techniques publiés.`}">
+  <meta name="description" content="Scanner ${d.session_label || d.date} &middot; ${regime} (score ${(Number(d.regime_score || 0) * 100).toFixed(1).replace('.', ',')}/100). ${suspended.length ? `${suspensionLabel}. Validation du panier bloquée.` : `${setups.length} setups conditionnels, niveaux techniques publiés.`}">
   <meta property="og:title" content="Scanner DailyTickers &middot; ${d.session_label || d.date} &middot; ${suspensionLabel || setups.slice(0,10).map(s=>s.ticker).join(', ')}">
   <meta property="og:description" content="Régime ${regime}. ${d.session_label || d.date}. ${suspended.length ? `${suspensionLabel}. Validation du panier bloquée.` : `${setups.length} setups conditionnels.`}">
   <meta property="og:image" content="${ogImage}">

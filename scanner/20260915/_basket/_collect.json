@@ -1,0 +1,127 @@
+{
+  "contract_version": "1.0",
+  "workflow": "scanner",
+  "plan": "plans/scanner-basket-risk.json",
+  "plan_sha256": "573b68c6c73bd31553165750c08dc664e2e8567d13e68ad33213a5eaeb5b0375",
+  "input_sha256": "5311380bbaf7f9b0eacfc7876db10fb4513d5d0c338fa922f30937f6ea25870a",
+  "resolved_input": {
+    "artifact": "scanner/20260915/signals.json",
+    "equity_reference_close": "2026-09-14",
+    "crypto_completed_refdate": null,
+    "as_of_timestamp": "2026-09-15T05:29:11.443Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "covers_close": "2026-09-14",
+              "expected_intraday_close": "2026-09-14"
+            }
+          }
+        ]
+      },
+      {
+        "name": "final-basket-risk",
+        "calls": [
+          {
+            "as": "correlation",
+            "server": "marketdata",
+            "tool": "PortfolioRisk",
+            "args": {
+              "action": "correlation",
+              "symbols": "META,AAPL,QCOM,REXR,VLO,ROIV,STT,FAST,XOP,CTA",
+              "lookback_days": 120,
+              "method": "pearson",
+              "returns_type": "log"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "nwsa_quote",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "quote",
+              "symbols": "NWSA"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "scanner/20260915/signals.json",
+  "reference_date": "2026-09-14",
+  "equity_reference_close": "2026-09-14",
+  "crypto_completed_refdate": null,
+  "started_at": "2026-09-15T05:29:11.443Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 273,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 273,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "96b17880646119f73678116c657757caf361d9022c0b58c48638563c12fb1de5"
+        }
+      ]
+    },
+    {
+      "name": "final-basket-risk",
+      "ms": 2102,
+      "calls": [
+        {
+          "as": "correlation",
+          "server": "marketdata",
+          "tool": "PortfolioRisk",
+          "required": true,
+          "detached": false,
+          "ok": false,
+          "ms": 786,
+          "wait_ms": 0,
+          "error": "Erreur outil MCP : Correlation matrix failed: only 4 common trading days across symbols, need >= 20"
+        },
+        {
+          "as": "nwsa_quote",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2102,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "f263592165ac4bcc43a0bd304666bfd3d56be928d6b15bd61c7a8d3f600df201"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-09-15T05:29:13.837Z",
+  "failures": 1,
+  "executed_calls": 3,
+  "skipped_calls": 0
+}

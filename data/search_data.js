@@ -447,6 +447,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "L’indice n’a pas bougé. Le marché, si.",
+    "desc": "Briefing du 15 septembre 2026 : un indice qui ne bouge pas, des titres qui bougent de treize pour cent dans les deux sens, et une décision de taux le lendemain.",
+    "tags": "macro,technique,us,etf,crypto,energy,formation",
+    "grade": "",
+    "href": "/daily/20260915/",
+    "date": "15 septembre 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Plan de recherche : continuation, repli et risque Fed",
     "desc": "Plan de recherche pour la semaine du 14 au 18 septembre 2026 : niveaux préparés, protocole continuation ou repli, calendrier Fed et gestion du risque.",
     "tags": "macro,earnings,trade-idea,formation,energy",
@@ -5796,6 +5809,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/status/",
     "date": "Updated continuously"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 9 conditionnel RECOVERY · META, AAPL, QCOM, REXR, ROIV, XOP, IBIT, STT, FAST",
+    "desc": "L'indice large a perdu moins d'un demi-point lundi. Ce chiffre ne raconte rien de la séance.",
+    "tags": "scanner,us,etf,energy,tech,crypto,macro,technique",
+    "grade": "",
+    "href": "/scanner/20260915/",
+    "date": "15 septembre 2026"
   },
   {
     "type": "scanner",

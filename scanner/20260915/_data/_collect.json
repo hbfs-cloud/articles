@@ -1,0 +1,424 @@
+{
+  "contract_version": "1.0",
+  "workflow": "scanner",
+  "plan": "plans/scanner-wave1-no-dtx.json",
+  "plan_sha256": "a76f2942ed647d641d450d5b70c4976e2ba618b12480523870a3c553d7d3245a",
+  "input_sha256": "92a9eaf938a2ae1de099434be41886bf225def7e94e817da823871f22980722d",
+  "resolved_input": {
+    "artifact": "scanner/20260915/data.json",
+    "equity_reference_close": "2026-09-14",
+    "crypto_completed_refdate": null,
+    "as_of_timestamp": "2026-09-15T05:02:15.568Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "covers_close": "2026-09-14",
+              "expected_intraday_close": "2026-09-14"
+            }
+          }
+        ]
+      },
+      {
+        "name": "vivier-context",
+        "calls": [
+          {
+            "as": "regime_authority",
+            "server": "marketdata",
+            "tool": "GetMarketContext",
+            "args": {
+              "facets": "regime",
+              "as_of": "2026-09-14",
+              "horizon_days": 5
+            },
+            "freshness": {
+              "max_age_h": 6,
+              "required": true
+            },
+            "_reason": "Autorité MARKETDATA switcher_analyzer : lire exclusivement facets.regime.dtx_regime, moteur et échelle déclarés 0-1_risk_on, couverture vérifiée à refdate. Le parent context_conditional et son score de défensivité ne gouvernent jamais la sélection. Route compacte complète vérifiée le 2026-09-08 ; overview global reste contextuel avec son échec conservé."
+          },
+          {
+            "as": "regime_marketdata",
+            "server": "marketdata",
+            "tool": "GetMarketContext",
+            "args": {
+              "facets": "regime,prediction_markets",
+              "horizon_days": 5
+            },
+            "freshness": {
+              "max_age_h": 6,
+              "required": true
+            },
+            "_reason": "Classifieur probabiliste (0-100 défensivité) + marchés de prédiction. CONSERVÉ pour le contexte et les probabilités de transition, mais son regime_score n'est JAMAIS le score publié : échelle inverse de celle de l'autorité."
+          }
+        ]
+      },
+      {
+        "name": "vivier-autoscreen-etf",
+        "calls": [
+          {
+            "as": "autoscreen_etf",
+            "server": "marketdata",
+            "tool": "RunScreener",
+            "args": {
+              "pass_expr": "rsi14 > 40 && rsi14 < 70 && vol > 500000 && close > 10",
+              "score_expr": "trend_strength(20) * 20 + rsi14",
+              "region": "US",
+              "asset": "etf",
+              "timeframe": "1d",
+              "top_k": 30,
+              "force_async": true
+            },
+            "job_max_ms": 900000,
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "cache_minutes": 180,
+            "_tool_reason": "RunAutoScreener reste cassé côté serveur au 2026-09-05 (build 87424cc4) : timeout systématique `phase=screening limit=5m0s`, y compris seul sur un pool idle. Le correctif du jour n'a couvert que RunScreener. On bascule donc sur la MÊME formulation RunScreener que plans/scanner-etf-fallback.json, déjà sanctionnée et vérifiée en journalier. La clé `as` reste `autoscreen_etf` : extract-universe.js sélectionne par NOM DE FICHIER, et les deux outils rendent la même forme screener_results.candidates. À rebasculer sur RunAutoScreener quand le serveur le corrige — c'est lui qui porte la pondération par régime."
+          }
+        ]
+      },
+      {
+        "name": "vivier-momentum",
+        "calls": [
+          {
+            "as": "screen_momentum_us",
+            "server": "marketdata",
+            "tool": "RunScreener",
+            "args": {
+              "pass_expr": "rsi14 > 53 && rsi14 < 70 && macd > 0 && vol > 1500000 && close > 10",
+              "score_expr": "rsi14 + (macd > 0 ? 15 : 0)",
+              "region": "US",
+              "asset": "stock",
+              "timeframe": "1d",
+              "top_k": 40,
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "job_max_ms": 900000
+          }
+        ]
+      },
+      {
+        "name": "vivier-breakout",
+        "calls": [
+          {
+            "as": "screen_breakout_us",
+            "server": "marketdata",
+            "tool": "RunScreener",
+            "args": {
+              "pass_expr": "near_breakout(0.03) && vol > 1500000 && rsi14 > 52 && rsi14 < 72 && close > 10",
+              "score_expr": "rsi14 + (vol_spike45(1.5) ? 20 : 0)",
+              "region": "US",
+              "asset": "stock",
+              "timeframe": "1d",
+              "top_k": 40,
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "job_max_ms": 900000
+          }
+        ]
+      },
+      {
+        "name": "vivier-pullback",
+        "calls": [
+          {
+            "as": "screen_pullback_us",
+            "server": "marketdata",
+            "tool": "RunScreener",
+            "args": {
+              "pass_expr": "rsi14 > 40 && rsi14 < 65 && ema(close,20) > ema(close,50) && atr() / close < 0.025 && vol > 1500000 && close > 10",
+              "score_expr": "trend_strength(20) * 10 + (65 - rsi14)",
+              "region": "US",
+              "asset": "stock",
+              "timeframe": "1d",
+              "top_k": 25,
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "job_max_ms": 900000
+          }
+        ]
+      },
+      {
+        "name": "vivier-events",
+        "calls": [
+          {
+            "as": "earnings_7d",
+            "server": "marketdata",
+            "tool": "GetEarningsCalendarFiltered",
+            "args": {
+              "days_ahead": 7,
+              "min_expected_move_pct": 4
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "economic_events",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "economic_events",
+              "days": 7
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "contexte-detache",
+        "detached": true,
+        "deadline_ms": 120000,
+        "calls": [
+          {
+            "as": "overview",
+            "server": "marketdata",
+            "tool": "GetMarketContext",
+            "args": {
+              "facets": "overview",
+              "timeout": 90
+            },
+            "freshness": {
+              "max_age_h": 6,
+              "required": false,
+              "note": "CONTEXTE, non requis — appel instable (63s→298s→2 timeouts serveur le 11/08). Son absence ne doit jamais bloquer une publication : il ne sert à aucune sélection."
+            },
+            "_reason": "Contexte non requis. Le bloc regime, lui, est collecte par `regime_authority` qui est REQUIS."
+          },
+          {
+            "as": "insiders_7d",
+            "server": "marketdata",
+            "tool": "GetInsiderActivity",
+            "args": {
+              "days": 7,
+              "limit": 25
+            },
+            "freshness": {
+              "max_age_h": 96,
+              "required": false
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "scanner/20260915/data.json",
+  "reference_date": "2026-09-14",
+  "equity_reference_close": "2026-09-14",
+  "crypto_completed_refdate": null,
+  "started_at": "2026-09-15T05:02:15.568Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 427,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 426,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "782149a4a7b5d4016e25705669557ea1497799f3c3f3cebb6c2c577f22a07115"
+        }
+      ]
+    },
+    {
+      "name": "vivier-context",
+      "ms": 2750,
+      "calls": [
+        {
+          "as": "regime_authority",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1618,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "265ac2e62e562b353ec3ed051bc422ce75c404b861d129b84ccbae9c1f190604"
+        },
+        {
+          "as": "regime_marketdata",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2749,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "5b3ef73c4ebf4312cc72d92efa554e572501c93c33766937adff7e3f6c5e8626"
+        }
+      ]
+    },
+    {
+      "name": "vivier-autoscreen-etf",
+      "ms": 19381,
+      "calls": [
+        {
+          "as": "autoscreen_etf",
+          "server": "marketdata",
+          "tool": "RunScreener",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 19381,
+          "wait_ms": 19330,
+          "error": null,
+          "output_sha256": "6454fbb86be133e09e89af25be3a2d68392a9eb6715b4b2cbeb09196bde9962e"
+        }
+      ]
+    },
+    {
+      "name": "vivier-momentum",
+      "ms": 14171,
+      "calls": [
+        {
+          "as": "screen_momentum_us",
+          "server": "marketdata",
+          "tool": "RunScreener",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 14171,
+          "wait_ms": 13218,
+          "error": null,
+          "output_sha256": "6438ff777b653d053f170e69f659846253ad1021c5fa9e56caf33e9f01566e27"
+        }
+      ]
+    },
+    {
+      "name": "vivier-breakout",
+      "ms": 20196,
+      "calls": [
+        {
+          "as": "screen_breakout_us",
+          "server": "marketdata",
+          "tool": "RunScreener",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 20195,
+          "wait_ms": 19269,
+          "error": null,
+          "output_sha256": "5b10c50cd169157cc9d11fb5d120386538b9c0e543692c9bb7edb70ac173bf2c"
+        }
+      ]
+    },
+    {
+      "name": "vivier-pullback",
+      "ms": 14134,
+      "calls": [
+        {
+          "as": "screen_pullback_us",
+          "server": "marketdata",
+          "tool": "RunScreener",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 14133,
+          "wait_ms": 13182,
+          "error": null,
+          "output_sha256": "6d4ebd92dbd093c1b9b4b34670960e8f9ff640619e71c4cddcec6fdfbe32338e"
+        }
+      ]
+    },
+    {
+      "name": "vivier-events",
+      "ms": 2295,
+      "calls": [
+        {
+          "as": "earnings_7d",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2295,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "5c7d578a70a7820b87e42769152a8ca8ad37f0d756e20f0b56749a4d64cad0e8"
+        },
+        {
+          "as": "economic_events",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2118,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "724a6a8f763e9ae8e1251afb0abd7fbf38d214e9a36f23699de37405b9012d3f"
+        }
+      ]
+    },
+    {
+      "name": "contexte-detache",
+      "ms": 24979,
+      "calls": [
+        {
+          "as": "overview",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "required": false,
+          "detached": true,
+          "ok": true,
+          "ms": 23983,
+          "wait_ms": 23324,
+          "error": null,
+          "output_sha256": "44adf4f6a0fd6f5e81de938f89c1f9a414c0763d79f07cdd646205fd4745a220"
+        },
+        {
+          "as": "insiders_7d",
+          "server": "marketdata",
+          "tool": "GetInsiderActivity",
+          "required": false,
+          "detached": true,
+          "ok": true,
+          "ms": 3663,
+          "wait_ms": 2008,
+          "error": null,
+          "output_sha256": "c7f89cbeffcb4e286700931674aa0b76fd8426b3acfdafea6778b73d85a202bb"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-09-15T05:03:53.998Z",
+  "failures": 0,
+  "executed_calls": 11,
+  "skipped_calls": 0
+}
