@@ -1,0 +1,289 @@
+{
+  "contract_version": "1.0",
+  "workflow": "daily",
+  "plan": "plans/daily-focus.json",
+  "plan_sha256": "c9bdbfabde690ed094e0cfd6184c6cc2f88ababd05255dffcad1070d4f003e07",
+  "input_sha256": "68b6f97a1dde748677a57eeb25a360b89f90fba20afbe1933f59eecc00851a73",
+  "resolved_input": {
+    "artifact": "daily/20260917/index.html",
+    "equity_reference_close": "2026-09-16",
+    "crypto_completed_refdate": null,
+    "as_of_timestamp": "2026-09-16T21:01:22.241Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "equity_reference_close": "2026-09-16"
+            }
+          }
+        ]
+      },
+      {
+        "name": "focus-evidence",
+        "calls": [
+          {
+            "as": "focus_bars",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "LEN,MSTR",
+              "limit": 90,
+              "force_async": true,
+              "as_of_timestamp": "2026-09-16T21:01:22.241Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-16"
+            }
+          },
+          {
+            "as": "focus_technicals",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "technicals,support_resistance,trading_signals",
+              "symbols": "LEN,MSTR",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "temporal_note": "current-only facet on marketdata build 06e115d7+: the server refuses end_date because it cannot reconstruct a point-in-time snapshot, and fails the call rather than serving live data as if it were dated. The read is therefore CURRENT (capture instant), not as-of $refdate; the article must date it as such. Point-in-time bounding stays on the bar facets, which support it. The 'quote' facet was removed: on build 06e115d7 it returns completed_without_data cells for identified symbols (server-side cell-attribution defect), and a live quote must never govern a published percentage move — certified bars from focus_bars do that."
+          },
+          {
+            "as": "focus_fundamentals",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "financials,stats,earnings_quarterly,analyst_actions",
+              "symbols": "LEN,MSTR",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            },
+            "temporal_note": "current-only facet on marketdata build 06e115d7+: the server refuses end_date because it cannot reconstruct a point-in-time snapshot, and fails the call rather than serving live data as if it were dated. The read is therefore CURRENT (capture instant), not as-of $refdate; the article must date it as such. Point-in-time bounding stays on the bar facets, which support it."
+          },
+          {
+            "as": "focus_events",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "news,sec_filings,flags",
+              "symbols": "LEN,MSTR",
+              "days": 180,
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "temporal_note": "current-only facet on marketdata build 06e115d7+: the server refuses end_date because it cannot reconstruct a point-in-time snapshot, and fails the call rather than serving live data as if it were dated. The read is therefore CURRENT (capture instant), not as-of $refdate; the article must date it as such. Point-in-time bounding stays on the bar facets, which support it."
+          },
+          {
+            "as": "focus_flows",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "insider_transactions,dark_pool,max_pain,short_interest",
+              "symbols": "LEN,MSTR",
+              "days": 90,
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "temporal_note": "current-only facet on marketdata build 06e115d7+: the server refuses end_date because it cannot reconstruct a point-in-time snapshot, and fails the call rather than serving live data as if it were dated. The read is therefore CURRENT (capture instant), not as-of $refdate; the article must date it as such. Point-in-time bounding stays on the bar facets, which support it. 'unusual_options' moved to a detached wave: marketdata reports a symbol with NO unusual flow as a completed_without_data cell rather than an empty success, so a legitimate absence failed the governing call. Unusual flow colours a name, it never governs a level, a move or a publication decision."
+          },
+          {
+            "as": "focus_correlation",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "LEN,MSTR",
+              "adjusted": true,
+              "force_async": true,
+              "days": 90,
+              "as_of_timestamp": "2026-09-16T21:01:22.241Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-16"
+            }
+          }
+        ]
+      },
+      {
+        "name": "focus-flow-colour",
+        "detached": true,
+        "calls": [
+          {
+            "as": "focus_unusual_options",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "unusual_options",
+              "symbols": "LEN,MSTR",
+              "days": 90,
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": false
+            },
+            "note": "context only: cannot govern a number, a level, a candidate or the publication decision"
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "daily/20260917/index.html",
+  "reference_date": "2026-09-16",
+  "equity_reference_close": "2026-09-16",
+  "crypto_completed_refdate": null,
+  "started_at": "2026-09-16T21:01:22.241Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 315,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 314,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "fe4249d176210078f92c05383f895f829beed754265946e90cbae6f1bb12a464"
+        }
+      ]
+    },
+    {
+      "name": "focus-evidence",
+      "ms": 15827,
+      "calls": [
+        {
+          "as": "focus_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1752,
+          "wait_ms": 1008,
+          "error": null,
+          "output_sha256": "8769c8af28841060a64896e671b8e55c607bae11db04b1402008271ace1d97d0"
+        },
+        {
+          "as": "focus_technicals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 3739,
+          "wait_ms": 1996,
+          "error": null,
+          "output_sha256": "c8cef7b36b3c2095043fe9d2ee92dd1236eb78453d1f4beca61a19c501ed3f57"
+        },
+        {
+          "as": "focus_fundamentals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 5734,
+          "wait_ms": 2997,
+          "error": null,
+          "output_sha256": "ff07455a290abe7587e06d550f038d7cf195e4da2ad3c762235292e5a72fb7da"
+        },
+        {
+          "as": "focus_events",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 13812,
+          "wait_ms": 10074,
+          "error": null,
+          "output_sha256": "90b48eb777e6be849d6244451da3ea26f090f3e2040ba0a91fb560ba24fd145f"
+        },
+        {
+          "as": "focus_flows",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 9756,
+          "wait_ms": 5011,
+          "error": null,
+          "output_sha256": "7709b6015e3c4326ed387e654e13ec50c2856c62690f8032e55ac3d1e8fbf16d"
+        },
+        {
+          "as": "focus_correlation",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 11744,
+          "wait_ms": 5994,
+          "error": null,
+          "output_sha256": "ab3373b38a1e0584647d72e3b28b852ab7ff4f34115f2b303f2b2b29ced91073"
+        }
+      ]
+    },
+    {
+      "name": "focus-flow-colour",
+      "ms": 1948,
+      "calls": [
+        {
+          "as": "focus_unusual_options",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": false,
+          "detached": true,
+          "ok": true,
+          "ms": 1948,
+          "wait_ms": 1000,
+          "error": null,
+          "output_sha256": "9bf0fb6ae08aefe0fa59ac40b436a107d944f1b8486ffdb960d9e22ae6119da7"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-09-16T21:01:40.379Z",
+  "failures": 0,
+  "executed_calls": 8,
+  "skipped_calls": 0
+}

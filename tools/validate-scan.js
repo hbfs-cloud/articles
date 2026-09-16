@@ -1092,19 +1092,46 @@ async function main() {
           const pct = v <= 1 ? v * 100 : v;              // 0-1 → 0-100
           return scale === 'defensiveness' ? 100 - pct : pct; // → toujours bullish
         };
+        // ⚠️ L'ÉCHELLE NE SUFFIT PAS : IL FAUT AUSSI LE MÊME MOTEUR (ajouté le 2026-09-17).
+        // Ce gate comparait deux grandeurs différentes déclarées sur la même échelle. Les scans
+        // des 14, 15 et 17 septembre lisent le classificateur `switcher_analyzer` (0-1 risk-on,
+        // ramené en bullish) ; celui du 16 a publié le COMPLÉMENT d'une échelle de défensivité
+        // produite par un autre moteur, `context_conditional` — 92,3 contre 65,4 pour la même
+        // séance et le même marché. Le gate lisait donc 92,3 → 62,1, soit un décrochage de
+        // 30 pts qui n'a jamais eu lieu : à moteur constant la série vaut 73,0 → 68,2 → 65,4
+        // → 62,1, c'est-à-dire -10,9 pts, SOUS le seuil de 15. Le plafonnement du momentum se
+        // déclenchait sur un changement d'instrument de mesure, pas sur une dégradation.
+        // Un score n'est comparable que s'il vient du même producteur : on ne retient donc dans
+        // l'historique que les scans dont le moteur déclaré est le même, et on DIT lesquels on
+        // écarte — un historique tronqué en silence vaut moins que pas d'historique du tout.
+        // Moteur absent d'un côté ou de l'autre (archive <= 20260731) : comportement inchangé.
+        const engineKey = v => {
+          const raw = String(v || '').split('/')[0].trim().toLowerCase();
+          return raw || null;
+        };
         const win = g3.window_sessions ?? 5;
         const prevDirs = fs.readdirSync(path.join(ROOT, 'scanner'))
           .filter(d => /^\d{8}$/.test(d) && d < dirName).sort().slice(-(win - 1));
-        const hist = [];
+        const rawCur = loadRawSignalsJson(dir) || {};
+        const curEngine = engineKey(rawCur.regimeEngine);
+        const hist = [], skippedEngines = [];
         for (const d of prevDirs) {
           try {
             const j = JSON.parse(fs.readFileSync(path.join(ROOT, 'scanner', d, 'signals.json'), 'utf8'));
+            const hEngine = engineKey(j.regimeEngine);
+            if (curEngine && hEngine && hEngine !== curEngine) {
+              skippedEngines.push(`${d} (${hEngine} ≠ ${curEngine}, score ${j.regimeScore})`);
+              continue;
+            }
             // échelle absente (tout l'historique <= 20260731) => bullish, comportement inchangé
             const v = norm(j.regimeScore, j.regimeScoreScale || null);
             if (v != null) hist.push(v);
           } catch { /* scan sans signals.json : ignoré */ }
         }
-        const curScale = (loadRawSignalsJson(dir) || {}).regimeScoreScale || null;
+        if (skippedEngines.length) {
+          advisories.push(`regime_score_drop : ${skippedEngines.length} scan(s) écarté(s) de la comparaison car produits par un autre moteur de régime — ${skippedEngines.join(', ')}. Un score n'est comparable qu'à moteur constant. [regime_score_drop_engine_mismatch]`);
+        }
+        const curScale = rawCur.regimeScoreScale || null;
         const cur = norm(regimeScore, curScale);
         if (cur != null && hist.length) {
           const peak = Math.max(...hist, cur);

@@ -712,6 +712,20 @@ function rowDir(r) {
 
 // ─── SECTOR ROTATION TABLE ───
 
+// Le décompte des candidats écartés pour cause d'extension ne peut pas être écrit en dur :
+// il change à chaque scan, et une phrase figée finit par décrire le scan d'un autre jour.
+// Il se lit donc dans la liste de rejets effectivement publiée.
+function overextensionNote(d) {
+  const rejected = (d.rejected || []).filter(r => r && typeof r.reason === 'string');
+  const hits = rejected.filter(r => /extension|moyenne à cinquante|50-DMA|force relative|RSI/i.test(r.reason));
+  const base = "Le filtre de surextension, lui, a déjà joué au moment de la sélection et n'annule rien en séance";
+  if (!rejected.length) return `${base}.`;
+  if (!hits.length) return `${base} : aucun candidat de ce scan n'a été écarté sur ce motif.`;
+  const n = hits.length;
+  const mot = n === 1 ? 'un candidat' : `${n} candidats`;
+  return `${base} : il a pesé sur ${mot} de ce scan (${hits.map(r => r.ticker).join(', ')}).`;
+}
+
 function sectorRotationTable(rows) {
   if (!Array.isArray(rows) || !rows.length) return '';
   const trs = rows.map(r => {
@@ -719,7 +733,7 @@ function sectorRotationTable(rows) {
     return `            <tr><td>${esc(r.sector)}</td><td class="${dirClass}">${esc(r.perf)}</td><td>${esc(r.signal ?? r.note ?? '')}</td><td><strong>${esc(r.exposure ?? '')}</strong></td></tr>`;
   });
   return `        <div style="overflow-x:auto"><table class="data-table">
-          <thead><tr><th>Secteur (ETF)</th><th>Perf. s&eacute;ance</th><th>Signal de r&eacute;gime</th><th>Exposition du scan</th></tr></thead>
+          <thead><tr><th>Secteur (ETF)</th><th>Performance</th><th>Signal de r&eacute;gime</th><th>Exposition du scan</th></tr></thead>
           <tbody>${trs.join('')}</tbody>
         </table></div>`;
 }
@@ -1049,7 +1063,7 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
         : `L’ordre a un plafond unique ; le prix moyen réellement payé peut être inférieur. Le calcul utilise le prix limite, soit le prix maximal autorisé ; un remplissage inférieur modifie le risque réel et le rapport gain/risque.`
       } Aucune quantité n’est proposée : le budget de perte, le cash et les expositions doivent être vérifiés avant achat. ${hasEntryZone
         ? `Si l'ouverture dépasse le haut de la zone de 2%, l'entrée directe est annulée et seul un retour au VWAP peut réarmer la ligne.`
-        : `Si le prix n'est pas touché pendant la séance, la ligne expire : elle n'est pas reportée au lendemain.`} Le filtre de surextension, lui, a déjà joué au moment de la sélection et n'annule rien en séance : il a écarté trois candidats de ce scan, deux sur la seule distance aux moyennes et un troisième qui échouait aussi ailleurs.</p>
+        : `Si le prix n'est pas touché pendant la séance, la ligne expire : elle n'est pas reportée au lendemain.`} ${overextensionNote(d)}</p>
       <p style="font-size:0.85rem;color:#64748b;margin-top:0.5rem;">${(d.setups || []).some(s => typeof s.sharia === 'boolean') ? `Badges : <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span> ligne dont le secteur d'activité est conforme aux critères de finance islamique retenus ici (l'endettement, quand vérifié, est précisé ligne par ligne dans les invalidations — non systématiquement audité) — <span class="badge" style="background:#e2e8f0;color:#334155;border:1px solid #94a3b8;font-size:.68rem">CONV</span> ligne conventionnelle, non conforme.` : 'Aucun contrôle de conformité à la finance islamique n’a été réalisé pour cette sélection.'}</p>
     </div>
   </div>

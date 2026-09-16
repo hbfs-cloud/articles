@@ -12,7 +12,7 @@ const ROOT = path.resolve(__dirname, '..');
 // Liste CLOSE des références autoritaires du dépôt. Toute addition
 // doit être un acte délibéré : c'est la seule voie par laquelle un chiffre publié peut se passer
 // d'une provenance de collecte.
-const REGISTRY_SOURCES = new Set(['data/scheduled-events.json', 'daily/20260912/primary-reference.json', 'daily/20260916/primary-reference.json']);
+const REGISTRY_SOURCES = new Set(['data/scheduled-events.json', 'daily/20260912/primary-reference.json', 'daily/20260916/primary-reference.json', 'daily/20260917/primary-reference.json']);
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
 // Résolution de pointeur JSON. Sur un tableau, seuls les index numériques sont acceptés : sans
 // cela, « /bars/length » publiait le nombre de barres comme s'il s'agissait d'une mesure, et

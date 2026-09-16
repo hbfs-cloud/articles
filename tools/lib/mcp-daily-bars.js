@@ -16,6 +16,10 @@ const fs = require('fs');
 const path = require('path');
 const { randomUUID } = require('crypto');
 
+// Sources de repli par symbole, essayées DANS CET ORDRE quand la série yahoo se contredit.
+// Elles restent toutes des sources marketdata : aucun repli hors MCP, aucune barre synthétique.
+const ALT_BAR_SOURCES = Object.freeze(['tiingo', 'webull']);
+
 function argValue(argv, name, envName) {
   const i = argv.indexOf(name);
   return i >= 0 && argv[i + 1] ? argv[i + 1] : process.env[envName];
@@ -187,17 +191,35 @@ async function fetchCertifiedDailyBars({ symbols, refdate, cryptoRefdate, asOfTi
           // et séances manquantes au milieu de l'historique (AMKR saute les 21 et 22/07/2026,
           // que tiingo sert). Tout autre échec reste fatal.
           if (!/invalid OHLCV bounds|open .* outside |incomplete .* bar sequence/.test(error.message)) throw error;
-          const alt = await completedResponse(client, {
-            types: 'bars_daily', symbols: item.id, limit,
-            as_of_timestamp: asOfTimestamp, completion_policy: 'completed_only', source: 'tiingo',
-          }, recordReceipt);
-          const altCheck = contract.validateQueryData(alt, {
-            symbols: item.id, assetCalendar: group.calendar, expectedCompletedEnd: group.expected,
-          });
-          const altCell = altCheck.errors.length ? null : altCheck.healthyCells.find(c => c.id === item.id && c.status === 'completed' && c.row);
-          if (!altCell) throw new Error(`${item.id}: série yahoo défectueuse et tiingo indisponible — ${error.message}`);
-          bars = normalizeBars(altCell.row, item.id, group.calendar).filter(bar => bar.date <= group.expected);
-          console.log(`  [source] ${item.id}: série yahoo défectueuse → barres reprises sur tiingo (${error.message})`);
+          // Un seul fournisseur de repli ne suffit pas : le 2026-09-16 à 20h54 UTC, tiingo
+          // était en cooldown côté serveur et NU restait bloqué sur un high tronqué
+          // (o=14.01 h=14.00 l=13.58) alors que webull servait la barre juste (h=14.07),
+          // confirmée par l'intraday 15 minutes dont la première bougie de séance touche
+          // 14.07. Une panne d'un fournisseur secondaire ne doit pas abattre la chaîne
+          // quand un autre sert la même vérité : on essaie les replis dans l'ordre et on
+          // n'échoue que si AUCUN ne rend une série cohérente.
+          let altCell = null, altSource = null;
+          for (const source of ALT_BAR_SOURCES) {
+            const alt = await completedResponse(client, {
+              types: 'bars_daily', symbols: item.id, limit,
+              as_of_timestamp: asOfTimestamp, completion_policy: 'completed_only', source,
+            }, recordReceipt).catch(() => null);
+            if (!alt) continue;
+            const altCheck = contract.validateQueryData(alt, {
+              symbols: item.id, assetCalendar: group.calendar, expectedCompletedEnd: group.expected,
+            });
+            if (altCheck.errors.length) continue;
+            const cell = altCheck.healthyCells.find(c => c.id === item.id && c.status === 'completed' && c.row);
+            if (!cell) continue;
+            // Le repli ne vaut que s'il est LUI-MÊME cohérent : une source alternative qui
+            // se contredit aussi n'est pas une réparation, on passe à la suivante.
+            try {
+              bars = normalizeBars(cell.row, item.id, group.calendar).filter(bar => bar.date <= group.expected);
+            } catch { continue; }
+            altCell = cell; altSource = source; break;
+          }
+          if (!altCell) throw new Error(`${item.id}: série yahoo défectueuse et aucun repli cohérent (${ALT_BAR_SOURCES.join(', ')}) — ${error.message}`);
+          console.log(`  [source] ${item.id}: série yahoo défectueuse → barres reprises sur ${altSource} (${error.message})`);
         }
         const last = bars[bars.length - 1];
         if (!last || last.date !== group.expected) {
