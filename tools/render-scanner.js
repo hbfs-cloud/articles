@@ -13,6 +13,21 @@
 
 'use strict';
 
+// Libellé de régime explicite sur son échelle. Un « score » sans unité a déjà permis de publier
+// une confiance d'état (0,685 → « 68,5 % ») sous le nom de score de régime, alors que l'autorité
+// donnait une défensivité de 7,7/100. L'échelle voyage donc avec la valeur.
+function regimeScoreLabel(d) {
+  const v = Number(d.regime_score);
+  if (!Number.isFinite(v)) return 'n/a';
+  const scale = String((d.engine_meta && d.engine_meta.regime_scale) || '');
+  const conf = d.engine_meta && d.engine_meta.regime_state_confidence;
+  const num = n => String(n.toFixed(1)).replace('.', ',');
+  if (/defensiveness/i.test(scale)) {
+    return `défensivité ${num(v * 100)}/100` + (Number.isFinite(Number(conf)) ? `, confiance ${String(Number(conf).toFixed(3)).replace('.', ',')}` : '');
+  }
+  return `score haussier ${num(v * 100)}/100` + (Number.isFinite(Number(conf)) ? `, confiance ${String(Number(conf).toFixed(3)).replace('.', ',')}` : '');
+}
+
 const fs   = require('fs');
 const path = require('path');
 const { pickOgImage } = require('./lib/og-image.js');
@@ -215,7 +230,15 @@ const rrValues = (d.setups || [])
     ? (s.tp1 - s.entry_high) / (s.entry_high - s.stop) : null)
   .filter(x => x != null && Number.isFinite(x));
 const maxRR = (rrValues.length ? Math.max(...rrValues).toFixed(2) : '1.50').replace('.', ',');
-const nBelowOne = rrValues.filter(x => x < 1).length;
+// Les niveaux publies sont arrondis au cent : (tp1-entree)/(entree-stop) se calcule donc sur des
+// CENTIMES entiers. Le comparer en flottant faisait ressortir XOM et T « sous 1 » alors que les deux
+// valent exactement 5,62/5,62 et 0,85/0,85 — la page annoncait 3 lignes la ou il n'y en a qu'une.
+const nBelowOne = (d.setups || []).filter(s => {
+  if (!(typeof s.entry_high === 'number' && typeof s.stop === 'number' && typeof s.tp1 === 'number')) return false;
+  const gain = Math.round((s.tp1 - s.entry_high) * 100);
+  const risk = Math.round((s.entry_high - s.stop) * 100);
+  return risk > 0 && gain < risk;
+}).length;
 const rrBelowOne = nBelowOne
   ? ` — mesuré AVANT l'arrondi d'affichage, ${nBelowOne} ligne${nBelowOne > 1 ? 's' : ''} sur ${rrValues.length} vise${nBelowOne > 1 ? 'nt' : ''} un peu moins qu'elle${nBelowOne > 1 ? 's ne risquent' : ' ne risque'} ; le tableau les affiche arrondies à deux décimales, ce qui en montre moins. C'est la contrepartie d'une cible placée à une distance réellement parcourue`
   : '';
@@ -886,7 +909,7 @@ function buildPage(d) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${suspensionLabel || `Top ${setups.length} conditionnel ${regime} · ${setups.slice(0,10).map(s=>s.ticker).join(', ')}`} | DailyTickers Scanner</title>
-  <meta name="description" content="Scanner ${d.session_label || d.date} &middot; ${regime} (score ${(Number(d.regime_score || 0) * 100).toFixed(1).replace('.', ',')}/100). ${suspended.length ? `${suspensionLabel}. Validation du panier bloquée.` : `${setups.length} setups conditionnels, niveaux techniques publiés.`}">
+  <meta name="description" content="Scanner ${d.session_label || d.date} &middot; ${regime} (${regimeScoreLabel(d)}). ${suspended.length ? `${suspensionLabel}. Validation du panier bloquée.` : `${setups.length} setups conditionnels, niveaux techniques publiés.`}">
   <meta property="og:title" content="Scanner DailyTickers &middot; ${d.session_label || d.date} &middot; ${suspensionLabel || setups.slice(0,10).map(s=>s.ticker).join(', ')}">
   <meta property="og:description" content="Régime ${regime}. ${d.session_label || d.date}. ${suspended.length ? `${suspensionLabel}. Validation du panier bloquée.` : `${setups.length} setups conditionnels.`}">
   <meta property="og:image" content="${ogImage}">
@@ -968,7 +991,7 @@ ${alertsHtml(d.alerts)}
 
 <!-- REGIME -->
 <section id="regime" class="section-block">
-  <div class="section-header"><h2><i class="fas fa-gauge"></i> Régime de marché : ${regime} (score ${d.regime_score ? String((d.regime_score * 100).toFixed(1)).replace('.', ',') + '%' : 'n/a'})</h2></div>
+  <div class="section-header"><h2><i class="fas fa-gauge"></i> Régime de marché : ${regime} (${regimeScoreLabel(d)})</h2></div>
   <div class="content-card">
     <h3 style="margin:1.25rem 0 0.6rem;font-weight:700;">Tableau de marché (${d.session_label || d.date})</h3>
     <div class="data-table-wrap"><table class="data-table">
@@ -1012,7 +1035,11 @@ ${sectorRotationTable(d.sector_rotation)}
     <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés sur la clôture de référence. ${hasEntryZone
       ? `Tous les setups restent non exécutables avant l'observation du VWAP de la prochaine séance.`
       : `L'entrée est un prix unique : un ordre à cours limité valable la séance, sans condition de VWAP. Si le prix n'est pas touché, il n'y a pas de trade.`}${sizingSentence}</p>
-${strategyTablesHtml}
+${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div class="pedagogy-box" style="border-left:4px solid #b45309;">
+      <h4><i class="fas fa-list-ol"></i> Ordre d'exécution et hiérarchie des sorties</h4>
+      <p>${esc(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy))}</p>
+    </div>
+` : ''}${strategyTablesHtml}
     <div class="pedagogy-box">
       <h4><i class="fas fa-info-circle"></i> Comment utiliser ces niveaux</h4>
       <p>${hasEntryZone
@@ -1022,7 +1049,7 @@ ${strategyTablesHtml}
         : `L’ordre a un plafond unique ; le prix moyen réellement payé peut être inférieur. Le calcul utilise le prix limite, soit le prix maximal autorisé ; un remplissage inférieur modifie le risque réel et le rapport gain/risque.`
       } Aucune quantité n’est proposée : le budget de perte, le cash et les expositions doivent être vérifiés avant achat. ${hasEntryZone
         ? `Si l'ouverture dépasse le haut de la zone de 2%, l'entrée directe est annulée et seul un retour au VWAP peut réarmer la ligne.`
-        : `Si le prix n'est pas touché pendant la séance, la ligne expire : elle n'est pas reportée au lendemain.`} Une entrée est également nulle si son filtre de surextension est franchi avant l'exécution.</p>
+        : `Si le prix n'est pas touché pendant la séance, la ligne expire : elle n'est pas reportée au lendemain.`} Le filtre de surextension, lui, a déjà joué : il écarte un candidat au moment de la sélection et n'annule rien en séance.</p>
       <p style="font-size:0.85rem;color:#64748b;margin-top:0.5rem;">${(d.setups || []).some(s => typeof s.sharia === 'boolean') ? `Badges : <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span> ligne dont le secteur d'activité est conforme aux critères de finance islamique retenus ici (l'endettement, quand vérifié, est précisé ligne par ligne dans les invalidations — non systématiquement audité) — <span class="badge" style="background:#e2e8f0;color:#334155;border:1px solid #94a3b8;font-size:.68rem">CONV</span> ligne conventionnelle, non conforme.` : 'Aucun contrôle de conformité à la finance islamique n’a été réalisé pour cette sélection.'}</p>
     </div>
   </div>

@@ -64,7 +64,9 @@ const setups = sig.signals.map(s => ({
   horizon_days: s.horizon,
   thesis: s.thesis,
   confirmations: (ed.confirmations || {})[s.ticker] || [],
-  invalidations: [s.invalidation, `Niveau observable : ${nbFR(s.invalidation_level, 2)} $, strictement au-dessus du stop à ${nbFR(s.stop, 2)} $.`],
+  // Le niveau observable est le plus bas de la seance de reference : l'arrondir a deux decimales
+  // publiait 12,26 pour un plus-bas DRH a 12,255, donc un niveau qui n'a jamais ete cote.
+  invalidations: [s.invalidation, `Niveau observable : ${nbFR(s.invalidation_level, Number.isInteger(s.invalidation_level * 100) ? 2 : 3)} $, strictement au-dessus du stop à ${nbFR(s.stop, 2)} $.`],
   // (le stop reste la protection ; l'invalidation ci-dessus est ce que le lecteur peut voir)
   market_cap: s.market_cap,
   earnings_clear: s.earnings_clear, dilution_clear: s.dilution_clear,
@@ -105,7 +107,10 @@ const out = {
     // Les identifiants d'outil et de moteur restent dans signals.json, qui est interne.
     // data.json alimente la page publiée, et CLAUDE.md interdit tout terme d'infrastructure
     // dans le contenu publié — on décrit la donnée, jamais la plomberie.
-    regime_scale: 'score haussier ramené sur 0-1 pour cet artefact ; la page l\'affiche en pourcentage',
+    // L'echelle voyage avec la valeur : sans elle, « score 68,5 % » a pu publier une confiance
+    // d'etat sous le nom de score de regime (incident du 2026-09-16).
+    regime_scale: man.regime_score_scale || 'bullish_0_1',
+    regime_state_confidence: (man.editorial && man.editorial.risk_gating && man.editorial.risk_gating.regime_state_confidence) ?? null,
     marketdata_contract_status: 'certified',
     marketdata_completion_policy: 'completed_only',
     freshness: ed.freshness,

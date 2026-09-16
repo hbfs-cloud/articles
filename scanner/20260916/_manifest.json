@@ -2,7 +2,7 @@
   "scan_date": "2026-09-16",
   "reference_close": "2026-09-15",
   "regime": "RISK-ON",
-  "regime_score": 68.5,
+  "regime_score": 92.3,
   "regime_score_scale": "bullish_0_100",
   "regime_authority": "marketdata GetMarketContext — scanner/20260916/_data/regime_authority.json",
   "regime_engine": "marketdata",
@@ -66,7 +66,7 @@
       "strategy": "Breakout",
       "region": "US",
       "source_artifact": "scanner/20260916/_data/screen_breakout_us.json",
-      "thesis": "Sortie de range sur la plus grosse capitalisation énergie du vivier, à 7,2 % seulement de la moyenne à cinquante séances. Réorganisation en holding bouclée le 1er juillet, migration des plans sous le nouveau CIK, et rien d'autre au capital que de la dette : la cassure se fait sur un flottant stable.",
+      "thesis": "Sortie de range sur la plus grosse capitalisation énergie du vivier, à 7,2 % de la moyenne à cinquante séances. Aucune offre d'actions sur la fenêtre examinée : les seuls dépôts sont la reprise de vingt-trois plans salariés par la holding successeur, après la réorganisation bouclée le 1er juillet. La cassure se fait sur un flottant stable.",
       "invalidation": "Clôture sous le plus bas de la séance de référence : la tendance énergie casse et le dossier redevient un pari macro."
     },
     {
@@ -75,7 +75,7 @@
       "strategy": "Pullback",
       "region": "US",
       "source_artifact": "scanner/20260916/_data/screen_pullback_us.json",
-      "thesis": "RSI à 50, cours à 1,9 % de sa moyenne à cinquante séances, trente-quatre barres de range serré. C'est le profil inverse du reste du panier : on paie une respiration, pas une extension.",
+      "thesis": "RSI à 50, cours à 1,9 % de sa moyenne à cinquante séances, quinze barres de range serré. C'est le profil inverse du reste du panier : on paie une respiration, pas une extension.",
       "invalidation": "Clôture sous le plus bas de la séance de référence : la consolidation devient distribution."
     },
     {
@@ -93,7 +93,7 @@
       "strategy": "Momentum",
       "region": "US",
       "source_artifact": "scanner/20260916/_data/screen_momentum_us.json",
-      "thesis": "Quatre prospectus sur la période, quatre placements de dette, zéro action nouvelle au marché. Le nombre de titres recule de 6,95 à 6,85 milliards entre avril et juillet. Un opérateur qui se finance sans émettre reste rare.",
+      "thesis": "Classée en suivi de tendance, mais ce n'est pas une cassure de plus-hauts : le titre reprend 21 % en soixante séances et repasse au-dessus de ses moyennes, tout en restant en baisse de 8,9 % sur un an, et la cible à 27,58 demeure sous le plus haut de trois cents séances à 29,79. C'est un rebond dans une tendance longue encore négative. Ce qui tient le dossier est le capital : quatre prospectus sur la période, quatre placements de dette, zéro action nouvelle au marché, et un nombre de titres qui recule de 6,95 à 6,85 milliards entre avril et juillet.",
       "invalidation": "Clôture sous le plus bas de la séance de référence : le mouvement de rattrapage s'essouffle."
     },
     {
@@ -102,7 +102,7 @@
       "strategy": "Breakout",
       "region": "US",
       "source_artifact": "scanner/20260916/_data/screen_breakout_us.json",
-      "thesis": "Sortie de range sur le meilleur score de la famille cassure parmi les assureurs du vivier, à 5,6 % seulement de la moyenne à cinquante séances. La cassure est fraîche, pas déjà courue.",
+      "thesis": "Sortie de range sur le meilleur score de la famille cassure parmi les assureurs du vivier, à 5,6 % de la moyenne à cinquante séances. La cassure est fraîche, pas déjà courue.",
       "invalidation": "Clôture sous le plus bas de la séance de référence : la cassure est reprise et le range se referme."
     },
     {
@@ -121,7 +121,8 @@
       "region": "US",
       "source_artifact": "scanner/20260916/_data/screen_pullback_us.json",
       "thesis": "RSI à 50,6 et cours collé à sa moyenne à cinquante séances. Le dossier n'a rien de spectaculaire, et c'est précisément ce qui le rend jouable à ce stade du cycle.",
-      "invalidation": "Clôture sous le plus bas de la séance de référence : la base se rompt."
+      "invalidation": "Clôture sous le plus bas de la séance de référence : la base se rompt.",
+      "invalidation_level": 12.255
     },
     {
       "ticker": "BUG",
@@ -160,8 +161,8 @@
       "invalidation": "Clôture sous le plus bas de la séance de référence : la rotation sort du thème."
     }
   ],
-  "_entry_policy_public": "Ordre à cours limité au prix publié. Si la séance ouvre au-dessus, le plan ne se poursuit pas : il redevient valable seulement si le prix revient sur le niveau.",
-  "_score_caveat_public": "Les dix lignes portent la même note. Ce n'est pas un classement : les scores de criblage viennent de formules différentes selon la stratégie et ne se comparent pas entre elles.",
+  "_entry_policy_public": "Entrée : un prix unique, en <strong>ordre d'achat à cours limité</strong>. Si la séance ouvre au-dessus du prix publié, on ne poursuit pas — la ligne ne se déclenche simplement pas, et elle n'est pas reportée au lendemain. Sortie, dans cet ordre de priorité : (1) le <strong>stop de protection</strong> reste en carnet en permanence, c'est le filet mécanique, et le rapport gain-risque publié est calculé depuis lui ; (2) une clôture sous le niveau d'invalidation, toujours situé au-dessus du stop, sort la position à l'ouverture suivante même si le stop n'a pas été touché ; (3) entre les deux niveaux, on ne fait rien en séance. Suivre l'invalidation sort plus tôt et plus haut que le stop : sur une sortie perdante, la perte encaissée est donc plus petite que celle qui a servi à calculer le rapport gain-risque affiché — celui-ci décrit le scénario où seul le stop agit. <strong>Décision de taux du 16 septembre à 14h00 à New York.</strong> La consigne qui suit porte sur l'<strong>ordre d'achat à cours limité, et sur lui seul</strong> : le stop de protection d'une position déjà ouverte, lui, ne se retire jamais. Un ordre d'achat laissé au carnet pendant l'annonce se remplit précisément si le marché décroche, c'est-à-dire dans le scénario que l'on ne veut pas. Deux options cohérentes : entrer avant 14h00 en acceptant de porter la décision, ou retirer l'ordre d'achat vers 13h55. Dans ce second cas, on ne le replace que si le prix revient sur le niveau publié après 14h30 ; s'il n'y revient pas, la ligne est abandonnée pour la séance — on ne relève pas la limite pour aller chercher le cours.",
+  "_score_caveat_public": "Les dix lignes portent la même note. Ce n'est pas un classement : les scores de criblage viennent de formules différentes selon la stratégie et ne se comparent pas entre elles. Le rapport gain-risque s'échelonne de 1:1,00 à 1:1,29 ; mesuré avant l'arrondi d'affichage, une seule ligne sur dix vise un peu moins qu'elle ne risque — HACK, à 1:0,998.",
   "editorial": {
     "generated_at": "2026-09-16T10:20:00.000Z",
     "freshness": {
@@ -198,7 +199,10 @@
         "HACK"
       ],
       "correlation_source": "Dérivation locale sur les barres certifiées qui portent les niveaux publiés (300 séances complètes arrêtées au 2026-09-15), rendements logarithmiques, 120 observations.",
-      "crisis_source": "marketdata GetMarketContext — probabilité de transition vers un état de crise à 5 séances."
+      "crisis_source": "marketdata GetMarketContext — probabilité de transition vers un état de crise à 5 séances.",
+      "regime_bullish_score": 92.3,
+      "regime_scale_note": "L'autorité mesure une défensivité de 7,7 sur 100 (0 = plein risk-on). La série publie un score haussier : 92,3 en est le complément. La confiance accordée à l'état risk_on, 0,685, est un troisième chiffre distinct — c'est elle qui avait été publiée par erreur sous le nom de score.",
+      "regime_series_note": "Changement de série assumé et déclaré : les scans des 14 et 15 septembre publiaient le score du moteur systematic (dtx). Depuis le 16 septembre, le régime est lu sur l'autorité marketdata, dont la défensivité de 7,7/100 donne 92,3 sur l'échelle haussière. Les deux séries ne sont pas comparables d'un jour à l'autre ; l'écart apparent avec le 73,0 du 15 septembre est un changement de source, pas un mouvement de marché."
     },
     "tags": [
       "scanner",
@@ -217,8 +221,8 @@
         "color": "#16a34a"
       },
       "spx": {
-        "value": 757.44,
-        "change_pct": -0.45,
+        "value": 7585.73,
+        "change_pct": null,
         "color": "#0ea5e9"
       },
       "avg_score": 80,
@@ -245,23 +249,16 @@
         "text": "BUG et HACK affichent une corrélation de 0,97 sur les 120 dernières séances. Ce sont deux constructions différentes du même thème, mais elles bougent ensemble. Qui dimensionne dix positions égales en porte en réalité neuf, avec une double exposition à la cybersécurité. Le panier les garde parce que le vivier n'offre pas de troisième fonds publiable — le seul autre est un inverse à effet de levier sur les petites capitalisations — mais compter une seule position sur les deux est la lecture juste."
       }
     ],
-    "intro": "<p>L'indice a reculé de 0,45 % lundi, le Nasdaq de 0,65 %, et la volatilité implicite est remontée à 17,42. Rien de tout cela ne décrit la séance.</p><p>Ce qui la décrit tient dans l'écart entre secteurs. Sur vingt séances, l'énergie prend 5,37 % et la communication 2,85 %, pendant que l'industrie perd 9,37 %, les utilities 6,46 % et la consommation discrétionnaire 5,04 %. Onze points séparent le premier du dernier. Un investisseur indiciel n'a rien vu ; celui qui portait de l'industrie a pris la moitié d'une correction.</p><p>Le panier suit cette dispersion plutôt que l'indice : dix lignes, un secteur chacune, dont un repli assumé sur le secteur le plus vendu du mois.</p>",
-    "regime_prose": "<p>Le régime ressort en appétit pour le risque. Deux chiffres le décrivent et il faut les distinguer : la défensivité mesurée est de 7,7 sur 100, où 100 serait une crise, et la confiance accordée à cet état est de 0,685. Le premier dit où l'on est, le second à quel point la mesure est nette.</p><p>Le composite tient sur six jambes, et leur hiérarchie compte plus que la note : le dollar contribue pour 0,89, l'indice pour 0,67, la volatilité pour 0,66, le crédit pour 0,53, les obligations longues pour 0,51 et le bitcoin pour 0,50.</p><p>Autrement dit, le risk-on de ce soir est porté par le change, pas par les actions. La nuance compte à la veille d'une décision de taux : si la Fed déçoit sur la trajectoire, la composante qui soutient le régime est précisément celle qui réagira le plus vite. La probabilité de bascule vers un état de crise à cinq séances ressort à 6,9 %, et le repli attendu sur l'indice à 1,8 %.</p>",
-    "strategy": "<p>Dix lignes : huit actions américaines et deux fonds cotés aux États-Unis, en cinq suivis de tendance, trois replis et deux sorties de consolidation. Le plafond par stratégie est de cinq lignes sur dix ; le suivi de tendance y est exactement.</p><p>Dix secteurs, une ligne chacun. Aucune concentration n'est possible par construction. Le panier mélange délibérément deux postures : quatre lignes sur des secteurs qui montent — énergie, communication, technologie, santé — et trois replis sur des secteurs vendus, dont Emerson sur l'industrie, la pire du mois à -9,37 %. On achète la faiblesse là où la structure longue tient encore, pas partout.</p><p>La corrélation moyenne entre les dix lignes ressort à 0,04 sur 120 séances, et le couple le plus décorrélé oppose Exxon à Emerson à -0,50. Une seule paire fait exception, et elle est chiffrée plus haut : les deux fonds cybersécurité bougent à 0,97 l'un de l'autre.</p>",
+    "intro": "<p>À la clôture de référence du 15 septembre, le S&P 500 termine à 7 585,73 et la volatilité implicite à 17,42. Le niveau de l'indice ne dit rien de la séance.</p><p>Ce qui la dit tient dans l'écart entre secteurs. Sur vingt séances, l'énergie prend 5,37 % et la communication 2,85 %, pendant que l'industrie perd 9,37 %, les utilities 6,46 % et la consommation discrétionnaire 5,04 %. Près de quinze points séparent le premier du dernier — 14,74 exactement. Un investisseur indiciel n'a rien vu ; celui qui portait de l'industrie a pris la moitié d'une correction.</p><p>Le panier suit cette dispersion plutôt que l'indice : dix lignes, un secteur chacune, dont un repli assumé sur le secteur le plus vendu du mois.</p>",
+    "regime_prose": "<p>Le régime ressort en appétit pour le risque. Trois chiffres le décrivent et il faut les distinguer, parce qu'on les confond facilement. L'autorité mesure une <strong>défensivité de 7,7 sur 100</strong>, où 100 serait une crise ; sur l'échelle haussière que publie cette série, cela donne <strong>92,3</strong>. La <strong>confiance</strong> accordée à cet état vaut <strong>0,685</strong>. Le premier dit où l'on est, le second le redit à l'endroit, le troisième dit à quel point la mesure est nette.</p><p>Un avertissement de lecture avant d'aller plus loin : ce chiffre ne se compare pas à celui d'hier. Les scans des 14 et 15 septembre publiaient le score du moteur systematic ; depuis aujourd'hui, le régime est lu sur l'autorité marketdata. L'écart avec le 73,0 publié lundi est un changement de source, pas un mouvement de marché.</p><p>Le composite tient sur six jambes, et leur hiérarchie compte plus que la note : le dollar contribue pour 0,89, l'indice pour 0,67, la volatilité pour 0,66, le crédit pour 0,53, les obligations longues pour 0,51 et le bitcoin pour 0,50.</p><p>Autrement dit, le risk-on de ce soir est porté par le change, pas par les actions. La nuance compte à la veille d'une décision de taux : si la Fed déçoit sur la trajectoire, la composante qui soutient le régime est précisément celle qui réagira le plus vite. La probabilité de bascule vers un état de crise à cinq séances ressort à 6,9 %, et le repli attendu sur l'indice à 1,8 %.</p>",
+    "strategy": "<p>Dix lignes : huit actions américaines et deux fonds cotés aux États-Unis, en cinq suivis de tendance, trois replis et deux sorties de consolidation. Le plafond par stratégie est de cinq lignes sur dix ; le suivi de tendance y est exactement.</p><p>Dix secteurs, une ligne chacun. Aucune concentration n'est possible par construction. Trois lignes seulement sont posées sur des secteurs qui montent — énergie, communication, santé. Les sept autres sont à contre-courant de leur secteur, dont Apple pendant que la technologie perd 3,45 % sur un mois, et Emerson sur l'industrie, la pire du mois à -9,37 %.</p><p>La corrélation moyenne entre les dix lignes ressort à 0,04 sur 120 séances, et le couple le plus décorrélé oppose Exxon à Emerson à -0,50. Une seule paire fait exception, et elle est chiffrée plus haut : les deux fonds cybersécurité bougent à 0,97 l'un de l'autre.</p><p>Extension à la moyenne cinquante séances, ligne par ligne : DRH +0,8 %, JNJ +1,9 %, AAPL +5,0 %, UNM +5,6 %, XOM +7,2 %, T +8,0 %, HACK +9,5 %, BBY +10,3 %, BUG +12,6 %, et EMR seul en dessous à -2,5 %. BUG et BBY cumulent l'extension la plus forte et le stop le plus large du panier : ce sont les deux lignes qui demandent le plus de marge.</p>",
     "market_snapshot": [
       {
-        "name": "S&P 500 (SPY)",
-        "value": "757,44",
-        "change": "-0,45 %",
+        "name": "S&P 500 (^GSPC)",
+        "value": "7 585,73",
+        "change": "clôture du 15 septembre",
         "dir": "down",
-        "note": "clôture certifiée du 15 septembre"
-      },
-      {
-        "name": "Nasdaq 100 (QQQ)",
-        "value": "704,54",
-        "change": "-0,65 %",
-        "dir": "down",
-        "note": "la technologie sous-performe l'indice large"
+        "note": "source : autorité de régime du scan"
       },
       {
         "name": "Volatilité implicite",
@@ -273,51 +270,58 @@
       {
         "name": "Énergie (XLE)",
         "value": "65,94",
-        "change": "+5,37 % sur un mois",
+        "change": "+5,37 % sur vingt séances",
         "dir": "up",
         "note": "premier secteur, porte XOM"
       },
       {
         "name": "Communication (XLC)",
         "value": "113,98",
-        "change": "+2,85 % sur un mois",
+        "change": "+2,85 % sur vingt séances",
         "dir": "up",
         "note": "deuxième secteur, porte T"
       },
       {
+        "name": "Santé (XLV)",
+        "value": "167,67",
+        "change": "+0,37 % sur vingt séances",
+        "dir": "up",
+        "note": "troisième et dernier secteur en hausse, porte JNJ"
+      },
+      {
         "name": "Technologie (XLK)",
         "value": "183,76",
-        "change": "-3,45 % sur un mois",
+        "change": "-3,45 % sur vingt séances",
         "dir": "down",
         "note": "AAPL est pris à contre-courant de son secteur"
       },
       {
-        "name": "Industrie (XLI)",
-        "value": "168,87",
-        "change": "-9,37 % sur un mois",
+        "name": "Immobilier (XLRE)",
+        "value": "43,07",
+        "change": "-3,93 % sur vingt séances",
         "dir": "down",
-        "note": "pire secteur du mois, porte le repli EMR"
+        "note": "sensible aux taux avant la décision"
       },
       {
-        "name": "Utilities (XLU)",
-        "value": "41,33",
-        "change": "-6,46 % sur un mois",
+        "name": "Industrie (XLI)",
+        "value": "168,87",
+        "change": "-9,37 % sur vingt séances",
         "dir": "down",
-        "note": "aucune ligne du panier"
+        "note": "pire secteur du mois, porte le repli EMR"
       }
     ],
     "macro_calendar": [
       {
         "date": "2026-09-16",
-        "event": "Ventes au détail (États-Unis)",
-        "impact": "Moyen",
-        "note": "8h30 à New York, avant l'ouverture"
-      },
-      {
-        "date": "2026-09-16",
         "event": "Décision de taux de la Réserve fédérale",
         "impact": "ÉLEVÉ",
         "note": "14h00 à New York ; conférence de presse à 14h30 — dans l'horizon des dix lignes"
+      },
+      {
+        "date": "2026-09-16",
+        "event": "Ventes au détail (États-Unis)",
+        "impact": "Moyen",
+        "note": "8h30 à New York, avant l'ouverture"
       },
       {
         "date": "2026-09-17",
@@ -345,12 +349,18 @@
       },
       {
         "date": "2026-09-25",
+        "event": "Climat des affaires ifo (Allemagne)",
+        "impact": "Moyen",
+        "note": "10h00 à Francfort"
+      },
+      {
+        "date": "2026-09-25",
         "event": "Confiance du consommateur Michigan (définitif)",
         "impact": "Moyen",
         "note": "10h00 à New York — dernière donnée avant la fin de l'horizon"
       }
     ],
-    "macro_thesis": "<p>Tout converge vers ce mercredi 14h00 à New York. La Réserve fédérale publie sa décision, la conférence de presse suit à 14h30, et les dix lignes de ce panier ont un horizon de dix séances : aucune ne peut éviter l'événement.</p><p>La conséquence pratique est simple et vaut d'être dite sans détour. Un stop protège d'une baisse qui se déroule pendant la séance. Il ne protège pas d'un écart à l'ouverture du jeudi : si le prix ouvre sous le stop, la sortie se fait au premier cours traité, pas au niveau publié. Sur des lignes dont le stop est posé entre 3,0 et 5,4 % de l'entrée, un écart de cette taille n'a rien d'exceptionnel un lendemain de Fed.</p><p>Le 18 septembre ajoute une seconde échéance, plus étroite : le discours de Michelle Bowman sur les stress tests bancaires touche directement la seule ligne financière du panier, Unum.</p><p>Qui ne souhaite pas porter ce risque a une option propre : attendre la clôture de jeudi et reprendre les mêmes niveaux, en acceptant que certains ne se représentent pas.</p><p>Deux réserves sur le calendrier lui-même, que le lecteur doit connaître. Correction du PPI américain : la donnée d’août a été publiée le 2026-09-10, alors que le flux de calendrier utilisé par ce scan la date au 2026-09-14. La date retenue est celle du calendrier officiel du Bureau of Labor Statistics. Le détail est vérifiable sur <a href=\"https://www.bls.gov/schedule/news_release/ppi.htm\">https://www.bls.gov/schedule/news_release/ppi.htm</a>.</p><p>Seconde réserve : le flux de calendrier collecté pour ce scan s'arrête au 2026-09-18, alors que l'horizon des dix séances court jusqu'au 29 septembre. Au-delà du 2026-09-18, seuls les rendez-vous programmés à l'avance et tenus dans notre registre sont couverts — une annonce non planifiée survenue dans cette fenêtre a pu échapper à la page.</p>",
+    "macro_thesis": "<p>Tout converge vers ce mercredi 14h00 à New York. La Réserve fédérale publie sa décision, la conférence de presse suit à 14h30, et les dix lignes de ce panier ont un horizon de dix séances : aucune ne peut éviter l'événement.</p><p>La conséquence pratique mérite d'être dite sans détour. Un stop protège d'une baisse qui se déroule pendant la séance. Il ne protège pas d'un écart à l'ouverture du jeudi : si le prix ouvre sous le stop, la sortie se fait au premier cours traité, pas au niveau publié. Sur des lignes dont le stop est posé entre 3,16 et 5,43 % de l'entrée, un écart de cette taille n'a rien d'exceptionnel un lendemain de Fed.</p><p>Le 18 septembre ajoute une seconde échéance, plus étroite : le discours de Michelle Bowman sur les stress tests bancaires touche directement la seule ligne financière du panier, Unum.</p><p>Le calendrier ci-dessus couvre la fenêtre du 16 au 29 septembre, soit exactement l'horizon des dix séances. Il est borné là volontairement : l'indice des prix PCE du 30 septembre tombe après la dernière séance portée et n'y figure donc pas. Une réserve sur la source elle-même. Correction du PPI américain : la donnée d’août a été publiée le 2026-09-10, alors que le flux de calendrier utilisé par ce scan la date au 2026-09-14. La date retenue est celle du calendrier officiel du Bureau of Labor Statistics. Vérifiable sur <a href=\"https://www.bls.gov/schedule/news_release/ppi.htm\">https://www.bls.gov/schedule/news_release/ppi.htm</a>. Au-delà du 2026-09-18, le flux automatique ne couvre plus la fenêtre et seuls les rendez-vous programmés à l'avance, tenus dans notre registre, y figurent : une annonce non planifiée survenue entre le 19 et le 29 septembre a pu échapper à cette page.</p><p>Qui ne souhaite pas porter ce risque a une option propre : attendre la clôture de jeudi et reprendre les mêmes niveaux, en acceptant que certains ne se représentent pas.</p>",
     "sector_rotation": [
       {
         "sector": "Énergie (XLE)",
@@ -434,7 +444,7 @@
       "title": "Ce qu'un stop ne protège pas",
       "content": "<p>Un stop est un ordre déclenché quand le prix touche un niveau. Tant que le marché cote en continu, il fait son travail : le prix descend, le niveau est traité, la position sort à peu près là où c'était prévu.</p><p>Entre deux séances, le marché ne cote pas. Si une nouvelle tombe après la clôture — une décision de taux, par exemple — le premier prix du lendemain peut se situer très en dessous du stop. L'ordre se déclenche alors au premier cours traité, pas au niveau inscrit. C'est ce qu'on appelle un écart d'ouverture, et c'est la limite structurelle de l'outil.</p><p>Deux conséquences concrètes. La taille de position doit être calculée en acceptant que la perte réelle puisse dépasser la perte théorique. Et à la veille d'un événement connu, porter la position est un choix, pas une fatalité : ne pas entrer reste une décision valable.</p>"
     },
-    "disclaimer_extra": "Les niveaux publiés sont conditionnels et ne deviennent actionnables qu'à la séance du 16 septembre 2026, en ordre à cours limité au prix indiqué. Aucune position n'est ouverte, aucun ordre n'est transmis. Les dix lignes traversent la décision de taux du 16 septembre : un écart à l'ouverture peut dépasser le stop, qui ne protège que d'une baisse cotée en continu. Sept cibles sur dix sont posées à 1,5 fois l'ATR faute de résistance lisible, et non par lecture d'un niveau technique. Le calendrier collecté s'arrête au 2026-09-18 ; au-delà, seuls les événements programmés sont couverts.",
+    "disclaimer_extra": "Les niveaux publiés sont conditionnels et ne deviennent actionnables qu'à la séance du 16 septembre 2026, en ordre à cours limité au prix indiqué. Aucune position n'est ouverte, aucun ordre n'est transmis. Les dix lignes traversent la décision de taux du 16 septembre : un écart à l'ouverture peut dépasser le stop, qui ne protège que d'une baisse cotée en continu. Sept cibles sur dix sont posées à 1,5 fois l'ATR faute de résistance lisible, et non par lecture d'un niveau technique. Le flux de calendrier automatique s'arrête au 2026-09-18 ; au-delà, seuls les événements programmés au registre couvrent la fin de fenêtre.",
     "descriptions": {
       "AAPL": "Suivi de tendance sur un flottant qui rétrécit, à contre-courant d'un secteur technologique en repli.",
       "XOM": "Sortie de consolidation sur la première capitalisation du secteur le mieux orienté du mois.",
@@ -453,7 +463,7 @@
         "Volume de la séance d'entrée supérieur à la moyenne de vingt séances."
       ],
       "XOM": [
-        "L'énergie (XLE) reste le premier secteur sur cinq séances.",
+        "L'énergie (XLE) reste le premier secteur sur vingt séances.",
         "Le brut ne casse pas sous son plus bas de la semaine."
       ],
       "JNJ": [
@@ -488,6 +498,8 @@
         "Le thème cybersécurité reste positif en relatif sur cinq séances.",
         "Aucun écart d'ouverture sous 114,94."
       ]
-    }
+    },
+    "entry_policy_public": "Entrée : un prix unique, en <strong>ordre d'achat à cours limité</strong>. Si la séance ouvre au-dessus du prix publié, on ne poursuit pas — la ligne ne se déclenche simplement pas, et elle n'est pas reportée au lendemain. Sortie, dans cet ordre de priorité : (1) le <strong>stop de protection</strong> reste en carnet en permanence, c'est le filet mécanique, et le rapport gain-risque publié est calculé depuis lui ; (2) une clôture sous le niveau d'invalidation, toujours situé au-dessus du stop, sort la position à l'ouverture suivante même si le stop n'a pas été touché ; (3) entre les deux niveaux, on ne fait rien en séance. Suivre l'invalidation sort plus tôt et plus haut que le stop : sur une sortie perdante, la perte encaissée est donc plus petite que celle qui a servi à calculer le rapport gain-risque affiché — celui-ci décrit le scénario où seul le stop agit. <strong>Décision de taux du 16 septembre à 14h00 à New York.</strong> La consigne qui suit porte sur l'<strong>ordre d'achat à cours limité, et sur lui seul</strong> : le stop de protection d'une position déjà ouverte, lui, ne se retire jamais. Un ordre d'achat laissé au carnet pendant l'annonce se remplit précisément si le marché décroche, c'est-à-dire dans le scénario que l'on ne veut pas. Deux options cohérentes : entrer avant 14h00 en acceptant de porter la décision, ou retirer l'ordre d'achat vers 13h55. Dans ce second cas, on ne le replace que si le prix revient sur le niveau publié après 14h30 ; s'il n'y revient pas, la ligne est abandonnée pour la séance — on ne relève pas la limite pour aller chercher le cours.",
+    "score_caveat_public": "Les dix lignes portent la même note. Ce n'est pas un classement : les scores de criblage viennent de formules différentes selon la stratégie et ne se comparent pas entre elles. Le rapport gain-risque s'échelonne de 1:1,00 à 1:1,29 ; mesuré avant l'arrondi d'affichage, une seule ligne sur dix vise un peu moins qu'elle ne risque — HACK, à 1:0,998."
   }
 }
