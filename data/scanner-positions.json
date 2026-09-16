@@ -1,21 +1,22 @@
 {
-  "updated_at": "2026-09-16T04:34:11.152Z",
+  "updated_at": "2026-09-16T21:12:54.934Z",
   "open_positions": [],
   "symbol_exclusions": {
     "status": "EXCLUDED_BY_EXPLICIT_USER_INSTRUCTION",
-    "date": "20260916",
-    "refdate": "2026-09-15",
-    "path": "scanner/20260916/_symbol-exclusions.json",
-    "sha256": "e292f635f3d93e50f3b2f07c387281243eacef8baf29cef295a62e754951762d",
+    "date": "20260917",
+    "refdate": "2026-09-16",
+    "path": "scanner/20260917/_symbol-exclusions.json",
+    "sha256": "37f5a5dc84e72b7c6dd28a52f5fc2d1dc1e1533bfa31c375bbcd6e1cecb56cab",
     "symbols": [
       "BK",
       "EDP.LS",
       "EURUSD",
+      "GALP.LS",
       "GLEN.L",
       "USEG",
       "XAUUSD"
     ],
-    "user_instruction": "Report de l'instruction permanente de l'utilisateur du 2026-09-14 (« skip ce qui pose pb pour EDP/Glencore et les 3 données manquantes, on ne les considere pas »), déjà appliquée le 2026-09-15, et réaffirmée le 2026-09-16 par la consigne de débloquer le run avant l'open. Preuve par symbole sur la clôture de référence 2026-09-15 : GLEN.L reste servi en statut partial venue_session_coverage_incomplete sur la place de Londres ; EDP.LS est conservé dans la même exclusion qu'au run précédent ; BK et USEG renvoient tous deux un 404 amont « No data found, symbol may be delisted ». Pour BK, la cause identifiée est une MIGRATION DE TICKER et non une radiation : BNY sert une barre complète au 2026-09-15 (o=156.31 h=156.875 l=152.54 c=154.67) et figure dans l'univers intraday du serveur, alors que BK n'existe plus côté fournisseur. La migration BK vers BNY dans les données d'analyses est un correctif à part entière, à faire sur preuve primaire (communiqué IR ou dépôt SEC), pas une réécriture par inférence en cours de run : BK est donc exclu ce soir et migré ensuite. Pour USEG, aucune cible de migration n'est établie — le symbole USE répond mais avec un profil de prix et de volume incompatible, aucun rapprochement n'est fait. Les enregistrements existants des quatre symboles sont préservés, aucun trade n'est modifié ni supprimé, et tous les autres gates restent obligatoires. Le défaut de bornes OHLC du 2026-09-15 n'est PAS traité par exclusion : les barres incohérentes de yahoo sont reprises par symbole sur tiingo, vérifiées contre l'intraday 15 minutes (STT : ouverture 187.45 = plus haut réel de séance, yahoo servait high=187.265). Ajout du 2026-09-16 : EURUSD et XAUUSD echouent de maniere REPRODUCTIBLE dans le cycle de vie des analyses (EURUSD stale served_end_before_latest_expected_us_session, XAUUSD upstream_or_calculation_failed) alors qu'ils repondent correctement en fenetre courte au 2026-09-15. La cause n'est pas une donnee manquante mais un defaut de CALENDRIER : ce sont des instruments FX et metal spot reclames sous us_equity_exchange_sessions, dont la fenetre longue (~190 barres) ne peut pas prouver la cloture attendue. Leur exclusion ne coute aucun statut publie : les deux analyses n'ont aujourd'hui aucune entree dans analyses-status.json. Le correctif durable est un calendrier propre aux instruments non actions, hors perimetre de ce run.",
+    "user_instruction": "Report de l'instruction permanente du 2026-09-14 (« skip ce qui pose pb pour EDP/Glencore et les 3 donnees manquantes, on ne les considere pas »), deja appliquee les 2026-09-15 et 2026-09-16. Preuves du run, capturees le 2026-09-16 entre 21:10 et 21:20 UTC sur la cloture de reference 2026-09-16. EDP.LS sert la seance du 16 mais rend des bornes OHLC qui se contredisent sur au moins trois barres — 2026-09-07 (o=4.619, h=4.716, l=4.637 : le plus bas est AU-DESSUS de l'ouverture), 2026-09-15 (o=4.777, h=4.666) et 2026-09-16 (o=4.777, h=4.75) — et ni tiingo ni webull ne rendent de serie coherente pour cette place. GLEN.L echoue en fenetre de suivi (160 barres) avec le statut de cellule partial venue_session_coverage_incomplete, identique au constat du 2026-09-15 : une sonde courte de huit barres repond completed et ne vaut donc PAS refutation — c'est la fenetre longue qui gouverne le suivi, et c'est elle qui manque de couverture sur la place de Londres. GALP.LS est conserve pour la meme cause exacte sur Euronext Lisbonne. BK reste stale a l'extreme : derniere seance servie 2026-06-10, 8 467 200 secondes de retard, rejection_reason=served_end_before_latest_expected_us_session ; la cause identifiee reste la MIGRATION DE TICKER vers BNY, qui se traite sur preuve primaire hors run et non par reecriture en cours de chaine. USEG renvoie toujours un 404 amont « No data found, symbol may be delisted » sans cible de migration etablie. EURUSD et XAUUSD restent exclus du cycle de vie des analyses pour le defaut de CALENDRIER documente le 2026-09-16 : instruments FX et metal spot reclames sous us_equity_exchange_sessions, dont la fenetre longue ne peut pas prouver la cloture attendue ; aucune observation de ce run ne contredit ce constat et leur exclusion ne coute aucun statut publie. Le defaut de bornes yahoo sur les listings US n'est PAS traite par exclusion : NU et XLE sont repris par symbole sur webull apres l'echec de tiingo (en cooldown serveur ce soir), NU etant verifie contre l'intraday 15 minutes — premiere bougie de seance a 13:30Z, plus haut 14.07, quand yahoo servait high=14.00. Les enregistrements existants des symboles exclus sont preserves, aucun trade n'est modifie ni supprime, et tous les autres gates restent obligatoires.",
     "preserve_existing_records": true,
     "all_other_gates_required": true
   },

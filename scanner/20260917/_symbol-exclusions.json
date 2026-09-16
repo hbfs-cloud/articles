@@ -1,0 +1,16 @@
+{
+  "date": "20260917",
+  "refdate": "2026-09-16",
+  "symbols": [
+    "BK",
+    "EDP.LS",
+    "EURUSD",
+    "GALP.LS",
+    "GLEN.L",
+    "USEG",
+    "XAUUSD"
+  ],
+  "user_instruction": "Report de l'instruction permanente du 2026-09-14 (« skip ce qui pose pb pour EDP/Glencore et les 3 donnees manquantes, on ne les considere pas »), deja appliquee les 2026-09-15 et 2026-09-16. Preuves du run, capturees le 2026-09-16 entre 21:10 et 21:20 UTC sur la cloture de reference 2026-09-16. EDP.LS sert la seance du 16 mais rend des bornes OHLC qui se contredisent sur au moins trois barres — 2026-09-07 (o=4.619, h=4.716, l=4.637 : le plus bas est AU-DESSUS de l'ouverture), 2026-09-15 (o=4.777, h=4.666) et 2026-09-16 (o=4.777, h=4.75) — et ni tiingo ni webull ne rendent de serie coherente pour cette place. GLEN.L echoue en fenetre de suivi (160 barres) avec le statut de cellule partial venue_session_coverage_incomplete, identique au constat du 2026-09-15 : une sonde courte de huit barres repond completed et ne vaut donc PAS refutation — c'est la fenetre longue qui gouverne le suivi, et c'est elle qui manque de couverture sur la place de Londres. GALP.LS est conserve pour la meme cause exacte sur Euronext Lisbonne. BK reste stale a l'extreme : derniere seance servie 2026-06-10, 8 467 200 secondes de retard, rejection_reason=served_end_before_latest_expected_us_session ; la cause identifiee reste la MIGRATION DE TICKER vers BNY, qui se traite sur preuve primaire hors run et non par reecriture en cours de chaine. USEG renvoie toujours un 404 amont « No data found, symbol may be delisted » sans cible de migration etablie. EURUSD et XAUUSD restent exclus du cycle de vie des analyses pour le defaut de CALENDRIER documente le 2026-09-16 : instruments FX et metal spot reclames sous us_equity_exchange_sessions, dont la fenetre longue ne peut pas prouver la cloture attendue ; aucune observation de ce run ne contredit ce constat et leur exclusion ne coute aucun statut publie. Le defaut de bornes yahoo sur les listings US n'est PAS traite par exclusion : NU et XLE sont repris par symbole sur webull apres l'echec de tiingo (en cooldown serveur ce soir), NU etant verifie contre l'intraday 15 minutes — premiere bougie de seance a 13:30Z, plus haut 14.07, quand yahoo servait high=14.00. Les enregistrements existants des symboles exclus sont preserves, aucun trade n'est modifie ni supprime, et tous les autres gates restent obligatoires.",
+  "preserve_existing_records": true,
+  "all_other_gates_required": true
+}
