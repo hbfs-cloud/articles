@@ -233,6 +233,7 @@ async function main() {
   }
 
   if (replayTickers.size) {
+    // Strict : le repli tiingo par symbole répare une barre incohérente en amont.
     certifiedBars = await fetchCertifiedDailyBars({
       symbols: [...replayTickers], refdate: run.refdate, cryptoRefdate: run.cryptoRefdate,
       asOfTimestamp: run.asOfTimestamp, limit: Math.max(160, MAX_AGE_DAYS + 10),

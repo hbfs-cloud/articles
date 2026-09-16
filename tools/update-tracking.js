@@ -156,6 +156,9 @@ async function main() {
   const tickers = [...new Set(allTrades.map(t => t.ticker_marketdata))];
   console.log(`\nFetching certified MCP OHLC for: ${tickers.join(', ')}`);
   const ohlcData = {};
+  // Strict : une barre qui se contredit déclenche le repli tiingo par symbole dans
+  // fetchCertifiedDailyBars. Le suivi statue sur high/low (TP touché, stop touché), donc
+  // il lui faut la vraie amplitude de séance, pas une barre yahoo tronquée.
   const certified = await fetchCertifiedDailyBars({
     symbols: tickers, refdate: run.refdate, cryptoRefdate: run.cryptoRefdate,
     asOfTimestamp: run.asOfTimestamp, limit: 160,
@@ -165,7 +168,9 @@ async function main() {
     const last = history[run.refdate];
     if (!last) throw new Error(`${tkr}: certified bars missing ${run.refdate}`);
     ohlcData[tkr] = { history, lastPrice: last.close };
-    console.log(`  ${tkr}: last=${last.close}, ${Object.keys(history).length} certified bars`);
+    const unreliable = Object.entries(history).filter(([, b]) => b.open_unreliable).map(([d]) => d);
+    console.log(`  ${tkr}: last=${last.close}, ${Object.keys(history).length} certified bars`
+      + (unreliable.length ? `  [open hors [low,high] sur ${unreliable.join(', ')} — non utilisé par le suivi]` : ''));
   }
 
   // Determine status for each trade — walk OHLC bars day by day. A plan is not a

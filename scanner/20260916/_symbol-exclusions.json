@@ -1,0 +1,16 @@
+{
+  "date": "20260916",
+  "refdate": "2026-09-15",
+  "symbols": [
+    "BK",
+    "EDP.LS",
+    "EURUSD",
+    "GALP.LS",
+    "GLEN.L",
+    "USEG",
+    "XAUUSD"
+  ],
+  "user_instruction": "Report de l'instruction permanente de l'utilisateur du 2026-09-14 (« skip ce qui pose pb pour EDP/Glencore et les 3 données manquantes, on ne les considere pas »), déjà appliquée le 2026-09-15, et réaffirmée le 2026-09-16 par la consigne de débloquer le run avant l'open. Preuve par symbole sur la clôture de référence 2026-09-15 : GLEN.L reste servi en statut partial venue_session_coverage_incomplete sur la place de Londres ; EDP.LS est conservé dans la même exclusion qu'au run précédent ; BK et USEG renvoient tous deux un 404 amont « No data found, symbol may be delisted ». Pour BK, la cause identifiée est une MIGRATION DE TICKER et non une radiation : BNY sert une barre complète au 2026-09-15 (o=156.31 h=156.875 l=152.54 c=154.67) et figure dans l'univers intraday du serveur, alors que BK n'existe plus côté fournisseur. La migration BK vers BNY dans les données d'analyses est un correctif à part entière, à faire sur preuve primaire (communiqué IR ou dépôt SEC), pas une réécriture par inférence en cours de run : BK est donc exclu ce soir et migré ensuite. Pour USEG, aucune cible de migration n'est établie — le symbole USE répond mais avec un profil de prix et de volume incompatible, aucun rapprochement n'est fait. Les enregistrements existants des quatre symboles sont préservés, aucun trade n'est modifié ni supprimé, et tous les autres gates restent obligatoires. Le défaut de bornes OHLC du 2026-09-15 n'est PAS traité par exclusion : les barres incohérentes de yahoo sont reprises par symbole sur tiingo, vérifiées contre l'intraday 15 minutes (STT : ouverture 187.45 = plus haut réel de séance, yahoo servait high=187.265). Ajout du 2026-09-16 : EURUSD et XAUUSD echouent de maniere REPRODUCTIBLE dans le cycle de vie des analyses (EURUSD stale served_end_before_latest_expected_us_session, XAUUSD upstream_or_calculation_failed) alors qu'ils repondent correctement en fenetre courte au 2026-09-15. La cause n'est pas une donnee manquante mais un defaut de CALENDRIER : ce sont des instruments FX et metal spot reclames sous us_equity_exchange_sessions, dont la fenetre longue (~190 barres) ne peut pas prouver la cloture attendue. Leur exclusion ne coute aucun statut publie : les deux analyses n'ont aujourd'hui aucune entree dans analyses-status.json. Le correctif durable est un calendrier propre aux instruments non actions, hors perimetre de ce run. GALP.LS rejoint EDP.LS pour la meme cause exacte et sur la meme place : statut partial euronext_session_coverage_incomplete sur Euronext Lisbonne au 2026-09-15. Le perimetre analyses ne compte que quatre symboles non-US (BNP.PA, EURUSD, GALP.LS, XAUUSD) sur 369 ; BNP.PA passe tous les gates et reste dans le perimetre.",
+  "preserve_existing_records": true,
+  "all_other_gates_required": true
+}

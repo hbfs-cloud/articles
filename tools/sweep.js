@@ -739,11 +739,25 @@ function marketForTicker(ticker) {
 function saveCertifiedPrice(ticker, history) {
   priceCacheLib.writeHistory(ticker, history, { date: REF_DATE, market: marketForTicker(ticker) });
 }
+// Un open servi hors [low, high] (défaut fournisseur du 2026-09-15) ne doit JAMAIS
+// devenir un prix de fill ou de sortie sur gap : le P&L d'un trade scellé en dépend.
+// On refuse au point d'usage, avec le trade et la date, plutôt qu'au chargement.
+function reliableOpen(bar, ticker, date, usage) {
+  if (bar && bar.open_unreliable) {
+    throw new Error(`${ticker}: open non fiable le ${date} (hors [low, high]) — refus de l'utiliser comme ${usage}`);
+  }
+  return bar.open;
+}
+
 async function prefetchBulkMCP(tickers, label) {
   const list = [...new Set(tickers)].filter(t => t && !priceCache[t] && !SYMBOL_EXCLUSIONS.excludesSymbol(t));
   if (!list.length) return 0;
   const run = runContext();
   console.log(`  [marketdata] ${list.length} ticker(s)${label ? ' — ' + label : ''}`);
+  // Le préchargement charge la barre marquée plutôt que d'abattre tout le sweep : l'open
+  // n'est consommé qu'aux points de fill/gap ci-dessous, où `reliableOpen()` refuse
+  // explicitement une valeur non fiable. Un open hors [low, high] ne peut donc jamais
+  // entrer dans un P&L, mais il ne bloque plus les trades qui ne s'en servent pas.
   const barsBySymbol = await fetchCertifiedDailyBars({
     symbols: list,
     refdate: run.refdate,
@@ -838,6 +852,9 @@ function computeOutcomeHorizons(priceHistory, entryDate, entryPrice, DF) {
 }
 
 function simulateTrade(setup, scanDate, priceHistory, config = {}) {
+  // Identité du titre pour les refus de `reliableOpen()` ci-dessous : `setup` est le seul
+  // porteur du ticker dans cette fonction.
+  const ticker = setup.ticker || setup.symbol || '?';
   // `let` (et non `const`) : les positions du livre moteur portent leurs PROPRES sorties, par
   // poche. Voir le bloc « SORTIES DU MOTEUR » plus bas — sans cela, `horizonDays`/`partialTP*`
   // devraient être renommés partout, ce qui rendrait le diff illisible pour un changement de deux
@@ -927,7 +944,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   const entryBar = priceHistory[entryDate];
   if (!entryBar) return null;
 
-  const actualEntry = entryBar.open;
+  const actualEntry = reliableOpen(entryBar, ticker, entryDate, 'prix d\'entrée');
   if (!actualEntry || actualEntry <= 0) return null;
 
   // Reject trade if entry gaps below stop level (e.g. BTU 03-31: open $34.52 < stop $35)
@@ -1095,7 +1112,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       else if (currentStop >= entryPrice) status = 'breakeven';  // stop moved to entry → 0 exit
       else status = 'sl';                                         // original stop hit → loss
       exitDate = date;
-      exitPrice = heldOvernight ? Math.min(currentStop, bar.open) : currentStop;
+      exitPrice = heldOvernight ? Math.min(currentStop, reliableOpen(bar, ticker, date, 'sortie stop sur gap')) : currentStop;
       if (ambiguous) status = status + '_amb';                    // _amb suffix for audit
       break;
     }
@@ -1148,7 +1165,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     if (!disableTP2 && actualTp2 !== null && bar.high >= actualTp2) {
       status = 'tp2';
       exitDate = date;
-      exitPrice = heldOvernight ? Math.max(actualTp2, bar.open) : actualTp2;
+      exitPrice = heldOvernight ? Math.max(actualTp2, reliableOpen(bar, ticker, date, 'sortie TP2 sur gap')) : actualTp2;
       break;
     }
 
@@ -1162,7 +1179,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       if (bar.high >= tpLevel) {
         status = partialRealized > 0 ? 'tp1_partial' : 'tp1';
         exitDate = date;
-        exitPrice = heldOvernight ? Math.max(tpLevel, bar.open) : tpLevel;
+        exitPrice = heldOvernight ? Math.max(tpLevel, reliableOpen(bar, ticker, date, 'sortie TP total sur gap')) : tpLevel;
         break;
       }
     }
@@ -1193,7 +1210,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       } else {
         status = 'tp1';
         exitDate = date;
-        exitPrice = heldOvernight ? Math.max(actualTp1, bar.open) : actualTp1;
+        exitPrice = heldOvernight ? Math.max(actualTp1, reliableOpen(bar, ticker, date, 'sortie TP1 sur gap')) : actualTp1;
         break;
       }
     }

@@ -153,17 +153,25 @@ function validateBeta(payload, cfg, refdate) {
     if (typeof row.symbol !== 'string' || !row.symbol || seen.has(row.symbol)) throw Error(`${cfg.ref}: missing/duplicate proxy symbol`);
     seen.add(row.symbol);
     for (const key of ['beta', 'correlation', 'r2']) if (typeof row[key] !== 'number' || !Number.isFinite(row[key])) throw Error(`${cfg.ref}/${row.symbol}: invalid ${key}`);
-    if (row.correlation < cfg.minCorr || row.correlation > 1 || row.r2 < 0 || row.r2 > 1) throw Error(`${cfg.ref}/${row.symbol}: proxy fails quality thresholds`);
+    // RankBeta filtre sur |correlation| : il retient aussi les proxys INVERSES (beta < 0),
+    // légitimes mais qui ne sont pas des "plus hauts beta". Comparer la valeur signée au
+    // seuil faisait donc échouer toute la page sur un proxy que le tri écartait de toute
+    // façon (ETH/LZB, corr=-0.61, beta=-0.65, le 2026-09-15). On valide sur la magnitude,
+    // et on écarte les inverses de la liste publiée plus bas.
+    if (Math.abs(row.correlation) < cfg.minCorr || Math.abs(row.correlation) > 1 || row.r2 < 0 || row.r2 > 1) throw Error(`${cfg.ref}/${row.symbol}: proxy fails quality thresholds`);
     const n = row.overlap ?? row.n_obs ?? row.observations ?? row.n;
     if (n != null && (!Number.isInteger(n) || n < 30)) throw Error(`${cfg.ref}/${row.symbol}: fewer than 30 overlapping observations`);
     for (const key of ['served_completed_end', 'data_through', 'as_of']) if (row[key] != null && String(row[key]).slice(0,10) !== refdate) throw Error(`${cfg.ref}/${row.symbol}: stale regression window`);
     if (row.last_price != null && (typeof row.last_price !== 'number' || !Number.isFinite(row.last_price) || row.last_price <= 0)) throw Error(`${cfg.ref}/${row.symbol}: invalid price`);
   }
-  const rows = [...item.rows].sort((a,b) => b.beta - a.beta || a.symbol.localeCompare(b.symbol)).slice(0,6).map(r => ({
+  const positive = item.rows.filter(r => r.correlation > 0);
+  const inverseExcluded = item.rows.length - positive.length;
+  if (!positive.length) throw Error(`${cfg.ref}: no positively-correlated beta proxy (${inverseExcluded} inverse proxies only)`);
+  const rows = [...positive].sort((a,b) => b.beta - a.beta || a.symbol.localeCompare(b.symbol)).slice(0,6).map(r => ({
     symbol: r.symbol, beta: +r.beta.toFixed(2), correlation: +r.correlation.toFixed(2), r2: +r.r2.toFixed(2),
     last_price: r.last_price == null ? null : +r.last_price.toFixed(2), sector: r.sector || '', industry: r.industry || '',
   }));
-  return { key: cfg.key, label: cfg.label, reference: cfg.ref, window: item.window || '90d', asof: refdate, quality: 'usable', warning: null, rows };
+  return { key: cfg.key, label: cfg.label, reference: cfg.ref, window: item.window || '90d', asof: refdate, quality: 'usable', warning: null, inverse_excluded: inverseExcluded, rows };
 }
 function options(argv, env, root, now) {
   let supplied;

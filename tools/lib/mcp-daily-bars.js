@@ -52,7 +52,14 @@ function isValidIsoDate(date) {
     && new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) === date;
 }
 
-function normalizeBars(row, symbol, calendar) {
+// `allowUnreliableOpen` ne desserre RIEN sur high/low/close : il autorise le seul cas
+// où l'open servi sort de [low, high] alors que le reste de la barre est cohérent.
+// Le fournisseur produit cet écart en prenant l'open sur une impression pré-marché
+// (7 symboles sur 112 le 2026-09-15 ; RefreshBars resert le même open). Seuls les
+// consommateurs qui ne lisent pas l'open peuvent l'activer — update-tracking et
+// analyses-lifecycle. sweep.js s'en sert comme prix de fill et reste donc strict.
+function normalizeBars(row, symbol, calendar, opts = {}) {
+  const allowUnreliableOpen = opts.allowUnreliableOpen === true;
   const raw = row && row.bars;
   if (!Array.isArray(raw) || raw.length === 0) throw new Error(`${symbol}: bars_daily returned no bars`);
   const out = [];
@@ -70,11 +77,15 @@ function normalizeBars(row, symbol, calendar) {
       throw new Error(`${symbol}: malformed bars_daily row`);
     }
     if (open <= 0 || high <= 0 || low <= 0 || close <= 0 || volume < 0
-      || high < Math.max(open, low, close) || low > Math.min(open, high, close)) {
+      || high < Math.max(low, close) || low > Math.min(high, close)) {
       throw new Error(`${symbol}: invalid OHLCV bounds`);
     }
+    const openInRange = open >= low && open <= high;
+    if (!openInRange && !allowUnreliableOpen) {
+      throw new Error(`${symbol}: open ${open} outside [${low}, ${high}] on ${date}`);
+    }
     if (!isSession(date, calendar)) throw new Error(`${symbol}: bar on a non-session date ${date} (${calendar})`);
-    out.push({ date, open, high, low, close, volume });
+    out.push({ date, open, high, low, close, volume, ...(openInRange ? {} : { open_unreliable: true }) });
   }
   for (let i = 1; i < out.length; i++) {
     const prior = out[i - 1].date, current = out[i].date;
@@ -109,7 +120,7 @@ async function completedResponse(client, args, recordReceipt) {
  * Returns Map<symbol, [{date,open,high,low,close,volume}]>.
  * Every returned series is bounded by, and proves, its requested completed end.
  */
-async function fetchCertifiedDailyBars({ symbols, refdate, cryptoRefdate, asOfTimestamp, limit = 160, batchSize = 25, client = require('./mcp-client'), receiptDir = path.resolve(__dirname, '../../.agent/mcp-daily-bars') }) {
+async function fetchCertifiedDailyBars({ symbols, refdate, cryptoRefdate, asOfTimestamp, limit = 160, batchSize = 25, allowUnreliableOpen = false, client = require('./mcp-client'), receiptDir = path.resolve(__dirname, '../../.agent/mcp-daily-bars') }) {
   const requested = [...new Set((symbols || []).map(String).map(s => s.trim()).filter(Boolean))];
   if (!requested.length) return new Map();
   refdate = requireIsoDate(refdate, '--refdate');
@@ -162,7 +173,32 @@ async function fetchCertifiedDailyBars({ symbols, refdate, cryptoRefdate, asOfTi
       }
       for (const item of check.healthyCells) {
         if (item.status !== 'completed' || !item.row) throw new Error(`${item.id}: no completed daily-bar row`);
-        const bars = normalizeBars(item.row, item.id, group.calendar).filter(bar => bar.date <= group.expected);
+        let bars;
+        try {
+          bars = normalizeBars(item.row, item.id, group.calendar, { allowUnreliableOpen }).filter(bar => bar.date <= group.expected);
+        } catch (error) {
+          // Le défaut yahoo du 2026-09-15 : high/low calculés sur la séance régulière SANS
+          // l'impression d'ouverture, donc une barre qui se contredit. Vérifié sur STT contre
+          // l'intraday 15m (ouverture 187.45 = plus haut réel, yahoo servait high=187.265) :
+          // un high tronqué fait MANQUER un take-profit, un low tronqué manque un stop.
+          // On rejoue le seul symbole atteint sur tiingo, qui inclut l'ouverture. Aucun repli
+          // hors MCP, et si tiingo se contredit aussi on échoue franchement.
+          // Deux défauts de série yahoo appellent le même remède : bornes qui se contredisent
+          // et séances manquantes au milieu de l'historique (AMKR saute les 21 et 22/07/2026,
+          // que tiingo sert). Tout autre échec reste fatal.
+          if (!/invalid OHLCV bounds|open .* outside |incomplete .* bar sequence/.test(error.message)) throw error;
+          const alt = await completedResponse(client, {
+            types: 'bars_daily', symbols: item.id, limit,
+            as_of_timestamp: asOfTimestamp, completion_policy: 'completed_only', source: 'tiingo',
+          }, recordReceipt);
+          const altCheck = contract.validateQueryData(alt, {
+            symbols: item.id, assetCalendar: group.calendar, expectedCompletedEnd: group.expected,
+          });
+          const altCell = altCheck.errors.length ? null : altCheck.healthyCells.find(c => c.id === item.id && c.status === 'completed' && c.row);
+          if (!altCell) throw new Error(`${item.id}: série yahoo défectueuse et tiingo indisponible — ${error.message}`);
+          bars = normalizeBars(altCell.row, item.id, group.calendar).filter(bar => bar.date <= group.expected);
+          console.log(`  [source] ${item.id}: série yahoo défectueuse → barres reprises sur tiingo (${error.message})`);
+        }
         const last = bars[bars.length - 1];
         if (!last || last.date !== group.expected) {
           throw new Error(`${item.id}: bars do not end at certified close ${group.expected}`);
@@ -177,7 +213,7 @@ async function fetchCertifiedDailyBars({ symbols, refdate, cryptoRefdate, asOfTi
 
 function barsToHistory(bars) {
   const history = {};
-  for (const bar of bars || []) history[bar.date] = { open: bar.open, high: bar.high, low: bar.low, close: bar.close, volume: bar.volume };
+  for (const bar of bars || []) history[bar.date] = { open: bar.open, high: bar.high, low: bar.low, close: bar.close, volume: bar.volume, ...(bar.open_unreliable ? { open_unreliable: true } : {}) };
   return history;
 }
 
