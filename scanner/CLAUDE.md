@@ -40,6 +40,16 @@ source contract is `.claude/skills/source-policy.md`. Those files override histo
   its explicit asset calendar, and `expected_completed_end=refdate`; `end_date` is not close certification.
 - SEC discovery uses MCP `sec_filings,flags`; every equity-offering hit is classified from the primary
   filing. Debt is not dilution. Unknown classification blocks the candidate.
+- Registration-form screening is NOT sufficient. A large cap issues shares through an **8-K Item 3.02
+  (Unregistered Sales of Equity Securities)**, which carries no S-*/424B* form and is invisible to a
+  form-type filter. Read 8-K item codes: 3.02 (issuance) and 3.03 (modification of holder rights) are
+  equity events and must be classified like any offering. QCOM cleared a form-type screen on 2026-09-16
+  while holding a 2026-09-08 Item 3.02 warrant to Amazon for 25,000,000 shares at $161.26 — in the money
+  at the $187.80 reference close — plus 19,200,000 shares for the Modular acquisition. Both filings were
+  present in the collected MCP payload; only the filter was blind.
+- The MCP `sec_filings` list is truncated relative to EDGAR and its date bounds are refused
+  (`current-only`). Treat it as discovery, never as the complete record: classification opens the primary
+  filing on EDGAR, and the point-in-time bound (`filingDate <= refdate`) is applied when reading.
 - Web access is limited to primary SEC/IR/macro documents and attributed current news. It never replaces
   market data, a technical, a score, a level, a backtest or a missing DTX response.
 

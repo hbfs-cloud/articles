@@ -145,6 +145,12 @@ The selection phase additionally applies:
 Unknown SEC classification, missing earnings evidence, stale bars or a scale mismatch is a reject. Debt
 prospectuses are not equity dilution. Web snippets never settle classification.
 
+Screening registration forms alone misses the most direct issuance channel. **8-K Item 3.02 (Unregistered
+Sales of Equity Securities) and Item 3.03 (material modification of holder rights) are equity events** and
+are classified like any offering; a filter keyed on `S-*`/`424B*`/`F-*` never sees them. Neither wave1 nor
+wave2 collects `sec_filings,flags` today, so the evidence is gathered per run and the gap is the first
+thing to check before trusting a dilution clearance.
+
 ## Phase 3 - Levels and Selection
 
 1. Build the eligible set from collected rows only.
