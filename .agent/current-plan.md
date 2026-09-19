@@ -2,7 +2,9 @@
 
 ## Livraison Git autorisée — travaux terminés uniquement
 
-- IN PROGRESS — Demande explicite commit/push reçue; branche créée et contrôles finaux PASS (suite content, KLAC 282, AAOI 240, rétro strict). Branche de sauvegarde `checkpoint/20260919-completed-research` : correctifs testés, rétro provisoire, révisions locales KLAC/AAOI et preuves. Main déclenche Pages : aucune fusion/publication des analyses bloquées.
+- IN PROGRESS — Utilisateur exige `main`. Export Pages corrigé pour exclure `_runs`, test ciblé PASS; transfert des commits terminés vers main puis push sans force.
+
+- DONE — Commit `ad8ceb1606adaf09bfb5207ad5e44853464473aa` poussé vers `origin/checkpoint/20260919-completed-research`, après autorisation explicite utilisateur « oui push » couvrant le dépôt public et les archives locales. Correctifs testés, rétro provisoire, révisions locales KLAC/AAOI et preuves sauvegardés. Aucune fusion vers main ni déploiement Pages.
 - TODO — À reprendre plus tard : AG/AMD/ALLR, lots restants et gates externes. Sources de collecte `_data` de la rétro conservées localement conformément aux règles scanner, non stagées. Changements utilisateur et travaux inachevés exclus.
 
 ## Checkpoint courant — récupération Marketdata et révisions effectives

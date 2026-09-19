@@ -37,8 +37,9 @@ jobs:
           cp -r assets/ _site/assets/
 
           # Article directories + public apps
+          # Research runs are versioned evidence, not approved public articles.
           for dir in daily weekly scanner analyses series tech prompt-ia rotation; do
-            [ -d "$dir" ] && cp -r "$dir" "_site/$dir"
+            [ -d "$dir" ] && rsync -a --exclude='_runs/' "$dir/" "_site/$dir/"
           done
 
           # Data (JSON indexes + search + trading plans)
