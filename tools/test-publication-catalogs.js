@@ -26,16 +26,21 @@ function publish(type, file, title) {
   run('tools/publish.js', '--type', type, '--path', file, '--no-push', '--no-notify');
   assert.equal(git('status', '--porcelain'), '', 'publisher must commit all generated indexes');
   assert.ok(git('show', `HEAD:${file}`).includes(title));
+  assert.ok(git('show', 'HEAD:assets/search-index.json').includes(title), 'full-text search must follow the publication');
+  assert.ok(git('show', 'HEAD:sitemap.xml').includes(file.replace(/index\.html$/, '')), 'sitemap must include the page');
+  assert.ok(!git('show', 'HEAD:index.html').includes('search_data.js?v=1"'), 'the browser search cache must be invalidated');
 }
 
 try {
   for (const file of ['package.json', 'tools/package.json', 'tools/publish.js', 'tools/add_card.js',
+    'tools/build_search_index.py', 'tools/build_sitemap_rss.py', 'tools/build_rss.js',
     'tools/build_search_module.js', 'tools/gen-series-catalog.js', 'tools/gen-tech-catalog.cjs',
     'tools/validate-article.js', 'tools/lib/analysis-publication-gate.js', 'tools/lib/refresh-tech-series.js']) {
     write(file, fs.readFileSync(path.join(ROOT, file)));
   }
   fs.symlinkSync(path.join(ROOT, 'node_modules'), path.join(temp, 'node_modules'), 'dir');
   write('.gitignore', 'node_modules/\n');
+  write('index.html', '<script src="/data/search_data.js?v=1"></script>');
   for (const type of ['tech', 'series']) write(`data/${type}.json`, '[]');
   const curated = { title: 'Curated cross-slug group', chapters: [
     { number: 1, href: '/tech/existing-one/', title: 'Short label one' },
@@ -56,6 +61,7 @@ try {
   assert.equal(guides.length, 1, 'refresh must not duplicate the card');
   assert.equal(guides[0].title, 'Guide actualisé');
   assert.ok(git('show', 'HEAD:data/tech-catalog.json').includes('Guide actualisé'));
+  assert.ok(git('show', 'HEAD:feed.xml').includes('Guide actualisé'), 'RSS must contain the refreshed title');
 
   publish('series', 'series/course/part1-start/index.html', 'Introduction');
   for (const [part, title] of [['part2-next', 'Approfondissement'], ['ep3', 'Exercices']]) {

@@ -1,6 +1,5 @@
 import os
 import glob
-from bs4 import BeautifulSoup
 
 def build_sitemap():
     dirs = ['analyses', 'daily', 'scanner', 'weekly', 'portfolio', 'series', 'tech', 'prompt-ia', 'rotation']
@@ -47,8 +46,4 @@ def build_sitemap():
     print(f"Built sitemap.xml with {len(urls)} URLs.")
 
 if __name__ == "__main__":
-    try:
-        from bs4 import BeautifulSoup
-    except ImportError:
-        pass
     build_sitemap()

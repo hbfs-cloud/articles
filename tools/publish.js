@@ -145,6 +145,16 @@ function extractDatePart(p) {
 
 console.log('\nStep 3/7 — Indexing article (add_card.js)...');
 runSafe('node', ['tools/add_card.js', artPath], 'add_card.js');
+// Fresh publication clones do not carry local Git hooks. Rebuild every index
+// consumed by the site explicitly, including full-text search and discovery.
+runSafe('python3', ['tools/build_search_index.py'], 'full-text search');
+runSafe('python3', ['tools/build_sitemap_rss.py'], 'sitemap');
+runSafe('node', ['tools/build_rss.js'], 'RSS');
+if (!dryRun) {
+  const home = path.join(ROOT, 'index.html');
+  const html = fs.readFileSync(home, 'utf8');
+  fs.writeFileSync(home, html.replace(/search_data\.js\?v=\d+/g, `search_data.js?v=${Date.now()}`));
+}
 
 // ─── Step 4: Git add ──────────────────────────────────────────────────────────
 
@@ -152,7 +162,7 @@ console.log('\nStep 4/7 — Staging files (git add)...');
 
 // Always stage the article folder and data/
 const artFolder = artPath.split('/').slice(0, 2).join('/');
-let gitAddPaths = [artFolder, 'data/'];
+let gitAddPaths = [artFolder, 'data/', 'assets/search-index.json', 'sitemap.xml', 'feed.xml', 'index.html'];
 
 if (type === 'daily' || type === 'weekly') {
   gitAddPaths.push('data/radar.json');
