@@ -72,9 +72,27 @@ else tab = doc.documentElement.getAttribute('data-tab') || 'analyses';
 // GUARD: Skip sub-parts of multi-part series/tech articles.
 // Only the landing page or part1 should get a card, not part2, part3, etc.
 // Matches patterns like /part2-xxx/, /part3-xxx/, etc.
-const subPartMatch = argPath.match(/\/part(\d+)-/);
+function rebuildCatalogs() {
+    if (tab !== 'series' && tab !== 'tech') return;
+    // These are the payloads actually consumed by the homepage. Do not rely on
+    // unversioned Git hooks: MCP publishes from a fresh, isolated clone.
+    if (tab === 'tech') require('./lib/refresh-tech-series')(argPath);
+    if (tab === 'series') require('./gen-series-catalog.js');
+    require('./gen-tech-catalog.cjs');
+}
+
+const subPartMatch = argPath.match(/\/(?:part|ep)(\d+)(?:[-/])/i);
 if (subPartMatch && parseInt(subPartMatch[1]) > 1) {
+    if (tab === 'series' || tab === 'tech') {
+        const familyHref = '/' + path.relative(path.resolve(__dirname, '..'), fullPath).split(path.sep).slice(0, 2).join('/') + '/';
+        const indexed = JSON.parse(fs.readFileSync(path.join(__dirname, '../data', `${tab}.json`), 'utf8'));
+        if (!indexed.some(card => card.includes(`href="${familyHref}`))) {
+            throw new Error(`Publish the landing page or first chapter of ${familyHref} before later chapters; no parent card is indexed.`);
+        }
+    }
     console.log(`Skipped: ${argPath} is a sub-part (part ${subPartMatch[1]}). Only landing pages and part1 get indexed as cards.`);
+    // A new/refreshed chapter must still reach the catalog and navigation.
+    rebuildCatalogs();
     process.exit(0);
 }
 
@@ -500,7 +518,8 @@ if (tab === 'daily') {
     if (removed > 0) {
         console.log(`Dedup: replaced ${removed} existing card(s) for ${href}`);
     }
-    cards.push(cardHtml.trim());
+    if (tab === 'tech' || tab === 'series') cards.unshift(cardHtml.trim());
+    else cards.push(cardHtml.trim());
 
     // Weekly cards must remain newest-first because the homepage renders the
     // stored order directly.
@@ -537,6 +556,7 @@ if (tab === 'daily') {
 
 fs.writeFileSync(jsonFile, JSON.stringify(cards, null, 2));
 console.log(`Added card to ${tab}.json successfully.`);
+rebuildCatalogs();
 
 // Rebuild search
 const buildSearch = require('./build_search_module.js');

@@ -56,6 +56,16 @@ function chaptersFor(slug) {
     const meta = pageMeta(file, href, `Partie ${number}`);
     chapters.push({ number, href, title: meta.title });
   }
+  // Some series use the root article as episode 1. A landing/redirect is not a
+  // chapter: include it only when it explicitly identifies itself as part 1.
+  const rootPage = path.join(dir, 'index.html');
+  if (!chapters.some(chapter => chapter.number === 1) && fs.existsSync(rootPage)) {
+    const html = fs.readFileSync(rootPage, 'utf8');
+    if (!/http-equiv\s*=\s*["']refresh/i.test(html) && partNumber('', html) === 1) {
+      const href = `/series/${slug}/`;
+      chapters.push({ number: 1, href, title: pageMeta(rootPage, href, 'Partie 1').title });
+    }
+  }
   return chapters.sort((a, b) => a.number - b.number || a.href.localeCompare(b.href));
 }
 

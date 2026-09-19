@@ -8156,6 +8156,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Recette technique temporaire du MCP Author",
+    "desc": "Gates bloquants (fraîcheur datée, validation quantitative, détecteur de tics), trois états au lieu de deux, panel adversarial avant mise en ligne. Le jour où un relecteur a recompté « 17 » et trouvé 15, et pourquoi refuser de publier est une fonctionnalité, pas une panne.",
+    "tags": "tech,ai,architecture,formation",
+    "grade": "",
+    "href": "/tech/author-mcp-qa-20260919182454735/",
+    "date": ""
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Track record scellé : les carnets, chiffres figés",
     "desc": "Les performances des carnets publics, recopiées d'un registre scellé en ajout seul : trades clôturés, taux de réussite, facteur de profit, rendement, pire repli. Aucun chiffre recalculé pour l'affichage.",
     "tags": "tech,technique,retrospective,education",
@@ -8616,19 +8629,6 @@ window.searchDataPrebuilt = [
     "tags": "formation,tech,trading,architecture",
     "grade": "",
     "href": "/tech/broker-simulator/",
-    "date": ""
-  },
-  {
-    "type": "tech",
-    "icon": "fa-microchip",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Recette technique temporaire du MCP Author",
-    "desc": "Gates bloquants (fraîcheur datée, validation quantitative, détecteur de tics), trois états au lieu de deux, panel adversarial avant mise en ligne. Le jour où un relecteur a recompté « 17 » et trouvé 15, et pourquoi refuser de publier est une fonctionnalité, pas une panne.",
-    "tags": "tech,ai,architecture,formation",
-    "grade": "",
-    "href": "/tech/author-mcp-qa-20260919182454735/",
     "date": ""
   },
   {

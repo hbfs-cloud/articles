@@ -230,6 +230,6 @@ if (!noNotify && !dryRun) {
 
 // ─── Summary ──────────────────────────────────────────────────────────────────
 
-const url = `https://articles.dailytickers.com/${artFolder}/`;
+const url = `https://articles.dailytickers.com/${artPath.replace(/index\.html$/, '')}`;
 console.log(`\n✅ Published ${type} ${artPath} → ${url}`);
 if (dryRun) console.log('   (dry-run — no files were modified)');

@@ -43,7 +43,8 @@ for (const cardHtml of cards) {
 
   const heading = card.find('h2').first().text().trim() || card.find('h3').first().text().trim();
   const description = card.find('p').first().text().replace(/\s+/g, ' ').trim();
-  const series = seriesByFirstChapter.get(href);
+  const series = seriesByFirstChapter.get(href) || (/^\/tech\/[^/]+\/$/.test(href)
+    ? techSeries.find(item => item.chapters.some(chapter => chapter.href.startsWith(href))) : undefined);
   const discovered = discoverSeriesChapters(href);
   const chapters = series ? series.chapters : (discovered.length ? discovered : [{ number: 1, href, title: heading }]);
   guides.push({

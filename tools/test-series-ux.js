@@ -117,7 +117,14 @@ assert(indexHtml.includes('techCatalogCard'), 'tech index cards must use the nor
 assert(indexHtml.includes('Parcours techniques'), 'tech index needs the same visible guided-path structure as Series');
 assert(indexHtml.includes("'panel.tech.title': 'Guides techniques'"), 'French tech heading must remain short on mobile');
 assert(indexHtml.includes("tab === 'tech' ? 'tech-catalog'"), 'tech index must load the structured catalog');
-assert(Array.isArray(techIndexCatalog.guides) && techIndexCatalog.guides.length === 36, 'tech index catalog must preserve all 36 guides');
+const techCardHrefs = new Set(JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'tech.json'), 'utf8')).map(card => {
+  const $ = cheerio.load(card);
+  return $('.report-card').find('.actions a[href], a[href]').first().attr('href');
+}).filter(Boolean));
+assert(Array.isArray(techIndexCatalog.guides), 'tech index catalog needs guides');
+assert.strictEqual(techIndexCatalog.guides.length, techCardHrefs.size, 'tech catalog must not duplicate guides');
+assert.deepStrictEqual(new Set(techIndexCatalog.guides.map(guide => guide.href)), techCardHrefs,
+  'tech catalog must include every indexed guide without stale entries');
 assert(techIndexCatalog.guides.every(guide => Array.isArray(guide.chapters) && guide.chapters.length > 0), 'every tech card needs a real chapter destination');
 assert(/#tab-tech \.report-card\s*\{[\s\S]*?height:\s*300px/.test(style), 'tech index cards need the same stable height as Series');
 assert(/\.series-steps\s*\{[\s\S]*?scrollbar-width:\s*none/.test(fs.readFileSync(path.join(ROOT, 'assets', 'report.css'), 'utf8')), 'chapter scrollbars must stay visually hidden');
