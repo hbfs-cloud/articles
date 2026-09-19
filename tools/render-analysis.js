@@ -31,6 +31,10 @@ function validate(data, schema, loc, rootSchema) {
   loc = loc || '';
   rootSchema = rootSchema || schema;
   const errs = [];
+  if (!loc && data?.performance?.windowReturns) {
+    const w = data.performance.windowReturns;
+    if (w.startDate > w.endDate) errs.push('performance.windowReturns startDate must not exceed endDate');
+  }
   if (schema.$ref) {
     const parts = schema.$ref.replace(/^#\//, '').split('/').map(x => x.replace(/~1/g, '/').replace(/~0/g, '~'));
     const resolved = parts.reduce((node, key) => node && node[key], rootSchema);
@@ -150,6 +154,11 @@ function metricTile(value, label) {
   const v = String(value == null ? '' : value).trim();
   if (!v || v === 'N/A' || v === '.' || v.length > 40) return '';
   return `          <div class="ticker-metric"><div class="tm-value">${esc(v)}</div><div class="tm-label">${esc(label)}</div></div>\n`;
+}
+
+function metricStrip(tiles) {
+  const content = tiles.filter(Boolean).join('');
+  return content ? `<div class="metric-strip metric-strip-muted">${content}</div>` : '';
 }
 
 // Les jauges de risque attendent un NOMBRE. Une valeur en prose (« Structural »,
@@ -286,6 +295,8 @@ function renderHead(d) {
     <style>
       body.analysis-refresh .content-card p, body.analysis-refresh .content-card li { font-size:16px!important; line-height:1.6; }
       .ticker-decision { max-width:850px; margin:0 auto 1rem; text-align:left; font-size:16px!important; line-height:1.5; color:#334155; }
+      .analysis-refresh .source-ref { white-space:normal; flex-wrap:wrap; max-width:100%; margin-left:0; }
+      .analysis-refresh .source-ref .source-name { overflow-wrap:anywhere; min-width:0; }
     </style>
 </head>
 <body${Number(meta.version) >= 3 ? ' class="analysis-refresh"' : ''}>
@@ -388,10 +399,11 @@ function renderVerdict(d) {
     const icon = { pass: 'circle-check', warn: 'triangle-exclamation', blocked: 'ban', fail: 'circle-xmark', unknown: 'circle-question' }[item.status] || 'circle-question';
     return `<div class="decision-check decision-check-${esc(item.status)}"><div class="decision-check-head"><i class="fa-solid fa-${icon}"></i><strong>${esc(item.label)}</strong><span>${esc(item.statusLabel)}</span></div><div class="decision-check-evidence">${esc(item.evidence)}</div><div class="decision-check-action"><b>Conséquence :</b> ${esc(item.action)}</div></div>`;
   }).join('');
+  const noTrade = d.tradeIdea?.status === 'no-trade' || meta.status === 'no-trade';
   return `
       <div id="verdict" class="content-card">
         <h2><i class="fa-solid fa-gavel"></i> Verdict Express</h2>
-${checklist ? `        <div class="decision-cockpit"><div class="decision-cockpit-title"><div><span class="eyebrow-label">DÉCISION PRIORITAIRE</span><h3>ATTENDRE — aucun achat avant les résultats</h3></div><span class="decision-pill decision-pill-blocked"><i class="fa-solid fa-ban"></i> Entrée bloquée</span></div><p class="decision-cockpit-note">La qualité de l’entreprise est élevée, mais le timing est non validé. Les niveaux historiques sont des repères d’audit, pas des ordres.</p><div class="decision-check-grid">${checklist}</div></div>` : ''}
+${checklist || noTrade ? `        <div class="decision-cockpit"><div class="decision-cockpit-title"><div><span class="eyebrow-label">DÉCISION PRIORITAIRE</span><h3>${noTrade ? tx(d, 'NO ACTIVE ORDER', 'AUCUN ORDRE ACTIF') : tx(d, 'Decision conditions', 'Conditions de décision')}</h3></div>${noTrade ? `<span class="decision-pill decision-pill-blocked"><i class="fa-solid fa-ban"></i> ${tx(d, 'No active entry', 'Entrée inactive')}</span>` : ''}</div><p class="decision-cockpit-note">${esc(d.tradeIdea?.statusNote || tx(d, 'Check the conditions below before any order.', 'Vérifier les conditions ci-dessous avant tout ordre.'))}</p><div class="decision-check-grid">${checklist}</div></div>` : ''}
         <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem;">
           <div style="text-align:center;">
             <div id="gaugeScore" class="echart-box" style="width:180px;height:180px;"></div>
@@ -405,7 +417,7 @@ ${checklist ? `        <div class="decision-cockpit"><div class="decision-cockpi
             <p style="font-size:0.95rem;line-height:1.6;color:#334155;">${esc(verdict.summary)}</p>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:1.5rem;">
           <div style="background:#f0fdf4;border:1px solid #86efac;padding:1.25rem;border-radius:12px;">
             <h4 style="color:#16a34a;margin:0 0 0.75rem;font-size:1rem;"><i class="fa-solid fa-thumbs-up"></i> ${tx(d, 'Why Buy', 'Pourquoi acheter')}</h4>
             <ul style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.5rem;">
@@ -432,13 +444,14 @@ function renderBusiness(d) {
   if (b.segments && b.segments.length) {
     // Colonnes émises seulement si au moins un segment porte la donnée —
     // sinon le <thead> annonçait 4 colonnes pour des lignes à 2 cellules.
+    const hasRevenue = b.segments.some(s => s.revenue != null && s.revenue !== '');
     const hasPct = b.segments.some(s => s.pct);
     const hasDesc = b.segments.some(s => s.description);
     html += `\n        <h4 style="margin-top:1rem;">Segments</h4>
         <table class="data-table">
-          <thead><tr><th>Segment</th><th>${tx(d, 'Revenue', 'Revenus')}</th>${hasPct ? `<th>${tx(d, '% Total', '% du total')}</th>` : ''}${hasDesc ? '<th>Description</th>' : ''}</tr></thead>
+          <thead><tr><th>Segment</th>${hasRevenue ? `<th>${tx(d, 'Revenue', 'Revenus')}</th>` : ''}${hasPct ? `<th>${tx(d, '% Total', '% du total')}</th>` : ''}${hasDesc ? '<th>Description</th>' : ''}</tr></thead>
           <tbody>
-${b.segments.map(s => `            <tr><td><strong>${esc(s.name)}</strong></td><td>${esc(s.revenue || '')}</td>${hasPct ? `<td>${esc(s.pct || '')}</td>` : ''}${hasDesc ? `<td>${esc(s.description || '')}</td>` : ''}</tr>`).join('\n')}
+${b.segments.map(s => `            <tr><td><strong>${esc(s.name)}</strong></td>${hasRevenue ? `<td>${esc(s.revenue ?? '')}</td>` : ''}${hasPct ? `<td>${esc(s.pct || '')}</td>` : ''}${hasDesc ? `<td>${esc(s.description || '')}</td>` : ''}</tr>`).join('\n')}
           </tbody>
         </table>`;
   }
@@ -480,13 +493,17 @@ ${f.rows.map(r => `            <tr><td>${esc(r.metric)}</td><td><strong>${esc(r.
       </div>`;
 }
 
+function hasEarnings(d) {
+  return Boolean(d.earnings && (d.earnings.quarters?.length || d.earnings.beatNote || d.earnings.nextEarnings));
+}
+
 function renderEarnings(d) {
-  if (!d.earnings || !d.earnings.quarters || !d.earnings.quarters.length) return '';
+  if (!hasEarnings(d)) return '';
   const e = d.earnings;
   return `
       <div id="earnings" class="content-card">
-        <h2><i class="fa-solid fa-chart-bar"></i> ${tx(d, 'Earnings History', 'Historique des résultats')}</h2>
-        <table class="data-table">
+        <h2><i class="fa-solid fa-chart-bar"></i> ${e.quarters?.length ? tx(d, 'Earnings History', 'Historique des résultats') : tx(d, 'Earnings and calendar', 'Résultats et calendrier')}</h2>
+${e.quarters?.length ? `        <table class="data-table">
           <thead><tr><th>${tx(d, 'Quarter', 'Trimestre')}</th><th>${tx(d, 'EPS Actual', 'BPA publié')}</th><th>${tx(d, 'EPS Est.', 'BPA attendu')}</th><th>Surprise</th><th>${tx(d, 'Revenue', 'Revenus')}</th></tr></thead>
           <tbody>
 ${e.quarters.map(q => {
@@ -497,8 +514,8 @@ ${e.quarters.map(q => {
     return `            <tr><td>${esc(q.quarter)}</td><td><strong>$${q.epsActual.toFixed(2)}</strong></td><td>${hasEstimate ? '$' + q.epsEstimate.toFixed(2) : 'N/A'}</td><td><span class="badge badge-${badge}">${esc(label)}</span></td><td>${esc(q.revActual || '-')}</td></tr>`;
   }).join('\n')}
           </tbody>
-        </table>
-${e.beatNote ? `        <div class="pedagogy-box" style="margin-top:1rem;"><p><strong>${esc(e.beatNote)}</strong>${e.nextEarnings ? ` &mdash; ${tx(d, 'Next', 'Prochaine publication')} : ${esc(e.nextEarnings)}` : ''}</p></div>` : ''}
+        </table>` : ''}
+${e.beatNote || e.nextEarnings ? `        <div class="pedagogy-box" style="margin-top:1rem;"><p><strong>${esc(e.beatNote || '')}</strong>${e.nextEarnings ? ` &mdash; ${tx(d, 'Next', 'Prochaine publication')} : ${esc(e.nextEarnings)}` : ''}</p></div>` : ''}
 ${sourceRefsHtml(e.sourceRefs)}
       </div>`;
 }
@@ -509,10 +526,7 @@ function renderInsiders(d) {
   let html = `
       <div id="insiders" class="content-card">
         <h2><i class="fa-solid fa-user-tie"></i> ${tx(d, 'Insiders &amp; Institutions', 'Initiés et institutions')}</h2>
-        <div class="metric-strip metric-strip-muted">
-          <div class="ticker-metric"><div class="tm-value">${esc(ins.insiderPct || 'N/A')}</div><div class="tm-label">${tx(d, 'Insider Own.', 'Détention initiés')}</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(ins.institutionPct || 'N/A')}</div><div class="tm-label">${tx(d, 'Institution Own.', 'Détention institutions')}</div></div>
-        </div>`;
+${metricStrip([metricTile(ins.insiderPct, tx(d, 'Insider Own.', 'Détention initiés')), metricTile(ins.institutionPct, tx(d, 'Institution Own.', 'Détention institutions'))])}`;
   if (ins.topHolders && ins.topHolders.length) {
     html += `\n        <table class="data-table"><thead><tr><th>Holder</th><th>%</th><th>Role</th></tr></thead><tbody>
 ${ins.topHolders.map(h => `            <tr><td>${esc(h.name)}</td><td>${esc(h.pct)}</td><td>${esc(h.role || '')}</td></tr>`).join('\n')}
@@ -574,11 +588,7 @@ function renderShortInterest(d) {
   return `
       <div id="short" class="content-card">
         <h2><i class="fa-solid fa-arrow-down-up-across-line"></i> ${tx(d, 'Short Interest', 'Positions vendeuses')}</h2>
-        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
-          <div class="ticker-metric"><div class="tm-value">${esc(si.siPct || 'N/A')}</div><div class="tm-label">${tx(d, 'Short float', 'Part du flottant vendue')}</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(si.daysToCover || 'N/A')}</div><div class="tm-label">${tx(d, 'Days to Cover', 'Jours à couvrir')}</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(si.ctb || 'N/A')}</div><div class="tm-label">${tx(d, 'Cost to borrow', 'Coût d’emprunt')}</div></div>
-        </div>
+${metricStrip([metricTile(si.siPct, tx(d, 'Short float', 'Part du flottant vendue')), metricTile(si.daysToCover, tx(d, 'Days to Cover', 'Jours à couvrir')), metricTile(si.ctb, tx(d, 'Cost to borrow', 'Coût d’emprunt'))])}
 ${si.trend ? `        <p style="font-size:0.9rem;color:#64748b;">${esc(si.trend)}</p>` : ''}${sourceRefsHtml(si.sourceRefs)}
       </div>`;
 }
@@ -589,14 +599,8 @@ function renderOptions(d) {
   return `
       <div id="options" class="content-card">
         <h2><i class="fa-solid fa-chart-gantt"></i> ${tx(d, 'Options / Derivatives', 'Options et dérivés')}</h2>
-        <div class="data-context-line"><strong>Échéance observée :</strong> ${esc(o.maturity || 'INDISPONIBLE')} <span class="badge badge-amber">Snapshot avant résultats</span></div>
-        <div class="metric-strip metric-strip-muted">
-          <div class="ticker-metric"><div class="tm-value">${esc(o.callOI || 'N/A')}</div><div class="tm-label">${tx(d, 'Call OI', 'Intérêt ouvert calls')}</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(o.putOI || 'N/A')}</div><div class="tm-label">${tx(d, 'Put OI', 'Intérêt ouvert puts')}</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(o.cpRatio || 'N/A')}</div><div class="tm-label">${tx(d, 'Call/put OI ratio', 'Ratio d’intérêt ouvert calls/puts')}</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(o.maxPain || 'N/A')}</div><div class="tm-label">${tx(d, 'Max Pain', 'Cours de paiement théorique minimal')}</div></div>
-          <div class="ticker-metric"><div class="tm-value">${esc(o.ivMean || 'N/A')}</div><div class="tm-label">${tx(d, 'IV Mean', 'Volatilité implicite')}</div></div>
-        </div>
+${o.maturity ? `        <div class="data-context-line"><strong>${tx(d, 'Observed expiry', 'Échéance observée')} :</strong> ${esc(o.maturity)}</div>` : ''}
+${metricStrip([metricTile(o.callOI, tx(d, 'Call OI', 'Intérêt ouvert calls')), metricTile(o.putOI, tx(d, 'Put OI', 'Intérêt ouvert puts')), metricTile(o.cpRatio, tx(d, 'Call/put OI ratio', 'Ratio d’intérêt ouvert calls/puts')), metricTile(o.maxPain, tx(d, 'Max Pain', 'Cours de paiement théorique minimal')), metricTile(o.ivMean, tx(d, 'IV Mean', 'Volatilité implicite'))])}
 ${o.unusual ? `        <div class="alert-box"><p><strong>${tx(d, 'Unusual Activity', 'Activité inhabituelle')} :</strong> ${esc(o.unusual)}</p></div>` : ''}${sourceRefsHtml(o.sourceRefs)}
       </div>`;
 }
@@ -608,7 +612,7 @@ function renderTechnicals(d) {
       <div id="technique" class="content-card">
         <h2><i class="fa-solid fa-chart-area"></i> ${tx(d, 'Technical Analysis', 'Analyse technique')}</h2>
         <div class="interpretation-band"><strong>Lecture :</strong> ${esc(t.setupNote || 'La technique ne confirme pas encore une entrée.')} <span class="badge badge-amber">Décision: attendre</span></div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;margin-bottom:1.5rem;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:2rem;margin-bottom:1.5rem;">
 ${t.radarValues && Object.keys(rv).length ? `          <div><div id="radarTech${d.header.ticker.replace(/[^a-zA-Z0-9]/g,'')}" class="echart-box" style="height:320px;"></div></div>` : ''}
           <div>
             <table class="data-table"><tbody>
@@ -627,7 +631,7 @@ ${(t.badges || []).map(b => `              <span class="badge badge-${b.includes
           </div>
         </div>
 ${t.supports && t.supports.length ? `        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;"><div><strong>Supports :</strong> ${t.supports.map(s => '$' + s.toFixed(2)).join(' / ')}</div><div><strong>Résistances :</strong> ${(t.resistances||[]).map(r => '$' + r.toFixed(2)).join(' / ')}</div></div>` : ''}
-${t.setupNote ? `        <div class="pedagogy-box"><h4><i class="fa-solid fa-lightbulb"></i> ${tx(d, 'Technical Setup', 'Configuration technique')}</h4><p>${esc(t.setupNote)}</p></div>` : ''}${sourceRefsHtml(t.sourceRefs)}
+${sourceRefsHtml(t.sourceRefs)}
       </div>`;
 }
 
@@ -637,13 +641,14 @@ function renderPerformance(d) {
   let html = `
       <div id="performance" class="content-card">
         <h2><i class="fa-solid fa-trophy"></i> ${tx(d, 'Performance &amp; Benchmarks', 'Performance et références')}</h2>
-        <div class="metric-strip metric-strip-muted">
-          ${p.ytd ? `<div class="ticker-metric"><div class="tm-value">${esc(p.ytd)}</div><div class="tm-label">YTD</div></div>` : ''}
-          ${p.oneYear ? `<div class="ticker-metric"><div class="tm-value">${esc(p.oneYear)}</div><div class="tm-label">1Y</div></div>` : ''}
-          ${p.threeYear ? `<div class="ticker-metric"><div class="tm-value">${esc(p.threeYear)}</div><div class="tm-label">3Y</div></div>` : ''}
-          ${p.alpha ? `<div class="ticker-metric"><div class="tm-value">${esc(p.alpha)}</div><div class="tm-label">Alpha</div></div>` : ''}
-        </div>`;
-  if (p.benchmarks && p.benchmarks.length) {
+${p.windowReturns ? '' : metricStrip([metricTile(p.ytd, 'YTD'), metricTile(p.oneYear, '1Y'), metricTile(p.threeYear, '3Y'), metricTile(p.alpha, 'Alpha')])}`;
+  if (p.windowReturns && p.windowReturns.rows && p.windowReturns.rows.length) {
+    const w = p.windowReturns;
+    html += `\n        <p>${esc(w.label)} · ${esc(w.startDate)} → ${esc(w.endDate)}</p>
+        <table class="data-table"><thead><tr><th>Ticker</th><th>${tx(d, 'Price return', 'Variation de clôture')}</th></tr></thead><tbody>
+${w.rows.map(row => `          <tr><td>${esc(row.ticker)}</td><td>${row.returnPct >= 0 ? '+' : ''}${row.returnPct.toFixed(2)} %</td></tr>`).join('\n')}
+        </tbody></table>`;
+  } else if (p.benchmarks && p.benchmarks.length) {
     html += `\n        <table class="data-table"><thead><tr><th>Benchmark</th><th>Ticker</th><th>YTD</th>${p.benchmarks[0].oneYear ? '<th>1Y</th>' : ''}</tr></thead><tbody>
 ${p.benchmarks.map(b => `            <tr><td>${esc(b.name)}</td><td>${esc(b.ticker||'')}</td><td>${esc(b.ytd)}</td>${b.oneYear ? `<td>${esc(b.oneYear)}</td>` : ''}</tr>`).join('\n')}
           </tbody></table>`;
@@ -795,13 +800,8 @@ function renderCapitalFlow(d) {
   return `
       <div id="capitalflow" class="content-card">
         <h2><i class="fa-solid fa-water"></i> ${tx(d, 'Capital Flow', 'Flux de capitaux')}</h2>
-        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
-          ${cf.netFlow ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.netFlow)}</div><div class="tm-label">${tx(d, 'Net Flow', 'Flux net')}</div></div>` : ''}
-          ${cf.institutionalFlow ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.institutionalFlow)}</div><div class="tm-label">${tx(d, 'Institutional', 'Institutionnels')}</div></div>` : ''}
-          ${cf.retailFlow ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.retailFlow)}</div><div class="tm-label">${tx(d, 'Retail', 'Particuliers')}</div></div>` : ''}
-          ${cf.darkPoolPct ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.darkPoolPct)}</div><div class="tm-label">Dark Pool %</div></div>` : ''}
-        </div>
-        ${cf.signal ? `<div class="data-empty-state"><i class="fa-solid fa-circle-info"></i><div><strong>Flux directionnels indisponibles</strong><p>${esc(cf.signal)}</p></div></div>` : ''}${sourceRefsHtml(cf.sourceRefs)}
+${metricStrip([metricTile(cf.netFlow, tx(d, 'Net Flow', 'Flux net')), metricTile(cf.institutionalFlow, tx(d, 'Institutional', 'Institutionnels')), metricTile(cf.retailFlow, tx(d, 'Retail', 'Particuliers')), metricTile(cf.darkPoolPct, tx(d, 'Dark Pool %', 'Part hors marché affiché'))])}
+        ${cf.signal ? `<div class="data-empty-state"><i class="fa-solid fa-circle-info"></i><div><strong>${tx(d, 'Interpretation', 'Interprétation')}</strong><p>${esc(cf.signal)}</p></div></div>` : ''}${sourceRefsHtml(cf.sourceRefs)}
       </div>`;
 }
 
@@ -846,7 +846,7 @@ ${be.confluences.map(c => `          <div style="display:flex;align-items:center
   if (be.setups && be.setups.length) {
     html += `
         <h4 style="margin-bottom:0.75rem;">Setups in Formation</h4>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:1rem;">
 ${be.setups.map(s => `          <div class="setup-card" style="border:1px solid #e2e8f0;border-radius:12px;padding:1rem;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
               <span style="font-weight:700;font-size:0.9rem;">${esc(s.pattern)}</span>
@@ -937,9 +937,31 @@ function renderTradeIdea(d) {
   const t = d.tradeIdea;
   const isInvalidated = t.status === 'invalidated' || t.status === 'stopped';
   const isClosed = isInvalidated || t.status === 'rejected' || t.status === 'missed';
-  const isDormant = t.status === 'wait';
+  const isNoTrade = t.status === 'no-trade' || d.meta.status === 'no-trade';
+  const isDormant = t.status === 'wait' || isNoTrade;
+  if (isNoTrade) return `
+      <div id="trade" class="content-card">
+        <h2><i class="fa-solid fa-box-archive"></i> ${tx(d, 'Archived trade references', 'Repères historiques du trade')}</h2>
+        <p><strong>${tx(d, 'NO ACTIVE ORDER', 'AUCUN ORDRE ACTIF')}</strong> — ${esc(t.statusNote || '')}</p>
+        ${t.thesis ? `<p>${esc(t.thesis)}</p>` : ''}
+        <details class="archived-trade"><summary>${tx(d, 'View archived levels — not executable', 'Voir les anciens niveaux — non exécutables')}</summary>
+          ${t.archiveReferenceClose ? `<p>${tx(d, 'Archived reference close', 'Clôture de référence de l’archive')} : ${esc(t.archiveReferenceClose)}</p>` : ''}
+          <p>${esc(t.entryNote || '')}</p>
+          <table class="data-table"><thead><tr><th>${tx(d, 'Archived reference', 'Repère archivé')}</th><th>${tx(d, 'Historical price', 'Cours historique')}</th></tr></thead><tbody>
+            <tr><td>${tx(d, 'Previous entry', 'Ancienne entrée')}</td><td>$${t.entry.toFixed(2)}</td></tr>
+            <tr><td>${tx(d, 'Previous stop', 'Ancien stop')}</td><td>$${t.stop.toFixed(2)}</td></tr>
+            <tr><td>${tx(d, 'Previous target 1', 'Ancien objectif 1')}</td><td>$${t.tp1.toFixed(2)}</td></tr>
+            ${t.tp2 != null ? `<tr><td>${tx(d, 'Previous target 2', 'Ancien objectif 2')}</td><td>$${t.tp2.toFixed(2)}</td></tr>` : ''}
+          </tbody></table>
+        </details>
+        ${t.catalysts?.length ? `<h4>${tx(d, 'Conditions to reassess', 'Conditions de réexamen')}</h4><ul>${t.catalysts.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+        ${t.invalidation?.length ? `<h4>${tx(d, 'Execution safeguards', 'Conditions à respecter')}</h4><ul>${t.invalidation.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+      </div>`;
+
   const op = isClosed || isDormant ? 'opacity:0.65;' : '';
-  const statusBanner = isInvalidated
+  const statusBanner = isNoTrade
+    ? `<div class="alert-box"><strong>${tx(d, 'NO ACTIVE ORDER', 'AUCUN ORDRE ACTIF')}</strong><p>${esc(t.statusNote || tx(d, 'Historical levels only; no new order.', 'Niveaux historiques uniquement; aucun nouvel ordre.'))}</p></div>`
+    : isInvalidated
     ? `\n        <div style="background:#dc2626;color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-ban"></i> TRADE ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
     : t.status === 'rejected' || t.status === 'missed'
     ? `\n        <div style="background:#64748b;color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-circle-pause"></i> ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
@@ -951,15 +973,15 @@ function renderTradeIdea(d) {
 
   const cards = [
     { label: isDormant ? tx(d, 'Dormant reference', 'Repère inactif') : tx(d, 'Entry Zone', 'Zone d’entrée'), value: `$${t.entry.toFixed(2)}`, note: t.entryNote || '', color: '#3b82f6', bg: '#f8fafc', tc: '#0f172a' },
-    { label: isDormant ? tx(d, 'Previous low', 'Ancien plus bas') : tx(d, 'Stop Loss', 'Stop'),  value: `$${t.stop.toFixed(2)}`,  note: t.stopPct || '',  color: '#ef4444', bg: '#fef2f2', tc: '#ef4444' },
-    { label: isDormant ? tx(d, 'Previous resistance', 'Ancienne résistance') : tx(d, 'Target 1', 'Objectif 1'),   value: `$${t.tp1.toFixed(2)}`,   note: t.tp1Pct || '',   color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' },
+    { label: isDormant ? tx(d, 'Previous stop', 'Ancien stop') : tx(d, 'Stop Loss', 'Stop'),  value: `$${t.stop.toFixed(2)}`,  note: t.stopPct || '',  color: '#ef4444', bg: '#fef2f2', tc: '#ef4444' },
+    { label: isDormant ? tx(d, 'Previous target 1', 'Ancien objectif 1') : tx(d, 'Target 1', 'Objectif 1'),   value: `$${t.tp1.toFixed(2)}`,   note: t.tp1Pct || '',   color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' },
   ];
-  if (t.tp2) cards.push({ label: isDormant ? tx(d, 'Previous resistance 2', 'Ancienne résistance 2') : tx(d, 'Target 2', 'Objectif 2'), value: `$${t.tp2.toFixed(2)}`, note: t.tp2Pct || '', color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' });
+  if (t.tp2) cards.push({ label: isDormant ? tx(d, 'Previous target 2', 'Ancien objectif 2') : tx(d, 'Target 2', 'Objectif 2'), value: `$${t.tp2.toFixed(2)}`, note: t.tp2Pct || '', color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' });
   cards.push({ label: isDormant ? tx(d, 'Dormant ratio', 'Ratio inactif') : tx(d, 'Risk/Reward', 'Risque/rendement'), value: t.rr, note: t.horizon || '', color: '#7c3aed', bg: '#f5f3ff', tc: '#7c3aed' });
 
   return `
       <div id="trade" class="content-card">
-        <h2><i class="fa-solid fa-crosshairs"></i> ${tx(d, 'Trade Idea', 'Plan de trade')}</h2>${statusBanner}
+        <h2><i class="fa-solid fa-crosshairs"></i> ${isNoTrade ? tx(d, 'Archived trade references', 'Repères historiques du trade') : tx(d, 'Trade Idea', 'Plan de trade')}</h2>${statusBanner}
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;${op}">
 ${cards.map(c => `          <div style="border-left:4px solid ${c.color};padding:1rem;background:${c.bg};border-radius:0 8px 8px 0;">
             <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">${esc(c.label)}</div>
@@ -1007,7 +1029,7 @@ function renderFab(d) {
     d.business          && { id: 'business',      icon: 'fa-building',                 label: tx(d, 'Business', 'Activité') },
     d.news && d.news.length && { id: 'news',      icon: 'fa-newspaper',                label: tx(d, 'News', 'Actualités') },
     d.fundamentals      && { id: 'fondamentaux',  icon: 'fa-chart-line',               label: tx(d, 'Fundamentals', 'Fondamentaux') },
-    d.earnings && d.earnings.quarters && d.earnings.quarters.length && { id: 'earnings', icon: 'fa-chart-bar', label: tx(d, 'Earnings', 'Résultats') },
+    hasEarnings(d) && { id: 'earnings', icon: 'fa-chart-bar', label: tx(d, 'Earnings', 'Résultats') },
     d.insiders          && { id: 'insiders',      icon: 'fa-user-tie',                 label: tx(d, 'Insiders', 'Initiés') },
     d.capitalStructure  && { id: 'capital',       icon: 'fa-money-bill-trend-up',      label: 'Capital' },
     d.filingsReview     && { id: 'filings',       icon: 'fa-file-shield',               label: tx(d, 'SEC Review', 'Dépôts SEC') },
@@ -1109,7 +1131,7 @@ ${d.risks.riskRadarValues ? `    (function(){var el=document.getElementById('ris
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){['chartModal','historyModal'].forEach(function(id){var m=document.getElementById(id);if(m)m.style.display='none';});}});
     (function(){var btn=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),open=false;if(!btn||!menu)return;btn.addEventListener('click',function(){open=!open;menu.classList.toggle('open',open);});menu.querySelectorAll('.fnav-item').forEach(function(a){a.addEventListener('click',function(){var target=document.querySelector(a.getAttribute('href'));var details=target&&target.closest('details');if(details)details.open=true;open=false;menu.classList.remove('open');});});var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var id=e.target.id;menu.querySelectorAll('.fnav-item').forEach(function(a){a.classList.toggle('active',a.getAttribute('data-section')===id);});}});},{threshold:0.3});document.querySelectorAll('[id]').forEach(function(el){if(menu.querySelector('[data-section="'+el.id+'"]'))obs.observe(el);});})();
     </script>
-    <script src="/assets/core.js?v=20260912"></script>
+    <script src="/assets/core.js?v=20260919"></script>
     <script src="/assets/tag-renderer.js"></script>
     <script src="/assets/echarts-responsive.js"></script>`;
 }

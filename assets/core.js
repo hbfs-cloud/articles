@@ -952,6 +952,9 @@ function initRetentionKit() {
     window.DT_ANALYSIS_STATUS = { THEMES: THEMES, I18N: I18N, classify: classify, fmtEvent: fmtEvent, fmtDate: fmtDate, FRESH_MAX_DAYS: FRESH_MAX_DAYS };
 
     if (document.documentElement.dataset.tab !== 'analyses') return;
+    // Local research runs have their own evidence/status. The public registry
+    // describes the canonical article and must not relabel a staged revision.
+    if (/\/analyses\/[^/]+\/_runs\//.test(location.pathname)) return;
     var m = location.pathname.match(/^\/analyses\/([A-Za-z0-9.\-]+)\/?/);
     if (!m) return;
     var slug = m[1];

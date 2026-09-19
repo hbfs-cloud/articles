@@ -57,10 +57,62 @@ function dateLiterals(value) {
 function normalizeSpec(spec = {}) {
   return {
     required_variables: spec.required_variables || [],
+    conditional_variables: spec.conditional_variables || [],
     variable_constraints: spec.variable_constraints || {},
+    client_applicability: spec.client_applicability || null,
     static_symbol_calls: spec.static_symbol_calls || [],
     allowed_date_literals: spec.allowed_date_literals || [],
   };
+}
+
+function csvItems(value) {
+  return String(value || '').split(',').map(item => item.trim()).filter(Boolean);
+}
+
+function validateClientApplicability(rawSpec = {}, values = {}) {
+  const spec = normalizeSpec(rawSpec);
+  const rule = spec.client_applicability;
+  if (!rule) return [];
+  const errors = [];
+  const requiredKeys = ['mode_variable', 'symbols_variable', 'reason_variable', 'evidence_path_variable', 'evidence_sha256_variable'];
+  for (const key of requiredKeys) if (!rule[key] || typeof rule[key] !== 'string') errors.push(`client_applicability.${key} must be configured`);
+  if (errors.length) return errors;
+  const mode = String(values[rule.mode_variable] || '').trim();
+  const symbols = csvItems(values[rule.symbols_variable]);
+  const reason = String(values[rule.reason_variable] || '').trim();
+  const evidencePath = String(values[rule.evidence_path_variable] || '').trim();
+  const evidenceSha256 = String(values[rule.evidence_sha256_variable] || '').trim();
+  const evidenceFieldsPresent = reason || evidencePath || evidenceSha256;
+  if (mode === 'applicable') {
+    if (!symbols.length) errors.push('documented listed client applicability=applicable requires at least one documented client symbol');
+    if (evidenceFieldsPresent) errors.push('documented listed client applicability=applicable must not carry N/A reason or evidence');
+    return errors;
+  }
+  if (mode !== 'not_applicable') {
+    errors.push('documented listed client applicability must be applicable or not_applicable');
+    return errors;
+  }
+  if (symbols.length) errors.push('documented listed client applicability=not_applicable forbids client symbols');
+  if (reason.length < 32) errors.push('documented listed client N/A requires an explicit reason of at least 32 characters');
+  if (!evidencePath) errors.push('documented listed client N/A requires an evidence path');
+  if (!/^[a-f0-9]{64}$/.test(evidenceSha256)) errors.push('documented listed client N/A requires a lowercase SHA-256 evidence hash');
+  if (!evidencePath) return errors;
+  if (path.isAbsolute(evidencePath)) {
+    errors.push('documented listed client N/A evidence path must be repository-relative');
+    return errors;
+  }
+  const absolute = path.resolve(ROOT, evidencePath);
+  const relative = path.relative(ROOT, absolute);
+  if (!relative || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    errors.push('documented listed client N/A evidence path escapes the repository');
+    return errors;
+  }
+  if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) {
+    errors.push(`documented listed client N/A evidence file is unavailable: ${evidencePath}`);
+  } else if (/^[a-f0-9]{64}$/.test(evidenceSha256) && sha256(fs.readFileSync(absolute)) !== evidenceSha256) {
+    errors.push(`documented listed client N/A evidence hash mismatch: ${evidencePath}`);
+  }
+  return errors;
 }
 
 function validateRuntimeVariables(rawSpec = {}, vars = {}) {
@@ -93,6 +145,7 @@ function validateRuntimeVariables(rawSpec = {}, vars = {}) {
       for (const item of rawItems) if (!pattern.test(item)) errors.push(`${name}: invalid item ${item}`);
     }
   }
+  errors.push(...validateClientApplicability(rawSpec, vars));
   return [...new Set(errors)];
 }
 
@@ -284,6 +337,43 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
         errors.push(`${label}: foreach.max exceeds ${call.foreach.var} max_items=${constraint.max_items}`);
       }
     }
+    if (call.when) {
+      if (!call.when || typeof call.when !== 'object' || Array.isArray(call.when)) {
+        errors.push(`${label}: when must be an object`);
+      } else {
+        const keys = Object.keys(call.when).sort();
+        if (keys.join(',') !== 'equals,variable') errors.push(`${label}: when supports exactly variable and equals`);
+        if (!declaredVars.has(call.when.variable)) errors.push(`${label}: when.variable must name a declared runtime variable`);
+        if (typeof call.when.equals !== 'string' || !call.when.equals) errors.push(`${label}: when.equals must be a non-empty string`);
+        const rule = spec.client_applicability;
+        if (!rule || call.as !== rule.client_bars_call || call.when.variable !== rule.mode_variable || call.when.equals !== 'applicable') {
+          errors.push(`${label}: conditional execution is reserved for the configured documented-client bars branch`);
+        }
+      }
+    }
+  }
+
+  if (spec.client_applicability) {
+    const rule = spec.client_applicability;
+    const ruleKeys = ['mode_variable', 'symbols_variable', 'reason_variable', 'evidence_path_variable', 'evidence_sha256_variable', 'metadata_call', 'client_bars_call'];
+    for (const key of ruleKeys) if (typeof rule[key] !== 'string' || !rule[key]) errors.push(`client_applicability.${key} must be configured`);
+    for (const key of ruleKeys.slice(0, 5)) if (rule[key] && !declaredVars.has(rule[key])) errors.push(`client_applicability ${key} must be a declared runtime variable`);
+    const clientBars = calls.find(({ call }) => call.as === rule.client_bars_call)?.call;
+    if (!clientBars) errors.push(`client_applicability client bars call ${rule.client_bars_call} is missing`);
+    else if (!clientBars.when || clientBars.when.variable !== rule.mode_variable || clientBars.when.equals !== 'applicable') {
+      errors.push(`client_applicability client bars call ${rule.client_bars_call} must run only when ${rule.mode_variable}=applicable`);
+    }
+    const metadata = calls.find(({ call }) => call.as === rule.metadata_call)?.call?.freshness?.client_applicability;
+    if (!metadata || typeof metadata !== 'object') errors.push(`client_applicability metadata is missing from ${rule.metadata_call}.freshness`);
+    else {
+      const expected = {
+        mode: `$${rule.mode_variable}`,
+        reason: `$${rule.reason_variable}`,
+        evidence_path: `$${rule.evidence_path_variable}`,
+        evidence_sha256: `$${rule.evidence_sha256_variable}`,
+      };
+      for (const [key, value] of Object.entries(expected)) if (metadata[key] !== value) errors.push(`client_applicability metadata ${key} must equal ${value}`);
+    }
   }
 
   const usedVars = collectVariables({ artifact: plan.artifact, waves: plan.waves });
@@ -291,7 +381,10 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
   usedVars.delete('as_of_timestamp');
   for (const name of usedVars) if (!declaredVars.has(name)) errors.push(`variable $${name} is used but not declared by the plan contract`);
   for (const name of spec.required_variables) if (!usedVars.has(name)) errors.push(`required variable $${name} is declared but unused`);
-  for (const name of Object.keys(spec.variable_constraints)) if (!spec.required_variables.includes(name)) errors.push(`variable constraint ${name} is not a required variable`);
+  const conditional = new Set(spec.conditional_variables);
+  for (const name of Object.keys(spec.variable_constraints)) {
+    if (!spec.required_variables.includes(name) && !conditional.has(name)) errors.push(`variable constraint ${name} is not a required or conditional variable`);
+  }
 
   return [...new Set(errors)];
 }
@@ -451,6 +544,25 @@ function validateRun(workflow, outDir, config = readConfig()) {
   const canonical = report.workflow || workflow;
   if (!owner || (owner.workflow !== canonical && !(owner.workflow === 'signals-desk' && canonical === 'signals-desk-fire-and-forget'))) {
     errors.push(`plan ${journal.plan || '(missing)'} does not belong to workflow ${canonical}`);
+  } else if (owner.planSpec.client_applicability) {
+    const rule = owner.planSpec.client_applicability;
+    const calls = (journal.resolved_input?.waves || []).flatMap(wave => wave.calls || []);
+    const metadata = calls.find(call => call.as === rule.metadata_call)?.freshness?.client_applicability;
+    const clientBars = calls.find(call => call.as === rule.client_bars_call);
+    if (!metadata || typeof metadata !== 'object') {
+      errors.push(`client applicability metadata is missing from resolved ${rule.metadata_call} input`);
+    } else {
+      const proofErrors = validateClientApplicability(owner.planSpec, {
+        [rule.mode_variable]: metadata.mode,
+        [rule.symbols_variable]: clientBars?.args?.symbols || '',
+        [rule.reason_variable]: metadata.reason,
+        [rule.evidence_path_variable]: metadata.evidence_path,
+        [rule.evidence_sha256_variable]: metadata.evidence_sha256,
+      });
+      errors.push(...proofErrors.map(error => `client applicability proof: ${error}`));
+      if (metadata.mode === 'applicable' && !clientBars) errors.push('client applicability proof: applicable mode is missing the client bars call');
+      if (metadata.mode === 'not_applicable' && clientBars) errors.push('client applicability proof: N/A mode must not execute the client bars call');
+    }
   }
   return { workflow: canonical, harness: harnessPath, journal: journalPath, errors };
 }

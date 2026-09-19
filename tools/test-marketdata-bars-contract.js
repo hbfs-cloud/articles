@@ -87,6 +87,18 @@ assert.deepStrictEqual(completeCheck.errors, []);
 assert.strictEqual(completeCheck.healthyCells.length, 2);
 assert.strictEqual(completeCheck.completedDataThrough, '2026-08-31');
 
+const expandedBatch = JSON.parse(JSON.stringify(completeBatch));
+for (const r of expandedBatch.data.items[0].results[0].data) {
+  r.bars = r.bars.map(([date, open, high, low, close, volume]) => ({ date, open, high, low, close, volume }));
+}
+assert.deepStrictEqual(contract.validateQueryData(expandedBatch, {
+  symbols: 'AAPL,NVDA', assetCalendar: 'us_equity_exchange_sessions', expectedCompletedEnd: '2026-08-31',
+}).errors, [], 'expanded QueryData OHLCV records are equally supported');
+expandedBatch.data.items[0].results[0].data[0].bars[0].close = 297;
+const badExpanded = contract.validateQueryData(expandedBatch, { symbols: 'AAPL,NVDA' });
+assert(badExpanded.errors.some(error => error.includes('AAPL: invalid daily OHLCV geometry')));
+assert.deepStrictEqual(badExpanded.healthyCells.map(cell => cell.id), ['NVDA']);
+
 const partialBatch = {
   results: [{ cells: [completedCell('AAPL', { last_bar_complete: false })], data: [row('AAPL')] }],
 };
@@ -130,3 +142,18 @@ assert(contract.validateRefreshBars({ last_bar_after: '2026-09-01' }, '2026-08-3
   .some(error => error.includes('last_completed_bar_after')));
 
 console.log('marketdata bars contract tests: PASS');
+
+// Regression: complete=true must not certify holes inside an otherwise fresh series.
+const dailyProof = {assetCalendar:'us_equity_exchange_sessions',servedCompletedEnd:'2026-07-27'};
+const dailyBar = date => [date,10,12,9,11,100];
+const julyDates = ['2026-07-20','2026-07-21','2026-07-22','2026-07-23','2026-07-24','2026-07-27'];
+assert.deepStrictEqual(contract.validateDailySeries({bars:julyDates.map(dailyBar)},dailyProof),[]);
+assert(contract.validateDailySeries({coverage:{complete:true},bars:julyDates.filter(d=>d!=='2026-07-21').map(dailyBar)},dailyProof).some(e=>e.includes('continuity')));
+assert(contract.validateDailySeries({bars:[dailyBar('2026-07-24'),dailyBar('2026-07-25'),dailyBar('2026-07-27')]},dailyProof).some(e=>e.includes('non-session')));
+assert(contract.validateDailySeries({bars:[dailyBar('2026-07-27'),dailyBar('2026-07-27')]},dailyProof).some(e=>e.includes('duplicate')));
+assert(contract.validateDailySeries({bars:[dailyBar('2026-07-24')]},dailyProof).some(e=>e.includes('tail disagrees')));
+assert(contract.validateDailySeries({bars:[['2026-07-27',10,12,9,297,100]]},dailyProof).some(e=>e.includes('geometry')));
+assert.deepStrictEqual(contract.validateDailySeries({bars:['2026-07-02','2026-07-06'].map(dailyBar)},{assetCalendar:'us_equity_exchange_sessions',servedCompletedEnd:'2026-07-06'}),[], 'Independence Day holiday is not a gap');
+assert(contract.validateDailySeries({bars:['2026-07-24','2026-07-27'].map(dailyBar)},{assetCalendar:'crypto_24_7_utc',servedCompletedEnd:'2026-07-27'}).some(e=>e.includes('continuity')));
+assert.deepStrictEqual(contract.validateDailySeries({bars:['2026-07-24','2026-07-25','2026-07-26','2026-07-27'].map(dailyBar)},{assetCalendar:'crypto_24_7_utc',servedCompletedEnd:'2026-07-27'}),[]);
+console.log('Daily session continuity regression tests passed.');

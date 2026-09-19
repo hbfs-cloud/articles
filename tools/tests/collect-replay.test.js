@@ -4,10 +4,18 @@ const fs = require('node:fs'), path = require('node:path'), os = require('node:o
 const { spawnSync } = require('node:child_process');
 const { stableStringify } = require('../lib/workflow-contract');
 const { reassembleJobResponse } = require('../lib/mcp-chunks');
-const ROOT = path.resolve(__dirname, '../..'), ref = '2026-09-04';
-const rawFixture = fs.readFileSync(path.join(__dirname, 'fixtures/mcp-bars-fragments-13a1b497.json'));
+const ROOT = path.resolve(__dirname, '../..'), ref = '2026-09-18';
+// This is an exact, contiguous 300-session QueryData response. The older raw
+// fragmented fixture intentionally retains its historical gaps for mcp-chunks
+// transport tests; it cannot represent a passing daily-bars replay anymore.
+const rawFixture = fs.readFileSync(path.join(__dirname, 'fixtures/mcp-bars-klac-continuous-20260919.json'));
 const sha = value => crypto.createHash('sha256').update(value).digest('hex');
-function fixture(t, { failed = true, sourceTime = true, semanticBad = false } = {}) {
+const fixtureProvenance = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/mcp-bars-klac-continuous-20260919.provenance.json')));
+assert.equal(sha(rawFixture), fixtureProvenance.source_sha256, 'continuous replay fixture must remain an exact archived response');
+function queryResults(value) {
+  return value.results || value.data?.items?.flatMap(item => item.results || []) || [];
+}
+function fixture(t, { failed = true, sourceTime = true, semanticBad = false, continuityGap = false } = {}) {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'collect-replay-')));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.mkdirSync(path.join(root, 'tools'), { recursive: true });
@@ -15,19 +23,23 @@ function fixture(t, { failed = true, sourceTime = true, semanticBad = false } = 
   fs.cpSync(path.join(ROOT, 'tools/lib'), path.join(root, 'tools/lib'), { recursive: true });
   fs.cpSync(path.join(ROOT, 'config'), path.join(root, 'config'), { recursive: true });
   const put = (name, data) => { const p = path.join(root, name); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, typeof data === 'string' || Buffer.isBuffer(data) ? data : JSON.stringify(data, null, 2)); return sha(fs.readFileSync(p)); };
-  const raw = JSON.parse(rawFixture), decoded = reassembleJobResponse(raw), symbols = decoded.data.items.flatMap(i => i.results || []).filter(r => r.data_type === 'bars_daily').flatMap(r => r.data || []).map(c => c.symbol).join(',');
-  const timestamp = '2026-09-08T06:55:00.000Z', finished = '2026-09-08T07:30:00.000Z', asOf = '2026-09-08T07:20:00.000Z';
-  const planPath = 'plans/replay-fixture.json', original = 'scanner/20260908/original', destination = 'scanner/20260908/replayed';
+  const raw = JSON.parse(rawFixture), decoded = reassembleJobResponse(raw), symbols = queryResults(decoded).filter(r => r.data_type === 'bars_daily').flatMap(r => r.data || []).map(c => c.symbol).join(',');
+  const timestamp = '2026-09-19T20:00:00.000Z', finished = '2026-09-19T20:30:00.000Z', asOf = '2026-09-19T20:20:00.000Z';
+  const planPath = 'plans/replay-fixture.json', original = 'scanner/20260919/original', destination = 'scanner/20260919/replayed';
   const declaration = { as: 'bars_b1', server: 'marketdata', tool: 'QueryData', cache_minutes: 60,
     args: { types: 'bars_daily', symbols, limit: 300, as_of_timestamp: '$as_of_timestamp', completion_policy: 'completed_only' },
     freshness: { max_age_h: 24, required: true, expects_close: true, asset_calendar: 'us_equity_exchange_sessions', expected_completed_end: '$refdate' } };
   const plan = { artifact: 'scanner/$date/signals.json', waves: [{ name: 'history', calls: [declaration] }] };
   const ph = put(planPath, plan), call = structuredClone(declaration); call.args.as_of_timestamp = timestamp; call.freshness.expected_completed_end = ref;
-  const resolved = { artifact: 'scanner/20260908/signals.json', equity_reference_close: ref, crypto_completed_refdate: null, as_of_timestamp: timestamp, waves: [{ name: 'history', calls: [call] }] };
+  const resolved = { artifact: 'scanner/20260919/signals.json', equity_reference_close: ref, crypto_completed_refdate: null, as_of_timestamp: timestamp, waves: [{ name: 'history', calls: [call] }] };
   const ih = sha(stableStringify(resolved));
   let payload = rawFixture;
-  if (semanticBad) {
-    const broken = decoded; broken.data.items[0].results[0].data[0].served_completed_end = '2026-09-03'; payload = JSON.stringify(broken);
+  if (semanticBad || continuityGap) {
+    const broken = structuredClone(decoded);
+    const row = queryResults(broken).find(result => result.data_type === 'bars_daily').data[0];
+    if (semanticBad) row.served_completed_end = '2026-09-17';
+    if (continuityGap) row.bars.splice(150, 1);
+    payload = JSON.stringify(broken);
   }
   const bh = put(`${original}/bars_b1.json`, payload);
   const journal = { workflow: null, plan: planPath, plan_sha256: ph, input_sha256: ih, resolved_input: resolved,
@@ -42,7 +54,7 @@ function fixture(t, { failed = true, sourceTime = true, semanticBad = false } = 
   put('data/collect-cache/sentinel.json', { must: 'remain unchanged' });
   // Test guard forbids all transport, authentication and cache access in the subprocess.
   put('offline-guard.js', `const fs=require('fs');global.fetch=()=>{throw Error('NETWORK FORBIDDEN')};for(const n of ['http','https']){require(n).request=()=>{throw Error('NETWORK FORBIDDEN')}}const read=fs.readFileSync;fs.readFileSync=function(p,...args){if(String(p).includes('collect-cache')||String(p).endsWith('_socle.json'))throw Error('CACHE READ FORBIDDEN');return read.call(this,p,...args)};const write=fs.writeFileSync;fs.writeFileSync=function(p,...args){if(String(p).includes('collect-cache'))throw Error('CACHE WRITE FORBIDDEN');return write.call(this,p,...args)};`);
-  const run = (extra = [], out = destination) => spawnSync(process.execPath, ['--require', path.join(root, 'offline-guard.js'), 'tools/collect.js', '--plan', planPath, '--out', out, '--replay-dir', original, '--var', 'date=20260908', '--var', 'refdate=' + ref, '--quiet', ...extra], {
+  const run = (extra = [], out = destination) => spawnSync(process.execPath, ['--require', path.join(root, 'offline-guard.js'), 'tools/collect.js', '--plan', planPath, '--out', out, '--replay-dir', original, '--var', 'date=20260919', '--var', 'refdate=' + ref, '--quiet', ...extra], {
     cwd: root, encoding: 'utf8', timeout: 15000, env: { PATH: process.env.PATH, HOME: root, COLLECT_SOCLE_DIR: 'forbidden-socle', MCP_SERVER_MARKETDATA: 'http://127.0.0.1:1' }
   });
   return { root, original, destination, planPath, put, run, journal, harness, ih, timestamp, finished, asOf };
@@ -56,7 +68,7 @@ test('offline replay reassembles real saved response, reruns semantic gates, pre
   assert.equal(journal.replay.network_calls, 0); assert.equal(journal.replay.cache_writes, 0); assert(journal.replay.reprocessed_at);
   assert.equal(journal.replay.original_journal_sha256, sha(fs.readFileSync(path.join(f.root, f.original, '_collect.json'))));
   for (const [name, digest] of before) assert.equal(sha(fs.readFileSync(path.join(f.root, f.original, name))), digest);
-  const data = JSON.parse(fs.readFileSync(path.join(f.root, f.destination, 'bars_b1.json'))); assert.equal(data.chunk_reassembly.status, 'complete');
+  const data = JSON.parse(fs.readFileSync(path.join(f.root, f.destination, 'bars_b1.json'))); assert.equal(data.status, 'completed');
   assert.equal(journal.waves[0].calls[0].output_sha256, sha(fs.readFileSync(path.join(f.root, f.destination, 'bars_b1.json'))));
 });
 test('failed semantic source without original harness entry uses conservative original started_at', t => {
@@ -66,6 +78,10 @@ test('failed semantic source without original harness entry uses conservative or
 test('replay still rejects genuine semantic close mismatch after transport decoding', t => {
   const f = fixture(t, { semanticBad: true }); const result = f.run(); assert.equal(result.status, 1);
   const j = JSON.parse(fs.readFileSync(path.join(f.root, f.destination, '_collect.json'))); assert.equal(j.failures, 1); assert.match(j.waves[0].calls[0].error, /close|completed/);
+});
+test('replay still rejects a gap inside an otherwise certified daily series', t => {
+  const f = fixture(t, { continuityGap: true }); const result = f.run(); assert.equal(result.status, 1);
+  const j = JSON.parse(fs.readFileSync(path.join(f.root, f.destination, '_collect.json'))); assert.equal(j.failures, 1); assert.match(j.waves[0].calls[0].error, /continuity/);
 });
 const mutations = [
   ['source tamper', f => f.put(`${f.original}/bars_b1.json`, {})],
@@ -82,7 +98,7 @@ for (const [name, mutate] of mutations) test(`rejects ${name} before creating ou
 });
 test('changed refdate or as_of cannot alter original replay input', t => {
   const f = fixture(t);
-  for (const extra of [['--var', 'refdate=2026-09-03'], ['--var', 'as_of_timestamp=2026-09-08T08:00:00Z']]) {
+  for (const extra of [['--var', 'refdate=2026-09-17'], ['--var', 'as_of_timestamp=2026-09-19T21:00:00Z']]) {
     const result = f.run(extra); assert.notEqual(result.status, 0); assert.equal(fs.existsSync(path.join(f.root, f.destination)), false);
   }
 });

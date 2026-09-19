@@ -1,5 +1,12 @@
 {
   "artifact": "analyses/$symbol/index.html",
+  "vars": {
+    "documented_client_symbols": "",
+    "documented_client_applicability": "applicable",
+    "documented_client_na_reason": "",
+    "documented_client_na_evidence_path": "",
+    "documented_client_na_evidence_sha256": ""
+  },
   "waves": [
     {
       "name": "preflight",
@@ -29,7 +36,7 @@
           "tool": "GetInstruments",
           "args": {
             "symbols": "$symbol",
-            "bars_depth": 260
+            "bars_depth": 300
           },
           "freshness": {
             "max_age_h": 24,
@@ -43,7 +50,7 @@
           "args": {
             "types": "bars_daily",
             "symbols": "$symbol",
-            "limit": 260,
+            "limit": 300,
             "as_of_timestamp": "$as_of_timestamp",
             "completion_policy": "completed_only"
           },
@@ -149,6 +156,10 @@
           "as": "comparison_client_bars",
           "server": "marketdata",
           "tool": "QueryData",
+          "when": {
+            "variable": "documented_client_applicability",
+            "equals": "applicable"
+          },
           "args": {
             "types": "bars_daily",
             "symbols": "$documented_client_symbols",
@@ -180,7 +191,13 @@
           "freshness": {
             "max_age_h": 168,
             "required": true,
-            "note": "Current-only context: label observation time and never present it as point-in-time at refdate."
+            "note": "Current-only context: label observation time and never present it as point-in-time at refdate.",
+            "client_applicability": {
+              "mode": "$documented_client_applicability",
+              "reason": "$documented_client_na_reason",
+              "evidence_path": "$documented_client_na_evidence_path",
+              "evidence_sha256": "$documented_client_na_evidence_sha256"
+            }
           }
         },
         {

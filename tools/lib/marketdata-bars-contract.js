@@ -1,5 +1,7 @@
 'use strict';
 
+const { isUSTradingDay, usTradingDaysBetween } = require('./market-calendar');
+
 const MIN_MARKETDATA_BUILD = '0424cf4b';
 const ASSET_CALENDARS = new Set(['us_equity_exchange_sessions', 'crypto_24_7_utc', 'euronext_cash_2025_2026', 'borsa_italiana_cash_2025_2026', 'bme_cash_2025_2026', 'gpw_cash_2025_2026', 'lse_cash_2025_2026', 'xetra_cash_2025_2026', 'nasdaq_helsinki_cash_2025_2026']);
 
@@ -82,6 +84,53 @@ function proofFor(cell, row) {
   };
 }
 
+// Coverage flags do not prove the contents: a provider can report a complete
+// tail while omitting sessions inside the window. Validate the observed window
+// (not a requested start that may predate an IPO or be truncated by limit).
+function validateDailySeries(row, proof) {
+  const errors = [];
+  if (!Array.isArray(row.bars)) return errors;
+  const calendar = proof.assetCalendar;
+  if (!['us_equity_exchange_sessions', 'crypto_24_7_utc'].includes(calendar)) return errors;
+  if (!row.bars.length) return ['daily series is empty'];
+  const dates = [];
+  for (const bar of row.bars) {
+    // QueryData can return either compact tuples or expanded OHLCV records.
+    const values = Array.isArray(bar) ? bar : bar && typeof bar === 'object'
+      ? [bar.date, bar.open, bar.high, bar.low, bar.close, bar.volume] : [];
+    if (values.length < 6) { errors.push('malformed daily OHLCV row'); continue; }
+    const [date, open, high, low, close, volume] = values;
+    const parsed = new Date(`${date}T00:00:00Z`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) {
+      errors.push('invalid daily bar date'); continue;
+    }
+    if (![open, high, low, close, volume].every(Number.isFinite)
+      || Math.min(open, high, low, close) <= 0 || volume < 0
+      // Same absolute rounding tolerance as derive-scanner-technicals. Preserve
+      // original values; this is not a price repair or a relative outlier filter.
+      || Math.max(low - Math.min(open, close), Math.max(open, close) - high, 0) > 0.001 + 1e-12 || low > high) {
+      errors.push(`invalid daily OHLCV geometry on ${date}`);
+    }
+    if (dates.length && date <= dates.at(-1)) errors.push(`duplicate or unordered daily date ${date}`);
+    dates.push(date);
+    if (calendar === 'us_equity_exchange_sessions') {
+      try { if (!isUSTradingDay(date)) errors.push(`non-session daily date ${date}`); }
+      catch (error) { errors.push(error.message); }
+    }
+  }
+  if (dates.length) {
+    const end = proof.servedCompletedEnd;
+    if (end && dates.at(-1) !== end) errors.push(`daily tail disagrees with served_completed_end (${dates.at(-1)} vs ${end})`);
+    try {
+      const expected = calendar === 'us_equity_exchange_sessions'
+        ? usTradingDaysBetween(dates[0], dates.at(-1)) + 1
+        : (Date.parse(dates.at(-1)) - Date.parse(dates[0])) / 86400000 + 1;
+      if (expected !== dates.length) errors.push(`daily session continuity failed (${dates.length} rows, ${expected} expected inside served window)`);
+    } catch (error) { errors.push(error.message); }
+  }
+  return [...new Set(errors)];
+}
+
 /**
  * Validate the terminal state and completed-close proof of every QueryData cell.
  * Healthy cells remain returned even when another cell fails, so callers can
@@ -144,6 +193,7 @@ function validateQueryData(value, options = {}) {
     }
     const row = matches[0];
     const proof = proofFor(cell, row);
+    for (const error of validateDailySeries(row, proof)) errors.push(`${id}: ${error}`);
     if (proof.retryAt && (!retryAt || String(proof.retryAt) < retryAt)) retryAt = String(proof.retryAt);
     if (options.assetCalendar && proof.assetCalendar !== options.assetCalendar) {
       errors.push(`${id}: asset_calendar mismatch (expected ${options.assetCalendar}, got ${proof.assetCalendar || 'missing'})`);
@@ -247,5 +297,6 @@ module.exports = {
   findQueryResults,
   validateOperationReadiness,
   validateQueryData,
+  validateDailySeries,
   validateRefreshBars,
 };

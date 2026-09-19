@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { validate } = require('./validate-analysis-evidence');
+const { validate, validateNonMarketInput } = require('./validate-analysis-evidence');
 const { stableStringify } = require('./lib/workflow-contract');
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'analysis-evidence-'));
@@ -48,5 +48,20 @@ try {
   const selfProof = structuredClone(manifest);
   selfProof.claims.forEach(claim => { claim.source_artifact = 'data/analysis.json'; claim.source_sha256 = selfProof.analysis_sha256; });
   assert(validate(selfProof, root).some(error => error.includes('cannot prove itself')));
+  const archived = { header: { ticker: 'TEST' }, tradeIdea: { entry: 189.7489, stop: 176.4499, tp1: 214.8, tp2: 219.0299 } };
+  const archiveInput = { kind: 'archived_analysis', path: 'archive.json' };
+  const checkArchiveText = (field, value) => {
+    const candidate = { tradeIdea: { [field]: value } };
+    const calculation = { claim_provenance: { [`tradeIdea.${field}`]: { input_path: 'archive.json', source_pointer: '/tradeIdea', derivation: 'archived_trade_geometry' } } };
+    return validateNonMarketInput(archiveInput, archived, calculation, candidate, 'TEST');
+  };
+  assert.deepStrictEqual(checkArchiveText('rr', '1:1.88 / 1:2.20'), [], 'both archived targets reproduce their R/R');
+  assert.deepStrictEqual(checkArchiveText('stopPct', '-7.0%'), [], 'published precision is respected');
+  assert.deepStrictEqual(checkArchiveText('thesis', 'Historical entry 189.7489'), [], 'exact archived precision is supported');
+  assert(checkArchiveText('rr', '1:1.88 / 1:2.50').length, 'invented target ratio remains rejected');
+  assert(checkArchiveText('stopPct', '-8.0%').length, 'incorrect percentage remains rejected');
+  for (const [field, text] of [['stopPct', '+7.0%'], ['tp1Pct', '-13.2%'], ['tp2Pct', '-15.4%'], ['rr', '1:-1.88 / 1:2.20'], ['rr', '1:2.20 / 1:1.88'], ['stopPct', '+13.2%']]) {
+    assert(checkArchiveText(field, text).length, `reject wrong sign, target or order: ${field} ${text}`);
+  }
   console.log('analysis evidence tests: PASS');
 } finally { fs.rmSync(root, { recursive: true, force: true }); }

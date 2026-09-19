@@ -53,7 +53,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { callTool, callMany, awaitJob, canCallDirectly, McpAuthError } = require('./lib/mcp-client');
+const { callTool, callMany, awaitJob, canCallDirectly, McpAuthError, queryFailureDetails } = require('./lib/mcp-client');
 const { validateDtxDecision, validateDtxReplay } = require('./lib/dtx-content-gates');
 const workflowContract = require('./lib/workflow-contract');
 const marketdataBarsContract = require('./lib/marketdata-bars-contract');
@@ -192,7 +192,7 @@ function semanticFailure(call, value) {
       for (const child of Object.values(node)) if (child && typeof child === 'object') visit(child);
     };
     visit(value);
-    if (failures.length) return `marketdata QueryData incomplete: ${[...new Set(failures)].slice(0, 3).join('; ')}`;
+    if (failures.length) return `marketdata QueryData incomplete: ${[...new Set([...queryFailureDetails(value), ...failures])].slice(0, 3).join('; ')}`;
     return null;
   }
   if (call.server !== 'systematic') return null;
@@ -352,12 +352,18 @@ function substitute(value, vars) {
 function expandCalls(wave, vars) {
   const expanded = [];
   for (const declaration of wave.calls || []) {
+    if (declaration.when) {
+      const { variable, equals } = declaration.when;
+      if (!(variable in vars)) throw new Error(`${declaration.as}: variable when $${variable} absente`);
+      if (String(vars[variable]) !== equals) continue;
+    }
     if (!declaration.foreach) {
+      const { when: _unusedWhen, ...withoutWhen } = declaration;
       expanded.push({
-        ...declaration,
-        args: substitute(declaration.args || {}, vars),
-        ...(declaration.freshness ? { freshness: substitute(declaration.freshness, vars) } : {}),
-        ...(declaration.assert ? { assert: substitute(declaration.assert, vars) } : {}),
+        ...withoutWhen,
+        args: substitute(withoutWhen.args || {}, vars),
+        ...(withoutWhen.freshness ? { freshness: substitute(withoutWhen.freshness, vars) } : {}),
+        ...(withoutWhen.assert ? { assert: substitute(withoutWhen.assert, vars) } : {}),
       });
       continue;
     }
@@ -376,7 +382,7 @@ function expandCalls(wave, vars) {
       // relecture divergeraient donc pour tout plan utilisant `foreach` — ressuscitant exactement
       // le mode d'échec corrigé plus bas dans ce fichier. Aucun plan du dépôt n'utilise `foreach`
       // aujourd'hui : le défaut était dormant, pas absent.
-      const { foreach: _unusedForeach, ...withoutForeach } = declaration;
+      const { foreach: _unusedForeach, when: _unusedWhen, ...withoutForeach } = declaration;
       expanded.push({
         ...withoutForeach,
         as: `${declaration.as}_${suffix}`,
@@ -687,7 +693,7 @@ function socleRead(c) {
       if (!r.ok || replay) return;
       const tw = Date.now();
       try { r.value = await resolveAsync(calls[i].server, r.value, calls[i].job_max_ms); }
-      catch (e) { r.ok = false; r.error = `job async : ${e.message}`; }
+      catch (e) { r.ok = false; r.error = `job async : ${e.message}`; r.failedResponse = e.failedResponse; }
       r.waitMs = Date.now() - tw;
       r.ms += r.waitMs;
     }));
@@ -733,6 +739,13 @@ function socleRead(c) {
         error: r.error || semanticError || null,
       });
       if (!r.ok) {
+        if (r.failedResponse) {
+          const diagnosticName = `${r.as}.failed.json`;
+          const diagnosticBody = JSON.stringify(r.failedResponse, null, 2);
+          fs.writeFileSync(path.join(outDir, diagnosticName), diagnosticBody);
+          waveLog.calls[i].diagnostic_artifact = diagnosticName;
+          waveLog.calls[i].diagnostic_sha256 = workflowContract.sha256(diagnosticBody);
+        }
         if (estDetachee) { log(`   ~ ${r.as} indisponible — vague détachée, non bloquant`); continue; }
         failures++; continue;
       }

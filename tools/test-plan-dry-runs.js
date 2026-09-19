@@ -36,9 +36,13 @@ for (const workflow of Object.values(config.workflows)) {
       const count = Math.max(1, constraint && constraint.min_items || 1);
       vars[name] = symbols.slice(0, count).join(',');
     }
+    if (spec.client_applicability) {
+      vars[spec.client_applicability.symbols_variable] = 'GOOGL,META,AAPL';
+      vars[spec.client_applicability.mode_variable] = 'applicable';
+    }
     const args = ['tools/collect.js', '--plan', spec.path, '--out', '/tmp/dailytickers-plan-dry-run', '--plan-only'];
     for (const [name, value] of Object.entries(vars)) {
-      if ((spec.required_variables || []).includes(name)) args.push('--var', `${name}=${value}`);
+      if ((spec.required_variables || []).includes(name) || (spec.client_applicability && name === spec.client_applicability.symbols_variable)) args.push('--var', `${name}=${value}`);
     }
     const result = spawnSync(process.execPath, args, { cwd: contract.ROOT, encoding: 'utf8' });
     assert.strictEqual(result.status, 0, `${spec.path} dry-run failed:\n${result.stdout}\n${result.stderr}`);

@@ -3,7 +3,7 @@
 
 // Offline transport regressions: fetch is replaced before any MCP call.
 const assert = require('assert');
-const { callTool, awaitJob, McpCallError } = require('./lib/mcp-client');
+const { callTool, awaitJob, McpCallError, queryFailureDetails } = require('./lib/mcp-client');
 
 async function main() {
   const savedFetch = global.fetch;
@@ -37,6 +37,34 @@ async function main() {
     });
     assert.strictEqual(calls.length, 2);
     assert.strictEqual(calls[1].arguments.page, 2);
+
+    // Failed Jobs can contain a complete diagnostic matrix without error at
+    // the envelope level. Keep the reason and raw failure, never return success.
+    const failed = { status: 'failed', job_id: 'options-failed', data: { items: [{
+      type: 'query_data', status: 'partial', results: [
+        { data_type: 'options_chain', cells: [
+          { symbol: 'ALLR', status: 'failed', error: `no expiration dates; ${secret}` },
+          { symbol: 'KLAC', status: 'completed' },
+        ] },
+        { data_type: 'calendar', cells: [{ symbol: 'HPE', status: 'failed', rejection_reason: 'earnings_calendar_unavailable' }] },
+      ],
+    }] } };
+    assert.deepStrictEqual(queryFailureDetails(failed), [
+      'options_chain[ALLR]: no expiration dates; [REDACTED]',
+      'calendar[HPE]: earnings_calendar_unavailable',
+    ]);
+    await assert.rejects(awaitJob('marketdata', 'options-failed', { call: async () => failed }), error => {
+      assert.match(error.message, /options_chain\[ALLR\]: no expiration dates/);
+      assert.match(error.message, /calendar\[HPE\]: earnings_calendar_unavailable/);
+      assert(!error.message.includes('aucun motif'));
+      assert.strictEqual(error.failedResponse.status, 'failed');
+      assert(!JSON.stringify(error.failedResponse).includes(secret));
+      assert.strictEqual(error.failedResponse.data.items[0].results[0].cells[1].symbol, 'KLAC');
+      return true;
+    });
+    await assert.rejects(awaitJob('marketdata', 'root-failed', {
+      call: async () => ({ status: 'failed', error: 'root cause', data: { items: [] } }),
+    }), /root cause/);
 
     // Plain and JSON tool errors preserve useful details while removing secrets.
     for (const text of [

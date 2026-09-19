@@ -606,6 +606,49 @@
         "ytd":       { "type": "string" },
         "oneYear":   { "type": "string" },
         "threeYear": { "type": "string" },
+        "windowReturns": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "label",
+            "startDate",
+            "endDate",
+            "rows"
+          ],
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "startDate": {
+              "type": "string",
+              "format": "date"
+            },
+            "endDate": {
+              "type": "string",
+              "format": "date"
+            },
+            "rows": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ticker",
+                  "returnPct"
+                ],
+                "properties": {
+                  "ticker": {
+                    "type": "string"
+                  },
+                  "returnPct": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
         "benchmarks": { "type": "array", "items": {
           "type": "object",
           "required": ["name", "ytd"],
@@ -675,6 +718,7 @@
       "required": ["entry", "stop", "tp1", "rr"],
       "additionalProperties": false,
       "properties": {
+        "archiveReferenceClose": {"type": "string", "pattern": "^20[0-9]{2}-[0-9]{2}-[0-9]{2}$"},
         "entry":       { "type": "number" },
         "entryNote":   { "type": "string", "description": "e.g. 'Momentum entry'" },
         "stop":        { "type": "number" },

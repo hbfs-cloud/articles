@@ -26,7 +26,7 @@ bash tools/run-collect.sh analyse analyses/TICKER/_data \
   --var documented_client_symbols=CLIENT1,CLIENT2
 ```
 
-Le plan couvre instrument, 260 barres, fondamentaux, earnings, analystes, techniques, SEC/flags,
+Le plan couvre instrument, 300 barres, fondamentaux, earnings, analystes, techniques, SEC/flags,
 actions corporate, insiders/institutionnels, short/CTB/FTD/dark pool, options et signaux composites.
 Les sources de contexte optionnelles ne peuvent combler une preuve requise absente.
 

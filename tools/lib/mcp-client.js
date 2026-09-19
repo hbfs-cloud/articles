@@ -67,6 +67,26 @@ class McpCallError extends Error {
   }
 }
 
+// QueryData may return failures inside a Jobs data.items[] matrix, without a
+// top-level error. Prefer named cells so callers retain the actual cause.
+function queryFailureDetails(value) {
+  const failures = [];
+  const visit = (node, facet = '') => {
+    if (!node || typeof node !== 'object') return;
+    facet = node.data_type || facet;
+    if (Array.isArray(node.cells)) {
+      for (const cell of node.cells) {
+        if (!['failed', 'partial', 'stale'].includes(String(cell.status || '').toLowerCase())) continue;
+        const reason = cell.error || cell.rejection_reason || cell.status;
+        failures.push(`${facet || 'query'}[${cell.symbol || '?'}]: ${typeof reason === 'string' ? reason : JSON.stringify(reason)}`);
+      }
+    }
+    for (const [key, child] of Object.entries(node)) if (key !== 'cells' && child && typeof child === 'object') visit(child, facet);
+  };
+  visit(value);
+  return [...new Set(failures)].map(redactSecrets);
+}
+
 /**
  * Valide la présence et la fraîcheur du token AVANT toute salve.
  * Échoue tôt et avec un message actionnable : un run à moitié fait sur un token
@@ -396,9 +416,13 @@ async function awaitJob(server, jobId, {
       // Remonter la RAISON du serveur : « job en échec » sans motif oblige à
       // rejouer l'appel à la main pour diagnostiquer, ce qui annule le gain.
       const d = r.data || r;
-      const why = d.error || d.message || d.reason || (d.result && d.result.error) || '';
-      throw new McpCallError(`Job ${jobId} en échec${why ? ' — ' + String(why).slice(0, 300) : ' (aucun motif renvoyé)'}`,
-        { server, tool: pollTool, body: JSON.stringify(d).slice(0, 500) });
+      const why = queryFailureDetails(r).slice(0, 3).join('; ') || d.error || d.message || d.reason || (d.result && d.result.error) || r.error || r.message || r.reason || '';
+      const error = new McpCallError(`Job ${jobId} en échec${why ? ' — ' + redactSecrets(why).slice(0, 1000) : ' (aucun motif renvoyé)'}`,
+        { server, tool: pollTool, body: redactSecrets(JSON.stringify(d)).slice(0, 500) });
+      // Diagnostic only: retain the failed envelope, never promote it to a
+      // completed/pagination-exhausted result or add it to a freshness manifest.
+      error.failedResponse = JSON.parse(redactSecrets(JSON.stringify(r)));
+      throw error;
     }
     if (Date.now() > deadline) throw new McpCallError(`Job ${jobId} non terminé après ${maxMs}ms`, { server, tool: pollTool });
     const hinted = Number(r?.retry_after_seconds ?? r?.data?.retry_after_seconds);
@@ -410,6 +434,6 @@ async function awaitJob(server, jobId, {
 module.exports = {
   SERVERS, callTool, callToolWithRetry, callMany, awaitJob, rateLimitDelayMs,
   requireToken, canCallDirectly,
-  redactSecrets,
+  redactSecrets, queryFailureDetails,
   McpAuthError, McpCallError,
 };

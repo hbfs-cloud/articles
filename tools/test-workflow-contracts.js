@@ -7,6 +7,7 @@ const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const contract = require('./lib/workflow-contract');
+const { latestCompletedUSClose } = require('./lib/market-calendar');
 
 const config = contract.readConfig();
 const all = contract.validateAll(config);
@@ -49,6 +50,55 @@ const base = {
 const spec = { required_variables: ['date', 'refdate', 'symbols'] };
 assert.deepStrictEqual(contract.validatePlan(base, spec, config.policy), []);
 assert.deepStrictEqual(contract.validateRuntimeVariables(spec, { date: '20260831', refdate: '2026-08-28', symbols: 'AAA,BBB' }), []);
+
+const analyseSpec = config.workflows.analyse.plans.find(item => item.path === 'plans/analyse.json');
+const clientEvidenceDir = fs.mkdtempSync(path.join(contract.ROOT, '.agent', 'workflow-client-applicability-'));
+const clientEvidencePath = path.relative(contract.ROOT, path.join(clientEvidenceDir, 'primary-evidence.md'));
+fs.writeFileSync(path.join(contract.ROOT, clientEvidencePath), [
+  '# Test-only primary-review evidence',
+  '',
+  'ALLR is a clinical-stage developer; this fixture records that no documented listed commercial customer was identified for the test case.',
+].join('\n'));
+const clientEvidenceSha256 = contract.sha256(fs.readFileSync(path.join(contract.ROOT, clientEvidencePath)));
+try {
+const clientApplicabilityVars = {
+  symbol: 'ALLR', refdate: '2026-09-18', comparison_start_date: '2026-03-01',
+  comparison_symbols: 'AAPL,MSFT,NVDA,AMZN,GOOGL,META,AVGO,JPM,XOM,XLK,SPY,QQQ',
+  documented_client_applicability: 'not_applicable', documented_client_symbols: '',
+  documented_client_na_reason: 'Clinical developer with no documented listed commercial customer after primary review.',
+  documented_client_na_evidence_path: clientEvidencePath,
+  documented_client_na_evidence_sha256: clientEvidenceSha256,
+};
+assert.deepStrictEqual(contract.validateRuntimeVariables(analyseSpec, clientApplicabilityVars), [],
+  'a documented N/A client case must be accepted');
+assert(contract.validateRuntimeVariables(analyseSpec, { ...clientApplicabilityVars, documented_client_na_reason: '' })
+  .some(error => error.includes('explicit reason')),
+  'a client N/A case without a reason must be refused');
+assert(contract.validateRuntimeVariables(analyseSpec, { ...clientApplicabilityVars, documented_client_na_evidence_sha256: '0'.repeat(64) })
+  .some(error => error.includes('hash mismatch')),
+  'a client N/A case with mismatched evidence must be refused');
+assert(contract.validateRuntimeVariables(analyseSpec, { ...clientApplicabilityVars, documented_client_symbols: 'EISAI' })
+  .some(error => error.includes('forbids client symbols')),
+  'a client N/A case must refuse a contradictory client symbol');
+assert.deepStrictEqual(contract.validateRuntimeVariables(analyseSpec, {
+  ...clientApplicabilityVars,
+  documented_client_applicability: 'applicable', documented_client_symbols: 'MSFT',
+  documented_client_na_reason: '', documented_client_na_evidence_path: '', documented_client_na_evidence_sha256: '',
+}), [], 'the documented client path must remain valid');
+const naPlanOnly = spawnSync(process.execPath, [
+  'tools/collect.js', '--plan', 'plans/analyse.json', '--out', path.join(os.tmpdir(), 'analyse-client-na-plan-only'), '--plan-only',
+  '--var', 'symbol=ALLR', '--var', `refdate=${latestCompletedUSClose()}`, '--var', 'comparison_start_date=2026-03-01',
+  '--var', `comparison_symbols=${clientApplicabilityVars.comparison_symbols}`,
+  '--var', 'documented_client_applicability=not_applicable', '--var', 'documented_client_symbols=',
+  '--var', `documented_client_na_reason=${clientApplicabilityVars.documented_client_na_reason}`,
+  '--var', `documented_client_na_evidence_path=${clientEvidencePath}`,
+  '--var', `documented_client_na_evidence_sha256=${clientEvidenceSha256}`,
+], { cwd: contract.ROOT, encoding: 'utf8' });
+assert.strictEqual(naPlanOnly.status, 0, naPlanOnly.stderr);
+assert(!naPlanOnly.stdout.includes('comparison_client_bars'), 'N/A mode must not execute client bars');
+} finally {
+  fs.rmSync(clientEvidenceDir, { recursive: true, force: true });
+}
 
 const scannerDtxSpec = config.workflows.scanner.plans.find(item => item.path === 'plans/scanner-dtx-decide-only.json');
 const scannerDtxPlan = JSON.parse(fs.readFileSync(path.join(contract.ROOT, scannerDtxSpec.path), 'utf8'));
@@ -99,6 +149,12 @@ assert(contract.validatePlan(legacyEndDate, spec, config.policy).some(e => e.inc
 const broker = structuredClone(base);
 broker.waves[1].calls[0].server = 'broker_live';
 assert(contract.validatePlan(broker, spec, config.policy).some(e => e.includes('not allowed')));
+
+const conditionalRequiredSource = structuredClone(base);
+conditionalRequiredSource.waves[1].calls[0].when = { variable: 'symbols', equals: 'skip' };
+assert(contract.validatePlan(conditionalRequiredSource, spec, config.policy)
+  .some(e => e.includes('conditional execution is reserved')),
+  'a conditional branch must not become a general required-source bypass');
 
 const unknownTool = structuredClone(base);
 unknownTool.waves[1].calls[0].tool = 'LooksPlausibleButDoesNotExist';

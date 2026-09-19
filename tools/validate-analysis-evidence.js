@@ -49,7 +49,7 @@ function validateNonMarketInput(input, payload, calculation, analysis, ticker) {
   for (const [dotted, provenance] of usages) {
     const derivedArchive = archived && /^(?:tradeIdea\.(?:stopPct|tp1Pct|tp2Pct|rr|thesis|statusNote|invalidation\.\d+)|technicals\.setupNote)$/.test(dotted);
     const permitted = archived
-      ? derivedArchive || /^meta\.(?:statusHistory\.\d+\.|lastEvent\.)/.test(dotted) || /^tradeIdea\.(?:entry|stop|tp1|tp2)$/.test(dotted)
+      ? dotted === 'tradeIdea.archiveReferenceClose' || derivedArchive || /^meta\.(?:statusHistory\.\d+\.|lastEvent\.)/.test(dotted) || /^tradeIdea\.(?:entry|stop|tp1|tp2)$/.test(dotted)
       : /^(?:verdict\.score|risks\.riskScore|meta\.(?:version|date|dateDisplay)|blastRadius\.groups\.\d+\.order)$/.test(dotted);
     if (!permitted) { errors.push(`non-market input cannot support ${dotted}`); continue; }
     const actual = get(analysis, dotted);
@@ -57,19 +57,37 @@ function validateNonMarketInput(input, payload, calculation, analysis, ticker) {
       const t = payload.tradeIdea || {}, numbers = [1, t.entry, t.stop, t.tp1, t.tp2].filter(Number.isFinite);
       if (Number.isFinite(t.entry) && t.entry !== 0) {
         for (const level of [t.stop, t.tp1, t.tp2].filter(Number.isFinite)) numbers.push((level / t.entry - 1) * 100);
-        if (t.entry !== t.stop) numbers.push(Math.abs((t.tp1 - t.entry) / (t.entry - t.stop)));
+        if (t.entry !== t.stop) {
+          for (const target of [t.tp1, t.tp2].filter(Number.isFinite)) numbers.push(Math.abs((target - t.entry) / (t.entry - t.stop)));
+        }
       }
       if (dotted === 'tradeIdea.statusNote') {
         for (const e of [...(payload.meta?.statusHistory || []), payload.meta?.lastEvent].filter(Boolean)) {
           if (Number.isFinite(e.close)) numbers.push(e.close);
         }
       }
-      const allowed = new Set(numbers.map(x => Math.abs(Number(x.toFixed(2)))));
-      const claimed = typeof actual === 'string' ? (actual.match(/-?\d+(?:[.,]\d+)?/g) || []).map(x => Math.abs(Number(x.replace(',', '.')))) : [NaN];
+      const claimed = typeof actual === 'string' ? (actual.match(/[+-]?\d+(?:[.,]\d+)?/g) || []) : [];
+      const roundedMatch = (text, value) => {
+        const normalized = text.replace(',', '.'), decimals = (normalized.split('.')[1] || '').length;
+        return Number.isFinite(value) && Number(value.toFixed(Math.min(decimals, 100))) === Number(normalized);
+      };
+      let supported = claimed.length > 0 && claimed.every(text => numbers.some(value => roundedMatch(text, value)));
+      const percentLevel = { 'tradeIdea.stopPct': 'stop', 'tradeIdea.tp1Pct': 'tp1', 'tradeIdea.tp2Pct': 'tp2' }[dotted];
+      if (percentLevel) supported = claimed.length === 1 && roundedMatch(claimed[0], (t[percentLevel] / t.entry - 1) * 100);
+      if (dotted === 'tradeIdea.rr') {
+        const ratioPattern = /([+-]?\d+(?:[.,]\d+)?)\s*:\s*([+-]?\d+(?:[.,]\d+)?)/g;
+        const ratios = typeof actual === 'string' ? [...actual.matchAll(ratioPattern)] : [];
+        const remainder = typeof actual === 'string' ? actual.replace(ratioPattern, '').replace(/TP[12]\b/gi, '') : '';
+        supported = ratios.length >= 1 && ratios.length <= 2 && !/\d/.test(remainder)
+          && ratios.every((match, index) => Number(match[1].replace(',', '.')) === 1
+            && Number(match[2].replace(',', '.')) > 0
+            && roundedMatch(match[2], Math.abs((t[index === 0 ? 'tp1' : 'tp2'] - t.entry) / (t.entry - t.stop))));
+      }
       if (provenance.derivation !== 'archived_trade_geometry' || !['', '/tradeIdea', '/meta'].includes(provenance.source_pointer)
-        || !claimed.length || claimed.some(x => !allowed.has(x))) errors.push(`unsupported archived trade derivation for ${dotted}`);
+        || !supported) errors.push(`unsupported archived trade derivation for ${dotted}`);
     } else if (archived) {
-      if (JSON.stringify(get(payload, dotted)) !== JSON.stringify(actual)
+      const archiveValue = dotted === 'tradeIdea.archiveReferenceClose' ? payload.meta?.levelsCloseDate : get(payload, dotted);
+      if (JSON.stringify(archiveValue) !== JSON.stringify(actual)
         || JSON.stringify(pointerGet(payload, provenance.source_pointer)) !== JSON.stringify(actual)) errors.push(`archived value differs for ${dotted}`);
     } else {
       const judgment = payload?.judgments?.[dotted];
@@ -86,6 +104,34 @@ function validateNonMarketInput(input, payload, calculation, analysis, ticker) {
   return errors;
 }
 
+function validateValuationScenario(scenario, inputs, root) {
+  if (scenario.status === 'non_applicable') {
+    const errors = [];
+    if (scenario.reason_code !== 'NON_POSITIVE_EBITDA' || typeof scenario.reason !== 'string' || !scenario.reason.trim()) errors.push('non-applicable valuation requires a supported reason');
+    if (Object.keys(scenario).some(key => !['status', 'reason_code', 'reason', 'basis'].includes(key))) errors.push('non-applicable valuation cannot contain economic outputs');
+    const basis = scenario.basis || {};
+    const input = (inputs || []).find(item => item.path === basis.input_path && item.sha256 === basis.input_sha256);
+    const abs = path.resolve(root, basis.input_path || '');
+    if (!input || path.isAbsolute(basis.input_path || '') || path.relative(root, abs).startsWith('..') || !fs.existsSync(abs) || !fs.statSync(abs).isFile()) {
+      return [...errors, 'non-applicable valuation basis is missing or outside repository'];
+    }
+    const bytes = fs.readFileSync(abs);
+    if (hash(bytes) !== basis.input_sha256) return [...errors, 'non-applicable valuation basis hash mismatch'];
+    let value;
+    try { value = pointerGet(JSON.parse(bytes), basis.source_pointer); } catch { value = undefined; }
+    if (typeof basis.source_pointer !== 'string' || !/\/ebitda$/i.test(basis.source_pointer) || typeof value !== 'number' || !Number.isFinite(value) || value > 0) errors.push('non-applicable valuation requires observed non-positive EBITDA');
+    return errors;
+  }
+  const enterpriseValue = Number(scenario.multiple) * Number(scenario.ebitda);
+  const equityValue = enterpriseValue - Number(scenario.debt) + Number(scenario.cash);
+  const scenarioPrice = equityValue / Number(scenario.shares);
+  const downside = (scenarioPrice / Number(scenario.close) - 1) * 100;
+  const closeEnough = (a, b) => Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) <= Math.max(1e-8, Math.abs(a) * 1e-10);
+  return closeEnough(enterpriseValue, Number(scenario.enterprise_value)) && closeEnough(equityValue, Number(scenario.equity_value))
+    && closeEnough(scenarioPrice, Number(scenario.price)) && closeEnough(downside, Number(scenario.downside_pct))
+    ? [] : ['valuation scenario is not reproducible'];
+}
+
 function validateDeterministicCalculation(source, abs, expectedHash, manifest, root) {
   const errors = [];
   if (source.kind !== 'deterministic_analysis_calculation_v1') return null;
@@ -97,16 +143,7 @@ function validateDeterministicCalculation(source, abs, expectedHash, manifest, r
   if (!Array.isArray(source.inputs) || !source.inputs.length) errors.push('calculation inputs are missing');
   const score = Object.values(source.score_components || {}).reduce((sum, value) => sum + Number(value || 0), 0);
   if (score !== source.values?.verdict?.score) errors.push('calculation score components do not reproduce verdict score');
-  const scenario = source.valuation_scenario || {};
-  const enterpriseValue = Number(scenario.multiple) * Number(scenario.ebitda);
-  const equityValue = enterpriseValue - Number(scenario.debt) + Number(scenario.cash);
-  const scenarioPrice = equityValue / Number(scenario.shares);
-  const downside = (scenarioPrice / Number(scenario.close) - 1) * 100;
-  const closeEnough = (a, b) => Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) <= Math.max(1e-8, Math.abs(a) * 1e-10);
-  if (!closeEnough(enterpriseValue, Number(scenario.enterprise_value)) || !closeEnough(equityValue, Number(scenario.equity_value))
-    || !closeEnough(scenarioPrice, Number(scenario.price)) || !closeEnough(downside, Number(scenario.downside_pct))) {
-    errors.push('valuation scenario is not reproducible');
-  }
+  errors.push(...validateValuationScenario(source.valuation_scenario || {}, source.inputs, root));
   let analysis;
   try { analysis = JSON.parse(fs.readFileSync(path.resolve(root, manifest.analysis_path), 'utf8')); } catch { analysis = null; }
   const numericStrings = {};
@@ -244,4 +281,4 @@ if (require.main === module) {
   console.log(`[analysis-evidence] PASS (${manifest.claims.length} claims)`);
 }
 
-module.exports = { numericPaths, validate, validateNonMarketInput };
+module.exports = { numericPaths, validate, validateNonMarketInput, validateValuationScenario };

@@ -17,11 +17,15 @@ node tools/test-plan-dry-runs.js
 node tools/test-socle-reuse.js
 node tools/test-extract-universe.js
 node tools/test-mcp-client.js
+node tools/test-mcp-client-tool-errors.js
+node tools/test-collect-failed-jobs.js
 node tools/test-market-calendar.js
 node tools/check-freshness.test.js
 node tools/test-evidence-gates.js
 node tools/test-trade-idea-gates.js
 node tools/test-analysis-evidence.js
+node tools/test-analysis-valuation-evidence.js
+node tools/test-analysis-non-market-evidence.js
 node tools/test-content-claims.js
 node tools/test-selection-gates.js
 node tools/test-semantic-evidence.js
