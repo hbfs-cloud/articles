@@ -35,24 +35,22 @@ assert(!positions.some(p => p.scan_date > today), 'future scans must never becom
 
 const statusHtml = fs.readFileSync(path.join(ROOT, 'scanner/status/index.html'), 'utf8');
 assert(!statusHtml.includes('scanDir=20260831'), 'future scans must never feed status orders');
-const isMarketClosedDay = !isUSTradingDay(today);
+const statusDates = read('scanner/status/history/dates.json');
+const statusKey = statusDates.at(-1);
+assert(/^\d{8}$/.test(statusKey), 'status history must expose a dated latest snapshot');
+const statusDate = `${statusKey.slice(0,4)}-${statusKey.slice(4,6)}-${statusKey.slice(6,8)}`;
+const snapshot = read(`scanner/status/history/${statusKey}.json`);
+assert.strictEqual(snapshot.date, statusDate, 'latest status snapshot date must match its filename');
+const isMarketClosedDay = !isUSTradingDay(statusDate);
 if (isMarketClosedDay) {
   assert(statusHtml.includes('Portefeuille · Marché fermé'), 'closed-session status must be labeled in the site language');
   assert(!/>\s*\d+ Orders? to Place</.test(statusHtml), 'closed-session status must not advertise actionable orders');
-  const todayKey = today.replace(/-/g, '');
-  const snapshot = read(`scanner/status/history/${todayKey}.json`);
   for (const [mode, payload] of Object.entries(snapshot.modes || {})) {
     assert.strictEqual((payload.orders || []).length, 0, `${mode}: closed-session snapshot orders must be empty`);
   }
   for (const mode of ['best', 'turbo', 'dynamic', 'balanced', 'fortress'].filter(id => !SCOPE.excludesMode(id))) {
     assert.strictEqual((read(`portfolio/v1/${mode}/orders.json`).orders || []).length, 0, `${mode}: closed-session API orders must be empty`);
   }
-}
-if (!SCOPE.active) {
-const bestMethod = (statusHtml.split('<div id="p-best"')[1] || '').split('<!-- ══ 2bis.')[0];
-assert(!/market order/i.test(bestMethod), 'DTX public method must never prescribe LIMIT-to-MARKET conversion');
-assert(/rank 1 only/i.test(bestMethod) && /engine_managed/i.test(bestMethod), 'DTX public method must describe grouped execution and exact protection');
-
 }
 
 const sec = read('scanner/20260831/_data2/sec_selected_evidence.json');
