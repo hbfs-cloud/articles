@@ -8156,7 +8156,7 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Recette actualisée du MCP Author",
+    "title": "Recette finale du MCP Author",
     "desc": "Gates bloquants (fraîcheur datée, validation quantitative, détecteur de tics), trois états au lieu de deux, panel adversarial avant mise en ligne. Le jour où un relecteur a recompté « 17 » et trouvé 15, et pourquoi refuser de publier est une fonctionnalité, pas une panne.",
     "tags": "tech,ai,architecture,formation",
     "grade": "",
