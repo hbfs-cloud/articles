@@ -8619,6 +8619,19 @@ window.searchDataPrebuilt = [
     "date": ""
   },
   {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Recette technique temporaire du MCP Author",
+    "desc": "Gates bloquants (fraîcheur datée, validation quantitative, détecteur de tics), trois états au lieu de deux, panel adversarial avant mise en ligne. Le jour où un relecteur a recompté « 17 » et trouvé 15, et pourquoi refuser de publier est une fonctionnalité, pas une panne.",
+    "tags": "tech,ai,architecture,formation",
+    "grade": "",
+    "href": "/tech/author-mcp-qa-20260919181847655/",
+    "date": ""
+  },
+  {
     "type": "série",
     "icon": "fa-graduation-cap",
     "ticker": "",
