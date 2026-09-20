@@ -1,5 +1,11 @@
 # Actualisation des analyses et KLAC — 19 septembre 2026
 
+## Tableaux Rotation interactifs — 21 septembre 2026
+
+- DONE — Les quatre tableaux de `/rotation/` sont triables dans les deux sens et filtrables indépendamment sur chaque colonne, avec valeurs numériques brutes, valeurs absentes en fin de tri et remise à zéro lors du changement de référence de co-mouvement.
+- DONE — Les 31 colonnes et leurs filtres ont été exercés dans le navigateur; activation clavier, rendu à 390 px, DFDV/Solana, validateurs, 20 tests ciblés et console sans erreur sont vérifiés.
+- IN PROGRESS — Revoir le diff ciblé, committer, pousser sur `main`, attendre le déploiement puis contrôler la page publique.
+
 ## Correctif Rotation multi-actifs — 20 septembre 2026
 
 - DONE — Audit intégral de la page au close du 18 septembre : 11/11 rendements sectoriels reproduits; 12/48 anciennes lignes bêta divergentes, toutes avec seulement 35 à 40 observations malgré 57 à 62 barres disponibles. Le classement EUR/USD a été retiré.
