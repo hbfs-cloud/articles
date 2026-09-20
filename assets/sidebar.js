@@ -108,6 +108,7 @@
     // === Detect current tab ===
     var htmlEl = document.documentElement;
     var currentTab = htmlEl.getAttribute("data-tab") || "";
+    var marketWatchActive = window.location.pathname.indexOf("/marketwatch/") === 0 ? " active" : "";
     if (!currentTab) {
       var path = window.location.pathname;
       if (path.indexOf("/weekly/") === 0) currentTab = "weekly";
@@ -178,6 +179,7 @@
       "  </div>",
       '  <nav class="sidebar-nav">' + navLinks + "</nav>",
       '  <div class="sidebar-bottom">',
+      '    <a href="/marketwatch/" class="sidebar-link sidebar-extra' + marketWatchActive + '"><i class="fa-solid fa-binoculars"></i><span>MarketWatch</span></a>',
       '    <a href="/prompt-ia/" class="sidebar-link sidebar-extra"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Prompt IA</span></a>',
       '    <a href="/integrations/" class="sidebar-link sidebar-extra"><i class="fa-solid fa-plug"></i><span>Integrations</span></a>',
       '    <a href="/series/quick-start/" class="sidebar-link sidebar-extra"><i class="fa-solid fa-graduation-cap"></i><span data-i18n="sidebar.start">' +
