@@ -67,7 +67,7 @@
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
-            "types": "profile,financials,stats,earnings_quarterly,earnings_reactions,earnings_surprises,earnings_yearly,calendar,analyst_actions,analyst_trend,holders,dividends",
+            "types": "profile,financials,stats,earnings_quarterly,earnings_reactions,earnings_surprises,earnings_yearly,calendar,analyst_trend,holders,dividends",
             "symbols": "$symbol"
           },
           "freshness": {
@@ -81,7 +81,7 @@
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
-            "types": "technicals,support_resistance,volume_profile,obv,vwap,trading_signals",
+            "types": "technicals,support_resistance,volume_profile,obv,trading_signals",
             "symbols": "$symbol",
             "end_date": "$refdate"
           },
@@ -184,7 +184,7 @@
           "server": "marketdata",
           "tool": "QueryData",
           "args": {
-            "types": "metadata,financials,stats,technicals,calendar,earnings_reactions,earnings_surprises,analyst_trend,short_interest,ctb,sec_catalysts",
+            "types": "metadata,financials,stats,technicals,earnings_reactions,earnings_surprises,analyst_trend,short_interest,sec_catalysts",
             "symbols": "$comparison_symbols",
             "force_async": true
           },
@@ -307,38 +307,6 @@
           }
         },
         {
-          "as": "short_squeeze",
-          "server": "marketdata",
-          "tool": "QueryData",
-          "args": {
-            "types": "short_interest,ctb,ctb_history,ftd_threshold,finra_short_volume",
-            "symbols": "$symbol",
-            "end_date": "$refdate",
-            "days": 365
-          },
-          "freshness": {
-            "max_age_h": 168,
-            "required": true
-          }
-        },
-        {
-          "as": "options",
-          "server": "marketdata",
-          "tool": "QueryData",
-          "args": {
-            "types": "options_chain,vol_surface,options_history,unusual_options,max_pain",
-            "symbols": "$symbol",
-            "end_date": "$refdate",
-            "max_expirations": 3,
-            "moneyness_min": 0.8,
-            "moneyness_max": 1.2
-          },
-          "freshness": {
-            "max_age_h": 24,
-            "required": true
-          }
-        },
-        {
           "as": "symbol_signals",
           "server": "marketdata",
           "tool": "GetSymbolSignals",
@@ -370,6 +338,84 @@
       "name": "context",
       "detached": true,
       "calls": [
+        {
+          "as": "short_squeeze",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "short_interest,ctb,ctb_history,ftd_threshold,finra_short_volume",
+            "symbols": "$symbol",
+            "end_date": "$refdate",
+            "days": 365
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": false,
+            "note": "Optional short-interest and borrow coverage. Missing CTB or lender coverage must be disclosed and never interpreted as zero borrow cost or neutral squeeze risk."
+          }
+        },
+        {
+          "as": "comparison_calendar_ctb",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "calendar,ctb",
+            "symbols": "$comparison_symbols",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": false,
+            "note": "Optional comparison calendar and borrow-cost coverage. Missing, stale or timed-out cells stay explicit and cannot neutralize the required economic comparison context."
+          }
+        },
+        {
+          "as": "analyst_actions",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "analyst_actions",
+            "symbols": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": false,
+            "note": "Optional current analyst-action feed. Unavailable coverage must be disclosed and never represented as no analyst activity."
+          }
+        },
+        {
+          "as": "vwap",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "vwap",
+            "symbols": "$symbol",
+            "end_date": "$refdate"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false,
+            "note": "Optional intraday-derived VWAP. Missing intraday bars must remain explicit and must not block a daily analysis."
+          }
+        },
+        {
+          "as": "options",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "options_chain,vol_surface,options_history,unusual_options,max_pain",
+            "symbols": "$symbol",
+            "end_date": "$refdate",
+            "max_expirations": 3,
+            "moneyness_min": 0.8,
+            "moneyness_max": 1.2
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false,
+            "note": "Optional derivatives coverage because some listed equities have no option chain. Absence must be disclosed and never converted into a neutral options signal."
+          }
+        },
         {
           "as": "move_explanation",
           "server": "marketdata",

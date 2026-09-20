@@ -1,11 +1,29 @@
 # Actualisation des analyses et KLAC — 19 septembre 2026
 
+## Publication finale des cinq — 20 septembre 2026
+
+- DONE — KLAC, AAOI, AMD, AG et ALLR promus dans les chemins canoniques avec collecte MCP gouvernée, RankBeta opérationnel, preuves numériques complètes et gates stricts sans erreur ni avertissement.
+- DONE — Revues indépendantes Senior QA, Contrarian et Retail War Room sur les hashes canoniques : cinq PASS, 38 contrôles AQ-1.1 chacun, aucun BLOCK; attestations enregistrées aux dates éditoriales.
+- DONE — Publication locale canonique et indexation des cinq pages; fraîcheur, run-plan, preuves, rendu, QA contenu et anti-tics PASS. Commit et push main en cours.
+
 ## Livraison des cinq autorisée — 20 septembre 2026
 
 - DONE — Révisions françaises locales KLAC, AAOI, AMD, AG, ALLR complétées; valeurs liées aux sources : respectivement 282, 274, 267, 282, 270 claims PASS. Générateurs AAOI/AMD/ALLR autonomes hashés, vrais documents SEC pour AG/AMD/ALLR, anciens contrats conservés inactifs.
 - DONE — Pré-revue stricte KLAC/AAOI/AMD/AG PASS; ALLR conserve une erreur amont non représenté, plutôt qu'un fournisseur inventé. QA HTML des cinq PASS. Suite content-workflows complète PASS avec tests du contexte éditorial.
 - DONE — Revues indépendantes Senior/Contrarian/Retail locales des cinq dossiers terminées. Rapports et addenda sur les dernières empreintes dans `final-five-review/`; aucune attestation AQ finale PASS.
-- BLOCKED — Publication : run-plan FAIL sur les cinq. RankBeta US renvoie toujours HTTP 403 dans la sonde native du 20 septembre. AAOI/AMD ont aussi CIEN/HPE indisponibles. ALLR conserve analystes/VWAP/options manquants et amont non représenté. Aucune attestation AQ finale PASS; aucune page publique remplacée.
+- DONE — Retest Marketdata du 20 septembre sur `d211cc28-ace` : bootstrap
+  22 299 / 22 299, RankBeta exact PASS, calendriers CIEN/HPE structurés et cinq
+  facets options ALLR explicitement indisponibles sans valeur inventée. Le plan
+  analyse isole dans la vague optionnelle détachée les couvertures non
+  universelles (actions analystes, VWAP intraday, options, short/borrow,
+  calendriers et CTB comparables), tout en conservant prix, fondamentaux, SEC,
+  risque et noyau du blast radius obligatoires. Recollecte finale des cinq sur
+  le hash `f54acbc8ad7bedcd138edec019fc5df0098570220074f504610952749a472048` :
+  cinq journaux sans échec obligatoire et cinq `validate-workflows.js
+  --run-plan plans/analyse.json` PASS. Aucune page publique remplacée; les
+  attestations éditoriales existantes restent distinctes de cette recette de
+  collecte. Suite `tools/test-content-workflows.sh` PASS, dont 32 dry-runs de
+  plans et tous les gates analyse/scanner.
 - DONE — Révisions, preuves, revues et correctifs sauvegardés dans un commit sur main. Heartbeat utilisateur et autres travaux hors scope préservés. L’export Pages exclut les dossiers `_runs`; publication des analyses toujours BLOCKED.
 
 ## Livraison Git autorisée — travaux terminés uniquement

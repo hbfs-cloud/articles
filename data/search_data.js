@@ -1692,6 +1692,71 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ALLR",
+    "exchange": "NASDAQ · Biotechnologie",
+    "name": "ALLR — efficacité clinique, financement et dilution à distinguer.",
+    "title": "ALLR — efficacité clinique, financement et dilution à distinguer.",
+    "desc": "ALLR : risque clinique, trésorerie disponible et financement conditionnel. Aucun ordre actif.",
+    "tags": "us,biotech,oncology,clinical-stage,no-trade",
+    "grade": "D",
+    "href": "/analyses/ALLR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "AG",
+    "exchange": "NYSE · Mines d’argent et d’or",
+    "name": "AG — exposition argent et risque minier par action. Aucun ordre actif.",
+    "title": "AG — exposition argent et risque minier par action. Aucun ordre actif.",
+    "desc": "AG : argent, mines, participation Los Gatos et capital. Révision locale sans ordre actif.",
+    "tags": "us,equities,silver,mining,basic-materials",
+    "grade": "D+",
+    "href": "/analyses/AG/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "AMD",
+    "exchange": "NASDAQ · Semi-conducteurs",
+    "name": "AMD — croissance Data Center, valorisation et risques de partenariat. Aucun ordre actif.",
+    "title": "AMD — croissance Data Center, valorisation et risques de partenariat. Aucun ordre actif.",
+    "desc": "AMD : accélérateurs IA, croissance Data Center et capital conditionnel. Révision locale sans ordre actif.",
+    "tags": "us,equities,ai-chain,semiconducteurs,technology",
+    "grade": "C",
+    "href": "/analyses/AMD/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "AAOI",
+    "exchange": "NASDAQ · Équipements de communication",
+    "name": "AAOI — demande optique, capacité, ATM et risque par action. Aucun ordre actif.",
+    "title": "AAOI — demande optique, capacité, ATM et risque par action. Aucun ordre actif.",
+    "desc": "AAOI : optique de data center, capacité et dilution. Révision locale au dernier close certifié, sans ordre actif.",
+    "tags": "us,equities,ai-chain,optics,technology",
+    "grade": "C+",
+    "href": "/analyses/AAOI/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "KLAC",
+    "exchange": "NASDAQ · Équipements pour semi-conducteurs",
+    "name": "KLAC — qualité industrielle, faiblesse relative et risques de valorisation. Aucun ordre actif.",
+    "title": "KLAC — qualité industrielle, faiblesse relative et risques de valorisation. Aucun ordre actif.",
+    "desc": "KLA : inspection des semi-conducteurs, valorisation et propagation sectorielle. Révision au dernier cours de clôture, sans ordre actif.",
+    "tags": "us,equities,ai-chain,hardware,technology",
+    "grade": "B",
+    "href": "/analyses/KLAC/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "MTDR",
     "exchange": "NYSE · Energy",
     "name": "MTDR — résultats, risques, comparables et suivi de veille au 11 septembre 2026.",
@@ -1835,19 +1900,6 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "ALLR",
-    "exchange": "NASDAQ · Healthcare",
-    "name": "ALLR — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "title": "ALLR — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "desc": "ALLR: individual article observation list dossier with official SEC review and actionable trade state.",
-    "tags": "us,equities,ai-chain,observed,healthcare",
-    "grade": "D",
-    "href": "/analyses/ALLR/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
     "ticker": "LPLA",
     "exchange": "NASDAQ · Financial Services",
     "name": "LPLA — fundamentals, SEC filings, technical structure, risks and trade levels.",
@@ -1869,19 +1921,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,ai-chain,metals,basic-materials",
     "grade": "B",
     "href": "/analyses/EQX/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "AG",
-    "exchange": "NYSE · Basic Materials",
-    "name": "AG — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "title": "AG — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "desc": "AG: individual precious-metals equity beta dossier with official SEC review and actionable trade state.",
-    "tags": "us,equities,ai-chain,metals,basic-materials",
-    "grade": "B+",
-    "href": "/analyses/AG/",
     "date": ""
   },
   {
@@ -2199,19 +2238,6 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "AMD",
-    "exchange": "NASDAQ · Technology",
-    "name": "AMD — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "title": "AMD — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "desc": "AMD: individual ai hardware propagation dossier with official SEC review and actionable trade state.",
-    "tags": "us,equities,ai-chain,hardware,technology",
-    "grade": "B",
-    "href": "/analyses/AMD/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
     "ticker": "MRVL",
     "exchange": "NASDAQ · Technology",
     "name": "MRVL — fundamentals, SEC filings, technical structure, risks and trade levels.",
@@ -2233,19 +2259,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,ai-chain,hardware,technology",
     "grade": "B+",
     "href": "/analyses/ANET/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "AAOI",
-    "exchange": "NASDAQ · Technology",
-    "name": "AAOI — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "title": "AAOI — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "desc": "AAOI: individual ai hardware propagation dossier with official SEC review and actionable trade state.",
-    "tags": "us,equities,ai-chain,hardware,technology",
-    "grade": "C+",
-    "href": "/analyses/AAOI/",
     "date": ""
   },
   {
@@ -2298,19 +2311,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,ai-chain,hardware,technology",
     "grade": "B",
     "href": "/analyses/SNPS/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "KLAC",
-    "exchange": "NASDAQ · Technology",
-    "name": "KLAC — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "title": "KLAC — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "desc": "KLAC: individual ai hardware propagation dossier with official SEC review and actionable trade state.",
-    "tags": "us,equities,ai-chain,hardware,technology",
-    "grade": "B+",
-    "href": "/analyses/KLAC/",
     "date": ""
   },
   {

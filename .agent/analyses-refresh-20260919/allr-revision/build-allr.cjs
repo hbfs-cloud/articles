@@ -970,21 +970,40 @@ const archive=read(archivePath);
  a.blastRadius.scenarios[2].confirmation='Une émission défavorable, un retard de recrutement ou un résultat insuffisant doit documenter la dégradation.';
  a.blastRadius.scenarios[2].contradiction='Un financement clos sans dilution disproportionnée et des données substantielles contrediraient ce scénario de dégradation.';
  a.performance.windowReturns.rows=[{ticker:'ALLR',returnPct:+(100*(bars.at(-1)[4]/bars.at(-22)[4]-1)).toFixed(2)},...comparisons.map(x=>({ticker:x.ticker,returnPct:x.return21d}))];
+ Object.assign(a.meta,{lastMcpRefresh:raw.status.captured_at,levelsVerifiedAt:raw.status.captured_at});
+ a.verdict.confidence='Confiance faible : risque clinique et données d’exécution intraday incomplètes.';
+ a.verdict.summary=a.verdict.summary.replace('Avec RankBeta, options et VWAP intraday indisponibles,','RankBeta répond, mais les options et le VWAP intraday restent indisponibles;');
+ Object.assign(a.verdict.controlChecklist[1],{status:'pass',statusLabel:'RankBeta opérationnel',evidence:'Le classement large répond sur le snapshot gouverné courant.',action:'L’utiliser comme contrôle de couverture, sans lui attribuer de causalité clinique.'});
+ Object.assign(a.business.coverageMatrix.find(x=>x.facet==='RankBeta'),{status:'COUVERT',decision:'Classement élargi disponible comme contrôle de couverture; aucune causalité clinique n’en est déduite.'});
+ a.blastRadius.methodology=a.blastRadius.methodology.replace('le classement élargi reste indisponible','RankBeta sert de contrôle de couverture');
+ a.blastRadius.missingData=a.blastRadius.missingData.filter(x=>!x.includes('RankBeta'));
+ a.blastRadius.missingData=a.blastRadius.missingData.filter(x=>!x.startsWith('Amont non représenté'));
+ a.blastRadius.missingData.push('Relation amont limitée au concédant historique Eisai; aucun fabricant coté ni client commercial n’est inventé.');
+ a.blastRadius.groups.splice(1,0,{
+  name:'Amont documenté — propriété intellectuelle',order:1,
+  transmission:'Allarity détient des droits exclusifs mondiaux sur un actif développé à l’origine par Eisai; il s’agit d’un lien de droits, pas d’une relation de fournisseur courant.',
+  symbols:[{ticker:'ESALY',role:'Développeur originel et concédant des droits',relationClass:'upstream',correlation:null,beta:null,r2:null,observations:null,return5d:null,return21d:null,eventRisk:'Événements propres à Eisai à vérifier séparément.',readThrough:'Eisai est documenté comme développeur originel et concédant historique. Les performances et régressions sont indisponibles dans le snapshot; ce lien de propriété intellectuelle ne prouve ni fourniture courante, ni validation clinique.',confidence:'low'}]
+ });
+ Object.assign(a.risks.riskCards[3],{title:'Données d’exécution',severity:'high',points:['RankBeta opérationnel sur le snapshot courant.','Options indisponibles et VWAP intraday refusé.'],verdict:'L’absence de données d’exécution intraday empêche toute géométrie d’ordre; RankBeta reste seulement un contrôle de couverture.'});
+ a.globalScore.keyTakeawaysNegative=a.globalScore.keyTakeawaysNegative.map(x=>x.replace('Gates de marché obligatoires bloqués.','Options et VWAP intraday absents; contrat historique non réexécutable.'));
+ Object.assign(a.shortInterest,{siPct:'Non publié',daysToCover:'Non publié',trend:'Couverture short optionnelle non certifiée dans le harness obligatoire; aucune thèse squeeze.'});
+ a.disclaimer='Document de recherche éducatif. Ni conseil financier, ni signal de trading. Aucun ordre actif.';
  write(rev+'/primary-manifest.json',primary);write(rev+'/ALLR.json',a);
  (function(a,c){
  const {raw,bars,f,s,run,rev,data,root,read,write,bytes,sha,primary}=c;
  const esc=v=>String(v).replace(/~/g,'~0').replace(/\//g,'~1'),get=(o,p)=>p.split('.').reduce((v,k)=>v?.[k],o);
  const find=(o,type,p='')=>{if(o&&typeof o==='object'){if(o.type===type)return p;for(const[k,v]of Object.entries(o)){const r=find(v,type,p+'/'+esc(k));if(r!==undefined)return r;}}};
  const B='/results/0/data/0/bars',F=find(raw.fund,'instrument_comprehensive_financial'),S=find(raw.fund,'instrument_comprehensive_stats'),T=find(raw.tech,'instrument_technicals'),SH=find(raw.short,'instrument_short_interest_series');
- const J={ticker:'ALLR',score_components:{base:60,business:15,technical:3,capital:-20,source_gate:-15,clinical_risk:-25},judgments:{}};
+ const J={ticker:'ALLR',score_components:{base:60,business:15,technical:3,capital:-20,execution_data:-15,clinical_risk:-25},judgments:{}};
  for(const p of ['meta.date','meta.dateDisplay','meta.version','verdict.score','risks.riskScore'])J.judgments[p]={value:get(a,p),reason:'Métadonnée ou jugement éditorial qualitatif explicite, distinct d’une mesure de marché et d’une probabilité.'};
  a.blastRadius.groups.forEach((g,i)=>J.judgments['blastRadius.groups.'+i+'.order']={value:g.order,reason:'Classement économique des groupes de comparaison, sans inférence de causalité clinique.'});write(rev+'/editorial-judgments.json',J);
- const inputs=[];for(const[name,file]of [['bars','bars'],['comparison','comparison_bars'],['fund','instrument'],['tech','instrument'],['short','short_squeeze'],['status','status']])inputs.push({name,path:data+'/'+file+'.json',sha256:sha(bytes(data+'/'+file+'.json'))});
+ const inputs=[];for(const[name,file]of [['bars','bars'],['comparison','comparison_bars'],['rank','rank_beta'],['fund','instrument'],['tech','instrument'],['status','status']])inputs.push({name,path:data+'/'+file+'.json',sha256:sha(bytes(data+'/'+file+'.json'))});
  for(const[name,p,kind]of [['primary',rev+'/primary-manifest.json','primary_sec_manifest_v1'],['archive',rev+'/ALLR-archive-snapshot-20260828.json','archived_analysis'],['judgments',rev+'/editorial-judgments.json','editorial_judgment']])inputs.push({name,path:p,sha256:sha(bytes(p)),kind});
  const input=n=>inputs.find(x=>x.name===n),dep=(n,p)=>({input_path:input(n).path,input_sha256:input(n).sha256,source_pointer:p}),prov=(n,p,method,additional_inputs=[])=>({...dep(n,p),input_name:n,method,...(additional_inputs.length?{additional_inputs}:{})});
  const C=ticker=>{const i=raw.comparison.data.items[0].results[0].data.findIndex(x=>x.symbol===ticker);if(i<0)throw Error('Missing comparable '+ticker);return '/data/items/0/results/0/data/'+i+'/bars';};
  const primaryDoc=(i,method,more=[])=>prov('primary','/documents/'+i,method,more);
  function sourceFor(p){
+  if(/^meta\.(lastMcpRefresh|levelsVerifiedAt)$/.test(p))return prov('status','/captured_at','Horodatage exact de la collecte MCP gouvernée.');
   if(J.judgments[p])return prov('judgments','/judgments/'+esc(p)+'/value',J.judgments[p].reason);
   const ref=p.match(/^(.*)\.sourceRefs\.(\d+)\.(date|url|name)$/);if(ref){const r=get(a,ref[1]+'.sourceRefs.'+ref[2]);if(r.url==='https://mcp.dailytickers.com/mcp')return prov('status','/captured_at','Date de collecte pour attribution MCP, non date de marché.');const i=primary.documents.findIndex(x=>x.url===r.url);if(i<0)throw Error('Unknown primary URL');return primaryDoc(i,'Métadonnée bibliographique du document exact ouvert et haché.');}
   if(p==='meta.levelsCloseDate'||p==='blastRadius.asOf')return prov('bars',B+'/299/0','Dernière séance quotidienne complète.');
@@ -1022,7 +1041,7 @@ const archive=read(archivePath);
  }
  function getShortCount(){let x=raw.short;for(const k of SH.slice(1).split('/'))x=x[k];return x.points.length;}
  const claims={},strings={},methods={};function walk(v,p=''){if(typeof v==='number'||typeof v==='string'&&/\d/.test(v)){claims[p]=sourceFor(p);methods[p]=claims[p].method;if(typeof v==='string')strings[p]=v;}else if(v&&typeof v==='object')for(const[k,x]of Object.entries(v))walk(x,p?p+'.'+k:k);}walk(a);
- const calc={kind:'deterministic_analysis_calculation_v1',ticker:'ALLR',reference_close:'2026-09-18',analysis_sha256:sha(bytes(rev+'/ALLR.json')),generator_path:'.agent/analyses-refresh-20260919/allr-revision/build-allr.cjs',generator_sha256:sha(bytes('.agent/analyses-refresh-20260919/allr-revision/build-allr.cjs')),inputs,score_components:J.score_components,valuation_scenario:{status:'non_applicable',reason_code:'NON_POSITIVE_EBITDA',reason:'EBITDA fournisseur observé négatif; aucun multiple positif ni objectif de prix calculé.',basis:dep('fund',F+'/ebitda')},values:a,string_numeric_claims:strings,methods,claim_provenance:claims,limitations:['RankBeta indisponible, options absentes, VWAP intraday refusé.','Amont coté non représenté : ne pas inventer un fournisseur.','Dilution potentielle variable non réconciliée; aucun ordre actif.']};
+ const calc={kind:'deterministic_analysis_calculation_v1',ticker:'ALLR',reference_close:'2026-09-18',analysis_sha256:sha(bytes(rev+'/ALLR.json')),generator_path:'.agent/analyses-refresh-20260919/allr-revision/build-allr.cjs',generator_sha256:sha(bytes('.agent/analyses-refresh-20260919/allr-revision/build-allr.cjs')),inputs,score_components:J.score_components,valuation_scenario:{status:'non_applicable',reason_code:'NON_POSITIVE_EBITDA',reason:'EBITDA fournisseur observé négatif; aucun multiple positif ni objectif de prix calculé.',basis:dep('fund',F+'/ebitda')},values:a,string_numeric_claims:strings,methods,claim_provenance:claims,limitations:['RankBeta opérationnel; options absentes et VWAP intraday refusé.','Amont coté non représenté : ne pas inventer un fournisseur.','Dilution potentielle variable non réconciliée; aucun ordre actif.']};
  write(rev+'/numeric-evidence.json',calc);write(rev+'/calculations.json',calc);const h=sha(bytes(rev+'/numeric-evidence.json'));
  write(rev+'/evidence.json',{ticker:'ALLR',reference_close:'2026-09-18',analysis_path:rev+'/ALLR.json',analysis_sha256:sha(bytes(rev+'/ALLR.json')),claims:Object.keys(claims).map(p=>({path:p,value:get(a,p),as_of:'2026-09-18',source_artifact:rev+'/numeric-evidence.json',source_sha256:h,source_pointer:typeof get(a,p)==='number'?'/values/'+p.split('.').map(esc).join('/'):'/string_numeric_claims/'+esc(p)}))});
  console.log('ALLR real semantic mappings: '+Object.keys(claims).length);
