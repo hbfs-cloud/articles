@@ -24,6 +24,7 @@ node tools/check-freshness.test.js
 node tools/test-evidence-gates.js
 node tools/test-trade-idea-gates.js
 node tools/test-analysis-evidence.js
+node tools/test-analysis-editorial-context.js
 node tools/test-analysis-valuation-evidence.js
 node tools/test-analysis-non-market-evidence.js
 node tools/test-content-claims.js

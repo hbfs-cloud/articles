@@ -1,8 +1,16 @@
 # Actualisation des analyses et KLAC — 19 septembre 2026
 
+## Livraison des cinq autorisée — 20 septembre 2026
+
+- DONE — Révisions françaises locales KLAC, AAOI, AMD, AG, ALLR complétées; valeurs liées aux sources : respectivement 282, 274, 267, 282, 270 claims PASS. Générateurs AAOI/AMD/ALLR autonomes hashés, vrais documents SEC pour AG/AMD/ALLR, anciens contrats conservés inactifs.
+- DONE — Pré-revue stricte KLAC/AAOI/AMD/AG PASS; ALLR conserve une erreur amont non représenté, plutôt qu'un fournisseur inventé. QA HTML des cinq PASS. Suite content-workflows complète PASS avec tests du contexte éditorial.
+- DONE — Revues indépendantes Senior/Contrarian/Retail locales des cinq dossiers terminées. Rapports et addenda sur les dernières empreintes dans `final-five-review/`; aucune attestation AQ finale PASS.
+- BLOCKED — Publication : run-plan FAIL sur les cinq. RankBeta US renvoie toujours HTTP 403 dans la sonde native du 20 septembre. AAOI/AMD ont aussi CIEN/HPE indisponibles. ALLR conserve analystes/VWAP/options manquants et amont non représenté. Aucune attestation AQ finale PASS; aucune page publique remplacée.
+- DONE — Révisions, preuves, revues et correctifs sauvegardés dans un commit sur main. Heartbeat utilisateur et autres travaux hors scope préservés. L’export Pages exclut les dossiers `_runs`; publication des analyses toujours BLOCKED.
+
 ## Livraison Git autorisée — travaux terminés uniquement
 
-- IN PROGRESS — Utilisateur exige `main`. Export Pages corrigé pour exclure `_runs`, test ciblé PASS; transfert des commits terminés vers main puis push sans force.
+- DONE — À la demande utilisateur, commits `ad8ceb160` et `4d167f0c9` intégrés et poussés sur `origin/main`, sans force. Export Pages exclut `_runs`, test ciblé PASS. Branche active main; travaux inachevés conservés localement.
 
 - DONE — Commit `ad8ceb1606adaf09bfb5207ad5e44853464473aa` poussé vers `origin/checkpoint/20260919-completed-research`, après autorisation explicite utilisateur « oui push » couvrant le dépôt public et les archives locales. Correctifs testés, rétro provisoire, révisions locales KLAC/AAOI et preuves sauvegardés. Aucune fusion vers main ni déploiement Pages.
 - TODO — À reprendre plus tard : AG/AMD/ALLR, lots restants et gates externes. Sources de collecte `_data` de la rétro conservées localement conformément aux règles scanner, non stagées. Changements utilisateur et travaux inachevés exclus.

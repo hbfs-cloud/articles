@@ -73,6 +73,95 @@ const a={
  globalScore:{keyTakeawaysPositive:['Exposition aux liaisons optiques data center.','Qualifications clients et intégration des composants optiques.','Capacité supplémentaire disponible sous réserve de demande rentable.'],keyTakeawaysNegative:['EBITDA et marge opérationnelle négatifs.','ATM et fully diluted shares non réconciliés.','RankBeta et calendrier CIEN bloquent la validation.']},
  disclaimer:'Révision locale de recherche au close certifié. Pas une recommandation, pas une attestation AQ finale, pas un ordre. Les données ou gates indisponibles restent bloquants.'
 };
+const completion=(function complete(a, { f, s, marketCap, ev, primary }) {
+  const market = label => ({name:'Marketdata MCP : '+label,url:'https://mcp.dailytickers.com/mcp',date:'2026-09-19'});
+  a.verdict.summary = 'AAOI offre une exposition directe aux modules optiques des data centers, mais la progression du chiffre d’affaires ne suffit pas encore à démontrer une création de valeur par action. Les revenus trimestriels atteignent 191,9 M$ dans le dépôt primaire; le snapshot financier fournisseur conserve un EBITDA négatif et une période comptable non identifiée. La capacité ATM de 600 M$, le warrant client et les nouveaux engagements industriels imposent de suivre simultanément marge, trésorerie et dilution. Le cours et les comparables ont été recalculés sur des séances continues, sans transformer leur corrélation en commande client. La décision reste aucun ordre actif : le contrat historique est expiré, le capital pleinement dilué demeure non réconcilié et la recherche élargie ainsi que le calendrier CIEN restent indisponibles. Une reprise du dossier exige des sources complètes et une amélioration économique observable, pas seulement une hausse du titre.';
+  a.verdict.whyBuy = [
+    'Le trimestre clos en juin affiche 191,9 M$ de revenus : une activité réelle existe derrière le thème optique, sans présumer sa rentabilité.',
+    'La croissance fournisseur des revenus atteint '+(f.revenueGrowth*100).toFixed(1)+' %; sa période non identifiée empêche de l’assimiler à une comparaison trimestrielle officielle.',
+    'La trésorerie fournisseur de '+(f.totalCash/1e6).toFixed(1)+' M$ apporte un contexte de financement, mais sa date comptable et les décaissements ultérieurs doivent être rapprochés.',
+    'Les qualifications clients et l’intégration des composants peuvent favoriser les rampes industrielles si les volumes deviennent des marges puis du cash.'
+  ];
+  a.verdict.whyAvoid = [
+    'L’EBITDA fournisseur de '+(f.ebitda/1e6).toFixed(1)+' M$ interdit une lecture positive d’un multiple de bénéfice opérationnel.',
+    'L’ATM autorise jusqu’à 600 M$ de ventes : capacité de financement, pas émission déjà réalisée ni cash disponible.',
+    'Les engagements de capacité précèdent potentiellement les encaissements et peuvent augmenter le besoin de financement si un client reporte son programme.',
+    'Le dénominateur entièrement dilué, RankBeta et le calendrier CIEN restent non réconciliés; aucun nouveau trade n’est certifié.'
+  ];
+  a.business.overview += '<p>Le point décisif est le passage de la qualification à la production rentable. Un client peut valider un produit sans acheter immédiatement les volumes attendus; une ligne peut être disponible sans atteindre un taux d’utilisation satisfaisant. Les dépenses immobilières et les loyers rendent ce décalage important pour le cash. Il faut également distinguer le mix data center du câble : leurs cycles, prix et contraintes de déploiement ne se transmettent pas automatiquement.</p>';
+  a.business.moat += ' Cet avantage reste lié aux produits effectivement qualifiés et aux rendements industriels. Un concurrent peut gagner sur le prix, tandis qu’un changement d’architecture peut modifier le contenu optique requis; la fidélité commerciale ne constitue pas une garantie de marge.';
+  a.earnings.nextEarnings = 'Date non confirmée par l’émetteur';
+  a.earnings.beatNote = 'Le rapport trimestriel documente 191,9 M$ de revenus pour la période close au 30 juin. Cette base primaire doit rester distincte des ratios courants du fournisseur, dont la période comptable n’est pas identifiée. La croissance des volumes doit être confrontée au coût des nouvelles capacités, au mix clients et au cash réellement encaissé. Aucune surprise ni guidance non vérifiée n’est retenue comme résultat acquis. Le prochain résultat reste à date non confirmée par l’émetteur dans les pièces examinées; il faudra contrôler cette annonce avant toute décision exposée à un gap.';
+  const extra = [
+    ['Revenus fournisseur',f.totalRevenue/1e6,' M$','totalRevenue'],
+    ['Croissance des revenus fournisseur',f.revenueGrowth*100,' %','revenueGrowth'],
+    ['Marge brute fournisseur',f.grossMargins*100,' %','grossMargins'],
+    ['Marge opérationnelle fournisseur',f.operatingMargins*100,' %','operatingMargins'],
+    ['Marge nette fournisseur',f.profitMargins*100,' %','profitMargins'],
+    ['Rentabilité des actifs fournisseur',f.returnOnAssets*100,' %','returnOnAssets'],
+    ['Rentabilité des capitaux propres fournisseur',f.returnOnEquity*100,' %','returnOnEquity'],
+    ['Actions courantes fournisseur',s.sharesOutstanding/1e6,' M','sharesOutstanding'],
+  ];
+  a.fundamentals.rows.push(...extra.map(([metric,value,unit])=>({metric,value:value.toFixed(2)+unit,signal:'Snapshot collecté le 2026-09-19; période comptable non identifiée',signalColor:'amber',source:'Marketdata MCP, facette financière ou statistiques; période à réconcilier'})));
+  a.fundamentals.rows.push(
+    {metric:'Price/sales indicatif',value:(marketCap/f.totalRevenue).toFixed(2)+'x',signal:'Close 2026-09-18 et revenus fournisseur non datés; ni trailing ni forward certifié',comparison:'Versus EV/revenus ci-dessous : la différence reflète dette et cash; aucune décote sectorielle déduite.',source:'Marketdata MCP : barres, actions et revenus du snapshot',note:'Sensibilité au dénominateur : une révision des revenus ou des actions modifie mécaniquement le ratio; aucune juste valeur.'},
+    {metric:'EV/revenus indicatif',value:(ev/f.totalRevenue).toFixed(2)+'x',signal:'Enterprise value = capitalisation + dette − cash; close 2026-09-18, comptes fournisseur non datés',comparison:'Versus price/sales : comparer cette société déficitaire sur les ventes ne prouve pas une marge future.',source:'Marketdata MCP : barres, actions, dette, cash et revenus',note:'Le multiple EV/EBITDA et le scénario de prix fondé sur cet EBITDA restent non applicables, car le résultat fourni est négatif.'}
+  );
+  a.fundamentals.sourceRefs.push(market('fondamentaux et statistiques'));
+  a.news[0].detail = 'La société dispose d’un mécanisme de vente d’actions pouvant financer ses besoins, mais le produit net et le nombre d’actions effectivement émises restent à réconcilier avant toute valorisation par action.';
+  a.news[1].detail = 'Les baux ajoutent des obligations fixes avant que l’utilisation et la rentabilité des capacités soient démontrées; un retard de rampe client peut donc accroître le besoin de trésorerie.';
+  a.news[2].detail = 'Le bail élargit les capacités industrielles envisagées et crée un engagement financier; il ne constitue ni une commande ferme ni une preuve de marge sur les volumes futurs.';
+  const findings = [
+    'Le rapport trimestriel établit les revenus, décrit la concentration des clients et le warrant client. Ces éléments relient croissance, dépendance commerciale et dilution conditionnelle; ils ne permettent pas de certifier un total courant entièrement dilué.',
+    'Le supplément ouvre une capacité de financement en actions et distingue la base du prospectus des instruments exclus. Son illustration de vente ne démontre ni une émission réalisée ni le solde disponible à la clôture étudiée.',
+    'Les contrats immobiliers au Texas créent des engagements et une option d’achat. Ils renforcent la capacité potentielle mais exposent la trésorerie au décalage entre dépenses fixes et montée en charge des commandes clients.',
+    'L’acquisition du bâtiment de Houston mobilise du cash pour la capacité industrielle. Une propriété supplémentaire ne prouve ni un taux d’utilisation futur ni une croissance rentable; le suivi doit rapprocher décaissements, commandes et marge.',
+    'Le bail de Ningbo ajoute une obligation financière et une capacité potentielle. Le risque économique dépend de la demande effectivement livrée et de la rentabilité de production, et non du seul agrandissement annoncé.'
+  ];
+  a.filingsReview.filings.forEach((row,i)=>row.finding=findings[i]);
+  a.filingsReview.contrarianRisks.push('Un warrant client peut aligner les intérêts commerciaux tout en diluant les autres actionnaires; les conditions d’acquisition ne doivent jamais être traitées comme des achats déjà facturés.');
+  for (const section of ['technicals','insiders','shortInterest','options','performance']) a[section].sourceRefs=[market(section)];
+  a.social={platforms:[],sourceRefs:[market('couverture sentiment, mesure non retenue')]};
+  a.blastRadius.sourceRefs=[market('barres comparables et contexte événementiel'),a.business.sourceRefs[0]];
+  const links={
+    LITE:['Leader coté des composants optiques','leader','Les dépenses optiques soutiennent un marché commun, mais le mix de composants et les clients de Lumentum peuvent produire des marges différentes.'],
+    COHR:['Concurrent en modules et composants optiques','direct_peer','Coherent partage des débouchés optiques tout en ayant un portefeuille plus large; ses résultats ne constituent pas une preuve des commandes AAOI.'],
+    CIEN:['Équipementier de transport optique','second_order','Les mises à niveau de transport peuvent accompagner la demande optique, avec des cycles opérateurs différents des liaisons internes aux data centers.'],
+    VIAV:['Spécialiste des tests de réseaux','second_order','La complexité des déploiements peut augmenter les besoins de test, sans garantir une demande équivalente en modules fabriqués par AAOI.'],
+    GLW:['Amont sectoriel fibre et matériaux','upstream','La fibre constitue une infrastructure complémentaire aux modules; ce lien industriel ne prouve aucun contrat de fourniture direct avec AAOI.'],
+    CRDO:['Connectivité électrique des data centers','second_order','Les interconnexions électriques peuvent compléter ou concurrencer certaines liaisons optiques selon distance et architecture; la transmission peut donc être contradictoire.'],
+    MRVL:['Circuits de connectivité et traitement','upstream','Les circuits et architectures de connectivité influencent le contenu des modules; aucune relation fournisseur précise avec AAOI n’est présumée.'],
+    AXTI:['Amont sectoriel substrats composés','upstream','Les substrats servent différentes applications de composants; demande, contraintes industrielles et exposition régionale peuvent diverger des ventes finales de modules AAOI.'],
+    CSCO:['Intégrateur de réseaux et systèmes','downstream','Les choix de systèmes et de standards façonnent la demande optique; un budget réseau ne se convertit pas automatiquement en achat AAOI.'],
+    ANET:['Équipementier réseaux des data centers','downstream','Les déploiements de commutateurs peuvent stimuler les liaisons optiques, mais architecture et choix des modules déterminent la part réellement accessible.'],
+    MSFT:['Demande finale cloud et calcul','second_order','Les infrastructures cloud créent un besoin de connectivité; aucun statut de client AAOI ni calendrier de commande ne découle de cette comparaison.'],
+    AMZN:['Client avec warrant conditionnel documenté','downstream','Le warrant documente une relation commerciale et des conditions futures; il ne prouve pas que les achats nécessaires ont déjà été réalisés.'],
+    META:['Demande finale de réseau informatique','second_order','Les choix d’architecture des centres de données peuvent modifier les besoins optiques; aucune attribution de commande à AAOI n’est établie ici.'],
+    NVDA:['Écosystème du calcul accéléré','second_order','L’expansion du calcul peut soutenir les réseaux associés, mais le fournisseur de calcul ne permet pas d’identifier le bénéficiaire optique final.'],
+    SMH:['Benchmark sectoriel des semi-conducteurs','sector_proxy','Le panier mesure le facteur sectoriel de marché, avec un mix différent des composants optiques; il sert de contrôle de force relative.'],
+    SOXX:['Autre panier sectoriel semi-conducteurs','sector_proxy','La composition différente permet de vérifier si le mouvement est sectoriel; aucun revenu AAOI ne se déduit d’une hausse du panier.'],
+    QQQ:['Benchmark large de croissance technologique','sector_proxy','La sensibilité aux valorisations de croissance peut expliquer un mouvement commun sans amélioration des marges ni des encaissements de la société.'],
+    SPY:['Contrôle du marché actions américain','sector_proxy','Le panier large aide à distinguer la reprise générale d’une surperformance propre; il ne neutralise pas le risque de dilution spécifique.' ]
+  };
+  for(const g of a.blastRadius.groups) for(const row of g.symbols){const [role,relationClass,readThrough]=links[row.ticker];Object.assign(row,{role,relationClass,readThrough,eventRisk:row.ticker==='CIEN'?'Calendrier CIEN indisponible dans la collecte; aucun événement proche ne peut être exclu.':row.relationClass==='sector_proxy'?'Rééquilibrages, taux et publications des principales pondérations peuvent déplacer le panier sans nouvelle AAOI.':'Date d’événement propre à '+row.ticker+' non confirmée dans cette synthèse; revérifier les annonces émetteur avant toute exposition.'});}
+  a.blastRadius.scenarios[0].confirmation='Vérifier les résultats émetteur, les marges et un dénominateur réconcilié avant de conclure à une amélioration par action.';
+  a.blastRadius.scenarios[1].secondOrder='Les titres de test, de fibre et de systèmes peuvent diverger selon leurs calendriers de déploiement et leur mix.';
+  a.blastRadius.scenarios[1].contradiction='Une amélioration durable de marge et de cash par action contredirait la lecture de croissance insuffisamment rentable.';
+  a.blastRadius.scenarios[2].secondOrder='Les fournisseurs et intégrateurs diversifiés peuvent résister si le problème concerne seulement un programme client ou une rampe AAOI.';
+  a.blastRadius.scenarios[2].confirmation='Vérifier dans les résultats ou perspectives une baisse de marge, un report de commandes ou une tension supplémentaire sur la trésorerie.';
+  a.risks.riskCards.forEach((row,i)=>row.verdict=[
+    'Suivre les émissions effectives et les conditions des instruments avant de convertir une croissance d’activité en bénéfice potentiel par action.',
+    'Les dépenses deviennent contraignantes avant les ventes; exiger une preuve de montée en charge rentable et de maîtrise du cash.',
+    'Une amélioration sectorielle ne compense pas forcément le report d’un programme majeur; les indications propres à la société restent décisives.',
+    'Les sources absentes interdisent une certification complète du calendrier et du classement; elles ne valent jamais absence de risque.'
+  ][i]);
+  a.risks.riskSummary='Le risque vient du financement de la croissance autant que de la demande optique. Une rampe retardée peut combiner coûts fixes, dilution et baisse du titre. La concentration clients et les engagements immobiliers rendent indispensable un suivi conjoint des marges, de la trésorerie et du dénominateur par action.';
+  a.risks.pedagogy='Pour un particulier, un gap après résultats peut franchir un stop théorique; le spread et le slippage augmentent encore la perte réalisée. La taille de position doit partir du budget de risque et du risque événementiel, jamais d’une cible optimiste. Ne pas poursuivre un rebond ni réutiliser les niveaux archivés. Le calendrier propre et celui des expositions proches doivent être revérifiés avant toute entrée.';
+  a.tradeIdea.thesis='Le contrat conservé appartient à une fenêtre expirée et ne constitue aucun ordre actuel. La reprise exige une nouvelle structure de prix, une vérification du spread et du risque de gap, un calendrier événementiel complet et une taille de position compatible avec la dilution possible. Attendre ces confirmations; le rebond et la corrélation sectorielle ne réactivent pas une ancienne entrée.';
+  a.tradeIdea.statusNote='Archive non exécutable : le prédicat historique est expiré et non revalidé; aucun ordre actif, aucun stop ni objectif actuel.';
+  a.tradeIdea.invalidation.push('Une annonce de financement ou un report de programme client impose de refaire le scénario économique avant toute entrée.','Un gap, un spread excessif ou un calendrier incomplet invalide toute tentative d’exécution issue de cette archive.');
+  return { extraFundamentalKeys:extra.map(x=>x[3]) };
+})(a,{f,s,marketCap,ev,primary});
 const judgments={ticker:'AAOI',score_components:{business:12,technical:8,capital:-10,source_gate:-12,dilution:-10,risk:50},judgments:{'meta.version':{value:3,reason:'Identifiant de révision locale, distinct de toute donnée de marché.'},'meta.date':{value:'2026-09-19',reason:'Date de finalisation du dossier local, distincte de la clôture.'},'meta.dateDisplay':{value:'19 septembre 2026',reason:'Format français de la date éditoriale locale.'},'verdict.score':{value:38,reason:'Score éditorial additif : points de business et technique, pénalités capital/source/dilution et risque explicitement séparé.'},'risks.riskScore':{value:8,reason:'Jugement qualitatif sur dix : dilution, capacités, concentration et gates de source; pas une probabilité.'}}};
 a.blastRadius.groups.forEach((g,i)=>judgments.judgments['blastRadius.groups.'+i+'.order']={value:g.order,reason:'Classement éditorial du mécanisme économique, non une mesure de causalité.'});
 write(revision+'/editorial-judgments.json',judgments);
@@ -87,6 +176,7 @@ const get=(o,p)=>p.split('.').reduce((x,k)=>x?.[k],o),claims={},methods={},strin
 function docForUrl(url){const i=primary.findIndex(x=>x.url===url);if(i<0)throw Error('Primary missing '+url);return i;}
 function primaryExtract(doc,key){const n=primary[doc].claim_extracts.findIndex(x=>x.key===key);if(n<0)throw Error('Primary extract missing '+doc+'/'+key);return '/documents/'+doc+'/claim_extracts/'+n;}
 function sourceFor(p){
+ if(p.includes('.sourceRefs.')){const m=p.match(/^(.*)\.sourceRefs\.(\d+)\.(date|url|name)$/);if(m&&get(a,m[1]+'.sourceRefs.'+m[2]).url==='https://mcp.dailytickers.com/mcp')return prov('status','/captured_at','Date de collecte MCP pour attribution de source, distincte de la date de marché.');}
  if(judgments.judgments[p])return prov('judgments','/judgments/'+esc(p)+'/value',judgments.judgments[p].reason);
  if(p==='tradeIdea.archiveReferenceClose')return prov('archive','/meta/levelsCloseDate','Clôture de référence du snapshot historique, jamais le cours actuel.');
  if(/^tradeIdea\.(entry|stop|tp1|tp2)$/.test(p))return prov('archive','/'+p.replaceAll('.','/'),'Niveau exact conservé depuis le snapshot historique et explicitement non exécutable.');
@@ -97,6 +187,7 @@ function sourceFor(p){
  if(p==='header.metrics.marketCap')return prov('bars',B+'/299/4','Close × actions fournisseur; indicatif, pas fully diluted.',[dep('fundamentals',S+'/sharesOutstanding')]);
  if(p==='header.metrics.volume')return prov('bars',B+'/299/5','Volume de la dernière séance, affiché en millions.');
  if(p.startsWith('technicals.'))return prov('technicals',T,'Indicateur du snapshot fournisseur; les 300 séances servent uniquement à certifier le close et les rendements locaux. Aucun signal d’exécution.',[dep('bars',B)]);
+ if(/^fundamentals\.rows\.(?:[4-9]|1[0-3])\./.test(p)){const i=Number(p.split('.')[2]);if(i>=12)return prov('fundamentals',F,'Ratios indicatifs : close × actions / revenus; EV ajoute dette et retranche cash. Période des comptes non identifiée.',[dep('fundamentals',S+'/sharesOutstanding'),dep('bars',B+'/299/4')]); const key=completion.extraFundamentalKeys[i-4];return prov('fundamentals',key==='sharesOutstanding'?S+'/'+key:F+'/'+key,'Snapshot fournisseur; montants en millions et ratios en pourcentage, période comptable non inférée.',[dep('status','/captured_at')]);}
  if(p.startsWith('fundamentals.rows.0.'))return prov('primary',primaryExtract(0,'q2_revenue'),'Revenu primaire du trimestre clos le 30 juin 2026, affiché en millions.');
  if(/^fundamentals\.rows\.[123]\./.test(p)){const key={1:'ebitda',2:'totalCash',3:'totalDebt'}[Number(p.split('.')[2])];return prov('fundamentals',F+'/'+key,'Valeur fournisseur affichée en millions; période comptable non inférée.');}
  if(p==='earnings.nextEarnings')return prov('fundamentals',calendar.path+'/nextEarningsDate','Date calendrier fournisseur explicitement qualifiée, non confirmée par l’émetteur.');

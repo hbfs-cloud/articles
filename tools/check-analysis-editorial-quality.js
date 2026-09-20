@@ -50,7 +50,7 @@ function check(file) {
   const news = d.news || [];
   const valuationRows = rows.filter(x => /valuation|P\/E|EV\/|FCF|NAV|book value|yield|price\/sales|enterprise value/i.test(x.metric));
   const usableValuationRows = valuationRows.filter(x => hasNumber(`${x.value} ${x.signal}`));
-  const valuationText = valuationRows.map(x => `${x.metric} ${x.value} ${x.signal}`).join(' ');
+  const valuationText = valuationRows.map(x => `${x.metric} ${x.value} ${x.signal} ${x.comparison || ''} ${x.note || ''}`).join(' ');
   const risks = d.filingsReview?.contrarianRisks || [];
   const filingRows = d.filingsReview?.filings || [];
   const riskCards = d.risks?.riskCards || [];
@@ -144,7 +144,9 @@ function check(file) {
   })) {
     const refs = payload?.sourceRefs || [];
     require(refs.length >= 1, `${section} section lacks a market source`);
-    require(!refs.some(x => /sec\.gov|10-[qk]|8-k|earnings/i.test(`${x.url} ${x.name}`)), `${section} section incorrectly cites corporate filings`);
+    // Primary ownership filings and split notices may supplement market data.
+    // They cannot replace the market source for prices, short interest or flows.
+    require(refs.some(x => /^https?:\/\//i.test(x.url || '') && !/sec\.gov|10-[qk]|8-k|earnings/i.test(`${x.url} ${x.name}`)), `${section} section lacks a market source distinct from corporate filings`);
   }
   const flowHasClaim = !['N/A', '', undefined, null].includes(d.capitalFlow?.netFlow) || !['N/A', '', undefined, null].includes(d.capitalFlow?.institutionalFlow) || !['N/A', '', undefined, null].includes(d.capitalFlow?.retailFlow);
   require(!flowHasClaim || (d.capitalFlow?.sourceRefs || []).length >= 1, 'capital-flow claim lacks a market source');
@@ -202,10 +204,17 @@ function check(file) {
       const calculatedPct = (value / entry - 1) * 100;
       require(Number.isFinite(publishedPct) && Math.abs(publishedPct - calculatedPct) <= 0.15, `${label} percentage does not match levels (${publishedPct || 'missing'} vs ${calculatedPct.toFixed(1)}%)`);
     }
-    require(mentionsLevel(d.technicals?.setupNote, entry), `technical setup does not cite its own entry ${entry}`);
-    require(mentionsLevel(d.technicals?.setupNote, stop), `technical setup does not cite its own stop ${stop}`);
-    require(mentionsLevel(trade.thesis, entry), `trade thesis does not cite its own entry ${entry}`);
-    require(mentionsLevel(trade.thesis, stop), `trade thesis does not cite its own stop ${stop}`);
+    const archivedNoTrade = trade.status === 'no-trade' && d.meta?.status === 'no-trade'
+      && /^\d{4}-\d{2}-\d{2}$/.test(trade.archiveReferenceClose || '')
+      && trade.archiveReferenceClose < d.meta?.levelsCloseDate;
+    if (archivedNoTrade) {
+      require(/archiv|histor/i.test(trade.statusNote || '') && /aucun ordre|inactif|non.ex[ée]cut|no active|not executable/i.test(trade.statusNote || ''), 'archived trade must explicitly identify inactive historical levels');
+    } else {
+      require(mentionsLevel(d.technicals?.setupNote, entry), `technical setup does not cite its own entry ${entry}`);
+      require(mentionsLevel(d.technicals?.setupNote, stop), `technical setup does not cite its own stop ${stop}`);
+      require(mentionsLevel(trade.thesis, entry), `trade thesis does not cite its own entry ${entry}`);
+      require(mentionsLevel(trade.thesis, stop), `trade thesis does not cite its own stop ${stop}`);
+    }
   }
   if (['active', 'pending', 'watch', 'wait', 'speculative', 'triggered', 'tp1-hit'].includes(trade.status)) {
     require((d.technicals?.supports || []).length >= 1, 'open trade state lacks support levels');
