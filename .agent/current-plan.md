@@ -1,5 +1,11 @@
 # Actualisation des analyses et KLAC — 19 septembre 2026
 
+## Weekly du 21 au 25 septembre 2026
+
+- DONE — Socle Marketdata collecté au close US du 18 septembre : 14 sources générales et 11 sources focus fraîches, COST retenu comme catalyseur systémique, CTAS comme second focus, rayon de propagation documenté.
+- DONE — Weekly français rendu avec 18 sections, 9 graphiques et 78 claims vérifiés; tous les gates déterministes passent. Revues Senior/Contrarian et Retail War Room PASS sur les hashes finaux, dont contrôle mobile à 390 px.
+- DONE — Weekly indexé et publication web enregistrée; contenu, plans reproductibles et attestations finales livrés sur `main`, puis URL publique contrôlée après déploiement.
+
 ## Publication finale des cinq — 20 septembre 2026
 
 - DONE — KLAC, AAOI, AMD, AG et ALLR promus dans les chemins canoniques avec collecte MCP gouvernée, RankBeta opérationnel, preuves numériques complètes et gates stricts sans erreur ni avertissement.
