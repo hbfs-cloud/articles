@@ -1,3 +1,5 @@
+import { effectiveQuote, hyperliquidCoin, isHyperliquidWindow } from './quote-routing.js?v=5';
+
 const $ = (selector, root = document) => root.querySelector(selector);
 const esc = (value = '') => String(value).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 const STORAGE = { tags: 'marketscope:tags', alerts: 'marketscope:alerts', firebase: 'marketscope:firebase', tagFilters: 'marketscope:tag-filters', sort: 'marketscope:sort', columns: 'marketscope:columns' };
@@ -19,7 +21,10 @@ const storedTagState = storedTagFilter();
 const state = {
   tagGroups: [], assets: [], filtered: [], tags: read(STORAGE.tags, {}), alerts: read(STORAGE.alerts, []),
   selectedTags: new Set(storedTagState.tags), sort: storedSort(),
-  visibleColumns: storedColumns(), selected: null, stream: null, firebase: null, firebaseApi: null, remoteTimer: null, analysisLoading: false
+  visibleColumns: storedColumns(), selected: null, firebase: null, firebaseApi: null, remoteTimer: null, analysisLoading: false,
+  streamEnabled: true, streams: { yahoo:null, hyperliquid:null },
+  streamStatus: { yahoo:'idle', hyperliquid:'idle' }, reconnectTimers: { yahoo:null, hyperliquid:null },
+  yahooAssets: new Map(), hyperliquidAssets: new Map(), yahooCloseCount: 0, quoteRenderPending: false
 };
 const SORT_LABELS = { change:'variation 24 h', perfWeek:'variation 1 semaine', perfMonth:'variation 1 mois', perf3Month:'variation 3 mois', price:'prix', ticker:'ticker', name:'nom', tags:'nombre de tags', market:'marché', setup:'tendance', relvol:'volume relatif', rsi:'RSI', ma200:'écart MA200' };
 
@@ -45,11 +50,12 @@ function assetTags(asset) {
   return [...new Set([...(asset.sourceTags || []), ...(state.tags[asset.id] || [])])];
 }
 function marketFor(id, ticker, name) {
-  const text = `${id} ${ticker} ${name}`.toUpperCase();
-  if (text.includes('CRYPTO') || /\b(BTC|ETH|SOL|XRP)\b/.test(text)) return 'CRYPTO';
-  if (/_JP_|_HK_|_AU_|_SG_|6857/.test(text)) return 'APAC';
-  if (/_US_/.test(text)) return 'US';
-  if (/#|XAU|XAG|GOLD|SILVER|BRENT|CRUDE|OIL|EURUSD|USA500|SPX/.test(text)) return 'MACRO';
+  const symbolId = String(id || '').toUpperCase(), symbol = String(ticker || '').toUpperCase();
+  const text = `${symbolId} ${symbol} ${name}`.toUpperCase();
+  if (/_US_/.test(symbolId)) return 'US';
+  if (/_JP_|_HK_|_AU_|_SG_|6857/.test(symbolId)) return 'APAC';
+  if (/^#|XAU|XAG|EURUSD/.test(symbolId) || /^(USA500|CRUDE)$/.test(symbol)) return 'MACRO';
+  if (symbolId.includes('_CRYPTO') || /^(BTC|ETH|SOL|XRP)(?:[/-](?:USD|EUR))?$/.test(symbol)) return 'CRYPTO';
   return 'EU';
 }
 function numberFrom(text) {
@@ -59,16 +65,28 @@ function numberFrom(text) {
 }
 function yahooSymbol(asset) {
   const id = asset.id.toUpperCase();
-  const text = `${asset.ticker} ${asset.name}`.toUpperCase();
-  const map = { BTC:'BTC-USD', ETH:'ETH-USD', SOL:'SOL-USD', XRP:'XRP-USD', XAU:'GC=F', GOLD:'GC=F', XAG:'SI=F', SILVER:'SI=F', BRENT:'BZ=F', CRUDE:'CL=F', OIL:'CL=F', EURUSD:'EURUSD=X', USA500:'^GSPC', SPX:'^GSPC' };
-  for (const [key, value] of Object.entries(map)) if (text.includes(key) || id.includes(key)) return value;
+  const ticker = String(asset.ticker || '').toUpperCase();
+  if (asset.market === 'CRYPTO') {
+    const base = ticker.match(/^(BTC|ETH|SOL|XRP)/)?.[1] || id.match(/^(BTC|ETH|SOL|XRP)/)?.[1];
+    if (base) return `${base}-USD`;
+  }
+  if (asset.market === 'MACRO') {
+    if (/XAU|GOLD/.test(`${id} ${ticker}`)) return 'GC=F';
+    if (/XAG|SILVER/.test(`${id} ${ticker}`)) return 'SI=F';
+    if (/BRENT/.test(`${id} ${ticker}`)) return 'BZ=F';
+    if (/CRUDE|OIL/.test(`${id} ${ticker}`)) return 'CL=F';
+    if (/EURUSD|EURO \/ US DOLLAR/.test(`${id} ${ticker}`)) return 'EURUSD=X';
+    if (/USA500|SPX/.test(`${id} ${ticker}`)) return '^GSPC';
+    if (/VIX|VOLX/.test(`${id} ${ticker}`)) return '^VIX';
+  }
   if (asset.market === 'US') return asset.ticker.replace(/\./g, '-');
   if (/_JP_/.test(id) || /^\d{4}$/.test(asset.ticker)) return `${asset.ticker}.T`;
+  if (/_CA_/.test(id)) return `${asset.ticker}.TO`;
   if (/_FR_|P_EQ$/.test(id)) return `${asset.ticker}.PA`;
   if (/_DE_|D_EQ$/.test(id)) return `${asset.ticker}.DE`;
   if (/_GB_|L_EQ$/.test(id)) return `${asset.ticker}.L`;
   if (/_NL_/.test(id)) return `${asset.ticker}.AS`;
-  if (/_IT_/.test(id)) return `${asset.ticker}.MI`;
+  if (/_IT_|M_EQ$/.test(id)) return `${asset.ticker}.MI`;
   return asset.ticker;
 }
 function logoSources(asset) {
@@ -171,7 +189,7 @@ function activeAlerts() {
 function updateCounts() {
   $('#visibleCount').textContent = state.filtered.length;
   $('#resultCount').textContent = `${state.filtered.length} instrument${state.filtered.length > 1 ? 's' : ''}`;
-  $('#positiveCount').textContent = state.filtered.filter(a => (a.liveChange ?? a.tech?.change ?? a.change) > 0).length;
+  $('#positiveCount').textContent = state.filtered.filter(asset => effectiveQuote(asset).change > 0).length;
   $('#analyzedCount').textContent = state.assets.filter(a => a.tech).length;
   $('#alertCount').textContent = activeAlerts().length;
 }
@@ -218,15 +236,15 @@ function sortValue(asset, key) {
   if (key === 'tags') return assetTags(asset).length;
   if (key === 'market') return asset.market;
   if (key === 'setup') return setupFor(asset) || '';
-  if (key === 'price') return asset.livePrice ?? asset.tech?.close ?? asset.priceNumber;
-  if (key === 'change') return asset.liveChange ?? asset.tech?.change ?? asset.change;
+  if (key === 'price') return effectiveQuote(asset).price;
+  if (key === 'change') return effectiveQuote(asset).change;
   if (key === 'perfWeek') return asset.tech?.perfWeek;
   if (key === 'perfMonth') return asset.tech?.perfMonth;
   if (key === 'perf3Month') return asset.tech?.perf3Month;
   if (key === 'relvol') return asset.tech?.relVolume;
   if (key === 'rsi') return asset.tech?.rsi;
   if (key === 'ma200') return asset.tech?.ma200 ? (asset.tech.close - asset.tech.ma200) / asset.tech.ma200 : null;
-  return asset.liveChange ?? asset.tech?.change ?? asset.change;
+  return effectiveQuote(asset).change;
 }
 function compareAssets(a, b) {
   const av = sortValue(a, state.sort.key), bv = sortValue(b, state.sort.key), missingA = av == null || (typeof av === 'number' && !Number.isFinite(av)), missingB = bv == null || (typeof bv === 'number' && !Number.isFinite(bv));
@@ -266,13 +284,42 @@ function performanceCell(key, label, value) {
   const available = Number.isFinite(value), sign = available && value > 0 ? '+' : '', negative = available && value < 0;
   return `<td data-column="${key}" data-label="${label}" class="num performance ${negative ? 'negative' : available ? 'positive' : 'unavailable'}">${available ? `${sign}${value.toLocaleString('fr-FR',{maximumFractionDigits:2})} %` : '—'}</td>`;
 }
+function quoteSourceText(quote) {
+  if (quote.source === 'hyperliquid') return 'Cours temps réel du perpétuel Hyperliquid xyz';
+  if (quote.source === 'yahoo-rt') return 'Cours temps réel Yahoo';
+  if (quote.source === 'yahoo-close') return `Clôture Yahoo${quote.sessionDate ? ` du ${new Date(`${quote.sessionDate}T12:00:00Z`).toLocaleDateString('fr-FR')}` : ''}`;
+  return 'Instantané local — aucun cours temps réel ni close Yahoo disponible';
+}
+function quoteBadge(quote, detailed = false) {
+  const stale = quote.realtime ? '' : '<span aria-hidden="true">⏳</span>';
+  const label = quote.source === 'hyperliquid' && detailed ? 'HL RT · perp' : quote.label;
+  return `<span class="quote-source ${esc(quote.source)}" title="${esc(quoteSourceText(quote))}">${stale}<span>${esc(label)}</span></span>`;
+}
+function quoteTimeText(quote) {
+  if (quote.realtime && Number.isFinite(quote.at)) return `Mis à jour à ${new Date(quote.at).toLocaleTimeString('fr-FR')}`;
+  return quoteSourceText(quote);
+}
+function updateDetailQuote(asset) {
+  const quote = effectiveQuote(asset), price = quote.price, change = quote.change;
+  const value = $('#detailQuote'), meta = $('#detailQuoteMeta'), changeValue = $('#detailQuoteChange');
+  if (value) value.textContent = Number.isFinite(price) ? price.toLocaleString('fr-FR',{maximumFractionDigits:4}) : asset.price;
+  if (meta) meta.innerHTML = `${quoteBadge(quote, true)}<span>${esc(quoteTimeText(quote))}</span>`;
+  if (changeValue) {
+    changeValue.textContent = `${change > 0 ? '+' : ''}${formatMetric(change,2)} %`;
+    changeValue.classList.toggle('negative', change < 0);
+  }
+  const metricValue = $('[data-detail-quote-change] b'), metricLabel = $('[data-detail-quote-change] small');
+  if (metricValue) metricValue.textContent = `${formatMetric(change,2)}%`;
+  if (metricLabel) metricLabel.textContent = quote.source === 'hyperliquid' ? 'Variation vs close' : 'Variation 24 h';
+}
 function renderRows() {
   const alerts = activeAlerts();
   $('#rows').innerHTML = state.filtered.map(asset => {
-    const tags = assetTags(asset), price = asset.livePrice ?? asset.tech?.close ?? asset.priceNumber, change = asset.liveChange ?? asset.tech?.change ?? asset.change, setup = setupFor(asset);
+    const tags = assetTags(asset), quote = effectiveQuote(asset), price = quote.price, change = quote.change, setup = setupFor(asset);
     const pills = tags.slice(0, 3).map(tag => `<button type="button" class="pill tag tag-row" data-row-tag="${esc(tag)}" aria-label="Afficher le tag ${esc(tag)}">#${esc(tag)}</button>`);
     if (tags.length > 3) pills.push(`<span class="pill tag-more">+${tags.length - 3}</span>`);
-    return `<tr data-id="${esc(asset.id)}" tabindex="0"><td data-column="instrument"><div class="asset">${logoMarkup(asset)}<span><b>${esc(asset.ticker)}</b><small>${esc(asset.name)}</small></span></div></td><td data-column="tags"><div class="pills">${pills.join('')}</div></td><td data-column="market"><span class="market">${asset.market}</span></td><td data-column="setup"><div class="signal-stack">${spark({...asset,change})}<span class="signal-badge ${esc(setup)}">${esc(setup || 'analyse…')}</span></div></td><td data-column="price" class="num">${Number.isFinite(price) ? price.toLocaleString('fr-FR',{maximumFractionDigits:4}) : esc(asset.price)}</td>${performanceCell('change','24 h',change)}${performanceCell('perfWeek','1 sem.',asset.tech?.perfWeek)}${performanceCell('perfMonth','1 mois',asset.tech?.perfMonth)}${performanceCell('perf3Month','3 mois',asset.tech?.perf3Month)}<td data-column="alerts"><button class="bell ${alerts.some(a => a.instrumentId === asset.id) ? 'active' : ''}" aria-label="Alertes ${esc(asset.ticker)}">♢</button></td></tr>`;
+    const changeLabel = quote.source === 'hyperliquid' ? 'vs close' : '24 h';
+    return `<tr data-id="${esc(asset.id)}" tabindex="0"><td data-column="instrument"><div class="asset">${logoMarkup(asset)}<span><b>${esc(asset.ticker)}</b><small>${esc(asset.name)}</small></span></div></td><td data-column="tags"><div class="pills">${pills.join('')}</div></td><td data-column="market"><span class="market">${asset.market}</span></td><td data-column="setup"><div class="signal-stack">${spark({...asset,change})}<span class="signal-badge ${esc(setup)}">${esc(setup || 'analyse…')}</span></div></td><td data-column="price" class="num quote-cell"><div class="price-stack"><span>${Number.isFinite(price) ? price.toLocaleString('fr-FR',{maximumFractionDigits:4}) : esc(asset.price)}</span>${quoteBadge(quote)}</div></td>${performanceCell('change',changeLabel,change)}${performanceCell('perfWeek','1 sem.',asset.tech?.perfWeek)}${performanceCell('perfMonth','1 mois',asset.tech?.perfMonth)}${performanceCell('perf3Month','3 mois',asset.tech?.perf3Month)}<td data-column="alerts"><button class="bell ${alerts.some(a => a.instrumentId === asset.id) ? 'active' : ''}" aria-label="Alertes ${esc(asset.ticker)}">♢</button></td></tr>`;
   }).join('');
   document.querySelectorAll('.asset-logo').forEach(image => image.addEventListener('error', () => {
     const fallbacks = JSON.parse(image.dataset.logoFallbacks || '[]'), next = fallbacks.shift();
@@ -322,11 +369,11 @@ function setupText(setup) {
 }
 function renderDetail(asset, chart = null) {
   const personalTags = state.tags[asset.id] || [], tags = assetTags(asset), alerts = activeAlerts().filter(a => a.instrumentId === asset.id), t = asset.tech || {}, f = asset.fundamentals || {};
-  const values = chart?.closes?.filter(Number.isFinite) || seededSeries(asset.id, 60), price = asset.livePrice ?? t.close ?? asset.priceNumber, change = asset.liveChange ?? t.change ?? asset.change, symbol = yahooSymbol(asset), setup = setupFor(asset) || 'en attente';
+  const quote = effectiveQuote(asset), values = chart?.closes?.filter(Number.isFinite) || seededSeries(asset.id, 60), price = quote.price, change = quote.change, symbol = yahooSymbol(asset), setup = setupFor(asset) || 'en attente';
   const chartBlock = asset.market === 'US' ? `<figure class="finviz-figure"><img id="finvizChart" class="finviz-chart" src="https://finviz.com/chart.ashx?t=${encodeURIComponent(asset.ticker)}&ty=c&ta=1&p=d&s=l" alt="Graphique technique Finviz de ${esc(asset.ticker)}"><figcaption><span>Finviz · journalier · SMA20/50/200</span><span>${esc(asset.ticker)}</span></figcaption></figure>` : `${chartSvg(values)}<div class="chart-caption"><span>${chart ? 'Yahoo Finance · 1 an' : 'Historique Yahoo en chargement…'}</span><span>${esc(symbol)}</span></div>`;
   const metric = (label, value, digits = 2, suffix = '') => `<div class="metric"><small>${label}</small><b>${formatMetric(value,digits)}${Number.isFinite(value) ? suffix : ''}</b></div>`;
   const secBlock = asset.market === 'US' ? `<div class="filing-links"><a href="${secUrl(asset,'10-K')}" target="_blank" rel="noopener"><b>10-K</b><span>Rapport annuel</span></a><a href="${secUrl(asset,'10-Q')}" target="_blank" rel="noopener"><b>10-Q</b><span>Rapport trimestriel</span></a><a href="${secUrl(asset,'8-K')}" target="_blank" rel="noopener"><b>8-K</b><span>Événement courant</span></a></div><a class="source-link" href="${secUrl(asset)}" target="_blank" rel="noopener">Tous les dépôts officiels sur SEC EDGAR ↗</a>` : '<p class="intel-empty">SEC EDGAR concerne les émetteurs déposants aux États-Unis.</p>';
-  $('#detailContent').innerHTML = `<p class="eyebrow">${asset.market} · ${esc(f.sector || 'Marché')}</p><div class="detail-heading">${logoMarkup(asset)}<div><h1>${esc(asset.ticker)}</h1><div class="secondary">${esc(asset.name)}</div></div></div><div class="detail-tags">${tags.map(tag => `<button type="button" data-detail-filter-tag="${esc(tag)}">#${esc(tag)}</button>`).join('')}</div><div class="quote">${Number.isFinite(price) ? price.toLocaleString('fr-FR',{maximumFractionDigits:4}) : esc(asset.price)}</div><div class="change ${change < 0 ? 'negative' : ''}">${change > 0 ? '+' : ''}${formatMetric(change,2)} %</div>${chartBlock}<div class="setup-card"><strong class="signal-badge ${esc(setup)}">${esc(setup)}</strong><span>${esc(setupText(setup))}</span></div><div class="metrics extended">${metric('MA 20',t.ma20)}${metric('MA 50',t.ma50)}${metric('MA 100',t.ma100)}${metric('MA 200',t.ma200)}${metric('RSI 14',t.rsi,1)}${metric('MACD',t.macd,3)}${metric('Signal MACD',t.macdSignal,3)}${metric('Vol. relatif',t.relVolume,2,'×')}${metric('VWAP',t.vwap)}${metric('ATR 14',t.atr)}${metric('Variation 24 h',change,2,'%')}${metric('Variation 1 sem.',t.perfWeek,2,'%')}${metric('Variation 1 mois',t.perfMonth,2,'%')}${metric('Variation 3 mois',t.perf3Month,2,'%')}<div class="metric"><small>OBV Δ jour</small><b>${formatCompact(t.obvDelta)}</b></div></div><p class="analysis-source">TradingView Scanner · données quotidiennes. OBV Δ jour = contribution signée du volume, pas l’OBV cumulatif.</p><section class="intel-section"><div class="intel-heading"><div><span class="eyebrow">ENTREPRISE</span><h2>Fondamentaux</h2></div><span class="intel-source">TradingView · Yahoo · Webull</span></div><div class="fundamental-grid">${fundamentalCards(asset)}</div><p class="intel-context">${esc([f.sector,f.industry].filter(Boolean).join(' · ') || 'Classification indisponible')}</p></section><section class="intel-section"><div class="intel-heading"><div><span class="eyebrow">FLUX</span><h2>Actualités</h2></div><span class="intel-source">Yahoo Finance</span></div><div id="detailNews" class="news-list" aria-live="polite"><p class="intel-empty">Chargement des actualités…</p></div><div class="source-links"><a href="https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}/news/" target="_blank" rel="noopener">Toutes les news Yahoo ↗</a><a href="${webullUrl(asset)}" target="_blank" rel="noopener">Voir sur Webull ↗</a></div></section><section class="intel-section"><div class="intel-heading"><div><span class="eyebrow">DOCUMENTS</span><h2>Dépôts SEC</h2></div><span class="intel-source">SEC EDGAR</span></div>${secBlock}</section><div class="section"><b>Ajouter un tag</b><div class="tag-input"><input id="newTag" maxlength="24" placeholder="ex. breakout, énergie"><button id="addTag" class="primary">Ajouter</button></div><div class="tag-list">${personalTags.map(tag => `<button data-personal-tag="${esc(tag)}" title="Retirer">#${esc(tag)} ×</button>`).join('')}</div></div><div class="section"><b>Alerte de prix avec durée de vie</b><div class="alert-grid"><select id="alertCondition"><option value="above">Au-dessus de</option><option value="below">En dessous de</option></select><input id="alertTarget" type="number" step="any" value="${Number.isFinite(price) ? price : ''}" aria-label="Prix cible"><select id="alertTtl"><option value="24">24 heures</option><option value="168">7 jours</option><option value="720">30 jours</option></select><button id="addAlert" class="primary">Créer l’alerte</button></div>${alerts.map(a => `<div class="alert-item"><span>${a.condition === 'above' ? '≥' : '≤'} ${a.target} · expire ${new Date(a.expiresAt).toLocaleDateString('fr-FR')}</span><button data-alert="${esc(a.id)}" aria-label="Supprimer">×</button></div>`).join('')}<p class="secondary">Les alertes fonctionnent tant que cette page reste ouverte.</p></div><div class="links"><a href="https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}" target="_blank" rel="noopener">Yahoo Finance ↗</a><a href="${webullUrl(asset)}" target="_blank" rel="noopener">Webull ↗</a>${asset.market === 'US' ? `<a href="https://finviz.com/quote.ashx?t=${encodeURIComponent(asset.ticker)}" target="_blank" rel="noopener">Finviz ↗</a>` : ''}</div>`;
+  $('#detailContent').innerHTML = `<p class="eyebrow">${asset.market} · ${esc(f.sector || 'Marché')}</p><div class="detail-heading">${logoMarkup(asset)}<div><h1>${esc(asset.ticker)}</h1><div class="secondary">${esc(asset.name)}</div></div></div><div class="detail-tags">${tags.map(tag => `<button type="button" data-detail-filter-tag="${esc(tag)}">#${esc(tag)}</button>`).join('')}</div><div id="detailQuote" class="quote">${Number.isFinite(price) ? price.toLocaleString('fr-FR',{maximumFractionDigits:4}) : esc(asset.price)}</div><div id="detailQuoteMeta" class="detail-quote-meta">${quoteBadge(quote, true)}<span>${esc(quoteTimeText(quote))}</span></div><div id="detailQuoteChange" class="change ${change < 0 ? 'negative' : ''}">${change > 0 ? '+' : ''}${formatMetric(change,2)} %</div>${chartBlock}<div class="setup-card"><strong class="signal-badge ${esc(setup)}">${esc(setup)}</strong><span>${esc(setupText(setup))}</span></div><div class="metrics extended">${metric('MA 20',t.ma20)}${metric('MA 50',t.ma50)}${metric('MA 100',t.ma100)}${metric('MA 200',t.ma200)}${metric('RSI 14',t.rsi,1)}${metric('MACD',t.macd,3)}${metric('Signal MACD',t.macdSignal,3)}${metric('Vol. relatif',t.relVolume,2,'×')}${metric('VWAP',t.vwap)}${metric('ATR 14',t.atr)}<div class="metric" data-detail-quote-change><small>${quote.source === 'hyperliquid' ? 'Variation vs close' : 'Variation 24 h'}</small><b>${formatMetric(change,2)}%</b></div>${metric('Variation 1 sem.',t.perfWeek,2,'%')}${metric('Variation 1 mois',t.perfMonth,2,'%')}${metric('Variation 3 mois',t.perf3Month,2,'%')}<div class="metric"><small>OBV Δ jour</small><b>${formatCompact(t.obvDelta)}</b></div></div><p class="analysis-source">TradingView Scanner · données quotidiennes. OBV Δ jour = contribution signée du volume, pas l’OBV cumulatif.</p><section class="intel-section"><div class="intel-heading"><div><span class="eyebrow">ENTREPRISE</span><h2>Fondamentaux</h2></div><span class="intel-source">TradingView · Yahoo · Webull</span></div><div class="fundamental-grid">${fundamentalCards(asset)}</div><p class="intel-context">${esc([f.sector,f.industry].filter(Boolean).join(' · ') || 'Classification indisponible')}</p></section><section class="intel-section"><div class="intel-heading"><div><span class="eyebrow">FLUX</span><h2>Actualités</h2></div><span class="intel-source">Yahoo Finance</span></div><div id="detailNews" class="news-list" aria-live="polite"><p class="intel-empty">Chargement des actualités…</p></div><div class="source-links"><a href="https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}/news/" target="_blank" rel="noopener">Toutes les news Yahoo ↗</a><a href="${webullUrl(asset)}" target="_blank" rel="noopener">Voir sur Webull ↗</a></div></section><section class="intel-section"><div class="intel-heading"><div><span class="eyebrow">DOCUMENTS</span><h2>Dépôts SEC</h2></div><span class="intel-source">SEC EDGAR</span></div>${secBlock}</section><div class="section"><b>Ajouter un tag</b><div class="tag-input"><input id="newTag" maxlength="24" placeholder="ex. breakout, énergie"><button id="addTag" class="primary">Ajouter</button></div><div class="tag-list">${personalTags.map(tag => `<button data-personal-tag="${esc(tag)}" title="Retirer">#${esc(tag)} ×</button>`).join('')}</div></div><div class="section"><b>Alerte de prix avec durée de vie</b><div class="alert-grid"><select id="alertCondition"><option value="above">Au-dessus de</option><option value="below">En dessous de</option></select><input id="alertTarget" type="number" step="any" value="${Number.isFinite(price) ? price : ''}" aria-label="Prix cible"><select id="alertTtl"><option value="24">24 heures</option><option value="168">7 jours</option><option value="720">30 jours</option></select><button id="addAlert" class="primary">Créer l’alerte</button></div>${alerts.map(a => `<div class="alert-item"><span>${a.condition === 'above' ? '≥' : '≤'} ${a.target} · expire ${new Date(a.expiresAt).toLocaleDateString('fr-FR')}</span><button data-alert="${esc(a.id)}" aria-label="Supprimer">×</button></div>`).join('')}<p class="secondary">Les alertes fonctionnent tant que cette page reste ouverte.</p></div><div class="links"><a href="https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}" target="_blank" rel="noopener">Yahoo Finance ↗</a><a href="${webullUrl(asset)}" target="_blank" rel="noopener">Webull ↗</a>${asset.market === 'US' ? `<a href="https://finviz.com/quote.ashx?t=${encodeURIComponent(asset.ticker)}" target="_blank" rel="noopener">Finviz ↗</a>` : ''}</div>`;
   document.querySelectorAll('#detailContent .asset-logo').forEach(image => image.addEventListener('error', () => {
     const fallbacks = JSON.parse(image.dataset.logoFallbacks || '[]'), next = fallbacks.shift();
     if (next) { image.dataset.logoFallbacks = JSON.stringify(fallbacks); image.src = next; } else image.remove();
@@ -366,7 +413,8 @@ function openDetail(id) {
 }
 function closeDetail() { $('#detail').classList.remove('open'); $('#detail').setAttribute('aria-hidden','true'); $('#scrim').hidden = true; state.selected = null; }
 function evaluateAlerts(asset) {
-  const price = asset.livePrice ?? asset.priceNumber;
+  const price = effectiveQuote(asset).price;
+  if (!Number.isFinite(price)) return;
   for (const alert of activeAlerts().filter(a => a.instrumentId === asset.id && !a.triggered)) {
     if ((alert.condition === 'above' && price >= alert.target) || (alert.condition === 'below' && price <= alert.target)) {
       alert.triggered = true; const message = `${asset.ticker} ${alert.condition === 'above' ? 'a franchi' : 'est passé sous'} ${alert.target}`;
@@ -387,18 +435,110 @@ function decodeYahoo(data) {
   }
   return result;
 }
-function disconnectStream() {
-  if (state.stream) state.stream.close(); state.stream = null; $('#marketState').classList.remove('live'); $('#connectionState').textContent = 'Hors ligne'; $('#streamBtn').classList.remove('active');
+function scheduleQuoteRender() {
+  if (state.quoteRenderPending) return;
+  state.quoteRenderPending = true;
+  requestAnimationFrame(() => {
+    state.quoteRenderPending = false; applyFilters(); updateConnectionUi();
+    if (state.selected) updateDetailQuote(state.selected);
+  });
+}
+function updateConnectionUi() {
+  const yahooOpen = state.streamStatus.yahoo === 'open', hyperliquidOpen = state.streamStatus.hyperliquid === 'open';
+  const live = yahooOpen || hyperliquidOpen;
+  $('#marketState').classList.toggle('live', live);
+  $('#streamBtn').classList.toggle('active', state.streamEnabled);
+  $('#streamBtn').setAttribute('aria-pressed', String(state.streamEnabled));
+  $('#connectionState').textContent = hyperliquidOpen && yahooOpen ? 'HL + Yahoo RT' : hyperliquidOpen ? 'Hyperliquid RT' : yahooOpen ? 'Yahoo RT' : state.yahooCloseCount ? 'Repli clôture' : state.streamEnabled ? 'Connexion…' : 'Flux désactivé';
+  const rtCount = state.assets.filter(asset => effectiveQuote(asset).realtime).length;
+  $('#connectionHint').textContent = `${rtCount} RT · ${state.yahooCloseCount} closes Yahoo`;
+}
+function scheduleReconnect(kind, connect) {
+  if (!state.streamEnabled || state.reconnectTimers[kind]) return;
+  state.reconnectTimers[kind] = setTimeout(() => { state.reconnectTimers[kind] = null; connect(); }, 5000);
+}
+function connectYahoo() {
+  if (!state.streamEnabled || state.streams.yahoo) return;
+  try {
+    const socket = new WebSocket('wss://streamer.finance.yahoo.com/?version=2');
+    state.streams.yahoo = socket; state.streamStatus.yahoo = 'connecting'; updateConnectionUi();
+    socket.onopen = () => {
+      if (state.streams.yahoo !== socket) return;
+      state.streamStatus.yahoo = 'open';
+      const symbols = [...state.yahooAssets.keys()];
+      for (let index = 0; index < symbols.length; index += 100) socket.send(JSON.stringify({ subscribe:symbols.slice(index, index + 100) }));
+      updateConnectionUi();
+    };
+    socket.onmessage = event => {
+      try {
+        const incoming = decodeYahoo(event.data), assets = state.yahooAssets.get(incoming.id) || [];
+        if (!assets.length || !Number.isFinite(incoming.price)) return;
+        const receivedAt = Date.now(), sourceAt = Number.isFinite(incoming.time) ? incoming.time * 1000 : receivedAt;
+        for (const asset of assets) {
+          asset.yahooRt = { price:incoming.price, change:incoming.changePercent, at:sourceAt };
+          evaluateAlerts(asset);
+        }
+        scheduleQuoteRender();
+      } catch { /* malformed Yahoo frame */ }
+    };
+    socket.onerror = () => { state.streamStatus.yahoo = 'error'; updateConnectionUi(); };
+    socket.onclose = () => {
+      if (state.streams.yahoo !== socket) return;
+      state.streams.yahoo = null; state.streamStatus.yahoo = 'closed'; updateConnectionUi(); scheduleQuoteRender(); scheduleReconnect('yahoo', connectYahoo);
+    };
+  } catch { state.streamStatus.yahoo = 'error'; updateConnectionUi(); scheduleReconnect('yahoo', connectYahoo); }
+}
+function connectHyperliquid() {
+  if (!state.streamEnabled || !isHyperliquidWindow() || state.streams.hyperliquid) return;
+  try {
+    const socket = new WebSocket('wss://api.hyperliquid.xyz/ws');
+    state.streams.hyperliquid = socket; state.streamStatus.hyperliquid = 'connecting'; updateConnectionUi();
+    socket.onopen = () => {
+      if (state.streams.hyperliquid !== socket) return;
+      state.streamStatus.hyperliquid = 'open';
+      socket.send(JSON.stringify({ method:'subscribe', subscription:{ type:'allMids', dex:'xyz' } }));
+      updateConnectionUi();
+    };
+    socket.onmessage = event => {
+      try {
+        const message = JSON.parse(event.data); if (message.channel !== 'allMids' || !message.data?.mids) return;
+        const receivedAt = Date.now();
+        for (const [coin, assets] of state.hyperliquidAssets) {
+          const price = Number(message.data.mids[coin]); if (!Number.isFinite(price)) continue;
+          for (const asset of assets) { asset.hyperliquidRt = { price, at:receivedAt }; evaluateAlerts(asset); }
+        }
+        scheduleQuoteRender();
+      } catch { /* malformed Hyperliquid frame */ }
+    };
+    socket.onerror = () => { state.streamStatus.hyperliquid = 'error'; updateConnectionUi(); };
+    socket.onclose = () => {
+      if (state.streams.hyperliquid !== socket) return;
+      state.streams.hyperliquid = null; state.streamStatus.hyperliquid = 'closed'; updateConnectionUi(); scheduleQuoteRender(); scheduleReconnect('hyperliquid', connectHyperliquid);
+    };
+  } catch { state.streamStatus.hyperliquid = 'error'; updateConnectionUi(); scheduleReconnect('hyperliquid', connectHyperliquid); }
+}
+function reconcilePriceFeeds() {
+  if (!state.streamEnabled) return;
+  connectYahoo();
+  if (isHyperliquidWindow()) connectHyperliquid();
+  else if (state.streams.hyperliquid) {
+    const socket = state.streams.hyperliquid; state.streams.hyperliquid = null; state.streamStatus.hyperliquid = 'idle'; socket.close();
+  }
+  updateConnectionUi();
+}
+function disconnectStreams() {
+  state.streamEnabled = false;
+  for (const kind of ['yahoo','hyperliquid']) {
+    clearTimeout(state.reconnectTimers[kind]); state.reconnectTimers[kind] = null;
+    const socket = state.streams[kind]; state.streams[kind] = null; state.streamStatus[kind] = 'idle';
+    if (socket) socket.close();
+  }
+  for (const asset of state.assets) { delete asset.yahooRt; delete asset.hyperliquidRt; }
+  updateConnectionUi(); scheduleQuoteRender();
 }
 function toggleStream() {
-  if (state.stream) return disconnectStream();
-  try {
-    const socket = new WebSocket('wss://streamer.finance.yahoo.com/?version=2'); state.stream = socket; $('#connectionState').textContent = 'Connexion…';
-    socket.onopen = () => { const symbols = [...new Set(state.assets.filter(a => ['US','CRYPTO','MACRO'].includes(a.market)).map(yahooSymbol))].slice(0, 100); socket.send(JSON.stringify({ subscribe: symbols })); $('#marketState').classList.add('live'); $('#connectionState').textContent = 'Yahoo live'; $('#streamBtn').classList.add('active'); toast(`${symbols.length} symboles abonnés`); };
-    socket.onmessage = event => { try { const quote = decodeYahoo(event.data); const asset = state.assets.find(a => yahooSymbol(a) === quote.id); if (!asset) return; if (Number.isFinite(quote.price)) asset.livePrice = quote.price; if (Number.isFinite(quote.changePercent)) asset.liveChange = quote.changePercent; evaluateAlerts(asset); applyFilters(); if (state.selected?.id === asset.id) renderDetail(asset); } catch {} };
-    socket.onerror = () => toast('Flux Yahoo indisponible — données figées conservées');
-    socket.onclose = () => disconnectStream();
-  } catch { toast('WebSocket indisponible dans ce navigateur'); }
+  if (state.streamEnabled) { disconnectStreams(); toast('Flux temps réel désactivés · closes Yahoo conservées'); return; }
+  state.streamEnabled = true; reconcilePriceFeeds(); toast('Flux automatiques activés');
 }
 async function sharePage() {
   const payload = { title: 'MarketWatch', text: 'Mon cockpit DailyTickers de surveillance marchés', url: location.href };
@@ -436,15 +576,35 @@ function registerWebMcp() {
   document.modelContext.registerTool({ name:'filter_watchlist', description:'Filtre le cockpit par texte, tag ou marché.', inputSchema:{type:'object',properties:{query:{type:'string'},tag:{type:'string'},market:{type:'string'}}}, annotations:{readOnlyHint:true}, execute: async input => { if (input.query != null) $('#search').value=input.query; if (input.tag != null) state.selectedTags = new Set([input.tag]); if (input.market != null) $('#marketFilter').value=input.market; renderTagFilter(); applyFilters(); return {content:[{type:'text',text:`${state.filtered.length} instruments visibles`}]} } });
   document.modelContext.registerTool({ name:'open_instrument', description:'Ouvre la fiche détaillée d’un ticker.', inputSchema:{type:'object',required:['ticker'],properties:{ticker:{type:'string'}}}, annotations:{readOnlyHint:true}, execute: async ({ticker}) => { const asset=state.assets.find(a=>a.ticker.toLowerCase()===ticker.toLowerCase()); if(!asset) throw new Error('Ticker introuvable'); openDetail(asset.id); return {content:[{type:'text',text:`Fiche ${asset.ticker} ouverte`}]} } });
 }
+function indexQuoteSources(closePayload) {
+  state.yahooAssets = new Map(); state.hyperliquidAssets = new Map(); state.yahooCloseCount = 0;
+  for (const asset of state.assets) {
+    const symbol = yahooSymbol(asset);
+    if (!state.yahooAssets.has(symbol)) state.yahooAssets.set(symbol, []);
+    state.yahooAssets.get(symbol).push(asset);
+    const close = closePayload?.quotes?.[symbol];
+    if (Number.isFinite(close?.price)) {
+      asset.yahooClose = { price:close.price, previousClose:close.previousClose, change:close.change, sessionDate:close.sessionDate };
+      state.yahooCloseCount += 1;
+    }
+    const coin = hyperliquidCoin(asset, symbol);
+    if (coin) {
+      if (!state.hyperliquidAssets.has(coin)) state.hyperliquidAssets.set(coin, []);
+      state.hyperliquidAssets.get(coin).push(asset);
+    }
+  }
+}
 async function init() {
   try {
-    const [response, autoResponse] = await Promise.all([
+    const [response, autoResponse, closesResponse] = await Promise.all([
       fetch('./data/watchlists.json'),
-      fetch('./data/auto-universe.json').catch(() => null)
+      fetch('./data/auto-universe.json').catch(() => null),
+      fetch('./data/yahoo-closes.json', { cache:'no-cache' }).catch(() => null)
     ]);
     if (!response.ok) throw new Error('Données indisponibles');
     const [rawLists, rawAssets] = await response.json();
     const autoUniverse = autoResponse?.ok ? await autoResponse.json() : { assets:[] };
+    const yahooCloses = closesResponse?.ok ? await closesResponse.json() : { quotes:{} };
     state.tagGroups = rawLists.filter(([name]) => !EXCLUDED_LISTS.has(name) && name !== 'Ma Liste de surveillance').map(([name,indexes]) => ({name,indexes}));
     const memberships = Array.from({length:rawAssets.length},()=>[]); state.tagGroups.forEach(group => group.indexes.forEach(index => memberships[index]?.push(group.name)));
     state.assets = rawAssets.map(([id,ticker,name,price,change], index) => ({ id,ticker,name,price,priceNumber:numberFrom(price),change:numberFrom(change),market:marketFor(id,ticker,name),sourceTags:memberships[index] })).filter(asset => asset.sourceTags.length);
@@ -467,7 +627,8 @@ async function init() {
       };
       state.assets.push(asset); byTicker.set(key, asset);
     }
-    $('#assetCount').textContent = state.assets.length; $('#tagCount').textContent = availableTags().length; renderTagFilter(); renderColumnPicker(); applyFilters(); registerWebMcp(); loadTechnicals();
+    indexQuoteSources(yahooCloses);
+    $('#assetCount').textContent = state.assets.length; $('#tagCount').textContent = availableTags().length; renderTagFilter(); renderColumnPicker(); applyFilters(); registerWebMcp(); updateConnectionUi(); reconcilePriceFeeds(); loadTechnicals();
     const config = localStorage.getItem(STORAGE.firebase); if (config) $('#firebaseConfig').value = config;
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(() => {});
   } catch (error) { $('#rows').innerHTML = `<tr><td colspan="10">${esc(error.message)}</td></tr>`; }
@@ -488,5 +649,6 @@ $('#rows').addEventListener('click', event => { const tag = event.target.closest
 $('#rows').addEventListener('keydown', event => { if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('tr')) openDetail(event.target.dataset.id); });
 $('#closeDetail').onclick = closeDetail; $('#scrim').onclick = closeDetail; document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
 $('#streamBtn').onclick = toggleStream; $('#shareBtn').onclick = sharePage; $('#syncBtn').onclick = () => $('#syncDialog').showModal(); $('#connectGoogle').onclick = connectGoogle;
-setInterval(() => { activeAlerts(); updateCounts(); }, 60000);
+window.addEventListener('online', reconcilePriceFeeds);
+setInterval(() => { activeAlerts(); reconcilePriceFeeds(); scheduleQuoteRender(); }, 60000);
 init();

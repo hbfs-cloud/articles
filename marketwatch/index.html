@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="/assets/sidebar.css?v=20260309">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=5">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -41,7 +41,7 @@
   <header class="topbar">
     <a class="brand" href="/" aria-label="Retour à DailyTickers"><img class="brand-mark" src="/logo.svg" alt="" width="36" height="36"><div><strong>MarketWatch</strong><small>DailyTickers · surveillance consolidée</small></div></a>
     <div class="headline"><span id="marketState" class="pulse"></span><strong id="assetCount">257</strong> instruments <span>·</span> <strong id="tagCount">23</strong> tags</div>
-    <div class="top-actions"><button id="shareBtn" class="ghost"><span aria-hidden="true">↗</span> Partager</button><button id="streamBtn" class="ghost"><span aria-hidden="true">◉</span> Yahoo expérimental</button><button id="syncBtn" class="ghost"><span aria-hidden="true">↻</span> Synchro Google</button></div>
+    <div class="top-actions"><button id="shareBtn" class="ghost"><span aria-hidden="true">↗</span> Partager</button><button id="streamBtn" class="ghost active" aria-pressed="true"><span aria-hidden="true">◉</span> Flux auto</button><button id="syncBtn" class="ghost"><span aria-hidden="true">↻</span> Synchro Google</button></div>
   </header>
 
   <main id="mainContent">
@@ -50,7 +50,7 @@
       <div><small>SIGNAL POSITIF</small><strong id="positiveCount">—</strong><span>variation affichée</span></div>
       <div><small>ANALYSE TECHNIQUE</small><strong id="analyzedCount">0</strong><span id="analysisState">chargement…</span></div>
       <div><small>ALERTES</small><strong id="alertCount">0</strong><span>actives</span></div>
-      <div><small>CONNEXION</small><strong id="connectionState">Hors ligne</strong><span>données Trading 212 figées</span></div>
+      <div><small>CONNEXION</small><strong id="connectionState">Connexion…</strong><span id="connectionHint">0 RT · closes Yahoo en chargement</span></div>
     </section>
 
     <section class="workspace">
@@ -108,7 +108,7 @@
         </table>
         <div id="empty" class="empty" hidden>Aucun instrument pour ces filtres.</div>
       </div>
-      <p class="data-note">Tags importés de Trading 212 · Analyse quotidienne TradingView · Graphiques Finviz pour les titres US · Yahoo temps réel expérimental.</p>
+      <p class="data-note">Prix : <strong class="legend-source hyperliquid">HL RT</strong> hors séance US si le perpétuel exact existe · <strong class="legend-source yahoo-rt">Yahoo RT</strong> sinon · <strong class="legend-source yahoo-close">⏳ Yahoo close</strong> quand aucun temps réel frais n’est disponible.</p>
       <details class="about-panel">
         <summary>Comment lire MarketWatch <span aria-hidden="true">+</span></summary>
         <div class="about-grid">
@@ -122,7 +122,7 @@
           </section>
           <section>
             <h2>Données et alertes</h2>
-            <p>Les tags Trading 212 sont un instantané statique. TradingView alimente l’analyse quotidienne, Yahoo et Webull complètent la fiche, Finviz les graphiques US. Les alertes TTL sont évaluées tant que cette page reste ouverte ; elles ne constituent ni une donnée de marché garantie ni un conseil financier.</p>
+            <p>Chaque prix affiche sa provenance. Hors séance US, un marché exact disponible sur Hyperliquid <strong>xyz</strong> fournit un prix temps réel de perpétuel, distinct du cash. Yahoo temps réel est utilisé sinon. Le symbole ⏳ signale une clôture Yahoo ou un snapshot non temps réel. Les alertes TTL sont évaluées tant que cette page reste ouverte.</p>
           </section>
         </div>
       </details>
@@ -151,6 +151,6 @@
 
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="/assets/sidebar.js"></script>
-  <script type="module" src="app.js?v=4"></script>
+  <script type="module" src="app.js?v=5"></script>
 </body>
 </html>

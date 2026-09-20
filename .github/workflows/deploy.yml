@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # Refresh the Yahoo close fallback after every US trading day.
+    - cron: '30 23 * * 1-5'
 
 permissions:
   contents: read
@@ -27,6 +30,7 @@ jobs:
       - name: Build public site
         run: |
           node tools/build-marketwatch-data.js
+          node tools/build-marketwatch-yahoo-closes.js
           mkdir -p _site
 
           # Root public files
