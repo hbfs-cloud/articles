@@ -50,10 +50,12 @@ immutable for the run. Do not infer one from the other inside a plan.
    filters, SEC/earnings evidence, recent-family overlay, open-position exclusions and diversification.
    Rank with a stable ticker tie-breaker. The universe is US-listed stocks and US-listed ETFs only.
 
-5. DTX is excluded from the scanner product by `config/scanner-components.json` (owner instruction,
-   2026-09-12). `scan-parallel.sh` creates an immutable dated `_scope.json` and uses the marketdata-only
-   collection plans. Pass `--scope=scanner/YYYYMMDD/_scope.json` to scope-aware QA, sweep, status/API and
-   regime tools. Do not collect, render or refresh the obsolete DTX curve; preserve its standalone history.
+5. DTX is required by `config/scanner-components.json` from the 2026-09-21 session. The public `best`
+   mode consumes the `etf_us` engine portfolio. `scan-parallel.sh` collects and validates the systematic
+   health/catalog/decision/replay and writes fresh staging. After structured signals exist, run
+   `dtx-pool-bridge.js --folder YYYYMMDD --date YYYY-MM-DD` and `dtx-history-append.js` before the final
+   sweep/status/API generation. Pass the dated `_scope.json` to scope-aware tools; it records whether DTX
+   is required or carries a historical explicit waiver. DTX remains informational and must never execute.
 
 6. Write structured `signals.json`/`data.json`, then render. Preserve the existing Finviz chart source
    unless the user explicitly requests a chart-provider change.

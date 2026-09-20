@@ -90,6 +90,9 @@ assert.deepStrictEqual(summarize(momentumMature.filter(x => x.region === 'US')),
 
 if (!SCOPE.active) {
 const dtxBest = read('data/dtx/best.json');
+const modeConfig = read('data/modes-config.json').modes.best;
+const activeEnginePortfolio = modeConfig.enginePortfolio || 'best';
+const activeDtx = read(`data/dtx/${activeEnginePortfolio}.json`);
 const decideEnvelope = read('scanner/20260831/_dtx/decide_best.json');
 const decideV2 = decideEnvelope.result || decideEnvelope;
 assert.deepStrictEqual(dtxScan.validateDecisionV2(decideV2, { asof: '2026-08-31' }), [], 'valid DTX Contract V2 decision rejected');
@@ -147,11 +150,27 @@ const apiReturn = (apiValues[apiValues.length - 1] / apiBase - 1) * 100;
 assert(Math.abs(apiReturn - bestApi.stats.ret) <= 0.05, 'DTX API curve/headline mismatch');
 assert.strictEqual(bestApi.engineBacktest.metrics_source, 'mcp_replay', 'DTX API replay provenance missing');
 assert.strictEqual(bestApi.engineBacktest.curve_is_book, false, 'DTX replay must not be labeled as a served book curve');
+assert.deepStrictEqual(dtxScan.stagingSnapshotErrors(activeDtx, activeEnginePortfolio, {
+  todayIso: activeDtx.generatedAt.slice(0, 10), scanDateIso: activeDtx.asof,
+  expectedClose: activeDtx.decisionProvenance.expectedDataDate,
+}), [], 'active engine DTX staging rejected');
+const latestScannerDate = fs.readdirSync(path.join(ROOT, 'scanner'))
+  .filter(name => /^\d{8}$/.test(name) && fs.existsSync(path.join(ROOT, 'scanner', name, 'signals.json')))
+  .sort().at(-1);
+const latestScanner = read(`scanner/${latestScannerDate}/signals.json`);
+const latestSession = `${latestScannerDate.slice(0,4)}-${latestScannerDate.slice(4,6)}-${latestScannerDate.slice(6,8)}`;
+if (activeDtx.decisionProvenance.validFrom.slice(0, 10) === latestSession) {
+  assert.strictEqual(
+    (latestScanner.dtx_pool || []).filter(s => s.universe === 'best' && s.sleeve === activeEnginePortfolio).length,
+    (activeDtx.orders || []).length,
+    'active DTX decision must be bridged into the matching scanner session',
+  );
+}
 const now = Date.now();
-if (dtxBest.actionable !== false && (now < Date.parse(dtxBest.decisionProvenance.validFrom) || now > Date.parse(dtxBest.decisionProvenance.validUntil))) {
+if (activeDtx.actionable !== false && (now < Date.parse(activeDtx.decisionProvenance.validFrom) || now > Date.parse(activeDtx.decisionProvenance.validUntil))) {
   const bestOrdersApi = read('portfolio/v1/best/orders.json');
   assert.strictEqual((bestOrdersApi.orders || []).length, 0, 'DTX API orders must be empty outside plan window');
-  assert.deepStrictEqual(bestOrdersApi.decisionProvenance, dtxBest.decisionProvenance, 'DTX API must disclose the gated plan provenance even when it publishes zero orders');
+  assert.deepStrictEqual(bestOrdersApi.decisionProvenance, activeDtx.decisionProvenance, 'DTX API must disclose the gated plan provenance even when it publishes zero orders');
 }
 
 } else {

@@ -16,9 +16,10 @@ const fs = require('fs');
 const path = require('path');
 const { randomUUID } = require('crypto');
 
-// Sources de repli par symbole, essayées DANS CET ORDRE quand la série yahoo se contredit.
+// Sources de repli par symbole, essayées DANS CET ORDRE quand la série webull se contredit.
 // Elles restent toutes des sources marketdata : aucun repli hors MCP, aucune barre synthétique.
-const ALT_BAR_SOURCES = Object.freeze(['tiingo', 'webull']);
+const PRIMARY_US_BAR_SOURCE = 'webull';
+const ALT_BAR_SOURCES = Object.freeze(['tiingo', 'yahoo']);
 
 function argValue(argv, name, envName) {
   const i = argv.indexOf(name);
@@ -166,21 +167,56 @@ async function fetchCertifiedDailyBars({ symbols, refdate, cryptoRefdate, asOfTi
       const symbolsBatch = group.symbols.slice(offset, offset + batchSize);
       const response = await completedResponse(client, {
         types: 'bars_daily', symbols: symbolsBatch.join(','), limit,
+        ...(group.calendar === EQUITY_CALENDAR ? { source: PRIMARY_US_BAR_SOURCE } : {}),
         as_of_timestamp: asOfTimestamp, completion_policy: 'completed_only',
       }, recordReceipt);
       const check = contract.validateQueryData(response, {
         symbols: symbolsBatch.join(','), assetCalendar: group.calendar,
         expectedCompletedEnd: group.expected,
       });
-      if (check.errors.length) {
-        throw new Error(`marketdata bars rejected: ${check.errors.join('; ')}${check.retryAt ? `; retry_at=${check.retryAt}` : ''}${receiptDir ? `; receipt_dir=${receiptDir}` : ''}`);
+      const repairable = new Map();
+      const unrepairable = [];
+      for (const error of check.errors) {
+        const match = /^([^:]+): (invalid daily OHLCV geometry|daily session continuity failed)/.exec(error);
+        if (!match || !symbolsBatch.includes(match[1])) unrepairable.push(error);
+        else {
+          if (!repairable.has(match[1])) repairable.set(match[1], []);
+          repairable.get(match[1]).push(error);
+        }
       }
-      for (const item of check.healthyCells) {
+      if (unrepairable.length) {
+        throw new Error(`marketdata bars rejected: ${unrepairable.join('; ')}${check.retryAt ? `; retry_at=${check.retryAt}` : ''}${receiptDir ? `; receipt_dir=${receiptDir}` : ''}`);
+      }
+      const accepted = check.healthyCells.filter(item => item.status === 'completed' && item.row);
+      for (const [symbol, reasons] of repairable) {
+        let replacement = null, replacementSource = null;
+        for (const source of ALT_BAR_SOURCES) {
+          const alt = await completedResponse(client, {
+            types: 'bars_daily', symbols: symbol, limit,
+            as_of_timestamp: asOfTimestamp, completion_policy: 'completed_only', source,
+          }, recordReceipt).catch(() => null);
+          if (!alt) continue;
+          const altCheck = contract.validateQueryData(alt, {
+            symbols: symbol, assetCalendar: group.calendar, expectedCompletedEnd: group.expected,
+          });
+          if (altCheck.errors.length) continue;
+          replacement = altCheck.healthyCells.find(item => item.id === symbol && item.status === 'completed' && item.row) || null;
+          if (replacement) { replacementSource = source; break; }
+        }
+        if (!replacement) {
+          throw new Error(`${symbol}: série ${PRIMARY_US_BAR_SOURCE} défectueuse et aucun repli cohérent (${ALT_BAR_SOURCES.join(', ')}) — ${reasons.join('; ')}`);
+        }
+        console.log(`  [source] ${symbol}: série ${PRIMARY_US_BAR_SOURCE} défectueuse → barres reprises sur ${replacementSource} (${reasons.join('; ')})`);
+        accepted.push(replacement);
+      }
+      for (const item of accepted) {
         if (item.status !== 'completed' || !item.row) throw new Error(`${item.id}: no completed daily-bar row`);
         let bars;
         try {
           bars = normalizeBars(item.row, item.id, group.calendar, { allowUnreliableOpen }).filter(bar => bar.date <= group.expected);
         } catch (error) {
+          // Défense secondaire : si normalizeBars détecte une incohérence que le contrat
+          // de réponse n'a pas classée, rejouer le symbole sur les mêmes sources MCP.
           // Le défaut yahoo du 2026-09-15 : high/low calculés sur la séance régulière SANS
           // l'impression d'ouverture, donc une barre qui se contredit. Vérifié sur STT contre
           // l'intraday 15m (ouverture 187.45 = plus haut réel, yahoo servait high=187.265) :

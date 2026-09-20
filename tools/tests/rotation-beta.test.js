@@ -75,6 +75,10 @@ test('stale, mismatched, low-quality or empty beta results never become current 
     const payload=beta('BTC-USD');mutate(payload);assert.throws(()=>validateBeta(payload,REFERENCES[0],REF));
   }
 });
+test('published beta rows preserve the normalized observation count',()=>{
+  const result=validateBeta(beta('BTC-USD'),REFERENCES[0],REF);
+  assert.equal(result.rows[0].n_obs,60);
+});
 test('a late beta failure preserves evidence but does not write a partial rotation',async t=>{
   const root=fixture(t),c=client((value,tool,args)=>{if(tool==='RankBeta'&&args.reference==='EURUSD=X')value.rows=[];return value;});
   await assert.rejects(run(opts(root,c)),/no qualified beta/);assert.equal(c.calls.length,10);

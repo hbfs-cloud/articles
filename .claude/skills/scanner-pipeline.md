@@ -14,7 +14,7 @@ files; they do not define alternate execution paths. Shared source/security rule
 
 1. US-listed stocks and US-listed ETFs only. Never run or stage an EU/APAC fallback.
 2. Target 8 stocks + 2 ETFs; minimum honest publication 6 stocks + 2 ETFs. Never force a failing name.
-3. Marketdata is required. DTX is excluded by `config/scanner-components.json`. Missing auth, service failure, stale close, incomplete
+3. Marketdata and DTX are required by `config/scanner-components.json`. Missing auth, service failure, stale close, incomplete
    pagination or failed source is a hard stop.
 4. `refdate` is the last completed US close. Folder/session `date` may be the next trading day. They are
    never inferred from one another inside a plan.
@@ -42,13 +42,14 @@ Arguments are session folder, `refdate`, and the ignored legacy `asof` date argu
 Set `AS_OF_TIMESTAMP` to the immutable ISO capture instant; if omitted the script fixes it once on entry. Tokens are short-lived and scoped to the minimum
 surface; values enter via a secure environment or masked prompt and never appear in commands or logs.
 
-`scan-parallel.sh` initializes the dated scope from the product policy and runs three independent chains:
+`scan-parallel.sh` initializes the dated scope from the product policy and runs four independent chains:
 
 - **A:** `scanner-wave1-no-dtx` candidate universe, then `scanner-wave2` governing evidence.
+- **B:** systematic health/catalog, `etf_us` Contract V2 decision and replay, then validated DTX staging.
 - **C:** tracking, quick sweep and analysis lifecycle.
 - **D:** US sector rotation and beta pages.
 
-A is publication-critical. DTX is outside this product. C is required for current
+A and B are publication-critical. DTX is published as engine information and never executed by the scanner. C is required for current
 performance and analysis status. D is required for the rotation/API outputs distributed by the same run;
 its failure cannot alter editorial selection but blocks distribution rather than leaving stale pages.
 The script validates freshness and run provenance immediately after each collection.
@@ -87,7 +88,7 @@ to supply a token.
   exports the per-server variable for child processes. Delete the file when the run ends.
 - A token literal inside the command is forbidden: the harness persists approved commands into
   `permissions.allow`, and `VAR="$(cat file)"` is refused outright by the credential classifier.
-- No systematic token is required by the scanner. DTX standalone workflows retain their own authentication.
+- Systematic authentication is required when the dated scope includes DTX. It uses the same token-file discipline as marketdata.
 - Never echo, print, paste into argv, persist or commit token values.
 - Propagate `--scope=scanner/<date>/_scope.json` to scope-aware downstream and QA tools.
 
@@ -165,14 +166,16 @@ thing to check before trusting a dilution clearance.
 The active R/R floors and horizon/target envelopes live in `data/scanner-filters.json`; prose must not
 duplicate hard-coded values that can drift. `validate-scan.js` is the executable authority.
 
-## DTX outside the scanner
+## DTX in the scanner
 
-The owner removed DTX from this chain on 2026-09-12 because its book curve was obsolete.
-`config/scanner-components.json` records that durable product decision; the canonical collector creates
-an immutable dated scope. Do not call DTX health/config/decision/replay/book tools for a scanner run,
-or render a current DTX panel. Preserve standalone DTX history and endpoints. Other source, numerical,
-execution and publication gates remain mandatory. The marketdata regime field named `dtx_regime` is
-still the source's regime classifier; it does not require the systematic service or a book curve.
+The owner restored DTX to this chain for the 2026-09-21 session after the backend repair. The public
+mode `best` consumes the engine portfolio `etf_us`; derive this mapping from
+`data/modes-config.json#enginePortfolio` instead of assuming identical ids. Collect `GetHealth`, the
+catalog, `DtxDecide` and `DtxReplay`; validate and ingest the Contract V2 payload, then require a fresh
+staging-completeness marker for the target session. After `signals.json` exists, run
+`dtx-pool-bridge.js` and `dtx-history-append.js` before sweep/status/API generation. The scanner exposes
+pilot/research engine information only and never calls broker, account or order tools. Historical dated
+scopes that explicitly excluded DTX remain valid and immutable.
 
 ## Phase 4 - Structured Output
 
@@ -191,7 +194,7 @@ After structured validation:
 1. Render scanner HTML/variants.
 2. Run tracking and status/API generation.
 3. Ensure future scans do not enter open positions or actionable status orders.
-4. Update scanner indexes; preserve excluded DTX history and endpoints.
+4. Update scanner indexes, DTX history and public endpoints.
 5. Generate visual assets and inspect them when the publish command requires them.
 
 Do not rerun the full sweep twice. `scan-parallel.sh` owns the sweep for the run; downstream publication

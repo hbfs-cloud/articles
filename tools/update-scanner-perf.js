@@ -41,10 +41,18 @@ if (!retros.length) fail('retro-summary.json ne contient aucune rétro');
 // scanner/retrospective/YYYYMMDD publié. Dataset en retard = on refuse de générer
 // (c'est exactement le bug "bloc figé" qu'on veut rendre impossible).
 const retroDirs = fs.readdirSync(path.join(ROOT, 'scanner', 'retrospective'))
-  .filter(d => /^\d{8}$/.test(d)).sort();
+  .filter(d => /^\d{8}$/.test(d))
+  .filter(d => {
+    try {
+      const html = fs.readFileSync(path.join(ROOT, 'scanner', 'retrospective', d, 'index.html'), 'utf8');
+      return !/data-retro-publication=["']coverage_review["']/i.test(html);
+    } catch { return false; }
+  })
+  .sort();
 const lastDir = retroDirs[retroDirs.length - 1];
 const last = retros[retros.length - 1];
-const lastCompact = last.date.replace(/-/g, '');
+const lastPublicationDate = last.publication_date || last.date;
+const lastCompact = lastPublicationDate.replace(/-/g, '');
 if (lastCompact !== lastDir) {
   fail(`dataset en retard: dernière rétro publiée ${lastDir}, dernière entrée dataset ${lastCompact}. Mettre à jour data/retro-summary.json d'abord.`);
 }
@@ -61,7 +69,7 @@ const parseDate = iso => new Date(`${iso}T00:00:00Z`);
 const fmtShort = iso => { const d = parseDate(iso); return `${months[d.getUTCMonth()]} ${d.getUTCDate()}`; };
 const fmtFull = iso => { const d = parseDate(iso); return `${months[d.getUTCMonth()]} ${d.getUTCDate()} ${d.getUTCFullYear()}`; };
 
-const updatedStr = fmtFull(last.date);
+const updatedStr = fmtFull(lastPublicationDate);
 const periodStr = `${fmtShort(retros[0].date)} – ${fmtFull(last.date)}`;
 const grade = last.grade; // tel que publié (l'astérisque « provisoire » inclus)
 const retroUrl = `/scanner/retrospective/${lastCompact}/`;
@@ -74,8 +82,9 @@ if ([winRate, avgReturn, totalSignals, totalResolved].some(v => typeof v !== 'nu
   fail('aggregate incomplet dans retro-summary.json (hit rate / avg return / totals)');
 }
 
-const pf = last.profit_factor;
-if (typeof pf !== 'number') fail(`profit_factor absent de l'entrée ${last.date} du dataset`);
+const latestHasPerformance = Number(last.resolved) > 0;
+const pf = typeof last.profit_factor === 'number' ? last.profit_factor : null;
+if (latestHasPerformance && pf === null) fail(`profit_factor absent de l'entrée mature ${last.date} du dataset`);
 
 // Régime de la dernière rétro : champ court explicite si présent, sinon dernier
 // libellé de régime mentionné dans la description (l'état final de la semaine).
@@ -130,6 +139,9 @@ const bestPick = picks[picks.length - 1] || { t: '?', v: 0 };
 const worstPick = picks[0] || { t: '?', v: 0 };
 
 const fmtSigned = v => (v > 0 ? '+' : '') + v + '%';
+const latestPerformanceText = latestHasPerformance
+  ? `hit rate ${last.hit_rate_pct}%, avg return ${fmtSigned(last.avg_return_pct)}, PF ${pf} on resolved trades`
+  : 'coverage review only: zero mature horizons, so no hit rate, return or profit factor is published';
 
 // ── 4. Génération HTML du bloc ──────────────────────────────────────────────
 const BLOCK_START = '<!-- ===== SCANNER PERFORMANCE DASHBOARD (COLLAPSIBLE) ===== -->';
@@ -191,7 +203,7 @@ const blockHtml = `${BLOCK_START}
         <div class="scanner-perf-content" id="scanner-perf-content">
           <!-- Narrative Framing -->
           <div style="background:oklch(46% 0.13 237 / 0.10); border:1px solid oklch(46% 0.13 237 / 0.30); border-radius:8px; padding:0.6rem 0.9rem; margin-bottom:1rem; font-size:0.78rem; color:#cbd5e1; line-height:1.55;">
-            <strong style="color:#fff;">How to read this:</strong> our A+ setups target R:R of 1:1.5 or better. The <strong>${winRate}% hit rate is cumulative</strong> across all ${nRetros} retros (${totalSignals} signals, ${totalResolved} resolved) — <em>not</em> the latest week, which can swing wildly. With positive R:R we need fewer wins than losses for positive expectancy; what matters is the <strong style="color:oklch(70% 0.12 155);">size of wins vs the size of losses</strong> and the trend across retros. Latest retro (${grade}): hit rate ${last.hit_rate_pct}%, avg return ${fmtSigned(last.avg_return_pct)}, PF ${pf} on resolved trades. <a href="/scanner/retrospective/" style="color:oklch(72% 0.13 237); text-decoration:underline;">See full methodology + every retro →</a>
+            <strong style="color:#fff;">How to read this:</strong> our A+ setups target R:R of 1:1.5 or better. The <strong>${winRate}% hit rate is cumulative</strong> across all ${nRetros} retros (${totalSignals} signals, ${totalResolved} resolved) — <em>not</em> the latest week, which can swing wildly. With positive R:R we need fewer wins than losses for positive expectancy; what matters is the <strong style="color:oklch(70% 0.12 155);">size of wins vs the size of losses</strong> and the trend across retros. Latest retro (${grade}): ${latestPerformanceText}. <a href="/scanner/retrospective/" style="color:oklch(72% 0.13 237); text-decoration:underline;">See full methodology + every retro →</a>
           </div>
 
           <!-- KPI Row -->
@@ -222,9 +234,9 @@ const blockHtml = `${BLOCK_START}
             </div>
             ${kpiCardOpen}
               ${kpiLabel('Profit Factor')}
-              <div style="font-size: 1.5rem; font-weight: 900; color: ${pf >= 1 ? '#10b981' : '#ef4444'}">
-                ${pf}×</div>
-              <div style="font-size: 0.6rem; color: #64748b">Latest retro — resolved trades</div>
+              <div style="font-size: 1.5rem; font-weight: 900; color: ${pf === null ? '#94a3b8' : (pf >= 1 ? '#10b981' : '#ef4444')}">
+                ${pf === null ? 'N/D' : `${pf}×`}</div>
+              <div style="font-size: 0.6rem; color: #64748b">${latestHasPerformance ? 'Latest retro — resolved trades' : 'Latest retro — no mature horizon'}</div>
             </div>
             ${kpiCardOpen}
               ${kpiLabel('Regime')}
@@ -549,9 +561,13 @@ html = replaceBetween(html, BLOCK_START, BLOCK_END, blockHtml, 'bloc dashboard')
 html = replaceBetween(html, CHARTS_START, '</script>', chartsHtml, 'script charts');
 
 // Bannière : compteur de rétros partagé.
-const bannerRe = /\d+-retro performance dashboard/;
-if (!bannerRe.test(html)) fail('bannière "N-retro performance dashboard" introuvable');
-html = html.replace(bannerRe, `${nRetros}-retro performance dashboard`);
+const bannerPatterns = [
+  { re: /\d+-retro performance dashboard/, value: `${nRetros}-retro performance dashboard` },
+  { re: /tableau de performance sur \d+ rétros/, value: `tableau de performance sur ${nRetros} rétros` },
+];
+const banner = bannerPatterns.find(({ re }) => re.test(html));
+if (!banner) fail('bannière du tableau de performance introuvable');
+html = html.replace(banner.re, banner.value);
 
 fs.writeFileSync(INDEX_PATH, html);
 
@@ -564,7 +580,7 @@ const asserts = [
   [`lien = ${retroUrl}`, block.includes(`href="${retroUrl}"`)],
   [`régime = ${regime}`, block.includes(regime)],
   [`compteur unique = ${nRetros} (bloc)`, [...block.matchAll(/\b(\d+)[ -](?:cumulative retros|retros\b|rétros)/g)].every(m => Number(m[1]) === nRetros)],
-  [`compteur unique = ${nRetros} (bannière)`, out.includes(`${nRetros}-retro performance dashboard`)],
+  [`compteur unique = ${nRetros} (bannière)`, out.includes(`${nRetros}-retro performance dashboard`) || out.includes(`tableau de performance sur ${nRetros} rétros`)],
 ];
 let ok = true;
 console.log('=== Assertions bloc Scanner Performance ===');

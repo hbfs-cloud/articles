@@ -417,7 +417,15 @@ function forwardViewFor(fe) {
 function emitRetroHeartbeat() {
   try {
     const retroDir = path.join(ROOT, 'scanner', 'retrospective');
-    const lastRetro = fs.readdirSync(retroDir).filter(d => /^\d{8}$/.test(d)).sort().pop();
+    const lastRetro = fs.readdirSync(retroDir)
+      .filter(d => /^\d{8}$/.test(d))
+      .filter(d => {
+        try {
+          const html = fs.readFileSync(path.join(retroDir, d, 'index.html'), 'utf8');
+          return !/data-retro-publication=["']coverage_review["']/i.test(html);
+        } catch { return false; }
+      })
+      .sort().pop();
     if (!lastRetro) return;
     const lastRetroISO = `${lastRetro.slice(0, 4)}-${lastRetro.slice(4, 6)}-${lastRetro.slice(6, 8)}`;
 
@@ -4372,7 +4380,7 @@ document.addEventListener('DOMContentLoaded',function(){
       // etait connu a la date du snapshot, jamais une seance posterieure. null pour les
       // modes non pilotes par le moteur.
       engine_decision: (cfg.assetClass === 'dtx') ? (() => {
-        const e = dxh.asOf(id, todayISO, _dxhStore);
+        const e = dxh.asOf(dtxEnginePortfolio(id) || id, todayISO, _dxhStore);
         if (!e) return null;
         return {
           asof: e.asof, provenance: e.provenance || null, engineMode: e.engineMode || null,

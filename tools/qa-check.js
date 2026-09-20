@@ -18,6 +18,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { isDeepStrictEqual } = require('util');
 const { isUSTradingDay, newYorkDateISO, usTradingDaysBetween, previousUSTradingDay, nextUSTradingDay } = require('./lib/market-calendar');
 const { latestPublishedScan } = require('./lib/published-scan');
 const { classifyRetroPublication } = require('./lib/retro-publication');
@@ -106,6 +107,13 @@ function readFile(relPath) {
   return fs.readFileSync(full, 'utf8');
 }
 
+function activeDtxModes() {
+  const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8')).modes || {};
+  return Object.entries(catalog)
+    .filter(([, cfg]) => cfg.assetClass === 'dtx' && cfg.status !== 'stopped')
+    .map(([publicId, cfg]) => ({ publicId, enginePortfolio: cfg.enginePortfolio || publicId }));
+}
+
 function fileSize(relPath) {
   const full = path.join(ROOT, relPath);
   if (!fs.existsSync(full)) return 0;
@@ -150,6 +158,13 @@ function isFresh(isoDate, maxAgeHours = 48) {
 }
 
 // ─── Checks ─────────────────────────────────────────────────────────────────
+
+if (SCOPE.provided) check('scope: métadonnée backtest alignée sur le périmètre courant', () => {
+  const results = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-results.json'), 'utf8'));
+  if (!isDeepStrictEqual(results.scanner_scope, SCOPE.audit)) {
+    return `scanner_scope obsolète ou différent de ${SCOPE.audit.path}`;
+  }
+});
 
 if (SCOPE.active) check('scope: DTX absent des nouveaux signaux et du rendu courant', () => {
   const signals = readJSON(`scanner/${SCOPE.audit.date}/signals.json`);
@@ -525,9 +540,9 @@ dtxCheck('dtx: fenêtres Contract V2 appliquées aux pools et ordres publics', (
   let scan = {};
   try { scan = readJSON(`scanner/${latest}/signals.json`); } catch { /* reported elsewhere */ }
   const pool = Array.isArray(scan.dtx_pool) ? scan.dtx_pool : [];
-  for (const id of ['best']) {
+  for (const { publicId: id, enginePortfolio } of activeDtxModes()) {
     let stg;
-    try { stg = readJSON(`data/dtx/${id}.json`); } catch { continue; }
+    try { stg = readJSON(`data/dtx/${enginePortfolio}.json`); } catch { continue; }
     if (stg.actionable === false && stg.failureMode === 'fail_closed') {
       if ((stg.orders || []).length) issues.push(`${id}: staging fail-closed contient des ordres`);
       let publicOrders = [];
@@ -542,10 +557,18 @@ dtxCheck('dtx: fenêtres Contract V2 appliquées aux pools et ordres publics', (
       continue;
     }
     if (now < from || now > until) {
-      const leakedPool = pool.filter(s => s && s.universe === id).length;
+      const pooled = pool.filter(s => s && s.universe === id);
+      const targetSession = String(stg.asof || '').slice(0, 10);
+      const planSession = String(stg.decisionProvenance?.validFrom || '').slice(0, 10);
+      const latestSession = `${latest.slice(0,4)}-${latest.slice(4,6)}-${latest.slice(6,8)}`;
       let publicOrders = [];
       try { publicOrders = readJSON(`portfolio/v1/${id}/orders.json`).orders || []; } catch { /* API covered elsewhere */ }
-      if (leakedPool) issues.push(`${id}: ${leakedPool} signal(s) dtx_pool hors fenêtre`);
+      // A scanner is published before the next session. Its dtx_pool is the immutable, informational
+      // preview for that exact session; only the public orders endpoint must remain empty before open.
+      // A pool bound to another session is still a stale-plan leak and blocks publication.
+      if (pooled.length && (latestSession !== targetSession || targetSession !== planSession)) {
+        issues.push(`${id}: ${pooled.length} signal(s) dtx_pool liés à une autre séance`);
+      }
       if (publicOrders.length) issues.push(`${id}: ${publicOrders.length} ordre(s) API hors fenêtre`);
     }
   }
@@ -554,9 +577,9 @@ dtxCheck('dtx: fenêtres Contract V2 appliquées aux pools et ordres publics', (
 
 dtxCheck('dtx: courbe, headline et provenance décrivent le même replay', () => {
   const issues = [];
-  for (const id of ['best']) {
+  for (const { publicId: id, enginePortfolio } of activeDtxModes()) {
     let stg, api;
-    try { stg = readJSON(`data/dtx/${id}.json`); api = readJSON(`portfolio/v1/${id}/equity.json`); }
+    try { stg = readJSON(`data/dtx/${enginePortfolio}.json`); api = readJSON(`portfolio/v1/${id}/equity.json`); }
     catch { continue; }
     if (stg.metricsSource !== 'mcp_replay') continue;
     const sv = stg.equity?.values || [];
@@ -1026,7 +1049,7 @@ check('scanner (dernier scan): engine_meta.risk_gating non vide (corrélation + 
 // reproduire. La série data/dtx-live-track.json doit exister et porter, pour chacun des 6
 // modes, un dernier point de moins de 72h (tolérance week-end).
 dtxWarn('dtx-live-track.json: série live des modes scriptés fraîche (<72h)', () => {
-  const DTX = ['best'];
+  const DTX = activeDtxModes().map(({ publicId }) => publicId);
   let track;
   try { track = readJSON('data/dtx-live-track.json'); } catch { return 'fichier absent — lancer dtx-live-track.js --backfill puis gen-status-page'; }
   const stale = [];

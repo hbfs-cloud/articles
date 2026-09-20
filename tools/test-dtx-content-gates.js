@@ -36,7 +36,7 @@ assert(validateDtxReplay(truncated, {
 const staged = {
   portfolioId: 'best', asof: '2026-08-31', engineMode: 'mcp', generatedAt: '2026-08-29T01:00:00Z',
   decisionProvenance: {
-    contractVersion: '2.0', requestedAsOf: '2026-08-31', expectedDataDate: '2026-08-28',
+    contractVersion: '2.0', requestedAsOf: '2026-08-28', expectedDataDate: '2026-08-28',
     dataAsOf: '2026-08-28', requestId: 'r', runId: 'run', callId: 'call', planId: 'plan',
   },
 };
@@ -60,7 +60,7 @@ const failClosed = {
     sourceArtifact: 'scanner/20260831/_dtx/decide_best.json',
   },
   decisionProvenance: {
-    contractVersion: '2.0', requestedAsOf: '2026-08-31', expectedDataDate: '2026-08-28',
+    contractVersion: '2.0', requestedAsOf: '2026-08-28', expectedDataDate: '2026-08-28',
     dataAsOf: '2026-08-28', requestId: 'r', runId: null, callId: null, planId: null,
   },
 };

@@ -44,8 +44,30 @@ async function main() {
   assert.equal(bars.get('AAA').at(-1).date, '2026-09-11');
   assert.deepEqual(calls[1].args, {
     types: 'bars_daily', symbols: 'AAA', limit: 160,
+    source: 'webull',
     as_of_timestamp: '2026-09-12T06:00:00Z', completion_policy: 'completed_only',
   });
+
+  const fallbackCalls = [];
+  const fallbackClient = {
+    canCallDirectly: () => true,
+    callToolWithRetry: async (_server, tool, args) => {
+      fallbackCalls.push({ tool, args });
+      if (tool === 'GetStatus') return status('2026-09-11');
+      if (args.source === 'yahoo') return response('AAA', '2026-09-11');
+      const invalid = response('AAA', '2026-09-11');
+      invalid.results[0].data[0].bars[1][1] = 14;
+      return invalid;
+    },
+    awaitJob: async () => { throw new Error('unexpected async job'); },
+  };
+  const repaired = await fetchCertifiedDailyBars({
+    symbols: ['AAA'], refdate: '2026-09-11', asOfTimestamp: '2026-09-12T06:00:00Z',
+    client: fallbackClient, receiptDir: null,
+  });
+  assert.equal(repaired.get('AAA').at(-1).date, '2026-09-11');
+  assert.deepEqual(fallbackCalls.filter(call => call.tool === 'QueryData').map(call => call.args.source),
+    ['webull', 'tiingo', 'yahoo']);
 
   await assert.rejects(
     () => fetchCertifiedDailyBars({ symbols: ['AAA'], refdate: '2026-09-11', asOfTimestamp: '2026-09-12T06:00:00Z', client: {

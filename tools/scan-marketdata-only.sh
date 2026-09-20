@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Scanner with a dated product scope excluding only DTX.
+# Scanner with a dated product scope that either requires DTX or records its explicit waiver.
 # Usage: bash tools/scan-marketdata-only.sh <DATE> <REFDATE> <ASOF>
-# A: collection/enrichment; C: historic tracking/sweep; D: rotations/beta.
-# Every non-DTX source and quality gate remains mandatory.
+# A: collection/enrichment; B: DTX decision/replay; C: historic tracking/sweep; D: rotations/beta.
+# Every in-scope source and quality gate remains mandatory.
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || { echo "ÉCHEC: racine du dépôt introuvable" >&2; exit 1; }
@@ -13,11 +13,13 @@ SYMBOL_ARGS=()
 if [ -f "$DIR/_symbol-exclusions.json" ]; then
   SYMBOL_ARGS=("--symbol-exclusions=$DIR/_symbol-exclusions.json")
 fi
-node - "$DATE" "$REF" <<'JS'
+DTX_REQUIRED=$(node - "$DATE" "$REF" <<'JS'
 const date=process.argv[2],ref=process.argv[3];
 const scope=require('./tools/lib/scanner-scope').loadScannerScope(process.cwd(),[`--scope=scanner/${date}/_scope.json`]);
-if(!scope.active||scope.audit.date!==date||scope.audit.refdate!==ref)throw Error('Missing exact run-bound DTX exclusion authorization');
+if(!scope.provided||scope.audit.date!==date||scope.audit.refdate!==ref)throw Error('Missing exact run-bound scanner component policy');
+console.log(scope.active ? '0' : '1');
 JS
+)
 if [ "$?" -ne 0 ]; then exit 2; fi
 # Fix the request instant and crypto completed day once for all chain C calls.
 AS_OF_TIMESTAMP="${AS_OF_TIMESTAMP:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
@@ -27,12 +29,14 @@ log(){ echo "[$(( $(date +%s) - T0 ))s] $*"; }
 TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/dailytickers-scanner-${DATE}.XXXXXX")
 trap 'rm -rf "$TMP_ROOT"' EXIT HUP INT TERM
 A_LOG="$TMP_ROOT/A.log"; A_STATUS="$TMP_ROOT/A.status"
+B_LOG="$TMP_ROOT/B.log"; B_STATUS="$TMP_ROOT/B.status"
 C_LOG="$TMP_ROOT/C.log"; C_STATUS="$TMP_ROOT/C.status"
 D_LOG="$TMP_ROOT/D.log"; D_STATUS="$TMP_ROOT/D.status"
 
 # shellcheck source=tools/lib/mcp-auth.sh
 source tools/lib/mcp-auth.sh
 mcp_require_token marketdata || exit $?
+if [ "$DTX_REQUIRED" = "1" ]; then mcp_require_token systematic || exit $?; fi
 
 
 # ── A : vivier puis enrichissement (seule vraie dépendance) ──────────────────
@@ -44,7 +48,13 @@ mcp_require_token marketdata || exit $?
     || { echo "A1 ÉCHEC — contrat/fraîcheur" > "$A_STATUS"; exit 1; }
   node tools/regime-reconcile.js --dir "$DIR" --refdate "$REF" "--scope=$DIR/_scope.json" --json >> "$A_LOG" 2>&1 \
     || { echo "A1 ÉCHEC — autorité du régime" > "$A_STATUS"; exit 1; }
-  node tools/extract-universe.js --in "$DIR/_data" --out "$DIR/_data/vars.json" --limit 150 \
+  HISTORY_ARGS=()
+  if [ -f "$DIR/_history-rejections.json" ]; then
+    HISTORY_EXCLUDES=$(node tools/scanner-history-rejections.js csv --file "$DIR/_history-rejections.json") \
+      || { echo "A2 ÉCHEC — manifeste de rejets historiques invalide" > "$A_STATUS"; exit 1; }
+    HISTORY_ARGS=(--exclude "$HISTORY_EXCLUDES")
+  fi
+  node tools/extract-universe.js --in "$DIR/_data" --out "$DIR/_data/vars.json" --limit 150 "${HISTORY_ARGS[@]}" \
     >> "$A_LOG" 2>&1 || { echo "A2 ÉCHEC — vivier vide" > "$A_STATUS"; exit 1; }
   # Le code retour de l'enrichissement DOIT être testé. Sans ce garde, un
   # sous-shell dont l'avant-dernière commande échoue sort en 0 et écrivait « A OK » :
@@ -58,6 +68,34 @@ mcp_require_token marketdata || exit $?
     || { echo "A3 ÉCHEC — contrat/fraîcheur" > "$A_STATUS"; exit 1; }
   echo "A OK" > "$A_STATUS"
 ) & PA=$!
+
+# ── B : décision + replay DTX (information moteur, aucune exécution broker) ───
+if [ "$DTX_REQUIRED" = "1" ]; then
+(
+  REQUEST_ID="scanner-${DATE}-etf-us-evening-001"
+  node tools/collect.js --plan plans/scanner-dtx.json --out "$DIR/_dtx" --quiet --no-cache \
+    --var date="$DATE" --var refdate="$REF" --var request_id="$REQUEST_ID" > "$B_LOG" 2>&1 \
+    || { echo "B ÉCHEC — collecte DTX" > "$B_STATUS"; exit 1; }
+  node tools/check-freshness.js "$DIR/_dtx/harness.json" >> "$B_LOG" 2>&1 \
+    && node tools/validate-workflows.js --run-plan plans/scanner-dtx.json "$DIR/_dtx" >> "$B_LOG" 2>&1 \
+    || { echo "B ÉCHEC — contrat/fraîcheur DTX" > "$B_STATUS"; exit 1; }
+  node tools/dtx-mcp-ingest.js --portfolio etf_us \
+    --decide "$DIR/_dtx/decide_etf_us.json" --replay "$DIR/_dtx/replay_etf_us.json" \
+    --asof "$REF" --expected-close "$REF" --from 2021-01-01 --to "$REF" >> "$B_LOG" 2>&1 \
+    || { echo "B ÉCHEC — ingestion DTX" > "$B_STATUS"; exit 1; }
+  node - "$DATE" >> "$B_LOG" 2>&1 <<'JS'
+const date=process.argv[2];
+const iso=`${date.slice(0,4)}-${date.slice(4,6)}-${date.slice(6,8)}`;
+const result=require('./tools/dtx-scan').writeStagingCompleteness(iso);
+if(!result.complete) throw Error('DTX staging incomplete');
+JS
+  [ "$?" -eq 0 ] || { echo "B ÉCHEC — complétude staging DTX" > "$B_STATUS"; exit 1; }
+  echo "B OK (DTX etf_us → best; information seulement)" > "$B_STATUS"
+) & PB=$!
+else
+  echo "B WAIVED (DTX explicitement exclu par le scope daté)" > "$B_STATUS"
+  PB=""
+fi
 
 # ── C : suivi + sweep (ne portent que sur des trades déjà scellés) ───────────
 (
@@ -92,18 +130,20 @@ mcp_require_token marketdata || exit $?
   exit "$D_RC"
 ) & PD=$!
 
-log "3 chaînes lancées (A vivier+enrichissement · C suivi+sweep · D rotations/beta); DTX exclu sur instruction utilisateur"
+log "chaînes lancées (A vivier+enrichissement · B DTX si requis · C suivi+sweep · D rotations/beta)"
 # Le verdict vient du CODE RETOUR de la chaîne, pas d'un grep dans un fichier de
 # statut. Un fichier absent (sous-shell tué, /tmp purgé, deux scans concurrents
 # qui se marchent dessus) faisait échouer le grep, donc passer le test : le
 # chemin critique était déclaré sain par défaut. Un rc, lui, existe toujours.
 wait $PA; ARC=$?; log "A terminée (rc=$ARC) — $(cat "$A_STATUS" 2>/dev/null)"
+if [ -n "$PB" ]; then wait $PB; BRC=$?; else BRC=0; fi
+log "B terminée (rc=$BRC) — $(cat "$B_STATUS" 2>/dev/null)"
 wait $PC; CRC=$?; log "C terminée (rc=$CRC) — $(cat "$C_STATUS" 2>/dev/null)"
 wait $PD; DRC=$?; log "D terminée (rc=$DRC) — $(cat "$D_STATUS" 2>/dev/null)"
-if [ "$ARC" -ne 0 ] || grep -q "ÉCHEC" "$A_STATUS" 2>/dev/null; then
+if [ "$ARC" -ne 0 ] || [ "$BRC" -ne 0 ] || grep -q "ÉCHEC" "$A_STATUS" "$B_STATUS" 2>/dev/null; then
   trap - EXIT HUP INT TERM
   echo "Journaux conservés dans $TMP_ROOT" >&2
-  echo "Chemin critique en échec (rc=$ARC) — on ne poursuit PAS sur des données partielles." >&2
+  echo "Chemin critique en échec (A=$ARC B=$BRC) — on ne poursuit PAS sur des données partielles." >&2
   exit 1
 fi
 # Chaque chaîne alimente une sortie publiée. Une seule chaîne stale interdit la publication.

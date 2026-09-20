@@ -20,10 +20,12 @@ When invoked as `$scanner` or when the user asks to run `/scanner`:
 6. The editorial universe is US-listed securities only. Target 8 stocks and 2 US-listed ETFs, but publish
    as few as 6 stocks plus 2 ETFs rather than force a candidate that fails a gate. Never call an EU/APAC
    screener, build an EU fallback, or produce an EU ETF staging.
-7. DTX is excluded by the owner-approved `config/scanner-components.json`. The canonical script creates
-   the dated `_scope.json` and runs only marketdata discovery, tracking and rotation. No systematic token,
-   DTX decision, replay or book-equity response is required. Keep all other gates and propagate the scope
-   to QA/status/API tools; do not refresh or relabel old DTX history.
+7. DTX is required again by the owner-approved `config/scanner-components.json` for sessions from
+   2026-09-21 onward. The canonical script creates the dated `_scope.json`, then requires systematic
+   health, catalog, Contract V2 decision, replay, fresh staging and the DTX bridge before sweep/status/API
+   generation. The public `best` mode consumes engine portfolio `etf_us`. Keep DTX informational and
+   fail closed: never call broker, account or trading tools from the scanner workflow. Historical dated
+   scopes that explicitly excluded DTX remain valid and immutable.
 
 For compatibility, this skill is intentionally a thin pointer. The source of truth remains the Claude
 runbook and scanner-pipeline skill.

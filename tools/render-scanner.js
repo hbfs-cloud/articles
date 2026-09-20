@@ -21,11 +21,12 @@ function regimeScoreLabel(d) {
   if (!Number.isFinite(v)) return 'n/a';
   const scale = String((d.engine_meta && d.engine_meta.regime_scale) || '');
   const conf = d.engine_meta && d.engine_meta.regime_state_confidence;
+  const hasConfidence = conf !== null && conf !== undefined && conf !== '' && Number.isFinite(Number(conf));
   const num = n => String(n.toFixed(1)).replace('.', ',');
   if (/defensiveness/i.test(scale)) {
-    return `défensivité ${num(v * 100)}/100` + (Number.isFinite(Number(conf)) ? `, confiance ${String(Number(conf).toFixed(3)).replace('.', ',')}` : '');
+    return `défensivité ${num(v * 100)}/100` + (hasConfidence ? `, confiance ${String(Number(conf).toFixed(3)).replace('.', ',')}` : '');
   }
-  return `score haussier ${num(v * 100)}/100` + (Number.isFinite(Number(conf)) ? `, confiance ${String(Number(conf).toFixed(3)).replace('.', ',')}` : '');
+  return `score haussier ${num(v * 100)}/100` + (hasConfidence ? `, confiance ${String(Number(conf).toFixed(3)).replace('.', ',')}` : '');
 }
 
 const fs   = require('fs');
@@ -250,7 +251,7 @@ const rg = (d.engine_meta && d.engine_meta.risk_gating) || {};
 const sizingSentence = rg.sizing_status === 'rejected_overallocated'
   ? ` Le dimensionnement de portefeuille a été REJETÉ pour surallocation : l'allocation recommandée au panier complet est de 0%.`
   : (rg.sizing_status === 'not_run'
-    ? ` Aucun dimensionnement de portefeuille n'a été calculé pour ce scan : les lignes sont des plans conditionnels indépendants, la taille de position reste entièrement à la main du lecteur.`
+    ? ` Aucun dimensionnement de portefeuille n'a été calculé pour ce scan : les lignes sont des plans conditionnels distincts, la taille de position reste entièrement à la main du lecteur.`
     : '');
 
 /** La légende Sharia ne s'affiche que si une ligne la porte. */

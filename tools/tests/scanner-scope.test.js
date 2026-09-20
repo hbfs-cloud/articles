@@ -10,6 +10,8 @@ const { loadScannerScope, initializeScannerScope } = require('../lib/scanner-sco
 const ARG = '--scope=scanner/20260908/_scope.json';
 const scopeDoc = { date: '20260908', refdate: '2026-09-04', excluded_components: ['dtx'],
   user_instruction: 'skip cette partie du scanner fait le reste en dehors de dtx', all_other_gates_required: true };
+const fullScopeDoc = { date: '20260921', refdate: '2026-09-18', excluded_components: [],
+  user_instruction: 'DTX est réparé depuis; le remettre dans la chaîne scanner', all_other_gates_required: true };
 function write(root, relative, value) {
   const p = path.join(root, relative); fs.mkdirSync(path.dirname(p), { recursive: true });
   fs.writeFileSync(p, typeof value === 'string' ? value : JSON.stringify(value));
@@ -52,10 +54,20 @@ test('canonical product policy initializes a dated scope without overwriting pri
   assert.throws(() => initializeScannerScope(root, '20260914', '2026-09-10'), /preserving/);
   assert.throws(() => initializeScannerScope(root, '20260913', '2026-09-11'), /session/);
 });
+test('canonical full-chain policy requires DTX without activating a waiver', t => {
+  const root = fixture(t);
+  write(root, 'config/scanner-components.json', { ...fullScopeDoc, effective_from: '2026-09-21' });
+  const scope = initializeScannerScope(root, '20260921', '2026-09-18');
+  assert.equal(scope.provided, true);
+  assert.equal(scope.active, false);
+  assert.equal(scope.audit.status, 'REQUIRED');
+  assert.equal(scope.excludesMode('best', { assetClass: 'dtx' }), false);
+  assert.deepEqual(scope.filterModes({ best: { assetClass: 'dtx' } }), { best: { assetClass: 'dtx' } });
+});
 test('scope binds the calendar, folder, instruction and exact DTX-only boundary', t => {
   const root = fixture(t);
   for (const delta of [{ date: '20260909' }, { refdate: '2026-09-07' },
-    { excluded_components: ['dtx', 'marketdata'] }, { excluded_components: [] },
+    { excluded_components: ['dtx', 'marketdata'] },
     { user_instruction: '' }, { all_other_gates_required: false }]) {
     write(root, 'scanner/20260908/_scope.json', { ...scopeDoc, ...delta });
     assert.throws(() => loadScannerScope(root, [ARG]));
@@ -88,7 +100,8 @@ test('every downstream executable rejects malformed scope before doing work', t 
 test('actual API render leaves DTX endpoints byte-identical while refreshing non-DTX', t => {
   const root = fixture(t);
   const history = path.join(ROOT, 'scanner/status/history');
-  const latest = fs.readdirSync(history).filter(f => /^\d{8}\.json$/.test(f)).sort().pop();
+  const latest = fs.readdirSync(history).filter(f => /^\d{8}\.json$/.test(f)).sort().reverse()
+    .find(f => JSON.parse(fs.readFileSync(path.join(history, f), 'utf8')).modes?.best);
   write(root, 'scanner/status/history/' + latest, fs.readFileSync(path.join(history, latest), 'utf8'));
   write(root, 'portfolio/v1/best/orders.json', 'PRESERVE DTX ORDERS\n');
   write(root, 'portfolio/v1/best/equity.json', 'PRESERVE DTX EQUITY\n');

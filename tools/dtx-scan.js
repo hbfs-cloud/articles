@@ -38,11 +38,10 @@ const DEFAULT_FROM = '2021-01-01';
 const MODES_CFG = path.join(REPO_ROOT, 'data', 'modes-config.json');
 // dtx MCP v15 cut-over (2026-07-13): the 6 cost-honest strategies. Fresh ids => identity map
 // (dashboard mode id == dtx portfolio id == staging file). Legacy scripted modes are stopped.
-// Un seul portefeuille depuis le 2026-08-12 : « best », panier multi-poches qui
-// remplace et agrège les six précédents. Cette table était restée sur les six
-// supprimés — conséquence : le moteur rendait ses 18 ordres et rien ne les
-// routait vers le mode, dont le panneau restait vide sur la page publiée.
-const PORTFOLIO_TO_MODE = { best: 'best' };
+// Le mode public `best` suit le portefeuille moteur `etf_us` depuis le 2026-09-14.
+// Cette table gouverne la complétude et le go-live du staging moteur; elle doit
+// refléter le même câblage que data/modes-config.json#enginePortfolio.
+const PORTFOLIO_TO_MODE = { etf_us: 'best' };
 // Livres multi-poches : leur portefeuille EST le bloc `combined`, pas results[0]
 // qui ne serait que la première poche. « best » en est un — porteur haute
 // volatilité, poche défensive, ETF, explosion de momentum.
@@ -659,7 +658,7 @@ function stagingSnapshotErrors(snapshot, portfolioId, { todayIso, scanDateIso, e
   if (snapshot && snapshot.portfolioId !== portfolioId) errors.push(`portfolioId ${snapshot.portfolioId || 'missing'} != ${portfolioId}`);
   if (scanDateIso && snapshot && snapshot.asof !== scanDateIso) errors.push(`asof ${snapshot.asof || 'missing'} != ${scanDateIso}`);
   if (provenance.contractVersion !== '2.0') errors.push('Contract V2 provenance missing');
-  if (scanDateIso && provenance.requestedAsOf !== scanDateIso) errors.push(`requestedAsOf ${provenance.requestedAsOf || 'missing'} != ${scanDateIso}`);
+  if (expectedClose && provenance.requestedAsOf !== expectedClose) errors.push(`requestedAsOf ${provenance.requestedAsOf || 'missing'} != ${expectedClose}`);
   if (scanDateIso && !expectedClose) errors.push('certified scanner reference close is missing');
   if (!provenance.expectedDataDate || provenance.expectedDataDate !== provenance.dataAsOf) errors.push('expectedDataDate/dataAsOf mismatch');
   if (expectedClose && provenance.expectedDataDate !== expectedClose) errors.push(`expectedDataDate ${provenance.expectedDataDate || 'missing'} != ${expectedClose}`);
@@ -771,7 +770,7 @@ function main() {
   console.warn('⚠️  dtx-scan: this tool no longer produces staging. The hosted dtx MCP is the SOLE engine.');
   console.warn('⚠️  dtx-scan: use scan-parallel.sh for token-scoped DtxDecide/DtxReplay collection and staging.');
   console.warn('⚠️  dtx-scan: for a manual authenticated-agent capture, write raw JSON then run:');
-  console.warn('⚠️      node tools/dtx-mcp-ingest.js --portfolio <id> --decide <f> --replay <f> --asof <J+1> --expected-close <REF>');
+  console.warn('⚠️      node tools/dtx-mcp-ingest.js --portfolio <id> --decide <f> --replay <f> --asof <REF> --expected-close <REF>');
   if (targets.length) {
     console.warn(`⚠️  dtx-scan: requested mode(s) [${targets.join(', ')}] — the pipeline will READ the`);
     console.warn('⚠️      committed staging (data/dtx/<id>.json) as-is. Incomplete/stale staging blocks downstream publication.');

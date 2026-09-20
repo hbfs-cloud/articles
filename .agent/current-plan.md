@@ -1,5 +1,13 @@
 # Actualisation des analyses et KLAC — 19 septembre 2026
 
+## Scanner US pour la séance du 21 septembre 2026
+
+- DONE — Contrat de date fixé au 21 septembre avec clôture de référence du 18 septembre; collecteur canonique Marketdata sans DTX et harnais de collecte validés. 108 historiques candidats retenus, 6 anomalies sources rejetées explicitement; 103 séries techniques longues complètes, 5 historiques trop courts laissés en rejet.
+- DONE — Sélection finale fixée à 9 lignes après exclusion de NTAP par le gate SEC; snapshot reproductible, rendu français et pédagogie R/R validés. Gates ciblés scanner, horizon, contenu, score, fraîcheur et workflows PASS.
+- DONE — DTX réintégré à la chaîne scanner du 21 septembre : portefeuille moteur `etf_us` mappé au mode public `best`, 7 signaux informationnels réels, provenance Contract V2 au 18 septembre et fenêtre du 21 septembre. API pré-fenêtre à zéro ordre; aucun appel broker/LIVE. Gates stricts PASS et revues Senior QA, Contrarian et Retail War Room PASS sur le snapshot final.
+- DONE — Page Rotation réparée avant publication : snapshot Marketdata promu au close du 18 septembre, 48 lignes bêta avec nombre d'observations explicite, rendu navigateur sans `undefined`, validateur article et 14 tests de collecte PASS. Le générateur conserve désormais `n_obs` et le client affiche un tiret sur les anciens snapshots incomplets.
+- DONE — Revue du diff final et staging explicite limités aux artefacts scanner/DTX/rotation terminés; commit et push effectués sur `main` sans force, puis contrôle des URL publiques.
+
 ## Weekly du 21 au 25 septembre 2026
 
 - DONE — Socle Marketdata collecté au close US du 18 septembre : 14 sources générales et 11 sources focus fraîches, COST retenu comme catalyseur systémique, CTAS comme second focus, rayon de propagation documenté.

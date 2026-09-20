@@ -24,20 +24,28 @@ function loadScannerScope(root, argv = process.argv.slice(2)) {
     if (doc.date !== date || !isUSTradingDay(iso) || doc.refdate !== previousUSTradingDay(iso)) {
       throw new Error('Scope date/refdate must match its folder and the previous completed US session');
     }
-    if (!Array.isArray(doc.excluded_components) || doc.excluded_components.length !== 1 || doc.excluded_components[0] !== 'dtx') {
-      throw new Error('Scope may exclude exactly ["dtx"] and no other component');
+    const excluded = doc.excluded_components;
+    const excludesDtx = Array.isArray(excluded) && excluded.length === 1 && excluded[0] === 'dtx';
+    const fullChain = Array.isArray(excluded) && excluded.length === 0;
+    if (!excludesDtx && !fullChain) throw new Error('Scope may exclude exactly ["dtx"] or require the full chain with []');
+    if (typeof doc.user_instruction !== 'string' || !/\bdtx\b/i.test(doc.user_instruction)) {
+      throw new Error('Scope requires the explicit user instruction about DTX');
     }
-    if (typeof doc.user_instruction !== 'string' || !/\bdtx\b/i.test(doc.user_instruction) || !/skip|exclu|hors|sans/i.test(doc.user_instruction)) {
-      throw new Error('Scope requires the explicit user instruction to exclude DTX');
+    if (excludesDtx && !/skip|exclu|hors|sans/i.test(doc.user_instruction)) {
+      throw new Error('DTX exclusion scope requires an explicit exclusion instruction');
+    }
+    if (fullChain && !/remet|réint|reint|inclu|répar|repar|actif|required/i.test(doc.user_instruction)) {
+      throw new Error('Full-chain scope requires an explicit DTX reintegration instruction');
     }
     if (doc.all_other_gates_required !== true) throw new Error('Scope must retain every other gate');
     configs = JSON.parse(fs.readFileSync(path.join(root, 'data/modes-config.json'), 'utf8')).modes;
     if (!configs || typeof configs !== 'object' || Array.isArray(configs)) throw new Error('Scope requires a valid modes-config catalog');
-    audit = { status: 'WAIVED', component: 'dtx', date, refdate: doc.refdate,
+    audit = { status: excludesDtx ? 'WAIVED' : 'REQUIRED', component: 'dtx', date, refdate: doc.refdate,
       path: relative, sha256: crypto.createHash('sha256').update(raw).digest('hex'),
       user_instruction: doc.user_instruction, all_other_gates_required: true };
   }
-  const active = audit !== null;
+  const provided = audit !== null;
+  const active = audit?.status === 'WAIVED';
   const excludesMode = (id, cfg) => active && ((configs[id] || {}).assetClass === 'dtx' || (cfg || {}).assetClass === 'dtx');
   const filterModes = modes => !active ? modes : Object.fromEntries(Object.entries(modes || {}).filter(([id,cfg]) => !excludesMode(id,cfg)));
   const isDtxResultKey = key => active && Object.keys(configs).some(id => excludesMode(id) &&
@@ -48,7 +56,7 @@ function loadScannerScope(root, argv = process.argv.slice(2)) {
     for (const [k,v] of Object.entries(previous)) if (isDtxResultKey(k)) output[k] = v;
     return output;
   };
-  return Object.freeze({ active, audit, excludesMode, filterModes, isDtxResultKey, preserveDtxResults });
+  return Object.freeze({ provided, active, audit, excludesMode, filterModes, isDtxResultKey, preserveDtxResults });
 }
 function initializeScannerScope(root, date, refdate) {
   if (!/^\d{8}$/.test(date || '')) throw Error('Invalid scanner date');
@@ -63,7 +71,8 @@ function initializeScannerScope(root, date, refdate) {
   } else {
     const iso = `${date.slice(0,4)}-${date.slice(4,6)}-${date.slice(6,8)}`;
     if (!isUSTradingDay(iso) || refdate !== previousUSTradingDay(iso) || iso < policy.effective_from) throw Error('Invalid product scope session');
-    if (JSON.stringify(policy.excluded_components) !== '["dtx"]' || policy.all_other_gates_required !== true) throw Error('Policy may exclude only DTX');
+    const excluded = JSON.stringify(policy.excluded_components);
+    if (!['[]', '["dtx"]'].includes(excluded) || policy.all_other_gates_required !== true) throw Error('Policy may require the full chain or exclude only DTX');
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, JSON.stringify(doc, null, 2) + '\n', { flag: 'wx' });
   }
@@ -72,6 +81,6 @@ function initializeScannerScope(root, date, refdate) {
 if (require.main === module) {
   if (process.argv[2] !== '--initialize' || process.argv.length !== 5) throw Error('Usage: scanner-scope.js --initialize YYYYMMDD YYYY-MM-DD');
   const scope = initializeScannerScope(path.resolve(__dirname, '../..'), process.argv[3], process.argv[4]);
-  console.log(`[scope] DTX excluded; other gates required (${scope.audit.date})`);
+  console.log(`[scope] DTX ${scope.active ? 'excluded by explicit waiver' : 'required'}; other gates required (${scope.audit.date})`);
 }
 module.exports = { loadScannerScope, initializeScannerScope };

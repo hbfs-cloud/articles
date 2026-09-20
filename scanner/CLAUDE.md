@@ -20,7 +20,7 @@ source contract is `.claude/skills/source-policy.md`. Those files override histo
 
 1. `node tools/validate-workflows.js --workflow scanner`.
 2. Resolve `date`, `refdate` (last completed US close) explicitly (the third legacy collector argument remains accepted).
-3. Run `tools/scan-parallel.sh`; it performs the marketdata, enrichment, tracking and beta
+3. Run `tools/scan-parallel.sh`; it performs the marketdata, DTX, enrichment, tracking and beta
    chains. Required chains fail closed.
 4. Read the generated harnais and source files. Never replay the same MCP calls manually just to obtain a
    different answer.
@@ -33,8 +33,10 @@ source contract is `.claude/skills/source-policy.md`. Those files override histo
 ## Data Integrity
 
 - The first collection wave is a health gate: marketdata `GetStatus`.
-- DTX is excluded by `config/scanner-components.json`; the scanner does not depend on its curve or
-  systematic authentication. Propagate the generated dated `_scope.json` through downstream tools.
+- DTX is required by `config/scanner-components.json` from the 2026-09-21 session. The public `best`
+  mode consumes engine portfolio `etf_us`. Require systematic health, catalog, Contract V2 decision,
+  replay and fresh staging; bridge the result before sweep/status/API generation. Propagate the dated
+  `_scope.json` through downstream tools. Historical explicit DTX waivers remain immutable.
 - Async MCP results must be polled once and paginated to exhaustion. Partial pages are a failed source.
 - Every daily bar request uses the immutable `as_of_timestamp`, `completion_policy=completed_only`,
   its explicit asset calendar, and `expected_completed_end=refdate`; `end_date` is not close certification.

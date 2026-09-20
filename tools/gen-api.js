@@ -490,7 +490,8 @@ function writeMode(mode, prefix) {
   // label NOMME la provenance au lieu de proclamer une autorité.
   const _staged = (() => {
     try {
-      const f = path.join(ROOT, 'data', 'dtx', `${modeId}.json`);
+      const enginePortfolio = _modeCfgFull.enginePortfolio || modeId;
+      const f = path.join(ROOT, 'data', 'dtx', `${enginePortfolio}.json`);
       return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null;
     } catch { return null; }
   })();

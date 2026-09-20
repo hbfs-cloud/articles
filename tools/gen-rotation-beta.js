@@ -169,6 +169,7 @@ function validateBeta(payload, cfg, refdate) {
   if (!positive.length) throw Error(`${cfg.ref}: no positively-correlated beta proxy (${inverseExcluded} inverse proxies only)`);
   const rows = [...positive].sort((a,b) => b.beta - a.beta || a.symbol.localeCompare(b.symbol)).slice(0,6).map(r => ({
     symbol: r.symbol, beta: +r.beta.toFixed(2), correlation: +r.correlation.toFixed(2), r2: +r.r2.toFixed(2),
+    n_obs: r.overlap ?? r.n_obs ?? r.observations ?? r.n,
     last_price: r.last_price == null ? null : +r.last_price.toFixed(2), sector: r.sector || '', industry: r.industry || '',
   }));
   return { key: cfg.key, label: cfg.label, reference: cfg.ref, window: item.window || '90d', asof: refdate, quality: 'usable', warning: null, inverse_excluded: inverseExcluded, rows };
@@ -200,7 +201,7 @@ async function run({ argv=process.argv.slice(2), env=process.env, root=ROOT, cli
   const opts=options(argv,env,root,now);
   if (!client.canCallDirectly('marketdata')) throw Error('marketdata token missing or expired; rotation did not run');
   const declarations=[{name:'status',tool:'GetStatus',args:{}},
-    {name:'bars_sectors',tool:'QueryData',args:{symbols:SECTORS.map(s=>s.etf).join(','),types:'bars_daily',limit:30,force_async:true,as_of_timestamp:opts.asof,completion_policy:'completed_only'},asset_calendar:CALENDAR,expected_completed_end:opts.refdate},
+    {name:'bars_sectors',tool:'QueryData',args:{symbols:SECTORS.map(s=>s.etf).join(','),types:'bars_daily',limit:30,source:'webull',force_async:true,as_of_timestamp:opts.asof,completion_policy:'completed_only'},asset_calendar:CALENDAR,expected_completed_end:opts.refdate},
     ...REFERENCES.map(cfg=>({name:`beta_${cfg.key}`,tool:'RankBeta',args:{reference:cfg.ref,universe_asset:'stock',universe_region:'US',min_correlation:cfg.minCorr,min_dollar_adv:5e6,min_price:3,min_overlap:30,lookback_days:90,top_k:12,as_of:opts.refdate}}))];
   const plan={schema:'scanner-rotation-plan.v1',reference_close:opts.refdate,as_of_timestamp:opts.asof,calls:declarations};
   const planSha=hash(JSON.stringify(plan,null,2)+'\n'), inputSha=hash(stableStringify(plan)), sources=[], calls=[];
