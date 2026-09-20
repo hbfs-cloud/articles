@@ -3,7 +3,7 @@
 - DONE — Routage automatique vers Hyperliquid hors séance US lorsqu'un perpétuel `xyz` exact existe, puis vers le WebSocket Yahoo quand Hyperliquid ne couvre pas l'instrument ou n'est pas frais.
 - DONE — Dernière clôture Yahoo chargée comme repli lorsqu'aucun flux temps réel frais n'est disponible; snapshot local conservé uniquement en ultime repli explicite.
 - DONE — Chaque prix affiche un badge coloré de provenance (`HL RT`, `Yahoo RT`, `Yahoo close ⏳`, `Snapshot ⏳`) et le panneau détaillé précise la source et l'horodatage.
-- IN PROGRESS — Tests ciblés et rendu desktop/mobile validés; terminer la suite élargie, la revue du diff, le commit/push sur `main` et la vérification du déploiement public.
+- DONE — Tests ciblés, suite rapide (45 PASS), rendu desktop/mobile et console validés; commit `981deaf2e` poussé sur `main`, déploiement Pages réussi et production contrôlée avec badges colorés, sablier et 292/293 replis Yahoo exploitables.
 
 # Actualisation des analyses et KLAC — 19 septembre 2026
 
