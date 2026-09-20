@@ -1,5 +1,12 @@
 # Actualisation des analyses et KLAC — 19 septembre 2026
 
+## Correctif Rotation multi-actifs — 20 septembre 2026
+
+- DONE — Audit intégral de la page au close du 18 septembre : 11/11 rendements sectoriels reproduits; 12/48 anciennes lignes bêta divergentes, toutes avec seulement 35 à 40 observations malgré 57 à 62 barres disponibles. Le classement EUR/USD a été retiré.
+- DONE — Collecteur durci : minimum de 50 observations communes, GLD/SLV/SMH comme références homogènes, filtres par secteur/industrie pour métaux, pétrole et semi-conducteurs, terminologie limitée au co-mouvement statistique.
+- DONE — Repères crypto directs séparés et recalculés depuis les barres Marketdata : ASST→Bitcoin, SBET/BMNR→Ethereum, DFDV→Solana, avec 60 à 62 observations et sources SEC associées. Le plancher direct de liquidité est 2 M$ afin de ne plus exclure DFDV (ADV médiane 2,73 M$).
+- DONE — Snapshot final `rotation-beta.v2` généré par MCP Marketdata : 17 tests ciblés PASS, fraîcheur des 15 sources PASS, article/anti-tics/workflow/diff checks PASS, revues Contrarian et Retail War Room PASS, rendu desktop/mobile contrôlé. Livraison limitée aux sept fichiers Rotation, prête pour commit et publication sur `main`.
+
 ## Scanner US pour la séance du 21 septembre 2026
 
 - DONE — Contrat de date fixé au 21 septembre avec clôture de référence du 18 septembre; collecteur canonique Marketdata sans DTX et harnais de collecte validés. 108 historiques candidats retenus, 6 anomalies sources rejetées explicitement; 103 séries techniques longues complètes, 5 historiques trop courts laissés en rejet.
