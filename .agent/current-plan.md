@@ -4,7 +4,7 @@
 
 - DONE — Les quatre tableaux de `/rotation/` sont triables dans les deux sens et filtrables indépendamment sur chaque colonne, avec valeurs numériques brutes, valeurs absentes en fin de tri et remise à zéro lors du changement de référence de co-mouvement.
 - DONE — Les 31 colonnes et leurs filtres ont été exercés dans le navigateur; activation clavier, rendu à 390 px, DFDV/Solana, validateurs, 20 tests ciblés et console sans erreur sont vérifiés.
-- IN PROGRESS — Revoir le diff ciblé, committer, pousser sur `main`, attendre le déploiement puis contrôler la page publique.
+- DONE — Diff ciblé revu, commit `898f443f7` poussé sur `main`; Tests et GitHub Pages réussis, hash public identique au fichier local et tri/filtre contrôlés sur l'URL de production.
 
 ## Correctif Rotation multi-actifs — 20 septembre 2026
 
