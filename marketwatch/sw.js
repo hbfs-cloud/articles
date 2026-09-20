@@ -1,5 +1,5 @@
-const CACHE = 'dailytickers-marketwatch-v1';
-const ASSETS = ['./','./index.html','./styles.css?v=1','./app.js?v=1','./data/watchlists.json','./manifest.webmanifest','/assets/style.css','/assets/sidebar.css','/assets/sidebar.js','/logo.svg'];
+const CACHE = 'dailytickers-marketwatch-v3';
+const ASSETS = ['./','./index.html','./styles.css?v=3','./app.js?v=3','./data/watchlists.json','./manifest.webmanifest','/assets/style.css','/assets/sidebar.css','/assets/sidebar.js','/logo.svg'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())));
 self.addEventListener('fetch', event => {

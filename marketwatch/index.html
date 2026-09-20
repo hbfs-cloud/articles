@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Cockpit personnel multi-listes pour surveiller actions, ETF, matières premières et crypto.">
+  <meta name="description" content="Cockpit personnel par tags pour surveiller actions, ETF, matières premières et crypto.">
   <meta name="theme-color" content="#50b4ee">
   <meta property="og:title" content="MarketWatch — Surveillance marchés">
   <meta property="og:description" content="257 actions, ETF, cryptos et matières premières dans un cockpit filtrable.">
@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="/assets/sidebar.css?v=20260309">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=3">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -40,7 +40,7 @@
   <a class="skip-nav" href="#mainContent">Aller au contenu</a>
   <header class="topbar">
     <a class="brand" href="/" aria-label="Retour à DailyTickers"><img class="brand-mark" src="/logo.svg" alt="" width="36" height="36"><div><strong>MarketWatch</strong><small>DailyTickers · surveillance consolidée</small></div></a>
-    <div class="headline"><span id="marketState" class="pulse"></span><strong id="assetCount">257</strong> instruments <span>·</span> <strong id="listCount">23</strong> listes</div>
+    <div class="headline"><span id="marketState" class="pulse"></span><strong id="assetCount">257</strong> instruments <span>·</span> <strong id="tagCount">23</strong> tags</div>
     <div class="top-actions"><button id="shareBtn" class="ghost"><span aria-hidden="true">↗</span> Partager</button><button id="streamBtn" class="ghost"><span aria-hidden="true">◉</span> Yahoo expérimental</button><button id="syncBtn" class="ghost"><span aria-hidden="true">↻</span> Synchro Google</button></div>
   </header>
 
@@ -56,14 +56,12 @@
     <section class="workspace">
       <div class="filters">
         <label class="search"><span>⌕</span><input id="search" type="search" placeholder="Ticker, nom, tag…" autocomplete="off"></label>
-        <select id="listFilter" aria-label="Filtrer par liste"><option value="">Toutes les listes</option></select>
         <select id="marketFilter" aria-label="Filtrer par marché"><option value="">Tous les marchés</option><option value="US">US</option><option value="EU">Europe</option><option value="CRYPTO">Crypto</option><option value="MACRO">Macro</option><option value="APAC">APAC</option></select>
         <select id="signalFilter" aria-label="Filtrer par setup"><option value="">Tous les setups</option><option value="momentum">Momentum</option><option value="breakout">Breakout</option><option value="pullback">Pullback</option><option value="above200">Au-dessus MA200</option><option value="relvol">Volume relatif &gt; 1,5×</option><option value="oversold">RSI survendu</option><option value="analyzed">Données techniques dispo</option></select>
         <details id="tagFilter" class="tag-filter">
           <summary><span class="tag-filter-title"># Tags</span><span id="tagFilterCount" class="filter-count" hidden>0</span><span class="chevron" aria-hidden="true">⌄</span></summary>
           <div class="tag-menu" aria-label="Filtrer par tags">
-            <div class="tag-menu-head"><strong>Tags personnels</strong><button id="clearTagFilters" type="button">Tout effacer</button></div>
-            <label class="tag-choice tagged-only"><input id="tagsOnly" type="checkbox"><span><b>Avec au moins un tag</b><small>Masquer les instruments non classés</small></span></label>
+            <div class="tag-menu-head"><strong>Tous les tags</strong><button id="clearTagFilters" type="button">Tout effacer</button></div>
             <div id="tagChoices" class="tag-choices"></div>
           </div>
         </details>
@@ -74,45 +72,57 @@
 
       <div class="table-tools">
         <p><strong id="resultCount">257 instruments</strong><span id="sortStatus">Triés par variation, décroissant</span></p>
-        <div class="mobile-sort">
-          <label for="sortKey">Trier par</label>
-          <select id="sortKey" aria-label="Colonne de tri">
-            <option value="change">Variation</option><option value="price">Prix</option><option value="ticker">Ticker</option><option value="name">Nom</option><option value="lists">Nombre de listes</option><option value="market">Marché</option><option value="setup">Tendance</option><option value="relvol">Volume relatif</option><option value="rsi">RSI</option><option value="ma200">Écart MA200</option>
-          </select>
-          <button id="sortDirection" type="button" class="sort-direction" aria-label="Inverser le sens du tri">↓</button>
+        <div class="table-controls">
+          <details id="columnPicker" class="column-picker">
+            <summary><span>Colonnes</span><span id="columnCount" class="filter-count">10</span><span class="chevron" aria-hidden="true">⌄</span></summary>
+            <div class="column-menu" aria-label="Choisir les colonnes affichées">
+              <div class="column-menu-head"><strong>Colonnes affichées</strong><button id="showAllColumns" type="button">Tout afficher</button></div>
+              <div id="columnChoices" class="column-choices"></div>
+            </div>
+          </details>
+          <div class="mobile-sort">
+            <label for="sortKey">Trier par</label>
+            <select id="sortKey" aria-label="Colonne de tri">
+              <option value="change">Variation 24 h</option><option value="perfWeek">Variation 1 semaine</option><option value="perfMonth">Variation 1 mois</option><option value="perf3Month">Variation 3 mois</option><option value="price">Prix</option><option value="ticker">Ticker</option><option value="name">Nom</option><option value="tags">Nombre de tags</option><option value="market">Marché</option><option value="setup">Tendance</option><option value="relvol">Volume relatif</option><option value="rsi">RSI</option><option value="ma200">Écart MA200</option>
+            </select>
+            <button id="sortDirection" type="button" class="sort-direction" aria-label="Inverser le sens du tri">↓</button>
+          </div>
         </div>
       </div>
 
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th data-sort-column="ticker"><button class="sort-button" data-sort="ticker">Instrument <span aria-hidden="true">↕</span></button></th>
-            <th data-sort-column="lists"><button class="sort-button" data-sort="lists">Listes / tags <span aria-hidden="true">↕</span></button></th>
-            <th data-sort-column="market"><button class="sort-button" data-sort="market">Marché <span aria-hidden="true">↕</span></button></th>
-            <th data-sort-column="setup"><button class="sort-button" data-sort="setup">Tendance <span aria-hidden="true">↕</span></button></th>
-            <th class="num" data-sort-column="price"><button class="sort-button" data-sort="price">Prix <span aria-hidden="true">↕</span></button></th>
-            <th class="num" data-sort-column="change"><button class="sort-button" data-sort="change">Var. <span aria-hidden="true">↓</span></button></th>
-            <th></th>
+            <th data-column="instrument" data-sort-column="ticker"><button class="sort-button" data-sort="ticker">Instrument <span aria-hidden="true">↕</span></button></th>
+            <th data-column="tags" data-sort-column="tags"><button class="sort-button" data-sort="tags">Tags <span aria-hidden="true">↕</span></button></th>
+            <th data-column="market" data-sort-column="market"><button class="sort-button" data-sort="market">Marché <span aria-hidden="true">↕</span></button></th>
+            <th data-column="setup" data-sort-column="setup"><button class="sort-button" data-sort="setup">Tendance <span aria-hidden="true">↕</span></button></th>
+            <th class="num" data-column="price" data-sort-column="price"><button class="sort-button" data-sort="price">Prix <span aria-hidden="true">↕</span></button></th>
+            <th class="num" data-column="change" data-sort-column="change"><button class="sort-button" data-sort="change">24 h <span aria-hidden="true">↓</span></button></th>
+            <th class="num" data-column="perfWeek" data-sort-column="perfWeek"><button class="sort-button" data-sort="perfWeek">1 sem. <span aria-hidden="true">↕</span></button></th>
+            <th class="num" data-column="perfMonth" data-sort-column="perfMonth"><button class="sort-button" data-sort="perfMonth">1 mois <span aria-hidden="true">↕</span></button></th>
+            <th class="num" data-column="perf3Month" data-sort-column="perf3Month"><button class="sort-button" data-sort="perf3Month">3 mois <span aria-hidden="true">↕</span></button></th>
+            <th data-column="alerts"><span class="visually-hidden">Alertes</span></th>
           </tr></thead>
           <tbody id="rows"></tbody>
         </table>
         <div id="empty" class="empty" hidden>Aucun instrument pour ces filtres.</div>
       </div>
-      <p class="data-note">Listes importées de Trading 212 · Analyse quotidienne TradingView · Graphiques Finviz pour les titres US · Yahoo temps réel expérimental.</p>
+      <p class="data-note">Tags importés de Trading 212 · Analyse quotidienne TradingView · Graphiques Finviz pour les titres US · Yahoo temps réel expérimental.</p>
       <details class="about-panel">
         <summary>Comment lire MarketWatch <span aria-hidden="true">+</span></summary>
         <div class="about-grid">
           <section>
             <h2>Repérer les configurations</h2>
-            <p>Utilisez le filtre <strong>Setup</strong> pour isoler les tendances, cassures et replis. Le tableau combine le prix, la variation et les listes d’origine ; la fiche d’un instrument ajoute MA20, MA50, MA100, MA200, MACD, RSI, OBV, VWAP, ATR et volume relatif lorsque l’historique est disponible.</p>
+            <p>Utilisez le filtre <strong>Setup</strong> pour isoler les tendances, cassures et replis. Cliquez sur un tag dans une ligne — par exemple <strong>#TSS</strong> — pour afficher immédiatement tous ses instruments. La fiche ajoute les indicateurs, fondamentaux, actualités et accès aux dépôts SEC.</p>
           </section>
           <section>
             <h2>Classer et retrouver</h2>
-            <p>Cliquez sur un en-tête de colonne, ou utilisez le sélecteur de tri sur mobile. Les tags personnels peuvent être combinés et restent enregistrés dans ce navigateur. La synchronisation Google est facultative et nécessite votre propre configuration Firebase.</p>
+            <p>Cliquez sur un en-tête de colonne, ou utilisez le sélecteur de tri sur mobile. Les tags importés et personnels forment une seule taxonomie et peuvent être combinés. La synchronisation Google est facultative et nécessite votre propre configuration Firebase.</p>
           </section>
           <section>
             <h2>Données et alertes</h2>
-            <p>Les listes Trading 212 sont un instantané statique. TradingView alimente l’analyse quotidienne, Finviz les graphiques US et Yahoo le flux expérimental. Les alertes TTL sont évaluées tant que cette page reste ouverte ; elles ne constituent ni une donnée de marché garantie ni un conseil financier.</p>
+            <p>Les tags Trading 212 sont un instantané statique. TradingView alimente l’analyse quotidienne, Yahoo et Webull complètent la fiche, Finviz les graphiques US. Les alertes TTL sont évaluées tant que cette page reste ouverte ; elles ne constituent ni une donnée de marché garantie ni un conseil financier.</p>
           </section>
         </div>
       </details>
@@ -141,6 +151,6 @@
 
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="/assets/sidebar.js"></script>
-  <script type="module" src="app.js?v=1"></script>
+  <script type="module" src="app.js?v=3"></script>
 </body>
 </html>

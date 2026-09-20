@@ -1,26 +1,48 @@
 const $ = (selector, root = document) => root.querySelector(selector);
 const esc = (value = '') => String(value).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
-const STORAGE = { tags: 'marketscope:tags', alerts: 'marketscope:alerts', firebase: 'marketscope:firebase', tagFilters: 'marketscope:tag-filters', sort: 'marketscope:sort' };
+const STORAGE = { tags: 'marketscope:tags', alerts: 'marketscope:alerts', firebase: 'marketscope:firebase', tagFilters: 'marketscope:tag-filters', sort: 'marketscope:sort', columns: 'marketscope:columns' };
 const EXCLUDED_LISTS = new Set(['Les meilleurs mouvements', 'Plus empruntées']);
+const COLUMN_DEFS = [
+  { key:'instrument', label:'Instrument', locked:true },
+  { key:'tags', label:'Tags' },
+  { key:'market', label:'Marché' },
+  { key:'setup', label:'Tendance' },
+  { key:'price', label:'Prix' },
+  { key:'change', label:'Variation 24 h' },
+  { key:'perfWeek', label:'Variation 1 semaine' },
+  { key:'perfMonth', label:'Variation 1 mois' },
+  { key:'perf3Month', label:'Variation 3 mois' },
+  { key:'alerts', label:'Alertes' }
+];
+const DEFAULT_COLUMNS = COLUMN_DEFS.map(column => column.key);
 const storedTagState = storedTagFilter();
 const state = {
-  lists: [], assets: [], filtered: [], tags: read(STORAGE.tags, {}), alerts: read(STORAGE.alerts, []),
-  selectedTags: new Set(storedTagState.tags), taggedOnly: storedTagState.taggedOnly, sort: storedSort(),
-  selected: null, stream: null, firebase: null, firebaseApi: null, remoteTimer: null, analysisLoading: false
+  tagGroups: [], assets: [], filtered: [], tags: read(STORAGE.tags, {}), alerts: read(STORAGE.alerts, []),
+  selectedTags: new Set(storedTagState.tags), sort: storedSort(),
+  visibleColumns: storedColumns(), selected: null, stream: null, firebase: null, firebaseApi: null, remoteTimer: null, analysisLoading: false
 };
-const SORT_LABELS = { change:'variation', price:'prix', ticker:'ticker', name:'nom', lists:'nombre de listes', market:'marché', setup:'tendance', relvol:'volume relatif', rsi:'RSI', ma200:'écart MA200' };
+const SORT_LABELS = { change:'variation 24 h', perfWeek:'variation 1 semaine', perfMonth:'variation 1 mois', perf3Month:'variation 3 mois', price:'prix', ticker:'ticker', name:'nom', tags:'nombre de tags', market:'marché', setup:'tendance', relvol:'volume relatif', rsi:'RSI', ma200:'écart MA200' };
 
 function read(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
 }
 function storedTagFilter() {
   const value = read(STORAGE.tagFilters, []);
-  if (Array.isArray(value)) return { tags:value, taggedOnly:false };
-  return value && typeof value === 'object' ? { tags:Array.isArray(value.tags) ? value.tags : [], taggedOnly:Boolean(value.taggedOnly) } : { tags:[], taggedOnly:false };
+  if (Array.isArray(value)) return { tags:value };
+  return value && typeof value === 'object' ? { tags:Array.isArray(value.tags) ? value.tags : [] } : { tags:[] };
 }
 function storedSort() {
   const value = read(STORAGE.sort, {});
-  return value && typeof value === 'object' ? { key:value.key || 'change', dir:value.dir === 'asc' ? 'asc' : 'desc' } : { key:'change', dir:'desc' };
+  const key = value?.key === 'lists' ? 'tags' : value?.key;
+  return value && typeof value === 'object' ? { key:key || 'change', dir:value.dir === 'asc' ? 'asc' : 'desc' } : { key:'change', dir:'desc' };
+}
+function storedColumns() {
+  const allowed = new Set(DEFAULT_COLUMNS), value = read(STORAGE.columns, DEFAULT_COLUMNS);
+  const columns = Array.isArray(value) ? value.map(key => key === 'lists' ? 'tags' : key).filter(key => allowed.has(key)) : DEFAULT_COLUMNS;
+  return new Set(['instrument', ...columns]);
+}
+function assetTags(asset) {
+  return [...new Set([...(asset.sourceTags || []), ...(state.tags[asset.id] || [])])];
 }
 function marketFor(id, ticker, name) {
   const text = `${id} ${ticker} ${name}`.toUpperCase();
@@ -103,13 +125,14 @@ async function loadTechnicals() {
   try {
     const candidateMap = new Map(), tickers = [];
     for (const asset of state.assets) for (const candidate of tradingViewCandidates(asset)) if (!candidateMap.has(candidate)) { candidateMap.set(candidate, asset); tickers.push(candidate); }
-    const columns = ['name','close','change','volume','relative_volume_10d_calc','RSI','MACD.macd','MACD.signal','SMA20','SMA50','SMA100','SMA200','Recommend.All','ATR','High.1M','High.3M','High.6M','VWAP','Perf.W','Perf.1M','logoid'];
+    const columns = ['name','close','change','volume','relative_volume_10d_calc','RSI','MACD.macd','MACD.signal','SMA20','SMA50','SMA100','SMA200','Recommend.All','ATR','High.1M','High.3M','High.6M','VWAP','Perf.W','Perf.1M','Perf.3M','logoid','market_cap_basic','price_earnings_ttm','earnings_per_share_diluted_ttm','dividends_yield_current','total_revenue','revenue_growth_ttm_yoy','debt_to_equity','beta_1_year','sector','industry'];
     const response = await fetch('https://scanner.tradingview.com/global/scan', { method:'POST', body:JSON.stringify({symbols:{tickers,query:{types:[]}},columns,range:[0,tickers.length]}) });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     for (const row of payload.data || []) {
       const asset = candidateMap.get(row.s); if (!asset) continue; const d = row.d;
-      asset.tvSymbol = row.s; asset.logoId = d[20]; asset.tech = { close:d[1], change:d[2], volume:d[3], relVolume:d[4], rsi:d[5], macd:d[6], macdSignal:d[7], ma20:d[8], ma50:d[9], ma100:d[10], ma200:d[11], recommend:d[12], atr:d[13], high1m:d[14], high3m:d[15], high6m:d[16], vwap:d[17], perfWeek:d[18], perfMonth:d[19], obvDelta:(d[2] > 0 ? 1 : d[2] < 0 ? -1 : 0) * (d[3] || 0) };
+      asset.tvSymbol = row.s; asset.logoId = d[21]; asset.tech = { close:d[1], change:d[2], volume:d[3], relVolume:d[4], rsi:d[5], macd:d[6], macdSignal:d[7], ma20:d[8], ma50:d[9], ma100:d[10], ma200:d[11], recommend:d[12], atr:d[13], high1m:d[14], high3m:d[15], high6m:d[16], vwap:d[17], perfWeek:d[18], perfMonth:d[19], perf3Month:d[20], obvDelta:(d[2] > 0 ? 1 : d[2] < 0 ? -1 : 0) * (d[3] || 0) };
+      asset.fundamentals = { marketCap:d[22], pe:d[23], eps:d[24], dividendYield:d[25], revenue:d[26], revenueGrowth:d[27], debtToEquity:d[28], beta:d[29], sector:d[30], industry:d[31] };
     }
     const count = state.assets.filter(a => a.tech).length; $('#analysisState').textContent = `${count}/${state.assets.length} couverts`; toast(`${count} instruments analysés en données réelles`);
   } catch (error) { $('#analysisState').textContent = 'source indisponible'; toast(`Analyse technique indisponible : ${error.message}`); }
@@ -152,40 +175,54 @@ function updateCounts() {
   $('#analyzedCount').textContent = state.assets.filter(a => a.tech).length;
   $('#alertCount').textContent = activeAlerts().length;
 }
-function renderFilters() {
-  const options = state.lists.map(list => `<option value="${esc(list.name)}">${esc(list.name)} (${list.indexes.length})</option>`).join('');
-  $('#listFilter').insertAdjacentHTML('beforeend', options);
-}
-function personalTags() {
+function availableTags() {
   const counts = new Map();
-  Object.values(state.tags).flat().forEach(tag => counts.set(tag, (counts.get(tag) || 0) + 1));
+  state.assets.forEach(asset => assetTags(asset).forEach(tag => counts.set(tag, (counts.get(tag) || 0) + 1)));
   return [...counts.entries()].sort((a,b) => a[0].localeCompare(b[0], 'fr'));
 }
 function saveUiState() {
-  localStorage.setItem(STORAGE.tagFilters, JSON.stringify({ tags:[...state.selectedTags], taggedOnly:state.taggedOnly }));
+  localStorage.setItem(STORAGE.tagFilters, JSON.stringify({ tags:[...state.selectedTags] }));
   localStorage.setItem(STORAGE.sort, JSON.stringify(state.sort));
+  localStorage.setItem(STORAGE.columns, JSON.stringify([...state.visibleColumns]));
+  scheduleRemoteSave();
 }
 function renderTagFilter() {
-  const tags = personalTags(), available = new Set(tags.map(([tag]) => tag));
+  const tags = availableTags(), available = new Set(tags.map(([tag]) => tag));
   state.selectedTags.forEach(tag => { if (!available.has(tag)) state.selectedTags.delete(tag); });
-  $('#tagsOnly').checked = state.taggedOnly;
-  $('#tagChoices').innerHTML = tags.length ? tags.map(([tag,count]) => `<label class="tag-choice"><input type="checkbox" data-filter-tag="${esc(tag)}" ${state.selectedTags.has(tag) ? 'checked' : ''}><span><b>#${esc(tag)}</b><small>${count} instrument${count > 1 ? 's' : ''}</small></span></label>`).join('') : '<p class="tag-empty">Aucun tag pour le moment.<br>Ajoutez-en depuis la fiche d’un instrument.</p>';
-  const filterCount = state.selectedTags.size + (state.taggedOnly ? 1 : 0), badge = $('#tagFilterCount');
+  $('#tagChoices').innerHTML = tags.length ? tags.map(([tag,count]) => `<label class="tag-choice"><input type="checkbox" data-filter-tag="${esc(tag)}" ${state.selectedTags.has(tag) ? 'checked' : ''}><span><b>#${esc(tag)}</b><small>${count} instrument${count > 1 ? 's' : ''}</small></span></label>`).join('') : '<p class="tag-empty">Aucun tag pour le moment.</p>';
+  const filterCount = state.selectedTags.size, badge = $('#tagFilterCount');
   badge.textContent = filterCount; badge.hidden = filterCount === 0;
   const active = $('#activeTagFilters'), chips = [];
-  if (state.taggedOnly) chips.push('<button type="button" data-remove-tagged>Avec tags <span>×</span></button>');
   state.selectedTags.forEach(tag => chips.push(`<button type="button" data-remove-tag="${esc(tag)}">#${esc(tag)} <span>×</span></button>`));
   if (chips.length) chips.push('<button type="button" class="clear-active" data-clear-tags>Effacer les filtres tags</button>');
   active.innerHTML = chips.join(''); active.hidden = chips.length === 0;
   saveUiState();
 }
+function renderColumnPicker() {
+  $('#columnChoices').innerHTML = COLUMN_DEFS.map(column => `<label class="column-choice ${column.locked ? 'locked' : ''}"><input type="checkbox" data-column-toggle="${column.key}" ${state.visibleColumns.has(column.key) ? 'checked' : ''} ${column.locked ? 'disabled' : ''}><span>${column.label}</span>${column.locked ? '<small>Toujours visible</small>' : ''}</label>`).join('');
+  updateColumnPicker();
+}
+function updateColumnPicker() {
+  const count = COLUMN_DEFS.filter(column => state.visibleColumns.has(column.key)).length;
+  $('#columnCount').textContent = count;
+  document.querySelectorAll('[data-column-toggle]').forEach(input => { input.checked = state.visibleColumns.has(input.dataset.columnToggle); });
+  saveUiState();
+}
+function applyColumnVisibility() {
+  document.querySelectorAll('[data-column]').forEach(cell => { cell.hidden = !state.visibleColumns.has(cell.dataset.column); });
+  updateColumnPicker();
+}
 function sortValue(asset, key) {
   if (key === 'ticker') return asset.ticker;
   if (key === 'name') return asset.name;
-  if (key === 'lists') return asset.lists.length;
+  if (key === 'tags') return assetTags(asset).length;
   if (key === 'market') return asset.market;
   if (key === 'setup') return setupFor(asset) || '';
   if (key === 'price') return asset.livePrice ?? asset.tech?.close ?? asset.priceNumber;
+  if (key === 'change') return asset.liveChange ?? asset.tech?.change ?? asset.change;
+  if (key === 'perfWeek') return asset.tech?.perfWeek;
+  if (key === 'perfMonth') return asset.tech?.perfMonth;
+  if (key === 'perf3Month') return asset.tech?.perf3Month;
   if (key === 'relvol') return asset.tech?.relVolume;
   if (key === 'rsi') return asset.tech?.rsi;
   if (key === 'ma200') return asset.tech?.ma200 ? (asset.tech.close - asset.tech.ma200) / asset.tech.ma200 : null;
@@ -215,29 +252,34 @@ function setSort(key, direction) {
   applyFilters();
 }
 function applyFilters() {
-  const q = $('#search').value.trim().toLowerCase(), list = $('#listFilter').value, market = $('#marketFilter').value, signal = $('#signalFilter').value;
+  const q = $('#search').value.trim().toLowerCase(), market = $('#marketFilter').value, signal = $('#signalFilter').value;
   state.filtered = state.assets.filter(asset => {
-    const tags = state.tags[asset.id] || [];
-    const haystack = `${asset.ticker} ${asset.name} ${asset.lists.join(' ')} ${tags.join(' ')}`.toLowerCase();
+    const tags = assetTags(asset);
+    const haystack = `${asset.ticker} ${asset.name} ${tags.join(' ')}`.toLowerCase();
     const selectedTagMatch = !state.selectedTags.size || tags.some(tag => state.selectedTags.has(tag));
-    return (!q || haystack.includes(q)) && (!list || asset.lists.includes(list)) && (!market || asset.market === market) && matchesSignal(asset, signal) && (!state.taggedOnly || tags.length) && selectedTagMatch;
+    return (!q || haystack.includes(q)) && (!market || asset.market === market) && matchesSignal(asset, signal) && selectedTagMatch;
   });
   state.filtered.sort(compareAssets);
   renderRows(); updateCounts(); updateSortUi();
 }
+function performanceCell(key, label, value) {
+  const available = Number.isFinite(value), sign = available && value > 0 ? '+' : '', negative = available && value < 0;
+  return `<td data-column="${key}" data-label="${label}" class="num performance ${negative ? 'negative' : available ? 'positive' : 'unavailable'}">${available ? `${sign}${value.toLocaleString('fr-FR',{maximumFractionDigits:2})} %` : '—'}</td>`;
+}
 function renderRows() {
   const alerts = activeAlerts();
   $('#rows').innerHTML = state.filtered.map(asset => {
-    const tags = state.tags[asset.id] || [], price = asset.livePrice ?? asset.tech?.close ?? asset.priceNumber, change = asset.liveChange ?? asset.tech?.change ?? asset.change, setup = setupFor(asset);
-    const pills = [...asset.lists.slice(0, 2).map(x => `<span class="pill">${esc(x)}</span>`), ...tags.slice(0, 2).map(x => `<span class="pill tag">#${esc(x)}</span>`)];
-    if (asset.lists.length > 2) pills.push(`<span class="pill">+${asset.lists.length - 2}</span>`);
-    return `<tr data-id="${esc(asset.id)}" tabindex="0"><td><div class="asset">${logoMarkup(asset)}<span><b>${esc(asset.ticker)}</b><small>${esc(asset.name)}</small></span></div></td><td><div class="pills">${pills.join('')}</div></td><td><span class="market">${asset.market}</span></td><td><div class="signal-stack">${spark({...asset,change})}<span class="signal-badge ${esc(setup)}">${esc(setup || 'analyse…')}</span></div></td><td class="num">${Number.isFinite(price) ? price.toLocaleString('fr-FR',{maximumFractionDigits:4}) : esc(asset.price)}</td><td class="num change ${change < 0 ? 'negative' : ''}">${change > 0 ? '+' : ''}${change.toLocaleString('fr-FR',{maximumFractionDigits:2})} %</td><td><button class="bell ${alerts.some(a => a.instrumentId === asset.id) ? 'active' : ''}" aria-label="Alertes ${esc(asset.ticker)}">♢</button></td></tr>`;
+    const tags = assetTags(asset), price = asset.livePrice ?? asset.tech?.close ?? asset.priceNumber, change = asset.liveChange ?? asset.tech?.change ?? asset.change, setup = setupFor(asset);
+    const pills = tags.slice(0, 3).map(tag => `<button type="button" class="pill tag tag-row" data-row-tag="${esc(tag)}" aria-label="Afficher le tag ${esc(tag)}">#${esc(tag)}</button>`);
+    if (tags.length > 3) pills.push(`<span class="pill tag-more">+${tags.length - 3}</span>`);
+    return `<tr data-id="${esc(asset.id)}" tabindex="0"><td data-column="instrument"><div class="asset">${logoMarkup(asset)}<span><b>${esc(asset.ticker)}</b><small>${esc(asset.name)}</small></span></div></td><td data-column="tags"><div class="pills">${pills.join('')}</div></td><td data-column="market"><span class="market">${asset.market}</span></td><td data-column="setup"><div class="signal-stack">${spark({...asset,change})}<span class="signal-badge ${esc(setup)}">${esc(setup || 'analyse…')}</span></div></td><td data-column="price" class="num">${Number.isFinite(price) ? price.toLocaleString('fr-FR',{maximumFractionDigits:4}) : esc(asset.price)}</td>${performanceCell('change','24 h',change)}${performanceCell('perfWeek','1 sem.',asset.tech?.perfWeek)}${performanceCell('perfMonth','1 mois',asset.tech?.perfMonth)}${performanceCell('perf3Month','3 mois',asset.tech?.perf3Month)}<td data-column="alerts"><button class="bell ${alerts.some(a => a.instrumentId === asset.id) ? 'active' : ''}" aria-label="Alertes ${esc(asset.ticker)}">♢</button></td></tr>`;
   }).join('');
   document.querySelectorAll('.asset-logo').forEach(image => image.addEventListener('error', () => {
     const fallbacks = JSON.parse(image.dataset.logoFallbacks || '[]'), next = fallbacks.shift();
     if (next) { image.dataset.logoFallbacks = JSON.stringify(fallbacks); image.src = next; } else image.remove();
   }));
   $('#empty').hidden = state.filtered.length > 0;
+  applyColumnVisibility();
 }
 function chartSvg(values) {
   const d = pathFor(values, 500, 190, 12), area = `${d} L488,190 L12,190 Z`;
@@ -245,15 +287,46 @@ function chartSvg(values) {
 }
 function formatMetric(value, digits = 2) { return Number.isFinite(value) ? value.toLocaleString('fr-FR',{maximumFractionDigits:digits}) : '—'; }
 function formatCompact(value) { return Number.isFinite(value) ? new Intl.NumberFormat('fr-FR',{notation:'compact',maximumFractionDigits:1,signDisplay:'exceptZero'}).format(value) : '—'; }
+function compactValue(value) { return Number.isFinite(value) ? new Intl.NumberFormat('fr-FR',{notation:'compact',maximumFractionDigits:1}).format(value) : '—'; }
+function webullUrl(asset) {
+  const exchange = (asset.tvSymbol || '').split(':')[0].toLowerCase();
+  return ['nasdaq','nyse','amex'].includes(exchange) ? `https://www.webull.com/quote/${exchange}-${encodeURIComponent(asset.ticker.toLowerCase())}` : `https://www.webull.com/search/${encodeURIComponent(yahooSymbol(asset))}`;
+}
+function secUrl(asset, type = '') {
+  const params = new URLSearchParams({ action:'getcompany', CIK:asset.ticker, owner:'exclude' });
+  if (type) params.set('type', type);
+  return `https://www.sec.gov/edgar/browse/?${params}`;
+}
+function fundamentalCards(asset) {
+  const f = asset.fundamentals || {};
+  const card = (label, value, suffix = '') => `<div class="fundamental-card"><small>${label}</small><b>${value}${value !== '—' ? suffix : ''}</b></div>`;
+  return `${card('Capitalisation',compactValue(f.marketCap))}${card('P/E TTM',formatMetric(f.pe,1))}${card('BPA dilué TTM',formatMetric(f.eps,2))}${card('Rendement dividende',formatMetric(f.dividendYield,2),' %')}${card('Chiffre d’affaires',compactValue(f.revenue))}${card('Croissance CA TTM',formatMetric(f.revenueGrowth,1),' %')}${card('Dette / capitaux',formatMetric(f.debtToEquity,1))}${card('Bêta 1 an',formatMetric(f.beta,2))}`;
+}
+function renderNewsItems(asset, items) {
+  const container = $('#detailNews'); if (!container || state.selected?.id !== asset.id) return;
+  if (!items.length) { container.innerHTML = '<p class="intel-empty">Actualités Yahoo indisponibles pour cet instrument. Utilisez les liens sources ci-dessous.</p>'; return; }
+  container.innerHTML = items.slice(0,5).map(item => {
+    const url = item.link || item.canonicalUrl?.url || item.clickThroughUrl?.url || '#', date = item.providerPublishTime ? new Date(item.providerPublishTime * 1000).toLocaleDateString('fr-FR') : '';
+    return `<a class="news-item" href="${esc(url)}" target="_blank" rel="noopener"><strong>${esc(item.title || 'Actualité')}</strong><span>${esc(item.publisher || 'Yahoo Finance')}${date ? ` · ${date}` : ''}</span></a>`;
+  }).join('');
+}
+async function loadYahooNews(asset) {
+  try {
+    const response = await fetch(`https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(yahooSymbol(asset))}&quotesCount=1&newsCount=6&enableFuzzyQuery=false`);
+    if (!response.ok) throw new Error('Yahoo');
+    const payload = await response.json(); renderNewsItems(asset, payload.news || []);
+  } catch { renderNewsItems(asset, []); }
+}
 function setupText(setup) {
   return setup === 'breakout' ? 'Proche du plus haut 3 mois, avec volume confirmé.' : setup === 'pullback' ? 'Tendance au-dessus de la MA200, retour contrôlé vers MA20/50.' : setup === 'momentum' ? 'MA20 > MA50 > MA200, MACD positif et RSI porteur.' : setup === 'haussier' ? 'Prix au-dessus de la MA200, sans déclencheur fort.' : setup === 'baissier' ? 'Prix sous la MA200 : tendance longue fragile.' : 'Pas de setup directionnel confirmé.';
 }
 function renderDetail(asset, chart = null) {
-  const tags = state.tags[asset.id] || [], alerts = activeAlerts().filter(a => a.instrumentId === asset.id), t = asset.tech || {};
+  const personalTags = state.tags[asset.id] || [], tags = assetTags(asset), alerts = activeAlerts().filter(a => a.instrumentId === asset.id), t = asset.tech || {}, f = asset.fundamentals || {};
   const values = chart?.closes?.filter(Number.isFinite) || seededSeries(asset.id, 60), price = asset.livePrice ?? t.close ?? asset.priceNumber, change = asset.liveChange ?? t.change ?? asset.change, symbol = yahooSymbol(asset), setup = setupFor(asset) || 'en attente';
   const chartBlock = asset.market === 'US' ? `<figure class="finviz-figure"><img id="finvizChart" class="finviz-chart" src="https://finviz.com/chart.ashx?t=${encodeURIComponent(asset.ticker)}&ty=c&ta=1&p=d&s=l" alt="Graphique technique Finviz de ${esc(asset.ticker)}"><figcaption><span>Finviz · journalier · SMA20/50/200</span><span>${esc(asset.ticker)}</span></figcaption></figure>` : `${chartSvg(values)}<div class="chart-caption"><span>${chart ? 'Yahoo Finance · 1 an' : 'Historique Yahoo en chargement…'}</span><span>${esc(symbol)}</span></div>`;
   const metric = (label, value, digits = 2, suffix = '') => `<div class="metric"><small>${label}</small><b>${formatMetric(value,digits)}${Number.isFinite(value) ? suffix : ''}</b></div>`;
-  $('#detailContent').innerHTML = `<p class="eyebrow">${asset.market} · ${esc(asset.lists.join(' · '))}</p><div class="detail-heading">${logoMarkup(asset)}<div><h1>${esc(asset.ticker)}</h1><div class="secondary">${esc(asset.name)}</div></div></div><div class="quote">${Number.isFinite(price) ? price.toLocaleString('fr-FR',{maximumFractionDigits:4}) : esc(asset.price)}</div><div class="change ${change < 0 ? 'negative' : ''}">${change > 0 ? '+' : ''}${formatMetric(change,2)} %</div>${chartBlock}<div class="setup-card"><strong class="signal-badge ${esc(setup)}">${esc(setup)}</strong><span>${esc(setupText(setup))}</span></div><div class="metrics extended">${metric('MA 20',t.ma20)}${metric('MA 50',t.ma50)}${metric('MA 100',t.ma100)}${metric('MA 200',t.ma200)}${metric('RSI 14',t.rsi,1)}${metric('MACD',t.macd,3)}${metric('Signal MACD',t.macdSignal,3)}${metric('Vol. relatif',t.relVolume,2,'×')}${metric('VWAP',t.vwap)}${metric('ATR 14',t.atr)}${metric('Perf. semaine',t.perfWeek,2,'%')}<div class="metric"><small>OBV Δ jour</small><b>${formatCompact(t.obvDelta)}</b></div></div><p class="analysis-source">TradingView Scanner · données quotidiennes. OBV Δ jour = contribution signée du volume, pas l’OBV cumulatif.</p><div class="section"><b>Tags personnels</b><div class="tag-input"><input id="newTag" maxlength="24" placeholder="ex. breakout, énergie"><button id="addTag" class="primary">Ajouter</button></div><div class="tag-list">${tags.map(tag => `<button data-tag="${esc(tag)}" title="Retirer">#${esc(tag)} ×</button>`).join('')}</div></div><div class="section"><b>Alerte de prix avec durée de vie</b><div class="alert-grid"><select id="alertCondition"><option value="above">Au-dessus de</option><option value="below">En dessous de</option></select><input id="alertTarget" type="number" step="any" value="${Number.isFinite(price) ? price : ''}" aria-label="Prix cible"><select id="alertTtl"><option value="24">24 heures</option><option value="168">7 jours</option><option value="720">30 jours</option></select><button id="addAlert" class="primary">Créer l’alerte</button></div>${alerts.map(a => `<div class="alert-item"><span>${a.condition === 'above' ? '≥' : '≤'} ${a.target} · expire ${new Date(a.expiresAt).toLocaleDateString('fr-FR')}</span><button data-alert="${esc(a.id)}" aria-label="Supprimer">×</button></div>`).join('')}<p class="secondary">Les alertes fonctionnent tant que cette page reste ouverte.</p></div><div class="links"><a href="https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}" target="_blank" rel="noopener">Yahoo Finance ↗</a>${asset.market === 'US' ? `<a href="https://finviz.com/quote.ashx?t=${encodeURIComponent(asset.ticker)}" target="_blank" rel="noopener">Finviz ↗</a>` : ''}</div>`;
+  const secBlock = asset.market === 'US' ? `<div class="filing-links"><a href="${secUrl(asset,'10-K')}" target="_blank" rel="noopener"><b>10-K</b><span>Rapport annuel</span></a><a href="${secUrl(asset,'10-Q')}" target="_blank" rel="noopener"><b>10-Q</b><span>Rapport trimestriel</span></a><a href="${secUrl(asset,'8-K')}" target="_blank" rel="noopener"><b>8-K</b><span>Événement courant</span></a></div><a class="source-link" href="${secUrl(asset)}" target="_blank" rel="noopener">Tous les dépôts officiels sur SEC EDGAR ↗</a>` : '<p class="intel-empty">SEC EDGAR concerne les émetteurs déposants aux États-Unis.</p>';
+  $('#detailContent').innerHTML = `<p class="eyebrow">${asset.market} · ${esc(f.sector || 'Marché')}</p><div class="detail-heading">${logoMarkup(asset)}<div><h1>${esc(asset.ticker)}</h1><div class="secondary">${esc(asset.name)}</div></div></div><div class="detail-tags">${tags.map(tag => `<button type="button" data-detail-filter-tag="${esc(tag)}">#${esc(tag)}</button>`).join('')}</div><div class="quote">${Number.isFinite(price) ? price.toLocaleString('fr-FR',{maximumFractionDigits:4}) : esc(asset.price)}</div><div class="change ${change < 0 ? 'negative' : ''}">${change > 0 ? '+' : ''}${formatMetric(change,2)} %</div>${chartBlock}<div class="setup-card"><strong class="signal-badge ${esc(setup)}">${esc(setup)}</strong><span>${esc(setupText(setup))}</span></div><div class="metrics extended">${metric('MA 20',t.ma20)}${metric('MA 50',t.ma50)}${metric('MA 100',t.ma100)}${metric('MA 200',t.ma200)}${metric('RSI 14',t.rsi,1)}${metric('MACD',t.macd,3)}${metric('Signal MACD',t.macdSignal,3)}${metric('Vol. relatif',t.relVolume,2,'×')}${metric('VWAP',t.vwap)}${metric('ATR 14',t.atr)}${metric('Variation 24 h',change,2,'%')}${metric('Variation 1 sem.',t.perfWeek,2,'%')}${metric('Variation 1 mois',t.perfMonth,2,'%')}${metric('Variation 3 mois',t.perf3Month,2,'%')}<div class="metric"><small>OBV Δ jour</small><b>${formatCompact(t.obvDelta)}</b></div></div><p class="analysis-source">TradingView Scanner · données quotidiennes. OBV Δ jour = contribution signée du volume, pas l’OBV cumulatif.</p><section class="intel-section"><div class="intel-heading"><div><span class="eyebrow">ENTREPRISE</span><h2>Fondamentaux</h2></div><span class="intel-source">TradingView · Yahoo · Webull</span></div><div class="fundamental-grid">${fundamentalCards(asset)}</div><p class="intel-context">${esc([f.sector,f.industry].filter(Boolean).join(' · ') || 'Classification indisponible')}</p></section><section class="intel-section"><div class="intel-heading"><div><span class="eyebrow">FLUX</span><h2>Actualités</h2></div><span class="intel-source">Yahoo Finance</span></div><div id="detailNews" class="news-list" aria-live="polite"><p class="intel-empty">Chargement des actualités…</p></div><div class="source-links"><a href="https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}/news/" target="_blank" rel="noopener">Toutes les news Yahoo ↗</a><a href="${webullUrl(asset)}" target="_blank" rel="noopener">Voir sur Webull ↗</a></div></section><section class="intel-section"><div class="intel-heading"><div><span class="eyebrow">DOCUMENTS</span><h2>Dépôts SEC</h2></div><span class="intel-source">SEC EDGAR</span></div>${secBlock}</section><div class="section"><b>Ajouter un tag</b><div class="tag-input"><input id="newTag" maxlength="24" placeholder="ex. breakout, énergie"><button id="addTag" class="primary">Ajouter</button></div><div class="tag-list">${personalTags.map(tag => `<button data-personal-tag="${esc(tag)}" title="Retirer">#${esc(tag)} ×</button>`).join('')}</div></div><div class="section"><b>Alerte de prix avec durée de vie</b><div class="alert-grid"><select id="alertCondition"><option value="above">Au-dessus de</option><option value="below">En dessous de</option></select><input id="alertTarget" type="number" step="any" value="${Number.isFinite(price) ? price : ''}" aria-label="Prix cible"><select id="alertTtl"><option value="24">24 heures</option><option value="168">7 jours</option><option value="720">30 jours</option></select><button id="addAlert" class="primary">Créer l’alerte</button></div>${alerts.map(a => `<div class="alert-item"><span>${a.condition === 'above' ? '≥' : '≤'} ${a.target} · expire ${new Date(a.expiresAt).toLocaleDateString('fr-FR')}</span><button data-alert="${esc(a.id)}" aria-label="Supprimer">×</button></div>`).join('')}<p class="secondary">Les alertes fonctionnent tant que cette page reste ouverte.</p></div><div class="links"><a href="https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}" target="_blank" rel="noopener">Yahoo Finance ↗</a><a href="${webullUrl(asset)}" target="_blank" rel="noopener">Webull ↗</a>${asset.market === 'US' ? `<a href="https://finviz.com/quote.ashx?t=${encodeURIComponent(asset.ticker)}" target="_blank" rel="noopener">Finviz ↗</a>` : ''}</div>`;
   document.querySelectorAll('#detailContent .asset-logo').forEach(image => image.addEventListener('error', () => {
     const fallbacks = JSON.parse(image.dataset.logoFallbacks || '[]'), next = fallbacks.shift();
     if (next) { image.dataset.logoFallbacks = JSON.stringify(fallbacks); image.src = next; } else image.remove();
@@ -261,11 +334,13 @@ function renderDetail(asset, chart = null) {
   const finviz = $('#finvizChart');
   if (finviz) finviz.addEventListener('error', () => { const figure = finviz.closest('figure'); figure.innerHTML = `${chartSvg(values)}<figcaption><span>Finviz indisponible · aperçu local</span><span>${esc(asset.ticker)}</span></figcaption>`; }, { once:true });
   bindDetailActions(asset);
+  loadYahooNews(asset);
 }
 function bindDetailActions(asset) {
   $('#addTag').onclick = () => { const input = $('#newTag'), tag = input.value.trim().replace(/^#/,'').toLowerCase(); if (!tag) return; state.tags[asset.id] = [...new Set([...(state.tags[asset.id] || []), tag])]; input.value=''; saveLocal(); renderTagFilter(); applyFilters(); renderDetail(asset); };
   $('#newTag').onkeydown = e => { if (e.key === 'Enter') $('#addTag').click(); };
-  document.querySelectorAll('[data-tag]').forEach(button => button.onclick = () => { state.tags[asset.id] = (state.tags[asset.id] || []).filter(t => t !== button.dataset.tag); saveLocal(); renderTagFilter(); applyFilters(); renderDetail(asset); });
+  document.querySelectorAll('[data-personal-tag]').forEach(button => button.onclick = () => { state.tags[asset.id] = (state.tags[asset.id] || []).filter(t => t !== button.dataset.personalTag); saveLocal(); renderTagFilter(); applyFilters(); renderDetail(asset); });
+  document.querySelectorAll('[data-detail-filter-tag]').forEach(button => button.onclick = () => { filterByTag(button.dataset.detailFilterTag); closeDetail(); });
   $('#addAlert').onclick = async () => {
     const target = Number($('#alertTarget').value), ttl = Number($('#alertTtl').value); if (!Number.isFinite(target)) return toast('Prix cible invalide');
     if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission();
@@ -341,43 +416,51 @@ async function connectGoogle(event) {
     const credential = await authMod.signInWithPopup(auth, provider), db = dbMod.getFirestore(app);
     const ref = dbMod.doc(db, 'users', credential.user.uid, 'marketscope', 'state'); const snapshot = await dbMod.getDoc(ref);
     state.firebase = { uid: credential.user.uid, ref }; state.firebaseApi = dbMod; localStorage.setItem(STORAGE.firebase, JSON.stringify(config));
-    if (snapshot.exists()) { const remote = snapshot.data(); state.tags = remote.tags || state.tags; state.alerts = remote.alerts || state.alerts; saveLocal(); renderTagFilter(); applyFilters(); }
-    else await dbMod.setDoc(ref, { tags: state.tags, alerts: state.alerts, updatedAt: Date.now() });
+    if (snapshot.exists()) {
+      const remote = snapshot.data(); state.tags = remote.tags || state.tags; state.alerts = remote.alerts || state.alerts;
+      if (Array.isArray(remote.selectedTags)) state.selectedTags = new Set(remote.selectedTags);
+      if (Array.isArray(remote.columns)) state.visibleColumns = new Set(['instrument', ...remote.columns.map(key => key === 'lists' ? 'tags' : key).filter(key => DEFAULT_COLUMNS.includes(key))]);
+      if (remote.sort?.key) state.sort = { key:remote.sort.key === 'lists' ? 'tags' : remote.sort.key, dir:remote.sort.dir === 'asc' ? 'asc' : 'desc' };
+      saveLocal(); renderTagFilter(); renderColumnPicker(); applyFilters();
+    }
+    else await dbMod.setDoc(ref, { tags:state.tags, alerts:state.alerts, selectedTags:[...state.selectedTags], columns:[...state.visibleColumns], sort:state.sort, updatedAt:Date.now() });
     status.textContent = `Synchronisé avec ${credential.user.email}`; $('#syncDialog').close(); $('#syncBtn').textContent = '✓ Google connecté'; toast('Synchronisation Google active');
   } catch (error) { status.textContent = `Échec : ${error.message}`; }
 }
 function scheduleRemoteSave() {
   if (!state.firebase || !state.firebaseApi) return; clearTimeout(state.remoteTimer);
-  state.remoteTimer = setTimeout(() => state.firebaseApi.setDoc(state.firebase.ref, { tags: state.tags, alerts: state.alerts, updatedAt: Date.now() }).catch(() => toast('Synchronisation Google interrompue')), 600);
+  state.remoteTimer = setTimeout(() => state.firebaseApi.setDoc(state.firebase.ref, { tags:state.tags, alerts:state.alerts, selectedTags:[...state.selectedTags], columns:[...state.visibleColumns], sort:state.sort, updatedAt:Date.now() }).catch(() => toast('Synchronisation Google interrompue')), 600);
 }
 function registerWebMcp() {
   if (!document.modelContext?.registerTool) return;
-  document.modelContext.registerTool({ name:'filter_watchlist', description:'Filtre le cockpit par texte, liste ou marché.', inputSchema:{type:'object',properties:{query:{type:'string'},list:{type:'string'},market:{type:'string'}}}, annotations:{readOnlyHint:true}, execute: async input => { if (input.query != null) $('#search').value=input.query; if (input.list != null) $('#listFilter').value=input.list; if (input.market != null) $('#marketFilter').value=input.market; applyFilters(); return {content:[{type:'text',text:`${state.filtered.length} instruments visibles`}]} } });
+  document.modelContext.registerTool({ name:'filter_watchlist', description:'Filtre le cockpit par texte, tag ou marché.', inputSchema:{type:'object',properties:{query:{type:'string'},tag:{type:'string'},market:{type:'string'}}}, annotations:{readOnlyHint:true}, execute: async input => { if (input.query != null) $('#search').value=input.query; if (input.tag != null) state.selectedTags = new Set([input.tag]); if (input.market != null) $('#marketFilter').value=input.market; renderTagFilter(); applyFilters(); return {content:[{type:'text',text:`${state.filtered.length} instruments visibles`}]} } });
   document.modelContext.registerTool({ name:'open_instrument', description:'Ouvre la fiche détaillée d’un ticker.', inputSchema:{type:'object',required:['ticker'],properties:{ticker:{type:'string'}}}, annotations:{readOnlyHint:true}, execute: async ({ticker}) => { const asset=state.assets.find(a=>a.ticker.toLowerCase()===ticker.toLowerCase()); if(!asset) throw new Error('Ticker introuvable'); openDetail(asset.id); return {content:[{type:'text',text:`Fiche ${asset.ticker} ouverte`}]} } });
 }
 async function init() {
   try {
     const response = await fetch('./data/watchlists.json'); if (!response.ok) throw new Error('Données indisponibles');
     const [rawLists, rawAssets] = await response.json();
-    state.lists = rawLists.filter(([name]) => !EXCLUDED_LISTS.has(name)).map(([name,indexes]) => ({name,indexes}));
-    const memberships = Array.from({length:rawAssets.length},()=>[]); state.lists.forEach(list => list.indexes.forEach(index => memberships[index]?.push(list.name)));
-    state.assets = rawAssets.map(([id,ticker,name,price,change], index) => ({ id,ticker,name,price,priceNumber:numberFrom(price),change:numberFrom(change),market:marketFor(id,ticker,name),lists:memberships[index] })).filter(asset => asset.lists.length);
-    $('#assetCount').textContent = state.assets.length; $('#listCount').textContent = state.lists.length; renderFilters(); renderTagFilter(); applyFilters(); registerWebMcp(); loadTechnicals();
+    state.tagGroups = rawLists.filter(([name]) => !EXCLUDED_LISTS.has(name) && name !== 'Ma Liste de surveillance').map(([name,indexes]) => ({name,indexes}));
+    const memberships = Array.from({length:rawAssets.length},()=>[]); state.tagGroups.forEach(group => group.indexes.forEach(index => memberships[index]?.push(group.name)));
+    state.assets = rawAssets.map(([id,ticker,name,price,change], index) => ({ id,ticker,name,price,priceNumber:numberFrom(price),change:numberFrom(change),market:marketFor(id,ticker,name),sourceTags:memberships[index] })).filter(asset => asset.sourceTags.length);
+    $('#assetCount').textContent = state.assets.length; $('#tagCount').textContent = state.tagGroups.length; renderTagFilter(); renderColumnPicker(); applyFilters(); registerWebMcp(); loadTechnicals();
     const config = localStorage.getItem(STORAGE.firebase); if (config) $('#firebaseConfig').value = config;
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(() => {});
-  } catch (error) { $('#rows').innerHTML = `<tr><td colspan="7">${esc(error.message)}</td></tr>`; }
+  } catch (error) { $('#rows').innerHTML = `<tr><td colspan="10">${esc(error.message)}</td></tr>`; }
 }
-['search','listFilter','marketFilter','signalFilter'].forEach(id => $(`#${id}`).addEventListener(id === 'search' ? 'input' : 'change', applyFilters));
+['search','marketFilter','signalFilter'].forEach(id => $(`#${id}`).addEventListener(id === 'search' ? 'input' : 'change', applyFilters));
 document.querySelectorAll('[data-sort]').forEach(button => button.onclick = () => setSort(button.dataset.sort));
 $('#sortKey').onchange = event => setSort(event.target.value, ['ticker','name','market','setup'].includes(event.target.value) ? 'asc' : 'desc');
 $('#sortDirection').onclick = () => setSort(state.sort.key, state.sort.dir === 'asc' ? 'desc' : 'asc');
-$('#tagsOnly').onchange = event => { state.taggedOnly = event.target.checked; renderTagFilter(); applyFilters(); };
 $('#tagChoices').onchange = event => { const checkbox = event.target.closest('[data-filter-tag]'); if (!checkbox) return; checkbox.checked ? state.selectedTags.add(checkbox.dataset.filterTag) : state.selectedTags.delete(checkbox.dataset.filterTag); renderTagFilter(); applyFilters(); };
-$('#clearTagFilters').onclick = () => { state.selectedTags.clear(); state.taggedOnly = false; renderTagFilter(); applyFilters(); };
-$('#activeTagFilters').onclick = event => { const tag = event.target.closest('[data-remove-tag]'), tagged = event.target.closest('[data-remove-tagged]'), clear = event.target.closest('[data-clear-tags]'); if (tag) state.selectedTags.delete(tag.dataset.removeTag); if (tagged) state.taggedOnly = false; if (clear) { state.selectedTags.clear(); state.taggedOnly = false; } if (tag || tagged || clear) { renderTagFilter(); applyFilters(); } };
-document.addEventListener('click', event => { const filter = $('#tagFilter'); if (filter.open && !filter.contains(event.target)) filter.removeAttribute('open'); });
+$('#clearTagFilters').onclick = () => { state.selectedTags.clear(); renderTagFilter(); applyFilters(); };
+$('#activeTagFilters').onclick = event => { const tag = event.target.closest('[data-remove-tag]'), clear = event.target.closest('[data-clear-tags]'); if (tag) state.selectedTags.delete(tag.dataset.removeTag); if (clear) state.selectedTags.clear(); if (tag || clear) { renderTagFilter(); applyFilters(); } };
+$('#columnChoices').onchange = event => { const input = event.target.closest('[data-column-toggle]'); if (!input || input.disabled) return; input.checked ? state.visibleColumns.add(input.dataset.columnToggle) : state.visibleColumns.delete(input.dataset.columnToggle); applyColumnVisibility(); };
+$('#showAllColumns').onclick = event => { event.preventDefault(); state.visibleColumns = new Set(DEFAULT_COLUMNS); applyColumnVisibility(); };
+document.addEventListener('click', event => { [$('#tagFilter'), $('#columnPicker')].forEach(menu => { if (menu.open && !menu.contains(event.target)) menu.removeAttribute('open'); }); });
 $('#analyzeBtn').onclick = loadTechnicals;
-$('#rows').addEventListener('click', event => { const row = event.target.closest('tr'); if (row) openDetail(row.dataset.id); });
+function filterByTag(tag) { state.selectedTags = new Set([tag]); renderTagFilter(); applyFilters(); $('#tagFilter').removeAttribute('open'); toast(`#${tag} · ${state.filtered.length} instruments`); }
+$('#rows').addEventListener('click', event => { const tag = event.target.closest('[data-row-tag]'); if (tag) { event.stopPropagation(); filterByTag(tag.dataset.rowTag); return; } const row = event.target.closest('tr'); if (row) openDetail(row.dataset.id); });
 $('#rows').addEventListener('keydown', event => { if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('tr')) openDetail(event.target.dataset.id); });
 $('#closeDetail').onclick = closeDetail; $('#scrim').onclick = closeDetail; document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
 $('#streamBtn').onclick = toggleStream; $('#shareBtn').onclick = sharePage; $('#syncBtn').onclick = () => $('#syncDialog').showModal(); $('#connectGoogle').onclick = connectGoogle;
