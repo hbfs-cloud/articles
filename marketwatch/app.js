@@ -438,12 +438,36 @@ function registerWebMcp() {
 }
 async function init() {
   try {
-    const response = await fetch('./data/watchlists.json'); if (!response.ok) throw new Error('Données indisponibles');
+    const [response, autoResponse] = await Promise.all([
+      fetch('./data/watchlists.json'),
+      fetch('./data/auto-universe.json').catch(() => null)
+    ]);
+    if (!response.ok) throw new Error('Données indisponibles');
     const [rawLists, rawAssets] = await response.json();
+    const autoUniverse = autoResponse?.ok ? await autoResponse.json() : { assets:[] };
     state.tagGroups = rawLists.filter(([name]) => !EXCLUDED_LISTS.has(name) && name !== 'Ma Liste de surveillance').map(([name,indexes]) => ({name,indexes}));
     const memberships = Array.from({length:rawAssets.length},()=>[]); state.tagGroups.forEach(group => group.indexes.forEach(index => memberships[index]?.push(group.name)));
     state.assets = rawAssets.map(([id,ticker,name,price,change], index) => ({ id,ticker,name,price,priceNumber:numberFrom(price),change:numberFrom(change),market:marketFor(id,ticker,name),sourceTags:memberships[index] })).filter(asset => asset.sourceTags.length);
-    $('#assetCount').textContent = state.assets.length; $('#tagCount').textContent = state.tagGroups.length; renderTagFilter(); renderColumnPicker(); applyFilters(); registerWebMcp(); loadTechnicals();
+    const byTicker = new Map(state.assets.map(asset => [asset.ticker.toUpperCase(), asset]));
+    for (const incoming of autoUniverse.assets || []) {
+      const key = String(incoming.ticker || '').toUpperCase(); if (!key) continue;
+      const existing = byTicker.get(key);
+      if (existing) {
+        existing.sourceTags = [...new Set([...(existing.sourceTags || []), ...(incoming.tags || [])])];
+        existing.analysisUrl = incoming.analysisUrl || existing.analysisUrl;
+        existing.scannerUrl = incoming.scannerUrl || existing.scannerUrl;
+        continue;
+      }
+      const asset = {
+        id:incoming.id, ticker:incoming.ticker, name:incoming.name, price:incoming.price ?? '—',
+        priceNumber:Number.isFinite(incoming.price) ? incoming.price : null,
+        change:Number.isFinite(incoming.change) ? incoming.change : null,
+        market:incoming.market || marketFor(incoming.id,incoming.ticker,incoming.name),
+        sourceTags:incoming.tags || [], analysisUrl:incoming.analysisUrl, scannerUrl:incoming.scannerUrl
+      };
+      state.assets.push(asset); byTicker.set(key, asset);
+    }
+    $('#assetCount').textContent = state.assets.length; $('#tagCount').textContent = availableTags().length; renderTagFilter(); renderColumnPicker(); applyFilters(); registerWebMcp(); loadTechnicals();
     const config = localStorage.getItem(STORAGE.firebase); if (config) $('#firebaseConfig').value = config;
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(() => {});
   } catch (error) { $('#rows').innerHTML = `<tr><td colspan="10">${esc(error.message)}</td></tr>`; }

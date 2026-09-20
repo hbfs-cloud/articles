@@ -150,6 +150,9 @@ runSafe('node', ['tools/add_card.js', artPath], 'add_card.js');
 runSafe('python3', ['tools/build_search_index.py'], 'full-text search');
 runSafe('python3', ['tools/build_sitemap_rss.py'], 'sitemap');
 runSafe('node', ['tools/build_rss.js'], 'RSS');
+if (fs.existsSync(path.join(ROOT, 'tools', 'build-marketwatch-data.js'))) {
+  runSafe('node', ['tools/build-marketwatch-data.js'], 'MarketWatch universe');
+}
 if (!dryRun) {
   const home = path.join(ROOT, 'index.html');
   const html = fs.readFileSync(home, 'utf8');
@@ -162,7 +165,7 @@ console.log('\nStep 4/7 — Staging files (git add)...');
 
 // Always stage the article folder and data/
 const artFolder = artPath.split('/').slice(0, 2).join('/');
-let gitAddPaths = [artFolder, 'data/', 'assets/search-index.json', 'sitemap.xml', 'feed.xml', 'index.html'];
+let gitAddPaths = [artFolder, 'data/', 'assets/search-index.json', 'sitemap.xml', 'feed.xml', 'index.html', 'marketwatch/data/auto-universe.json'];
 
 if (type === 'daily' || type === 'weekly') {
   gitAddPaths.push('data/radar.json');
