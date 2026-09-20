@@ -17,15 +17,48 @@ const ROOT = path.resolve(__dirname, '..');
 const CALENDAR = 'us_equity_exchange_sessions';
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 // --- config : sous-jacents + seuil de corrélation (pour écarter les co-mouvements parasites) ---
-const REFERENCES = [
-  { key: 'btc',    label: 'Bitcoin',          ref: 'BTC-USD', minCorr: 0.55, minOverlap: 50 },
-  { key: 'eth',    label: 'Ethereum',         ref: 'ETH-USD', minCorr: 0.60, minOverlap: 50 },
-  { key: 'sol',    label: 'Solana',           ref: 'SOL-USD', minCorr: 0.60, minOverlap: 50 },
-  { key: 'gold',   label: 'Or (GLD)',         ref: 'GLD',     minCorr: 0.55, minOverlap: 50, theme: 'metals' },
-  { key: 'silver', label: 'Argent (SLV)',     ref: 'SLV',     minCorr: 0.55, minOverlap: 50, theme: 'metals' },
-  { key: 'crude',  label: 'Pétrole (WTI)',    ref: 'CL=F',    minCorr: 0.55, minOverlap: 50, theme: 'energy' },
-  { key: 'ai',     label: 'Semi-conducteurs', ref: 'SMH',     minCorr: 0.55, minOverlap: 50, theme: 'semis' },
+const CRYPTO_REFERENCES = [
+  { key: 'btc', label: 'Bitcoin', ref: 'BTC-USD', minCorr: 0.55, minOverlap: 50, group: 'Crypto' },
+  { key: 'eth', label: 'Ethereum', ref: 'ETH-USD', minCorr: 0.60, minOverlap: 50, group: 'Crypto' },
+  { key: 'sol', label: 'Solana', ref: 'SOL-USD', minCorr: 0.60, minOverlap: 50, group: 'Crypto' },
 ];
+
+// Univers thématique explicite : 30 ETF USD liquides ou spécialisés. Le rang
+// éditorial est un ordre de lecture; le classement publié est recalculé sur les
+// performances 1 mois puis 1 semaine au close de référence.
+const THEMES = [
+  { rank:1, key:'semis', label:'Semi-conducteurs / AI compute', ref:'SMH', group:'IA & numérique', theme:'semis' },
+  { rank:2, key:'nuclear', label:'Uranium + nucléaire', ref:'URA', group:'Énergie & ressources' },
+  { rank:3, key:'grid', label:'Électrification / réseau / AI power', ref:'GRID', group:'Énergie & ressources' },
+  { rank:4, key:'copper', label:'Mines de cuivre', ref:'COPX', group:'Énergie & ressources' },
+  { rank:5, key:'ai_broad', label:'IA large / Big Data', ref:'AIQ', group:'IA & numérique' },
+  { rank:6, key:'cyber', label:'Cybersécurité', ref:'CIBR', group:'IA & numérique' },
+  { rank:7, key:'datacenters', label:'Data centers', ref:'VPN', group:'Infrastructure' },
+  { rank:8, key:'robotics', label:'Robotique / automatisation', ref:'BOTZ', group:'Industrie & rupture' },
+  { rank:9, key:'rareearth', label:'Terres rares / métaux stratégiques', ref:'REMX', group:'Énergie & ressources' },
+  { rank:10, key:'goldminers', label:"Mines d'or", ref:'GDX', group:'Énergie & ressources' },
+  { rank:11, key:'silverminers', label:"Mines d'argent", ref:'SIL', group:'Énergie & ressources' },
+  { rank:12, key:'uraniumminers', label:"Mines d'uranium", ref:'URNM', group:'Énergie & ressources' },
+  { rank:13, key:'defense', label:'Défense / aérospatial', ref:'PPA', group:'Industrie & rupture' },
+  { rank:14, key:'bitcoinminers', label:'Bitcoin miners / HPC', ref:'WGMI', group:'Actifs numériques' },
+  { rank:15, key:'quantum', label:'Informatique quantique', ref:'QTUM', group:'IA & numérique' },
+  { rank:16, key:'infrastructure', label:'Infrastructure US / reshoring', ref:'PAVE', group:'Infrastructure' },
+  { rank:17, key:'space', label:'Économie spatiale', ref:'UFO', group:'Industrie & rupture' },
+  { rank:18, key:'cloud', label:'Logiciel cloud / SaaS', ref:'WCLD', group:'IA & numérique' },
+  { rank:19, key:'biotech', label:'Biotechnologie', ref:'IBB', group:'Santé' },
+  { rank:20, key:'genomics', label:'Innovation santé / génomique', ref:'ARKG', group:'Santé' },
+  { rank:21, key:'blockchain', label:'Actions blockchain', ref:'BLOK', group:'Actifs numériques' },
+  { rank:22, key:'fintech', label:'Fintech', ref:'FINX', group:'Finance' },
+  { rank:23, key:'lithium', label:'Lithium / batteries', ref:'LIT', group:'Énergie & ressources' },
+  { rank:24, key:'ev', label:'Véhicules électriques / conduite autonome', ref:'DRIV', group:'Industrie & rupture' },
+  { rank:25, key:'cleanenergy', label:'Transition énergétique', ref:'ICLN', group:'Énergie & ressources' },
+  { rank:26, key:'solar', label:'Solaire', ref:'TAN', group:'Énergie & ressources' },
+  { rank:27, key:'hydrogen', label:'Hydrogène', ref:'HYDR', group:'Énergie & ressources' },
+  { rank:28, key:'water', label:'Eau', ref:'PHO', group:'Ressources durables' },
+  { rank:29, key:'agribusiness', label:'Agribusiness / agriculture', ref:'MOO', group:'Ressources durables' },
+  { rank:30, key:'timber', label:'Bois / forêt', ref:'WOOD', group:'Ressources durables' },
+].map(theme => ({...theme, minCorr:0.50, minOverlap:50, allowEmpty:true}));
+const REFERENCES = [...CRYPTO_REFERENCES, ...THEMES];
 
 // Relations économiques explicites et contrôlées séparément des simples
 // co-mouvements. Cette liste est volontairement courte et non exhaustive.
@@ -41,6 +74,18 @@ const DIRECT_CRYPTO_PROXIES = [
 ];
 const DIRECT_MIN_OVERLAP = 50;
 const DIRECT_MIN_DOLLAR_ADV = 2e6;
+
+function themeUnavailableWarning(error) {
+  const message = String(error && error.message ? error.message : error || '');
+  const shortHistory = message.match(/only\s+(\d+)\s+bars?.*?need\s*>=?\s*(\d+)/i);
+  if (shortHistory) {
+    return `Historique insuffisant : ${shortHistory[1]} séances exploitables, minimum ${shortHistory[2]}.`;
+  }
+  if (/no bars for reference|no bars available|without bars/i.test(message)) {
+    return 'Historique indisponible pour cette référence sur la fenêtre.';
+  }
+  return 'Calcul indisponible pour cette référence sur la fenêtre.';
+}
 
 // --- 11 secteurs SPDR + noms FR + valeurs-phares (top holdings, stables) ---
 const SECTORS = [
@@ -93,13 +138,13 @@ function assertTerminal(value) {
     }
   }
 }
-function validateSectorBars(payload, refdate) {
-  const symbols = SECTORS.map(s => s.etf);
+function validatePerformanceBars(payload, configs, symbolOf, refdate, kind) {
+  const symbols = configs.map(symbolOf);
   const result = barsContract.validateQueryData(payload, { symbols: symbols.join(','), assetCalendar: CALENDAR, expectedCompletedEnd: refdate });
   if (result.errors.length) throw Error(result.errors.join(' | '));
   const map = new Map();
   for (const item of result.healthyCells) {
-    if (!symbols.includes(item.id) || item.status !== 'completed' || !item.row) throw Error(`unexpected or unavailable sector ${item.id}`);
+    if (!symbols.includes(item.id) || item.status !== 'completed' || !item.row) throw Error(`unexpected or unavailable ${kind} ${item.id}`);
     const rows = item.row.bars;
     if (!Array.isArray(rows) || rows.length < 21) throw Error(`${item.id}: fewer than 21 completed sessions`);
     const parsed = rows.map(row => {
@@ -116,13 +161,22 @@ function validateSectorBars(payload, refdate) {
     if (item.row.coverage?.complete === false || (item.row.coverage?.missing_ranges || []).length) throw Error(`${item.id}: incomplete coverage`);
     map.set(item.id, parsed);
   }
-  if (map.size !== symbols.length) throw Error('incomplete sector universe');
-  return SECTORS.map(s => {
-    const b = map.get(s.etf), last = b.at(-1).close;
+  if (map.size !== symbols.length) throw Error(`incomplete ${kind} universe`);
+  return configs.map(config => {
+    const symbol=symbolOf(config), b=map.get(symbol), last=b.at(-1).close;
     const perf_1w = +((last / b.at(-6).close - 1) * 100).toFixed(2);
     const perf_1m = +((last / b.at(-21).close - 1) * 100).toFixed(2);
-    return { ...s, last: +last.toFixed(2), perf_1w, perf_1m, dir: perf_1w > 0.15 ? 'up' : perf_1w < -0.15 ? 'down' : 'flat' };
-  }).sort((a,b) => b.perf_1w - a.perf_1w || a.etf.localeCompare(b.etf));
+    return { ...config, last:+last.toFixed(2), perf_1w, perf_1m, dir:perf_1w>0.15?'up':perf_1w<-.15?'down':'flat' };
+  });
+}
+function validateSectorBars(payload, refdate) {
+  return validatePerformanceBars(payload,SECTORS,s=>s.etf,refdate,'sector')
+    .sort((a,b) => b.perf_1w - a.perf_1w || a.etf.localeCompare(b.etf));
+}
+function validateThemeBars(payload, refdate) {
+  return validatePerformanceBars(payload,THEMES,t=>t.ref,refdate,'theme ETF')
+    .sort((a,b)=>b.perf_1m-a.perf_1m || b.perf_1w-a.perf_1w || a.ref.localeCompare(b.ref))
+    .map((theme,index)=>({...theme,momentum_rank:index+1}));
 }
 function themeMatch(row, theme) {
   if (!theme) return true;
@@ -261,6 +315,7 @@ function validateBeta(payload, cfg, refdate) {
   if (item.rows == null || (Array.isArray(item.rows) && item.rows.length === 0)) {
     const coverage = ['analyzed', 'skipped_insufficient_overlap', 'skipped_no_bars', 'skipped_filtered', 'universe_size']
       .filter(key => item[key] != null).map(key => `${key}=${item[key]}`).join(', ');
+    if (cfg.allowEmpty) return {key:cfg.key,label:cfg.label,reference:cfg.ref,group:cfg.group,window:item.window||'90d',asof:refdate,quality:'no_qualified_rows',warning:`Aucun titre ne passe les seuils${coverage?' ('+coverage+')':''}.`,excluded_rows:0,rows:[]};
     throw Error(`${cfg.ref}: no qualified beta proxies — coverage/overlap insufficient (rows=${item.rows == null ? 'null' : '[]'}${coverage ? ', ' + coverage : ''})`);
   }
   if (!Array.isArray(item.rows)) throw Error(`${cfg.ref}: invalid RankBeta rows, expected array or explicit empty null`);
@@ -290,7 +345,36 @@ function validateBeta(payload, cfg, refdate) {
     n_obs: r.overlap ?? r.n_obs ?? r.observations ?? r.n,
     last_price:+r.last_price.toFixed(2), dollar_adv_median:+r.dollar_adv_median.toFixed(2), sector: r.sector || '', industry: r.industry || '',
   }));
-  return { key: cfg.key, label: cfg.label, reference: cfg.ref, window: item.window || '90d', asof: refdate, quality: 'usable', warning: null, excluded_rows: inverseExcluded, rows };
+  return { key: cfg.key, label: cfg.label, reference: cfg.ref, group:cfg.group, window: item.window || '90d', asof: refdate, quality: 'usable', warning: null, excluded_rows: inverseExcluded, rows };
+}
+
+function pinDirectProxies(references, directProxies, limit=6) {
+  return references.map(reference => {
+    const direct = directProxies.filter(proxy => proxy.key === reference.key);
+    if (!direct.length) return reference;
+    const directSymbols = new Set(direct.map(proxy => proxy.symbol));
+    const rankBySymbol = new Map(reference.rows.map(row => [row.symbol, row]));
+    const pinned = direct.map(proxy => {
+      const ranked = rankBySymbol.get(proxy.symbol) || {};
+      return {
+        symbol: proxy.symbol,
+        beta: proxy.beta,
+        correlation: proxy.correlation,
+        r2: proxy.r2,
+        n_obs: proxy.n_obs,
+        last_price: proxy.last_price,
+        dollar_adv_median: proxy.dollar_adv_median,
+        sector: ranked.sector || '',
+        industry: ranked.industry || '',
+        relation_verified: true,
+        relation: proxy.relation,
+      };
+    });
+    const statistical = reference.rows.filter(row => !directSymbols.has(row.symbol));
+    const selected = [...pinned, ...statistical.slice(0, Math.max(0, limit - pinned.length))]
+      .sort((a,b) => b.beta - a.beta || a.symbol.localeCompare(b.symbol));
+    return {...reference, rows:selected};
+  });
 }
 function options(argv, env, root, now) {
   let supplied;
@@ -320,13 +404,15 @@ async function run({ argv=process.argv.slice(2), env=process.env, root=ROOT, cli
   if (!client.canCallDirectly('marketdata')) throw Error('marketdata token missing or expired; rotation did not run');
   const directCryptoSymbols=[...new Set(DIRECT_CRYPTO_PROXIES.map(x=>x.reference))];
   const directEquitySymbols=[...new Set(DIRECT_CRYPTO_PROXIES.map(x=>x.symbol))];
+  const themeSymbols=THEMES.map(x=>x.ref);
   const declarations=[{name:'status',tool:'GetStatus',args:{}},
     {name:'bars_sectors',tool:'QueryData',args:{symbols:SECTORS.map(s=>s.etf).join(','),types:'bars_daily',limit:30,source:'webull',force_async:true,as_of_timestamp:opts.asof,completion_policy:'completed_only'},asset_calendar:CALENDAR,expected_completed_end:opts.refdate},
+    {name:'bars_themes',tool:'QueryData',args:{symbols:themeSymbols.join(','),types:'bars_daily',limit:30,source:'webull',force_async:true,as_of_timestamp:opts.asof,completion_policy:'completed_only'},asset_calendar:CALENDAR,expected_completed_end:opts.refdate},
     {name:'bars_direct_crypto',tool:'QueryData',args:{symbols:directCryptoSymbols.join(','),types:'bars_daily',start_date:utcDateMinus(opts.refdate,92),end_date:opts.refdate,limit:120,force_async:true,as_of_timestamp:opts.asof,completion_policy:'completed_only'}},
     {name:'bars_direct_equities',tool:'QueryData',args:{symbols:directEquitySymbols.join(','),types:'bars_daily',start_date:utcDateMinus(opts.refdate,92),end_date:opts.refdate,limit:120,source:'webull',force_async:true,as_of_timestamp:opts.asof,completion_policy:'completed_only'}},
     ...REFERENCES.map(cfg=>({name:`beta_${cfg.key}`,tool:'RankBeta',args:{reference:cfg.ref,universe_asset:'stock',universe_region:'US',min_correlation:cfg.minCorr,min_dollar_adv:5e6,min_price:3,min_overlap:cfg.minOverlap,lookback_days:90,top_k:30,as_of:opts.refdate}}))];
   const documents=DIRECT_CRYPTO_PROXIES.map(cfg=>({name:`sec_${cfg.symbol}`,url:cfg.evidence_url,document_date:cfg.evidence_date,symbol:cfg.symbol,asset_term:cfg.evidence_term}));
-  const plan={schema:'scanner-rotation-plan.v2',reference_close:opts.refdate,as_of_timestamp:opts.asof,calls:declarations,documents};
+  const plan={schema:'scanner-rotation-plan.v3',reference_close:opts.refdate,as_of_timestamp:opts.asof,calls:declarations,documents};
   const planSha=hash(JSON.stringify(plan,null,2)+'\n'), inputSha=hash(stableStringify(plan)), sources=[], calls=[];
   const collectorSha=hash(fs.readFileSync(__filename));
   const barsValidatorSha=hash(fs.readFileSync(require.resolve('./lib/marketdata-bars-contract')));
@@ -335,9 +421,9 @@ async function run({ argv=process.argv.slice(2), env=process.env, root=ROOT, cli
   function saveBytes(name,bytes) {fs.writeFileSync(path.join(opts.outDir,name),bytes,{flag:'wx'});return hash(bytes);}
   function save(name,value) { const bytes=JSON.stringify(value,null,2)+'\n'; return saveBytes(name,bytes); }
   save('plan.json',plan);
-  async function request(decl,validate) {
+  async function request(decl,validate,{required=true,onError=null}={}) {
     const call={name:decl.name,server:'marketdata',tool:decl.tool,args_sha256:hash(stableStringify(decl.args)),ok:false}; calls.push(call);
-    const source={name:decl.name,as_of:null,max_age_h:24,required:true,origin:`marketdata.${decl.tool}`,file:`${decl.name}.json`,reference_close:opts.refdate,expects_close:true}; sources.push(source);
+    const source={name:decl.name,as_of:null,max_age_h:24,required,origin:`marketdata.${decl.tool}`,file:`${decl.name}.json`,reference_close:opts.refdate,expects_close:true}; sources.push(source);
     try {
       let payload=await client.callTool('marketdata',decl.tool,decl.args);
       if (payload?.job_id && ['pending','running'].includes(payload.status)) {
@@ -352,7 +438,12 @@ async function run({ argv=process.argv.slice(2), env=process.env, root=ROOT, cli
       const result=validate(payload);
       source.data_through=opts.refdate;
       call.ok=true; return result;
-    } catch(e) {call.error=client.redactSecrets ? client.redactSecrets(e.message) : e.message; throw Error(`${decl.name}: ${call.error}`);}
+    } catch(e) {
+      call.error=client.redactSecrets ? client.redactSecrets(e.message) : e.message;
+      source.error=call.error;
+      if(!required&&onError)return onError(call.error);
+      throw Error(`${decl.name}: ${call.error}`);
+    }
   }
   async function requestEvidence(cfg) {
     const name=`sec_${cfg.symbol}`,file=`${name}.html`;
@@ -377,19 +468,24 @@ async function run({ argv=process.argv.slice(2), env=process.env, root=ROOT, cli
       if (report.errors.length) throw Error(report.errors.join(' | ')); return report;
     });
     const sectors=await request(declarations[1],payload=>validateSectorBars(payload,opts.refdate));
-    const cryptoRows=await request(declarations[2],payload=>validateDirectBatch(payload,directCryptoSymbols,'crypto_24_7_utc',opts.refdate));
-    const equityRows=await request(declarations[3],payload=>validateDirectBatch(payload,directEquitySymbols,CALENDAR,opts.refdate));
+    const themes=await request(declarations[2],payload=>validateThemeBars(payload,opts.refdate));
+    const cryptoRows=await request(declarations[3],payload=>validateDirectBatch(payload,directCryptoSymbols,'crypto_24_7_utc',opts.refdate));
+    const equityRows=await request(declarations[4],payload=>validateDirectBatch(payload,directEquitySymbols,CALENDAR,opts.refdate));
     let direct_proxies=computeDirectProxies(new Map([...cryptoRows,...equityRows]),opts.refdate);
     const evidence=new Map();
     for (const cfg of DIRECT_CRYPTO_PROXIES) evidence.set(cfg.symbol,await requestEvidence(cfg));
     direct_proxies=direct_proxies.map(row=>({...row,evidence_date:evidence.get(row.symbol).date,evidence_sha256:evidence.get(row.symbol).sha256}));
-    const references=[];
-    for (let i=0;i<REFERENCES.length;i++) references.push(await request(declarations[i+4],payload=>validateBeta(payload,REFERENCES[i],opts.refdate)));
-    result={schema:'rotation-beta.v2',updated:new Date().toISOString(),asof:opts.refdate,
+    let references=[];
+    for(let i=0;i<REFERENCES.length;i++) {
+      const cfg=REFERENCES[i];
+      references.push(await request(declarations[i+5],payload=>validateBeta(payload,cfg,opts.refdate),cfg.allowEmpty?{required:false,onError:error=>({key:cfg.key,label:cfg.label,reference:cfg.ref,group:cfg.group,window:'90 jours',asof:opts.refdate,quality:'unavailable',warning:themeUnavailableWarning(error),excluded_rows:0,rows:[]})}:undefined));
+    }
+    references=pinDirectProxies(references,direct_proxies);
+    result={schema:'rotation-beta.v3',updated:new Date().toISOString(),asof:opts.refdate,
       window:{beta:'90 jours',perf:'5 et 20 séances US'},
-      note:'Co-mouvements calculés sur au moins 50 rendements communs. Les repères crypto directs sont séparés et recalculés depuis les barres Marketdata; les performances sectorielles couvrent 5 et 20 séances US terminées.',
-      methodology:{rank_min_overlap:50,rank_min_dollar_adv:5000000,rank_min_price:3,direct_min_overlap:DIRECT_MIN_OVERLAP,direct_min_dollar_adv:DIRECT_MIN_DOLLAR_ADV,return_type:'log'},
-      sectors,references,direct_proxies,provenance:{plan_sha256:planSha,input_sha256:inputSha,collector_sha256:collectorSha,bars_validator_sha256:barsValidatorSha,equity_reference_close:opts.refdate,as_of_timestamp:opts.asof,sources:sources.map(s=>({file:s.file,sha256:s.sha256}))}};
+      note:'Les 30 ETF thématiques sont classés sur leur performance à 1 mois, puis 1 semaine. Les co-mouvements utilisent au moins 50 rendements communs. Les repères crypto directs sont recalculés depuis les barres Marketdata.',
+      methodology:{theme_count:THEMES.length,theme_rank:'perf_1m_desc_then_perf_1w_desc',rank_min_overlap:50,rank_min_dollar_adv:5000000,rank_min_price:3,direct_min_overlap:DIRECT_MIN_OVERLAP,direct_min_dollar_adv:DIRECT_MIN_DOLLAR_ADV,return_type:'log'},
+      sectors,themes,references,direct_proxies,provenance:{plan_sha256:planSha,input_sha256:inputSha,collector_sha256:collectorSha,bars_validator_sha256:barsValidatorSha,equity_reference_close:opts.refdate,as_of_timestamp:opts.asof,sources:sources.map(s=>({file:s.file,sha256:s.sha256}))}};
     journal.status='PASS';
   } catch(e) {
     journal.status='BLOCKED'; journal.error=e.message; throw e;
@@ -413,5 +509,5 @@ async function run({ argv=process.argv.slice(2), env=process.env, root=ROOT, cli
   }
   return {outDir:opts.outDir,sha256:outputHash,shared_updated:opts.refreshShared,result};
 }
-module.exports={run,assertTerminal,validateSectorBars,validateBeta,validateDirectCryptoBars,validateSecEvidence,regression,themeMatch,SECTORS,REFERENCES,DIRECT_CRYPTO_PROXIES};
+module.exports={run,assertTerminal,validateSectorBars,validateThemeBars,validateBeta,validateDirectCryptoBars,validateSecEvidence,regression,themeMatch,pinDirectProxies,themeUnavailableWarning,SECTORS,THEMES,REFERENCES,DIRECT_CRYPTO_PROXIES};
 if (require.main===module) run().then(r=>console.log(`[gen-rotation-beta] validated local output: ${r.outDir}/rotation-beta.json sha256:${r.sha256}`)).catch(e=>{console.error(`[gen-rotation-beta] BLOCKED: ${mcp.redactSecrets(e.message)}`);process.exitCode=1;});

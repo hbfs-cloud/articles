@@ -6,6 +6,8 @@
 - DONE — Collecteur durci : minimum de 50 observations communes, GLD/SLV/SMH comme références homogènes, filtres par secteur/industrie pour métaux, pétrole et semi-conducteurs, terminologie limitée au co-mouvement statistique.
 - DONE — Repères crypto directs séparés et recalculés depuis les barres Marketdata : ASST→Bitcoin, SBET/BMNR→Ethereum, DFDV→Solana, avec 60 à 62 observations et sources SEC associées. Le plancher direct de liquidité est 2 M$ afin de ne plus exclure DFDV (ADV médiane 2,73 M$).
 - DONE — Snapshot final `rotation-beta.v2` généré par MCP Marketdata : 17 tests ciblés PASS, fraîcheur des 15 sources PASS, article/anti-tics/workflow/diff checks PASS, revues Contrarian et Retail War Room PASS, rendu desktop/mobile contrôlé. Livraison limitée aux sept fichiers Rotation, prête pour commit et publication sur `main`.
+- DONE — Extension demandée après contrôle public : univers fixe de 30 ETF thématiques (IA, logiciel/cloud, nucléaire, réseau, ressources, infrastructure, santé, actifs numériques et durabilité), classé par performance 1 mois puis 1 semaine; chaque ETF devient une référence de co-mouvement, en plus de BTC/ETH/SOL.
+- DONE — Snapshot `rotation-beta.v3` régénéré par MCP Marketdata au close du 18 septembre : 30 historiques ETF classés, 33 références affichées, 23 classements exploitables et 10 historiques insuffisants explicitement documentés sans abaisser le seuil. BMNR/ETH et DFDV/SOL sont épinglés depuis leurs relations SEC vérifiées. Fraîcheur des 32 sources datées, 20 tests, article, anti-tics, workflow et diff PASS; revues Contrarian/Retail War Room PASS; rendu desktop/mobile et console contrôlés. Publication ciblée sur `main` autorisée.
 
 ## Scanner US pour la séance du 21 septembre 2026
 

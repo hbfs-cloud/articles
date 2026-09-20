@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const os=require('node:os');
 const path=require('node:path');
 const crypto=require('node:crypto');
-const {run,assertTerminal,SECTORS,REFERENCES,DIRECT_CRYPTO_PROXIES,validateBeta,validateSectorBars,validateDirectCryptoBars,validateSecEvidence}=require('../gen-rotation-beta');
+const {run,assertTerminal,SECTORS,THEMES,REFERENCES,DIRECT_CRYPTO_PROXIES,validateBeta,validateSectorBars,validateThemeBars,validateDirectCryptoBars,validateSecEvidence,pinDirectProxies,themeUnavailableWarning}=require('../gen-rotation-beta');
 const cal=require('../lib/market-calendar');
 const REF='2026-09-18', NOW='2026-09-20T08:30:00Z', CAL='us_equity_exchange_sessions';
 function fixture(t) {
@@ -21,6 +21,12 @@ function bars() {
   return {captured_at:NOW,results:[{cells:SECTORS.map(s=>({symbol:s.etf,status:'completed'})),data:SECTORS.map(s=>({
     symbol:s.etf,asset_calendar:CAL,expected_completed_end:REF,served_completed_end:REF,last_bar_complete:true,
     bars:Array.from({length:30},(_,i)=>[cal.addUSTradingDays(REF,i-29),100+i,101+i,99+i,100+i,10000]),
+  }))}]};
+}
+function themeBars() {
+  return {captured_at:NOW,results:[{cells:THEMES.map(t=>({symbol:t.ref,status:'completed'})),data:THEMES.map((t,j)=>({
+    symbol:t.ref,asset_calendar:CAL,expected_completed_end:REF,served_completed_end:REF,last_bar_complete:true,coverage:{complete:true,missing_ranges:[]},
+    bars:Array.from({length:30},(_,i)=>[cal.addUSTradingDays(REF,i-29),100+i+j/10,101+i+j/10,99+i+j/10,100+i+j/10,10000]),
   }))}]};
 }
 function directBars() {
@@ -41,7 +47,7 @@ function client(edit) {
   const calls=[];
   return {calls,canCallDirectly:()=>true,callTool:async(server,tool,args)=>{
     calls.push({server,tool,args});
-    let value=tool==='GetStatus'?{captured_at:NOW,commit:'13a1b497',operation_readiness:{bars_daily_us_equity:{status:'ready',asset_calendar:CAL,expected_completed_end:REF,served_completed_end:REF}}}:tool==='QueryData'?(args.symbols===SECTORS.map(s=>s.etf).join(',')?bars():directBatch(args.symbols)):beta(args.reference);
+    let value=tool==='GetStatus'?{captured_at:NOW,commit:'13a1b497',operation_readiness:{bars_daily_us_equity:{status:'ready',asset_calendar:CAL,expected_completed_end:REF,served_completed_end:REF}}}:tool==='QueryData'?(args.symbols===SECTORS.map(s=>s.etf).join(',')?bars():args.symbols===THEMES.map(t=>t.ref).join(',')?themeBars():directBatch(args.symbols)):beta(args.reference);
     return edit?edit(value,tool,args):value;
   },awaitJob:async()=>{throw Error('unexpected job polling')},redactSecrets:s=>s};
 }
@@ -54,17 +60,22 @@ function unchanged(root) {
 test('MCP-only full run stages all hashed sources; public outputs remain byte-identical',async t=>{
   const root=fixture(t), c=client();
   const output=await run(opts(root,c));
-  assert.equal(c.calls.length,11); assert.ok(c.calls.every(c=>c.server==='marketdata'));
+  assert.equal(c.calls.length,38); assert.ok(c.calls.every(c=>c.server==='marketdata'));
   const request=c.calls.find(c=>c.tool==='QueryData'&&c.args.source==='webull').args;
   assert.equal(request.completion_policy,'completed_only'); assert.equal(request.as_of_timestamp,NOW); assert.equal(request.end_date,undefined);
-  assert.equal(output.result.sectors.length,11); assert.equal(output.result.references.length,7);assert.equal(output.result.direct_proxies.length,4);
-  assert.equal(output.result.provenance.sources.length,15);assert.ok(output.result.direct_proxies.every(x=>x.evidence_sha256&&x.evidence_date<=REF));
+  assert.equal(output.result.sectors.length,11);assert.equal(output.result.themes.length,30);assert.equal(output.result.references.length,33);assert.equal(output.result.direct_proxies.length,4);
+  assert.deepEqual(new Set(output.result.themes.map(x=>x.ref)),new Set(THEMES.map(x=>x.ref)));
+  output.result.themes.forEach((theme,index)=>{
+    assert.equal(theme.momentum_rank,index+1);
+    if(index){const previous=output.result.themes[index-1];assert.ok(previous.perf_1m>theme.perf_1m||(previous.perf_1m===theme.perf_1m&&previous.perf_1w>=theme.perf_1w));}
+  });
+  assert.equal(output.result.provenance.sources.length,42);assert.ok(output.result.direct_proxies.every(x=>x.evidence_sha256&&x.evidence_date<=REF));
   assert.equal(output.result.sectors[0].perf_1m,+((129/109-1)*100).toFixed(2));
   for(const source of output.result.provenance.sources) assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(output.outDir,source.file))).digest('hex'),source.sha256);
   assert.equal(JSON.parse(fs.readFileSync(path.join(output.outDir,'collection.json'))).status,'PASS');
   assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(output.outDir,'plan.json'))).digest('hex'),output.result.provenance.plan_sha256);
   unchanged(root);
-  await assert.rejects(run(opts(root,c)),/not empty/); assert.equal(c.calls.length,11);
+  await assert.rejects(run(opts(root,c)),/not empty/); assert.equal(c.calls.length,38);
 });
 test('missing token fails without network, staging or public mutation',async t=>{
   const root=fixture(t),c=client();c.canCallDirectly=()=>false;
@@ -82,6 +93,7 @@ test('each ETF must contain the exact close and contiguous completed sessions',(
     p=>p.results[0].data[0].bars.pop(),p=>p.results[0].data[0].bars.splice(15,1),p=>p.results[0].data[0].bars[29][4]=null,
     p=>p.results[0].cells.pop()]) {const payload=bars();mutate(payload);assert.throws(()=>validateSectorBars(payload,REF));}
   const payload=bars();payload.results[0].data.reverse();assert.equal(validateSectorBars(payload,REF).length,11); // Symbol identity, not array position.
+  assert.equal(validateThemeBars(themeBars(),REF).length,30);
 });
 test('stale, mismatched, low-quality or empty beta results never become current output',()=>{
   for(const mutate of [p=>p.as_of='2026-09-17',p=>delete p.as_of,p=>p.reference='WRONG',p=>p.rows=[],p=>p.quality='insufficient',
@@ -92,6 +104,26 @@ test('stale, mismatched, low-quality or empty beta results never become current 
 test('published beta rows preserve the normalized observation count',()=>{
   const result=validateBeta(beta('BTC-USD'),REFERENCES[0],REF);
   assert.equal(result.rows[0].n_obs,60);
+});
+test('verified direct proxies are pinned in their statistical ranking',()=>{
+  const references=[
+    {key:'eth',rows:[
+      {symbol:'PURR',beta:1.41,sector:'Financials'},
+      {symbol:'SBET',beta:1.16,sector:'Financials'},
+      {symbol:'COIN',beta:1.04,sector:'Financials'},
+    ]},
+    {key:'sol',rows:[{symbol:'FWDI',beta:1.39,sector:'Financials'}]},
+  ];
+  const direct=[
+    {key:'eth',symbol:'SBET',relation:'Trésorerie Ethereum',beta:1.17,correlation:.78,r2:.61,n_obs:62,last_price:9.35,dollar_adv_median:54839250.84},
+    {key:'eth',symbol:'BMNR',relation:'Trésorerie Ethereum',beta:1.13,correlation:.71,r2:.51,n_obs:62,last_price:25.99,dollar_adv_median:617885908.73},
+    {key:'sol',symbol:'DFDV',relation:'Trésorerie Solana',beta:1.44,correlation:.75,r2:.56,n_obs:62,last_price:6.06,dollar_adv_median:2733534.14},
+  ];
+  const result=pinDirectProxies(references,direct);
+  assert.deepEqual(result[0].rows.map(x=>x.symbol),['PURR','SBET','BMNR','COIN']);
+  assert.deepEqual(result[1].rows.map(x=>x.symbol),['DFDV','FWDI']);
+  assert.equal(result[0].rows.find(x=>x.symbol==='BMNR').relation_verified,true);
+  assert.equal(result[1].rows.find(x=>x.symbol==='DFDV').dollar_adv_median,2733534.14);
 });
 test('direct crypto proxies are recomputed from identified common-date bars',()=>{
   const rows=validateDirectCryptoBars(directBars(),REF);
@@ -110,10 +142,22 @@ test('SEC evidence is point-in-time, identified and content-addressed',async()=>
   assert.throws(()=>validateSecEvidence(Buffer.from(`<html>${cfg.symbol} ${'evidence '.repeat(200)}</html>`),cfg,REF));
 });
 test('a late beta failure preserves evidence but does not write a partial rotation',async t=>{
-  const root=fixture(t),c=client((value,tool,args)=>{if(tool==='RankBeta'&&args.reference==='SMH')value.rows=[];return value;});
-  await assert.rejects(run(opts(root,c)),/no qualified beta/);assert.equal(c.calls.length,11);
-  assert.equal(fs.existsSync(path.join(staging(root),'beta_ai.json')),true);
+  const root=fixture(t),c=client((value,tool,args)=>{if(tool==='RankBeta'&&args.reference==='BTC-USD')value.rows=[];return value;});
+  await assert.rejects(run(opts(root,c)),/no qualified beta/);assert.equal(c.calls.length,6);
+  assert.equal(fs.existsSync(path.join(staging(root),'beta_btc.json')),true);
   assert.equal(fs.existsSync(path.join(staging(root),'rotation-beta.json')),false);unchanged(root);
+});
+test('a thematic ETF with insufficient beta history remains ranked with an explicit unavailable detail',async t=>{
+  const root=fixture(t),c=client((value,tool,args)=>{if(tool==='RankBeta'&&args.reference==='GRID')throw Error('reference GRID has only 42 bars; need >= 50; Erreur outil MCP: cache/DuckDB; Yahoo fetch failed');return value;});
+  const output=await run(opts(root,c));
+  const grid=output.result.references.find(x=>x.reference==='GRID');
+  assert.equal(grid.quality,'unavailable');assert.equal(grid.warning,'Historique insuffisant : 42 séances exploitables, minimum 50.');assert.doesNotMatch(grid.warning,/MCP|DuckDB|Yahoo/i);assert.deepEqual(grid.rows,[]);
+  const source=output.result.provenance.sources.find(x=>x.file==='beta_grid.json');assert.equal(source.sha256,undefined);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(staging(root),'collection.json'))).status,'PASS');unchanged(root);
+});
+test('thematic unavailability messages stay editorial and never expose transport internals',()=>{
+  assert.equal(themeUnavailableWarning(Error('no bars for reference VPN; Yahoo fetch failed')),'Historique indisponible pour cette référence sur la fenêtre.');
+  assert.equal(themeUnavailableWarning(Error('Erreur outil MCP: cache/DuckDB failed')),'Calcul indisponible pour cette référence sur la fenêtre.');
 });
 test('date or published output-path mismatch fails before network',async t=>{
   const root=fixture(t),c=client();
@@ -131,7 +175,7 @@ test('async job is polled once via shared exhausted-pagination client',async t=>
 
 test('completed GetStatus accepts running background work but still gates required readiness',async t=>{
   const root=fixture(t),c=client((value,tool)=>{if(tool==='GetStatus') {value.status='completed';value.capabilities=[{name:'sec_historical_rebuild',status:'running'},{name:'unrelated_old_job',status:'failed'}];}return value;});
-  await run(opts(root,c)); assert.equal(c.calls.length,11); unchanged(root);
+  await run(opts(root,c)); assert.equal(c.calls.length,38); unchanged(root);
   const other=fixture(t),bad=client((value,tool)=>{if(tool==='GetStatus'){value.status='completed';value.capabilities=[{name:'sec_historical_rebuild',status:'running'}];value.operation_readiness.bars_daily_us_equity.status='not_ready';}return value;});
   await assert.rejects(run(opts(other,bad)),/not ready/);assert.equal(bad.calls.length,1);unchanged(other);
 });
@@ -148,7 +192,7 @@ test('default compatibility refreshes both shared files only after every source 
   const staged=fs.readFileSync(path.join(output.outDir,'rotation-beta.json'),'utf8');
   assert.equal(fs.readFileSync(path.join(root,'data/rotation-beta.json'),'utf8'),staged);
   assert.equal(fs.readFileSync(path.join(root,'portfolio/v1/rotation.json'),'utf8'),staged);
-  const other=fixture(t),bad=client((value,tool,args)=>{if(tool==='RankBeta'&&args.reference==='SMH')value.rows=[];return value;});
+  const other=fixture(t),bad=client((value,tool,args)=>{if(tool==='RankBeta'&&args.reference==='BTC-USD')value.rows=[];return value;});
   await assert.rejects(run({...opts(other,bad),argv:[]}),/no qualified beta/);unchanged(other);
 });
 
@@ -164,13 +208,15 @@ test('actual RankBeta dated-window format certifies the served end without an as
   }
 });
 
-test('complete RankBeta with null rows reports insufficient overlap, not a parser failure',async t=>{
-  const empty={captured_at:NOW,type:'beta_ranking',reference:'SMH',window:'2026-06-20..2026-09-18',rows:null,analyzed:0,skipped_insufficient_overlap:5525,skipped_no_bars:73,universe_size:5599};
-  assert.throws(()=>validateBeta(empty,REFERENCES.at(-1),REF),/no qualified beta proxies.*coverage\/overlap insufficient.*analyzed=0.*skipped_insufficient_overlap=5525/);
-  const root=fixture(t),c=client((value,tool,args)=>tool==='RankBeta'&&args.reference==='SMH'?empty:value);
+test('complete strict RankBeta with null rows reports insufficient overlap, not a parser failure',async t=>{
+  const empty={captured_at:NOW,type:'beta_ranking',reference:'BTC-USD',window:'2026-06-20..2026-09-18',rows:null,analyzed:0,skipped_insufficient_overlap:5525,skipped_no_bars:73,universe_size:5599};
+  assert.throws(()=>validateBeta(empty,REFERENCES[0],REF),/no qualified beta proxies.*coverage\/overlap insufficient.*analyzed=0.*skipped_insufficient_overlap=5525/);
+  const optional={...empty,reference:'SMH'};
+  assert.equal(validateBeta(optional,REFERENCES.find(x=>x.ref==='SMH'),REF).quality,'no_qualified_rows');
+  const root=fixture(t),c=client((value,tool,args)=>tool==='RankBeta'&&args.reference==='BTC-USD'?empty:value);
   await assert.rejects(run(opts(root,c)),/coverage\/overlap insufficient/);
-  assert.equal(c.calls.length,11);
-  assert.equal(fs.existsSync(path.join(staging(root),'beta_ai.json')),true);
+  assert.equal(c.calls.length,6);
+  assert.equal(fs.existsSync(path.join(staging(root),'beta_btc.json')),true);
   assert.equal(fs.existsSync(path.join(staging(root),'rotation-beta.json')),false);
   assert.equal(JSON.parse(fs.readFileSync(path.join(staging(root),'collection.json'))).status,'BLOCKED');unchanged(root);
 });
