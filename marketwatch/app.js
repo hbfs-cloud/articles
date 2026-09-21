@@ -1,4 +1,4 @@
-import { effectiveQuote, hyperliquidCoin, isHyperliquidWindow } from './quote-routing.js?v=5';
+import { decodeYahooFrame, effectiveQuote, hyperliquidCoin, isFresh, isHyperliquidWindow, QUOTE_MAX_AGE, yahooSubscriptionBatches } from './quote-routing.js?v=6';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const esc = (value = '') => String(value).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
@@ -22,7 +22,7 @@ const state = {
   tagGroups: [], assets: [], filtered: [], tags: read(STORAGE.tags, {}), alerts: read(STORAGE.alerts, []),
   selectedTags: new Set(storedTagState.tags), sort: storedSort(),
   visibleColumns: storedColumns(), selected: null, firebase: null, firebaseApi: null, remoteTimer: null, analysisLoading: false,
-  streamEnabled: true, streams: { yahoo:null, hyperliquid:null },
+  streamEnabled: true, streams: { yahoo:new Map(), hyperliquid:null },
   streamStatus: { yahoo:'idle', hyperliquid:'idle' }, reconnectTimers: { yahoo:null, hyperliquid:null },
   yahooAssets: new Map(), hyperliquidAssets: new Map(), yahooCloseCount: 0, quoteRenderPending: false
 };
@@ -328,6 +328,32 @@ function renderRows() {
   $('#empty').hidden = state.filtered.length > 0;
   applyColumnVisibility();
 }
+function refreshQuoteCells() {
+  const rows = new Map([...$('#rows').querySelectorAll('tr[data-id]')].map(row => [row.dataset.id, row]));
+  if (rows.size !== state.filtered.length) { applyFilters(); return; }
+  for (const asset of state.filtered) {
+    const row = rows.get(asset.id); if (!row) continue;
+    const quote = effectiveQuote(asset), change = quote.change;
+    const price = row.querySelector('.price-stack > span:first-child');
+    if (price) price.textContent = Number.isFinite(quote.price) ? quote.price.toLocaleString('fr-FR',{maximumFractionDigits:4}) : asset.price;
+    const badge = row.querySelector('.quote-source');
+    if (badge && !badge.classList.contains(quote.source)) badge.outerHTML = quoteBadge(quote);
+    const changeCell = row.querySelector('[data-column="change"]');
+    if (changeCell) {
+      changeCell.textContent = Number.isFinite(change) ? `${change > 0 ? '+' : ''}${change.toLocaleString('fr-FR',{maximumFractionDigits:2})} %` : '—';
+      changeCell.classList.toggle('negative', change < 0);
+      changeCell.classList.toggle('positive', Number.isFinite(change) && change >= 0);
+      changeCell.classList.toggle('unavailable', !Number.isFinite(change));
+      changeCell.dataset.label = quote.source === 'hyperliquid' ? 'vs close' : '24 h';
+    }
+    row.querySelector('.spark')?.classList.toggle('negative', change < 0);
+  }
+  if (state.sort.key === 'price' || state.sort.key === 'change') {
+    state.filtered.sort(compareAssets);
+    $('#rows').append(...state.filtered.map(asset => rows.get(asset.id)).filter(Boolean));
+  }
+  updateCounts();
+}
 function chartSvg(values) {
   const d = pathFor(values, 500, 190, 12), area = `${d} L488,190 L12,190 Z`;
   return `<svg class="detail-chart" viewBox="0 0 500 190" preserveAspectRatio="none" role="img" aria-label="Historique de prix"><defs><linearGradient id="fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#50b4ee" stop-opacity=".25"/><stop offset="1" stop-color="#50b4ee" stop-opacity="0"/></linearGradient></defs><path class="area" d="${area}"/><path class="line" d="${d}"/></svg>`;
@@ -413,35 +439,25 @@ function openDetail(id) {
 }
 function closeDetail() { $('#detail').classList.remove('open'); $('#detail').setAttribute('aria-hidden','true'); $('#scrim').hidden = true; state.selected = null; }
 function evaluateAlerts(asset) {
+  if (!state.alerts.length) return;
   const price = effectiveQuote(asset).price;
   if (!Number.isFinite(price)) return;
+  let triggered = false;
   for (const alert of activeAlerts().filter(a => a.instrumentId === asset.id && !a.triggered)) {
     if ((alert.condition === 'above' && price >= alert.target) || (alert.condition === 'below' && price <= alert.target)) {
-      alert.triggered = true; const message = `${asset.ticker} ${alert.condition === 'above' ? 'a franchi' : 'est passé sous'} ${alert.target}`;
+      alert.triggered = true; triggered = true; const message = `${asset.ticker} ${alert.condition === 'above' ? 'a franchi' : 'est passé sous'} ${alert.target}`;
       toast(message); if ('Notification' in window && Notification.permission === 'granted') new Notification('MarketWatch', { body: message });
     }
   }
-  saveLocal();
-}
-function decodeYahoo(data) {
-  const bytes = Uint8Array.from(atob(data), c => c.charCodeAt(0)); let i = 0, result = {};
-  const varint = () => { let value = 0, shift = 0, b; do { b = bytes[i++]; value += (b & 127) * 2 ** shift; shift += 7; } while (b & 128); return value; };
-  while (i < bytes.length) {
-    const key = varint(), field = key >> 3, wire = key & 7;
-    if (wire === 2) { const length = varint(), chunk = bytes.slice(i, i + length); i += length; if (field === 1) result.id = new TextDecoder().decode(chunk); }
-    else if (wire === 5) { const view = new DataView(bytes.buffer, bytes.byteOffset + i, 4); const value = view.getFloat32(0, true); i += 4; if (field === 2) result.price = value; else if (field === 8) result.changePercent = value; }
-    else if (wire === 0) { const value = varint(); if (field === 3) result.time = value; }
-    else if (wire === 1) i += 8; else break;
-  }
-  return result;
+  if (triggered) saveLocal();
 }
 function scheduleQuoteRender() {
   if (state.quoteRenderPending) return;
   state.quoteRenderPending = true;
-  requestAnimationFrame(() => {
-    state.quoteRenderPending = false; applyFilters(); updateConnectionUi();
+  setTimeout(() => {
+    state.quoteRenderPending = false; refreshQuoteCells(); updateConnectionUi();
     if (state.selected) updateDetailQuote(state.selected);
-  });
+  }, 2000);
 }
 function updateConnectionUi() {
   const yahooOpen = state.streamStatus.yahoo === 'open', hyperliquidOpen = state.streamStatus.hyperliquid === 'open';
@@ -449,44 +465,57 @@ function updateConnectionUi() {
   $('#marketState').classList.toggle('live', live);
   $('#streamBtn').classList.toggle('active', state.streamEnabled);
   $('#streamBtn').setAttribute('aria-pressed', String(state.streamEnabled));
-  $('#connectionState').textContent = hyperliquidOpen && yahooOpen ? 'HL + Yahoo RT' : hyperliquidOpen ? 'Hyperliquid RT' : yahooOpen ? 'Yahoo RT' : state.yahooCloseCount ? 'Repli clôture' : state.streamEnabled ? 'Connexion…' : 'Flux désactivé';
-  const rtCount = state.assets.filter(asset => effectiveQuote(asset).realtime).length;
-  $('#connectionHint').textContent = `${rtCount} RT · ${state.yahooCloseCount} closes Yahoo`;
+  const sourceCounts = state.assets.reduce((counts, asset) => {
+    const source = effectiveQuote(asset).source;
+    counts[source] = (counts[source] || 0) + 1;
+    return counts;
+  }, {});
+  const rtCount = (sourceCounts.hyperliquid || 0) + (sourceCounts['yahoo-rt'] || 0);
+  $('#connectionState').textContent = rtCount ? (hyperliquidOpen && yahooOpen ? 'HL + Yahoo RT' : hyperliquidOpen ? 'Hyperliquid RT' : 'Yahoo RT') : yahooOpen || hyperliquidOpen ? 'Flux connecté' : state.yahooCloseCount ? 'Repli clôture' : state.streamEnabled ? 'Connexion…' : 'Flux désactivé';
+  $('#connectionHint').textContent = `${rtCount} RT · ${sourceCounts['yahoo-close'] || 0} closes Yahoo${sourceCounts.snapshot ? ` · ${sourceCounts.snapshot} snapshots` : ''}`;
 }
 function scheduleReconnect(kind, connect) {
   if (!state.streamEnabled || state.reconnectTimers[kind]) return;
   state.reconnectTimers[kind] = setTimeout(() => { state.reconnectTimers[kind] = null; connect(); }, 5000);
 }
 function connectYahoo() {
-  if (!state.streamEnabled || state.streams.yahoo) return;
-  try {
-    const socket = new WebSocket('wss://streamer.finance.yahoo.com/?version=2');
-    state.streams.yahoo = socket; state.streamStatus.yahoo = 'connecting'; updateConnectionUi();
-    socket.onopen = () => {
-      if (state.streams.yahoo !== socket) return;
-      state.streamStatus.yahoo = 'open';
-      const symbols = [...state.yahooAssets.keys()];
-      for (let index = 0; index < symbols.length; index += 100) socket.send(JSON.stringify({ subscribe:symbols.slice(index, index + 100) }));
-      updateConnectionUi();
-    };
-    socket.onmessage = event => {
-      try {
-        const incoming = decodeYahoo(event.data), assets = state.yahooAssets.get(incoming.id) || [];
-        if (!assets.length || !Number.isFinite(incoming.price)) return;
-        const receivedAt = Date.now(), sourceAt = Number.isFinite(incoming.time) ? incoming.time * 1000 : receivedAt;
-        for (const asset of assets) {
-          asset.yahooRt = { price:incoming.price, change:incoming.changePercent, at:sourceAt };
-          evaluateAlerts(asset);
-        }
-        scheduleQuoteRender();
-      } catch { /* malformed Yahoo frame */ }
-    };
-    socket.onerror = () => { state.streamStatus.yahoo = 'error'; updateConnectionUi(); };
-    socket.onclose = () => {
-      if (state.streams.yahoo !== socket) return;
-      state.streams.yahoo = null; state.streamStatus.yahoo = 'closed'; updateConnectionUi(); scheduleQuoteRender(); scheduleReconnect('yahoo', connectYahoo);
-    };
-  } catch { state.streamStatus.yahoo = 'error'; updateConnectionUi(); scheduleReconnect('yahoo', connectYahoo); }
+  if (!state.streamEnabled) return;
+  const batches = yahooSubscriptionBatches([...state.yahooAssets.keys()]);
+  for (const [index, symbols] of batches.entries()) {
+    if (state.streams.yahoo.has(index)) continue;
+    try {
+      const socket = new WebSocket('wss://streamer.finance.yahoo.com/');
+      state.streams.yahoo.set(index, socket);
+      state.streamStatus.yahoo = 'connecting';
+      socket.onopen = () => {
+        if (state.streams.yahoo.get(index) !== socket) return;
+        socket.send(JSON.stringify({ subscribe:symbols }));
+        state.streamStatus.yahoo = 'open'; updateConnectionUi();
+      };
+      socket.onmessage = event => {
+        try {
+          const incoming = decodeYahooFrame(event.data), assets = state.yahooAssets.get(incoming.id) || [];
+          if (!assets.length || incoming.quoteType === 7 || !Number.isFinite(incoming.price) || incoming.price <= 0) return;
+          const sourceAt = incoming.time;
+          if (!isFresh({ price:incoming.price, at:sourceAt }, QUOTE_MAX_AGE.yahoo)) return;
+          for (const asset of assets) {
+            if (asset.yahooRt && sourceAt < asset.yahooRt.at) continue;
+            asset.yahooRt = { price:incoming.price, change:incoming.changePercent, at:sourceAt };
+            evaluateAlerts(asset);
+          }
+          scheduleQuoteRender();
+        } catch { /* malformed Yahoo frame */ }
+      };
+      socket.onerror = () => { if (state.streams.yahoo.get(index) === socket) updateConnectionUi(); };
+      socket.onclose = () => {
+        if (state.streams.yahoo.get(index) !== socket) return;
+        state.streams.yahoo.delete(index);
+        state.streamStatus.yahoo = [...state.streams.yahoo.values()].some(stream => stream.readyState === WebSocket.OPEN) ? 'open' : 'closed';
+        updateConnectionUi(); scheduleQuoteRender(); scheduleReconnect('yahoo', connectYahoo);
+      };
+    } catch { scheduleReconnect('yahoo', connectYahoo); }
+  }
+  updateConnectionUi();
 }
 function connectHyperliquid() {
   if (!state.streamEnabled || !isHyperliquidWindow() || state.streams.hyperliquid) return;
@@ -528,7 +557,10 @@ function reconcilePriceFeeds() {
 }
 function disconnectStreams() {
   state.streamEnabled = false;
-  for (const kind of ['yahoo','hyperliquid']) {
+  clearTimeout(state.reconnectTimers.yahoo); state.reconnectTimers.yahoo = null;
+  const yahooStreams = [...state.streams.yahoo.values()]; state.streams.yahoo.clear(); state.streamStatus.yahoo = 'idle';
+  yahooStreams.forEach(socket => socket.close());
+  for (const kind of ['hyperliquid']) {
     clearTimeout(state.reconnectTimers[kind]); state.reconnectTimers[kind] = null;
     const socket = state.streams[kind]; state.streams[kind] = null; state.streamStatus[kind] = 'idle';
     if (socket) socket.close();
@@ -650,5 +682,6 @@ $('#rows').addEventListener('keydown', event => { if ((event.key === 'Enter' || 
 $('#closeDetail').onclick = closeDetail; $('#scrim').onclick = closeDetail; document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
 $('#streamBtn').onclick = toggleStream; $('#shareBtn').onclick = sharePage; $('#syncBtn').onclick = () => $('#syncDialog').showModal(); $('#connectGoogle').onclick = connectGoogle;
 window.addEventListener('online', reconcilePriceFeeds);
-setInterval(() => { activeAlerts(); reconcilePriceFeeds(); scheduleQuoteRender(); }, 60000);
+setInterval(() => { activeAlerts(); reconcilePriceFeeds(); }, 60000);
+setInterval(scheduleQuoteRender, 15000);
 init();

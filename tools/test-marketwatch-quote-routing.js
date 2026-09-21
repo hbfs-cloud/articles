@@ -4,11 +4,28 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
+const protobuf = require('protobufjs');
 const { pathToFileURL } = require('url');
 const { closeFromSpark, marketFor, yahooSymbol } = require('./build-marketwatch-yahoo-closes');
 
 (async () => {
   const routing = await import(pathToFileURL(path.join(__dirname, '../marketwatch/quote-routing.js')).href);
+
+  const pricingData = protobuf.loadSync(path.join(__dirname, 'PricingData.proto')).lookupType('yfinancedata');
+  const yahooTime = Date.parse('2026-09-21T15:00:00Z');
+  const frame = Buffer.from(pricingData.encode({ id:'AAOI', price:107.12, time:String(yahooTime), quoteType:8, changePercent:1.85 }).finish()).toString('base64');
+  const decoded = routing.decodeYahooFrame(frame);
+  assert.strictEqual(decoded.id, 'AAOI');
+  assert(Math.abs(decoded.price - 107.12) < 0.001);
+  assert.strictEqual(decoded.time, yahooTime, 'Yahoo sint64 time is decoded into epoch milliseconds');
+  assert.strictEqual(decoded.quoteType, 8);
+  assert.strictEqual(routing.isFresh({ price:decoded.price, at:decoded.time }, routing.QUOTE_MAX_AGE.yahoo, yahooTime + 6000), true, 'current Yahoo frame qualifies as live');
+  assert.strictEqual(routing.isFresh({ price:decoded.price, at:decoded.time }, routing.QUOTE_MAX_AGE.yahoo, yahooTime + 15 * 60 * 1000), false, '15-minute-delayed Yahoo frame is not labeled real-time');
+  assert.strictEqual(routing.isFresh({ price:decoded.price, at:decoded.time * 1000 }, routing.QUOTE_MAX_AGE.yahoo, yahooTime + 6000), false, 'future timestamp must not be labeled real-time');
+  const symbols = Array.from({length:290}, (_, index) => `T${index}`);
+  const batches = routing.yahooSubscriptionBatches(symbols);
+  assert.deepStrictEqual(batches.map(batch => batch.length), [100, 100, 90], 'Yahoo subscriptions cover the full universe across connections');
+  assert.deepStrictEqual(batches.flat(), symbols, 'Yahoo batching preserves every symbol in order');
 
   assert.strictEqual(routing.isHyperliquidWindow(new Date('2026-09-20T16:00:00Z')), true, 'Sunday uses Hyperliquid window');
   assert.strictEqual(routing.isHyperliquidWindow(new Date('2026-09-21T07:59:00Z')), true, '03:59 New York is overnight');

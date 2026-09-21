@@ -1,3 +1,10 @@
+# Correctif temps réel Yahoo MarketWatch — 21 septembre 2026
+
+- DONE — Écart reproduit : l'URL Yahoo `?version=2` enveloppait le protobuf en JSON et le champ `time` était décodé comme secondes brutes au lieu d'un `sint64` en millisecondes ; une seule connexion ne couvrait qu'environ 100 symboles.
+- DONE — Flux Yahoo direct décodé avec temps source, contrôle de fraîcheur à 90 s, rejet des messages anciens/futurs et des heartbeats ; 290 symboles répartis sur trois connexions. Rendu des seules cellules de cotation et persistance des alertes limitée aux déclenchements pour tenir sous charge.
+- DONE — Tests ciblés et suite rapide réussis (45 PASS, 4 SKIP, 0 échec) ; contrôle local prolongé avec AAOI en Yahoo RT, 193 RT sur 290 lignes après plus d'une minute, sans erreur console.
+- IN PROGRESS — Publier le correctif ciblé sur `main` selon l'autorisation déjà donnée, puis vérifier la page publique et GitHub Pages.
+
 # Routage des prix MarketWatch — 21 septembre 2026
 
 - DONE — Routage automatique vers Hyperliquid hors séance US lorsqu'un perpétuel `xyz` exact existe, puis vers le WebSocket Yahoo quand Hyperliquid ne couvre pas l'instrument ou n'est pas frais.

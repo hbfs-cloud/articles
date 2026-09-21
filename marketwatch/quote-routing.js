@@ -1,5 +1,50 @@
-const YAHOO_RT_MAX_AGE_MS = 5 * 60 * 1000;
+const YAHOO_RT_MAX_AGE_MS = 90 * 1000;
 const HYPERLIQUID_RT_MAX_AGE_MS = 45 * 1000;
+
+export function yahooSubscriptionBatches(symbols) {
+  const batches = [];
+  for (let index = 0; index < symbols.length; index += 100) batches.push(symbols.slice(index, index + 100));
+  return batches;
+}
+
+// Yahoo's PricingData.time is a protobuf sint64 in milliseconds, not seconds.
+export function decodeYahooFrame(base64) {
+  const bytes = Uint8Array.from(atob(base64), char => char.charCodeAt(0));
+  const cursor = { offset:0 }, quote = {};
+  const varint = () => {
+    let value = 0n, shift = 0n;
+    while (cursor.offset < bytes.length && shift <= 63n) {
+      const byte = bytes[cursor.offset++];
+      value |= BigInt(byte & 127) << shift;
+      if (!(byte & 128)) return value;
+      shift += 7n;
+    }
+    throw new Error('Truncated Yahoo protobuf varint');
+  };
+  while (cursor.offset < bytes.length) {
+    const key = Number(varint()), field = key >> 3, wire = key & 7;
+    if (wire === 2) {
+      const length = Number(varint()), end = cursor.offset + length;
+      if (!Number.isSafeInteger(length) || end > bytes.length) throw new Error('Truncated Yahoo protobuf field');
+      if (field === 1) quote.id = new TextDecoder().decode(bytes.subarray(cursor.offset, end));
+      cursor.offset = end;
+    } else if (wire === 5) {
+      if (cursor.offset + 4 > bytes.length) throw new Error('Truncated Yahoo protobuf float');
+      const value = new DataView(bytes.buffer, bytes.byteOffset + cursor.offset, 4).getFloat32(0, true);
+      cursor.offset += 4;
+      if (field === 2) quote.price = value;
+      else if (field === 8) quote.changePercent = value;
+    } else if (wire === 0) {
+      const value = varint();
+      if (field === 3) quote.time = Number((value >> 1n) ^ (-(value & 1n)));
+      else if (field === 6) quote.quoteType = Number(value);
+    } else if (wire === 1) {
+      if (cursor.offset + 8 > bytes.length) throw new Error('Truncated Yahoo protobuf double');
+      cursor.offset += 8;
+    } else throw new Error('Unsupported Yahoo protobuf field');
+  }
+  return quote;
+}
 
 const HYPERLIQUID_MACRO = {
   'GC=F': 'xyz:GOLD',
