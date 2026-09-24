@@ -1,24 +1,103 @@
 {
   "artifact": "scanner/$date/_dtx",
-  "note": "The public DTX mode is named best but consumes the deployed etf_us engine portfolio. DtxListConfigs remains a blocking runtime check so a catalog change cannot pass silently.",
+  "note": "The public DTX mode is named best but consumes the deployed etf_us engine portfolio. DtxListConfigs remains a blocking runtime check so a catalog change cannot pass silently. Mode DTX piloté par le catalogue (décision du propriétaire du 2026-09-24, jusqu'à nouvel ordre) : tant que DtxCatalog(eligible_for_live=true) ne contient pas etf_us, dtx_mode=compare_only ; dès qu'il le contient, dtx_mode=decide. La vague catalog relit le catalogue et refuse un mode incohérent.",
   "waves": [
     {
       "name": "preflight",
       "gate": true,
       "calls": [
-        { "as": "dtx_health", "server": "systematic", "tool": "GetHealth", "args": { "expected_close": "$refdate" }, "freshness": { "max_age_h": 2, "required": true } }
+        {
+          "as": "dtx_health",
+          "server": "systematic",
+          "tool": "GetHealth",
+          "args": {
+            "expected_close": "$refdate"
+          },
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          }
+        }
       ]
     },
     {
       "name": "catalog",
       "gate": true,
       "calls": [
-        { "as": "dtx_configs", "server": "systematic", "tool": "DtxListConfigs", "args": {}, "assert": { "contains_portfolio": "etf_us" }, "freshness": { "max_age_h": 24, "required": true } }
+        {
+          "as": "dtx_configs",
+          "server": "systematic",
+          "tool": "DtxListConfigs",
+          "args": {},
+          "assert": {
+            "contains_portfolio": "etf_us"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "dtx_catalog_live",
+          "server": "systematic",
+          "tool": "DtxCatalog",
+          "args": {
+            "eligible_for_live": true
+          },
+          "assert": {
+            "live_mode_for_portfolio": "etf_us",
+            "expected_mode": "$dtx_mode"
+          },
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          }
+        }
       ]
     },
     {
       "name": "decision-replay",
       "calls": [
+        {
+          "as": "decide_etf_us_compare",
+          "server": "systematic",
+          "tool": "DtxDecide",
+          "args": {
+            "portfolio": "etf_us",
+            "asof": "$refdate",
+            "appel": "evening",
+            "broker": "alpaca",
+            "expected_data_date": "$refdate",
+            "request_id": "$request_id",
+            "consumer_capabilities": {
+              "contract_version": "2.0",
+              "opportunity_groups": true,
+              "per_candidate_symbol": true,
+              "durable_intraday_execution": true
+            },
+            "positions": [],
+            "orders": [],
+            "balances": {
+              "base_currency": "USD",
+              "cash_by_currency": {
+                "USD": 100000
+              },
+              "total_equity": 100000,
+              "broker_source": "alpaca"
+            },
+            "compare_only": true
+          },
+          "job_max_ms": 900000,
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          },
+          "when": {
+            "variable": "dtx_mode",
+            "equals": "compare_only"
+          },
+          "note": "Évaluation de recherche (compare_only) tant qu'etf_us n'est pas eligible_for_live — décision du propriétaire du 2026-09-24, jusqu'à nouvel ordre."
+        },
         {
           "as": "decide_etf_us",
           "server": "systematic",
@@ -38,18 +117,41 @@
             },
             "positions": [],
             "orders": [],
-            "balances": { "base_currency": "USD", "cash_by_currency": { "USD": 100000 }, "total_equity": 100000, "broker_source": "alpaca" }
+            "balances": {
+              "base_currency": "USD",
+              "cash_by_currency": {
+                "USD": 100000
+              },
+              "total_equity": 100000,
+              "broker_source": "alpaca"
+            }
           },
           "job_max_ms": 900000,
-          "freshness": { "max_age_h": 24, "required": true }
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          },
+          "when": {
+            "variable": "dtx_mode",
+            "equals": "decide"
+          },
+          "note": "Mode décision Contract V2, repris automatiquement dès qu'etf_us figure dans DtxCatalog(eligible_for_live=true)."
         },
         {
           "as": "replay_etf_us",
           "server": "systematic",
           "tool": "DtxReplay",
-          "args": { "portfolio": "etf_us", "from": "2021-01-01", "to": "$refdate", "equity_full": true },
+          "args": {
+            "portfolio": "etf_us",
+            "from": "2021-01-01",
+            "to": "$refdate",
+            "equity_full": true
+          },
           "job_max_ms": 900000,
-          "freshness": { "max_age_h": 168, "required": true }
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
         }
       ]
     }

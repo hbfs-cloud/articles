@@ -639,7 +639,14 @@ function writeMode(mode, prefix) {
     status,
     allocPct,
     ...(isEngineMode ? { decisionProvenance: _apiDecisionProvenance } : {}),
-    orders: modeOrders
+    ...(isEngineMode && _staged && _staged.actionable === false && _staged.failureMode === 'compare_only' ? {
+      engineEvaluation: {
+        compareOnly: true, executable: false, eligibleForLive: false,
+        notice: _staged.evaluation && _staged.evaluation.noticeFr || null,
+        ineligibilityReasons: (_staged.evaluation && _staged.evaluation.ineligibilityReasons) || [],
+      },
+    } : {}),
+    orders: (isEngineMode && _staged && _staged.failureMode === 'compare_only') ? [] : modeOrders
   });
 
   // 6. actions.json

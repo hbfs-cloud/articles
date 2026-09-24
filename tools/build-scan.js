@@ -428,7 +428,17 @@ for (const pick of manifest.picks) {
         score_note: manifest._score_caveat },
       thesis: pick.thesis,
       invalidation: pick.invalidation, invalidation_level: inv,
-      execution: { status: 'limit_order_single_price', gate: manifest.execution_gate },
+      // G1 (docs/scanner-gates.md) : une ligne Breakout/Momentum s'achète en STOP-BUY au-dessus du
+      // niveau de cassure, jamais en ordre limité posé à la clôture — celui-ci ne se remplit que sur
+      // un repli, c'est l'échec du 13/07. Le déclencheur est la clôture publiée, le plafond est la
+      // borne haute de la zone (le R/R est calculé dessus), et l'ordre est annulé si l'ouverture se
+      // fait sous l'invalidation. Aucune cotation de pré-ouverture n'est collectée : l'actionnabilité
+      // au spot n'est pas certifiée et le champ le dit.
+      execution: ['Breakout', 'Momentum'].includes(pick.strategy)
+        ? { status: 'stop_limit_buy', trigger: L.entry_low, limit_cap: L.entry_high,
+            cancel_if_open_below: inv, actionability_certified: false,
+            gate: manifest.execution_gate_breakout || manifest.execution_gate }
+        : { status: 'limit_order_single_price', cancel_if_open_below: inv, actionability_certified: false, gate: manifest.execution_gate },
     });
   } catch (e) {
     rejected.push({ ticker: T, reason: e.message });
@@ -439,8 +449,14 @@ for (const pick of manifest.picks) {
 const problems = [];
 const usCount = signals.filter(s => s.region === 'US').length;
 const etfCount = signals.filter(s => s.region === 'ETF').length;
-if (usCount < DIV.min_us_count) problems.push(`${usCount} actions US < ${DIV.min_us_count}`);
-if (etfCount < DIV.min_etf_count) problems.push(`${etfCount} ETF < ${DIV.min_etf_count}`);
+// Plancher de composition : normal, ou abaissé par une dérogation DATÉE et fermée pour cette séance
+// seulement (tools/lib/basket-minimum-waiver.js). Le contrôle reste actif dans les deux cas.
+const FLOORS = require('./lib/basket-minimum-waiver').effectiveFloors({
+  root: ROOT, dirRel: path.relative(ROOT, DIR), date: String(manifest.scan_date || '').replace(/-/g, ''),
+  refdate: manifest.reference_close, filters: FILTERS,
+});
+if (usCount < FLOORS.min_us_count) problems.push(`${usCount} actions US < ${FLOORS.min_us_count}`);
+if (etfCount < FLOORS.min_etf_count) problems.push(`${etfCount} ETF < ${FLOORS.min_etf_count}`);
 
 const bySector = {};
 signals.forEach(s => { bySector[s.sector] = (bySector[s.sector] || 0) + 1; });
@@ -514,6 +530,7 @@ const out = {
   exited_factors: [],
   tkl_pool: [], dtx_pool: [], fortress_pool: [],
   rejected: [...rejected, ...(manifest.editorial_rejections || [])],
+  ...(FLOORS.waiver ? { basket_minimum_waiver: FLOORS.waiver } : {}),
   provenance,
 };
 

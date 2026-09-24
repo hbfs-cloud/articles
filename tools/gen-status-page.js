@@ -1297,6 +1297,17 @@ async function main() {
   // dashboard's signals ARE the orders) from the dtx `decide` CREATE set (data/dtx/<mode>.json).
   // Same display shape as signalsFor() so the Orders table / signal cards render unchanged.
   // Tolerates MARKET orders (no limit/stop) and missing score — shows "—" like a real market order.
+  // COMPARE_ONLY : bandeau explicite. Le moteur n'a rien servi d'exécutable pour ce mode ; on le dit
+  // en français, avec la raison exacte du serveur, et on n'affiche aucun ordre.
+  function dtxEvaluationNotice(id, cfg) {
+    if (cfg.assetClass !== 'dtx') return '';
+    const stg = loadDtxStaging(id);
+    if (!stg || stg.actionable !== false || stg.failureMode !== 'compare_only') return '';
+    const ev = stg.evaluation || {};
+    const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    const n = ((ev.hypotheticalActions || {}).CREATE || []).length;
+    return `<div class="mode-strategy-note" role="note" lang="fr" style="border-left:3px solid var(--amber,#b76e00);padding:.55rem .8rem"><strong>${esc(ev.noticeFr || 'Évaluation informative, non éligible au live')}.</strong> Aucun ordre, aucun signal exécutable n’est publié pour ce mode. Le moteur a évalué la ligne à titre de recherche${n ? ` (${n} achat${n > 1 ? 's' : ''} hypothétique${n > 1 ? 's' : ''}, sans quantité ni niveau)` : ''} ; cette évaluation ne vaut pas recommandation.</div>`;
+  }
   function dtxSignalsFor(id, cfg) {
     const stg = loadDtxStaging(id);
     if (!stg) return null; // caller falls back to signalsFor
@@ -1595,6 +1606,7 @@ async function main() {
 ${renderStatusBanner(cfg)}
 <h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> ${cfg.label} Dashboard${staleBadge}${promoBadge}</h2>
 ${cfg.strategyNote ? `<p class="mode-strategy-note">${cfg.strategyNote}</p>` : ''}
+${dtxEvaluationNotice(id, cfg)}
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
@@ -4389,6 +4401,8 @@ document.addEventListener('DOMContentLoaded',function(){
           metrics: e.metrics || null,
           decisionProvenance: e.decisionProvenance || null,
           executionPlan: e.executionPlan || null,
+          ...(e.failureMode ? { actionable: e.actionable === false ? false : null, failureMode: e.failureMode } : {}),
+          ...(e.evaluation ? { evaluation: e.evaluation } : {}),
         };
       })() : null,
       // Live-book (pit-state) beside the sim-derived fields above — ADDITIVE, prefixed pit_

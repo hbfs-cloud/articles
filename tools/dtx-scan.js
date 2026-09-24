@@ -292,6 +292,126 @@ function validateDecisionV2(decision, expected = {}) {
   return errors;
 }
 
+// ---------------------------------------------------------------------------
+// COMPARE_ONLY — évaluation de recherche d'une ligne non éligible au live.
+//
+// Décision du propriétaire du 2026-09-24 : le catalogue « eligible_for_live » est vide pour toutes
+// les stratégies ; le scanner appelle donc DtxDecide avec compare_only:true. Le serveur répond alors
+// executable:false, sans actions, sans execution_plan et sans state, avec un simple résumé
+// symbole/sens (hypothetical_actions). Ce résumé n'a NI quantité, NI niveau, NI protection : il ne
+// peut pas devenir un ordre, et ce module refuse d'en fabriquer un. Le staging qui en résulte porte
+// zéro ordre, pas de plan, et une évaluation explicitement informative.
+// ---------------------------------------------------------------------------
+const COMPARE_ONLY_NOTICE_FR = 'Évaluation informative, non éligible au live';
+
+function validateCompareOnlyDecision(decision, expected = {}) {
+  const errors = [];
+  if (!decision || typeof decision !== 'object') return ['decision missing'];
+  if (decision.compare_only !== true) errors.push('compare_only must be true');
+  if (decision.executable !== false) errors.push('compare_only decision must declare executable:false');
+  if (decision.eligible_for_live !== false) errors.push('compare_only decision must declare eligible_for_live:false');
+  if (decision.contract_version !== '2.0') errors.push('contract_version must equal 2.0');
+  if (typeof decision.request_id !== 'string' || !decision.request_id.trim()) errors.push('request_id missing');
+  if (expected.requestId && decision.request_id !== expected.requestId) errors.push(`request_id=${decision.request_id || 'missing'} != ${expected.requestId}`);
+  if (expected.asof && decision.requested_asof !== expected.asof) errors.push(`requested_asof=${decision.requested_asof || 'missing'} != ${expected.asof}`);
+  // Rien d'exécutable ne doit exister : un champ présent, même vide de sens, est un refus.
+  if (decision.execution_plan != null) errors.push('compare_only decision must not carry execution_plan');
+  if (decision.state != null) errors.push('compare_only decision must not carry state');
+  if (decision.actions != null) {
+    const a = decision.actions;
+    const nonEmpty = ['CREATE', 'UPDATE', 'CANCEL'].some(k => Array.isArray(a[k]) ? a[k].length > 0 : a[k] != null);
+    if (nonEmpty || typeof a !== 'object') errors.push('compare_only decision must not carry actions');
+  }
+  const reasons = decision.ineligibility_reasons;
+  if (!Array.isArray(reasons) || !reasons.length || reasons.some(r => typeof r !== 'string' || !r.trim())) errors.push('ineligibility_reasons missing');
+  if (typeof decision.non_executable_reason !== 'string' || !decision.non_executable_reason.trim()) errors.push('non_executable_reason missing');
+  const hyp = decision.hypothetical_actions;
+  if (hyp != null) {
+    if (typeof hyp !== 'object') errors.push('hypothetical_actions must be an object');
+    else for (const k of ['CREATE', 'UPDATE', 'CANCEL']) {
+      if (hyp[k] != null && !Array.isArray(hyp[k])) errors.push(`hypothetical_actions.${k} must be an array`);
+      for (const row of hyp[k] || []) {
+        // Un résumé qui porterait une quantité ou un prix cesserait d'être un résumé.
+        for (const key of ['qty', 'quantity', 'limit_price', 'stop_price', 'stop_loss', 'take_profit']) {
+          if (row && row[key] != null) errors.push(`hypothetical_actions.${k} carries executable field ${key}`);
+        }
+      }
+    }
+  }
+  return errors;
+}
+
+function isCompareOnlyDecision(decision) {
+  return !!decision && typeof decision === 'object' && decision.compare_only === true;
+}
+
+function buildCompareOnlyStaging({ modeInfo, cfg, asof, decidedOn, currency, decision, metrics, equity, replayErr, engineLabel, engineMode, t0 }) {
+  const errors = validateCompareOnlyDecision(decision, { asof: decidedOn || asof });
+  if (errors.length) throw new Error(`DtxDecide compare_only rejected: ${errors.join('; ')}`);
+  const sanityWarnings = assertReplaySanity(cfg.id, metrics);
+  const hyp = decision.hypothetical_actions || {};
+  const summary = k => (Array.isArray(hyp[k]) ? hyp[k] : []).map(r => ({ symbol: r.symbol || null, side: r.side || null }));
+  const reasons = [...decision.ineligibility_reasons];
+  return {
+    mode: modeInfo.id,
+    portfolioId: cfg.id,
+    name: cfg.name,
+    asof,
+    generatedAt: new Date().toISOString(),
+    engine: engineLabel,
+    engineMode,
+    actionable: false,
+    failureMode: 'compare_only',
+    decisionProvenance: {
+      contractVersion: decision.contract_version || null,
+      requestId: decision.request_id || null,
+      runId: null,
+      callId: null,
+      requestedAsOf: decision.requested_asof || null,
+      expectedDataDate: decision.expected_data_date || null,
+      dataAsOf: decision.data_asof || decision.last_data_date || null,
+      dataSnapshotId: decision.data_snapshot_id || null,
+      configHash: decision.config_hash || null,
+      planId: null,
+      planRevision: null,
+      validFrom: null,
+      validUntil: null,
+      compareOnly: true,
+    },
+    executionPlan: null,
+    evaluation: {
+      compareOnly: true,
+      executable: false,
+      eligibleForLive: false,
+      ineligibilityReasons: reasons,
+      nonExecutableReason: decision.non_executable_reason,
+      noticeFr: `${COMPARE_ONLY_NOTICE_FR} (raison serveur : ${reasons.join(', ')})`,
+      decisionQuality: decision.decision_quality || null,
+      decisionReasons: Array.isArray(decision.decision_reasons) ? decision.decision_reasons : [],
+      // Résumé symbole/sens UNIQUEMENT, tel que servi. Jamais transformé en ordre ni en signal.
+      hypotheticalActions: { CREATE: summary('CREATE'), UPDATE: summary('UPDATE'), CANCEL: summary('CANCEL') },
+      riskSummary: decision.risk_summary || null,
+      ownerDecision: 'compare_only choisi par le propriétaire le 2026-09-24 : catalogue eligible_for_live vide pour toutes les stratégies.',
+    },
+    config: modeInfo.path ? path.relative(REPO_ROOT, modeInfo.path) : `MCP:${cfg.id}`,
+    currency,
+    orders: [],
+    sleeveCoverage: { tagged: 0, total: 0, untagged: [], conflicts: [], source: 'compare_only — aucun ordre' },
+    updates: [],
+    cancels: [],
+    metrics,
+    equity,
+    metricsSource: metrics ? 'mcp_replay' : null,
+    equityResolution: equity ? 'replay' : null,
+    equitySource: equity ? 'DtxReplay (reconstruction combinée à capital fixe)' : null,
+    replayError: replayErr,
+    metricsSuspect: sanityWarnings.length > 0,
+    _sanityWarning: sanityWarnings.length > 0 ? sanityWarnings : null,
+    stateless: true,
+    tookMs: Date.now() - t0,
+  };
+}
+
 function rankOneOrdersFromV2(decision) {
   return decision.execution_plan.groups.map(group => {
     const c = [...group.candidates].sort((a, b) => a.rank - b.rank)[0];
@@ -662,8 +782,19 @@ function stagingSnapshotErrors(snapshot, portfolioId, { todayIso, scanDateIso, e
   if (scanDateIso && !expectedClose) errors.push('certified scanner reference close is missing');
   if (!provenance.expectedDataDate || provenance.expectedDataDate !== provenance.dataAsOf) errors.push('expectedDataDate/dataAsOf mismatch');
   if (expectedClose && provenance.expectedDataDate !== expectedClose) errors.push(`expectedDataDate ${provenance.expectedDataDate || 'missing'} != ${expectedClose}`);
-  const failClosed = snapshot && snapshot.actionable === false;
-  if (failClosed) {
+  const compareOnly = snapshot && snapshot.actionable === false && snapshot.failureMode === 'compare_only';
+  const failClosed = snapshot && snapshot.actionable === false && !compareOnly;
+  if (compareOnly) {
+    const ev = snapshot.evaluation || {};
+    if (!Array.isArray(snapshot.orders) || snapshot.orders.length !== 0) errors.push('compare_only staging orders must be empty');
+    if ((snapshot.updates || []).length || (snapshot.cancels || []).length) errors.push('compare_only staging updates/cancels must be empty');
+    if (snapshot.executionPlan != null) errors.push('compare_only staging executionPlan must be null');
+    if (ev.compareOnly !== true || ev.executable !== false || ev.eligibleForLive !== false) errors.push('compare_only staging evaluation flags invalid');
+    if (!Array.isArray(ev.ineligibilityReasons) || !ev.ineligibilityReasons.length) errors.push('compare_only staging ineligibilityReasons missing');
+    if (typeof ev.noticeFr !== 'string' || !ev.noticeFr.startsWith(COMPARE_ONLY_NOTICE_FR)) errors.push('compare_only staging noticeFr missing');
+    if (!provenance.requestId) errors.push('compare_only staging requestId missing');
+    if (provenance.runId || provenance.callId || provenance.planId || provenance.validFrom || provenance.validUntil) errors.push('compare_only staging must not invent run/call/plan identifiers or a validity window');
+  } else if (failClosed) {
     const fault = snapshot.invalidDecision || {};
     if (!Array.isArray(snapshot.orders) || snapshot.orders.length !== 0) errors.push('fail-closed staging orders must be empty');
     if (snapshot.executionPlan != null) errors.push('fail-closed staging executionPlan must be null');
@@ -788,5 +919,6 @@ module.exports = {
   buildStaging, writeStaging, stagingPathFor, extractReplayMetrics, assertReplaySanity, mapOrder, sleeveIndex,
   bookSnapshotCoherence,
   validateDecisionV2, rankOneOrdersFromV2, goLiveFor,
+  validateCompareOnlyDecision, isCompareOnlyDecision, buildCompareOnlyStaging, COMPARE_ONLY_NOTICE_FR,
   DEFAULT_FROM, STAGING_DIR, CONFIG_DIR, REPO_ROOT, PORTFOLIO_TO_MODE,
 };

@@ -218,6 +218,10 @@ function describeGeometry(setups) {
 }
 const geometryNote = describeGeometry(d.setups || []);
 
+// Exécution conforme à G1 (docs/scanner-gates.md) : les cassures et suivis de tendance s'achètent
+// en stop-limite au-dessus du niveau publié, jamais en ordre limité posé à la clôture.
+const stopLimit = (d.setups || []).some(s => s.execution && s.execution.status === 'stop_limit_buy');
+const hasPullback = (d.setups || []).some(s => s.pattern === 'Pullback');
 const hasEntryZone = (d.setups || []).some(s =>
   typeof s.entry_low === 'number' && typeof s.entry_high === 'number' && s.entry_low !== s.entry_high);
 
@@ -240,8 +244,18 @@ const nBelowOne = (d.setups || []).filter(s => {
   const risk = Math.round((s.entry_high - s.stop) * 100);
   return risk > 0 && gain < risk;
 }).length;
+// Les lignes sous un R/R de 1 sont NOMMÉES avec leur rapport réel, calculé sur les niveaux publiés.
+const belowOne = (d.setups || []).map(s => {
+  if (!(typeof s.entry_high === 'number' && typeof s.stop === 'number' && typeof s.tp1 === 'number')) return null;
+  const gain = Math.round((s.tp1 - s.entry_high) * 100);
+  const risk = Math.round((s.entry_high - s.stop) * 100);
+  if (!(risk > 0 && gain < risk)) return null;
+  const r = gain / risk;
+  // Un ratio qui s'arrondit à 1,00 n'est pas « 1,00 » : on donne trois décimales.
+  return `${s.ticker} ${r.toFixed(2) === '1.00' ? r.toFixed(3).replace('.', ',') : r.toFixed(2).replace('.', ',')}`;
+}).filter(Boolean);
 const rrBelowOne = nBelowOne
-  ? ` — mesuré AVANT l'arrondi d'affichage, ${nBelowOne} ligne${nBelowOne > 1 ? 's' : ''} sur ${rrValues.length} vise${nBelowOne > 1 ? 'nt' : ''} un peu moins qu'elle${nBelowOne > 1 ? 's ne risquent' : ' ne risque'} ; le tableau les affiche arrondies à deux décimales, ce qui en montre moins. C'est la contrepartie d'une cible placée à une distance réellement parcourue`
+  ? ` ; ${belowOne.length} ligne${belowOne.length > 1 ? 's' : ''} vise${belowOne.length > 1 ? 'nt' : ''} un peu moins qu'elle${belowOne.length > 1 ? 's ne risquent' : ' ne risque'} (${belowOne.join(', ')}), contrepartie d'un objectif placé à une distance réellement parcourue`
   : '';
 
 /** Le dimensionnement n'est affirmé que s'il a été calculé. `sizing_status: not_run` signifiait
@@ -542,7 +556,7 @@ function setupCard(s, idx) {
   // Sharia badge
   const shariaBadge = s.sharia
     ? `<span class="badge badge-green" style="font-size:.7rem">&#x262A; Halal</span>`
-    : `<span class="badge" style="background:#94a3b8;color:#fff;font-size:.7rem">CONV</span>`;
+    : '';
 
   // Extra badges
   const extraBadges = (s.extra_badges || []).map(b => badge(b, 'amber')).join('');
@@ -673,13 +687,29 @@ function thematicTable(data) {
 
 // ─── ALERTS ──────────────────────────────────────────────────────────────────
 
+// Un bloc de prose rédigé en HTML porte déjà ses paragraphes : l'envelopper dans un <p> produisait
+// des <p><p> imbriqués, invalides.
+function para(html) {
+  const text = String(html || '');
+  if (!text.trim()) return '';
+  return /^\s*<(p|ul|ol|div|table)[\s>]/i.test(text) ? text : `<p>${text}</p>`;
+}
+
+// Volume moyen quotidien en dollars, lisible : « 52 M$ », « 1,2 Md$ ».
+function advDisplay(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return 'n/d';
+  if (n >= 1e9) return `${(n / 1e9).toFixed(1).replace('.', ',')}&nbsp;Md$`;
+  return `${Math.round(n / 1e6)}&nbsp;M$`;
+}
+
 function alertsHtml(alerts) {
   if (!alerts || !alerts.length) return '';
   return alerts.map(a => {
     const isWarning = a.type === 'warning';
     const cls = isWarning ? 'pedagogy-box' : 'risk-on-banner';
     const warnStyle = isWarning ? ' style="background:#fef2f2;border-left:4px solid #ef4444;"' : '';
-    return `  <div class="${cls}"${warnStyle}>\n    <strong>&#x26A0; ${esc(a.title)}:</strong> ${esc(a.text)}\n  </div>`;
+    return `  <div class="${cls}"${warnStyle}>\n    <strong>&#x26A0; ${esc(a.title)}&nbsp;:</strong> ${esc(a.text)}\n  </div>`;
   }).join('\n');
 }
 
@@ -752,7 +782,8 @@ function num(v) {
   if (v == null || v === '') return '—';
   const n = Number(v);
   if (!isFinite(n)) return '—';
-  return n.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+  // Deux décimales et virgule partout : « 168,20 », jamais « 168,2 ».
+  return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 /** Trim a truncated string back to the last safe boundary before the unmatched "(" cut */
@@ -793,7 +824,7 @@ function confirmInvalidDetails(s) {
           <summary style="cursor:pointer;font-size:1rem;font-weight:600;color:#334155;">${esc(s.ticker)} — Thèse, confirmations et invalidations${s.horizon_days ? ` · ${esc(s.horizon_days)} séances` : ''}</summary>
 ${s.thesis ? `          <p style="margin:.5rem 0 .2rem;font-size:1rem;line-height:1.6;">${esc(s.thesis)}</p>` : ''}
 <a href="https://finviz.com/quote.ashx?t=${escAttr(s.ticker)}" target="_blank" rel="noopener"><img class="finviz-chart" style="max-width:100%;height:auto" src="${fs.existsSync(path.join(outDir, 'assets', `finviz-${s.ticker}-${String(d.engine_meta?.reference_close || '').replace(/-/g, '')}.png`)) ? `assets/finviz-${escAttr(s.ticker)}-${String(d.engine_meta.reference_close).replace(/-/g, '')}.png` : `https://charts2.finviz.com/chart.ashx?t=${escAttr(s.ticker)}&amp;ty=c&amp;ta=1&amp;p=d&amp;s=l`}" alt="Graphique quotidien Finviz de ${escAttr(s.ticker)}" loading="lazy"></a>
-${s.tp2 ? `          <p style="margin:.2rem 0 .5rem;font-size:1rem;color:#475569;">Deuxième objectif : ${esc(num(s.tp2))} · Horizon : ${esc(s.horizon_days || 10)} séances</p>` : ''}
+${s.tp2 && !d.single_target ? `          <p style="margin:.2rem 0 .5rem;font-size:1rem;color:#475569;">Deuxième objectif : ${esc(num(s.tp2))} · Horizon : ${esc(s.horizon_days || 10)} séances</p>` : ''}
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.6rem;margin-top:.5rem;">
 ${confirmItems ? `            <div class="confirm-box" style="margin:0;"><h4>&#x2705; Confirmations</h4><ul style="margin:0;padding-left:1.1rem;font-size:1rem;">${confirmItems}</ul></div>` : ''}
 ${invalidItems ? `            <div class="invalid-box" style="margin:0;"><h4>&#x274C; Invalidations</h4><ul style="margin:0;padding-left:1.1rem;font-size:1rem;">${invalidItems}</ul></div>` : ''}
@@ -810,19 +841,19 @@ function strategyTable(title, subtitle, rows) {
     const shariaBadge = s.sharia === true
       ? ' <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span>'
       : s.sharia === false
-        ? ' <span class="badge" style="background:#e2e8f0;color:#334155;border:1px solid #94a3b8;font-size:.68rem">CONV</span>'
+        ? ''
         : '';
     return `        <tr data-ticker="${escAttr(s.ticker)}" data-sharia="${s.sharia === true ? 'true' : s.sharia === false ? 'false' : ''}" data-entry="${entry || 0}" data-stop="${s.stop || 0}" data-tp1="${s.tp1 || 0}" data-tp2="${s.tp2 || 0}">`
       + `<td><strong>${esc(s.ticker)}</strong>${shariaBadge}${s.dilution_clear === false ? ' <span class="badge badge-amber">SUSPENDU — SEC</span>' : ''}</td>`
       + `<td class="setup-phrase">${setupPhrase(s)}</td>`
-      + `<td>${s.entry_low != null && s.entry_high != null && s.entry_low !== s.entry_high ? `${num(s.entry_low)}&ndash;${num(s.entry_high)}` : num(entry)}</td><td>${num(s.stop)}</td><td>${num(tp)}</td><td><strong>${rrDisplay(s.rr)}</strong></td></tr>`;
+      + `<td>${s.entry_low != null && s.entry_high != null && s.entry_low !== s.entry_high ? `${num(s.entry_low)}&ndash;${num(s.entry_high)}` : num(entry)}</td><td>${num(s.stop)}</td><td>${num(tp)}</td><td><strong>${rrDisplay(s.rr)}</strong></td><td>${advDisplay(s.avg_daily_dollar_volume)}</td></tr>`;
   }).join('\n');
   const civBlocks = rows.map(confirmInvalidDetails).filter(Boolean).join('\n');
   return `  <h3 class="strategy-table-title">${title}${subtitle ? ` <span style="font-weight:500;color:#64748b;font-size:.85rem">— ${subtitle}</span>` : ''}</h3>
   <div style="overflow-x:auto">
     <table class="compare-table setups-table">
       <thead>
-        <tr><th>Ticker</th><th>Setup</th><th>Entrée</th><th>Stop</th><th>TP</th><th>R/R</th></tr>
+        <tr><th>Ticker</th><th>Setup</th><th>Entrée</th><th>Stop</th><th>TP</th><th>R/R</th><th>Volume moyen/jour</th></tr>
       </thead>
       <tbody>
 ${trs}
@@ -879,9 +910,9 @@ function buildPage(d) {
 
   // ── KPI boxes ──────────────────────────────────────────────────────────────
   const dominantStr = (d.kpis && d.kpis.dominant_patterns || []).join(' / ');
-  const vixVal   = (d.kpis && d.kpis.vix)  ? `${d.kpis.vix.value}` : '';
+  const vixVal   = (d.kpis && d.kpis.vix)  ? num(d.kpis.vix.value) : '';
   const vixColor = (d.kpis && d.kpis.vix && d.kpis.vix.color) || 'var(--pos)';
-  const spxVal   = (d.kpis && d.kpis.spx)  ? `${d.kpis.spx.value}` : '';
+  const spxVal   = (d.kpis && d.kpis.spx)  ? num(d.kpis.spx.value) : '';
   const spxColor = (d.kpis && d.kpis.spx && d.kpis.spx.color) || 'var(--pos)';
   const avgScoreRaw = (d.kpis && d.kpis.avg_score) || (setups.reduce((a, s) => a + s.score, 0) / (setups.length || 1)).toFixed(1);
   // French locale: comma decimal, matching every other numeric KPI on the page (vix/spx are
@@ -997,7 +1028,7 @@ function buildPage(d) {
   ${reviewSummary ? `<p>${reviewSummary}</p>` : ''}
   ${d.intro || ''}
 ${alertsHtml(d.alerts)}
-  <p>${d.regime_prose || ''}</p>
+  ${para(d.regime_prose)}
   <p style="background:#f0fdf4;border:1px solid #86efac;padding:0.75rem;border-radius:8px;font-size:0.9rem;">
     <strong>Stratégie de séance :</strong> ${d.strategy || ''}
   </p>
@@ -1017,7 +1048,7 @@ ${(d.market_snapshot || []).map(r => `        <tr><td><strong>${esc(r.name ?? r.
     </table></div>
     ${d.pedagogy ? `<div class="pedagogy-box">
       <h4><i class="fas fa-graduation-cap"></i> ${d.pedagogy.title}</h4>
-      <p>${d.pedagogy.content}</p>
+      ${para(d.pedagogy.content)}
     </div>` : ''}
   </div>
 </section>
@@ -1038,7 +1069,7 @@ ${sectorRotationTable(d.sector_rotation)}
     </div>
     ${d.macro_thesis ? `<div class="pedagogy-box">
       <h4><i class="fas fa-info-circle"></i> Thèse de la semaine</h4>
-      <p>${d.macro_thesis}</p>
+      ${para(d.macro_thesis)}
     </div>` : ''}
   </div>
 </section>
@@ -1049,7 +1080,7 @@ ${sectorRotationTable(d.sector_rotation)}
   <div class="content-card">
     <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés sur la clôture de référence. ${hasEntryZone
       ? `Tous les setups restent non exécutables avant l'observation du VWAP de la prochaine séance.`
-      : `L'entrée est un prix unique : un ordre à cours limité valable la séance, sans condition de VWAP. Si le prix n'est pas touché, il n'y a pas de trade.`}${sizingSentence}</p>
+      : stopLimit ? `Cassures et tendances : ordre d'achat stop-limite au prix publié, plafonné à ce prix, annulé si l'ouverture se fait sous l'invalidation ${hasPullback ? ' ; replis : ordre limité au prix publié' : ''}. Si le prix n'est pas atteint, il n'y a pas de trade.` : `L'entrée est un prix unique : un ordre à cours limité valable la séance, sans condition de VWAP. Si le prix n'est pas touché, il n'y a pas de trade.`}${sizingSentence}</p>
 ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div class="pedagogy-box" style="border-left:4px solid #b45309;">
       <h4><i class="fas fa-list-ol"></i> Ordre d'exécution et hiérarchie des sorties</h4>
       <p>${esc(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy))}</p>
@@ -1059,13 +1090,15 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
       <h4><i class="fas fa-info-circle"></i> Comment utiliser ces niveaux</h4>
       <p>${hasEntryZone
         ? `Entrée = zone conditionnelle à l'ouverture (9h30–9h45 ET), uniquement si le prix s'y trouve et tient le VWAP observé.`
-        : `Entrée = un prix unique, en ordre à cours limité valable la séance. Pas de zone, pas de condition de VWAP, pas de poursuite : si le marché ouvre au-dessus et n'y revient pas, la ligne ne se déclenche simplement pas.`} Le stop est un ordre dur, pas mental. ${hasEntryZone
+        : stopLimit
+          ? `Cassures et suivis de tendance : ordre d'achat stop-limite, déclenché au prix publié et plafonné à ce même prix, valable la seule séance. Si le cours ouvre sous le niveau d'invalidation, annulez l'ordre dès l'ouverture. Si le cours saute au-dessus du plafond, l'ordre ne s'exécute pas : on ne poursuit pas. ${hasPullback ? 'Replis : ordre limité au prix publié. ' : ''}Aucune cotation d'avant-ouverture n'a été relevée : rien ne garantit que ces prix seront traités.`
+          : `Entrée = un prix unique, en ordre à cours limité valable la séance. Pas de zone, pas de condition de VWAP, pas de poursuite : si le marché ouvre au-dessus et n'y revient pas, la ligne ne se déclenche simplement pas.`} Le stop se place dans le système du courtier dès l'achat. ${hasEntryZone
         ? `Le R/R du tableau est calculé au HAUT de la zone d'entrée, soit le pire remplissage autorisé; le plancher du scan est 1:${minRR}.`
         : `L’ordre a un plafond unique ; le prix moyen réellement payé peut être inférieur. Le calcul utilise le prix limite, soit le prix maximal autorisé ; un remplissage inférieur modifie le risque réel et le rapport gain/risque.`
       } Aucune quantité n’est proposée : le budget de perte, le cash et les expositions doivent être vérifiés avant achat. ${hasEntryZone
         ? `Si l'ouverture dépasse le haut de la zone de 2%, l'entrée directe est annulée et seul un retour au VWAP peut réarmer la ligne.`
-        : `Si le prix n'est pas touché pendant la séance, la ligne expire : elle n'est pas reportée au lendemain.`} ${overextensionNote(d)}</p>
-      <p style="font-size:0.85rem;color:#64748b;margin-top:0.5rem;">${(d.setups || []).some(s => typeof s.sharia === 'boolean') ? `Badges : <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span> ligne dont le secteur d'activité est conforme aux critères de finance islamique retenus ici (l'endettement, quand vérifié, est précisé ligne par ligne dans les invalidations — non systématiquement audité) — <span class="badge" style="background:#e2e8f0;color:#334155;border:1px solid #94a3b8;font-size:.68rem">CONV</span> ligne conventionnelle, non conforme.` : 'Aucun contrôle de conformité à la finance islamique n’a été réalisé pour cette sélection.'}</p>
+        : `Si le prix n'est pas touché pendant la séance, la ligne expire : elle n'est pas reportée au lendemain. Sorties : le stop, l'objectif 1 en totalité, ou une clôture sous le niveau d'invalidation (sortie à l'ouverture suivante). Aucune sortie partielle n'est prévue par le plan. Sans objectif ni stop atteint, la position est soldée à la clôture de la ${d.setups && d.setups[0] && d.setups[0].horizon_days ? d.setups[0].horizon_days : 10}e séance.`} ${overextensionNote(d)}</p>
+      <p style="font-size:0.85rem;color:#64748b;margin-top:0.5rem;">${(d.setups || []).some(s => s.sharia === true) ? `Badges : <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span> ligne dont le secteur d'activité est conforme aux critères de finance islamique retenus ici (l'endettement, quand vérifié, est précisé ligne par ligne dans les invalidations — non systématiquement audité).` : 'Aucun contrôle de conformité à la finance islamique n’a été réalisé pour cette sélection.'}</p>
     </div>
   </div>
 </section>
@@ -1076,7 +1109,7 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
   <div class="content-card">
     <div class="pedagogy-box">
       <h4>1. Détection du régime</h4>
-      <p>Le régime publié vient du moteur identifié dans les preuves, avec ses propres composantes et seuils. Son score mesure un état de marché ; il ne représente pas une probabilité de réussite du panier. La lecture et les limites utiles sont précisées dans le contexte de marché ci-dessus.</p>
+      <p>Le régime publié vient d'un classificateur de marché, avec ses propres composantes et seuils. Son score décrit un état de marché ; ce n'est pas une probabilité de réussite du panier. Sa lecture détaillée figure dans le contexte de marché ci-dessus.</p>
     </div>
     <div class="pedagogy-box">
       <h4>2. Screening multi-stratégie</h4>
@@ -1090,11 +1123,18 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
       <h4>4. Calcul des niveaux techniques</h4>
       <p>Entrée / stop / TP / R/R calculés sur les données de clôture réelles. ${geometryNote} ${hasEntryZone
         ? `Une ligne ne devient exécutable qu'après confirmation du VWAP de la séance suivante.`
-        : `Un ordre limité est valable uniquement pendant la séance visée et sous réserve des contrôles publiés ; son exécution au prix limite ou à un prix inférieur n’est pas garantie.`}</p>
+        : stopLimit ? `Les cassures et suivis de tendance s'exécutent en ordre stop-limite déclenché au prix publié et plafonné à ce prix${hasPullback ? ' ; les replis en ordre limité' : ''}. Tous les ordres valent la séance visée et sont annulés si l'ouverture se fait sous l'invalidation ; leur exécution n'est pas garantie.` : `Un ordre limité est valable uniquement pendant la séance visée et sous réserve des contrôles publiés ; son exécution au prix limite ou à un prix inférieur n’est pas garantie.`}</p>
     </div>
-    <div class="pedagogy-box">
+${Array.isArray(d.gates_report) && d.gates_report.length ? `    <div class="pedagogy-box">
+      <h4>Contrôles de publication</h4>
+      <ul>
+${d.gates_report.map(g => `        <li><strong>${esc(g.id)} — ${esc(g.name)}</strong>&nbsp;: ${esc(g.result)}. ${esc(g.detail)}</li>`).join('\n')}
+      </ul>
+    </div>
+` : ''}${d.gates_summary ? `    <p><strong>${esc(d.gates_summary)}</strong></p>
+` : ''}    <div class="pedagogy-box">
       <h4>5. Anti-dilution &amp; ranking</h4>
-      <p>Le contrôle SEC doit distinguer les offres d’actions, la dette et les opérations mixtes en lisant les dépôts primaires. Les émetteurs privés étrangers déposent également auprès de la SEC, notamment des 20-F et des 6-K : leur statut ne les dispense pas du contrôle. Les ETF suivent un régime distinct de celui des sociétés opérationnelles. La fenêtre effectivement documentée est celle des preuves de chaque ligne ; un contrôle limité à 90 jours ne permet pas d’exclure des instruments dilutifs plus anciens encore actifs. Toute classification inconnue empêche de certifier la ligne. Diversification sectorielle et géographique. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Le R/R affiché est calculé au plafond d’achat ; un prix payé inférieur modifie ce rapport, avant frais et glissement. Il s'échelonne de 1:${minRR} à 1:${maxRR} selon les lignes${rrBelowOne}.`}${shariaSentence}</p>
+      <p>Le contrôle SEC doit distinguer les offres d’actions, la dette et les opérations mixtes en lisant les dépôts primaires. Les émetteurs privés étrangers déposent également auprès de la SEC, notamment des 20-F et des 6-K : leur statut ne les dispense pas du contrôle. Les ETF suivent un régime distinct de celui des sociétés opérationnelles. La fenêtre effectivement documentée est celle des preuves de chaque ligne ; un contrôle limité à 90 jours ne permet pas d’exclure des instruments dilutifs plus anciens encore actifs. Un dépôt de nature inconnue écarte la ligne. Depuis le 24 septembre 2026, un S-8 de plan d'actions salariés ne suffit plus à écarter une valeur ; les augmentations de capital, programmes d'émission au fil de l'eau, convertibles et placements privés restent éliminatoires. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Le R/R affiché est calculé au plafond d’achat ; un prix payé inférieur modifie ce rapport, avant frais et glissement. Il s'échelonne de 1:${minRR} à 1:${maxRR} selon les lignes${rrBelowOne}.`}${shariaSentence}</p>
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:1rem;">
       <h4 style="margin:0 0 0.5rem;">Sources de données</h4>

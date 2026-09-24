@@ -72,15 +72,24 @@ if [ "$DTX_REQUIRED" = "1" ]; then mcp_require_token systematic || exit $?; fi
 # ── B : décision + replay DTX (information moteur, aucune exécution broker) ───
 if [ "$DTX_REQUIRED" = "1" ]; then
 (
-  REQUEST_ID="scanner-${DATE}-etf-us-evening-001"
+  # request_id doit être un UUID v4 (tools/lib/workflow-contract.js). Dérivé du nom logique de la
+  # séance : stable d'une relance à l'autre (idempotence DTX), conforme au contrat.
+  REQUEST_ID=$(node -e 'const h=require("crypto").createHash("sha256").update(process.argv[1]).digest("hex");const v=((parseInt(h[16],16)&3)|8).toString(16);console.log(`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-${v}${h.slice(17,20)}-${h.slice(20,32)}`)' "scanner-${DATE}-etf-us-evening-001")
+  # Mode piloté par le catalogue (décision du propriétaire du 2026-09-24, jusqu'à nouvel ordre) :
+  # compare_only tant qu'etf_us n'est pas eligible_for_live, décision Contract V2 sinon.
+  DTX_MODE=$(node tools/dtx-live-mode.js --portfolio etf_us 2>> "$B_LOG") \
+    || { echo "B ÉCHEC — lecture du catalogue DTX" > "$B_STATUS"; exit 1; }
+  echo "[dtx] mode=$DTX_MODE (DtxCatalog eligible_for_live)" >> "$B_LOG"
   node tools/collect.js --plan plans/scanner-dtx.json --out "$DIR/_dtx" --quiet --no-cache \
-    --var date="$DATE" --var refdate="$REF" --var request_id="$REQUEST_ID" > "$B_LOG" 2>&1 \
+    --var date="$DATE" --var refdate="$REF" --var request_id="$REQUEST_ID" --var dtx_mode="$DTX_MODE" >> "$B_LOG" 2>&1 \
     || { echo "B ÉCHEC — collecte DTX" > "$B_STATUS"; exit 1; }
+  DECIDE_FILE="$DIR/_dtx/decide_etf_us.json"
+  if [ "$DTX_MODE" = "compare_only" ]; then DECIDE_FILE="$DIR/_dtx/decide_etf_us_compare.json"; fi
   node tools/check-freshness.js "$DIR/_dtx/harness.json" >> "$B_LOG" 2>&1 \
     && node tools/validate-workflows.js --run-plan plans/scanner-dtx.json "$DIR/_dtx" >> "$B_LOG" 2>&1 \
     || { echo "B ÉCHEC — contrat/fraîcheur DTX" > "$B_STATUS"; exit 1; }
   node tools/dtx-mcp-ingest.js --portfolio etf_us \
-    --decide "$DIR/_dtx/decide_etf_us.json" --replay "$DIR/_dtx/replay_etf_us.json" \
+    --decide "$DECIDE_FILE" --replay "$DIR/_dtx/replay_etf_us.json" \
     --asof "$REF" --expected-close "$REF" --from 2021-01-01 --to "$REF" >> "$B_LOG" 2>&1 \
     || { echo "B ÉCHEC — ingestion DTX" > "$B_STATUS"; exit 1; }
   node - "$DATE" >> "$B_LOG" 2>&1 <<'JS'

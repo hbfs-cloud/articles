@@ -60,6 +60,7 @@ function normalizeSpec(spec = {}) {
     conditional_variables: spec.conditional_variables || [],
     variable_constraints: spec.variable_constraints || {},
     client_applicability: spec.client_applicability || null,
+    dtx_mode_branch: spec.dtx_mode_branch || null,
     static_symbol_calls: spec.static_symbol_calls || [],
     allowed_date_literals: spec.allowed_date_literals || [],
   };
@@ -301,6 +302,14 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
         errors.push(`${label}: batched QueryData must set force_async=true so polling/pagination is deterministic`);
       }
     }
+    if (call.retry != null) {
+      // Reprise bornée : jamais plus fréquente que 120 s, jamais plus de 15 tentatives ni 30 min.
+      const r = call.retry;
+      if (typeof r !== 'object' || !(Number(r.interval_s) >= 120) || !Number.isInteger(r.max_attempts)
+        || r.max_attempts < 1 || r.max_attempts > 15 || !(Number(r.max_total_s) > 0) || Number(r.max_total_s) > 1800) {
+        errors.push(`${label}: retry must be {interval_s>=120, max_attempts 1..15, max_total_s<=1800}`);
+      }
+    }
     if (call.server === 'systematic' && call.tool === 'DtxDecide') {
       const args = call.args || {};
       if (!['alpaca', 'trading212', 'ibkr', 'saxo'].includes(args.broker)) errors.push(`${label}: DtxDecide broker must be explicit and supported`);
@@ -346,7 +355,16 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
         if (!declaredVars.has(call.when.variable)) errors.push(`${label}: when.variable must name a declared runtime variable`);
         if (typeof call.when.equals !== 'string' || !call.when.equals) errors.push(`${label}: when.equals must be a non-empty string`);
         const rule = spec.client_applicability;
-        if (!rule || call.as !== rule.client_bars_call || call.when.variable !== rule.mode_variable || call.when.equals !== 'applicable') {
+        // Seconde branche fermée : le mode DTX piloté par le catalogue (décision du propriétaire du
+        // 2026-09-24). Chaque mode nomme exactement un alias ; toute autre condition reste refusée.
+        const dtxBranch = spec.dtx_mode_branch;
+        const dtxBranchOk = dtxBranch && call.when.variable === dtxBranch.mode_variable
+          && dtxBranch.calls && dtxBranch.calls[call.when.equals] === call.as
+          && call.server === 'systematic' && call.tool === 'DtxDecide'
+          && ((call.when.equals === 'compare_only') === (call.args && call.args.compare_only === true));
+        if (dtxBranchOk) {
+          // accepted: declared, closed DTX mode branch
+        } else if (!rule || call.as !== rule.client_bars_call || call.when.variable !== rule.mode_variable || call.when.equals !== 'applicable') {
           errors.push(`${label}: conditional execution is reserved for the configured documented-client bars branch`);
         }
       }

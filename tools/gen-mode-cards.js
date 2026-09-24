@@ -37,6 +37,9 @@ const MODE_EMOJI = {
   fortress: '🏰', tkl: '🎯', alpha: '🎯', aplus: '💎', bull: '🐂',
 };
 const DEFAULT_EMOJI = '📊';
+// Vrai logo du site, embarqué en data-URI (convention images du projet : jamais de wordmark
+// dessiné à la main ni d'emoji à la place du logo).
+const LOGO_DATA_URI = 'data:image/svg+xml;base64,' + require('fs').readFileSync(require('path').join(__dirname, '..', 'logo.svg')).toString('base64');
 const FRENCH_GOALS = {
   'Risk-Adjusted Growth': 'Croissance ajustée du risque',
   'Maximum Return': 'Rendement maximal',
@@ -46,7 +49,10 @@ const FRENCH_GOALS = {
 const FRENCH_RISK_PROFILES = {
   'Ultra-Low': 'très faible', Low: 'faible', Medium: 'modéré', High: 'élevé', Extreme: 'extrême',
 };
-const frenchGoal = goal => FRENCH_GOALS[goal] || goal || 'Objectif non précisé';
+// Libellés internes du moteur jamais affichés tels quels sur une image publique.
+const INTERNAL_TERMS = [[/protection engine_managed/g, 'protection gérée par le moteur'], [/engine_managed/g, 'géré par le moteur'], [/dtx_engine/g, 'moteur']];
+const plain = text => INTERNAL_TERMS.reduce((t, [re, to]) => t.replace(re, to), String(text));
+const frenchGoal = goal => plain(FRENCH_GOALS[goal] || goal || 'Objectif non précisé');
 const frenchRiskProfile = profile => FRENCH_RISK_PROFILES[profile] || profile || 'non précisé';
 // Draft modes are config-only (never run) — skip them exactly like the public API
 // surface (gen-api.js NON_PUBLIC_API_STATUSES). They appear automatically once live.
@@ -200,10 +206,12 @@ function buildCardHtml(modeKey, cfg, metrics, positionState) {
 
   // KPI formatting helpers
   const known = Number.isFinite;
-  const fmtPct  = v => known(v) ? (v >= 0 ? '+' : '') + v.toFixed(2) + '%' : 'N/D';
-  const fmtDD   = v => known(v) ? '-' + Math.abs(v).toFixed(2) + '%' : 'N/D';
-  const fmtWR   = v => known(v) ? v.toFixed(1) + '%' : 'N/D';
-  const fmtPF   = v => known(v) ? v.toFixed(2) + 'x' : 'N/D';
+  // Format français : virgule décimale et espace avant %, comme sur le site.
+  const fr = (v, d) => v.toFixed(d).replace('.', ',');
+  const fmtPct  = v => known(v) ? (v >= 0 ? '+' : '−') + fr(Math.abs(v), 2) + ' %' : 'N/D';
+  const fmtDD   = v => known(v) ? '−' + fr(Math.abs(v), 2) + ' %' : 'N/D';
+  const fmtWR   = v => known(v) ? fr(v, 1) + ' %' : 'N/D';
+  const fmtPF   = v => known(v) ? fr(v, 2) : 'N/D';
 
   const retColor = !known(metrics.ret) ? '#94a3b8' : metrics.ret >= 0 ? '#10b981' : '#ef4444';
   const ddColor  = '#ef4444';
@@ -226,7 +234,7 @@ function buildCardHtml(modeKey, cfg, metrics, positionState) {
   const posRows = !positionState.available
     ? `<tr><td colspan="5" style="text-align:center;color:#fbbf24;padding:18px 0;font-size:13px;">Positions indisponibles — ${escHtml(positionState.reason)}</td></tr>`
     : positions.length === 0
-      ? `<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:18px 0;font-size:13px;">Aucune position ouverte dans le snapshot canonique</td></tr>`
+      ? `<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:18px 0;font-size:13px;">Aucune position ouverte à cette date</td></tr>`
       : positions.slice(0, 6).map(p => {
           const knownReturn = Number.isFinite(p.return_pct);
           const rc = !knownReturn ? '#94a3b8' : p.return_pct >= 0 ? '#10b981' : '#ef4444';
@@ -240,7 +248,7 @@ function buildCardHtml(modeKey, cfg, metrics, positionState) {
           </tr>`;
         }).join('\n');
   const positionsTitle = positionState.available
-    ? `Positions ouvertes (${positions.length}) · snapshot du ${positionState.snapshotDate}`
+    ? `Positions ouvertes (${positions.length}) · au ${positionState.snapshotDate}`
     : 'Positions ouvertes — indisponibles';
   const scenarioHtml = scenarioAvailable
     ? `<div class="scenario-wrap">
@@ -256,7 +264,7 @@ function buildCardHtml(modeKey, cfg, metrics, positionState) {
         <span>Favorable : ${bestNum >= 0 ? '+' : ''}${bestNum.toFixed(2)}%</span>
       </div>
     </div>`
-    : `<div class="scenario-wrap"><div class="scenario-title">Scénario de portefeuille indisponible</div><p style="color:#94a3b8;font-size:15px">Les métriques canoniques du scénario sont absentes ; la carte ne remplace pas ces valeurs par 0 %.</p></div>`;
+    : `<div class="scenario-wrap"><div class="scenario-title">Scénario de portefeuille indisponible</div><p style="color:#94a3b8;font-size:15px">Aucune position ouverte : pas de scénario à calculer. La carte ne remplace pas ces valeurs par 0 %.</p></div>`;
 
   return `<!DOCTYPE html>
 <html>
@@ -457,12 +465,12 @@ body {
   <div class="header">
     <div class="header-left">
       <div>
-        <div class="mode-badge">${meta.emoji} ${meta.label}</div>
+        <div class="mode-badge">${meta.label}</div>
         <div class="mode-goal">${frenchGoal(cfg.goal)} — risque ${frenchRiskProfile(cfg.riskProfile)}</div>
       </div>
     </div>
     <div class="header-right">
-      <div class="brand">DailyTickers</div>
+      <div class="brand"><img src="${LOGO_DATA_URI}" alt="" width="44" height="44" style="vertical-align:middle;margin-right:10px">DailyTickers</div>
       <div class="date">Généré le ${generatedToday}</div>
       <div style="color:#475569;font-size:14px;margin-top:4px;">Carte de mode portefeuille</div>
     </div>
@@ -518,7 +526,7 @@ body {
   <div class="footer">
     <span>articles.dailytickers.com/scanner/status/</span>
     <span>Information générale, pas un conseil financier.</span>
-    <span>H${cfg.horizon || '?'} · ${cfg.filterName || ''} · ${cfg.portfolioSize || 1} emplacement${cfg.portfolioSize > 1 ? 's' : ''}</span>
+    <span>Horizon ${cfg.horizon || '?'} séances · ${cfg.portfolioSize || 1} position${cfg.portfolioSize > 1 ? 's' : ''} au plus</span>
   </div>
 
 </div>

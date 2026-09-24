@@ -185,6 +185,14 @@ function main() {
     if (stg.engineMode !== 'mcp') { skipped.push(`${id} (engineMode:${stg.engineMode || '—'} ≠ mcp)`); continue; }
     if (asof !== opts.date) { skipped.push(`${id} (staging STALE asof:${asof} ≠ ${opts.date})`); continue; }
     if (stg.metricsSuspect === true) { skipped.push(`${id} (metricsSuspect — sanity gate)`); continue; }
+    // COMPARE_ONLY : évaluation de recherche non exécutable. Elle ne produit AUCUN candidat, quels
+    // que soient les champs présents — le résumé hypothétique n'a ni quantité ni niveau et ne doit
+    // jamais être promu en signal. Ce n'est pas un skip : le moteur a répondu, honnêtement, « rien
+    // d'exécutable ».
+    if (stg.actionable === false && stg.failureMode === 'compare_only') {
+      ingested.push(`${id} (0 ordre — ${stg.evaluation && stg.evaluation.noticeFr || 'évaluation compare_only, non éligible au live'})`);
+      continue;
+    }
     const validFrom = String(stg.decisionProvenance?.validFrom || '').slice(0, 10);
     const validUntil = String(stg.decisionProvenance?.validUntil || '').slice(0, 10);
     if (!validFrom || !validUntil) {

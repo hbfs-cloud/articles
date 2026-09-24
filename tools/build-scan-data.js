@@ -57,7 +57,11 @@ const setups = sig.signals.map(s => ({
   region_label: s.region === 'ETF' ? 'ETF coté aux États-Unis' : 'États-Unis',
   sector: s.sector, sharia: s.sharia ?? null, extra_badges: [],
   entry_low: s.entry_low, entry_high: s.entry_high,
-  entry_display: `${nbFR(s.entry, 2)} $ en ordre à cours limité, valable la séance. Pas de zone : si le prix n'est pas touché, il n'y a pas de trade.`,
+  entry_display: s.execution && s.execution.status === 'stop_limit_buy'
+    ? `Ordre d'achat stop-limite : déclenchement à ${nbFR(s.execution.trigger, 2)} $, plafond ${nbFR(s.execution.limit_cap, 2)} $, valable la séance ; si le cours ouvre sous ${nbFR(s.execution.cancel_if_open_below, 2)} $, annulez-le dès l'ouverture.`
+    : `${nbFR(s.entry, 2)} $ en ordre à cours limité, valable la séance ; si le cours ouvre sous ${nbFR(s.invalidation_level, 2)} $, annulez-le dès l'ouverture. Si le prix n'est pas touché, il n'y a pas de trade.`,
+  execution: s.execution || null,
+  avg_daily_dollar_volume: s.selection_evidence && s.selection_evidence.avg_daily_dollar_volume != null ? s.selection_evidence.avg_daily_dollar_volume : null,
   stop: s.stop, tp1: s.tp1, tp2: s.tp2,
   rr: s.rr, rr_entry: s.rr_entry,
   tp1_atr_multiple: s.tp1_atr_multiple,
@@ -66,7 +70,7 @@ const setups = sig.signals.map(s => ({
   confirmations: (ed.confirmations || {})[s.ticker] || [],
   // Le niveau observable est le plus bas de la seance de reference : l'arrondir a deux decimales
   // publiait 12,26 pour un plus-bas DRH a 12,255, donc un niveau qui n'a jamais ete cote.
-  invalidations: [s.invalidation, `Niveau observable : ${nbFR(s.invalidation_level, Number.isInteger(s.invalidation_level * 100) ? 2 : 3)} $, strictement au-dessus du stop à ${nbFR(s.stop, 2)} $.`],
+  invalidations: [s.invalidation, `Niveau observable : ${nbFR(s.invalidation_level, 2)} $, au-dessus du stop à ${nbFR(s.stop, 2)} $.`],
   // (le stop reste la protection ; l'invalidation ci-dessus est ce que le lecteur peut voir)
   market_cap: s.market_cap,
   earnings_clear: s.earnings_clear, dilution_clear: s.dilution_clear,
@@ -95,6 +99,10 @@ const out = {
     return { momentum: c('Momentum'), breakout: c('Breakout'), pullback: c('Pullback'), presqueeze: c('Pre-Squeeze') };
   })(),
   market_snapshot: ed.market_snapshot,
+  // Le plan éditorial sort en totalité à l'objectif 1 : aucun second objectif n'est publié.
+  single_target: true,
+  gates_summary: ed.gates_summary || null,
+  gates_report: null, // le rapport G1–G4 vit dans _final/gates-report.json, pas sur la page
   pedagogy: ed.pedagogy,
   score_methodology: ed.score_caveat_public || sig._scoreMethodology,
   macro_calendar: ed.macro_calendar,

@@ -543,6 +543,15 @@ dtxCheck('dtx: fenêtres Contract V2 appliquées aux pools et ordres publics', (
   for (const { publicId: id, enginePortfolio } of activeDtxModes()) {
     let stg;
     try { stg = readJSON(`data/dtx/${enginePortfolio}.json`); } catch { continue; }
+    if (stg.actionable === false && stg.failureMode === 'compare_only') {
+      if ((stg.orders || []).length || stg.executionPlan != null) issues.push(`${id}: staging compare_only contient des ordres ou un plan`);
+      const pooled = pool.filter(s => s && s.universe === id);
+      if (pooled.length) issues.push(`${id}: ${pooled.length} signal(s) dtx_pool issus d'une évaluation compare_only`);
+      let publicOrders = [];
+      try { publicOrders = readJSON(`portfolio/v1/${id}/orders.json`).orders || []; } catch { /* API covered elsewhere */ }
+      if (publicOrders.length) issues.push(`${id}: ${publicOrders.length} ordre(s) API malgré compare_only`);
+      continue;
+    }
     if (stg.actionable === false && stg.failureMode === 'fail_closed') {
       if ((stg.orders || []).length) issues.push(`${id}: staging fail-closed contient des ordres`);
       let publicOrders = [];

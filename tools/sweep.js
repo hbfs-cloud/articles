@@ -3317,8 +3317,11 @@ async function main() {
       if (SCOPE.excludesMode(id)) frozenTrades[id] = trades;
     }
     SCOPE.preserveDtxResults(output, existingResults);
-    output.scanner_scope = SCOPE.audit;
   }
+  // La métadonnée de périmètre suit TOUT scope fourni, requis ou dérogé : qa-check la compare au
+  // _scope.json courant dès qu'il est passé. Ne l'écrire qu'en dérogation laissait un scope requis
+  // pointer sur la séance précédente et faisait échouer le contrôle à chaque run.
+  if (SCOPE.provided) output.scanner_scope = SCOPE.audit;
   if (SYMBOL_EXCLUSIONS.active) {
     for (const [id, previous] of Object.entries(excludedTradeSnapshot)) {
       if (Array.isArray(previous) && !SCOPE.excludesMode(id))

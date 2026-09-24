@@ -8,10 +8,11 @@ function unwrapResult(value) {
 
 function validateDtxDecision(value, expected = {}) {
   const decision = unwrapResult(value);
-  const errors = dtxScan.validateDecisionV2(decision, {
-    asof: expected.asof,
-    requestId: expected.requestId,
-  });
+  // Une évaluation compare_only n'a pas de plan : elle se valide contre son propre contrat,
+  // qui exige au contraire l'ABSENCE de tout champ exécutable.
+  const errors = dtxScan.isCompareOnlyDecision(decision)
+    ? dtxScan.validateCompareOnlyDecision(decision, { asof: expected.asof, requestId: expected.requestId })
+    : dtxScan.validateDecisionV2(decision, { asof: expected.asof, requestId: expected.requestId });
   if (!decision || typeof decision !== 'object') return errors;
   if (expected.referenceClose && decision.expected_data_date !== expected.referenceClose) {
     errors.push(`expected_data_date=${decision.expected_data_date || 'missing'} != ${expected.referenceClose}`);

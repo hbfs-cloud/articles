@@ -107,7 +107,11 @@ assert(
   'served DTX snapshot may only be rejected when the curve/metric drawdown mismatch is material',
 );
 assert.strictEqual(dtxBest.decisionProvenance.contractVersion, '2.0', 'DTX best decision must retain Contract V2 provenance');
-if (dtxBest.actionable === false) {
+if (dtxBest.actionable === false && dtxBest.failureMode === 'compare_only') {
+  assert.strictEqual((dtxBest.orders || []).length, 0, 'compare_only DTX staging must contain zero orders');
+  assert.strictEqual(dtxBest.executionPlan, null, 'compare_only DTX staging must not carry an execution plan');
+  assert.strictEqual(dtxBest.evaluation?.executable, false, 'compare_only DTX evaluation must be non-executable');
+} else if (dtxBest.actionable === false) {
   assert.strictEqual(dtxBest.failureMode, 'fail_closed', 'non-actionable DTX staging must declare fail_closed');
   assert.strictEqual((dtxBest.orders || []).length, 0, 'fail-closed DTX staging must contain zero orders');
   assert.strictEqual(dtxBest.executionPlan, null, 'fail-closed DTX staging must not invent an execution plan');
@@ -159,7 +163,11 @@ const latestScannerDate = fs.readdirSync(path.join(ROOT, 'scanner'))
   .sort().at(-1);
 const latestScanner = read(`scanner/${latestScannerDate}/signals.json`);
 const latestSession = `${latestScannerDate.slice(0,4)}-${latestScannerDate.slice(4,6)}-${latestScannerDate.slice(6,8)}`;
-if (activeDtx.decisionProvenance.validFrom.slice(0, 10) === latestSession) {
+if (activeDtx.actionable === false && activeDtx.failureMode === 'compare_only') {
+  // Évaluation de recherche : jamais de candidat pont, jamais d'ordre API, quelle que soit la séance.
+  assert.strictEqual((latestScanner.dtx_pool || []).filter(s => s.universe === 'best').length, 0, 'compare_only DTX evaluation must never be bridged into dtx_pool');
+  assert.strictEqual((read('portfolio/v1/best/orders.json').orders || []).length, 0, 'compare_only DTX evaluation must never reach API orders');
+} else if (activeDtx.decisionProvenance.validFrom.slice(0, 10) === latestSession) {
   assert.strictEqual(
     (latestScanner.dtx_pool || []).filter(s => s.universe === 'best' && s.sleeve === activeEnginePortfolio).length,
     (activeDtx.orders || []).length,

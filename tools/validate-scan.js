@@ -1337,10 +1337,14 @@ async function main() {
         || JSON.stringify(secCoverage.non_equity_offering_hits || []) !== JSON.stringify(sec.non_equity_offering_hits || [])) {
         violations.push({ rule: 'sec_semantic_evidence', message: `${s.ticker}: SEC classifications/accession do not reconcile to the bound artifact.` });
       }
-      if (sec.equity_offering_hits?.length || s.dilution_clear !== true) {
+      // Politique SEC (décision durable du propriétaire du 2026-09-24) : un S-8 seul ne bloque plus ;
+      // toute autre preuve d'offre, ou toute nature inconnue, bloque toujours.
+      const secPolicy = require('./lib/sec-offering-policy');
+      const blocking = secPolicy.blockingHits(sec.equity_offering_hits, secPolicy.loadPolicy(ROOT));
+      if (blocking.length || s.dilution_clear !== true) {
         violations.push({
           rule: 'dilution_evidence',
-          message: `${s.ticker}: recent equity offering evidence is non-empty or dilution_clear is not true.`
+          message: `${s.ticker}: blocking equity offering evidence (${blocking.map(h => h.form).join(', ') || 'dilution_clear≠true'}) — only S-8 employee plans are non-blocking.`
         });
       }
       if (s.issuer_filing_regime === 'foreign_private_issuer') {
@@ -1394,9 +1398,19 @@ async function main() {
         }
         counts[region] = (counts[region] || 0) + 1;
       }
+      // Plancher normal, ou abaissé par une dérogation DATÉE et fermée de la séance
+      // (tools/lib/basket-minimum-waiver.js). Le signals.json doit déclarer la même dérogation.
+      const rawScan = JSON.parse(fs.readFileSync(path.join(dir, 'signals.json'), 'utf8'));
+      const waiverFloors = require('./lib/basket-minimum-waiver').effectiveFloors({
+        root: ROOT, dirRel: path.relative(ROOT, path.resolve(dir)), date: String(rawScan.scanDate || dirName),
+        refdate: rawScan.referenceClose, filters,
+      });
+      if (JSON.stringify(waiverFloors.waiver || null) !== JSON.stringify(rawScan.basket_minimum_waiver || null)) {
+        violations.push({ rule: 'basket_minimum_waiver', message: 'signals.json basket_minimum_waiver does not match the dated waiver file of this session.' });
+      }
       const floors = {
-        US: filters.diversification.min_us_count,
-        ETF: filters.diversification.min_etf_count
+        US: waiverFloors.min_us_count,
+        ETF: waiverFloors.min_etf_count
       };
       for (const [region, floor] of Object.entries(floors)) {
         if (floor == null) continue;

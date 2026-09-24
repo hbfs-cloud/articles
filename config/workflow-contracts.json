@@ -30,7 +30,8 @@
         "DtxListConfigs",
         "DtxRegime",
         "DtxReplay",
-        "GetHealth"
+        "GetHealth",
+        "DtxCatalog"
       ]
     },
     "allowed_args_by_server_tool": {
@@ -245,6 +246,7 @@
           "balances",
           "bars",
           "broker",
+          "compare_only",
           "consumer_capabilities",
           "expected_data_date",
           "orders",
@@ -270,6 +272,9 @@
         ],
         "GetHealth": [
           "expected_close"
+        ],
+        "DtxCatalog": [
+          "eligible_for_live"
         ]
       }
     },
@@ -989,11 +994,27 @@
           "required_variables": [
             "date",
             "refdate",
-            "request_id"
+            "request_id",
+            "dtx_mode"
           ],
           "allowed_date_literals": [
             "2021-01-01"
-          ]
+          ],
+          "variable_constraints": {
+            "dtx_mode": {
+              "type": "csv",
+              "min_items": 1,
+              "max_items": 1,
+              "item_pattern": "^(compare_only|decide)$"
+            }
+          },
+          "dtx_mode_branch": {
+            "mode_variable": "dtx_mode",
+            "calls": {
+              "compare_only": "decide_etf_us_compare",
+              "decide": "decide_etf_us"
+            }
+          }
         },
         {
           "path": "plans/scanner-dtx-decide-only.json",
@@ -1151,6 +1172,13 @@
               "item_pattern": "^[A-Z][A-Z0-9.-]{0,9}$"
             }
           }
+        },
+        {
+          "path": "plans/scanner-events-horizon.json",
+          "required_variables": [
+            "date",
+            "refdate"
+          ]
         }
       ]
     },

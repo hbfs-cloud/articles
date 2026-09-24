@@ -44,7 +44,7 @@ const watch = Object.entries(review.watch || {}).map(([ticker, manual]) => {
     sharia: null,
     sharia_reason: manual.sharia_reason,
     market_cap: cap,
-    market_cap_basis: 'sharesOutstanding collecté × clôture Webull vérifiée du 18 septembre',
+    market_cap_basis: `sharesOutstanding collecté × clôture Webull vérifiée du ${signals.referenceClose}`,
     in_fortress_universe: true,
     close: tech.close,
     rsi: Math.round(tech.rsi * 100) / 100,

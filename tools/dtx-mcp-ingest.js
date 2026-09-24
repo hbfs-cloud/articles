@@ -132,6 +132,7 @@ function main() {
   }
   const decide = decideEnvelope && decideEnvelope.result && typeof decideEnvelope.result === 'object'
     ? decideEnvelope.result : decideEnvelope;
+  if (scan.isCompareOnlyDecision(decide)) return ingestCompareOnly({ opts, modeInfo, cfg, currency, decide, t0 });
   if (!decide || !Array.isArray(decide.execution_plan && decide.execution_plan.groups)) {
     console.error(`ERROR: decide JSON has no Contract V2 execution_plan.groups (got keys: ${decide ? Object.keys(decide).join(',') : 'null'})`);
     process.exit(3);
@@ -268,6 +269,58 @@ function main() {
     console.error(`   → Le MCP dtx est sain (vérifié). Un replay aberrant = param drift / job result corrompu au run.`);
     console.error(`     Re-appeler DtxReplay(${cfg.id}, from=2021-01-01, to=<J-1 ou 2026-07-06>), re-vérifier trades vs baseline, PUIS ré-ingérer.`);
     console.error(`     ALERTER Telegram 'alerts' + NE PAS publier les métriques de ce mode.`);
+    process.exitCode = 7;
+  }
+  return out;
+}
+
+// COMPARE_ONLY (décision du propriétaire, 2026-09-24). Aucune fenêtre de plan n'existe : la séance
+// estampillée est la séance US qui suit la clôture certifiée, comme pour un plan du soir. Le staging
+// porte zéro ordre ; le garde anti-gel ne s'applique pas puisqu'il n'y a aucun batch à comparer.
+function ingestCompareOnly({ opts, modeInfo, cfg, currency, decide, t0 }) {
+  const { nextUSTradingDay } = require('./lib/market-calendar');
+  let metrics = null, equity = null;
+  if (opts.replay) {
+    try {
+      let rep = readJson(opts.replay, 'replay');
+      const replayErrors = validateDtxReplay(rep, { portfolio: opts.portfolio, referenceClose: opts.expectedClose });
+      if (replayErrors.length) throw new Error(`DtxReplay rejected: ${replayErrors.join('; ')}`);
+      if (rep && !rep.results && rep.result && rep.result.results) rep = rep.result;
+      const from = opts.from || scan.DEFAULT_FROM;
+      const to = opts.to || scan.goLiveFor(cfg.id) || opts.asof;
+      ({ metrics, equity } = scan.extractReplayMetrics(rep, from, to));
+      if (!metrics) throw new Error('replay results[0] empty');
+    } catch (e) {
+      console.error(`ERROR: ${e.message}`);
+      process.exit(4);
+    }
+  }
+  const targetSession = nextUSTradingDay(opts.expectedClose);
+  let out;
+  try {
+    out = scan.buildCompareOnlyStaging({
+      modeInfo, cfg, asof: targetSession, decidedOn: opts.asof, currency,
+      decision: decide, metrics, equity, replayErr: null,
+      engineLabel: 'dtx (systematic-tss) — MCP', engineMode: 'mcp', t0,
+    });
+  } catch (e) {
+    console.error(`ERROR: ${e.message}`);
+    process.exit(3);
+  }
+  const computedDate = extractComputedDate(decide);
+  if (computedDate && computedDate !== opts.expectedClose) {
+    console.error(`⛔ [${modeInfo.id}] évaluation compare_only calculée sur ${computedDate} ≠ clôture attendue ${opts.expectedClose} — staging NON écrit`);
+    process.exit(8);
+  }
+  const outPath = opts.out || scan.stagingPathFor(modeInfo.id, { asof: targetSession, pit: opts.pit });
+  scan.writeStaging(out, outPath);
+  if (!opts.quiet) {
+    console.log(`  [${modeInfo.id}] MCP ${currency} | COMPARE_ONLY — ${out.evaluation.noticeFr} | orders=0`);
+    if (metrics) console.log(`    replay ${metrics.from}→${metrics.to}: cagr=${metrics.cagr_pct} dd=${metrics.max_dd_pct} sharpe=${metrics.sharpe} trades=${metrics.total_trades} wr=${metrics.win_rate}`);
+    console.log(`    → ${path.relative(scan.REPO_ROOT, outPath)} (séance ${targetSession}, ${out.tookMs}ms)`);
+  }
+  if (out.metricsSuspect) {
+    console.error(`⛔ [${modeInfo.id}] REPLAY SUSPECT — ${out._sanityWarning.join(' ; ')}`);
     process.exitCode = 7;
   }
   return out;

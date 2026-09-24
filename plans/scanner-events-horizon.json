@@ -1,0 +1,43 @@
+{
+  "artifact": "scanner/$date/_events-horizon",
+  "note": "Calendrier économique sur tout l'horizon du scan (C10 de la revue du 2026-09-24) : la vague 1 ne couvre que sept jours alors que l'horizon court sur dix séances.",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "equity_reference_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "events-horizon",
+      "calls": [
+        {
+          "as": "economic_events_horizon",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "economic_events",
+            "days": 14
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        }
+      ]
+    }
+  ]
+}

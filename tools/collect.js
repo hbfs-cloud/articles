@@ -216,6 +216,20 @@ function semanticFailure(call, value) {
       return `systematic DtxListConfigs does not contain required portfolio ${requiredPortfolio}`;
     }
   }
+  if (call.tool === 'DtxCatalog' && call.assert && call.assert.live_mode_for_portfolio) {
+    // Le mode DTX est piloté par le catalogue (décision du propriétaire du 2026-09-24, jusqu'à
+    // nouvel ordre) : compare_only tant que la ligne n'est pas eligible_for_live, décision dès
+    // qu'elle l'est. Le harnais refuse un mode qui contredit le catalogue relu dans la même collecte.
+    const entries = Array.isArray(payload) ? payload : Array.isArray(payload.entries) ? payload.entries
+      : Array.isArray(payload.configs) ? payload.configs : Array.isArray(payload.data) ? payload.data : null;
+    if (!entries) return 'systematic DtxCatalog response is not a list';
+    const target = call.assert.live_mode_for_portfolio;
+    const live = entries.some(e => e && (e.id === target || e.portfolio === target) && e.eligible_for_live === true);
+    const expected = live ? 'decide' : 'compare_only';
+    if (call.assert.expected_mode !== expected) {
+      return `systematic DtxCatalog: ${target} ${live ? 'est' : "n'est pas"} eligible_for_live, mode attendu ${expected}, reçu ${call.assert.expected_mode}`;
+    }
+  }
   if (call.tool === 'DtxDecide') {
     const errors = validateDtxDecision(value, {
       asof: call.args && call.args.asof,
@@ -223,6 +237,12 @@ function semanticFailure(call, value) {
       referenceClose: call.args && call.args.expected_data_date,
     });
     if (errors.length) return `systematic DtxDecide contract rejected: ${errors.join('; ')}`;
+    // Demandé en compare_only, servi en compare_only : un plan exécutable reçu en réponse à une
+    // évaluation de recherche serait une dérive silencieuse du contrat choisi par le propriétaire.
+    const decided = value.result && typeof value.result === 'object' ? value.result : value;
+    if (call.args && call.args.compare_only === true && (decided.compare_only !== true || decided.executable !== false)) {
+      return 'systematic DtxDecide requested compare_only but received an executable decision';
+    }
   }
   if (call.tool === 'DtxReplay') {
     const errors = validateDtxReplay(value, {
@@ -698,6 +718,66 @@ function socleRead(c) {
       r.ms += r.waitMs;
     }));
 
+    // ── REPRISE CIBLÉE DES APPELS EN ÉCHEC (politique `retry` déclarée dans le plan) ──────────
+    // Décision du propriétaire du 2026-09-24 : une source tierce requise qui expire (signaux
+    // americanbulls) n'est PAS rendue optionnelle ; on rejoue les seuls appels en échec, à
+    // intervalle fixe, sous un plafond dur. Les reprises complètent la MÊME collecte : même
+    // instant de capture, même journal, même harnais ; chaque réponse garde son propre
+    // horodatage d'observation. Plafond atteint = l'appel reste en échec et le run échoue.
+    if (!replay) {
+      const retryable = () => results
+        .map((r, i) => ({ r, c: calls[i], i }))
+        .filter(({ r, c }) => c && c.retry && (!r.ok || semanticFailure(c, r.value)));
+      const missingSymbols = ({ r, c }) => {
+        const found = new Set();
+        const text = JSON.stringify(r.ok ? r.value : (r.failedResponse || r.error || ''));
+        for (const m of text.matchAll(/([a-z_]+)\[([A-Z0-9.^=\-]+)\]/g)) found.add(`${m[1]}[${m[2]}]`);
+        return found.size ? [...found] : [`${c.as} (${String(r.error || semanticFailure(c, r.value) || 'échec').slice(0, 120)})`];
+      };
+      const hhmm = () => new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
+      const started = Date.now();
+      let pending = retryable();
+      let attempt = 0;
+      while (pending.length) {
+        const policy = pending[0].c.retry;
+        const interval = Number(policy.interval_s) * 1000;
+        const maxAttempts = Number(policy.max_attempts);
+        const maxTotal = Number(policy.max_total_s) * 1000;
+        if (attempt >= maxAttempts || Date.now() - started + interval > maxTotal) {
+          console.error(`[collect] ${hhmm()} ⛔ reprise plafonnée (${attempt}/${maxAttempts} tentatives, ${Math.round((Date.now() - started) / 1000)} s) — encore manquants : ${pending.flatMap(missingSymbols).join(', ')}`);
+          journal.retry_exhausted = { wave: wave.name, attempts: attempt, missing: pending.flatMap(missingSymbols) };
+          break;
+        }
+        attempt += 1;
+        console.log(`[collect] ${hhmm()} reprise ${attempt}/${maxAttempts} dans ${interval / 1000} s — ${pending.length} appel(s), manquants : ${pending.flatMap(missingSymbols).join(', ')}`);
+        await new Promise(res => setTimeout(res, interval));
+        const again = await callMany(pending.map(p => p.c), {
+          onResult: (r) => console.log(`   ${r.ok ? '✓' : '✗'} ${r.as} [reprise ${attempt}] (${r.ms}ms)${r.ok ? '' : ' — ' + r.error}`),
+        });
+        await Promise.all(again.map(async (r, k) => {
+          if (!r.ok) return;
+          try { r.value = await resolveAsync(pending[k].c.server, r.value, pending[k].c.job_max_ms); }
+          catch (e) { r.ok = false; r.error = `job async : ${e.message}`; r.failedResponse = e.failedResponse; }
+        }));
+        for (let k = 0; k < again.length; k++) {
+          const { i, c } = pending[k];
+          again[k].retryAttempts = attempt;
+          // Horodatage PROPRE de la réponse rejouée : la reprise complète la collecte, elle ne
+          // prétend pas avoir observé à l'instant de la première salve. Le manifeste de fraîcheur
+          // et le journal portent cet instant, jamais celui du run.
+          const v = again[k].value || {};
+          again[k].asOf = (typeof v.captured_at === 'string' && v.captured_at) || new Date().toISOString();
+          results[i] = again[k];
+          const still = !again[k].ok || semanticFailure(c, again[k].value);
+          console.log(`[collect] ${hhmm()}   ${still ? '✗' : '✓'} ${c.as} après reprise ${attempt}${still ? ` — ${missingSymbols({ r: again[k], c }).join(', ')}` : ''}`);
+        }
+        journal.retries = [...(journal.retries || []), { wave: wave.name, attempt, at: new Date().toISOString(), calls: pending.map(p => p.c.as),
+          observed_at: Object.fromEntries(pending.map((p, k) => [p.c.as, again[k].asOf || null])) }];
+        pending = retryable();
+      }
+      if (attempt && !pending.length) console.log(`[collect] ${hhmm()} ✓ reprise terminée : tous les appels de la vague « ${wave.name} » sont complets après ${attempt} tentative(s)`);
+    }
+
     // ── COUPE-CIRCUIT DE PANNE D'ORIGINE ────────────────────────────────────────────────
     // Le 2026-08-12, le service marketdata est tombé (429 sur la résolution des jobs, puis 502
     // Cloudflare jusque sur GetStatus). La collecte a mis 2 694 s — 45 minutes — à mourir, en
@@ -736,6 +816,7 @@ function socleRead(c) {
         ok: r.ok && !semanticError,
         ms: r.ms,
         wait_ms: r.waitMs || 0,
+        ...(r.retryAttempts ? { retry_attempts: r.retryAttempts, observed_at: r.asOf || null } : {}),
         error: r.error || semanticError || null,
       });
       if (!r.ok) {

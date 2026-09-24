@@ -112,6 +112,8 @@ function append(staging, opts = {}) {
     updates: (staging.updates || []).map(normalizeOrder).filter(Boolean),
     cancels: (staging.cancels || []).map(normalizeOrder).filter(Boolean),
     metrics: staging.metrics || null,
+    ...(staging.actionable === false ? { actionable: false, failureMode: staging.failureMode || null } : {}),
+    ...(staging.evaluation ? { evaluation: staging.evaluation } : {}),
     recordedAt: new Date().toISOString(),
   };
   const counts = { orders: entry.orders.length, updates: entry.updates.length, cancels: entry.cancels.length };

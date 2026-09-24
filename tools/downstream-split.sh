@@ -153,9 +153,14 @@ case "$MODE" in
       for d in "$S"/decide_*.json; do
         [ -e "$d" ] || continue
         pf=$(basename "$d" .json); pf=${pf#decide_}
+        # Variante compare_only du plan piloté par le catalogue (décision du propriétaire du
+        # 2026-09-24) : decide_<pf>_compare.json appartient au même portefeuille <pf>.
+        pf=${pf%_compare}
         r="$S/replay_${pf}.json"
         if [ -f "$r" ]; then
-          node tools/dtx-mcp-ingest.js --portfolio "$pf" --decide "$d" --replay "$r" --asof "$ASOF" --expected-close "$REF_CLOSE" >> /tmp/ds-dtx.log 2>&1 \
+          # --asof = clôture sur laquelle le moteur a décidé (requested_asof), comme dans la chaîne B de
+          # scan-marketdata-only.sh ; la séance visée est déduite par l'ingest.
+          node tools/dtx-mcp-ingest.js --portfolio "$pf" --decide "$d" --replay "$r" --asof "$REF_CLOSE" --expected-close "$REF_CLOSE" >> /tmp/ds-dtx.log 2>&1 \
             || { echo "  $pf : ingestion decide/replay invalide" | tee -a /tmp/ds-dtx.log; exit 1; }
           # DtxReplay is useful for a current decision/replay audit, but its
           # fixed-capital combined curve is not the dynamic book curve. The
