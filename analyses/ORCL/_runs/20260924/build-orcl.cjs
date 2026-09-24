@@ -107,8 +107,7 @@ const primary = { kind: 'primary_sec_manifest_v1', ticker: 'ORCL', as_of: '2026-
   } };
 write(rev + '/primary-manifest.json', primary);
 const ref = i => ({ name: 'Oracle ' + docs[i].form, url: docs[i].url, date: docs[i].date });
-const EVIDENCE_URL = 'https://articles.dailytickers.com/data/analyses-evidence/ORCL.json';
-const market = name => ({ name: 'Données de marché datées (provenance hashée) : ' + name, url: EVIDENCE_URL, date: '2026-09-24' });
+const market = name => ({ name: 'Données de marché : ' + name, url: 'https://mcp.dailytickers.com/mcp', date: '2026-09-24' });
 
 // ---------------------------------------------------------------- le dossier
 const archivePath = run + '/original/ORCL.json', archive = read(archivePath);
@@ -357,7 +356,7 @@ function sourceFor(p) {
   if (/^meta\.(lastMcpRefresh|levelsVerifiedAt)$/.test(p) || p === 'blastRadius.observationTime') return prov('status', '/captured_at', 'Horodatage exact de la collecte.');
   if (judgments.judgments[p]) return prov('judgments', '/judgments/' + esc(p) + '/value', judgments.judgments[p].reason);
   const r = p.match(/^(.*)\.sourceRefs\.(\d+)\.(date|url|name)$/);
-  if (r) { const x = get(a, r[1] + '.sourceRefs.' + r[2]); if (x.url === EVIDENCE_URL) return prov('status', '/captured_at', 'Date de collecte, non date de cours.'); const i = docs.findIndex(d => d.url === x.url); if (i < 0) throw Error('référence inconnue ' + p); return P(i); }
+  if (r) { const x = get(a, r[1] + '.sourceRefs.' + r[2]); if (x.url === 'https://mcp.dailytickers.com/mcp') return prov('status', '/captured_at', 'Date de collecte, non date de cours.'); const i = docs.findIndex(d => d.url === x.url); if (i < 0) throw Error('référence inconnue ' + p); return P(i); }
   if (p === 'meta.levelsCloseDate' || p === 'blastRadius.asOf' || p === 'macro.indicators.0.value') return prov('bars', B + '/' + N + '/0', 'Dernière séance complète.');
   if (p === 'header.price' || p === 'macro.indicators.0.signal') return prov('bars', B + '/' + N + '/4', 'Clôture complète de référence.');
   if (p === 'header.changePct') return prov('bars', B + '/' + N + '/4', '100 × (close / close précédent − 1).', [dep('bars', B + '/' + (N - 1) + '/4')]);
