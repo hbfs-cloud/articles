@@ -204,6 +204,21 @@ function evaluateFormula(source, formula) {
     return formula.operation === 'ratio' ? a / b : (a / b - 1) * 100;
   }
 
+  // Variation depuis l'OUVERTURE d'une séance jusqu'à une clôture ultérieure (ou la même) de LA MÊME
+  // série. Ajoutée le 2026-09-24 pour juger un conseil « ne pas acheter l'écart d'ouverture » : la
+  // comparaison honnête part du prix auquel l'acheteur de l'écart a réellement payé. Contraintes :
+  // même tableau, dénominateur en colonne 1 (open), numérateur en colonne 4 (close), dénominateur
+  // antérieur ou égal. Rien d'autre n'est accepté.
+  if (formula.operation === 'ratio_pct_open_to_close') {
+    const A = splitSeriesPointer(formula.numerator_pointer);
+    const B = splitSeriesPointer(formula.denominator_pointer);
+    if (!A || !B || A.prefix !== B.prefix || A.column !== '4' || B.column !== '1' || !(B.index <= A.index)) return null;
+    const a = num(source, formula.numerator_pointer);
+    const b = num(source, formula.denominator_pointer);
+    if (a === null || b === null || b === 0) return null;
+    return (a / b - 1) * 100;
+  }
+
   // Rapport d'une observation à la moyenne d'une fenêtre — le multiple de volume d'une séance.
   //
   // La fenêtre est DÉCRITE (`window`, `offset`) et RECONSTRUITE ici, jamais énumérée par l'auteur.

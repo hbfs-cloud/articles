@@ -218,6 +218,15 @@ try {
     [c2('x', '−9,09 %', { source_pointer: '/bars/0/4', render: { scale: 1, decimals: 2, sign: 'always', suffix: ' %', format: 'fr' },
       formula: { operation: 'ratio_pct', numerator_pointer: '/bars/0/4', denominator_pointer: '/bars/2/4', result: -9.0909 } })], 'ordre inversé');
 
+  // A6 — variation depuis l'ouverture : seule la paire open (col 1) → clôture (col 4) de la même
+  // série est admise, jamais un plus bas, ni une ouverture postérieure.
+  fails('<!doctype html><main><p><span data-claim="x">+10,00 %</span></p></main>',
+    [c2('x', '+10,00 %', { source_pointer: '/bars/2/4', render: { scale: 1, decimals: 2, sign: 'always', suffix: ' %', format: 'fr' },
+      formula: { operation: 'ratio_pct_open_to_close', numerator_pointer: '/bars/2/4', denominator_pointer: '/bars/0/3', result: 10 } })], 'open_to_close hors colonne open');
+  fails('<!doctype html><main><p><span data-claim="x">+10,00 %</span></p></main>',
+    [c2('x', '+10,00 %', { source_pointer: '/bars/0/4', render: { scale: 1, decimals: 2, sign: 'always', suffix: ' %', format: 'fr' },
+      formula: { operation: 'ratio_pct_open_to_close', numerator_pointer: '/bars/0/4', denominator_pointer: '/bars/2/1', result: 10 } })], 'open_to_close ouverture postérieure');
+
   // A3 — la fenêtre de moyenne est reconstruite, plus énumérée : mélanger prix et volumes échoue
   fails('<!doctype html><main><p><span data-claim="x">10,70</span></p></main>',
     [c2('x', '10,70', { source_pointer: '/bars/2/5', source_value: 90,

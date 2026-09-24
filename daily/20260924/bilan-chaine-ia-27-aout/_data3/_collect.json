@@ -1,0 +1,150 @@
+{
+  "contract_version": "1.0",
+  "workflow": "daily",
+  "plan": "plans/daily-dossier-webull.json",
+  "plan_sha256": "1cc096366d4b1f75e4ea3976f7eb2db63385952a9f03c1a91bc58a727259cca6",
+  "input_sha256": "6fab8de02c812c68ad1f346d67cfaa5177d9ba345675c05b91b7ec5c7187558d",
+  "resolved_input": {
+    "artifact": "daily/20260924/bilan-chaine-ia-27-aout/index.html",
+    "equity_reference_close": "2026-09-23",
+    "crypto_completed_refdate": "2026-09-23",
+    "as_of_timestamp": "2026-09-24T07:09:37.622Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "equity_reference_close": "2026-09-23"
+            }
+          }
+        ]
+      },
+      {
+        "name": "dossier-close",
+        "calls": [
+          {
+            "as": "bars_dossier",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "QQQ,XLK,SMH,SOXX,CIBR,HACK,IGV,SPY",
+              "limit": 22,
+              "force_async": true,
+              "as_of_timestamp": "2026-09-24T07:09:37.622Z",
+              "completion_policy": "completed_only",
+              "source": "webull"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-23"
+            },
+            "note": "Variante webull du plan dossier : tiingo en cooldown serveur le 2026-09-24 ; barres certifiées completed_only."
+          }
+        ]
+      },
+      {
+        "name": "dossier-crypto",
+        "calls": [
+          {
+            "as": "bars_crypto",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "BTC-USD,ETH-USD,SOL-USD,XRP-USD",
+              "limit": 34,
+              "as_of_timestamp": "2026-09-24T07:09:37.622Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "crypto_24_7_utc",
+              "expected_completed_end": "2026-09-23"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "daily/20260924/bilan-chaine-ia-27-aout/index.html",
+  "reference_date": "2026-09-23",
+  "equity_reference_close": "2026-09-23",
+  "crypto_completed_refdate": "2026-09-23",
+  "started_at": "2026-09-24T07:09:37.622Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 348,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 346,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "dacf1b1591883b9e7af612c22bde58f176673e1761626bc596797f511ded3e9a"
+        }
+      ]
+    },
+    {
+      "name": "dossier-close",
+      "ms": 1710,
+      "calls": [
+        {
+          "as": "bars_dossier",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1710,
+          "wait_ms": 999,
+          "error": null,
+          "output_sha256": "59985cdf3f65f48296509c70db9076b26c4ae8ceacde722d95878c8f90d8f490"
+        }
+      ]
+    },
+    {
+      "name": "dossier-crypto",
+      "ms": 991,
+      "calls": [
+        {
+          "as": "bars_crypto",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 991,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "a53951a3e0ee6ebce02924b7ae8c60208944d2ad8c30899bf030e9097f67a3fb"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-09-24T07:09:40.712Z",
+  "failures": 0,
+  "executed_calls": 3,
+  "skipped_calls": 0
+}

@@ -1,0 +1,75 @@
+{
+  "artifact": "daily/$date/$slug/index.html",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "equity_reference_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dossier-close",
+      "calls": [
+        {
+          "as": "bars_dossier",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$symbols",
+            "limit": 22,
+            "force_async": true,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only",
+            "source": "tiingo"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
+          },
+          "note": "Dossier spécial : évolution depuis une édition passée. Barres tiingo certifiées completed_only (l'historique yahoo présente des trous sur plusieurs valeurs de la chaîne IA, cf. mémoire yahoo-store-holes-pin-source)."
+        }
+      ]
+    },
+    {
+      "name": "dossier-crypto",
+      "calls": [
+        {
+          "as": "bars_crypto",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "BTC-USD,ETH-USD,SOL-USD,XRP-USD",
+            "limit": 34,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "crypto_24_7_utc",
+            "expected_completed_end": "$crypto_completed_refdate"
+          }
+        }
+      ]
+    }
+  ]
+}

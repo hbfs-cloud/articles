@@ -1,0 +1,150 @@
+{
+  "contract_version": "1.0",
+  "workflow": "daily",
+  "plan": "plans/daily-dossier-webull.json",
+  "plan_sha256": "1cc096366d4b1f75e4ea3976f7eb2db63385952a9f03c1a91bc58a727259cca6",
+  "input_sha256": "b8eacb89f9f333cfd31824d8af583ec35ae8ab5323596e521928a5ea6d402b7b",
+  "resolved_input": {
+    "artifact": "daily/20260924/bilan-chaine-ia-27-aout/index.html",
+    "equity_reference_close": "2026-09-23",
+    "crypto_completed_refdate": "2026-09-23",
+    "as_of_timestamp": "2026-09-24T07:09:27.965Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "equity_reference_close": "2026-09-23"
+            }
+          }
+        ]
+      },
+      {
+        "name": "dossier-close",
+        "calls": [
+          {
+            "as": "bars_dossier",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "CEG,VST,GEV,BE,CRWV,APLD,NBIS,IREN,WULF,CIFR,CORZ,HUT,MARA,CLSK,CAN,MSTR,COIN,SBET,BMNR,CDE,AG,EQX,LPLA,ALLR,LUNR,RZLV,MRSH,STRL",
+              "limit": 22,
+              "force_async": true,
+              "as_of_timestamp": "2026-09-24T07:09:27.965Z",
+              "completion_policy": "completed_only",
+              "source": "webull"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-23"
+            },
+            "note": "Variante webull du plan dossier : tiingo en cooldown serveur le 2026-09-24 ; barres certifiées completed_only."
+          }
+        ]
+      },
+      {
+        "name": "dossier-crypto",
+        "calls": [
+          {
+            "as": "bars_crypto",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "BTC-USD,ETH-USD,SOL-USD,XRP-USD",
+              "limit": 34,
+              "as_of_timestamp": "2026-09-24T07:09:27.965Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "crypto_24_7_utc",
+              "expected_completed_end": "2026-09-23"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "daily/20260924/bilan-chaine-ia-27-aout/index.html",
+  "reference_date": "2026-09-23",
+  "equity_reference_close": "2026-09-23",
+  "crypto_completed_refdate": "2026-09-23",
+  "started_at": "2026-09-24T07:09:27.965Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 333,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 330,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "cba1eb69a31c9f8023cc793c40ef10e4b36ead1867223951c2f5509b83d9e90f"
+        }
+      ]
+    },
+    {
+      "name": "dossier-close",
+      "ms": 7831,
+      "calls": [
+        {
+          "as": "bars_dossier",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 7830,
+          "wait_ms": 7113,
+          "error": null,
+          "output_sha256": "4df97f6acab4bfc537ed07ef036f3b101e7d45d8dbfea38ea9b357865d08d7e8"
+        }
+      ]
+    },
+    {
+      "name": "dossier-crypto",
+      "ms": 900,
+      "calls": [
+        {
+          "as": "bars_crypto",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 899,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "d85a7e8aa64a68878c5be20aa7abb5e15f79b445ab8ff2146a370fbe16bf57f9"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-09-24T07:09:37.142Z",
+  "failures": 0,
+  "executed_calls": 3,
+  "skipped_calls": 0
+}
