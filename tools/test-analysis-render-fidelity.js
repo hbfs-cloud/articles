@@ -96,4 +96,12 @@ const mixedPeriodHtml = render(windowData).split('id="performance"')[1].split('c
 assert(!mixedPeriodHtml.includes('YTD') && !mixedPeriodHtml.includes('Alpha') && !mixedPeriodHtml.includes('metric-strip'));
 windowData.performance.windowReturns.endDate = '2026-07-01';
 assert(validate(windowData, SCHEMA).some(error => error.includes('startDate')));
+// Aucun lien vers l'infrastructure interne ne sort du rendu.
+const internal = JSON.parse(JSON.stringify(windowData));
+internal.performance = undefined;
+internal.fundamentals = internal.fundamentals || {};
+internal.fundamentals.sourceRefs = [{ name: 'Données', url: 'https://mcp.dailytickers.com/mcp', date: '2026-09-24' }];
+const internalHtml = render(internal);
+assert(!internalHtml.includes('mcp.dailytickers.com'), 'internal MCP host must never be rendered');
+assert(internalHtml.includes(`https://articles.dailytickers.com/data/analyses-evidence/${internal.header.ticker}.json`), 'internal source maps to the public evidence file');
 console.log('analysis render fidelity: PASS');

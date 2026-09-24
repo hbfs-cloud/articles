@@ -91,11 +91,24 @@ const safeEditorialHtml = s => esc(s)
   .replace(/&lt;table class=&quot;coverage-matrix&quot;&gt;/g, '<table class="coverage-matrix">');
 const isFrench = d => d?.meta?.lang === 'fr';
 const tx = (d, en, fr) => isFrench(d) ? fr : en;
+// Aucun lien publié ne peut viser l'infrastructure interne (points d'accès des données, du moteur
+// systematic, de la mémoire ou du simulateur) : CLAUDE.md l'interdit, et le 2026-09-24 huit fiches
+// en affichaient. Un tel lien est rendu comme le fichier de preuves public du titre, qui porte les
+// mêmes valeurs datées et hachées. La correction vit ici, au rendu, pour ne pas réécrire des
+// dossiers déjà attestés.
+const INTERNAL_HOSTS = /(^|\.)(mcp|systematic|simulator)\.dailytickers\.com$|(^|\.)hbfs-cloud\.com$/i;
+let currentTicker = '';
 function safeUrl(value) {
   const url = String(value || '').trim();
   if (url.startsWith('/') && !url.startsWith('//')) return url;
   try {
-    return new URL(url).protocol === 'https:' ? url : '#';
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') return '#';
+    if (INTERNAL_HOSTS.test(parsed.hostname)) {
+      const evidence = currentTicker && path.join(ROOT, 'data', 'analyses-evidence', `${currentTicker}.json`);
+      return evidence && fs.existsSync(evidence) ? `https://articles.dailytickers.com/data/analyses-evidence/${currentTicker}.json` : '#';
+    }
+    return url;
   } catch {
     return '#';
   }
@@ -1139,6 +1152,7 @@ ${d.risks.riskRadarValues ? `    (function(){var el=document.getElementById('ris
 // ─── Main render pipeline ───────────────────────────────────────────────────
 
 function render(data) {
+  currentTicker = /^[A-Z][A-Z0-9.-]{0,14}$/.test(data?.header?.ticker || '') ? data.header.ticker : '';
   const deepDive = [
     renderBusiness(data), renderNews(data), renderFundamentals(data), renderEarnings(data),
     renderInsiders(data), renderCapitalStructure(data), renderFilingsReview(data), renderShortInterest(data),
