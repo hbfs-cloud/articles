@@ -98,6 +98,10 @@ const tx = (d, en, fr) => isFrench(d) ? fr : en;
 // dossiers déjà attestés.
 const INTERNAL_HOSTS = /(^|\.)(mcp|systematic|simulator)\.dailytickers\.com$|(^|\.)hbfs-cloud\.com$/i;
 let currentTicker = '';
+// Même règle pour le texte : un nom de source ne nomme jamais l'infrastructure.
+function publicSourceName(name) {
+  return String(name || '').replace(/DailyTickers\s+MCP(\s+Gateway)?/gi, 'Market data').replace(/\bMCP\s+Gateway\b/gi, 'Market data');
+}
 function safeUrl(value) {
   const url = String(value || '').trim();
   if (url.startsWith('/') && !url.startsWith('//')) return url;
@@ -197,7 +201,7 @@ function impactBadge(i) {
 function sourceRefsHtml(refs) {
   if (!refs || !refs.length) return '';
   return `\n      <div class="source-refs" style="display:flex;flex-wrap:wrap;gap:0.5rem 1rem;margin-top:0.75rem;padding-top:0.5rem;border-top:1px solid #e2e8f0;">\n` +
-    refs.map(r => `        <a href="${esc(safeUrl(r.url))}" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">${esc(r.name)}</span>${r.date ? `<span class="source-date">&middot; ${esc(r.date)}</span>` : ''}</a>`).join('\n') +
+    refs.map(r => `        <a href="${esc(safeUrl(r.url))}" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">${esc(publicSourceName(r.name))}</span>${r.date ? `<span class="source-date">&middot; ${esc(r.date)}</span>` : ''}</a>`).join('\n') +
     `\n      </div>`;
 }
 
