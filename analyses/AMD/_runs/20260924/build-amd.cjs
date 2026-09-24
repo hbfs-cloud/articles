@@ -1,0 +1,221 @@
+'use strict';
+// Dossier AMD v3 au close du 2026-09-23 (lot R02), révision du dossier v3 du 19 septembre. Plan de repli :
+// pas d'achat après +40 % en treize séances ; entrée seulement sur un retour au haut du gap du 21 septembre.
+const R = require('../../../../tools/lib/analysis-v3-r02.cjs');
+const GEN = 'analyses/AMD/_runs/20260924/build-amd.cjs';
+
+R.build({
+  ticker: 'AMD', shortName: 'AMD', cik: 2488, generator: GEN, mode: 'pullback', clientBars: true,
+  xbrl: { ttm: { rev: ['RevenueFromContractWithCustomerExcludingAssessedTax'], ebit: ['OperatingIncomeLoss'], ni: ['NetIncomeLoss'], dep: ['OtherDepreciationAndAmortization'], amort: ['AmortizationOfIntangibleAssets'], ocf: ['NetCashProvidedByUsedInOperatingActivities'], capex: ['PaymentsToAcquirePropertyPlantAndEquipment'] },
+    instant: { debtTotal: ['DebtLongtermAndShorttermCombinedAmount'], cashEq: ['CashAndCashEquivalentsAtCarryingValue'], sti: ['ShortTermInvestments'] },
+    da: ['dep', 'amort'], debt: ['debtTotal'], cash: ['cashEq', 'sti'] },
+  scenarioMultiple: 50, valuationBasis: 'GAAP douze mois au 2026-06-27 (XBRL SEC) ; multiple de cinquante fois l’EBITDA = hypothèse éditoriale ; dette et trésorerie avant l’émission obligataire d’août',
+  levels: { trigger: { d: '2026-09-18', c: 2 }, stop: { d: '2026-09-17', c: 3 }, s1: { d: '2026-09-21', c: 3 }, r1: { d: '2026-09-21', c: 2 }, r2: { d: '2026-09-23', c: 2 } },
+  supports: ['s1', 'trigger', 'stop'], resistances: ['r1', 'r2'],
+  targets: ({ lv, entry }) => { const tp1 = lv('r2'); return { tp1, tp2: tp1 + (tp1 - entry) }; },
+  levelsMethod: 'Entrée de repli = plus haut du 18 septembre, haut du gap du 21 septembre ; stop = plus bas du 17 septembre ; TP1 = plus haut historique du 23 septembre ; TP2 = TP1 + (TP1 − entrée) ; pourcentages depuis l’entrée ; R/R = gain / risque.',
+  inventory: 28,
+  reviewScope: 'Dépôts EDGAR d’AMD du 1er janvier au 23 septembre 2026 (28 formulaires hors formulaires 3, 4, 5 et 144), plus le 10-K de l’exercice 2025. Les 8-K de gouvernance, les 13F-HR, le formulaire SD, les déclarations 13G et les procurations sont écartés comme non décisionnels. Le 8-K du 15 mai porte une ligne de crédit renouvelable de 5,0 Md$ non tirée et 65 millions d’actions de plus pour le plan de rémunération ; le S-8 du 15 mai enregistre ces actions ; le S-3ASR, le premier 424B5 et le FWP des 13 et 14 août préparent l’émission obligataire, et le 8-K du 17 août en constate la clôture.',
+  docs: [
+    ['2026-08-04', '8-K / Exhibit 99.1', '0000002488-26-000121', 'q22026991.htm', 'q2-8k__q22026991.htm',
+      'Communiqué du deuxième trimestre 2026 : chiffre d’affaires de 11,5 Md$ (+50 %), dont 6,7 Md$ de centres de données (+107 %), soit 58 % des revenus. Bénéfice par action GAAP de 1,38 $. Prévision du troisième trimestre à environ 13 Md$, à plus ou moins 300 M$.'],
+    ['2026-08-05', '10-Q', '0000002488-26-000123', 'amd-20260627.htm', 'q2-10q__amd-20260627.htm',
+      'Rapport trimestriel au 27 juin 2026 : bons de souscription d’OpenAI et de Meta portant chacun sur 160 millions d’actions à 0,01 $, aucun acquis au 27 juin. Dette de 3,2 Md$, 30,3 Md$ d’engagements d’achat, et 598 M$ d’autres produits, surtout des plus-values latentes, dans le résultat du trimestre.'],
+    ['2026-02-24', '8-K', '0000002488-26-000045', 'amd-20260223.htm', 'feb24-8k__amd-20260223.htm',
+      'Accord avec Meta pour jusqu’à six gigawatts de processeurs Instinct. Le bon de souscription s’acquiert par tranches selon les achats, dès le premier gigawatt livré, et selon des seuils de cours qui montent jusqu’à 600 $ par action pour la dernière tranche.'],
+    ['2026-02-24', '8-K / Exhibit 4.1', '0000002488-26-000045', 'a41commonstockwarrantagree.htm', 'feb24-8k__a41commonstockwarrantagree.htm',
+      'Contrat du bon de souscription de Meta : le calendrier d’acquisition et les conditions d’exercice figurent en annexes E et F, caviardées dans le dépôt public. Les seuils de cours intermédiaires et leur mode de mesure ne sont donc pas publiés.'],
+    ['2026-08-14', '424B5', '0001193125-26-352628', 'd173126d424b5.htm', 'aug14-424b5__d173126d424b5.htm',
+      'Prospectus de 4,75 Md$ d’obligations en quatre tranches, échéances 2029 à 2036, produit net d’environ 4,7 Md$ affecté aux besoins généraux, y compris le remboursement de dette. Aucune action n’est émise ; la dette brute passe d’environ 3,2 à près de 8 Md$.'],
+    ['2026-02-04', '10-K', '0000002488-26-000018', 'amd-20251227.htm', 'fy25-10k__amd-20251227.htm',
+      'Rapport annuel de l’exercice 2025 : aucun client n’a atteint 10 % du chiffre d’affaires en 2025 ni en 2024. Les restrictions d’exportation sur le MI308 ont coûté environ 800 M$ de stocks et charges au deuxième trimestre 2025.'],
+  ],
+  needles: {
+    q2: [0, ['Second quarter revenue was $11.5 billion', 'Data Center segment revenue was $6.7 billion, up 107% year-over-year', 'represented 58% of company revenue', 'diluted earnings per share was $1.38', 'approximately $13 billion, plus or minus $300 million', 'Non-GAAP gross margin is expected to be approximately 56%']],
+    tenq: [1, ['each entitling the holder the right to purchase up to 160 million shares', 'exercise price of $0.01 per share', 'no warrant shares had vested or become exercisable', 'Total debt (net) 3,226', 'unconditional commitments of approximately $30.3 billion', 'Other income (expense), net for the three months ended June 27, 2026 was $598 million', '$ 9.2 billion remained available', '1,632,475,042']],
+    meta: [2, ['escalate to $600 per share for the final tranche', 'purchasing six (6) gigawatt equivalent', 'initial one (1) gigawatt equivalent']],
+    redacted: [3, ['EXHIBIT E VESTING SCHEDULE [***]', 'EXHIBIT F EXERCISE CONDITIONS SCHEDULE [***]']],
+    notes: [4, ['$4,750,000,000', 'general corporate purposes, which may include the repayment of debt']],
+    tenk: [5, ['No customer accounted for at least 10% of the Company’s consolidated net revenue in fiscal years 2025 and 2024', '$800 million in inventory and related charges']],
+  },
+  sectionDocs: { verdict: [0, 1, 2], business: [0, 1, 5], news: [0], earnings: [0], capitalStructure: [1, 2, 3, 4], filingsReview: [0, 1, 2, 3, 4, 5], risks: [1, 2, 3, 4], globalScore: [0, 1, 2], meta: [0], disclaimer: [0], macro: [0], options: [0], social: [0], header: [0] },
+  score: { business: 30, technical: -2, capital: -2, calendar: 0, dilution: -6, risk: 30 },
+  riskScoreReason: 'Jugement qualitatif sur dix : titre étendu après treize séances de hausse, dilution conditionnelle des bons de souscription et multiple très élevé.',
+  compose: c => {
+    const { nb, fr, usd, pct, sgn, dfr, close, prev, bars, N, tech, st, M, adv, ret, G$, marketCap, ev, scn, lv, entry, stop, tp1, tp2, cap, rr1, rr2, riskAtr, sizeExample, archive, ref, market, docs, raw, tx } = c;
+    const low3 = bars.find(b => b[0] === '2026-09-03'), prevClose = archive.header.price;
+    const run = pct(close, low3[3]), since19 = pct(close, prevClose);
+    const capP = cap, gapLow = lv('s1');
+    const dilShares = st.sharesOutstanding + 320e6, dilPrice = scn.equity_value / dilShares, dilDown = pct(dilPrice, close), dilEv = (close * dilShares + G$.debt - G$.cash) / G$.ebitda;
+    const r21 = t => M[t].return21d, own = ret(21) - (r21('INTC') + r21('ARM')) / 2;
+    const wShares = 320e6, wPct = wShares / st.sharesOutstanding * 100, wDil = wShares / (st.sharesOutstanding + wShares) * 100;
+    const sold = n => tx.transactions.filter(x => x.insider_name === n && x.type_code === 'S');
+    const sum = (a, k) => a.reduce((s, x) => s + x[k], 0);
+    const su = sold('Su Lisa T'), no = sold('Norrod Forrest Eugene');
+    const suV = sum(su, 'value_usd'), suS = sum(su, 'shares'), noV = sum(no, 'value_usd'), noS = sum(no, 'shares');
+    const smh21 = M.SMH.return21d, nvda21 = M.NVDA.return21d, meta21 = M.META.return21d;
+    return {
+      meta: { lang: 'fr', dir: 'ltr', level: 'intermediate', tags: ['us', 'equities', 'ai-chain', 'semis', 'technology'], grade: 'C+', date: '2026-09-24', dateDisplay: '24 septembre 2026', version: 3, status: 'watch', assetType: 'stock', levelsCloseDate: c.REF,
+        description: 'AMD au plus haut historique après +40 % en trois semaines : un plan de repli, pas de poursuite. Dossier au close du 23 septembre 2026, révision du 19 septembre.',
+        ogDescription: 'AMD : centres de données +107 %, cours au-dessus du dernier seuil de 600 $ du bon de souscription de Meta ; entrée seulement sur repli.',
+        lastMcpRefresh: raw.status.captured_at, levelsVerifiedAt: raw.status.captured_at,
+        statusHistory: [{ at: raw.status.captured_at, from: 'no-trade', to: 'watch', note: 'révision v3 du 24 septembre : plan de repli neuf sur la clôture du 2026-09-23, niveaux archivés du 19 septembre abandonnés', close }] },
+      header: { ticker: 'AMD', name: 'Advanced Micro Devices, Inc.', exchange: 'NASDAQ', sector: 'Processeurs, accélérateurs d’IA et puces de centres de données', price: close, changePct: pct(close, prev),
+        badges: [{ text: 'SURVEILLER — ENTRÉE SUR REPLI SEULEMENT', color: 'blue' }, { text: 'Chaîne IA — accélérateurs', color: 'purple' }],
+        metrics: { marketCap: fr(marketCap / 1e12, 2) + ' T$', volume: fr(bars[N][5] / 1e6, 1) + ' M', evEbitda: fr(ev / G$.ebitda, 0) + '×' }, halalStatus: 'unknown' },
+      verdict: { score: 50, conviction: 'Low', bias: 'Neutral',
+        confidence: 'Score éditorial non prédictif. Les chiffres d’entreprise viennent des dépôts SEC et des données XBRL officielles ; les niveaux, du close certifié du 23 septembre.',
+        summary: 'AMD a gagné ' + fr(run, 0) + ' % depuis le plus bas du 3 septembre. Il a touché un record en séance à ' + usd(tp1) + ' le 23 septembre avant de clôturer à ' + usd(close) + '. La hausse n’est pas propre à AMD : sur vingt et une séances, Intel a pris ' + sgn(r21('INTC'), 1) + ' et Arm ' + sgn(r21('ARM'), 1) + ', contre ' + sgn(ret(21), 1) + ' pour AMD. C’est la vague des processeurs, pas les seuls accords de gigawatts. Le fond suit : centres de données à 6,7 Md$ au deuxième trimestre, en hausse de 107 %. Le prix, lui, a changé la lecture du capital. Le bon de souscription de Meta fixe des seuils de cours qui montent jusqu’à 600 $ pour la dernière tranche, liée aux six gigawatts ; le titre est au-dessus, mais le mode de mesure du seuil est caviardé dans le dépôt. Avec celui d’OpenAI, jusqu’à 320 millions d’actions à 0,01 $ peuvent s’ajouter aux ' + fr(st.sharesOutstanding / 1e9, 2) + ' milliards existantes, au rythme des livraisons de processeurs. Pas d’achat après une telle série. Le plan attend un retour au haut du gap du 21 septembre.',
+        whyBuy: [
+          'Le chiffre d’affaires des centres de données atteint 6,7 Md$ au deuxième trimestre, en hausse de 107 %, soit 58 % des revenus du groupe.',
+          'La prévision du troisième trimestre vise environ 13 Md$ de revenus, contre 11,5 Md$ au deuxième, avec une marge brute ajustée d’environ 56 %.',
+          'Meta s’est engagé ferme sur un premier gigawatt de processeurs Instinct, sur un programme qui peut aller jusqu’à six gigawatts.',
+          'Aucun client n’a dépassé 10 % du chiffre d’affaires en 2025 : la base de clients est plus large que celle de ses concurrents de la chaîne IA.'],
+        whyAvoid: [
+          'Le titre a pris ' + fr(run, 0) + ' % en treize séances et son RSI à quatorze jours vaut ' + fr(tech.rsi14, 0) + ' : acheter ici, c’est payer l’euphorie.',
+          'Les bons de souscription d’OpenAI et de Meta portent sur 320 millions d’actions à 0,01 $, soit ' + fr(wPct, 1) + ' % des actions en circulation ; le cours dépasse le dernier seuil de Meta, dont le mode de mesure est caviardé.',
+          'Au close du 23 septembre, la valeur d’entreprise représente ' + fr(ev / G$.ebitda, 0) + ' fois l’EBITDA GAAP des douze mois clos le 27 juin.',
+          'Lisa Su, présidente-directrice générale, a vendu ' + nb(suS) + ' actions pour ' + fr(suV / 1e6, 1) + ' M$ le 10 septembre, au début de la hausse.'],
+        controlChecklist: [
+          { label: 'Historique de cours', status: 'pass', statusLabel: 'Trois cents séances continues', evidence: 'Série quotidienne certifiée au close du 23 septembre, source de repli documentée ; les trous relevés le 19 septembre sont comblés.', action: 'Niveaux et indicateurs recalculés sur cette seule série.' },
+          { label: 'Dilution conditionnelle', status: 'fail', statusLabel: 'Jusqu’à 320 millions d’actions', evidence: 'Bons de souscription d’OpenAI et de Meta décrits au 10-Q ; calendrier d’acquisition caviardé.', action: 'Lire au prochain 10-Q le nombre d’actions acquises.' },
+          { label: 'Calendrier', status: 'warn', statusLabel: 'Micron le 30 septembre', evidence: 'Aucune publication d’AMD dans les quatorze jours ; Micron publie le 30 septembre selon deux calendriers.', action: 'Relire le plan au lendemain de cette publication.' }] },
+      business: { theme: 'Processeurs de serveurs EPYC, accélérateurs Instinct et baies d’IA Helios',
+        overview: '<p>AMD vend des processeurs pour PC et serveurs, des accélérateurs d’IA Instinct et, depuis cette année, des baies complètes Helios qui assemblent processeurs, accélérateurs et réseau. Au deuxième trimestre 2026, le chiffre d’affaires a atteint 11,5 Md$, en hausse de 50 %, dont 6,7 Md$ pour les centres de données, en hausse de 107 %, et 3,8 Md$ pour les PC et les consoles.</p><p>Deux accords changent l’échelle. OpenAI en octobre 2025, puis Meta en février 2026, se sont engagés à acheter des gigawatts de puissance de calcul AMD. En échange, chacun a reçu un bon de souscription portant sur jusqu’à 160 millions d’actions à 0,01 $. Ces bons ne s’acquièrent qu’au fil des livraisons et de seuils de cours ; aucun n’était acquis au 27 juin.</p><p>Le résultat publié est encore modeste au regard de la capitalisation. Le résultat opérationnel GAAP du trimestre est de 2,0 Md$, et le résultat net de 2,3 Md$ inclut 598 M$ d’autres produits, surtout des plus-values latentes. Les engagements d’achat atteignent 30,3 Md$ : AMD a réservé la capacité de fabrication de sa montée en charge.</p>',
+        moat: 'AMD est la seule alternative crédible aux processeurs graphiques de Nvidia qui combine aussi les processeurs de serveurs et une offre de baie complète. Cet avantage est réel mais se paie : ses deux plus gros contrats d’IA ont exigé de céder jusqu’à 320 millions d’actions.',
+        segments: [
+          { name: 'Centres de données', revenue: '6,7 Md$ au trimestre', pct: '58 %', description: 'En hausse de 107 % sur un an.' },
+          { name: 'PC et consoles', revenue: '3,8 Md$ au trimestre', pct: '33 %', description: 'En hausse de 6 % ; consoles en baisse de 31 %.' },
+          { name: 'Embarqué', revenue: '977 M$ au trimestre', pct: '8 %', description: 'En hausse de 19 % sur un an.' }],
+        sourceRefs: [ref(0), ref(1)],
+        coverageMatrix: [
+          { facet: 'Cours et historique', status: 'COUVERT', decision: 'Trois cents séances continues, close certifié ; les trous relevés le 19 septembre sont comblés.' },
+          { facet: 'Résultats et guidance', status: 'COUVERT — PRIMAIRE', decision: 'Communiqué du 4 août et 10-Q ; prochaine date non confirmée.' },
+          { facet: 'Bons de souscription', status: 'PARTIEL — PRIMAIRE', decision: 'Plafonds, prix d’exercice et dernier seuil de Meta publiés ; calendrier d’acquisition caviardé.' },
+          { facet: 'Dette', status: 'COUVERT — PRIMAIRE', decision: 'Bilan du 27 juin et émission de 4,75 Md$ d’août, traitée à part.' },
+          { facet: 'Comparables et transmission', status: 'COUVERT — LOCAL', decision: 'Corrélations recalculées sur barres certifiées, Meta inclus comme client documenté.' },
+          { facet: 'Initiés', status: 'COUVERT — PARTIEL', decision: 'Ventes de la présidente et d’un directeur général relevées ; aucun solde net officiel.' },
+          { facet: 'Révision du 19 septembre', status: 'MODIFIÉ', decision: 'Aucun ordre le 19 ; plan de repli neuf aujourd’hui, justifié par la nouvelle structure de prix et les données réparées.' }] },
+      news: [
+        { date: '2026-08-04', title: 'Centres de données en hausse de 107 %', impact: 'positive', detail: 'Le deuxième trimestre atteint 11,5 Md$ et la prévision vise environ 13 Md$, avec une accélération attendue au second semestre.', source: 'AMD — SEC', sourceUrl: docs[0].url },
+        { date: '2026-08-14', title: '4,75 Md$ d’obligations en quatre tranches', impact: 'neutral', detail: 'Le financement de la montée en charge passe par la dette, sans émission d’actions ; la dette brute passe à près de 8 Md$.', source: 'AMD — SEC', sourceUrl: docs[4].url },
+        { date: '2026-02-24', title: 'Six gigawatts avec Meta, contre un bon de souscription', impact: 'neutral', detail: 'Le premier gigawatt est un engagement ferme ; les tranches suivantes dépendent des achats et de seuils de cours allant jusqu’à 600 $.', source: 'AMD — SEC', sourceUrl: docs[2].url }],
+      fundamentals: { rows: [
+          { metric: 'Chiffre d’affaires du trimestre', value: '11,5 Md$', signal: '+50 % sur un an, communiqué du 4 août', signalColor: 'green', _src: 0 },
+          { metric: 'Centres de données du trimestre', value: '6,7 Md$', signal: '+107 % sur un an, 58 % des revenus', signalColor: 'green', _src: 0 },
+          { metric: 'Prévision du troisième trimestre', value: 'Environ 13 Md$', signal: 'À plus ou moins 300 M$ ; marge brute ajustée d’environ 56 %', signalColor: 'blue', _src: 0 },
+          { metric: 'Autres produits du trimestre', value: '598 M$', signal: 'Surtout des plus-values latentes, inclus dans le résultat net', signalColor: 'amber', _src: 1 },
+          { metric: 'Engagements d’achat', value: '30,3 Md$', signal: 'Dont 17,4 Md$ sur le reste de l’exercice 2026', signalColor: 'amber', _src: 1 },
+          { metric: 'Bons de souscription OpenAI et Meta', value: '320 millions d’actions au plus', signal: 'Prix d’exercice de 0,01 $, aucune acquise au 27 juin', signalColor: 'red', _src: 1, _also: [2] },
+          { metric: 'Revenus GAAP sur douze mois', value: fr(G$.rev / 1e9, 1) + ' Md$', signal: 'Douze mois glissants au 27 juin 2026 (XBRL SEC)', signalColor: 'blue', _src: 'gaap' },
+          { metric: 'EBITDA GAAP sur douze mois', value: fr(G$.ebitda / 1e9, 2) + ' Md$', signal: 'Résultat opérationnel + amortissements, y compris ceux des actifs acquis, douze mois au 27 juin 2026', signalColor: 'blue', _src: 'gaap' },
+          { metric: 'Résultat net GAAP sur douze mois', value: fr(G$.ni / 1e9, 2) + ' Md$', signal: 'Douze mois glissants au 27 juin 2026, plus-values latentes comprises', signalColor: 'amber', _src: 'gaap' },
+          { metric: 'Flux de trésorerie libre sur douze mois', value: fr(G$.fcf / 1e9, 1) + ' Md$', signal: 'Flux d’exploitation moins investissements industriels, douze mois au 27 juin 2026', signalColor: 'green', _src: 'gaap' },
+          { metric: 'Dette et trésorerie au 27 juin 2026', value: fr(G$.debt / 1e9, 1) + ' Md$ / ' + fr(G$.cash / 1e9, 1) + ' Md$', signal: 'Avant les 4,75 Md$ d’obligations d’août, qui augmentent les deux lignes', signalColor: 'blue', _src: 'gaap' },
+          { metric: 'EV/EBITDA GAAP', value: fr(ev / G$.ebitda, 0) + '×', signal: 'Valeur d’entreprise au close du 2026-09-23 sur EBITDA GAAP douze mois au 2026-06-27', signalColor: 'red', source: 'Clôture certifiée et XBRL SEC', comparison: 'Versus le scénario de compression ci-dessous : le marché paie les gigawatts promis, pas les résultats publiés.', _src: 'market' },
+          { metric: 'P/E GAAP sur douze mois', value: fr(marketCap / G$.ni, 0) + '×', signal: 'Douze mois glissants : capitalisation au 2026-09-23 sur résultat net GAAP douze mois au 2026-06-27', signalColor: 'red', source: 'Clôture certifiée et XBRL SEC', comparison: 'Versus EV/EBITDA : l’amortissement des actifs acquis réduit le résultat GAAP, les plus-values latentes l’augmentent.', _src: 'market' },
+          { metric: 'EV/EBITDA — scénario de compression (hypothèse éditoriale)', value: fr(scn.price, 2) + ' $ par action', signal: 'Scénario : multiple ramené à cinquante fois l’EBITDA GAAP par hypothèse, dette et trésorerie du 2026-06-27 inchangées, soit ' + fr(scn.downside_pct, 0) + ' % sous le close du 2026-09-23', signalColor: 'red', source: 'Clôture certifiée et XBRL SEC', comparison: 'Versus le close : même à cinquante fois, un multiple déjà élevé, le prix actuel suppose une forte hausse des bénéfices. Avec les 320 millions d’actions des bons de souscription, le même scénario donne ' + usd(dilPrice) + ' par action (' + sgn(dilDown, 0) + ') et le multiple actuel monte à environ ' + fr(dilEv, 0) + '× ; ce n’est pas un objectif.', _src: 'market', _also: [1] }],
+        sourceRefs: [ref(0), ref(1), market('fondamentaux et statistiques')] },
+      earnings: { quarters: [],
+        beatNote: 'Deuxième trimestre 2026 : bénéfice par action GAAP de 1,38 $ et ajusté de 1,66 $, marge brute GAAP de 54 % contre 40 % un an plus tôt, année marquée par la charge de 800 M$ sur le MI308. La guidance du troisième trimestre vise environ 13 Md$ de revenus à plus ou moins 300 M$ et une marge brute ajustée d’environ 56 %. La direction attend une accélération des centres de données au second semestre, avec la montée en charge de Helios. Aucune date de prochaine publication n’est confirmée par l’émetteur à ce jour.',
+        nextEarnings: 'Date non confirmée par l’émetteur ; aucune publication d’AMD dans les quatorze jours du calendrier collecté.',
+        sourceRefs: [ref(0)] },
+      capitalStructure: { sharesOutstanding: '1 632 475 042 actions au 29 juillet 2026 (page de garde du 10-Q)',
+        sharesAuthorized: '4 milliards d’actions autorisées ; 153 millions réservées au plan de rémunération de 2023 après l’ajout de 65 millions en mai.', dilutionRisk: 'high',
+        shareHistory: 'Pont vers un nombre dilué : ' + fr(st.sharesOutstanding / 1e6, 0) + ' millions d’actions, plus jusqu’à 320 millions au titre des bons de souscription d’OpenAI et de Meta, soit ' + fr((st.sharesOutstanding + wShares) / 1e6, 0) + ' millions si tout était acquis. Deux bases : ces 320 millions valent ' + fr(wPct, 1) + ' % des actions en circulation aujourd’hui, et ' + fr(wDil, 1) + ' % du total une fois ajoutés ; la part des porteurs actuels baisserait donc de ' + fr(wDil, 1) + ' %. Le rythme dépend des livraisons de processeurs et de seuils de cours dont le calendrier est caviardé. Les rachats, 221 M$ au premier semestre sur 9,2 Md$ disponibles, ne compensent pas cet ordre de grandeur. Les 4,75 Md$ d’obligations d’août sont de la dette et ne diluent pas.',
+        warrants: [
+          { series: 'Bon de souscription OpenAI', type: 'Partenaire commercial', strike: 0.01, shares: '160 millions au plus', expiration: '5 octobre 2030', dilutionPct: fr(160e6 / (st.sharesOutstanding + wShares) * 100, 1) + ' % du total dilué', status: 'ITM', note: 'ITM : « dans la monnaie », le prix d’exercice de 0,01 $ est très inférieur au cours. Acquisition par tranches selon les achats et des seuils de cours ; aucune action acquise au 27 juin 2026.' },
+          { series: 'Bon de souscription Meta', type: 'Partenaire commercial', strike: 0.01, shares: '160 millions au plus', expiration: '23 février 2031', dilutionPct: fr(160e6 / (st.sharesOutstanding + wShares) * 100, 1) + ' % du total dilué', status: 'ITM', note: 'ITM : « dans la monnaie », le prix d’exercice de 0,01 $ est très inférieur au cours. Première tranche au premier gigawatt livré, seuils de cours jusqu’à 600 $ ; calendrier caviardé (annexe E).' }],
+        atm: { active: false, authorized: 'Aucun programme d’émission d’actions relevé', used: 'Sans objet', remaining: 'Sans objet' },
+        sourceRefs: [ref(1), ref(2), ref(4)] },
+      filingsReview: { summary: 'Six dépôts décisionnels ouverts et hachés. Les résultats accélèrent ; la dilution des deux grands contrats d’IA se rapproche avec le cours ; l’émission obligataire d’août finance la montée en charge sans actions nouvelles.',
+        filings: docs.map(d => ({ date: d.date, form: d.form, accession: d.accession, finding: d.finding, url: d.url })),
+        contrarianRisks: [
+          'Plus le cours monte, plus les seuils des bons de souscription sont franchis : la hausse rapproche mécaniquement la dilution.',
+          'Le résultat net du trimestre contient 598 M$ d’autres produits, surtout des plus-values latentes, qui ne se répètent pas.',
+          'Les 30,3 Md$ d’engagements d’achat sont fermes ; un décalage des livraisons à Meta ou OpenAI laisserait AMD avec la capacité payée.',
+          'La présidente a vendu au début de la hausse ; une nouvelle vente au-dessus de 600 $ pèserait sur le sentiment.'] },
+      technicals: { rsi14: +tech.rsi14.toFixed(2), macd: +tech.macd.toFixed(2), macdSignal: +tech.macdSignal.toFixed(2), ema20: +tech.ema20.toFixed(2), ema50: +tech.ema50.toFixed(2), ema200: +tech.ema200.toFixed(2),
+        ma50Type: 'EMA', ma200Type: 'EMA', ma50Available: true, ma200Available: true, atr14: +tech.atr14.toFixed(2),
+        badges: ['RSI au-dessus de 70', 'Gap du 21 septembre non comblé', 'Entrée sur repli seulement'],
+        supports: [gapLow, entry, stop], resistances: [lv('r1'), tp1],
+        setupNote: 'Le titre clôture à ' + usd(close) + ', ' + fr(pct(close, tech.ema20), 1) + ' % au-dessus de sa moyenne à vingt séances, avec un RSI de ' + fr(tech.rsi14, 0) + '. Le gap du 21 septembre, entre ' + usd(entry) + ' et ' + usd(gapLow) + ', n’est pas comblé. Activation : une clôture comprise entre ' + usd(stop) + ' exclu et $' + entry.toFixed(2) + ' inclus, au haut du gap, puis achat à l’ouverture suivante ; une clôture sous ' + usd(stop) + ' annule le plan sans l’activer. Après activation, stop sous $' + stop.toFixed(2) + ', plus bas du 17 septembre, soit ' + fr(riskAtr, 2) + ' ATR sous l’entrée. Supports : ' + usd(gapLow) + ', ' + usd(entry) + ' et ' + usd(stop) + '. Résistances : ' + usd(lv('r1')) + ' et ' + usd(tp1) + ', plus haut historique.',
+        wyckoff: 'Non utilisé : le profil de volume n’est pas exploité dans ce dossier.',
+        sourceRefs: [market('barres quotidiennes et indicateurs recalculés')] },
+      options: { callOI: 'Non exploitable', putOI: 'Non exploitable', cpRatio: 'Non exploitable', maxPain: 'Non exploitable', ivMean: 'Non exploitable', skew: 'Chaîne relevée marché fermé, sans intérêt ouvert utilisable', unusual: 'Aucune activité inhabituelle qualifiée', sourceRefs: [market('options')] },
+      shortInterest: { siPct: fr(st.shortPercentOfFloat * 100, 2) + ' % du flottant', daysToCover: fr(st.shortRatio, 2) + ' jours, date de règlement non précisée par le snapshot', ctb: 'Coût d’emprunt bas, sans tension', trend: 'Positions vendeuses faibles : la hausse ne vient pas d’un rachat forcé des vendeurs.', squeezeScore: 'Non pertinent', sourceRefs: [market('positions vendeuses')] },
+      insiders: { signal: 'Vendeurs. Lisa Su, présidente-directrice générale, a vendu ' + nb(suS) + ' actions pour environ ' + fr(suV / 1e6, 1) + ' M$ le 10 septembre ; Forrest Norrod, directeur général des solutions de centres de données, ' + nb(noS) + ' actions pour ' + fr(noV / 1e6, 1) + ' M$ le 15 septembre après exercice d’options. Couverture officielle partielle : aucun solde net publié.',
+        recentTransactions: [
+          { date: '2026-09-10', insider: 'Lisa Su — présidente-directrice générale', type: 'sell', shares: nb(suS), value: fr(suV / 1e6, 1) + ' M$' },
+          { date: '2026-09-15', insider: 'Forrest Norrod — directeur général, centres de données', type: 'sell', shares: nb(noS), value: fr(noV / 1e6, 1) + ' M$' }],
+        sourceRefs: [market('formulaires 4')] },
+      macro: { indicators: [{ name: 'Clôture de référence', value: c.REF, signal: usd(close) + ', séance complète' }, { name: 'Rendement cinq séances', value: sgn(ret(5)), signal: 'Descriptif' }, { name: 'Rendement vingt et une séances', value: sgn(ret(21)), signal: 'Descriptif' }],
+        regime: 'neutral', impact: 'Un multiple aussi élevé est très sensible aux taux longs : le 10 ans américain a clôturé à 5,11 % le 23 septembre, plus haut depuis juillet 2007. La hausse d’AMD s’est faite malgré cette pression, ce qui la rend plus fragile à une nouvelle poussée des taux.' },
+      risks: { riskScore: 7, riskProfile: 'High',
+        riskSummary: 'Le risque d’AMD n’est pas sa croissance, qui accélère, mais le prix payé et la dilution qui l’accompagne. Le titre vient de prendre ' + fr(run, 0) + ' % en treize séances, se paie un multiple extrême des résultats publiés, et chaque étape de livraison à Meta et OpenAI peut ajouter des actions. Le bon plan est celui qui attend.',
+        riskCards: [
+          { title: 'Titre étendu', severity: 'high', icon: 'fa-rocket', points: ['Hausse de ' + fr(run, 0) + ' % depuis le 3 septembre, RSI de ' + fr(tech.rsi14, 0) + '.', 'Gap du 21 septembre non comblé sous le cours.'], verdict: 'Après une telle série, un retour vers le haut du gap est fréquent ; acheter maintenant, c’est prendre ce risque sans marge.' },
+          { title: 'Dilution des bons de souscription', severity: 'critical', icon: 'fa-money-bill-trend-up', points: ['Jusqu’à 320 millions d’actions à 0,01 $.', 'Dernier seuil de cours de Meta à 600 $, lié aux six gigawatts ; mode de mesure caviardé.'], verdict: 'Le rythme de la dilution dépend désormais surtout des livraisons, que la direction veut accélérer.' },
+          { title: 'Multiple des résultats publiés', severity: 'high', icon: 'fa-scale-balanced', points: ['EV/EBITDA GAAP de ' + fr(ev / G$.ebitda, 0) + ' fois.', 'Résultat net gonflé par des plus-values latentes.'], verdict: 'Le prix suppose que les gigawatts promis deviennent des bénéfices, et vite.' },
+          { title: 'Engagements d’achat', severity: 'medium', icon: 'fa-industry', points: ['30,3 Md$ d’engagements fermes.', '17,4 Md$ à honorer d’ici la fin de 2026.'], verdict: 'Un décalage de la demande laisserait AMD porter une capacité déjà payée.' }],
+        pedagogy: 'Après une hausse de 40 % en trois semaines, la question n’est pas de savoir si l’histoire est bonne mais à quel prix l’acheter. Un gap laissé ouvert sous le cours est souvent revisité ; attendre ce retour donne un stop proche et une taille de position raisonnable. La liquidité est très profonde, mais le slippage d’une ouverture en gap peut sauter le stop. Surveiller l’événement du 30 septembre, les résultats de Micron, qui peut faire bouger tout le secteur. Ne pas poursuivre le cours : attendre le repli.' },
+      tradeIdea: { status: 'watch', statusNote: 'Surveiller, entrée sur repli seulement. Avant activation : aucune entrée au-dessus de ' + usd(entry) + ' ; si le titre clôture au-dessus de ' + usd(tp1) + ' avant tout repli, le plan est retiré. Activation : clôture strictement au-dessus de ' + usd(stop) + ' et au plus ' + usd(entry) + ', puis achat à l’ouverture suivante entre ' + usd(stop) + ' et ' + usd(capP) + '. Après activation : stop sous ' + usd(stop) + '. Les niveaux archivés du 19 septembre ne sont pas repris.',
+        entry, stop, tp1, tp2,
+        stopPct: pct(stop, entry).toFixed(1) + '%', tp1Pct: '+' + pct(tp1, entry).toFixed(1) + '%', tp2Pct: '+' + pct(tp2, entry).toFixed(1) + '%',
+        rr: '1:' + rr1.toFixed(2) + ' TP1 / 1:' + rr2.toFixed(2) + ' TP2',
+        entryNote: 'Activation sur une clôture au haut du gap, strictement au-dessus de ' + usd(stop) + ' et au plus ' + usd(entry) + ', pas sur un passage en séance. Achat à l’ouverture suivante uniquement entre ' + usd(stop) + ' et ' + usd(capP) + ' : au plafond, le R/R vers TP1 vaut ' + fr(c.capRr, 2) + ' ; au-dessus, il tomberait sous 1,5 ; une ouverture sous ' + usd(stop) + ' annule le plan, sans achat. Le stop est à ' + fr(riskAtr, 2) + ' ATR : une séance ordinaire d’AMD couvre presque cette distance, le risque d’être sorti par le bruit est réel. Objectifs : TP1 au plus haut historique du 23 septembre, TP2 à la même distance au-delà. Liquidité : environ ' + fr(adv / 1e9, 1) + ' Md$ échangés par séance, médiane des vingt dernières. Exemple de taille, non personnalisé : avec un budget de perte de 100 $, le risque au plafond, ' + usd(cap - stop) + ' par action, donne ' + sizeExample + ' actions.',
+        horizon: 'Dix séances après activation ; plan retiré s’il n’est pas activé d’ici le 7 octobre',
+        thesis: 'La hausse de trois semaines est d’abord celle de tous les processeurs, Intel et Arm compris ; la part propre à AMD est faible, et le cours au-dessus de 600 $ rapproche la dilution des accords de gigawatts. La croissance est réelle, le prix d’entrée actuel ne l’est pas. Avant activation, aucune entrée : le plan attend une clôture au-dessus de ' + usd(stop) + ' et au plus $' + entry.toFixed(2) + ', au haut du gap du 21 septembre, puis un achat à l’ouverture suivante sous ' + usd(capP) + '. Après activation, le stop sous $' + stop.toFixed(2) + ' coupe un repli qui deviendrait une cassure. TP1 à ' + usd(tp1) + ', TP2 à ' + usd(tp2) + '. Ne pas poursuivre la hausse.',
+        catalysts: ['Un repli jusqu’au haut du gap du 21 septembre, sur un volume en baisse.', 'Les résultats de Micron, le 30 septembre après la clôture selon deux calendriers : un test de la demande d’infrastructure d’IA.', 'Les premières livraisons du gigawatt de Meta, attendues au second semestre 2026.'],
+        invalidation: ['Avant activation : une clôture au-dessus de ' + usd(tp1) + ' sans repli retire le plan.', 'Avant activation : une clôture sous ' + usd(stop) + ' annule le plan sans l’activer ; une ouverture sous ' + usd(stop) + ' après une clôture d’activation annule l’achat.', 'Après activation : une clôture sous ' + usd(stop) + ' invalide le trade.', 'Toute annonce de report des livraisons à Meta ou OpenAI annule la thèse.'] },
+      globalScore: { profile: 'Croissance de l’IA réelle, prix et dilution tendus',
+        keyTakeawaysPositive: ['Centres de données en hausse de 107 %, prévision en hausse.', 'Engagement ferme de Meta sur un premier gigawatt.', 'Aucun client au-dessus de 10 % des ventes en 2025.'],
+        keyTakeawaysNegative: ['Jusqu’à 320 millions d’actions nouvelles à 0,01 $.', 'Hausse de ' + fr(run, 0) + ' % en treize séances, RSI au-dessus de 70.', 'Multiple extrême des résultats publiés.'],
+        mindsetTip: 'La bonne entreprise et la bonne entrée sont deux décisions différentes : la première peut être prise aujourd’hui, la seconde se mérite.' },
+      social: { platforms: [], sourceRefs: [market('sentiment non retenu faute de mesure qualifiée')] },
+      disclaimer: 'Document de recherche éducatif. Ni conseil financier, ni signal de trading. Statut surveiller : aucun ordre actif avant repli.',
+    };
+  },
+  groups: [
+    { name: 'Clients documentés et grands acheteurs de calcul', order: 1, transmission: 'Leurs engagements en gigawatts et leur capex fixent la demande d’accélérateurs AMD.', rows: [
+      ['META', 'leader', 'Client documenté, engagement de six gigawatts', 'Ses livraisons acquièrent les tranches du bon de souscription et portent la croissance des centres de données.'],
+      ['MSFT', 'leader', 'Premier acheteur de calcul, déploie Helios', 'Son capex de centres de données arbitre entre Nvidia, AMD et ses puces maison.'],
+      ['ORCL', 'leader', 'Cloud d’infrastructure, déploie Helios', 'Ses nouveaux sites d’IA ajoutent un acheteur de grande taille pour les baies AMD.'],
+      ['GOOGL', 'leader', 'Cloud et puces maison', 'Ses puces conçues en interne réduisent la part accessible aux accélérateurs du marché.'],
+      ['AMZN', 'leader', 'Premier cloud public et puces maison', 'Ses propres accélérateurs concurrencent les processeurs AMD dans son cloud.'],
+      ['CRWV', 'leader', 'Néo-cloud spécialisé dans l’IA', 'Ses capacités louées aux laboratoires d’IA diversifient la demande hors grands clouds.']] },
+    { name: 'Pairs directs', order: 1, transmission: 'Accélérateurs et processeurs concurrents pour le même budget de calcul.', rows: [
+      ['NVDA', 'direct_peer', 'Leader des processeurs graphiques', 'Sa part de marché fixe l’espace laissé à AMD ; un écart de performance durable se lirait ici.'],
+      ['INTC', 'direct_peer', 'Processeurs de serveurs et de PC', 'Concurrent direct sur les processeurs EPYC et Ryzen ; ses parts perdues sont gagnées par AMD.'],
+      ['AVGO', 'direct_peer', 'Puces sur mesure des grands clouds', 'Chaque puce sur mesure d’un cloud est un budget en moins pour les accélérateurs d’AMD.'],
+      ['MRVL', 'direct_peer', 'Puces sur mesure et optique', 'Même lecture que Broadcom sur le sur-mesure, à plus petite échelle.'],
+      ['QCOM', 'direct_peer', 'Puces mobiles et PC', 'Concurrent émergent sur les PC et candidat aux accélérateurs d’inférence.'],
+      ['ARM', 'direct_peer', 'Architecture concurrente des processeurs x86', 'Ses licences alimentent les processeurs de serveurs maison des clouds.']] },
+    { name: 'Amont : fonderie, mémoire et équipement', order: 1, transmission: 'AMD conçoit ; ces fournisseurs fabriquent et limitent le volume livrable.', rows: [
+      ['TSM', 'upstream', 'Fondeur des puces AMD', 'Sa capacité en gravure et en assemblage avancé fixe le rythme des livraisons de gigawatts.'],
+      ['MU', 'upstream', 'Fournisseur de mémoire HBM', 'Ses résultats du 30 septembre diront si la mémoire limite les livraisons d’accélérateurs.'],
+      ['AMKR', 'upstream', 'Assemblage et test de puces', 'L’assemblage avancé reste un goulot pour les accélérateurs.'],
+      ['KLAC', 'upstream', 'Contrôle de procédé des fondeurs', 'Ses ventes suivent les investissements des fondeurs pour produire les puces avancées.'],
+      ['LRCX', 'upstream', 'Équipement de gravure et de dépôt', 'Ses commandes précèdent la capacité disponible chez les fondeurs.']] },
+    { name: 'Aval : serveurs, énergie et intégration', order: 2, transmission: 'Ils assemblent et alimentent les baies livrées aux clients.', rows: [
+      ['SMCI', 'downstream', 'Intégrateur de serveurs d’IA', 'Ses baies AMD livrées aux néo-clouds disent si la demande dépasse les grands clouds.'],
+      ['DELL', 'downstream', 'Intégrateur de serveurs d’IA', 'Son carnet de serveurs d’IA reflète la demande d’entreprise pour les accélérateurs.'],
+      ['HPE', 'downstream', 'Serveurs pour les entreprises', 'Ses systèmes à processeurs AMD mesurent l’adoption hors cloud.'],
+      ['VRT', 'second_order', 'Alimentation et refroidissement', 'Ses délais de livraison fixent la date de mise en service des gigawatts.'],
+      ['CEG', 'second_order', 'Production d’électricité nucléaire', 'Les gigawatts promis supposent une électricité disponible ; ses contrats mesurent cette contrainte.']] },
+    { name: 'Contrôles sectoriels', order: 2, transmission: 'Paniers de référence pour isoler ce qui est propre à AMD.', rows: [
+      ['SMH', 'sector_proxy', 'Panier de semi-conducteurs', 'Isole ce qui revient au secteur dans la hausse d’AMD.'],
+      ['SOXX', 'sector_proxy', 'Panier de semi-conducteurs moins concentré', 'Plus sensible aux valeurs moyennes du secteur, dont les équipementiers de la chaîne.'],
+      ['QQQ', 'sector_proxy', 'Grandes valeurs du Nasdaq', 'Contrôle large : un mouvement commun n’a rien de spécifique.']] },
+  ],
+  eventDefault: { leader: 'Aucune publication dans les quatorze jours collectés ; ses annonces de capex restent le signal à suivre', direct_peer: 'Aucune publication dans les quatorze jours collectés ; ses lancements de produits peuvent déplacer les parts', upstream: 'Aucune publication dans les quatorze jours collectés ; ses commentaires de capacité précèdent les livraisons', downstream: 'Aucune publication dans les quatorze jours collectés ; ses livraisons de baies sont le signal à suivre', second_order: 'Aucune publication dans les quatorze jours collectés ; ses délais fixent les mises en service', sector_proxy: 'Panier sans publication propre ; exposé aux résultats de Micron le 30 septembre' },
+  eventRisk: { MU: 'Résultats le 30 septembre après la clôture, date confirmée par deux calendriers ; premier test de la demande de mémoire d’IA' },
+  blastDoc: 2,
+  scenarios: c => [
+    { scenario: 'bullish', trigger: 'Les premières livraisons du gigawatt de Meta sont confirmées et la prévision du quatrième trimestre accélère.', firstOrder: 'Le titre prolonge sa hausse au-dessus du plus haut historique sans revenir au gap.', secondOrder: 'TSM et les intégrateurs de serveurs suivent ; la dilution des bons de souscription se rapproche.', confirmation: 'Une clôture au-dessus de 624,69 $ qui retire le plan de repli.', contradiction: 'Des ventes répétées de dirigeants au-dessus de 600 $.' },
+    { scenario: 'mixed', trigger: 'Le secteur consolide après les résultats de Micron sans changer la demande.', firstOrder: 'Le titre revient combler le gap du 21 septembre et active le plan.', secondOrder: 'SMH et NVDA consolident aussi ; l’écart de performance d’AMD se réduit.', confirmation: 'Une clôture au haut du gap sur un volume en baisse.', contradiction: 'Une cassure du plus bas du 17 septembre dans la même semaine.' },
+    { scenario: 'bearish', trigger: 'Un décalage des livraisons à Meta ou OpenAI, ou une nouvelle poussée des taux longs.', firstOrder: 'Le titre comble le gap et casse le plus bas du 17 septembre.', secondOrder: 'Les fournisseurs amont et les néo-clouds reculent avec lui.', confirmation: 'Une clôture sous 527,60 $, plus bas du 17 septembre, avec SMH en baisse le même jour.', contradiction: 'Une prévision relevée malgré un décalage de calendrier.' }],
+  contradictions: c => ['Sur vingt et une séances, AMD (' + c.sgn(c.ret(21), 1) + ') bat SMH (' + c.sgn(c.M.SMH.return21d, 1) + ') et Nvidia (' + c.sgn(c.M.NVDA.return21d, 1) + '), mais fait moins bien qu’Intel (' + c.sgn(c.M.INTC.return21d, 1) + ') et Arm (' + c.sgn(c.M.ARM.return21d, 1) + ') : la part propre à AMD, face à ces deux processeurs, est d’environ ' + c.sgn(c.ret(21) - (c.M.INTC.return21d + c.M.ARM.return21d) / 2, 1) + ' ; les accords de gigawatts n’expliquent pas seuls la hausse.', 'Meta est à la fois client documenté et détenteur potentiel de 160 millions d’actions : un co-mouvement des deux titres ne dit rien du rythme des livraisons.'],
+  missingData: c => ['Le calendrier d’acquisition et les seuils de cours intermédiaires des bons de souscription sont caviardés dans les dépôts.', 'Chaîne d’options relevée marché fermé, inexploitable ; sentiment non retenu.', 'Dette et trésorerie au 27 juin, avant l’émission de 4,75 Md$ d’août : l’effet net sur la valeur d’entreprise est quasi nul, mais non publié à date.'],
+  limitations: ['Barres d’une source de repli (Webull).', 'Options inexploitables, marché fermé.', 'Calendrier des bons de souscription caviardé.'],
+});
