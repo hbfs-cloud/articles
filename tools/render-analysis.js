@@ -353,7 +353,7 @@ function renderHeader(d) {
     usableMetric(m.marketCap)     && [tx(d, 'Market Cap', 'Capitalisation'), m.marketCap],
     usableMetric(m.volume)        && ['Volume', m.volume],
     usableMetric(m.fwdPE)         && ['Fwd P/E', m.fwdPE],
-    m.beta != null   && ['Beta', m.beta],
+    m.beta != null   && [tx(d, 'Beta', 'Bêta'), m.beta],
     usableMetric(m.range52w)      && [tx(d, '52W Range', 'Fourchette 52 semaines'), m.range52w],
     usableMetric(m.shortInterest) && [tx(d, 'Short Interest', 'Positions vendeuses'), m.shortInterest],
     usableMetric(m.divYield)      && ['Div Yield', m.divYield],
@@ -553,13 +553,13 @@ function renderCapitalStructure(d) {
         <div class="metric-strip metric-strip-muted">
 ${metricTile(cs.sharesOutstanding, tx(d, 'Shares Out.', 'Actions en circulation'))}${metricTile(cs.sharesAuthorized, tx(d, 'Authorized', 'Actions autorisées'))}${cs.dilutionRisk ? `          <div class="ticker-metric"><div class="tm-value"><span class="badge badge-${cs.dilutionRisk === 'low' ? 'green' : cs.dilutionRisk === 'moderate' ? 'blue' : cs.dilutionRisk === 'unknown' ? 'gray' : 'red'}">${esc(isFrench(d) ? ({ low: 'faible', moderate: 'modéré', high: 'élevé', critical: 'critique', unknown: 'inconnu' }[cs.dilutionRisk] || cs.dilutionRisk) : cs.dilutionRisk)}</span></div><div class="tm-label">${tx(d, 'Dilution Risk', 'Risque de dilution')}</div></div>\n` : ''}        </div>`;
   if (cs.warrants && cs.warrants.length) {
-    html += `\n        <h4>Warrants</h4>
-        <table class="data-table"><thead><tr><th>Series</th><th>Type</th><th>Strike</th><th>Shares</th><th>Exp.</th><th>Dilution</th><th>Status</th></tr></thead><tbody>
-${cs.warrants.map(w => `            <tr><td>${esc(w.series)}</td><td>${esc(w.type || 'N/A')}</td><td>${w.strike == null ? 'N/A' : '$' + w.strike}</td><td>${esc(w.shares || 'N/A')}</td><td>${esc(w.expiration || 'N/A')}</td><td>${esc(w.dilutionPct || w.note || 'See filing')}</td><td>${w.status ? `<span class="badge badge-${w.status === 'OTM' ? 'green' : w.status === 'ITM' ? 'red' : 'blue'}">${esc(w.status)}</span>` : 'Outstanding'}</td></tr>`).join('\n')}
+    html += `\n        <h4>${tx(d, 'Warrants', 'Bons, préférentielles et lignes de capital')}</h4>
+        <table class="data-table"><thead><tr><th>${tx(d, 'Series', 'Série')}</th><th>Type</th><th>${tx(d, 'Strike', 'Prix d’exercice')}</th><th>${tx(d, 'Shares', 'Actions')}</th><th>${tx(d, 'Exp.', 'Échéance')}</th><th>Dilution</th><th>${tx(d, 'Status', 'Statut')}</th></tr></thead><tbody>
+${cs.warrants.map(w => `            <tr><td>${esc(w.series)}</td><td>${esc(w.type || 'N/A')}</td><td>${w.strike == null ? 'N/A' : '$' + w.strike}</td><td>${esc(w.shares || 'N/A')}</td><td>${esc(w.expiration || 'N/A')}</td><td>${esc(w.dilutionPct || w.note || tx(d, 'See filing', 'Voir le dépôt'))}</td><td>${w.status ? `<span class="badge badge-${w.status === 'OTM' ? 'green' : w.status === 'ITM' ? 'red' : 'blue'}">${esc(w.status)}</span>` : tx(d, 'Outstanding', 'En circulation')}</td></tr>`).join('\n')}
           </tbody></table>`;
   }
   if (cs.atm && cs.atm.active) {
-    html += `\n        <div class="alert-box" style="margin-top:1rem;"><h4 style="margin:0;"><i class="fa-solid fa-triangle-exclamation"></i> Active ATM Program</h4><p>Authorized: ${esc(cs.atm.authorized)} | Used: ${esc(cs.atm.used)} | Remaining: ${esc(cs.atm.remaining)}</p></div>`;
+    html += `\n        <div class="alert-box" style="margin-top:1rem;"><h4 style="margin:0;"><i class="fa-solid fa-triangle-exclamation"></i> ${tx(d, 'Active ATM Program', 'Programme ATM actif')}</h4><p>${tx(d, 'Authorized', 'Autorisé')} : ${esc(cs.atm.authorized)} | ${tx(d, 'Used', 'Utilisé')} : ${esc(cs.atm.used)} | ${tx(d, 'Remaining', 'Restant')} : ${esc(cs.atm.remaining)}</p></div>`;
   }
   if (cs.shareHistory) html += `\n        <div class="pedagogy-box"><p>${esc(cs.shareHistory)}</p></div>`;
   html += sourceRefsHtml(cs.sourceRefs);
@@ -738,7 +738,7 @@ ${mc.impact ? `        <div class="pedagogy-box"><p>${esc(mc.impact)}</p></div>`
 function renderRisks(d) {
   const r = d.risks;
   const gc = riskGaugeColor(r.riskScore);
-  const riskProfile = isFrench(d) ? ({ High: 'Élevé', Moderate: 'Modéré', Low: 'Faible' }[r.riskProfile] || r.riskProfile) : (r.riskProfile || 'Moderate');
+  const riskProfile = isFrench(d) ? ({ 'Very High': 'Très élevé', High: 'Élevé', Moderate: 'Modéré', Low: 'Faible' }[r.riskProfile] || r.riskProfile) : (r.riskProfile || 'Moderate');
   const severityLabel = severity => isFrench(d) ? ({ critical: 'Critique', high: 'Élevé', medium: 'Modéré', low: 'Faible' }[severity] || severity) : severity.charAt(0).toUpperCase() + severity.slice(1);
   return `
       <div id="risques" class="content-card">
@@ -1018,7 +1018,7 @@ function renderDisclaimer(d) {
       <div id="disclaimer" class="content-card">
         <h2><i class="fa-solid fa-triangle-exclamation"></i> ${tx(d, 'Disclaimer', 'Avertissement')}</h2>
         <div class="disclaimer-mega">
-          ${isFrench(d) ? '<p>Cette analyse est fournie à des <strong>fins informatives et éducatives uniquement</strong>. Elle ne constitue ni un conseil financier, ni une recommandation, ni une sollicitation à acheter ou vendre un titre.</p><p>Les performances passées ne préjugent pas des résultats futurs. Tout investissement comporte un risque de perte en capital. Faites vos propres recherches et consultez un conseiller agréé avant toute décision.</p><p>Les données proviennent de collectes de marché datées, des dépôts de la société, de Yahoo Finance, de SEC EDGAR et de sources publiques. Leur exactitude n’est pas garantie.</p>' : '<p>This analysis is provided for <strong>informational and educational purposes only</strong>. It does not constitute financial advice, investment recommendation, or solicitation to buy or sell any security.</p><p>Past performance is not indicative of future results. All investments involve risk, including the possible loss of principal. Always conduct your own research and consult a licensed financial advisor before making investment decisions.</p><p>Data comes from point-in-time market snapshots, company filings, Yahoo Finance, SEC EDGAR, and public market data. Accuracy is not guaranteed.</p>'}
+          ${isFrench(d) ? '<p>Cette analyse est fournie à des <strong>fins informatives et éducatives uniquement</strong>. Elle ne constitue ni un conseil financier, ni une recommandation, ni une sollicitation à acheter ou vendre un titre.</p><p>Les performances passées ne préjugent pas des résultats futurs. Tout investissement comporte un risque de perte en capital. Faites vos propres recherches et consultez un conseiller agréé avant toute décision.</p><p>Les données proviennent de collectes de marché datées, des dépôts de la société sur SEC EDGAR et de sources publiques. Leur exactitude n’est pas garantie.</p>' : '<p>This analysis is provided for <strong>informational and educational purposes only</strong>. It does not constitute financial advice, investment recommendation, or solicitation to buy or sell any security.</p><p>Past performance is not indicative of future results. All investments involve risk, including the possible loss of principal. Always conduct your own research and consult a licensed financial advisor before making investment decisions.</p><p>Data comes from point-in-time market snapshots, company filings, Yahoo Finance, SEC EDGAR, and public market data. Accuracy is not guaranteed.</p>'}
         </div>
       </div>`;
 }
