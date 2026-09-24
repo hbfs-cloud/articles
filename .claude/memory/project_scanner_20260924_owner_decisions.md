@@ -27,6 +27,6 @@ cette note est la trace.
 5. Scan du 24/09 : dérogation au minimum 6 actions + 2 ETF, pour cette séance seulement, affichée sur la page ; jamais de remplissage.
 6. MSST ratifié dans les exclusions de symboles.
 
-**How to apply:** ne pas étendre compare_only aux scans suivants sans nouvelle décision si le catalogue
-live est toujours vide. Les fichiers qui citent ces décisions renvoient à cette note. Voir
+**How to apply:** compare_only reste actif jusqu'à nouvel ordre tant que le catalogue live est vide
+(décision 3) ; la dérogation au minimum ne vaut que pour le 24/09 (décision 5). Les fichiers qui citent ces décisions renvoient à cette note. Voir
 [[yahoo-store-holes-pin-source]].
