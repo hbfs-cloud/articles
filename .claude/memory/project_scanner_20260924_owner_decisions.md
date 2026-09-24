@@ -21,6 +21,12 @@ depuis le 21/09. En parallèle, americanbulls (trading_signals, source requise) 
 (enrichissement). Un relecteur senior sans accès à la conversation a jugé ces attributions invérifiables :
 cette note est la trace.
 
+**Décisions de suivi (2026-09-24 ~10:00 Paris), même mode :**
+3. DTX compare_only **jusqu'à nouvel ordre** : tant que le catalogue live est vide ; retour automatique au mode décision dès qu'une stratégie redevient éligible.
+4. Formulaire **S-8 non bloquant** (règle durable) : plan salarié, pas une levée ; S-3/424B/ATM/convertibles/3.02/PIPE restent bloquants.
+5. Scan du 24/09 : dérogation au minimum 6 actions + 2 ETF, pour cette séance seulement, affichée sur la page ; jamais de remplissage.
+6. MSST ratifié dans les exclusions de symboles.
+
 **How to apply:** ne pas étendre compare_only aux scans suivants sans nouvelle décision si le catalogue
 live est toujours vide. Les fichiers qui citent ces décisions renvoient à cette note. Voir
 [[yahoo-store-holes-pin-source]].
