@@ -106,7 +106,7 @@ Le weekly utilise le FAB flottant comme tous les autres types d'articles. 6 item
 #### Footer (OBLIGATOIRE)
 ```html
 <footer class="article-footer">
-  &copy; 2026 DailyTickers. Data via DailyTickers Gateway.
+  &copy; 2026 DailyTickers. Données arrêtées à la dernière clôture.
   Not financial advice.
   <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
 </footer>

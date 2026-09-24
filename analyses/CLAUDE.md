@@ -84,7 +84,7 @@ Adapter les items aux sections de l'analyse. ~6-12 items selon la complexité. J
 #### Footer (OBLIGATOIRE)
 ```html
 <footer class="article-footer">
-  &copy; 2026 DailyTickers. Data via DailyTickers Gateway.
+  &copy; 2026 DailyTickers. Données arrêtées à la dernière clôture.
   Not financial advice.
   <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
 </footer>
@@ -974,7 +974,7 @@ Ajouter dans `report.css` :
 | **Chiffre clé dans un paragraphe** | Inline, juste après le chiffre | "Revenue $298K `[source-ref]`" |
 | **Tableau de données** | `.source-refs` sous le tableau | Sources: artefact MCP harnaché, SEC/IR primaire |
 | **Fait d'actualité / News** | Inline dans le texte de la news | "Partenariat avec Mitsubishi `[source-ref]`" |
-| **Données techniques** (S/R, volume) | `.source-refs` sous le chart | Sources: DailyTickers Gateway |
+| **Données techniques** (S/R, volume) | `.source-refs` sous le chart | Sources : données de marché datées |
 | **SEC Filings** | Inline dans chaque ligne du tableau | Lien vers le filing exact sur SEC.gov |
 | **Sentiment social** | Inline ou sous la carte plateforme | Lien vers StockTwits, Reddit, etc. |
 | **Données institutionnelles (13F)** | Inline dans le tableau | Lien vers Fintel, WhaleWisdom |

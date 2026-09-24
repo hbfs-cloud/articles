@@ -97,7 +97,7 @@ Adapter les 6 items aux sections principales du briefing. Le JS gère toggle, sm
 #### Footer (OBLIGATOIRE)
 ```html
 <footer class="article-footer">
-  &copy; 2026 DailyTickers. Data via DailyTickers Gateway.
+  &copy; 2026 DailyTickers. Données arrêtées à la dernière clôture.
   Not financial advice.
   <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
 </footer>
