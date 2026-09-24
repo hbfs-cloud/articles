@@ -21,12 +21,25 @@ try {
   const evidence = { ticker: 'TEST', analysis_path: relative, analysis_sha256: hash(bytes) };
   const saveEvidence = () => fs.writeFileSync(evidencePath, JSON.stringify(evidence));
   saveEvidence();
+  // Le gate lit le plan déclaré par le harnais et exige qu'il soit enregistré pour `analyse`.
+  const harnessFile = path.join(root, 'analyses/TEST/_data/harness.json');
+  fs.mkdirSync(path.dirname(harnessFile), { recursive: true });
+  fs.mkdirSync(path.join(root, 'config'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'config/workflow-contracts.json'), JSON.stringify({
+    workflows: { analyse: { plans: [{ path: 'plans/analyse.json' }, { path: 'plans/analyse-tiingo.json' }] } },
+  }));
+  const saveHarness = plan => fs.writeFileSync(harnessFile, JSON.stringify({ plan }));
+  saveHarness('plans/analyse-tiingo.json');
   const calls = [];
   const runner = (bin, args) => { calls.push(args); return { status: 0 }; };
   assert.equal(assertAnalysisPublicationReady(relative, { root, runner }).ticker, 'TEST');
   assert.equal(calls.length, 4);
   assert.equal(calls[0][0], 'tools/check-freshness.js');
   assert.equal(calls[1][0], 'tools/validate-workflows.js');
+  assert.equal(calls[1][2], 'plans/analyse-tiingo.json', 'run-plan must use the plan declared by the harness');
+  saveHarness('plans/unregistered.json');
+  assert.throws(() => assertAnalysisPublicationReady(relative, { root, runner }), /not registered/);
+  saveHarness('plans/analyse.json');
   assert.equal(calls[2][0], 'tools/validate-analysis-evidence.js');
   assert(calls[3].includes('--strict') && calls[3].includes('--require-current-attestation'));
   // Failed evidence/reviews cannot be ignored, including a failed process launch.

@@ -26,9 +26,19 @@ function assertAnalysisPublicationReady(jsonPath, options = {}) {
       || evidence.analysis_sha256 !== sha256(bytes)) {
     throw new Error('Evidence is not bound to the dossier being published');
   }
+  // Le plan est celui que le harnais déclare, à condition qu'il soit enregistré pour le workflow
+  // analyse. Un plan codé en dur refusait toute collecte faite avec un plan de repli légitime
+  // (source tiingo ou webull quand l'historique yahoo est troué) — constaté le 2026-09-24.
+  const harnessPath = path.join(root, 'analyses', ticker, '_data', 'harness.json');
+  const declaredPlan = JSON.parse(fs.readFileSync(harnessPath, 'utf8')).plan;
+  const contracts = JSON.parse(fs.readFileSync(path.join(root, 'config', 'workflow-contracts.json'), 'utf8'));
+  const registered = ((contracts.workflows || {}).analyse || {}).plans || [];
+  if (!registered.some(entry => entry.path === declaredPlan)) {
+    throw new Error(`Analysis harness plan is not registered for the analyse workflow: ${declaredPlan}`);
+  }
   for (const args of [
     ['tools/check-freshness.js', `analyses/${ticker}/_data/harness.json`],
-    ['tools/validate-workflows.js', '--run-plan', 'plans/analyse.json', `analyses/${ticker}/_data`],
+    ['tools/validate-workflows.js', '--run-plan', declaredPlan, `analyses/${ticker}/_data`],
     ['tools/validate-analysis-evidence.js', evidencePath],
     ['tools/check-analysis-editorial-quality.js', '--strict', '--require-current-attestation', absolute],
   ]) {

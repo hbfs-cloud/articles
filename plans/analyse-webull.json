@@ -1,0 +1,485 @@
+{
+  "artifact": "analyses/$symbol/index.html",
+  "vars": {
+    "documented_client_symbols": "",
+    "documented_client_applicability": "applicable",
+    "documented_client_na_reason": "",
+    "documented_client_na_evidence_path": "",
+    "documented_client_na_evidence_sha256": ""
+  },
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "equity_reference_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "price-fundamentals",
+      "calls": [
+        {
+          "as": "instrument",
+          "server": "marketdata",
+          "tool": "GetInstruments",
+          "args": {
+            "symbols": "$symbol",
+            "bars_depth": 300
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$symbol",
+            "limit": 300,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only",
+            "source": "webull"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
+          },
+          "note": "Source Webull : le 2026-09-24, les barres Yahoo de PURR, MSTR, SBET, ASST et HYPD présentent des séances manquantes et Tiingo est en cooldown (limite de débit fournisseur) ; Webull sert des séries continues certifiées completed_only."
+        },
+        {
+          "as": "fundamentals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "profile,financials,stats,earnings_quarterly,earnings_reactions,earnings_surprises,earnings_yearly,calendar,analyst_trend,holders,dividends",
+            "symbols": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true,
+            "note": " Current-only snapshot: disclose collection time; never represent as reconstructed at refdate. Filing dates must be checked individually."
+          }
+        },
+        {
+          "as": "technicals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "technicals,support_resistance,volume_profile,obv",
+            "symbols": "$symbol",
+            "end_date": "$refdate"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          },
+          "note": "trading_signals retiré le 2026-09-24 : le fournisseur tiers de motifs (americanbulls) expire à chaque appel ; facette sans valeur décisionnelle, déclarée indisponible dans la fiche."
+        },
+        {
+          "as": "current_correlations",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "correlations",
+            "symbols": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "note": "Current-only context, not reconstructed at refdate; price correlations are separately calculated on certified comparison bars."
+          }
+        }
+      ]
+    },
+    {
+      "name": "blast-radius",
+      "calls": [
+        {
+          "as": "rank_beta",
+          "server": "marketdata",
+          "tool": "RankBeta",
+          "args": {
+            "reference": "$symbol",
+            "as_of": "$refdate",
+            "lookback_days": 180,
+            "min_overlap": 60,
+            "min_correlation": 0.25,
+            "min_dollar_adv": 10000000,
+            "min_price": 2,
+            "top_k": 50,
+            "universe_asset": "stock",
+            "universe_region": "US"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true
+          }
+        },
+        {
+          "as": "comparison_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$comparison_symbols",
+            "start_date": "$comparison_start_date",
+            "limit": 180,
+            "include_partial": false,
+            "force_async": true,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only",
+            "source": "webull"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
+          },
+          "note": "Source Webull : le 2026-09-24, les barres Yahoo de PURR, MSTR, SBET, ASST et HYPD présentent des séances manquantes et Tiingo est en cooldown (limite de débit fournisseur) ; Webull sert des séries continues certifiées completed_only."
+        },
+        {
+          "as": "comparison_client_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "when": {
+            "variable": "documented_client_applicability",
+            "equals": "applicable"
+          },
+          "args": {
+            "types": "bars_daily",
+            "symbols": "$documented_client_symbols",
+            "start_date": "$comparison_start_date",
+            "limit": 180,
+            "include_partial": false,
+            "force_async": true,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only",
+            "source": "webull"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "note": "Economically documented clients are explicit inputs; they are not inferred from correlation.",
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$refdate"
+          },
+          "note": "Source Webull : le 2026-09-24, les barres Yahoo de PURR, MSTR, SBET, ASST et HYPD présentent des séances manquantes et Tiingo est en cooldown (limite de débit fournisseur) ; Webull sert des séries continues certifiées completed_only."
+        },
+        {
+          "as": "comparison_context",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "metadata,financials,stats,technicals,earnings_reactions,earnings_surprises,analyst_trend,short_interest,sec_catalysts",
+            "symbols": "$comparison_symbols",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true,
+            "note": "Current-only context: label observation time and never present it as point-in-time at refdate.",
+            "client_applicability": {
+              "mode": "$documented_client_applicability",
+              "reason": "$documented_client_na_reason",
+              "evidence_path": "$documented_client_na_evidence_path",
+              "evidence_sha256": "$documented_client_na_evidence_sha256"
+            }
+          }
+        },
+        {
+          "as": "comparison_earnings",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "args": {
+            "symbols": "$comparison_symbols",
+            "days_ahead": 14,
+            "include_implied_move": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "market_regime",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "args": {
+            "facets": "regime",
+            "symbol": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "note": "Current regime context; observation time must be displayed and it is not point-in-time evidence for refdate."
+          }
+        },
+        {
+          "as": "symbol_seasonality",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "args": {
+            "facets": "seasonality",
+            "symbol": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true,
+            "note": "Current calculation; report period, sample and warnings, never backfill a historical as_of."
+          }
+        }
+      ]
+    },
+    {
+      "name": "risk-evidence",
+      "calls": [
+        {
+          "as": "sec_evidence",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "sec_filings,sec_catalysts,insider_coverage,flags",
+            "symbols": "$symbol",
+            "days": 365
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": true,
+            "note": "Primary anti-dilution input: offerings, ATM, shelf, warrants and convertibles. Current-only snapshot: disclose collection time; never represent as reconstructed at refdate. Filing dates must be checked individually."
+          }
+        },
+        {
+          "as": "corporate_actions",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "news,flags",
+            "symbols": "$symbol",
+            "end_date": "$refdate",
+            "days": 180
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "insiders",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "insider,insider_transactions,institutional_holdings",
+            "symbols": "$symbol",
+            "end_date": "$refdate",
+            "days": 365
+          },
+          "freshness": {
+            "max_age_h": 96,
+            "required": true
+          }
+        },
+        {
+          "as": "insider_current",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "insider_ownership",
+            "symbols": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 96,
+            "required": true,
+            "note": "Current projection; never label as point-in-time at refdate."
+          }
+        },
+        {
+          "as": "symbol_signals",
+          "server": "marketdata",
+          "tool": "GetSymbolSignals",
+          "args": {
+            "symbol": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "earnings_risk",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "args": {
+            "symbols": "$symbol",
+            "days_ahead": 14,
+            "include_implied_move": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "context",
+      "detached": true,
+      "calls": [
+        {
+          "as": "short_squeeze",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "short_interest,ctb,ctb_history,ftd_threshold,finra_short_volume",
+            "symbols": "$symbol",
+            "end_date": "$refdate",
+            "days": 365
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": false,
+            "note": "Optional short-interest and borrow coverage. Missing CTB or lender coverage must be disclosed and never interpreted as zero borrow cost or neutral squeeze risk."
+          }
+        },
+        {
+          "as": "comparison_calendar_ctb",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "calendar,ctb",
+            "symbols": "$comparison_symbols",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": false,
+            "note": "Optional comparison calendar and borrow-cost coverage. Missing, stale or timed-out cells stay explicit and cannot neutralize the required economic comparison context."
+          }
+        },
+        {
+          "as": "analyst_actions",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "analyst_actions",
+            "symbols": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": false,
+            "note": "Optional current analyst-action feed. Unavailable coverage must be disclosed and never represented as no analyst activity."
+          }
+        },
+        {
+          "as": "vwap",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "vwap",
+            "symbols": "$symbol",
+            "end_date": "$refdate"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false,
+            "note": "Optional intraday-derived VWAP. Missing intraday bars must remain explicit and must not block a daily analysis."
+          }
+        },
+        {
+          "as": "options",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "options_chain,vol_surface,options_history,unusual_options,max_pain",
+            "symbols": "$symbol",
+            "end_date": "$refdate",
+            "max_expirations": 3,
+            "moneyness_min": 0.8,
+            "moneyness_max": 1.2
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false,
+            "note": "Optional derivatives coverage because some listed equities have no option chain. Absence must be disclosed and never converted into a neutral options signal."
+          }
+        },
+        {
+          "as": "move_explanation",
+          "server": "marketdata",
+          "tool": "ExplainSymbolMove",
+          "args": {
+            "symbol": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false,
+            "note": "Current explanatory context; an empty catalyst list remains insufficient evidence."
+          }
+        },
+        {
+          "as": "sentiment",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "sentiment_overall,sentiment_stocktwits,sentiment_reddit,news",
+            "symbols": "$symbol",
+            "end_date": "$refdate",
+            "days": 14
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false
+          }
+        },
+        {
+          "as": "peers",
+          "server": "marketdata",
+          "tool": "GetReferentialData",
+          "args": {
+            "correlated_with": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 168,
+            "required": false,
+            "note": "Current-only discovery input; never use as point-in-time evidence."
+          }
+        },
+        {
+          "as": "search_trends",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "trends",
+            "symbols": "$symbol"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": false,
+            "note": "Optional Google search interest, not price trend. Missing coverage must be disclosed and never replaced by zero."
+          }
+        }
+      ]
+    }
+  ],
+  "description": "Source Webull : le 2026-09-24, les barres Yahoo de PURR, MSTR, SBET, ASST et HYPD présentent des séances manquantes et Tiingo est en cooldown (limite de débit fournisseur) ; Webull sert des séries continues certifiées completed_only."
+}
