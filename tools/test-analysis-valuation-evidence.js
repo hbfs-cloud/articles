@@ -32,5 +32,12 @@ try {
     enterprise_value: 1000, equity_value: 950, price: 95, downside_pct: -5 };
   assert.deepStrictEqual(validateValuationScenario(scenario, [], root), []);
   assert(validateValuationScenario({ ...scenario, price: 96 }, [], root).length);
-  console.log('valuation evidence: PASS; non-applicability requires hashed non-positive EBITDA without economic outputs');
+  const revenue = { metric: 'revenue', multiple: 5, revenue: 200, ebitda: -20, debt: 100, cash: 50, shares: 10, close: 100,
+    enterprise_value: 1000, equity_value: 950, price: 95, downside_pct: -5 };
+  assert.deepStrictEqual(validateValuationScenario(revenue, [], root), []);
+  assert(validateValuationScenario({ ...revenue, metric: 'ebitda' }, [], root).length);
+  assert(validateValuationScenario({ ...revenue, revenue: 0, enterprise_value: 0 }, [], root).length);
+  assert(validateValuationScenario({ ...revenue, metric: 'sales' }, [], root).length);
+  assert(validateValuationScenario({ ...revenue, price: 96 }, [], root).length);
+  console.log('valuation evidence: PASS; non-applicability requires hashed non-positive EBITDA without economic outputs; revenue metric replays revenue × multiple');
 } finally { fs.rmSync(root, { recursive: true, force: true }); }

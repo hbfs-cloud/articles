@@ -122,7 +122,12 @@ function validateValuationScenario(scenario, inputs, root) {
     if (typeof basis.source_pointer !== 'string' || !/\/ebitda$/i.test(basis.source_pointer) || typeof value !== 'number' || !Number.isFinite(value) || value > 0) errors.push('non-applicable valuation requires observed non-positive EBITDA');
     return errors;
   }
-  const enterpriseValue = Number(scenario.multiple) * Number(scenario.ebitda);
+  // Base du multiple : EBITDA par défaut ; `metric: 'revenue'` rejoue un multiple de revenus (logiciels dont
+  // l'EBITDA GAAP est faible ou négatif), avec des revenus strictement positifs.
+  const metric = scenario.metric === undefined ? 'ebitda' : scenario.metric;
+  if (!['ebitda', 'revenue'].includes(metric)) return ['valuation scenario metric must be ebitda or revenue'];
+  if (metric === 'revenue' && !(Number(scenario.revenue) > 0)) return ['revenue valuation scenario requires positive revenue'];
+  const enterpriseValue = Number(scenario.multiple) * Number(metric === 'revenue' ? scenario.revenue : scenario.ebitda);
   const equityValue = enterpriseValue - Number(scenario.debt) + Number(scenario.cash);
   const scenarioPrice = equityValue / Number(scenario.shares);
   const downside = (scenarioPrice / Number(scenario.close) - 1) * 100;
