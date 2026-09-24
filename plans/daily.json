@@ -44,7 +44,7 @@
           "tool": "QueryData",
           "args": {
             "types": "bars_daily",
-            "symbols": "SPY,QQQ,IWM,DIA,GLD,SLV,TLT,USO",
+            "symbols": "SPY,QQQ,IWM,GLD,SLV,TLT,USO",
             "limit": 15,
             "as_of_timestamp": "$as_of_timestamp",
             "completion_policy": "completed_only"
@@ -56,6 +56,27 @@
             "asset_calendar": "us_equity_exchange_sessions",
             "expected_completed_end": "$equity_reference_close"
           }
+        },
+        {
+          "as": "bars_dia",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "DIA",
+            "limit": 15,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only",
+            "source": "tiingo"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$equity_reference_close"
+          },
+          "note": "DIA isolé sur Tiingo : la barre Yahoo du 2026-09-22 a open>high (522.475>522.47) et fait rejeter tout le lot completed_only."
         },
         {
           "as": "bars_sectors",
@@ -184,8 +205,7 @@
           "tool": "GetMarketContext",
           "args": {
             "facets": "overview",
-            "timeout": 90,
-            "analysis_depth": "standard"
+            "timeout": 90
           },
           "freshness": {
             "max_age_h": 6,
