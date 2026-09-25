@@ -1731,6 +1731,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "S",
+    "exchange": "NYSE · Cybersécurité : protection des postes, du cloud et de l’identité (XDR)",
+    "name": "S — SentinelOne : ARR +22 %, EV/revenus 6,9× contre 49× pour CrowdStrike ; perte GAAP, diri...",
+    "title": "S — SentinelOne : ARR +22 %, EV/revenus 6,9× contre 49× pour CrowdStrike ; perte GAAP, diri...",
+    "desc": "SentinelOne : l’éditeur de cybersécurité qui croît le moins cher du secteur, ARR à 1,22 Md$ (+22 %) payé six fois les revenus quand CrowdStrike se paie quarante-neuf fois. Mais perte GAAP, croissance décélérée et dirigeants vendeurs au plus haut. Dossier au close du 24 septembre 2026, aucun ordre.",
+    "tags": "us,equities,ai-chain,software,technology",
+    "grade": "B-",
+    "href": "/analyses/S/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "AAOI",
     "exchange": "NASDAQ · Modules optiques pour centres de données et réseaux câblés",
     "name": "AAOI — revenus de 191,9 M$ (+86 %), prévision relevée ; programme d’émission de 600 M$ ouvert ...",
@@ -2168,19 +2181,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,trade-idea,technology",
     "grade": "B+",
     "href": "/analyses/TSM/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "S",
-    "exchange": "NYSE · Technology",
-    "name": "S — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "title": "S — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "desc": "S: individual cyber event-risk read-through dossier with official SEC review and actionable trade state.",
-    "tags": "us,equities,ai-chain,event,technology",
-    "grade": "B-",
-    "href": "/analyses/S/",
     "date": ""
   },
   {
