@@ -772,7 +772,14 @@ function sectorRotationTable(rows) {
 // ─── COMPACT STRATEGY TABLE (Ticker | Setup | Entrée | Stop | TP | R/R) ───────
 
 /** Strip leading "1:" from an R/R string for compact display ("1:1.9" → "1.9") */
-function rrDisplay(rr) {
+function rrDisplay(rr, s) {
+  // Même règle que la phrase « vise un peu moins qu'elle ne risque » : un ratio réel sous 1 qui
+  // s'arrondit à 1,00 s'affiche avec trois décimales, pour que tableau et texte disent la même chose.
+  if (s && typeof s.entry_high === 'number' && typeof s.stop === 'number' && typeof s.tp1 === 'number') {
+    const gain = Math.round((s.tp1 - s.entry_high) * 100);
+    const risk = Math.round((s.entry_high - s.stop) * 100);
+    if (risk > 0 && gain < risk && (gain / risk).toFixed(2) === '1.00') return (gain / risk).toFixed(3).replace('.', ',');
+  }
   const v = String(rr ?? '').replace(/^\s*1:\s*/, '').trim();
   return v ? v.replace('.', ',') : '—';
 }
@@ -846,7 +853,7 @@ function strategyTable(title, subtitle, rows) {
     return `        <tr data-ticker="${escAttr(s.ticker)}" data-sharia="${s.sharia === true ? 'true' : s.sharia === false ? 'false' : ''}" data-entry="${entry || 0}" data-stop="${s.stop || 0}" data-tp1="${s.tp1 || 0}" data-tp2="${s.tp2 || 0}">`
       + `<td><strong>${esc(s.ticker)}</strong>${shariaBadge}${s.dilution_clear === false ? ' <span class="badge badge-amber">SUSPENDU — SEC</span>' : ''}</td>`
       + `<td class="setup-phrase">${setupPhrase(s)}</td>`
-      + `<td>${s.entry_low != null && s.entry_high != null && s.entry_low !== s.entry_high ? `${num(s.entry_low)}&ndash;${num(s.entry_high)}` : num(entry)}</td><td>${num(s.stop)}</td><td>${num(tp)}</td><td><strong>${rrDisplay(s.rr)}</strong></td><td>${advDisplay(s.avg_daily_dollar_volume)}</td></tr>`;
+      + `<td>${s.entry_low != null && s.entry_high != null && s.entry_low !== s.entry_high ? `${num(s.entry_low)}&ndash;${num(s.entry_high)}` : num(entry)}</td><td>${num(s.stop)}</td><td>${num(tp)}</td><td><strong>${rrDisplay(s.rr, s)}</strong></td><td>${advDisplay(s.avg_daily_dollar_volume)}</td></tr>`;
   }).join('\n');
   const civBlocks = rows.map(confirmInvalidDetails).filter(Boolean).join('\n');
   return `  <h3 class="strategy-table-title">${title}${subtitle ? ` <span style="font-weight:500;color:#64748b;font-size:.85rem">— ${subtitle}</span>` : ''}</h3>
@@ -893,9 +900,9 @@ function buildPage(d) {
   // ── Group setups by strategy (compact tables — no per-card charts) ──────────
   const PATTERN_ORDER = ['Momentum', 'Breakout', 'Pullback', 'Combiné'];
   const PATTERN_SUB = {
-    Momentum: 'tendance établie, cassure de plus-hauts',
-    Breakout: 'sortie de base / gap sur volume',
-    Pullback: 'repli technique dans un uptrend intact',
+    Momentum: 'suivi de tendance, achat sur force',
+    Breakout: 'cassure ou test de résistance',
+    Pullback: 'repli dans une tendance longue',
     'Combiné': 'panier diversifié multi-secteurs',
   };
   const groups = {};
@@ -1080,7 +1087,7 @@ ${sectorRotationTable(d.sector_rotation)}
   <div class="content-card">
     <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés sur la clôture de référence. ${hasEntryZone
       ? `Tous les setups restent non exécutables avant l'observation du VWAP de la prochaine séance.`
-      : stopLimit ? `Cassures et tendances : ordre d'achat stop-limite au prix publié, plafonné à ce prix, annulé si l'ouverture se fait sous l'invalidation ${hasPullback ? ' ; replis : ordre limité au prix publié' : ''}. Si le prix n'est pas atteint, il n'y a pas de trade.` : `L'entrée est un prix unique : un ordre à cours limité valable la séance, sans condition de VWAP. Si le prix n'est pas touché, il n'y a pas de trade.`}${sizingSentence}</p>
+      : stopLimit ? `Tests de résistance et suivis de tendance : ordre d'achat stop-limite au prix publié, plafonné à ce prix, annulé si l'ouverture se fait sous l'invalidation ${hasPullback ? ' ; replis : ordre limité au prix publié' : ''}. Si le prix n'est pas atteint, il n'y a pas de trade.` : `L'entrée est un prix unique : un ordre à cours limité valable la séance, sans condition de VWAP. Si le prix n'est pas touché, il n'y a pas de trade.`}${sizingSentence}</p>
 ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div class="pedagogy-box" style="border-left:4px solid #b45309;">
       <h4><i class="fas fa-list-ol"></i> Ordre d'exécution et hiérarchie des sorties</h4>
       <p>${esc(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy))}</p>
@@ -1091,7 +1098,7 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
       <p>${hasEntryZone
         ? `Entrée = zone conditionnelle à l'ouverture (9h30–9h45 ET), uniquement si le prix s'y trouve et tient le VWAP observé.`
         : stopLimit
-          ? `Cassures et suivis de tendance : ordre d'achat stop-limite, déclenché au prix publié et plafonné à ce même prix, valable la seule séance. Si le cours ouvre sous le niveau d'invalidation, annulez l'ordre dès l'ouverture. Si le cours saute au-dessus du plafond, l'ordre ne s'exécute pas : on ne poursuit pas. ${hasPullback ? 'Replis : ordre limité au prix publié. ' : ''}Aucune cotation d'avant-ouverture n'a été relevée : rien ne garantit que ces prix seront traités.`
+          ? `Tests de résistance et suivis de tendance : ordre d'achat stop-limite, déclenché au prix publié et plafonné à ce même prix, valable la seule séance. Si le cours ouvre sous le niveau d'invalidation, annulez l'ordre dès l'ouverture. Si le cours saute au-dessus du plafond, l'ordre ne s'exécute pas : on ne poursuit pas. ${hasPullback ? 'Replis : ordre limité au prix publié. ' : ''}Aucune cotation d'avant-ouverture n'a été relevée : rien ne garantit que ces prix seront traités.`
           : `Entrée = un prix unique, en ordre à cours limité valable la séance. Pas de zone, pas de condition de VWAP, pas de poursuite : si le marché ouvre au-dessus et n'y revient pas, la ligne ne se déclenche simplement pas.`} Le stop se place dans le système du courtier dès l'achat. ${hasEntryZone
         ? `Le R/R du tableau est calculé au HAUT de la zone d'entrée, soit le pire remplissage autorisé; le plancher du scan est 1:${minRR}.`
         : `L’ordre a un plafond unique ; le prix moyen réellement payé peut être inférieur. Le calcul utilise le prix limite, soit le prix maximal autorisé ; un remplissage inférieur modifie le risque réel et le rapport gain/risque.`
@@ -1113,7 +1120,7 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
     </div>
     <div class="pedagogy-box">
       <h4>2. Screening multi-stratégie</h4>
-      <p>Trois filtres de sélection complémentaires : Momentum (tendance + volume), Breakout (sortie de base / gap volume), Pullback (repli vers support dans un uptrend intact). Short Squeeze exclu depuis le 20 mars 2026.</p>
+      <p>Trois filtres de sélection complémentaires : Momentum (tendance + volume), Breakout (cassure ou test de résistance), Pullback (repli dans une tendance longue). Short Squeeze exclu depuis le 20 mars 2026.</p>
     </div>
     <div class="pedagogy-box">
       <h4>3. Scoring composite</h4>
