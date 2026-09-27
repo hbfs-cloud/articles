@@ -1,14 +1,14 @@
 {
   "contract_version": "1.0",
   "workflow": "analyse",
-  "plan": "plans/analyse-webull.json",
-  "plan_sha256": "2c6bff345ad7ab2e9b81d5658e5bb89b2732f25f6c750afd888284b4872b9f9e",
-  "input_sha256": "4d63d8953218c763c7634694a2cf0e5c3a593eb8588af18105c6cf5ccb2c68f3",
+  "plan": "plans/analyse.json",
+  "plan_sha256": "f54acbc8ad7bedcd138edec019fc5df0098570220074f504610952749a472048",
+  "input_sha256": "4f069d41ead7596a0557f5bc330d591f75bb977d0a87b7acfa7d49752e6c49e5",
   "resolved_input": {
     "artifact": "analyses/CRWD/index.html",
-    "equity_reference_close": "2026-09-23",
+    "equity_reference_close": "2026-09-25",
     "crypto_completed_refdate": null,
-    "as_of_timestamp": "2026-09-24T12:07:15.410Z",
+    "as_of_timestamp": "2026-09-27T20:57:01.061Z",
     "waves": [
       {
         "name": "preflight",
@@ -24,7 +24,7 @@
               "required": true
             },
             "assert": {
-              "equity_reference_close": "2026-09-23"
+              "equity_reference_close": "2026-09-25"
             }
           }
         ]
@@ -53,18 +53,16 @@
               "types": "bars_daily",
               "symbols": "CRWD",
               "limit": 300,
-              "as_of_timestamp": "2026-09-24T12:07:15.410Z",
-              "completion_policy": "completed_only",
-              "source": "webull"
+              "as_of_timestamp": "2026-09-27T20:57:01.061Z",
+              "completion_policy": "completed_only"
             },
             "freshness": {
               "max_age_h": 24,
               "required": true,
               "expects_close": true,
               "asset_calendar": "us_equity_exchange_sessions",
-              "expected_completed_end": "2026-09-23"
-            },
-            "note": "Source Webull : le 2026-09-24, les barres Yahoo de PURR, MSTR, SBET, ASST et HYPD présentent des séances manquantes et Tiingo est en cooldown (limite de débit fournisseur) ; Webull sert des séries continues certifiées completed_only."
+              "expected_completed_end": "2026-09-25"
+            }
           },
           {
             "as": "fundamentals",
@@ -85,15 +83,14 @@
             "server": "marketdata",
             "tool": "QueryData",
             "args": {
-              "types": "technicals,support_resistance,volume_profile,obv",
+              "types": "technicals,support_resistance,volume_profile,obv,trading_signals",
               "symbols": "CRWD",
-              "end_date": "2026-09-23"
+              "end_date": "2026-09-25"
             },
             "freshness": {
               "max_age_h": 24,
               "required": true
-            },
-            "note": "trading_signals retiré le 2026-09-24 : le fournisseur tiers de motifs (americanbulls) expire à chaque appel ; facette sans valeur décisionnelle, déclarée indisponible dans la fiche."
+            }
           },
           {
             "as": "current_correlations",
@@ -120,7 +117,7 @@
             "tool": "RankBeta",
             "args": {
               "reference": "CRWD",
-              "as_of": "2026-09-23",
+              "as_of": "2026-09-25",
               "lookback_days": 180,
               "min_overlap": 60,
               "min_correlation": 0.25,
@@ -141,23 +138,44 @@
             "tool": "QueryData",
             "args": {
               "types": "bars_daily",
-              "symbols": "PANW,MSFT,ZS,FTNT,S,OKTA,NET,TENB,RBRK,QLYS,AMZN,GOOGL,DDOG,NOW,SNOW,MDB,CIBR,HACK,IGV",
-              "start_date": "2026-03-26",
+              "symbols": "PANW,FTNT,ZS,S,NET,OKTA,TENB,QLYS,RBRK,VRNS,DDOG,NOW,CRM,MSFT,AMZN,SNOW,CTSH,CIBR,IGV,QQQ",
+              "start_date": "2026-02-02",
               "limit": 180,
               "include_partial": false,
               "force_async": true,
-              "as_of_timestamp": "2026-09-24T12:07:15.410Z",
-              "completion_policy": "completed_only",
-              "source": "webull"
+              "as_of_timestamp": "2026-09-27T20:57:01.061Z",
+              "completion_policy": "completed_only"
             },
             "freshness": {
               "max_age_h": 24,
               "required": true,
               "expects_close": true,
               "asset_calendar": "us_equity_exchange_sessions",
-              "expected_completed_end": "2026-09-23"
+              "expected_completed_end": "2026-09-25"
+            }
+          },
+          {
+            "as": "comparison_client_bars",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "SNOW,CTSH",
+              "start_date": "2026-02-02",
+              "limit": 180,
+              "include_partial": false,
+              "force_async": true,
+              "as_of_timestamp": "2026-09-27T20:57:01.061Z",
+              "completion_policy": "completed_only"
             },
-            "note": "Source Webull : le 2026-09-24, les barres Yahoo de PURR, MSTR, SBET, ASST et HYPD présentent des séances manquantes et Tiingo est en cooldown (limite de débit fournisseur) ; Webull sert des séries continues certifiées completed_only."
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "note": "Economically documented clients are explicit inputs; they are not inferred from correlation.",
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-25"
+            }
           },
           {
             "as": "comparison_context",
@@ -165,7 +183,7 @@
             "tool": "QueryData",
             "args": {
               "types": "metadata,financials,stats,technicals,earnings_reactions,earnings_surprises,analyst_trend,short_interest,sec_catalysts",
-              "symbols": "PANW,MSFT,ZS,FTNT,S,OKTA,NET,TENB,RBRK,QLYS,AMZN,GOOGL,DDOG,NOW,SNOW,MDB,CIBR,HACK,IGV",
+              "symbols": "PANW,FTNT,ZS,S,NET,OKTA,TENB,QLYS,RBRK,VRNS,DDOG,NOW,CRM,MSFT,AMZN,SNOW,CTSH,CIBR,IGV,QQQ",
               "force_async": true
             },
             "freshness": {
@@ -173,10 +191,10 @@
               "required": true,
               "note": "Current-only context: label observation time and never present it as point-in-time at refdate.",
               "client_applicability": {
-                "mode": "not_applicable",
-                "reason": "Aucun client ni partenaire à 10 % du chiffre d'affaires selon le 10-K ; aucun client nommé.",
-                "evidence_path": "analyses/CRWD/_review/client-applicability.md",
-                "evidence_sha256": "eca61cee15011b68d70ca4e31e7267756872762173eeb20e33246755598b0806"
+                "mode": "applicable",
+                "reason": "",
+                "evidence_path": "",
+                "evidence_sha256": ""
               }
             }
           },
@@ -185,7 +203,7 @@
             "server": "marketdata",
             "tool": "GetEarningsCalendarFiltered",
             "args": {
-              "symbols": "PANW,MSFT,ZS,FTNT,S,OKTA,NET,TENB,RBRK,QLYS,AMZN,GOOGL,DDOG,NOW,SNOW,MDB,CIBR,HACK,IGV",
+              "symbols": "PANW,FTNT,ZS,S,NET,OKTA,TENB,QLYS,RBRK,VRNS,DDOG,NOW,CRM,MSFT,AMZN,SNOW,CTSH,CIBR,IGV,QQQ",
               "days_ahead": 14,
               "include_implied_move": true
             },
@@ -249,7 +267,7 @@
             "args": {
               "types": "news,flags",
               "symbols": "CRWD",
-              "end_date": "2026-09-23",
+              "end_date": "2026-09-25",
               "days": 180
             },
             "freshness": {
@@ -264,7 +282,7 @@
             "args": {
               "types": "insider,insider_transactions,institutional_holdings",
               "symbols": "CRWD",
-              "end_date": "2026-09-23",
+              "end_date": "2026-09-25",
               "days": 365
             },
             "freshness": {
@@ -325,7 +343,7 @@
             "args": {
               "types": "short_interest,ctb,ctb_history,ftd_threshold,finra_short_volume",
               "symbols": "CRWD",
-              "end_date": "2026-09-23",
+              "end_date": "2026-09-25",
               "days": 365
             },
             "freshness": {
@@ -340,7 +358,7 @@
             "tool": "QueryData",
             "args": {
               "types": "calendar,ctb",
-              "symbols": "PANW,MSFT,ZS,FTNT,S,OKTA,NET,TENB,RBRK,QLYS,AMZN,GOOGL,DDOG,NOW,SNOW,MDB,CIBR,HACK,IGV",
+              "symbols": "PANW,FTNT,ZS,S,NET,OKTA,TENB,QLYS,RBRK,VRNS,DDOG,NOW,CRM,MSFT,AMZN,SNOW,CTSH,CIBR,IGV,QQQ",
               "force_async": true
             },
             "freshness": {
@@ -370,7 +388,7 @@
             "args": {
               "types": "vwap",
               "symbols": "CRWD",
-              "end_date": "2026-09-23"
+              "end_date": "2026-09-25"
             },
             "freshness": {
               "max_age_h": 24,
@@ -385,7 +403,7 @@
             "args": {
               "types": "options_chain,vol_surface,options_history,unusual_options,max_pain",
               "symbols": "CRWD",
-              "end_date": "2026-09-23",
+              "end_date": "2026-09-25",
               "max_expirations": 3,
               "moneyness_min": 0.8,
               "moneyness_max": 1.2
@@ -416,7 +434,7 @@
             "args": {
               "types": "sentiment_overall,sentiment_stocktwits,sentiment_reddit,news",
               "symbols": "CRWD",
-              "end_date": "2026-09-23",
+              "end_date": "2026-09-25",
               "days": 14
             },
             "freshness": {
@@ -456,14 +474,14 @@
     ]
   },
   "artifact": "analyses/CRWD/index.html",
-  "reference_date": "2026-09-23",
-  "equity_reference_close": "2026-09-23",
+  "reference_date": "2026-09-25",
+  "equity_reference_close": "2026-09-25",
   "crypto_completed_refdate": null,
-  "started_at": "2026-09-24T12:07:15.410Z",
+  "started_at": "2026-09-27T20:57:01.061Z",
   "waves": [
     {
       "name": "preflight",
-      "ms": 338,
+      "ms": 190,
       "calls": [
         {
           "as": "status",
@@ -472,16 +490,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 338,
+          "ms": 189,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "f8a59ed658bfd9721e6abd0e4b59d4f47ac16a4cf6437bfb211218621cf3213f"
+          "output_sha256": "11a220e60b46a420ca2ab6de422e5154a605df98717badf947d4c923759e6ec7"
         }
       ]
     },
     {
       "name": "price-fundamentals",
-      "ms": 20597,
+      "ms": 38538,
       "calls": [
         {
           "as": "instrument",
@@ -490,10 +508,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 12986,
-          "wait_ms": 12260,
+          "ms": 31472,
+          "wait_ms": 30600,
           "error": null,
-          "output_sha256": "3ea073be769ef4da9ca00bcb634c9b00ef4342a441197a9f4ab2d7249281c362"
+          "output_sha256": "d444d77f1b29a9f20992d17a408e809fd58d65cee19515c64a4da85ac70919d2"
         },
         {
           "as": "bars",
@@ -502,10 +520,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 1931,
+          "ms": 2058,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "7d3f6512db16118c1b7ef0b8a311b4f04425d48da22183b1c73d50e6abfa6bd4"
+          "output_sha256": "4d85a28b53ac5453da8c6f8d44605fcd26a230adcc1c9d2c3da81b701e7d6786"
         },
         {
           "as": "fundamentals",
@@ -514,10 +532,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 3795,
-          "wait_ms": 1063,
+          "ms": 3938,
+          "wait_ms": 1064,
           "error": null,
-          "output_sha256": "4736701625ac3a19a292fe0b1fb913d225dce42816a25a6eb41f719435f5fd55"
+          "output_sha256": "6bc0b07cdca5211a1cef506934cbbe2badf1c680872c01f8baa1320a50e82326"
         },
         {
           "as": "technicals",
@@ -526,10 +544,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 5793,
-          "wait_ms": 2065,
+          "ms": 5952,
+          "wait_ms": 2071,
           "error": null,
-          "output_sha256": "4cd49b6faaff038172325cc086326497fa16f7431854128f2be091e132b0fe01"
+          "output_sha256": "a8dddf640f0aa656a2487466cafeabfb78cd2c8af6478bea85deb977826a063b"
         },
         {
           "as": "current_correlations",
@@ -538,16 +556,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 8335,
+          "ms": 7937,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "ff7fb98075764c87660f2dcfc5f44f141ad86b1ede8724c30188720ba3e92848"
+          "output_sha256": "8cab8aeac6984dfd69539fb3263b5d9a58211f52472607f3dfc0a0ba36bf9c8b"
         }
       ]
     },
     {
       "name": "blast-radius",
-      "ms": 9384,
+      "ms": 26184,
       "calls": [
         {
           "as": "rank_beta",
@@ -556,10 +574,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 1023,
+          "ms": 935,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "79da7b79e5b15ed0e7b07b13a4a78bfa96d8e6a03b28b50dd859a53ad2f290a4"
+          "output_sha256": "ded87ecd1654f347ecd48e254d274d6dbfd4601018f253a47ab348975a3fb11d"
         },
         {
           "as": "comparison_bars",
@@ -568,10 +586,22 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 1998,
-          "wait_ms": 110,
+          "ms": 21090,
+          "wait_ms": 19169,
           "error": null,
-          "output_sha256": "583628d4318ff72cc55eebe8b5c9f7f492b9d42fa026298d4d41081da0d27ebe"
+          "output_sha256": "ef629659ad7daaf10720417af64d378bc4451d39022a51c9c77179b46669c8d5"
+        },
+        {
+          "as": "comparison_client_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 10937,
+          "wait_ms": 7995,
+          "error": null,
+          "output_sha256": "1397ef1137b58aa29a8598107a597896aed0a003453738adbb8a4f4d1a24539d"
         },
         {
           "as": "comparison_context",
@@ -580,10 +610,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 5014,
-          "wait_ms": 2125,
+          "ms": 20039,
+          "wait_ms": 16110,
           "error": null,
-          "output_sha256": "3100093a8a9e0744c8868978bc7ce3248cd22b790f72b7212ceaa973e3a27f99"
+          "output_sha256": "a42fce26c90cf9718527abc882deac7c3ec0ab8973b71e64fb25892b44b493a6"
         },
         {
           "as": "comparison_earnings",
@@ -592,10 +622,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 4154,
+          "ms": 5838,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "2c85eadd8b66c00540591a25a458a1a5993f49fc3cd9eac1d90b2dda264a94e4"
+          "output_sha256": "90761e5915d7ec4463ef3341e5d80e419c2cb33fd5c75488c8981a3cd95bde40"
         },
         {
           "as": "market_regime",
@@ -604,10 +634,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 7259,
+          "ms": 5931,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "97c7b3a19dbf7320f1ad1f34fe03a0dcbd5687b6a23d44f56188d2373f9e1775"
+          "output_sha256": "1657f01fc77c7d1143dae9b4627520e532108d678656557d2ce2c3263031f2da"
         },
         {
           "as": "symbol_seasonality",
@@ -616,16 +646,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 5970,
+          "ms": 7014,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "30f61994c7e6e727d4855c2cf6b7556117797809a0484db673f3dabb48857934"
+          "output_sha256": "94753a5f8ac67dbea47d0df95bdef21817c0bf9b73b7b645055dc4e662f6b21d"
         }
       ]
     },
     {
       "name": "risk-evidence",
-      "ms": 6856,
+      "ms": 53520,
       "calls": [
         {
           "as": "sec_evidence",
@@ -634,10 +664,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 1648,
-          "wait_ms": 847,
+          "ms": 876,
+          "wait_ms": 122,
           "error": null,
-          "output_sha256": "df5f916d20443145c31c4c3f7a3cc9c021a8d64fe06a86b6323c779f1dc22f53"
+          "output_sha256": "e11fb8835323c625dd837efeef9f20855dedefdc825f79a870a864876b32b782"
         },
         {
           "as": "corporate_actions",
@@ -646,10 +676,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 1805,
+          "ms": 1762,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "571b38043008fea16a984ff8d849f6f557b0d5f76cf79070b413d3f48462a170"
+          "output_sha256": "b7d3fc7799b4b90219e6d3726266bef0f045929d9214981ae2c2be1fbe120966"
         },
         {
           "as": "insiders",
@@ -658,10 +688,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 3065,
+          "ms": 53398,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "ba3f4750e136a682dda95dd8b5662da00ee1f21c8c95620fa064356b4ba846b9"
+          "output_sha256": "7299df39c0a8ead7d88735c43f0d2f17396f7c7816fef8473391a0cbe3441c6d"
         },
         {
           "as": "insider_current",
@@ -670,10 +700,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 4093,
+          "ms": 4196,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "83ecd08153d8ac98f51e3ed644f6a2d00a562ddc337ffdd44b12a7cafedf74f6"
+          "output_sha256": "a46d7ccffbe6474253c921085d251eaa1aae79c75b093a8c5b31c1152c14c189"
         },
         {
           "as": "symbol_signals",
@@ -682,10 +712,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 5074,
+          "ms": 29751,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "76179e6d2a3b014ed7cf004539caf84a35080f0cf007c196d0bca684220f43eb"
+          "output_sha256": "36bf70df6a7fa644ca1d2bdb675ce41e052a07d537009d3f7816b311621aaa72"
         },
         {
           "as": "earnings_risk",
@@ -694,16 +724,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 6009,
+          "ms": 5923,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "464fa554fb32d9354604c63dbab8e5d424cb3a6e3eca2a7748845d66552eacb0"
+          "output_sha256": "cec0cfe4e80326cec680173c40012c3a74f6cac3c51319e917dfd0bf05320961"
         }
       ]
     },
     {
       "name": "context",
-      "ms": 23140,
+      "ms": 47916,
       "calls": [
         {
           "as": "short_squeeze",
@@ -711,11 +741,12 @@
           "tool": "QueryData",
           "required": false,
           "detached": true,
-          "ok": true,
-          "ms": 1984,
-          "wait_ms": 1028,
-          "error": null,
-          "output_sha256": "22a235588ddef63748b8f2c07b4c51622d1cd8b0a001bdb73ffe6b0d21018d40"
+          "ok": false,
+          "ms": 1012,
+          "wait_ms": 83,
+          "error": "marketdata QueryData incomplete: ctb[CRWD]: failed to fetch CTB: received status 444; ctb_history[CRWD]: failed to fetch CTB history: received status 444; 2 facet(s) failed",
+          "output_sha256": "2158ae6b5cc857f69c20a90e5e76538b0511ee28cf65f1c3086bcb5fa7014cde",
+          "artifact_preserved": true
         },
         {
           "as": "comparison_calendar_ctb",
@@ -723,11 +754,12 @@
           "tool": "QueryData",
           "required": false,
           "detached": true,
-          "ok": true,
-          "ms": 16133,
-          "wait_ms": 14174,
-          "error": null,
-          "output_sha256": "55d5d996c5cbf82cf4a1fd7f31d501e2584446c288e2603b885928d6fbd32aef"
+          "ok": false,
+          "ms": 2991,
+          "wait_ms": 1065,
+          "error": "marketdata QueryData incomplete: calendar[S]: stale; calendar[RBRK]: stale; ctb[PANW]: failed to fetch CTB: received status 444",
+          "output_sha256": "3a1f9e12caa2ade5e5e3b35302d2ebaa92e87227e5b7b15d17ce73d808804040",
+          "artifact_preserved": true
         },
         {
           "as": "analyst_actions",
@@ -736,10 +768,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 2961,
-          "wait_ms": 1,
+          "ms": 2922,
+          "wait_ms": 0,
           "error": null,
-          "output_sha256": "7aa72817cda3f696219b34f42a745af8983b6b16de55b39065208ec72124ba24"
+          "output_sha256": "e99e468c3f9a403b0c1ccb551d605280337f3fa4db71071acc7d152e36ff73d2"
         },
         {
           "as": "vwap",
@@ -748,10 +780,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 3955,
-          "wait_ms": 1,
+          "ms": 3927,
+          "wait_ms": 0,
           "error": null,
-          "output_sha256": "5ea837a716a1b120d994a0051c1556869880507293bbd556622e210d7e4068d2"
+          "output_sha256": "fc3aae0d86e996acf30f12a285721ceca62dc94724aebfb77313db62fa4a1e92"
         },
         {
           "as": "options",
@@ -760,10 +792,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 8005,
-          "wait_ms": 3049,
+          "ms": 7016,
+          "wait_ms": 2082,
           "error": null,
-          "output_sha256": "413a7c0845c3dc5730bd3a61da5b6922be19af1f37f36c061602c949455e76f9"
+          "output_sha256": "598ec85e7657c28a1c905485618374d154c3dec1f579ad5083bdef1503cc1746"
         },
         {
           "as": "move_explanation",
@@ -772,10 +804,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 8906,
-          "wait_ms": 1,
+          "ms": 32648,
+          "wait_ms": 0,
           "error": null,
-          "output_sha256": "c16c5daddebb19f1dcf784f024d95440941d035c07565f654726d93856c184bf"
+          "output_sha256": "a4f1e1c87975fc69273693e9ed3e98e7857e6b248028c6503ebc581a8c08e585"
         },
         {
           "as": "sentiment",
@@ -784,10 +816,10 @@
           "required": false,
           "detached": true,
           "ok": false,
-          "ms": 10971,
-          "wait_ms": 4004,
+          "ms": 22196,
+          "wait_ms": 15268,
           "error": "marketdata QueryData incomplete: sentiment_reddit[CRWD]: no Reddit data available; 1 facet(s) failed; sentiment_reddit",
-          "output_sha256": "cfc1f2b60507f96cdd48bc496bd5dded67fb9b131ae5f00fb1193623469e0924",
+          "output_sha256": "c48317545b64c8796eee994fed2c9e95f5aab08358580cc223de689ce35293be",
           "artifact_preserved": true
         },
         {
@@ -797,10 +829,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 7971,
-          "wait_ms": 1,
+          "ms": 7929,
+          "wait_ms": 0,
           "error": null,
-          "output_sha256": "d30e45bc65b785264de36503aff3cb958760cd51994dd369bcd3dfc13a4acc04"
+          "output_sha256": "25ff89e32cd6934c5ccc37f02583ed2b881555f1aaa377e6086f7be42bfbd581"
         },
         {
           "as": "search_trends",
@@ -809,17 +841,17 @@
           "required": false,
           "detached": true,
           "ok": false,
-          "ms": 8010,
+          "ms": 8003,
           "wait_ms": 0,
           "error": "marketdata QueryData incomplete: trends[CRWD]: no Google Trends data available; facet failed; trends",
-          "output_sha256": "5e476f53d8f80fd601fd2625891d5df1e9655ebf31b2fa9c8f999b005278eec4",
+          "output_sha256": "975b705862093f6d2424c22ce866f2fd33ee4987f8de22a21572a7b48ba24725",
           "artifact_preserved": true
         }
       ]
     }
   ],
-  "finished_at": "2026-09-24T12:08:15.919Z",
+  "finished_at": "2026-09-27T20:59:47.682Z",
   "failures": 0,
-  "executed_calls": 27,
+  "executed_calls": 28,
   "skipped_calls": 0
 }

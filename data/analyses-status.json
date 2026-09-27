@@ -1,35 +1,35 @@
 {
  "symbol_exclusions": {
   "status": "EXCLUDED_BY_EXPLICIT_USER_INSTRUCTION",
-  "date": "20260917",
-  "refdate": "2026-09-16",
-  "path": "scanner/20260917/_symbol-exclusions.json",
-  "sha256": "37f5a5dc84e72b7c6dd28a52f5fc2d1dc1e1533bfa31c375bbcd6e1cecb56cab",
+  "date": "20260928",
+  "refdate": "2026-09-25",
+  "path": "scanner/20260928/_symbol-exclusions.json",
+  "sha256": "4be11a00b9a6e9bb831e8a24ffb33a35962b9c5237d38f686f2df580bdc82b00",
   "symbols": [
-   "BK",
    "EDP.LS",
-   "EURUSD",
-   "GALP.LS",
    "GLEN.L",
-   "USEG",
-   "XAUUSD"
+   "ISP.MI",
+   "GALP.LS",
+   "EURUSD",
+   "XAUUSD",
+   "USEG"
   ],
-  "user_instruction": "Report de l'instruction permanente du 2026-09-14 (« skip ce qui pose pb pour EDP/Glencore et les 3 donnees manquantes, on ne les considere pas »), deja appliquee les 2026-09-15 et 2026-09-16. Preuves du run, capturees le 2026-09-16 entre 21:10 et 21:20 UTC sur la cloture de reference 2026-09-16. EDP.LS sert la seance du 16 mais rend des bornes OHLC qui se contredisent sur au moins trois barres — 2026-09-07 (o=4.619, h=4.716, l=4.637 : le plus bas est AU-DESSUS de l'ouverture), 2026-09-15 (o=4.777, h=4.666) et 2026-09-16 (o=4.777, h=4.75) — et ni tiingo ni webull ne rendent de serie coherente pour cette place. GLEN.L echoue en fenetre de suivi (160 barres) avec le statut de cellule partial venue_session_coverage_incomplete, identique au constat du 2026-09-15 : une sonde courte de huit barres repond completed et ne vaut donc PAS refutation — c'est la fenetre longue qui gouverne le suivi, et c'est elle qui manque de couverture sur la place de Londres. GALP.LS est conserve pour la meme cause exacte sur Euronext Lisbonne. BK reste stale a l'extreme : derniere seance servie 2026-06-10, 8 467 200 secondes de retard, rejection_reason=served_end_before_latest_expected_us_session ; la cause identifiee reste la MIGRATION DE TICKER vers BNY, qui se traite sur preuve primaire hors run et non par reecriture en cours de chaine. USEG renvoie toujours un 404 amont « No data found, symbol may be delisted » sans cible de migration etablie. EURUSD et XAUUSD restent exclus du cycle de vie des analyses pour le defaut de CALENDRIER documente le 2026-09-16 : instruments FX et metal spot reclames sous us_equity_exchange_sessions, dont la fenetre longue ne peut pas prouver la cloture attendue ; aucune observation de ce run ne contredit ce constat et leur exclusion ne coute aucun statut publie. Le defaut de bornes yahoo sur les listings US n'est PAS traite par exclusion : NU et XLE sont repris par symbole sur webull apres l'echec de tiingo (en cooldown serveur ce soir), NU etant verifie contre l'intraday 15 minutes — premiere bougie de seance a 13:30Z, plus haut 14.07, quand yahoo servait high=14.00. Les enregistrements existants des symboles exclus sont preserves, aucun trade n'est modifie ni supprime, et tous les autres gates restent obligatoires.",
+  "user_instruction": "Exclure du suivi et du cycle de vie les instruments hérités NON conformes à l'univers US-equity du scanner, qui bloquent les chaînes sur des barres non certifiables au calendrier de session US : (1) positions/dossiers NON US à venue étrangère — EDP.LS (Lisbonne), GLEN.L (Londres), ISP.MI (Milan), GALP.LS (Lisbonne) — barres de venue incomplètes ; (2) EURUSD et XAUUSD, paire de change et or spot cotant sur des jours fériés US (calendrier non-session US-equity, dates hors-session récurrentes : 16/02, 03/04, 25/05, 19/06, 03/07, 07/09) ; (3) USEG, sans aucune barre disponible côté fournisseur (upstream_or_calculation_failed, série vide). Exclusion demandée par l'utilisateur (« aucune raison que /scanner ne marche pas, débrouille-toi », 2026-09-27) pour débloquer le scan ; tous les autres gates restent requis.",
   "preserve_existing_records": true,
   "all_other_gates_required": true
  },
- "generatedAt": "2026-09-16T21:13:15.567Z",
- "closeDateMax": "2026-09-16",
+ "generatedAt": "2026-09-27T18:45:39.775Z",
+ "closeDateMax": "2026-09-27",
  "entries": {
   "AAOI": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "C+",
+   "status": "no-trade",
+   "display": "Dossier informatif",
+   "publishedAt": "2026-09-24",
+   "grade": "C",
    "name": "Applied Optoelectronics, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: No regular-session opening bar was captured; levels remain inactive.",
+   "verifiedAt": "2026-09-24T19:22:18.879330021Z",
+   "closeDate": "2026-09-23",
+   "note": "Aucun ordre actif. Niveaux historiques du plan du 27 août (entrée 119,72 $, stop 102,10 $, TP1 149,35 $, TP2 160,99 $), conservés à l’identique et inactifs : non exécutables. Vérifié sur les barres certifiées : depuis le 28 août, le plus haut est de 116,90 $ le 8 septembre, sous l’entrée ; le plan n’a jamais été activé, quel que soit son déclencheur en séance, et aucun stop ni objectif n’a compté. Le motif de l’absence d’ordre : le programme d’émission de 600 M$ ouvert le 21 août et un flux opérationnel négatif. Depuis la clôture du 18 septembre, le titre a fait −3,9 %.",
    "hasPlan": true,
    "event": null
   },
@@ -137,14 +137,14 @@
    "event": null
   },
   "AG": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B+",
+   "status": "no-trade",
+   "display": "Dossier informatif",
+   "publishedAt": "2026-09-18",
+   "grade": "D+",
    "name": "First Majestic Silver Corp.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: Wait. Activation requires a completed 15-minute close back above $22.19 with non-zero regular-session volume.",
+   "verifiedAt": "2026-09-20T17:56:48.363115442Z",
+   "closeDate": "2026-09-18",
+   "note": "NO TRADE. Les niveaux archivés restent visibles pour l’historique seulement : aucune activation, aucun ordre, aucune taille et aucune exécution ne sont proposés.",
    "hasPlan": true,
    "event": null
   },
@@ -197,14 +197,14 @@
    "event": null
   },
   "ALLR": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
+   "status": "no-trade",
+   "display": "Dossier informatif",
+   "publishedAt": "2026-09-19",
    "grade": "D",
-   "name": "Allarity Therapeutics, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: Calendar veto: the next earnings date is not confirmed; levels remain inactive.",
+   "name": "Allarity Therapeutics",
+   "verifiedAt": "2026-09-20T18:00:44.374206999Z",
+   "closeDate": "2026-09-18",
+   "note": "Niveaux historiques archivés et inactifs : aucun ordre, stop ou objectif n’est exécutable au close actuel.",
    "hasPlan": true,
    "event": null
   },
@@ -289,26 +289,26 @@
    }
   },
   "AMD": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "C+",
    "name": "Advanced Micro Devices, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: No regular-session opening bar was captured; levels remain inactive.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller, entrée sur repli seulement. Avant activation : aucune entrée au-dessus de 559,91 $ ; si le titre clôture au-dessus de 624,69 $ avant tout repli, le plan est retiré. Activation : clôture strictement au-dessus de 527,60 $ et au plus 559,91 $, puis achat à l’ouverture suivante entre 527,60 $ et 566,43 $. Après activation : stop sous 527,60 $. Les niveaux archivés du 19 septembre ne sont pas repris.",
    "hasPlan": true,
    "event": null
   },
   "AMKR": {
-   "status": "stopped",
-   "display": "Invalidé (stop touché)",
-   "publishedAt": "2026-08-28",
-   "grade": "B-",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "C+",
    "name": "Amkor Technology, Inc.",
-   "verifiedAt": "2026-09-16T04:35:54.763Z",
-   "closeDate": "2026-09-15",
-   "note": "clôture au stop le 2026-09-15 (46.38)",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller. Avant activation : aucune entrée ; une clôture sous 50,50 $ abandonne le scénario. Activation : clôture au-dessus de 54,89 $, puis achat à l’ouverture suivante seulement sous 55,62 $, ou par ordre limité à ce plafond pendant trois séances, annulé après une clôture sous 54,89 $ et jamais laissé actif sur une ouverture sous 51,30 $. Après activation : stop sous 51,30 $. Plan du 27 août (entrée 51,49 $, stop 47,04 $, TP1 62,23 $, TP2 67,52 $) : son activation exigeait une clôture de quinze minutes au-dessus de 51,49 $, invérifiable sur barres quotidiennes. Le 28 août, le plus haut certifié, 51,40 $, reste sous ce seuil : pas d’activation ce jour-là. Le seuil est dépassé en séance le 9 septembre (plus haut de 52,15 $) et le 11 (51,78 $). Si l’activation a eu lieu, le stop a été touché le 14 septembre, dans une séance ouverte à 47,32 $ qui descend à 46,80 $ ; aucun objectif n’a été atteint. L’outil de suivi a enregistré un stop sur la clôture du 15 septembre (46,38 $). L’ancien stop reposait sur un plus bas du 24 août à 47,04 $ ; la série de cours retenue aujourd’hui donne 46,95 $ pour ce jour-là.",
    "hasPlan": true,
    "event": {
     "type": "stop",
@@ -357,14 +357,14 @@
    }
   },
   "ANET": {
-   "status": "rejected",
-   "display": "rejected",
-   "publishedAt": "2026-08-28",
-   "grade": "B+",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "B",
    "name": "Arista Networks, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Rejected: the preserved structure returns only 0.88R to TP1 and 1.15R to TP2, and the $200 entry is absent from the frozen bars; no activation, order or sizing is allowed.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller. Avant activation : aucune entrée ; une clôture sous 181,27 $ abandonne le scénario. Activation : clôture au-dessus de 214,89 $, puis achat à l’ouverture suivante seulement sous 216,48 $. Après activation : stop sous 200,75 $. Le plan rejeté du 28 août n’est pas repris.",
    "hasPlan": true,
    "event": null
   },
@@ -484,14 +484,14 @@
    "event": null
   },
   "AVGO": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-30",
-   "grade": "B",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "B-",
    "name": "Broadcom Inc.",
-   "verifiedAt": "2026-08-30T17:06:00.320Z",
-   "closeDate": "2026-08-28",
-   "note": "Attendre les résultats du 2 septembre et reconstruire la structure sur des barres régulières avec volume.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller. Avant activation : aucune entrée ; une clôture sous 335,20 $ abandonne le scénario. Activation : clôture au-dessus de 375,91 $, puis achat à l’ouverture suivante seulement sous 378,15 $. Après activation : stop sous 359,29 $. L’ancien plan d’attente du 30 août n’a jamais été activé.",
    "hasPlan": true,
    "event": null
   },
@@ -608,16 +608,21 @@
    "event": null
   },
   "BK": {
-   "status": "active",
-   "display": "Dossier d’actualité",
+   "status": "expired",
+   "display": "Fenêtre écoulée",
    "publishedAt": "2026-06-14",
    "grade": "A",
    "name": "The Bank of New York Mellon",
-   "verifiedAt": "2026-08-26T08:30:14.721Z",
-   "closeDate": null,
-   "note": null,
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "jamais déclenché — fenêtre de 20 séances écoulée le 2026-07-14",
    "hasPlan": true,
-   "event": null
+   "event": {
+    "type": "expired_untriggered",
+    "date": "2026-07-14",
+    "close": 25.59,
+    "horizon": 20
+   }
   },
   "BLSH": {
    "status": "stopped",
@@ -660,19 +665,19 @@
    }
   },
   "BNY": {
-   "status": "active",
-   "display": "Dossier d’actualité",
+   "status": "stopped",
+   "display": "Invalidé (stop touché)",
    "publishedAt": "2026-08-04",
    "grade": "A-",
    "name": "The Bank of New York Mellon",
-   "verifiedAt": "2026-09-16T21:13:15.567Z",
-   "closeDate": "2026-09-16",
-   "note": "entrée déclenchée en clôture le 2026-09-15",
+   "verifiedAt": "2026-09-24T07:29:49.600Z",
+   "closeDate": "2026-09-23",
+   "note": "clôture au stop le 2026-09-22 (150.17)",
    "hasPlan": true,
    "event": {
-    "type": "triggered",
-    "date": "2026-09-15",
-    "close": 154.67
+    "type": "stop",
+    "date": "2026-09-22",
+    "close": 150.17
    }
   },
   "BTC": {
@@ -908,19 +913,20 @@
    "event": null
   },
   "CLSK": {
-   "status": "active",
-   "display": "Dossier d’actualité",
+   "status": "expired",
+   "display": "Fenêtre écoulée",
    "publishedAt": "2026-08-28",
    "grade": "D",
    "name": "CleanSpark, Inc.",
-   "verifiedAt": "2026-09-16T21:13:15.567Z",
-   "closeDate": "2026-09-16",
-   "note": "entrée déclenchée en clôture le 2026-09-04",
+   "verifiedAt": "2026-09-20T19:40:28.276Z",
+   "closeDate": "2026-09-18",
+   "note": "fenêtre de 10 séances écoulée le 2026-09-18 sans stop ni objectif",
    "hasPlan": true,
    "event": {
-    "type": "triggered",
-    "date": "2026-09-04",
-    "close": 12.6899995803833
+    "type": "expired",
+    "date": "2026-09-18",
+    "close": 14.47,
+    "horizon": 10
    }
   },
   "CNC": {
@@ -1015,26 +1021,26 @@
    "event": null
   },
   "CRM": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "A-",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "B",
    "name": "Salesforce, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: Wait. Activation requires a completed 15-minute close back above $256.46 with non-zero regular-session volume.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller. Avant activation : aucune entrée ; une clôture sous 229,81 $ abandonne le scénario. Activation : clôture au-dessus de 242,44 $, puis achat à l’ouverture suivante seulement sous 242,92 $. Après activation : stop sous 234,24 $.",
    "hasPlan": true,
    "event": null
   },
   "CRWD": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B+",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "B",
    "name": "CrowdStrike Holdings, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: Wait. Activation requires a completed 15-minute close back above $228.49 with non-zero regular-session volume.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller. Avant activation : aucune entrée ; une clôture sous 230,85 $ abandonne le scénario. Activation : clôture au-dessus de 263,19 $, puis achat à l’ouverture suivante seulement sous 263,68 $. Après activation : stop sous 248,51 $.",
    "hasPlan": true,
    "event": null
   },
@@ -1067,16 +1073,20 @@
    "event": null
   },
   "CSGP": {
-   "status": "active",
-   "display": "Dossier d’actualité",
+   "status": "stopped",
+   "display": "Invalidé (stop touché)",
    "publishedAt": "2026-08-14",
    "grade": "C+",
    "name": "CoStar Group, Inc.",
-   "verifiedAt": "2026-09-16T21:13:15.567Z",
-   "closeDate": "2026-09-16",
-   "note": null,
+   "verifiedAt": "2026-09-20T19:40:28.276Z",
+   "closeDate": "2026-09-18",
+   "note": "clôture au stop le 2026-09-18 (29.09)",
    "hasPlan": true,
-   "event": null
+   "event": {
+    "type": "stop",
+    "date": "2026-09-18",
+    "close": 29.09
+   }
   },
   "CTMX": {
    "status": "info",
@@ -1118,20 +1128,19 @@
    }
   },
   "DDOG": {
-   "status": "expired",
-   "display": "Fenêtre écoulée",
-   "publishedAt": "2026-08-28",
-   "grade": "B+",
+   "status": "active",
+   "display": "Dossier d’actualité",
+   "publishedAt": "2026-09-24",
+   "grade": "B-",
    "name": "Datadog, Inc.",
-   "verifiedAt": "2026-09-16T04:35:54.763Z",
-   "closeDate": "2026-09-15",
-   "note": "jamais déclenché — fenêtre de 10 séances écoulée le 2026-09-14",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "entrée déclenchée en clôture le 2026-09-25",
    "hasPlan": true,
    "event": {
-    "type": "expired_untriggered",
-    "date": "2026-09-14",
-    "close": 230.05,
-    "horizon": 10
+    "type": "triggered",
+    "date": "2026-09-25",
+    "close": 268.13
    }
   },
   "DECK": {
@@ -1147,14 +1156,14 @@
    "event": null
   },
   "DELL": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
    "grade": "B",
    "name": "Dell Technologies Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: Event veto: earnings are scheduled for 2026-09-01; the displayed levels are inactive until a post-release review.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller. Avant activation : aucune entrée ; une clôture sous 506,25 $ abandonne le scénario. Activation : clôture au-dessus de 595,51 $, puis achat à l’ouverture suivante seulement sous 599,24 $, ou par ordre limité à ce plafond pendant trois séances, annulé après une clôture sous 595,51 $ et jamais laissé actif sur une ouverture sous 542,23 $. Après activation : stop sous 542,23 $. L’ancien plan du 27 août, neutralisé par la publication du 1er septembre, n’a jamais été activé.",
    "hasPlan": true,
    "event": null
   },
@@ -1567,14 +1576,14 @@
    "event": null
   },
   "FTNT": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B+",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "B",
    "name": "Fortinet, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: Wait. Activation requires a completed 15-minute close back above $172.80 with non-zero regular-session volume.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller. Avant activation : aucune entrée ; une clôture sous 166,09 $ abandonne le scénario. Activation : clôture au-dessus de 179,35 $, puis achat à l’ouverture suivante seulement sous 181,06 $, ou par ordre limité à ce plafond pendant trois séances, annulé après une clôture sous 179,35 $ et jamais laissé actif sur une ouverture sous 173,37 $. Après activation : stop sous 173,37 $. Ancien plan du 28 août : sa condition, une clôture de quinze minutes au-dessus de 172,80 $, est remplie au plus tard le 21 septembre, clôture à 175,23 $ ; elle a pu l’être plus tôt en séance (plus hauts de 173,00 $ le 28 août et de 174,05 $ le 15 septembre), sans barres de quinze minutes pour le trancher. Depuis le 21 septembre, le plus bas est de 170,23 $ : le stop archivé à 163,94 $ n’a pas été touché, le TP1 à 187,90 $ non plus (plus haut 179,35 $) ; au close du 23, +3,4 % sur l’entrée archivée, horizon de dix séances non échu si l’activation date du 21. Une activation dès le 28 août aurait en revanche vu son stop franchi dans la même séance (plus bas 162,68 $). Ce plan n’est pas repris ici.",
    "hasPlan": true,
    "event": null
   },
@@ -1786,14 +1795,14 @@
    "event": null
   },
   "HPE": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
    "grade": "B-",
    "name": "Hewlett Packard Enterprise Company",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: $53.96 is a dormant reference absent from the frozen daily and intraday bundles and the event veto remains active; no activation, order or sizing is allowed before a fresh post-earnings RTH structure.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller. Avant activation : aucune entrée ; une clôture sous 57,01 $ abandonne le scénario. Activation : clôture au-dessus de 63,90 $, puis achat à l’ouverture suivante seulement sous 64,49 $, ou par ordre limité à ce plafond pendant trois séances, annulé après une clôture sous 63,90 $ et jamais laissé actif sur une ouverture sous 60,30 $. Après activation : stop sous 60,30 $. L’ancien plan du 27 août, neutralisé par la publication du 2 septembre, n’a jamais été activé.",
    "hasPlan": true,
    "event": null
   },
@@ -1925,14 +1934,14 @@
    }
   },
   "INTC": {
-   "status": "stopped",
-   "display": "Invalidé (stop touché)",
-   "publishedAt": "2026-08-28",
-   "grade": "C+",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "C",
    "name": "Intel Corporation",
-   "verifiedAt": "2026-09-16T21:13:15.567Z",
-   "closeDate": "2026-09-16",
-   "note": "stop après TP1 le 2026-08-31 (89.51)",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller, entrée sur repli seulement. Pas d’achat au cours actuel de 122,60 $ : +33,1 % depuis le 27 août, R/R de 0,50 vers TP1. Avant activation : si le titre clôture au-dessus de 130,74 $ avant tout repli, le plan est retiré. Activation : clôture strictement au-dessus de 106,40 $ et au plus 114,93 $, puis achat à l’ouverture suivante entre 106,40 $ et 116,13 $. Après activation : stop sous 106,40 $. Ancien plan du 27 août (entrée 92,68 $, stop 89,59 $, TP1 103,66 $, TP2 106,85 $) : il demandait une clôture de quinze minutes au-dessus de 92,68 $, ce que les barres quotidiennes ne permettent pas de vérifier. Deux lectures sont possibles. Première : achat le 28 août (plus haut de 93,70 $), puis stop touché le jour même (plus bas de 89,05 $) ou le 31 août (clôture de 89,51 $) ; c’est ce qu’a enregistré l’outil de suivi, qui a daté ce stop avant l’activation du 4 septembre, une erreur d’ordre de sa part. Seconde : achat sur la clôture du 4 septembre (95,80 $), TP1 dépassé le 8 septembre (plus haut de 106,09 $) et TP2 le 17 septembre (plus haut de 111,37 $). L’ordre des plus hauts et plus bas dans une séance n’est pas connu.",
    "hasPlan": true,
    "event": {
     "type": "stop_after_tp1",
@@ -2037,14 +2046,14 @@
    }
   },
   "KLAC": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B+",
+   "status": "no-trade",
+   "display": "Dossier informatif",
+   "publishedAt": "2026-09-19",
+   "grade": "B",
    "name": "KLA Corporation",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: No regular-session opening bar was captured; levels remain inactive.",
+   "verifiedAt": "2026-09-20T17:52:44.899Z",
+   "closeDate": "2026-09-18",
+   "note": "Aucun ordre actif. Les quatre repères historiques sont conservés pour traçabilité, sans réarmement.",
    "hasPlan": true,
    "event": null
   },
@@ -2178,19 +2187,20 @@
    "event": null
   },
   "MARA": {
-   "status": "active",
-   "display": "Dossier d’actualité",
+   "status": "expired",
+   "display": "Fenêtre écoulée",
    "publishedAt": "2026-08-28",
    "grade": "D+",
    "name": "MARA Holdings, Inc.",
-   "verifiedAt": "2026-09-16T21:13:15.567Z",
-   "closeDate": "2026-09-16",
-   "note": "entrée déclenchée en clôture le 2026-09-03",
+   "verifiedAt": "2026-09-20T19:40:28.276Z",
+   "closeDate": "2026-09-18",
+   "note": "fenêtre de 10 séances écoulée le 2026-09-17 sans stop ni objectif",
    "hasPlan": true,
    "event": {
-    "type": "triggered",
-    "date": "2026-09-03",
-    "close": 11.600000381469727
+    "type": "expired",
+    "date": "2026-09-17",
+    "close": 11.64,
+    "horizon": 10
    }
   },
   "MATX": {
@@ -2233,14 +2243,14 @@
    "event": null
   },
   "MDB": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B+",
+   "status": "no-trade",
+   "display": "Dossier informatif",
+   "publishedAt": "2026-09-24",
+   "grade": "B-",
    "name": "MongoDB, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: Event veto: earnings are scheduled for 2026-09-01; the displayed levels are inactive until a post-release review.",
+   "verifiedAt": "2026-09-24T18:32:30.442026695Z",
+   "closeDate": "2026-09-23",
+   "note": "Aucun plan. Les niveaux affichés sont ceux, archivés, du dossier du 27 août, neutralisés par la publication du 1er septembre : ils n’ont jamais été activés et aucun ordre n’y est attaché. Ce plan n’était pas viable : son R/R affiché de 1:5.44 reposait sur un stop à 455,19 $, 2,66 $ sous l’entrée, soit 0,12 ATR, qu’une séance ordinaire suffisait à franchir. Un nouveau plan ne sera construit que sur une clôture au-dessus de 473,10 $ ou sur un repli tenu vers 379,00 $.",
    "hasPlan": true,
    "event": null
   },
@@ -2308,14 +2318,14 @@
    "event": null
   },
   "MRVL": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "B-",
    "name": "Marvell Technology, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: MRVL's $228.88 level is not observable as an active setup in the captured bars. A new post-event RTH base must define the next trigger before any quantity or order exists.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller. Avant activation : aucune entrée ; une clôture sous 244,99 $ abandonne le scénario. Activation : clôture au-dessus de 266,00 $, puis achat à l’ouverture suivante seulement sous 269,37 $. Après activation : stop sous 254,00 $.",
    "hasPlan": true,
    "event": null
   },
@@ -2368,14 +2378,14 @@
    "event": null
   },
   "MTDR": {
-   "status": "stopped",
-   "display": "Invalidé (stop touché)",
-   "publishedAt": "2026-09-13",
-   "grade": "B-",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "C+",
    "name": "Matador Resources Company",
-   "verifiedAt": "2026-09-16T21:13:15.567Z",
-   "closeDate": "2026-09-16",
-   "note": "clôture au stop le 2026-09-16 (57.75)",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveillance : aucun ordre ; attendre une clôture au-dessus du seuil.",
    "hasPlan": true,
    "event": {
     "type": "stop",
@@ -2384,14 +2394,14 @@
    }
   },
   "MU": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
+   "status": "no-trade",
+   "display": "Dossier informatif",
+   "publishedAt": "2026-09-24",
    "grade": "B",
    "name": "Micron Technology, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: No regular-session opening bar was captured; levels remain inactive.",
+   "verifiedAt": "2026-09-24T17:11:44.035176038Z",
+   "closeDate": "2026-09-23",
+   "note": "Aucun plan. Les niveaux affichés sont ceux, archivés, du dossier du 27 août : ils n’ont jamais été activés et aucun ordre n’y est attaché. Un nouveau plan ne sera construit qu’après la publication du 30 septembre.",
    "hasPlan": true,
    "event": null
   },
@@ -2480,14 +2490,14 @@
    "event": null
   },
   "NOW": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B",
+   "status": "no-trade",
+   "display": "Dossier informatif",
+   "publishedAt": "2026-09-24",
+   "grade": "B-",
    "name": "ServiceNow, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: Wait. Activation requires a completed 15-minute close back above $141.39 with non-zero regular-session volume.",
+   "verifiedAt": "2026-09-24T18:28:42.773110049Z",
+   "closeDate": "2026-09-23",
+   "note": "Aucun plan. Les niveaux affichés sont ceux, archivés, du dossier du 27 août ; aucun ordre n’y est plus attaché. Leur condition, une clôture de quinze minutes au-dessus de 141,39 $, a très probablement été remplie le 28 août sur la base des clôtures et des plus hauts (clôture 144,71 $, plus haut 145,72 $) ; les barres de quinze minutes manquent pour l’affirmer. Depuis, le stop archivé à 130,25 $ n’a pas été touché (plus bas 130,39 $ le 11 septembre) et le TP1 à 160,68 $ non plus (plus haut 149,60 $ le 31 août). L’horizon de dix séances a échu le 14 septembre, clôture à 142,35 $, soit +0,7 % sur l’entrée archivée. Un nouveau plan ne sera construit que sur une clôture au-dessus de 149,60 $ avec une base plus serrée, ou sur un retour tenu vers 130,39 $.",
    "hasPlan": true,
    "event": null
   },
@@ -2524,14 +2534,14 @@
    }
   },
   "NVDA": {
-   "status": "stopped",
-   "display": "Invalidé (stop touché)",
-   "publishedAt": "2026-08-28",
-   "grade": "A-",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "B+",
    "name": "NVIDIA Corporation",
-   "verifiedAt": "2026-09-16T04:35:54.763Z",
-   "closeDate": "2026-09-15",
-   "note": "clôture au stop le 2026-09-09 (223.67)",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller. Avant activation : aucune entrée ; une clôture sous 208,93 $ abandonne le scénario. Activation : clôture au-dessus de 236,00 $, puis achat à l’ouverture suivante seulement sous 236,99 $. Après activation : stop sous 228,50 $. Le scénario précédent a été stoppé le 9 septembre ; ses niveaux archivés (230,36 $ d’entrée le 3 septembre, 223,67 $ le 9) viennent d’une autre source de cours que la série certifiée actuelle, qui donne 228,19 $ et 223,42 $ à ces dates.",
    "hasPlan": true,
    "event": {
     "type": "stop",
@@ -2587,14 +2597,14 @@
    }
   },
   "OKTA": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "B-",
    "name": "Okta, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: Wait. Activation requires a completed 15-minute close back above $172.91 with non-zero regular-session volume.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller. Avant activation : aucune entrée ; une clôture sous 181,36 $ abandonne le scénario. Activation : clôture au-dessus de 207,20 $, puis achat à l’ouverture suivante seulement sous 208,68 $. Après activation : stop sous 196,00 $. D’après les barres quotidiennes, le plan du 28 août (activation 172,91 $, stop 166,15 $) s’est probablement déclenché le 31 août (clôture 173,04 $) puis a touché son stop le 1er septembre (plus bas 162,01 $) ; non vérifié en intrajournalier.",
    "hasPlan": true,
    "event": null
   },
@@ -2611,14 +2621,14 @@
    "event": null
   },
   "ORCL": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B+",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "B-",
    "name": "Oracle Corporation",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: Event veto: earnings are scheduled for 2026-09-10; the displayed levels are inactive until a post-release review.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller. Avant activation : aucune entrée ; une clôture sous 139,00 $ abandonne le scénario. Activation : clôture au-dessus de 153,60 $, puis achat à l’ouverture suivante seulement sous 154,42 $. Après activation : stop sous 146,16 $.",
    "hasPlan": true,
    "event": null
   },
@@ -2635,14 +2645,14 @@
    "event": null
   },
   "PANW": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B+",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "B",
    "name": "Palo Alto Networks, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: Event veto: earnings are scheduled for 2026-09-01; the displayed levels are inactive until a post-release review.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller. Avant activation : aucune entrée ; une clôture sous 356,00 $ abandonne le scénario. Activation : clôture au-dessus de 398,88 $, puis achat à l’ouverture suivante seulement sous 401,22 $, ou par ordre limité à ce plafond pendant trois séances, annulé après une clôture sous 398,88 $ et jamais laissé actif sur une ouverture sous 374,20 $. Après activation : stop sous 374,20 $. L’ancien plan d’attente du 28 août, neutralisé par la publication du 1er septembre, n’a jamais été activé.",
    "hasPlan": true,
    "event": null
   },
@@ -2746,6 +2756,22 @@
    "note": "Pas de plan de trade exploitable — dossier informatif.",
    "hasPlan": false,
    "event": null
+  },
+  "PURR": {
+   "status": "active",
+   "display": "Dossier d’actualité",
+   "publishedAt": "2026-09-24",
+   "grade": "C",
+   "name": "Hyperliquid Strategies Inc",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "entrée déclenchée en clôture le 2026-09-25",
+   "hasPlan": true,
+   "event": {
+    "type": "triggered",
+    "date": "2026-09-25",
+    "close": 12.85
+   }
   },
   "PYPY": {
    "status": "info",
@@ -2926,20 +2952,16 @@
    "event": null
   },
   "S": {
-   "status": "active",
-   "display": "Dossier d’actualité",
-   "publishedAt": "2026-08-28",
+   "status": "no-trade",
+   "display": "Dossier informatif",
+   "publishedAt": "2026-09-25",
    "grade": "B-",
    "name": "SentinelOne, Inc.",
-   "verifiedAt": "2026-09-16T21:13:15.567Z",
-   "closeDate": "2026-09-16",
-   "note": "entrée déclenchée en clôture le 2026-09-14",
+   "verifiedAt": "2026-09-25T13:05:49.046957823Z",
+   "closeDate": "2026-09-24",
+   "note": "Aucun ordre actif. Les niveaux affichés — entrée 22,25 $, stop 21,50 $, TP1 23,95 $, TP2 27,98 $ — sont ceux, archivés, du plan précédent, désormais clos : inactifs et non exécutables. Vérifié sur les barres certifiées : le premier objectif a été atteint, le titre ayant dépassé 23,95 $ en séance jusqu’à 24,40 $ le 24 septembre. Le titre est aujourd’hui à son plus haut de cinquante-deux semaines, la cible de consensus est atteinte et les dirigeants ont vendu : aucun nouvel ordre au cours actuel.",
    "hasPlan": true,
-   "event": {
-    "type": "triggered",
-    "date": "2026-09-14",
-    "close": 22.61
-   }
+   "event": null
   },
   "SBET": {
    "status": "wait",
@@ -2990,16 +3012,20 @@
    "event": null
   },
   "SMCI": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
+   "status": "active",
+   "display": "Dossier d’actualité",
+   "publishedAt": "2026-09-24",
    "grade": "C+",
    "name": "Super Micro Computer, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: SMCI's old $38.95 framework is dormant while the enlarged common and preferred claims reset the denominator. Require fresh RTH price and volume structure before defining activation or size.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "entrée déclenchée en clôture le 2026-09-25",
    "hasPlan": true,
-   "event": null
+   "event": {
+    "type": "triggered",
+    "date": "2026-09-25",
+    "close": 43.26
+   }
   },
   "SMR": {
    "status": "stopped",
@@ -3050,16 +3076,20 @@
    "event": null
   },
   "SNPS": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B",
+   "status": "active",
+   "display": "Dossier d’actualité",
+   "publishedAt": "2026-09-24",
+   "grade": "C+",
    "name": "Synopsys, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: $462.45 is only a historical design reference. Synopsys needs a newly dated regular-session base before activation, sizing or any order can be considered.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "entrée déclenchée en clôture le 2026-09-25",
    "hasPlan": true,
-   "event": null
+   "event": {
+    "type": "triggered",
+    "date": "2026-09-25",
+    "close": 425.76
+   }
   },
   "SPWH": {
    "status": "info",
@@ -3186,14 +3216,14 @@
    "event": null
   },
   "TENB": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B-",
+   "status": "no-trade",
+   "display": "Dossier informatif",
+   "publishedAt": "2026-09-24",
+   "grade": "C+",
    "name": "Tenable Holdings, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: Wait. Activation requires a completed 15-minute close back above $37.88 with non-zero regular-session volume.",
+   "verifiedAt": "2026-09-24T17:45:39.929576661Z",
+   "closeDate": "2026-09-23",
+   "note": "Aucun plan. Les niveaux affichés sont ceux, archivés, du dossier du 27 août : aucun ordre n’y est attaché et ils sont désormais inactifs. Leur condition a été remplie en clôture le 31 août (38,15 $ au-dessus de 37,88 $), puis le stop a été cassé le 2 septembre : résultat de −8,9 % au stop, −9,6 % à la clôture du 2 septembre. Un nouveau plan ne sera construit que sur une clôture au-dessus de 40,19 $ ou un retour tenu vers 29,97 $.",
    "hasPlan": true,
    "event": null
   },
@@ -3346,8 +3376,8 @@
    "publishedAt": "2026-09-12",
    "grade": "B+",
    "name": "Taiwan Semiconductor Manufacturing Company Limited",
-   "verifiedAt": "2026-09-16T21:13:15.567Z",
-   "closeDate": "2026-09-16",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
    "note": "entrée déclenchée en clôture le 2026-09-14",
    "hasPlan": true,
    "event": {
@@ -3501,14 +3531,14 @@
    "event": null
   },
   "VICR": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B",
+   "status": "watch",
+   "display": "Sous surveillance",
+   "publishedAt": "2026-09-24",
+   "grade": "C",
    "name": "Vicor Corporation",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: VICR has no executable trigger in the frozen bundle. Treat $203.45/$188.6799 as dated analytical pivots only and rebuild the plan from fresh regular-session data before sizing.",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-25",
+   "note": "Surveiller, entrée sur repli seulement. Pas d’achat au cours actuel de 283,16 $ : +39,0 % depuis le 27 août, R/R de 0,03 vers TP1. Avant activation : si le titre clôture au-dessus de 285,44 $ avant tout repli, le plan est retiré. Activation : clôture strictement au-dessus de 212,20 $ et au plus 232,74 $, puis achat à l’ouverture suivante entre 212,20 $ et 241,49 $. Après activation : stop sous 212,20 $. Le plan du 27 août, en attente sans déclencheur exécutable (repères de 203,45 $ et 188,68 $), n’a jamais été activé ; pour mémoire, la clôture du 27 août, 203,64 $, dépassait le premier repère, et la séance du 28 est descendue à 185,57 $, sous le second ; l’ordre des plus hauts et plus bas dans une séance n’est pas connu.",
    "hasPlan": true,
    "event": null
   },
@@ -3748,14 +3778,14 @@
    "event": null
   },
   "ZS": {
-   "status": "wait",
-   "display": "wait",
-   "publishedAt": "2026-08-28",
-   "grade": "B+",
+   "status": "no-trade",
+   "display": "Dossier informatif",
+   "publishedAt": "2026-09-24",
+   "grade": "B-",
    "name": "Zscaler, Inc.",
-   "verifiedAt": null,
-   "closeDate": "2026-08-27",
-   "note": "Wait: Event veto: earnings are scheduled for 2026-09-03; the displayed levels are inactive until a post-release review.",
+   "verifiedAt": "2026-09-24T17:38:52.782261933Z",
+   "closeDate": "2026-09-23",
+   "note": "Aucun plan. Les niveaux affichés sont ceux, archivés, du dossier du 27 août, neutralisés par la publication du 3 septembre : ils n’ont jamais été activés et aucun ordre n’y est attaché. Un nouveau plan ne sera construit que sur un repli tenu vers 192,65 $–202,55 $ ou sur une clôture au-dessus de 231,48 $.",
    "hasPlan": true,
    "event": null
   },
@@ -3765,8 +3795,8 @@
    "publishedAt": null,
    "grade": null,
    "name": "_ai-chain-sec",
-   "verifiedAt": "2026-09-16T21:13:15.567Z",
-   "closeDate": "2026-09-16",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-27",
    "note": null,
    "hasPlan": false,
    "event": null
@@ -3777,8 +3807,8 @@
    "publishedAt": null,
    "grade": null,
    "name": "market-regime-20260827",
-   "verifiedAt": "2026-09-16T21:13:15.567Z",
-   "closeDate": "2026-09-16",
+   "verifiedAt": "2026-09-27T18:45:39.775Z",
+   "closeDate": "2026-09-27",
    "note": null,
    "hasPlan": false,
    "event": null

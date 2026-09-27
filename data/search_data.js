@@ -1744,6 +1744,84 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "HPE",
+    "exchange": "NYSE · Serveurs, réseau, stockage et financement d’équipements",
+    "name": "HPE — revenus +34 %, réseau +74,9 % avec Juniper, prévision relevée ; titre à 62,94 $, rejeté...",
+    "title": "HPE — revenus +34 %, réseau +74,9 % avec Juniper, prévision relevée ; titre à 62,94 $, rejeté...",
+    "desc": "Hewlett Packard Enterprise : Juniper qui double le réseau, des revenus à +34 % et un titre qui bute sur son sommet de série. Dossier au close du 25 septembre 2026, statut surveiller.",
+    "tags": "us,equities,ai-chain,technology,hardware",
+    "grade": "B-",
+    "href": "/analyses/HPE/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "APLD",
+    "exchange": "NASDAQ · Infrastructure de centres de données pour l’IA et le calcul haute performance",
+    "name": "APLD — Applied Digital : ~36 Md$ de baux IA contractés, mais 5 Md$ de dette, flux libre négati...",
+    "title": "APLD — Applied Digital : ~36 Md$ de baux IA contractés, mais 5 Md$ de dette, flux libre négati...",
+    "desc": "Applied Digital : bailleur de centres de données IA au carnet de ~36 Md$ de baux à quinze ans, mais financé par 5 Md$ de dette et une dilution permanente. Revenus 611 M$ (+167 %), perte nette 250 M$, flux libre très négatif. Close du 25 septembre, aucun ordre.",
+    "tags": "us,equities,ai-chain,technology,speculative",
+    "grade": "C+",
+    "href": "/analyses/APLD/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "RDDT",
+    "exchange": "NYSE · Médias sociaux et publicité en ligne",
+    "name": "RDDT — Reddit : revenus +61 %, marge 91 %, flux libre positif, sans dette ; mais titre sous se...",
+    "title": "RDDT — Reddit : revenus +61 %, marge 91 %, flux libre positif, sans dette ; mais titre sous se...",
+    "desc": "Reddit : +61 % de revenus et 91 % de marge brute, mais un titre cassé depuis juillet et une dépendance au trafic de recherche que l’IA menace. Dossier au close du 25 septembre 2026, statut surveiller, aucune entrée au cours actuel.",
+    "tags": "us,equities,comms,ai,technology",
+    "grade": "B",
+    "href": "/analyses/RDDT/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "CRWD",
+    "exchange": "NASDAQ · Cybersécurité en nuage",
+    "name": "CRWD — CrowdStrike : ARR en accélération, valorisation extrême, titre replié depuis le record ...",
+    "title": "CRWD — CrowdStrike : ARR en accélération, valorisation extrême, titre replié depuis le record ...",
+    "desc": "CrowdStrike : le meilleur trimestre de son histoire, un cours retombé sous son record, des dirigeants qui ont vendu pendant la hausse. Dossier au close du 25 septembre 2026, statut surveiller.",
+    "tags": "us,equities,ai-chain,software,technology",
+    "grade": "B",
+    "href": "/analyses/CRWD/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "LITE",
+    "exchange": "NASDAQ · Optique pour centres de données et télécoms : transcepteurs, lasers et composants photoniques",
+    "name": "LITE — Lumentum : revenus +83 % à 3,01 Md$, EBITDA 789 M$, NVIDIA investit 2,0 Md$ ; mais EV/r...",
+    "title": "LITE — Lumentum : revenus +83 % à 3,01 Md$, EBITDA 789 M$, NVIDIA investit 2,0 Md$ ; mais EV/r...",
+    "desc": "Lumentum : l’optique qui relie les puces d’IA dans les centres de données, chiffre d’affaires quasi doublé à 3,01 Md$ et adossé à 2,0 Md$ de NVIDIA. Mais 27× les revenus contre 8× pour les pairs optiques, perte GAAP comptable, convertibles dilutives. Close du 25 septembre 2026, aucun ordre.",
+    "tags": "us,semis,ai-chain,hardware,technology",
+    "grade": "B-",
+    "href": "/analyses/LITE/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "ORCL",
+    "exchange": "NYSE · Logiciels et infrastructure cloud",
+    "name": "ORCL — Oracle : infrastructure cloud +121 %, RPO de 664 Md$, mais flux libre négatif et diluti...",
+    "title": "ORCL — Oracle : infrastructure cloud +121 %, RPO de 664 Md$, mais flux libre négatif et diluti...",
+    "desc": "Oracle : un carnet de commandes géant, une facture d’investissement qui l’est tout autant, et un titre qui casse ses plus bas post-résultats. Dossier au close du 25 septembre 2026, statut surveiller, aucune entrée.",
+    "tags": "us,equities,ai-chain,software,technology",
+    "grade": "B-",
+    "href": "/analyses/ORCL/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "S",
     "exchange": "NYSE · Cybersécurité : protection des postes, du cloud et de l’identité (XDR)",
     "name": "S — SentinelOne : ARR +22 %, EV/revenus 6,9× contre 49× pour CrowdStrike ; perte GAAP, diri...",
@@ -1830,19 +1908,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,ai-chain,software,technology",
     "grade": "B-",
     "href": "/analyses/MDB/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "HPE",
-    "exchange": "NYSE · Serveurs, réseau, stockage et financement d’équipements",
-    "name": "HPE — revenus +34 %, réseau +74,9 % avec Juniper, prévision relevée ; titre à 62,33 $, sous l...",
-    "title": "HPE — revenus +34 %, réseau +74,9 % avec Juniper, prévision relevée ; titre à 62,33 $, sous l...",
-    "desc": "Hewlett Packard Enterprise : Juniper qui double le réseau, des revenus à +34 % et un titre revenu sous son sommet de juin. Dossier au close du 23 septembre 2026, statut surveiller.",
-    "tags": "us,equities,ai-chain,technology,hardware",
-    "grade": "B-",
-    "href": "/analyses/HPE/",
     "date": ""
   },
   {
@@ -2043,19 +2108,6 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "CRWD",
-    "exchange": "NASDAQ · Cybersécurité en nuage",
-    "name": "CRWD — CrowdStrike : accélération de l’ARR, valorisation extrême et titre étendu ; niveaux à s...",
-    "title": "CRWD — CrowdStrike : accélération de l’ARR, valorisation extrême et titre étendu ; niveaux à s...",
-    "desc": "CrowdStrike : le meilleur trimestre de son histoire, un cours au record, des dirigeants qui vendent. Dossier au close du 23 septembre 2026, statut surveiller.",
-    "tags": "us,equities,ai-chain,software,technology",
-    "grade": "B",
-    "href": "/analyses/CRWD/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
     "ticker": "NVDA",
     "exchange": "NASDAQ · Semi-conducteurs et plateformes de calcul pour l’IA",
     "name": "NVDA — NVIDIA : croissance record, engagements hors bilan et un cours plafonné sous son record...",
@@ -2077,19 +2129,6 @@ window.searchDataPrebuilt = [
     "tags": "us,crypto,financials,speculative,small-cap",
     "grade": "C",
     "href": "/analyses/PURR/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "ORCL",
-    "exchange": "NYSE · Logiciels et infrastructure cloud",
-    "name": "ORCL — Oracle : croissance de l’infrastructure cloud, financement par dette et par actions, et...",
-    "title": "ORCL — Oracle : croissance de l’infrastructure cloud, financement par dette et par actions, et...",
-    "desc": "Oracle : un carnet de commandes géant, une facture d’investissement qui l’est tout autant. Dossier au close du 23 septembre 2026, statut surveiller.",
-    "tags": "us,equities,ai-chain,software,technology",
-    "grade": "B-",
-    "href": "/analyses/ORCL/",
     "date": ""
   },
   {
@@ -2493,19 +2532,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,ai-chain,infrastructure,communication-services",
     "grade": "C+",
     "href": "/analyses/NBIS/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "APLD",
-    "exchange": "NASDAQ · Technology",
-    "name": "APLD — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "title": "APLD — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "desc": "APLD: individual ai/hpc infrastructure beta dossier with official SEC review and actionable trade state.",
-    "tags": "us,equities,ai-chain,infrastructure,technology",
-    "grade": "D+",
-    "href": "/analyses/APLD/",
     "date": ""
   },
   {
@@ -3460,19 +3486,6 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "RDDT",
-    "exchange": "NYSE · Communication Services",
-    "name": "RDDT — Analyse complete de Reddit (RDDT) : Revenue +70%, marge nette 24%, RSI 26 oversold. Opp...",
-    "title": "RDDT — Analyse complete de Reddit (RDDT) : Revenue +70%, marge nette 24%, RSI 26 oversold. Opp...",
-    "desc": "RDDT analysis: Reddit, Inc. opéré la plus grande plateforme de communautes en ligne au monde, avec plus de 121 millions d'utilisateurs actifs quotidiens et 471 millions hebdom",
-    "tags": "us,tech,financials",
-    "grade": "B",
-    "href": "/analyses/RDDT/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
     "ticker": "MTB",
     "exchange": "NYSE · Financial Services",
     "name": "MTB — Quality regional bank, score 88/100. Entry $225.12, target $239.00, R/R 1.94.",
@@ -4300,19 +4313,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,semis,ai,speculative,trade-idea",
     "grade": "B+",
     "href": "/analyses/POET/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "LITE",
-    "exchange": "NASDAQ • Technology • Communication Equipment\n    — Photonics / AI Datacenter",
-    "name": "LITE — Photonics powerhouse riding AI datacenter wave. 65.5% revenue growth, $2.1B revenue, an...",
-    "title": "LITE — Photonics powerhouse riding AI datacenter wave. 65.5% revenue growth, $2.1B revenue, an...",
-    "desc": "Institutional-grade analysis of Lumentum Holdings (LITE): AI/datacenter photonics leader, 65.5% revenue growth, 4 consecutive EPS beats. Target $655.",
-    "tags": "us,tech,semis,ai,trade-idea",
-    "grade": "B+",
-    "href": "/analyses/LITE/",
     "date": ""
   },
   {

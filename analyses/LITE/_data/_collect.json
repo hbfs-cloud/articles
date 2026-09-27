@@ -1,0 +1,822 @@
+{
+  "contract_version": "1.0",
+  "workflow": "analyse",
+  "plan": "plans/analyse.json",
+  "plan_sha256": "f54acbc8ad7bedcd138edec019fc5df0098570220074f504610952749a472048",
+  "input_sha256": "f8463ac108d3d57c596c328551706e64a74123adc5fcf3d85c58ccf77a6326b5",
+  "resolved_input": {
+    "artifact": "analyses/LITE/index.html",
+    "equity_reference_close": "2026-09-25",
+    "crypto_completed_refdate": null,
+    "as_of_timestamp": "2026-09-27T20:58:19.276Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "equity_reference_close": "2026-09-25"
+            }
+          }
+        ]
+      },
+      {
+        "name": "price-fundamentals",
+        "calls": [
+          {
+            "as": "instrument",
+            "server": "marketdata",
+            "tool": "GetInstruments",
+            "args": {
+              "symbols": "LITE",
+              "bars_depth": 300
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "bars",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "LITE",
+              "limit": 300,
+              "as_of_timestamp": "2026-09-27T20:58:19.276Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-25"
+            }
+          },
+          {
+            "as": "fundamentals",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "profile,financials,stats,earnings_quarterly,earnings_reactions,earnings_surprises,earnings_yearly,calendar,analyst_trend,holders,dividends",
+              "symbols": "LITE"
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true,
+              "note": " Current-only snapshot: disclose collection time; never represent as reconstructed at refdate. Filing dates must be checked individually."
+            }
+          },
+          {
+            "as": "technicals",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "technicals,support_resistance,volume_profile,obv,trading_signals",
+              "symbols": "LITE",
+              "end_date": "2026-09-25"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "current_correlations",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "correlations",
+              "symbols": "LITE"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "note": "Current-only context, not reconstructed at refdate; price correlations are separately calculated on certified comparison bars."
+            }
+          }
+        ]
+      },
+      {
+        "name": "blast-radius",
+        "calls": [
+          {
+            "as": "rank_beta",
+            "server": "marketdata",
+            "tool": "RankBeta",
+            "args": {
+              "reference": "LITE",
+              "as_of": "2026-09-25",
+              "lookback_days": 180,
+              "min_overlap": 60,
+              "min_correlation": 0.25,
+              "min_dollar_adv": 10000000,
+              "min_price": 2,
+              "top_k": 50,
+              "universe_asset": "stock",
+              "universe_region": "US"
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            }
+          },
+          {
+            "as": "comparison_bars",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "COHR,AAOI,MTSI,POET,CRDO,MRVL,ALAB,CIEN,ANET,CSCO,AVGO,FN,TSM,NVDA,AMZN,SMH,SOXX,XLK",
+              "start_date": "2025-09-25",
+              "limit": 180,
+              "include_partial": false,
+              "force_async": true,
+              "as_of_timestamp": "2026-09-27T20:58:19.276Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-09-25"
+            }
+          },
+          {
+            "as": "comparison_context",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "metadata,financials,stats,technicals,earnings_reactions,earnings_surprises,analyst_trend,short_interest,sec_catalysts",
+              "symbols": "COHR,AAOI,MTSI,POET,CRDO,MRVL,ALAB,CIEN,ANET,CSCO,AVGO,FN,TSM,NVDA,AMZN,SMH,SOXX,XLK",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true,
+              "note": "Current-only context: label observation time and never present it as point-in-time at refdate.",
+              "client_applicability": {
+                "mode": "not_applicable",
+                "reason": "Le 10-K FY2026 divulgue deux clients finaux depassant 10 pourcent du chiffre d affaires (Customer A 26,6 pourcent, Customer B 15,0 pourcent en 2026) de facon anonymisee, sans nommer d entite cotee identifiable comme client documente.",
+                "evidence_path": "analyses/LITE/_primary/fy26-10k__lite-20260627.htm",
+                "evidence_sha256": "65e3c7d51e7acbb1e315664e97463a6f8cd6d36c108a0ec36552f98913ffb4c3"
+              }
+            }
+          },
+          {
+            "as": "comparison_earnings",
+            "server": "marketdata",
+            "tool": "GetEarningsCalendarFiltered",
+            "args": {
+              "symbols": "COHR,AAOI,MTSI,POET,CRDO,MRVL,ALAB,CIEN,ANET,CSCO,AVGO,FN,TSM,NVDA,AMZN,SMH,SOXX,XLK",
+              "days_ahead": 14,
+              "include_implied_move": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "market_regime",
+            "server": "marketdata",
+            "tool": "GetMarketContext",
+            "args": {
+              "facets": "regime",
+              "symbol": "LITE"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "note": "Current regime context; observation time must be displayed and it is not point-in-time evidence for refdate."
+            }
+          },
+          {
+            "as": "symbol_seasonality",
+            "server": "marketdata",
+            "tool": "GetMarketContext",
+            "args": {
+              "facets": "seasonality",
+              "symbol": "LITE"
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true,
+              "note": "Current calculation; report period, sample and warnings, never backfill a historical as_of."
+            }
+          }
+        ]
+      },
+      {
+        "name": "risk-evidence",
+        "calls": [
+          {
+            "as": "sec_evidence",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "sec_filings,sec_catalysts,insider_coverage,flags",
+              "symbols": "LITE",
+              "days": 365
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true,
+              "note": "Primary anti-dilution input: offerings, ATM, shelf, warrants and convertibles. Current-only snapshot: disclose collection time; never represent as reconstructed at refdate. Filing dates must be checked individually."
+            }
+          },
+          {
+            "as": "corporate_actions",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "news,flags",
+              "symbols": "LITE",
+              "end_date": "2026-09-25",
+              "days": 180
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "insiders",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "insider,insider_transactions,institutional_holdings",
+              "symbols": "LITE",
+              "end_date": "2026-09-25",
+              "days": 365
+            },
+            "freshness": {
+              "max_age_h": 96,
+              "required": true
+            }
+          },
+          {
+            "as": "insider_current",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "insider_ownership",
+              "symbols": "LITE"
+            },
+            "freshness": {
+              "max_age_h": 96,
+              "required": true,
+              "note": "Current projection; never label as point-in-time at refdate."
+            }
+          },
+          {
+            "as": "symbol_signals",
+            "server": "marketdata",
+            "tool": "GetSymbolSignals",
+            "args": {
+              "symbol": "LITE"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "earnings_risk",
+            "server": "marketdata",
+            "tool": "GetEarningsCalendarFiltered",
+            "args": {
+              "symbols": "LITE",
+              "days_ahead": 14,
+              "include_implied_move": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "context",
+        "detached": true,
+        "calls": [
+          {
+            "as": "short_squeeze",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "short_interest,ctb,ctb_history,ftd_threshold,finra_short_volume",
+              "symbols": "LITE",
+              "end_date": "2026-09-25",
+              "days": 365
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": false,
+              "note": "Optional short-interest and borrow coverage. Missing CTB or lender coverage must be disclosed and never interpreted as zero borrow cost or neutral squeeze risk."
+            }
+          },
+          {
+            "as": "comparison_calendar_ctb",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "calendar,ctb",
+              "symbols": "COHR,AAOI,MTSI,POET,CRDO,MRVL,ALAB,CIEN,ANET,CSCO,AVGO,FN,TSM,NVDA,AMZN,SMH,SOXX,XLK",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": false,
+              "note": "Optional comparison calendar and borrow-cost coverage. Missing, stale or timed-out cells stay explicit and cannot neutralize the required economic comparison context."
+            }
+          },
+          {
+            "as": "analyst_actions",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "analyst_actions",
+              "symbols": "LITE"
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": false,
+              "note": "Optional current analyst-action feed. Unavailable coverage must be disclosed and never represented as no analyst activity."
+            }
+          },
+          {
+            "as": "vwap",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "vwap",
+              "symbols": "LITE",
+              "end_date": "2026-09-25"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": false,
+              "note": "Optional intraday-derived VWAP. Missing intraday bars must remain explicit and must not block a daily analysis."
+            }
+          },
+          {
+            "as": "options",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "options_chain,vol_surface,options_history,unusual_options,max_pain",
+              "symbols": "LITE",
+              "end_date": "2026-09-25",
+              "max_expirations": 3,
+              "moneyness_min": 0.8,
+              "moneyness_max": 1.2
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": false,
+              "note": "Optional derivatives coverage because some listed equities have no option chain. Absence must be disclosed and never converted into a neutral options signal."
+            }
+          },
+          {
+            "as": "move_explanation",
+            "server": "marketdata",
+            "tool": "ExplainSymbolMove",
+            "args": {
+              "symbol": "LITE"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": false,
+              "note": "Current explanatory context; an empty catalyst list remains insufficient evidence."
+            }
+          },
+          {
+            "as": "sentiment",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "sentiment_overall,sentiment_stocktwits,sentiment_reddit,news",
+              "symbols": "LITE",
+              "end_date": "2026-09-25",
+              "days": 14
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": false
+            }
+          },
+          {
+            "as": "peers",
+            "server": "marketdata",
+            "tool": "GetReferentialData",
+            "args": {
+              "correlated_with": "LITE"
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": false,
+              "note": "Current-only discovery input; never use as point-in-time evidence."
+            }
+          },
+          {
+            "as": "search_trends",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "trends",
+              "symbols": "LITE"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": false,
+              "note": "Optional Google search interest, not price trend. Missing coverage must be disclosed and never replaced by zero."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "analyses/LITE/index.html",
+  "reference_date": "2026-09-25",
+  "equity_reference_close": "2026-09-25",
+  "crypto_completed_refdate": null,
+  "started_at": "2026-09-27T20:58:19.276Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 304,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 303,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "4af98fecfe28705f45e4fb4ff4a1047080dba93301f48850b912c633751bc120"
+        }
+      ]
+    },
+    {
+      "name": "price-fundamentals",
+      "ms": 52982,
+      "calls": [
+        {
+          "as": "instrument",
+          "server": "marketdata",
+          "tool": "GetInstruments",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 31402,
+          "wait_ms": 30641,
+          "error": null,
+          "output_sha256": "4d3f44ed4db0f8d6a64eec7009e20322a8a8fd2c4f9a5bbce892c49f949bb9a7"
+        },
+        {
+          "as": "bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 6127,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "4ccc1a83a441988620847082f03eb84abb01c5ccef17d3b0ac6294374d301afa"
+        },
+        {
+          "as": "fundamentals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 3843,
+          "wait_ms": 1067,
+          "error": null,
+          "output_sha256": "ad9abb5518f7e333787e7e3ada1ef10670fe3e2e62b09ab54efe87ce2f3c27ed"
+        },
+        {
+          "as": "technicals",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 5840,
+          "wait_ms": 2074,
+          "error": null,
+          "output_sha256": "cf0e0c4ecac5c05eaa0135f59bcdaa7198e362e1aee5d341f4234fc178a9b2c4"
+        },
+        {
+          "as": "current_correlations",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 22340,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "5c3c644e0ee26d9746aaf37511fb0cb761aacd0ecd3834a7dccaf4bc42f1b572"
+        }
+      ]
+    },
+    {
+      "name": "blast-radius",
+      "ms": 19860,
+      "calls": [
+        {
+          "as": "rank_beta",
+          "server": "marketdata",
+          "tool": "RankBeta",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 17764,
+          "wait_ms": 1,
+          "error": null,
+          "output_sha256": "80be7997228f684107042b47fd8f6e6cc85fad6e78fd6966c799b4f5c2d14afc"
+        },
+        {
+          "as": "comparison_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1998,
+          "wait_ms": 104,
+          "error": null,
+          "output_sha256": "cdfd23a4e017284acaefe04826a7b99a7251304ae67ca15b925b5e410eed9b6a"
+        },
+        {
+          "as": "comparison_context",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 4993,
+          "wait_ms": 2097,
+          "error": null,
+          "output_sha256": "e918568e8f6382468f124b6c88d6e2892dee2eee213f67ee144b2a454d9d8718"
+        },
+        {
+          "as": "comparison_earnings",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 4746,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "4ebc56000b3904c34031965f3ede4685c5e465cfb73675f017e73a70b8ef7299"
+        },
+        {
+          "as": "market_regime",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 4901,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "295d5bed0a2c4d1ed3eb0ebf7c98666d843d729549338fdb24341d772d119ab2"
+        },
+        {
+          "as": "symbol_seasonality",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 5996,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "b440e1659905fa71126bf4df170706e3df43f35429616fc7cb7182bbfad0796d"
+        }
+      ]
+    },
+    {
+      "name": "risk-evidence",
+      "ms": 27138,
+      "calls": [
+        {
+          "as": "sec_evidence",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 845,
+          "wait_ms": 66,
+          "error": null,
+          "output_sha256": "3cf82752f032b5f43db1866a37c04707b54581fb34465a391786396834e59138"
+        },
+        {
+          "as": "corporate_actions",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1779,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "87ea0c7a7810a7ab29a0ea4b25587a4302bc41f09f30aa838d4578d6d8fb322e"
+        },
+        {
+          "as": "insiders",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 27071,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "3640b24ac4dc6709867bdc993c00a89da79964faa85079ab1778ce2716a6f006"
+        },
+        {
+          "as": "insider_current",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 4115,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "4483bc882dfbba55e083d39154f83d3e9c16d4bd8ca746e42bf745a15cd0f1af"
+        },
+        {
+          "as": "symbol_signals",
+          "server": "marketdata",
+          "tool": "GetSymbolSignals",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 11427,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "c34f57df7393cc65963b06bc4d7b65aaff773ffe8c4984f5bc1262971dec888f"
+        },
+        {
+          "as": "earnings_risk",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 5992,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "c3ce4b7df8dd161a3946ab7a7db98495e8a71119bf199f271b3d8d847226331a"
+        }
+      ]
+    },
+    {
+      "name": "context",
+      "ms": 20438,
+      "calls": [
+        {
+          "as": "short_squeeze",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": false,
+          "detached": true,
+          "ok": false,
+          "ms": 1039,
+          "wait_ms": 62,
+          "error": "marketdata QueryData incomplete: ctb[LITE]: failed to fetch CTB: received status 444; ctb_history[LITE]: failed to fetch CTB history: received status 444; 2 facet(s) failed",
+          "output_sha256": "09007b5d00d3a2f488a7afb9de1420afe7895277680876d5f825131bc9b03865",
+          "artifact_preserved": true
+        },
+        {
+          "as": "comparison_calendar_ctb",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": false,
+          "detached": true,
+          "ok": false,
+          "ms": 9098,
+          "wait_ms": 7123,
+          "error": "marketdata QueryData incomplete: calendar[CIEN]: stale; ctb[COHR]: failed to fetch CTB: received status 444; ctb[AAOI]: failed to fetch CTB: received status 444",
+          "output_sha256": "976719edd3c4831757f1f9b8e99f0e9d413a677b59982052f3d1c6ca1330fc9c",
+          "artifact_preserved": true
+        },
+        {
+          "as": "analyst_actions",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": false,
+          "detached": true,
+          "ok": true,
+          "ms": 2979,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "4a0abb58b7c40f3574fa0859bc489e9430cd150fc8b739a6fac11fd342c74887"
+        },
+        {
+          "as": "vwap",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": false,
+          "detached": true,
+          "ok": true,
+          "ms": 4032,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "d270774914ac87f821505f077da353081ad6fa6a87b9d0ce0077154f2a37b9e3"
+        },
+        {
+          "as": "options",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": false,
+          "detached": true,
+          "ok": true,
+          "ms": 7064,
+          "wait_ms": 2085,
+          "error": null,
+          "output_sha256": "9401cda1bdd7fff1f2c62019ee7c1269b6f3b1d373d4666848b180ef435466a9"
+        },
+        {
+          "as": "move_explanation",
+          "server": "marketdata",
+          "tool": "ExplainSymbolMove",
+          "required": false,
+          "detached": true,
+          "ok": true,
+          "ms": 13313,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "43530a7c19f7000e507f4ceceda49d9459c807d8b8236b27eb118c61497ded12"
+        },
+        {
+          "as": "sentiment",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": false,
+          "detached": true,
+          "ok": false,
+          "ms": 10054,
+          "wait_ms": 3057,
+          "error": "marketdata QueryData incomplete: sentiment_reddit[LITE]: no Reddit data available; 1 facet(s) failed; sentiment_reddit",
+          "output_sha256": "420199d0807b797f3ddd5a3bef93c5335d9ff8d8b0209226daf40dc8e8ce4265",
+          "artifact_preserved": true
+        },
+        {
+          "as": "peers",
+          "server": "marketdata",
+          "tool": "GetReferentialData",
+          "required": false,
+          "detached": true,
+          "ok": true,
+          "ms": 7991,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "646e20b580ac4b468237260131e2a46bf569e36d088d359384bb9337ae7a24a4"
+        },
+        {
+          "as": "search_trends",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": false,
+          "detached": true,
+          "ok": false,
+          "ms": 8018,
+          "wait_ms": 0,
+          "error": "marketdata QueryData incomplete: trends[LITE]: no Google Trends data available; facet failed; trends",
+          "output_sha256": "65299effb08c2efe92479b12a9e0bfb66fc9320d9b4c5e0220bf8ffc55b59050",
+          "artifact_preserved": true
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-09-27T21:00:20.278Z",
+  "failures": 0,
+  "executed_calls": 27,
+  "skipped_calls": 0
+}
