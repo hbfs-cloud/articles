@@ -1744,6 +1744,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "DELL",
+    "exchange": "NYSE · Serveurs d’IA, stockage, réseau et ordinateurs",
+    "name": "DELL — revenus +58 %, prévision annuelle relevée à 192 Md$, coûts des mémoires en forte hausse...",
+    "title": "DELL — revenus +58 %, prévision annuelle relevée à 192 Md$, coûts des mémoires en forte hausse...",
+    "desc": "Dell Technologies : 47 Md$ de revenus au trimestre, 95 Md$ de carnet de serveurs d’IA et un titre multiplié par cinq depuis janvier. Rebond de 5 % le 25 septembre après une note de Morgan Stanley et l’entrée de Gemini dans la gamme XPS. Dossier au close du 25 septembre 2026, statut surveiller.",
+    "tags": "us,equities,ai-chain,technology,hardware",
+    "grade": "B",
+    "href": "/analyses/DELL/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "HPE",
     "exchange": "NYSE · Serveurs, réseau, stockage et financement d’équipements",
     "name": "HPE — revenus +34 %, réseau +74,9 % avec Juniper, prévision relevée ; titre à 62,94 $, rejeté...",
@@ -1908,19 +1921,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,ai-chain,software,technology",
     "grade": "B-",
     "href": "/analyses/MDB/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "DELL",
-    "exchange": "NYSE · Serveurs d’IA, stockage, réseau et ordinateurs",
-    "name": "DELL — revenus +58 %, prévision annuelle relevée à 192 Md$, coûts des mémoires en forte hausse...",
-    "title": "DELL — revenus +58 %, prévision annuelle relevée à 192 Md$, coûts des mémoires en forte hausse...",
-    "desc": "Dell Technologies : 47 Md$ de revenus au trimestre, 95 Md$ de carnet de serveurs d’IA et un titre multiplié par cinq depuis janvier. Dossier au close du 23 septembre 2026, statut surveiller.",
-    "tags": "us,equities,ai-chain,technology,hardware",
-    "grade": "B",
-    "href": "/analyses/DELL/",
     "date": ""
   },
   {

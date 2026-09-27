@@ -1,14 +1,14 @@
 {
   "contract_version": "1.0",
   "workflow": "analyse",
-  "plan": "plans/analyse-webull.json",
-  "plan_sha256": "2c6bff345ad7ab2e9b81d5658e5bb89b2732f25f6c750afd888284b4872b9f9e",
-  "input_sha256": "c9f340ce61516891d0ccf625939382c59f26ee1ff81772fa8f1c6027c8f9c88f",
+  "plan": "plans/analyse.json",
+  "plan_sha256": "f54acbc8ad7bedcd138edec019fc5df0098570220074f504610952749a472048",
+  "input_sha256": "e3f1ada79199bf373d580c5adfd1514f85f987c29a697cee3d0d84a2d652321e",
   "resolved_input": {
     "artifact": "analyses/DELL/index.html",
-    "equity_reference_close": "2026-09-23",
+    "equity_reference_close": "2026-09-25",
     "crypto_completed_refdate": null,
-    "as_of_timestamp": "2026-09-24T18:34:21.395Z",
+    "as_of_timestamp": "2026-09-27T22:39:15.529Z",
     "waves": [
       {
         "name": "preflight",
@@ -24,7 +24,7 @@
               "required": true
             },
             "assert": {
-              "equity_reference_close": "2026-09-23"
+              "equity_reference_close": "2026-09-25"
             }
           }
         ]
@@ -53,18 +53,16 @@
               "types": "bars_daily",
               "symbols": "DELL",
               "limit": 300,
-              "as_of_timestamp": "2026-09-24T18:34:21.395Z",
-              "completion_policy": "completed_only",
-              "source": "webull"
+              "as_of_timestamp": "2026-09-27T22:39:15.529Z",
+              "completion_policy": "completed_only"
             },
             "freshness": {
               "max_age_h": 24,
               "required": true,
               "expects_close": true,
               "asset_calendar": "us_equity_exchange_sessions",
-              "expected_completed_end": "2026-09-23"
-            },
-            "note": "Source Webull : le 2026-09-24, les barres Yahoo de PURR, MSTR, SBET, ASST et HYPD présentent des séances manquantes et Tiingo est en cooldown (limite de débit fournisseur) ; Webull sert des séries continues certifiées completed_only."
+              "expected_completed_end": "2026-09-25"
+            }
           },
           {
             "as": "fundamentals",
@@ -85,15 +83,14 @@
             "server": "marketdata",
             "tool": "QueryData",
             "args": {
-              "types": "technicals,support_resistance,volume_profile,obv",
+              "types": "technicals,support_resistance,volume_profile,obv,trading_signals",
               "symbols": "DELL",
-              "end_date": "2026-09-23"
+              "end_date": "2026-09-25"
             },
             "freshness": {
               "max_age_h": 24,
               "required": true
-            },
-            "note": "trading_signals retiré le 2026-09-24 : le fournisseur tiers de motifs (americanbulls) expire à chaque appel ; facette sans valeur décisionnelle, déclarée indisponible dans la fiche."
+            }
           },
           {
             "as": "current_correlations",
@@ -120,7 +117,7 @@
             "tool": "RankBeta",
             "args": {
               "reference": "DELL",
-              "as_of": "2026-09-23",
+              "as_of": "2026-09-25",
               "lookback_days": 180,
               "min_overlap": 60,
               "min_correlation": 0.25,
@@ -141,23 +138,21 @@
             "tool": "QueryData",
             "args": {
               "types": "bars_daily",
-              "symbols": "HPE,SMCI,HPQ,NTAP,IBM,CSCO,NVDA,AMD,INTC,MU,STX,WDC,CRWV,ORCL,MSFT,VRT,ANET,SMH,XLK,QQQ",
-              "start_date": "2026-03-26",
+              "symbols": "HPE,SMCI,HPQ,IBM,CSCO,NVDA,AMD,INTC,MU,WDC,ORCL,MSFT,VRT,ANET,SMH,XLK,QQQ",
+              "start_date": "2025-09-25",
               "limit": 180,
               "include_partial": false,
               "force_async": true,
-              "as_of_timestamp": "2026-09-24T18:34:21.395Z",
-              "completion_policy": "completed_only",
-              "source": "webull"
+              "as_of_timestamp": "2026-09-27T22:39:15.529Z",
+              "completion_policy": "completed_only"
             },
             "freshness": {
               "max_age_h": 24,
               "required": true,
               "expects_close": true,
               "asset_calendar": "us_equity_exchange_sessions",
-              "expected_completed_end": "2026-09-23"
-            },
-            "note": "Source Webull : le 2026-09-24, les barres Yahoo de PURR, MSTR, SBET, ASST et HYPD présentent des séances manquantes et Tiingo est en cooldown (limite de débit fournisseur) ; Webull sert des séries continues certifiées completed_only."
+              "expected_completed_end": "2026-09-25"
+            }
           },
           {
             "as": "comparison_context",
@@ -165,7 +160,7 @@
             "tool": "QueryData",
             "args": {
               "types": "metadata,financials,stats,technicals,earnings_reactions,earnings_surprises,analyst_trend,short_interest,sec_catalysts",
-              "symbols": "HPE,SMCI,HPQ,NTAP,IBM,CSCO,NVDA,AMD,INTC,MU,STX,WDC,CRWV,ORCL,MSFT,VRT,ANET,SMH,XLK,QQQ",
+              "symbols": "HPE,SMCI,HPQ,IBM,CSCO,NVDA,AMD,INTC,MU,WDC,ORCL,MSFT,VRT,ANET,SMH,XLK,QQQ",
               "force_async": true
             },
             "freshness": {
@@ -174,9 +169,9 @@
               "note": "Current-only context: label observation time and never present it as point-in-time at refdate.",
               "client_applicability": {
                 "mode": "not_applicable",
-                "reason": "Un client à 12 % du chiffre d'affaires de l'exercice, non nommé.",
-                "evidence_path": "analyses/DELL/_review/client-applicability.md",
-                "evidence_sha256": "d76c6791db46765aa47ef0e3802ae4f27bcba5c4cddeba64cde5cf7ef9603a75"
+                "reason": "Client à ~12% du CA non nommé dans le 10-K FY26 (concentration divulguée sans identité)",
+                "evidence_path": "analyses/DELL/_primary/fy26-10k__dell-20260130.htm",
+                "evidence_sha256": "b19cdb9c164c81f240d811ba87d8c02dc85a0ac06f1e5babd64850bbccd7183b"
               }
             }
           },
@@ -185,7 +180,7 @@
             "server": "marketdata",
             "tool": "GetEarningsCalendarFiltered",
             "args": {
-              "symbols": "HPE,SMCI,HPQ,NTAP,IBM,CSCO,NVDA,AMD,INTC,MU,STX,WDC,CRWV,ORCL,MSFT,VRT,ANET,SMH,XLK,QQQ",
+              "symbols": "HPE,SMCI,HPQ,IBM,CSCO,NVDA,AMD,INTC,MU,WDC,ORCL,MSFT,VRT,ANET,SMH,XLK,QQQ",
               "days_ahead": 14,
               "include_implied_move": true
             },
@@ -249,7 +244,7 @@
             "args": {
               "types": "news,flags",
               "symbols": "DELL",
-              "end_date": "2026-09-23",
+              "end_date": "2026-09-25",
               "days": 180
             },
             "freshness": {
@@ -264,7 +259,7 @@
             "args": {
               "types": "insider,insider_transactions,institutional_holdings",
               "symbols": "DELL",
-              "end_date": "2026-09-23",
+              "end_date": "2026-09-25",
               "days": 365
             },
             "freshness": {
@@ -325,7 +320,7 @@
             "args": {
               "types": "short_interest,ctb,ctb_history,ftd_threshold,finra_short_volume",
               "symbols": "DELL",
-              "end_date": "2026-09-23",
+              "end_date": "2026-09-25",
               "days": 365
             },
             "freshness": {
@@ -340,7 +335,7 @@
             "tool": "QueryData",
             "args": {
               "types": "calendar,ctb",
-              "symbols": "HPE,SMCI,HPQ,NTAP,IBM,CSCO,NVDA,AMD,INTC,MU,STX,WDC,CRWV,ORCL,MSFT,VRT,ANET,SMH,XLK,QQQ",
+              "symbols": "HPE,SMCI,HPQ,IBM,CSCO,NVDA,AMD,INTC,MU,WDC,ORCL,MSFT,VRT,ANET,SMH,XLK,QQQ",
               "force_async": true
             },
             "freshness": {
@@ -370,7 +365,7 @@
             "args": {
               "types": "vwap",
               "symbols": "DELL",
-              "end_date": "2026-09-23"
+              "end_date": "2026-09-25"
             },
             "freshness": {
               "max_age_h": 24,
@@ -385,7 +380,7 @@
             "args": {
               "types": "options_chain,vol_surface,options_history,unusual_options,max_pain",
               "symbols": "DELL",
-              "end_date": "2026-09-23",
+              "end_date": "2026-09-25",
               "max_expirations": 3,
               "moneyness_min": 0.8,
               "moneyness_max": 1.2
@@ -416,7 +411,7 @@
             "args": {
               "types": "sentiment_overall,sentiment_stocktwits,sentiment_reddit,news",
               "symbols": "DELL",
-              "end_date": "2026-09-23",
+              "end_date": "2026-09-25",
               "days": 14
             },
             "freshness": {
@@ -456,14 +451,14 @@
     ]
   },
   "artifact": "analyses/DELL/index.html",
-  "reference_date": "2026-09-23",
-  "equity_reference_close": "2026-09-23",
+  "reference_date": "2026-09-25",
+  "equity_reference_close": "2026-09-25",
   "crypto_completed_refdate": null,
-  "started_at": "2026-09-24T18:34:21.395Z",
+  "started_at": "2026-09-27T22:39:15.529Z",
   "waves": [
     {
       "name": "preflight",
-      "ms": 352,
+      "ms": 245,
       "calls": [
         {
           "as": "status",
@@ -472,16 +467,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 350,
+          "ms": 244,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "ea891904139a81d15a2c349b798fe19ea244ee228ce785f4400c5fe624bf1408"
+          "output_sha256": "3eb2118485ec90d48247f527f44f5f7229a3953d754bffb4ab9916ec091e273d"
         }
       ]
     },
     {
       "name": "price-fundamentals",
-      "ms": 21373,
+      "ms": 19259,
       "calls": [
         {
           "as": "instrument",
@@ -490,10 +485,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 873,
-          "wait_ms": 174,
+          "ms": 6959,
+          "wait_ms": 6139,
           "error": null,
-          "output_sha256": "1a3e6a291b6432458b9d7e33d4c5f2f5d261f46ca2b0e22432afee2ba1663f2b"
+          "output_sha256": "5fa627dd34de1770550177bb8c6f53f5fcf4ed6d4e9c6112831219b16147c697"
         },
         {
           "as": "bars",
@@ -502,10 +497,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 1827,
-          "wait_ms": 1,
+          "ms": 2246,
+          "wait_ms": 0,
           "error": null,
-          "output_sha256": "60f5f046ade212c7c97b845b18abe7c483b1e7c08292d79e587121b96cfa9e49"
+          "output_sha256": "5c3d06a59ee4d7ac474e8d4b92d626bfe3b2e4b4772578c8fecb026e618f80d9"
         },
         {
           "as": "fundamentals",
@@ -514,10 +509,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 3767,
-          "wait_ms": 1062,
+          "ms": 3888,
+          "wait_ms": 1066,
           "error": null,
-          "output_sha256": "9709c6c216d215c45b2bcffb679384ce71752b9731490344a453dee99af05ef6"
+          "output_sha256": "63970eb5de93065a54c5806c572273c268c086fa3c9b48e8e653daedbc20336b"
         },
         {
           "as": "technicals",
@@ -526,10 +521,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 5771,
-          "wait_ms": 2065,
+          "ms": 5885,
+          "wait_ms": 2066,
           "error": null,
-          "output_sha256": "ea54a17d329965737fcdac237741ce8f7a3c4c375602606e449849ab097f88d1"
+          "output_sha256": "eb4eed66905d3daba35a90a4c3696f4c5e14f9a82ac87ebadab76b5794a521b2"
         },
         {
           "as": "current_correlations",
@@ -538,16 +533,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 19305,
+          "ms": 13119,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "be973cce1eec85d4e56714374d630a7752f551b807e608a100f799ab8b3c9861"
+          "output_sha256": "1d5399ffaed0c72f246ea8d9c797e5d08afe37cc32539000907b6ab7ac2de0a7"
         }
       ]
     },
     {
       "name": "blast-radius",
-      "ms": 18132,
+      "ms": 21174,
       "calls": [
         {
           "as": "rank_beta",
@@ -556,10 +551,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 1132,
+          "ms": 944,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "481328a9131c69452f8f64e435ff6b6bbb09ac6bb568aba73dbf17cfc8c2a305"
+          "output_sha256": "4960729667063b1e39c0c98fe34ac34303d8b55395e661dcef681afdc2841ecb"
         },
         {
           "as": "comparison_bars",
@@ -568,10 +563,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 2147,
-          "wait_ms": 217,
+          "ms": 15124,
+          "wait_ms": 13198,
           "error": null,
-          "output_sha256": "a87d4034b7efadbd98fc0450bf958949d5b1073e027effc5114fe50c5bc530c6"
+          "output_sha256": "6ef18154be34396edea922991f9cf8fc9980290a7e277a976e2988e87f597cd1"
         },
         {
           "as": "comparison_context",
@@ -580,10 +575,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 5092,
-          "wait_ms": 2158,
+          "ms": 18073,
+          "wait_ms": 15143,
           "error": null,
-          "output_sha256": "4008c53dbb3e40d28ec419c8e4a61532ec8fc553c4ff89160733142138c8068c"
+          "output_sha256": "1fdacfa249aba95a7c96197b509dda02b66f3e918d50a0d13e71b4bd068c7ba2"
         },
         {
           "as": "comparison_earnings",
@@ -592,10 +587,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 4422,
+          "ms": 5495,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "c498adbdb58ff6fd7463952c82b3988c6c82096af976c7cef78653b997a73ff6"
+          "output_sha256": "102fdb66f625fc8d83f89d1965b6d47f2b304893ced31f38af9dc0185efc5c27"
         },
         {
           "as": "market_regime",
@@ -604,10 +599,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 15973,
+          "ms": 4938,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "84153771a0d5a71dbd5061fa7975829984763efd5aad882d0fc4ad899e187f42"
+          "output_sha256": "60acea26481a7bde8222d98a8c537af0f88fd9a9df9f64c16e4a1e6b8865c8af"
         },
         {
           "as": "symbol_seasonality",
@@ -616,16 +611,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 6047,
+          "ms": 6030,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "dd306bda11df39d9ce3b890299fc3e9ec179998535ad1367d2299da0a5c6b0ab"
+          "output_sha256": "7815c3a3af99ca981150608604dabf6fb61b8ea1b3fa8198dc8e5c2ff8910cf1"
         }
       ]
     },
     {
       "name": "risk-evidence",
-      "ms": 13447,
+      "ms": 34273,
       "calls": [
         {
           "as": "sec_evidence",
@@ -634,10 +629,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 928,
-          "wait_ms": 161,
+          "ms": 856,
+          "wait_ms": 71,
           "error": null,
-          "output_sha256": "428509ef12c110deb638e69fd052dc3e3123c313736a2be5d8c4719c4c8de888"
+          "output_sha256": "354614a9176568fd1ee68ffdbaab383a7289c2d9b28e0ab9f429ba402e876f06"
         },
         {
           "as": "corporate_actions",
@@ -646,10 +641,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 1765,
+          "ms": 1785,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "a29491693a76ace7696b4547e9be436997af17222b4349b98b3a224373db6c39"
+          "output_sha256": "9aa5d88d7f4ea062b7204ec6482684ee308f92556968a3f0f1d1368a39c028b5"
         },
         {
           "as": "insiders",
@@ -658,10 +653,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 3288,
+          "ms": 34202,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "c29852ac3a74b3e0251765dfad10f324deaffbc06f5c1c9d9af93027eecfa4c3"
+          "output_sha256": "0dfdf5b3a33d6d7239b95599862f099f5dcf57f8ac6880260200238c0d6d5f53"
         },
         {
           "as": "insider_current",
@@ -670,10 +665,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 4233,
+          "ms": 4175,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "deadfdc1dd4f8bbf41a6c54f737d067f6e9133de544f8a2fb0a6db1b8561fb8e"
+          "output_sha256": "b24e25ee4ff2dce454d4a2b513d81d0e3855a83d116b2984f2c05c901c658a20"
         },
         {
           "as": "symbol_signals",
@@ -682,10 +677,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 13283,
+          "ms": 13979,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "3a5687acc00a6e0fc95af914804752016e4f3c0694bd347908ff19448dd10e5d"
+          "output_sha256": "498a18ea33dbc6c7db922364195e846cb4c1736ee4b6820d44a7e878c75a9508"
         },
         {
           "as": "earnings_risk",
@@ -694,16 +689,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 6126,
+          "ms": 5939,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "4e5ed3128c5de31dffa76ba6bbc8d66ff27164e2c56af0d6fab27c24367377f6"
+          "output_sha256": "b2aa2368b4d8be2ad496d28d3108cb761a9bbffc4d2f4f8eabdf3083ac770a54"
         }
       ]
     },
     {
       "name": "context",
-      "ms": 23055,
+      "ms": 17040,
       "calls": [
         {
           "as": "short_squeeze",
@@ -711,12 +706,11 @@
           "tool": "QueryData",
           "required": false,
           "detached": true,
-          "ok": false,
-          "ms": 1591,
-          "wait_ms": 709,
-          "error": "marketdata QueryData incomplete: ctb[DELL]: failed to fetch CTB: received status 444; ctb_history[DELL]: failed to fetch CTB history: received status 444; 2 facet(s) failed",
-          "output_sha256": "26ba372b24be5982fe3dc23677a97a71496f4d072ce03c870df4bddaffc2129c",
-          "artifact_preserved": true
+          "ok": true,
+          "ms": 1975,
+          "wait_ms": 1018,
+          "error": null,
+          "output_sha256": "47564619b9e148112d2fc881789c51373aa469c6c50196ab9606d927a0e7bce9"
         },
         {
           "as": "comparison_calendar_ctb",
@@ -724,12 +718,11 @@
           "tool": "QueryData",
           "required": false,
           "detached": true,
-          "ok": false,
-          "ms": 15738,
-          "wait_ms": 13875,
-          "error": "marketdata QueryData incomplete: calendar[HPE]: stale; ctb[HPE]: failed to fetch CTB: received status 444; ctb[SMCI]: failed to fetch CTB: received status 444",
-          "output_sha256": "61cacaef8c4e6cecf7a72bf6d959800f27df4c849d198c32db300487e1187708",
-          "artifact_preserved": true
+          "ok": true,
+          "ms": 10027,
+          "wait_ms": 8070,
+          "error": null,
+          "output_sha256": "af7fe876132acb77b361221cec1ed8584091a87c8000df060de0b4623b6e4818"
         },
         {
           "as": "analyst_actions",
@@ -738,10 +731,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 2867,
+          "ms": 2960,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "f045f1c6fb95cc6a6da2b58aae035584ba6e430897ac721b1ea5cfb35a61f822"
+          "output_sha256": "f6e2813d08f3274d1c7b5c5def03cdd4b264760fc8d17ed8de13146415ce7405"
         },
         {
           "as": "vwap",
@@ -750,10 +743,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 3867,
+          "ms": 3961,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "bd48259f4d720329375162f7766cf8a46f70878d31605ae4d4fa2570866482e0"
+          "output_sha256": "e9463444262ec598d19cb6ade34fb7d2156c9466a6253451ba0646df26f9a3d3"
         },
         {
           "as": "options",
@@ -762,10 +755,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 7601,
-          "wait_ms": 2737,
+          "ms": 8013,
+          "wait_ms": 3047,
           "error": null,
-          "output_sha256": "e4a3ee68afb9d97b8f49d1c2584924dd2bf529e5f8c2acc25357d047c61b2b5f"
+          "output_sha256": "a48ad05a3d17407390368b3fe0bcb221f4fba616f31161c6415ea5fe6ee5df42"
         },
         {
           "as": "move_explanation",
@@ -774,10 +767,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 9180,
+          "ms": 8295,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "c9c78118ce1efe9eab2a34c3c0b8a6b1593bed7ebfe4bec8fa6b4c5c226bd05a"
+          "output_sha256": "174d0b0aac8ba3017d6fc55e1a7c9f98620be453fcc09be8c102975500b548d8"
         },
         {
           "as": "sentiment",
@@ -786,10 +779,10 @@
           "required": false,
           "detached": true,
           "ok": false,
-          "ms": 10726,
-          "wait_ms": 3860,
+          "ms": 10987,
+          "wait_ms": 4016,
           "error": "marketdata QueryData incomplete: sentiment_reddit[DELL]: no Reddit data available; 1 facet(s) failed; sentiment_reddit",
-          "output_sha256": "dc1e563f36daa670bd73f621850c79e053644c9006bd737b4d29d8d4a4bdf5f7",
+          "output_sha256": "8ad1dda2e5275a21f14a7ccb0e3e1f1dc714f60b32217209ddb4b94f2f5677d8",
           "artifact_preserved": true
         },
         {
@@ -799,10 +792,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 7866,
+          "ms": 7967,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "49b17e4267d028fa18442bda493e2071d346053a0010fc3e9cd4930ac7273c9c"
+          "output_sha256": "7b9c0a6a99898c83185437d80fe4d67bf52fec9951cf07533886e7320df0563b"
         },
         {
           "as": "search_trends",
@@ -811,16 +804,16 @@
           "required": false,
           "detached": true,
           "ok": false,
-          "ms": 7986,
+          "ms": 8013,
           "wait_ms": 0,
           "error": "marketdata QueryData incomplete: trends[DELL]: no Google Trends data available; facet failed; trends",
-          "output_sha256": "bfcfe3014d5be6c3e0de9f58542311846ee20cf2e97ae179d1c2467b074ffe5f",
+          "output_sha256": "c086c089c137ce439e80b11719aa66581f4d6370d5b69ea8d904172cb0aa4385",
           "artifact_preserved": true
         }
       ]
     }
   ],
-  "finished_at": "2026-09-24T18:35:38.011Z",
+  "finished_at": "2026-09-27T22:40:47.851Z",
   "failures": 0,
   "executed_calls": 27,
   "skipped_calls": 0
