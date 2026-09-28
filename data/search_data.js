@@ -1744,6 +1744,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "EQX",
+    "exchange": "NYSE American · Or — producteur intermédiaire (Amériques)",
+    "name": "EQX — Equinox Gold (EQX) : revenus du S1 2026 de 1,63 Md$ contre 0,55 Md$, dette ramenée à 58...",
+    "title": "EQX — Equinox Gold (EQX) : revenus du S1 2026 de 1,63 Md$ contre 0,55 Md$, dette ramenée à 58...",
+    "desc": "Equinox Gold : producteur d’or intermédiaire (émetteur étranger, IFRS, USD). Revenus douze mois de 2,9 Md$, marge de 36 %, dette nette quasi nulle après la cession du Brésil, mais bêta 2,5 sur l’or et capital doublé en quinze mois. Close du 25 septembre 2026, statut surveiller.",
+    "tags": "us,gold,mining,commodity,trade-idea",
+    "grade": "B",
+    "href": "/analyses/EQX/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "NBIS",
     "exchange": "NASDAQ · Infrastructure de calcul GPU pour l’IA (cloud)",
     "name": "NBIS — Nebius (NBIS) : revenus du S1 2026 de 981 M$ contre 156 M$, 8,0 Md$ de trésorerie ; tit...",
@@ -2311,19 +2324,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,ai-chain,observed,financial-services",
     "grade": "A-",
     "href": "/analyses/LPLA/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "EQX",
-    "exchange": "NYSEAMERICAN · Basic Materials",
-    "name": "EQX — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "title": "EQX — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "desc": "EQX: individual precious-metals equity beta dossier with official SEC review and actionable trade state.",
-    "tags": "us,equities,ai-chain,metals,basic-materials",
-    "grade": "B",
-    "href": "/analyses/EQX/",
     "date": ""
   },
   {

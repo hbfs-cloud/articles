@@ -33,7 +33,9 @@ function build(cfg) {
 
   // ------------------------------------------------------------ données de marché
   const raw = K.loadRun(data, ['bars', 'fundamentals', 'comparison_bars', 'rank_beta', 'status', 'insiders', 'short_squeeze', 'comparison_earnings', 'earnings_risk', 'sec_evidence']);
-  const S = K.mainSeries(raw.bars, T, REF), { bars, N, B, idx, close, prev } = S;
+  // cfg.minBars : émetteur récemment coté (IPO/fusion) dont l'historique certifié est plus court que le
+  // défaut de 250 séances ; le seuil reste 250 quand cfg.minBars est absent.
+  const S = K.mainSeries(raw.bars, T, REF, cfg.minBars), { bars, N, B, idx, close, prev } = S;
   const tech = K.technicals(bars);
   const STP = findPath(raw.fundamentals, 'instrument_comprehensive_stats'), st = at(raw.fundamentals, STP);
   const TXP = findPath(raw.insiders, 'instrument_insider_transactions'), tx = TXP == null ? { transactions: [] } : at(raw.insiders, TXP);
@@ -317,7 +319,11 @@ function build(cfg) {
   const sourceForOut = p => { const fm = p.match(/^fundamentals\.rows\.(\d+)\./); if (fm) { const s = srcMap[+fm[1]]; return withPeerFiches(withPeers(s._src === 'gaap' ? gaap() : s._src === 'market' ? marketMath() : Pm(s._src, s._also), s._peers, s._peerField), s._peerFiches); } return sourceFor(p); };
   // Enregistrement du scénario : le validateur rejoue le multiple sur sa base déclarée (`metric`), EBITDA ou revenus.
   // Aucun multiple d'EBITDA « équivalent » n'est écrit : le champ `multiple` est toujours le multiple réellement retenu.
-  const valuationRecord = { basis: cfg.valuationBasis, metric: basis, ...scn };
+  // cfg.valuationScenario : véhicule sans exploitation (trésorerie d'actifs numériques) dont aucun multiple
+  // d'EBITDA/revenus n'a de sens ; le générateur fournit alors l'enregistrement (statut non_applicable + base
+  // d'EBITDA non positif observé, ou grille d'actif net), validé tel quel par validate-analysis-evidence.
+  const valuationRecord = (typeof cfg.valuationScenario === 'function' ? cfg.valuationScenario(ctx) : cfg.valuationScenario)
+    || { basis: cfg.valuationBasis, metric: basis, ...scn };
   const res = K.writeEvidence({ ticker: T, ref: REF, outJson: OUT_JSON, outEvidence: OUT_EVIDENCE, calcPath: rev + '/numeric-evidence.json', generator: GEN, a: aOut, inputs, sourceFor: sourceForOut, score: cfg.score,
     valuation: valuationRecord,
     extra: { template_path: TEMPLATE, template_sha256: sha(bytes(TEMPLATE)), xbrl_lib_path: XBRL_LIB, xbrl_lib_sha256: sha(bytes(XBRL_LIB)),
