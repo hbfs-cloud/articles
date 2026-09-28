@@ -1744,6 +1744,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "HOOD",
+    "exchange": "NASDAQ · Courtage de détail, crypto et services financiers",
+    "name": "HOOD — Robinhood : revenus +32 %, contrats événementiels ×10 ; titre à 119,40 $, environ 6 % s...",
+    "title": "HOOD — Robinhood : revenus +32 %, contrats événementiels ×10 ; titre à 119,40 $, environ 6 % s...",
+    "desc": "Robinhood Markets : revenus du deuxième trimestre de 1,308 Md$ (+32 %), bénéfice net de 573 M$, 28,4 millions de comptes financés. Titre payé plus de cinquante fois le bénéfice, en consolidation sous son sommet du 23 septembre. Dossier au close du 25 septembre 2026, statut surveiller.",
+    "tags": "us,equities,financials,fintech,crypto",
+    "grade": "B",
+    "href": "/analyses/HOOD/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "PURR",
     "exchange": "NASDAQ · Trésorerie d’actifs numériques (token HYPE)",
     "name": "PURR — une trésorerie en HYPE valorisée par sa valeur nette d’inventaire (0,95× au 30 juin), p...",
@@ -4690,19 +4703,6 @@ window.searchDataPrebuilt = [
     "tags": "us,industrials,trade-idea",
     "grade": "B+",
     "href": "/analyses/FDX/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "HOOD",
-    "exchange": "NASDAQ • Financial Services",
-    "name": "Robinhood Markets",
-    "title": "Robinhood Markets",
-    "desc": "Analyse technique et fondamentale complète de Robinhood Markets\n    (HOOD). Prix: $75.93, Market Cap: .",
-    "tags": "",
-    "grade": "B+",
-    "href": "/analyses/HOOD/",
     "date": ""
   },
   {
