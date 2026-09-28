@@ -1744,6 +1744,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "NBIS",
+    "exchange": "NASDAQ · Infrastructure de calcul GPU pour l’IA (cloud)",
+    "name": "NBIS — Nebius (NBIS) : revenus du S1 2026 de 981 M$ contre 156 M$, 8,0 Md$ de trésorerie ; tit...",
+    "title": "NBIS — Nebius (NBIS) : revenus du S1 2026 de 981 M$ contre 156 M$, 8,0 Md$ de trésorerie ; tit...",
+    "desc": "Nebius Group : loueur de calcul GPU coté au Nasdaq (émetteur étranger, IFRS). Revenus multipliés par plus de six sur un an, 8,0 Md$ de trésorerie et Nvidia au capital, mais exploitation déficitaire et valorisation proche de 48 fois les revenus. Close du 25 septembre 2026, statut surveiller.",
+    "tags": "us,equities,ai-chain,infrastructure,communication-services",
+    "grade": "C+",
+    "href": "/analyses/NBIS/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "DELL",
     "exchange": "NYSE · Serveurs d’IA, stockage, réseau et ordinateurs",
     "name": "DELL — revenus +58 %, prévision annuelle relevée à 192 Md$, coûts des mémoires en forte hausse...",
@@ -2519,19 +2532,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,ai-chain,infrastructure,financial-services",
     "grade": "D",
     "href": "/analyses/WULF/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "NBIS",
-    "exchange": "NASDAQ · Communication Services",
-    "name": "NBIS — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "title": "NBIS — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "desc": "NBIS: individual ai/hpc infrastructure beta dossier with official SEC review and actionable trade state.",
-    "tags": "us,equities,ai-chain,infrastructure,communication-services",
-    "grade": "C+",
-    "href": "/analyses/NBIS/",
     "date": ""
   },
   {
