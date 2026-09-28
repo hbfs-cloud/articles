@@ -149,3 +149,33 @@ des metriques non datees, ou un blast radius sans contradictions et donnees manq
 Zero blocker requis. Publier depuis le JSON valide, verifier que le rendu conserve les corrections,
 stager uniquement les fichiers de la fiche/revue/index necessaires, puis commit/push si demande. Aucune
 notification ni publication externe en `dry-run`.
+
+## Fiche ETF (UCITS / hors harnais MCP)
+
+Un ETF UCITS europeen (Amundi, iShares, Vanguard, Lyxor...) est **hors couverture des donnees marche
+internes** (US-only) et n'a **NI fondamentaux societe NI depots SEC**. Le harnais de preuve company v3
+(`analysis-v3-r07.cjs`, us-gaap / XBRL / blast-radius de pairs) **ne s'applique pas** et ne doit pas etre
+force. On utilise a la place le **template ETF dedie**.
+
+- **Template & doc** : `tools/templates/etf-fiche.md` (schema complet des sections + sources).
+- **Generateur** : `tools/lib/etf-fiche.cjs` (`buildHtml` / `buildCard`) + runner `tools/gen-etf-fiche.cjs`
+  (un objet `data` source par ETF -> `analyses/<T>/index.html` + `data/analyses-data/<T>.json`).
+- **Sources RÉELLES, datees, jamais inventees** :
+  - **justETF** `https://www.justetf.com/en/etf-profile.html?isin=<ISIN>` — indice, TER, encours, replication,
+    distribution, domicile, devise, lancement, nb composants, top 10 holdings, repartition secteur/pays,
+    performances (YTD/1a/3a/depuis lancement), volatilite. Source gouvernante.
+  - **Factsheet / KIID emetteur** — recoupement TER / holdings / tracking difference.
+  - **Yahoo Finance** `https://finance.yahoo.com/quote/<YahooTicker>/` — dernier cours + bornes 52 semaines
+    (repere NON certifie -> caveat obligatoire).
+  - Donnee introuvable = marquee `indisponible`. ZERO fabrication.
+- **Sections** : verdict (conserver/renforcer/alleger, PAS un trade), mandat & indice, composition
+  (top 10 + secteurs + pays + ECharts), performance & suivi, couts & structure (TER, replication, fiscalite
+  Acc / domicile IE-LU), technique (Yahoo, caveat), risques (marche, **change EUR vs USD**, concentration,
+  liquidite), role en portefeuille (**recouvrement** avec fonds monde / jumeaux), sources.
+- **Contenu publie** : voix FR institutionnelle, concise, zero tic IA, **aucun terme interne** (pas de « MCP »,
+  « Gateway », noms de scripts). Header = logo MW uniquement ; **Finviz interdit** (non-US) -> lien graphe Yahoo.
+- **Gates** : `node tools/qa-content.js analyses/<T>/index.html --strict` (0 ❌ ; la section « Trade Idea »
+  ressort en ⚠️ non bloquant, normal pour un ETF) + `node tools/check-ai-tells.js analyses/<T>/index.html --strict`
+  (0 finding). Ne PAS lancer le harnais evidence/attestation company.
+- Carte JSON : `meta.assetType = "etf"`, `meta.dataScope = "public-etf-no-mcp-harness"`, `header.metrics`
+  = TER / AUM / indice / replication / distribution / domicile.
