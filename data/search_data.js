@@ -1744,6 +1744,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "CCJ",
+    "exchange": "NYSE · Uranium et combustible nucléaire",
+    "name": "CCJ — douze mois au 30/06/2026 (comptes CAD convertis en USD au taux 1,4210) — 2,45 Md$ de re...",
+    "title": "CCJ — douze mois au 30/06/2026 (comptes CAD convertis en USD au taux 1,4210) — 2,45 Md$ de re...",
+    "desc": "Cameco, premier producteur d’uranium coté (émetteur canadien, IFRS, comptes en CAD). Douze mois au 30 juin 2026 convertis en USD au taux du 30/06 (1,4210) : 2,45 Md$ de revenus, EBITDA d’exploitation 0,56 Md$, trésorerie nette positive. Titre à 88,05 $, cher sur tous les multiples. Surveiller.",
+    "tags": "us,energy,commodity,materials,nucleaire,trade-idea",
+    "grade": "C",
+    "href": "/analyses/CCJ/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "EQX",
     "exchange": "NYSE American · Or — producteur intermédiaire (Amériques)",
     "name": "EQX — Equinox Gold (EQX) : revenus du S1 2026 de 1,63 Md$ contre 0,55 Md$, dette ramenée à 58...",
@@ -3078,19 +3091,6 @@ window.searchDataPrebuilt = [
     "tags": "us,financials,earnings,trade-idea",
     "grade": "A",
     "href": "/analyses/BAC/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "CCJ",
-    "exchange": "NYSE · Énergie",
-    "name": "CCJ — 43x l'excédent brut pour 7,1% de croissance et 9,6% de rentabilité des capitaux. La bai...",
-    "title": "CCJ — 43x l'excédent brut pour 7,1% de croissance et 9,6% de rentabilité des capitaux. La bai...",
-    "desc": "Cameco se paie 43 fois son excédent brut d'exploitation pour 7,1% de croissance. Entre juin et juillet, tout le complexe uranium a reculé de 26 à 40% : le risque dominant est thématique. Westinghouse a déposé un projet d'introduction en bourse le 31 juillet, le jour même des résultats trimestriels.",
-    "tags": "us,energy,commodity,materials,technique,trade-idea,earnings",
-    "grade": "D",
-    "href": "/analyses/CCJ/",
     "date": ""
   },
   {
