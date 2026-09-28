@@ -1744,6 +1744,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "PURR",
+    "exchange": "NASDAQ · Trésorerie d’actifs numériques (token HYPE)",
+    "name": "PURR — une trésorerie en HYPE valorisée par sa valeur nette d’inventaire (0,95× au 30 juin), p...",
+    "title": "PURR — une trésorerie en HYPE valorisée par sa valeur nette d’inventaire (0,95× au 30 juin), p...",
+    "desc": "Hyperliquid Strategies (PURR) : véhicule de trésorerie en token HYPE (~33 M d’unités), financé par une facilité d’émission d’actions de 2,5 Md$. Valorisation par la valeur nette d’inventaire (0,95× au 30 juin). Cours du 25 septembre 12,85 $ (−8,8 %), statut surveiller.",
+    "tags": "us,crypto,financials,speculative,small-cap",
+    "grade": "C-",
+    "href": "/analyses/PURR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "CCJ",
     "exchange": "NYSE · Uranium et combustible nucléaire",
     "name": "CCJ — douze mois au 30/06/2026 (comptes CAD convertis en USD au taux 1,4210) — 2,45 Md$ de re...",
@@ -2155,19 +2168,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,ai-chain,semis,technology",
     "grade": "B+",
     "href": "/analyses/NVDA/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "PURR",
-    "exchange": "NASDAQ · Trésorerie d'actifs numériques",
-    "name": "PURR — un pari sur le HYPE, payé en dilution.",
-    "title": "PURR — un pari sur le HYPE, payé en dilution.",
-    "desc": "PURR : trésorerie en HYPE financée par une ligne de capital de 2,5 Md$. Hausse forte, dilution chiffrée, aucun ordre avant le vote prévu le 4 novembre.",
-    "tags": "us,crypto,financials,speculative,small-cap",
-    "grade": "C",
-    "href": "/analyses/PURR/",
     "date": ""
   },
   {
