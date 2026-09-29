@@ -121,11 +121,26 @@ async function completedResponse(client, args, recordReceipt) {
   }
 }
 
+// Un fournisseur de repli peut être en « cooldown » côté serveur (limite de débit après une rafale, ex.
+// tiingo le 2026-09-29 après les rejeux du suivi). C'est un état transitoire de courte durée, pas une
+// série incohérente : on réessaie la MÊME source après une pause bornée plutôt que de passer à la
+// suivante, puis on rend null si elle reste indisponible. Toute autre réponse est rendue telle quelle.
+const COOLDOWN = /in cooldown/i;
+async function altResponse(client, args, recordReceipt, { tries = 4, waitMs = 30000 } = {}) {
+  for (let attempt = 0; attempt < tries; attempt++) {
+    const res = await completedResponse(client, args, recordReceipt).catch(() => null);
+    if (!res) return null;
+    if (!COOLDOWN.test(JSON.stringify(res))) return res;
+    if (attempt < tries - 1) await new Promise(resolve => setTimeout(resolve, waitMs));
+  }
+  return null;
+}
+
 /**
  * Returns Map<symbol, [{date,open,high,low,close,volume}]>.
  * Every returned series is bounded by, and proves, its requested completed end.
  */
-async function fetchCertifiedDailyBars({ symbols, refdate, cryptoRefdate, asOfTimestamp, limit = 160, batchSize = 25, allowUnreliableOpen = false, client = require('./mcp-client'), receiptDir = path.resolve(__dirname, '../../.agent/mcp-daily-bars') }) {
+async function fetchCertifiedDailyBars({ symbols, refdate, cryptoRefdate, asOfTimestamp, limit = 160, batchSize = 25, allowUnreliableOpen = false, fallbackCooldownWaitMs = 30000, client = require('./mcp-client'), receiptDir = path.resolve(__dirname, '../../.agent/mcp-daily-bars') }) {
   const requested = [...new Set((symbols || []).map(String).map(s => s.trim()).filter(Boolean))];
   if (!requested.length) return new Map();
   refdate = requireIsoDate(refdate, '--refdate');
@@ -177,7 +192,12 @@ async function fetchCertifiedDailyBars({ symbols, refdate, cryptoRefdate, asOfTi
       const repairable = new Map();
       const unrepairable = [];
       for (const error of check.errors) {
-        const match = /^([^:]+): (invalid daily OHLCV geometry|daily session continuity failed)/.exec(error);
+        // Séance US manquante dans la série primaire (`partial: us_session_coverage_incomplete`) : même
+        // remède que les deux défauts de série ci-dessus — on rejoue le seul symbole sur les sources MCP
+        // de repli, et l'appel échoue franchement si aucune ne rend une série qui atteint la clôture
+        // certifiée. Constaté le 2026-09-29 sur MSST (ETF quasi sans volume, barre du 28/09 absente de la
+        // source primaire). Les défauts de venue étrangère (`venue_session_coverage_incomplete`) restent fatals.
+        const match = /^([^:]+): (invalid daily OHLCV geometry|daily session continuity failed|non-terminal or unknown cell status partial: us_session_coverage_incomplete)/.exec(error);
         if (!match || !symbolsBatch.includes(match[1])) unrepairable.push(error);
         else {
           if (!repairable.has(match[1])) repairable.set(match[1], []);
@@ -191,10 +211,10 @@ async function fetchCertifiedDailyBars({ symbols, refdate, cryptoRefdate, asOfTi
       for (const [symbol, reasons] of repairable) {
         let replacement = null, replacementSource = null;
         for (const source of ALT_BAR_SOURCES) {
-          const alt = await completedResponse(client, {
+          const alt = await altResponse(client, {
             types: 'bars_daily', symbols: symbol, limit,
             as_of_timestamp: asOfTimestamp, completion_policy: 'completed_only', source,
-          }, recordReceipt).catch(() => null);
+          }, recordReceipt, { waitMs: fallbackCooldownWaitMs });
           if (!alt) continue;
           const altCheck = contract.validateQueryData(alt, {
             symbols: symbol, assetCalendar: group.calendar, expectedCompletedEnd: group.expected,
@@ -236,10 +256,10 @@ async function fetchCertifiedDailyBars({ symbols, refdate, cryptoRefdate, asOfTi
           // n'échoue que si AUCUN ne rend une série cohérente.
           let altCell = null, altSource = null;
           for (const source of ALT_BAR_SOURCES) {
-            const alt = await completedResponse(client, {
+            const alt = await altResponse(client, {
               types: 'bars_daily', symbols: item.id, limit,
               as_of_timestamp: asOfTimestamp, completion_policy: 'completed_only', source,
-            }, recordReceipt).catch(() => null);
+            }, recordReceipt, { waitMs: fallbackCooldownWaitMs });
             if (!alt) continue;
             const altCheck = contract.validateQueryData(alt, {
               symbols: item.id, assetCalendar: group.calendar, expectedCompletedEnd: group.expected,

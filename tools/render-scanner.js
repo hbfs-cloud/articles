@@ -255,7 +255,7 @@ const belowOne = (d.setups || []).map(s => {
   return `${s.ticker} ${r.toFixed(2) === '1.00' ? r.toFixed(3).replace('.', ',') : r.toFixed(2).replace('.', ',')}`;
 }).filter(Boolean);
 const rrBelowOne = nBelowOne
-  ? ` ; ${belowOne.length} ligne${belowOne.length > 1 ? 's' : ''} vise${belowOne.length > 1 ? 'nt' : ''} un peu moins qu'elle${belowOne.length > 1 ? 's ne risquent' : ' ne risque'} (${belowOne.join(', ')}), contrepartie d'un objectif placé à une distance réellement parcourue`
+  ? ` ; ${belowOne.length} ligne${belowOne.length > 1 ? 's' : ''} vise${belowOne.length > 1 ? 'nt' : ''} un peu moins qu'elle${belowOne.length > 1 ? 's ne risquent' : ' ne risque'} (${belowOne.join(', ')}), le stop, posé au plancher de bruit, est plus large que l'objectif 1`
   : '';
 
 /** Le dimensionnement n'est affirmé que s'il a été calculé. `sizing_status: not_run` signifiait
@@ -1130,7 +1130,7 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
       <h4>4. Calcul des niveaux techniques</h4>
       <p>Entrée / stop / TP / R/R calculés sur les données de clôture réelles. ${geometryNote} ${hasEntryZone
         ? `Une ligne ne devient exécutable qu'après confirmation du VWAP de la séance suivante.`
-        : stopLimit ? `Les cassures et suivis de tendance s'exécutent en ordre stop-limite déclenché au prix publié et plafonné à ce prix${hasPullback ? ' ; les replis en ordre limité' : ''}. Tous les ordres valent la séance visée et sont annulés si l'ouverture se fait sous l'invalidation ; leur exécution n'est pas garantie.` : `Un ordre limité est valable uniquement pendant la séance visée et sous réserve des contrôles publiés ; son exécution au prix limite ou à un prix inférieur n’est pas garantie.`}</p>
+        : stopLimit ? `Les cassures et suivis de tendance s'exécutent en ordre stop-limite déclenché au prix publié et plafonné à ce prix${hasPullback ? ' ; les replis en ordre limité' : ''}. Tous les ordres valent la séance visée ; les cassures et suivis de tendance sont annulés si l'ouverture se fait sous l'invalidation${hasPullback ? ', les replis se posent après l\'ouverture (un ordre limité posé avant s\'exécuterait sur une ouverture plus basse, y compris sous l\'invalidation)' : ''} ; leur exécution n'est pas garantie.` : `Un ordre limité est valable uniquement pendant la séance visée et sous réserve des contrôles publiés ; son exécution au prix limite ou à un prix inférieur n’est pas garantie.`}</p>
     </div>
 ${Array.isArray(d.gates_report) && d.gates_report.length ? `    <div class="pedagogy-box">
       <h4>Contrôles de publication</h4>

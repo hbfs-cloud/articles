@@ -76,6 +76,84 @@ async function main() {
     } }),
     /partial|complete=false/,
   );
+
+  // Séance US manquante côté source primaire : rejeu du seul symbole sur les sources MCP de repli.
+  const missingSession = () => {
+    const stale = response('AAA', '2026-09-11');
+    Object.assign(stale.results[0].cells[0], { status: 'partial', rejection_reason: 'us_session_coverage_incomplete', served_completed_end: '2026-09-10' });
+    return stale;
+  };
+  const partialCalls = [];
+  const partialClient = servedBy => ({
+    canCallDirectly: () => true,
+    callToolWithRetry: async (_server, tool, args) => {
+      partialCalls.push({ tool, args });
+      if (tool === 'GetStatus') return status('2026-09-11');
+      if (args.source === servedBy) return response('AAA', '2026-09-11');
+      return missingSession();
+    },
+    awaitJob: async () => { throw new Error('unexpected async job'); },
+  });
+  const viaTiingo = await fetchCertifiedDailyBars({
+    symbols: ['AAA'], refdate: '2026-09-11', asOfTimestamp: '2026-09-12T06:00:00Z',
+    client: partialClient('tiingo'), receiptDir: null,
+  });
+  assert.equal(viaTiingo.get('AAA').at(-1).date, '2026-09-11');
+  assert.deepEqual(partialCalls.filter(call => call.tool === 'QueryData').map(call => call.args.source), ['webull', 'tiingo']);
+  // Cooldown transitoire d'un fournisseur de repli : on réessaie la même source après une pause, puis on réussit.
+  const cooldown = () => ({ results: [{ cells: [{ symbol: 'AAA', status: 'failed', rejection_reason: 'upstream_or_calculation_failed',
+    error: 'bars_daily source=tiingo: datasource: all sources failed: tiingo: in cooldown' }], data: [] }] });
+  let tiingoCalls = 0;
+  const coolingClient = {
+    canCallDirectly: () => true,
+    callToolWithRetry: async (_server, tool, args) => {
+      if (tool === 'GetStatus') return status('2026-09-11');
+      if (args.source === 'tiingo') { tiingoCalls += 1; return tiingoCalls <= 2 ? cooldown() : response('AAA', '2026-09-11'); }
+      return missingSession();
+    },
+    awaitJob: async () => { throw new Error('unexpected async job'); },
+  };
+  const afterCooldown = await fetchCertifiedDailyBars({
+    symbols: ['AAA'], refdate: '2026-09-11', asOfTimestamp: '2026-09-12T06:00:00Z',
+    client: coolingClient, receiptDir: null, fallbackCooldownWaitMs: 1,
+  });
+  assert.equal(afterCooldown.get('AAA').at(-1).date, '2026-09-11');
+  assert.equal(tiingoCalls, 3, 'tiingo est réessayé après cooldown avant de passer à yahoo');
+  // Cooldown persistant : les essais sont bornés, puis échec franc.
+  let stuckCalls = 0;
+  await assert.rejects(
+    () => fetchCertifiedDailyBars({
+      symbols: ['AAA'], refdate: '2026-09-11', asOfTimestamp: '2026-09-12T06:00:00Z', receiptDir: null, fallbackCooldownWaitMs: 1,
+      client: { ...coolingClient, callToolWithRetry: async (_s, tool, args) => {
+        if (tool === 'GetStatus') return status('2026-09-11');
+        if (args.source === 'tiingo') { stuckCalls += 1; return cooldown(); }
+        return missingSession();
+      } },
+    }),
+    /aucun repli cohérent \(tiingo, yahoo\)/,
+  );
+  assert.equal(stuckCalls, 4, 'quatre essais au plus sur la source en cooldown');
+  // Aucune source de repli cohérente : échec franc, jamais de barre synthétique ni de série qui n'atteint pas la clôture.
+  await assert.rejects(
+    () => fetchCertifiedDailyBars({
+      symbols: ['AAA'], refdate: '2026-09-11', asOfTimestamp: '2026-09-12T06:00:00Z',
+      client: partialClient('none'), receiptDir: null,
+    }),
+    /aucun repli cohérent \(tiingo, yahoo\)/,
+  );
+  // Une venue étrangère incomplète n'est pas réparable par ce chemin.
+  await assert.rejects(
+    () => fetchCertifiedDailyBars({
+      symbols: ['AAA'], refdate: '2026-09-11', asOfTimestamp: '2026-09-12T06:00:00Z', receiptDir: null,
+      client: { ...partialClient('tiingo'), callToolWithRetry: async (_s, tool, args) => {
+        if (tool === 'GetStatus') return status('2026-09-11');
+        const venue = missingSession();
+        venue.results[0].cells[0].rejection_reason = 'venue_session_coverage_incomplete';
+        return venue;
+      } },
+    }),
+    /venue_session_coverage_incomplete/,
+  );
   await assert.rejects(
     () => fetchCertifiedDailyBars({ symbols: ['BTC-USD'], refdate: '2026-09-11', asOfTimestamp: '2026-09-12T06:00:00Z', client }),
     /crypto-refdate/,

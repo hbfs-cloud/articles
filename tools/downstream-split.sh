@@ -171,6 +171,13 @@ case "$MODE" in
           if [ -f "$book" ]; then
             node tools/dtx-book-equity-ingest.js --portfolio "$pf" --book-file "$book" --expected-close "$REF_CLOSE" >> /tmp/ds-dtx.log 2>&1 \
               || { echo "  $pf : DtxBookEquity invalide → publication bloquée" | tee -a /tmp/ds-dtx.log; exit 1; }
+          elif node -e '
+              // COMPARE_ONLY (decision du proprietaire, 2026-09-24) : evaluation informative sans ordre ni etat ni plan ;
+              // aucun livre servi n existe pour ce portefeuille. La preuve de livre reste exigee des que le staging n est plus compare_only.
+              const v=JSON.parse(require("fs").readFileSync("data/dtx/"+process.argv[1]+".json","utf8"));
+              process.exit(v.evaluation&&v.evaluation.compareOnly===true&&v.evaluation.executable===false&&v.actionable===false?0:1);
+            ' "$pf" 2>/dev/null; then
+            log "  $pf : compare_only — aucune courbe de livre requise (staging non exécutable)"
           else
             node -e '
               const fs=require("fs"), scan=require("./tools/dtx-scan");

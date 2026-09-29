@@ -59,7 +59,7 @@ const setups = sig.signals.map(s => ({
   entry_low: s.entry_low, entry_high: s.entry_high,
   entry_display: s.execution && s.execution.status === 'stop_limit_buy'
     ? `Ordre d'achat stop-limite : déclenchement à ${nbFR(s.execution.trigger, 2)} $, plafond ${nbFR(s.execution.limit_cap, 2)} $, valable la séance ; si le cours ouvre sous ${nbFR(s.execution.cancel_if_open_below, 2)} $, annulez-le dès l'ouverture.`
-    : `${nbFR(s.entry, 2)} $ en ordre à cours limité, valable la séance ; si le cours ouvre sous ${nbFR(s.invalidation_level, 2)} $, annulez-le dès l'ouverture. Si le prix n'est pas touché, il n'y a pas de trade.`,
+    : `${nbFR(s.entry, 2)} $ en ordre à cours limité, valable la séance, à poser après l'ouverture, une fois le niveau d'ouverture connu ; si le cours ouvre sous ${nbFR(s.invalidation_level, 2)} $, ne le posez pas. Si le prix n'est pas touché, il n'y a pas de trade.`,
   execution: s.execution || null,
   avg_daily_dollar_volume: s.selection_evidence && s.selection_evidence.avg_daily_dollar_volume != null ? s.selection_evidence.avg_daily_dollar_volume : null,
   stop: s.stop, tp1: s.tp1, tp2: s.tp2,
