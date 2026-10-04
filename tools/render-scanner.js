@@ -238,19 +238,22 @@ const maxRR = (rrValues.length ? Math.max(...rrValues).toFixed(2) : '1.50').repl
 // Les niveaux publies sont arrondis au cent : (tp1-entree)/(entree-stop) se calcule donc sur des
 // CENTIMES entiers. Le comparer en flottant faisait ressortir XOM et T « sous 1 » alors que les deux
 // valent exactement 5,62/5,62 et 0,85/0,85 — la page annoncait 3 lignes la ou il n'y en a qu'une.
-const nBelowOne = (d.setups || []).filter(s => {
-  if (!(typeof s.entry_high === 'number' && typeof s.stop === 'number' && typeof s.tp1 === 'number')) return false;
-  const gain = Math.round((s.tp1 - s.entry_high) * 100);
-  const risk = Math.round((s.entry_high - s.stop) * 100);
-  return risk > 0 && gain < risk;
-}).length;
-// Les lignes sous un R/R de 1 sont NOMMÉES avec leur rapport réel, calculé sur les niveaux publiés.
-const belowOne = (d.setups || []).map(s => {
+function centsRatio(s) {
   if (!(typeof s.entry_high === 'number' && typeof s.stop === 'number' && typeof s.tp1 === 'number')) return null;
   const gain = Math.round((s.tp1 - s.entry_high) * 100);
   const risk = Math.round((s.entry_high - s.stop) * 100);
   if (!(risk > 0 && gain < risk)) return null;
   const r = gain / risk;
+  // Un centime sur un écart de plusieurs dizaines de dollars s'arrondit encore à 1,000 :
+  // le dire « un peu moins » contredit le chiffre affiché.
+  if (r.toFixed(3) === '1.000') return null;
+  return r;
+}
+const nBelowOne = (d.setups || []).filter(s => centsRatio(s) != null).length;
+// Les lignes sous un R/R de 1 sont NOMMÉES avec leur rapport réel, calculé sur les niveaux publiés.
+const belowOne = (d.setups || []).map(s => {
+  const r = centsRatio(s);
+  if (r == null) return null;
   // Un ratio qui s'arrondit à 1,00 n'est pas « 1,00 » : on donne trois décimales.
   return `${s.ticker} ${r.toFixed(2) === '1.00' ? r.toFixed(3).replace('.', ',') : r.toFixed(2).replace('.', ',')}`;
 }).filter(Boolean);
@@ -778,7 +781,7 @@ function rrDisplay(rr, s) {
   if (s && typeof s.entry_high === 'number' && typeof s.stop === 'number' && typeof s.tp1 === 'number') {
     const gain = Math.round((s.tp1 - s.entry_high) * 100);
     const risk = Math.round((s.entry_high - s.stop) * 100);
-    if (risk > 0 && gain < risk && (gain / risk).toFixed(2) === '1.00') return (gain / risk).toFixed(3).replace('.', ',');
+    if (risk > 0 && gain < risk && (gain / risk).toFixed(2) === '1.00' && (gain / risk).toFixed(3) !== '1.000') return (gain / risk).toFixed(3).replace('.', ',');
   }
   const v = String(rr ?? '').replace(/^\s*1:\s*/, '').trim();
   return v ? v.replace('.', ',') : '—';
