@@ -27,6 +27,7 @@
 'use strict';
 
 const { execSync } = require('child_process');
+const { pageAnalysisDate } = require('./lib/archive-folders');
 const fs   = require('fs');
 const path = require('path');
 const { assertAnalysisPublicationReady } = require('./lib/analysis-publication-gate');
@@ -106,11 +107,12 @@ function archiveIfExists(ticker, nextDate) {
   if (!fs.existsSync(htmlPath)) return null;
 
   const content = fs.readFileSync(htmlPath, 'utf8');
-  const dateMatch = content.match(/data-date="([^"]+)"/);
-  if (dateMatch && nextDate && dateMatch[1] === nextDate) return null;
-  const folderDate = dateMatch
-    ? dateMatch[1].replace(/-/g, '')
-    : new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  // Le dossier porte la date de la fiche archivée (data-date, sinon date du <title>), jamais la date du
+  // jour : add_card construit le lien de la carte d'archive avec cette même date. Repli sur le jour
+  // seulement si la page n'expose aucune date lisible.
+  const pageDate = pageAnalysisDate(content);
+  if (pageDate && nextDate && pageDate === nextDate) return null;
+  const folderDate = (pageDate || new Date().toISOString().slice(0, 10)).replace(/-/g, '');
 
   const archiveDir = path.join(ROOT, 'analyses', ticker, 'archive', folderDate);
   if (fs.existsSync(path.join(archiveDir, 'index.html'))) return archiveDir;

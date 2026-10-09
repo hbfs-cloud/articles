@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { findArchiveFolder } = require('./lib/archive-folders');
 const path = require('path');
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
@@ -29,7 +30,10 @@ function formatFrenchDate(isoDate) {
 }
 
 function normalizeFrenchArchiveCard(card, ticker, archiveDate) {
-    const archiveHref = `/analyses/${ticker}/archive/${archiveDate.replace(/-/g, '')}/`;
+    // Le lien vise le dossier qui contient réellement la version datée archiveDate (lecture du contenu des
+    // dossiers d'archive) ; le nom de dossier dérivé de la date ne sert que si aucun dossier ne correspond.
+    const folder = findArchiveFolder(path.resolve(__dirname, '..'), ticker, archiveDate) || archiveDate.replace(/-/g, '');
+    const archiveHref = `/analyses/${ticker}/archive/${folder}/`;
     const dateLabel = formatFrenchDate(archiveDate);
     return String(card)
         .replace(/data-lang="[^"]*"/i, 'data-lang="fr"')
