@@ -1,0 +1,194 @@
+{
+  "captured_at": "2026-10-09T06:03:09.968483903Z",
+  "commit": "de18580222185d966999ee478457ee7766e500e4",
+  "deployment_id": "de1858022218-ace",
+  "intent_id": "21b52cba-f308-4365-99c8-b7614fbb1670",
+  "results": [
+    {
+      "symbol": "LEU",
+      "opportunity_score": 0,
+      "risk_score": 0,
+      "squeeze_score": 52.9,
+      "opportunities": [],
+      "risks": [],
+      "squeeze": {
+        "score": 52.9,
+        "components": [
+          {
+            "name": "short_float",
+            "value": 27.52538,
+            "sub_score": 91.8
+          },
+          {
+            "name": "ctb",
+            "value": 0.5296,
+            "sub_score": 1.1
+          }
+        ],
+        "note": "composite of short_float+ctb over the inputs present (see components); FINRA daily short-sale volume is intentionally excluded because it is non-directional, and days-to-cover/short_ratio is not exposed on this fast path"
+      },
+      "bearish_dossier": {
+        "symbol": "LEU",
+        "status": "measured",
+        "active_measured": 1,
+        "active_unmeasured": 1,
+        "unknown": 1,
+        "active_count": 2,
+        "components": [
+          {
+            "name": "bearish_analyst",
+            "state": "inactive",
+            "measured": true,
+            "definition": "a reliable author's NEWEST call on the symbol is short/reduce and dated in the last 28 days",
+            "value": {
+              "reliable_bearish_calls": 0,
+              "reliable_bullish_views": 0
+            },
+            "source": "Seeking Alpha contributors passing the reliability gate (GetAnalystTradeIdeas)",
+            "as_of": "2026-10-09",
+            "history": "about 13 months of article history; reliability is scored on the same history, so only the point-in-time rebuild in the event study is out-of-sample"
+          },
+          {
+            "name": "sell_side_downgrades",
+            "state": "inactive",
+            "measured": true,
+            "definition": ">= 2 downgrades by distinct firms dated in the last 28 days",
+            "value": {
+              "distinct_firms": 0,
+              "downgrades": 0
+            },
+            "source": "Finviz per-symbol dated analyst actions (analysts.Service)",
+            "as_of": "2026-10-09",
+            "history": "about 2 years of dated actions per symbol (Finviz); the event study used a 6-year Yahoo crawl"
+          },
+          {
+            "name": "insider_selling",
+            "state": "inactive",
+            "measured": true,
+            "definition": ">= 2 distinct insiders sold on the open market for >= $1000000 in total, and no open-market purchase, in filings public in the last 30 days",
+            "value": {
+              "bought_usd": 0,
+              "coverage_certified": true,
+              "sellers": 0,
+              "sold_usd": 0
+            },
+            "source": "SEC EDGAR Form 4 (local corpus; official filings only)",
+            "as_of": "2026-10-09",
+            "history": "corpus history is only partly certified (13 of 5820 index days at the time of writing), so live reads are coverage-gated; the event study used SEC's public Form 345 datasets (2020-2026) instead"
+          },
+          {
+            "name": "technical_damage",
+            "state": "active",
+            "measured": true,
+            "definition": "close below SMA200 AND 12-1 month momentum < 0 AND 63-session return below SPY's",
+            "value": {
+              "below_sma200": true,
+              "close": 142.09,
+              "momentum_12_1": -0.5096,
+              "negative_momentum": true,
+              "rel_strength_63_vs_spy": -0.1944,
+              "sma200": 198.6718,
+              "weaker_than_spy": true
+            },
+            "source": "daily bars (stock and SPY)",
+            "as_of": "2026-10-08",
+            "history": "years of daily bars (point in time by construction)"
+          },
+          {
+            "name": "bearish_put_call",
+            "state": "unknown",
+            "measured": false,
+            "definition": "put/call volume ratio > 1.5 (the risk detector's threshold)",
+            "detail": "no value available for this symbol",
+            "source": "Yahoo options chain, current snapshot",
+            "as_of": "2026-10-09",
+            "history": "none: only today's chain is read; no stored history",
+            "unmeasured_reason": "current snapshot only, no point-in-time history to test"
+          },
+          {
+            "name": "high_short_float",
+            "state": "active",
+            "measured": false,
+            "definition": "short float >= 20% of float (descriptive level, not fitted; can also mean squeeze risk)",
+            "value": 27.5254,
+            "source": "static data short float, current snapshot",
+            "as_of": "2026-10-09",
+            "history": "none: the daily snapshot store does not record short interest",
+            "unmeasured_reason": "current snapshot only, no point-in-time history to test"
+          },
+          {
+            "name": "high_cost_to_borrow",
+            "state": "inactive",
+            "measured": false,
+            "definition": "cost to borrow > 30% (the risk detector's threshold)",
+            "value": 0.5296,
+            "source": "iBorrowDesk, current snapshot (US only)",
+            "as_of": "2026-10-09",
+            "history": "none: only the current rate is read",
+            "unmeasured_reason": "current snapshot only, no point-in-time history to test"
+          },
+          {
+            "name": "consensus_deterioration",
+            "state": "inactive",
+            "measured": false,
+            "definition": "consensus rating score (5 strong buy .. 1 strong sell) fell by >= 0.2 over the recorded span",
+            "value": 0,
+            "detail": "change over 29 recorded days",
+            "source": "StockAnalysis consensus via the daily snapshot store",
+            "as_of": "2026-10-09",
+            "history": "forward-only: recording started with the snapshot worker (about 5 weeks at the time of writing)",
+            "unmeasured_reason": "too short a history for an event study"
+          }
+        ],
+        "validations": [
+          {
+            "component": "technical_damage",
+            "horizon": "63 sessions",
+            "n_observations": 169599,
+            "n_tickers": 3120,
+            "n_clusters_ticker_month": 55717,
+            "mean_excess_vs_matched": -0.0283,
+            "ci95_lo": -0.0396,
+            "ci95_hi": -0.0168,
+            "short_hit_rate": 0.542,
+            "control_short_hit_rate": 0.497,
+            "first_half": {
+              "period": "2021-10..2023-12",
+              "n_observations": 89790,
+              "mean_excess_vs_matched": -0.0185,
+              "ci_lo": -0.0337,
+              "ci_hi": -0.0035,
+              "ci_level": "95%"
+            },
+            "second_half_out_of_sample": {
+              "period": "2024-01..2026-08",
+              "n_observations": 79809,
+              "mean_excess_vs_matched": -0.0392,
+              "ci_lo": -0.0571,
+              "ci_hi": -0.0224,
+              "ci_level": "97.5% (Bonferroni over 2 candidates)"
+            },
+            "caveat": "the classic loser/momentum drift, not evidence about any other component; negative in every calendar year 2021-2026 but far from uniform (-1.4% to -6.5%); no effect at 21 sessions that passes the rule; current-listing universe only, so delisted losers are missing and the true drift is likely larger"
+          }
+        ],
+        "note": "Counts of components with evidence, not a score and not a forecast. status='unvalidated' means no out-of-sample test supports this combination; unmeasured components are context (current snapshots, no history). See rules.bearish_dossier in the tool description for the measured results."
+      }
+    }
+  ],
+  "rules": {
+    "bearish_dossier": {
+      "cannot_control": "Survivorship: only current listings have prices, delisted names are absent. Liquidity and sector/market cap use today's values (market cap is rebuilt point in time from price). Overlapping windows (weekly signals, 21/63-session horizons) are handled only by clustering. Matching does not control beta, volatility or momentum; a component that proxies momentum will show it. Equal-weighted, before costs, no shorting frictions (borrow, squeeze) which matter most for the names this view flags. Technical damage uses dividend-adjusted closes in the study and daily bar closes in the live view. The sell-side study used a Yahoo history, the live view Finviz; the insider study used SEC's public Form 4 data sets (2020-2026-03), not the local corpus, whose history is only partly certified.",
+      "inventory": "bearish_analyst: about 13 months of article history, point-in-time reliability rebuilt (measurable, thin); sell_side_downgrades: Yahoo history ~6 years, Finviz ~2 years (measurable); insider_selling: SEC data sets 2020-2026-03 (measurable); the local SEC corpus is certified for only a handful of days, so live insider reads are unknown unless a cluster is actually observed; technical_damage: years of bars (measurable); bearish_put_call, high_short_float, high_cost_to_borrow: current snapshots only (unmeasured); consensus_deterioration: forward-only since the snapshot worker started, about 5 weeks (unmeasured)",
+      "measured_flag": "measured=true means a point-in-time history exists that an event study can use; measured=false components are current snapshots only (put/call, short float, cost to borrow) or forward-only history of about 5 weeks (consensus), shown as context and counted in active_unmeasured.",
+      "purpose": "One place for the bearish evidence we hold on a symbol. It lists components with state active/inactive/unknown, the evidence, and counts. There is NO score and NO forecast: active_count is a plain count of active components.",
+      "result": "Validated: technical_damage at 63 sessions only (mean matched excess -2.83%, 95% CI [-3.96%, -1.68%], n=169,599 over 3,120 tickers; first half -1.85%, second half -3.92% with CI [-5.71%, -2.24%]; underperforms by more than 1% in 54.2% of cases vs 49.7% for controls). It is the known loser/momentum drift: it says nothing about analysts, insiders or sell-side. NOT validated: sell_side_downgrades (matched excess +0.25% at 21 and +0.79% at 63 sessions: no underperformance), insider_selling (matched excess +0.41% at 21 and +1.09% at 63 sessions: stocks with insider selling clusters did NOT underperform), bearish_analyst (245 events from at most 4 point-in-time reliable authors, all in 2025-26; 21-session matched excess -1.7%, CI [-4.0%, +0.5%]; 63 sessions +2.7%, n=95: too little history to say), count 2 (63-session matched excess -2.35%, but -0.69% in the first half with a CI spanning zero, and the extra components add nothing over technical_damage alone: technical_damage alone -3.01%, with insider_selling -3.53%, with sell_side_downgrades -0.43%), count 3+ (147 observations, no result).",
+      "states": "active = condition met on data we could read; inactive = we read the data and the condition is not met; unknown = the data could not be read or coverage is not certified (never shown as inactive).",
+      "status": "'unvalidated' by default. 'measured' only when an ACTIVE component is listed in validations, i.e. it passed the out-of-sample rule below. Any other combination, including 2 or more components, stays 'unvalidated'.",
+      "study": "Event study, signals sampled every 5 sessions from 2021-10 to 2026-08 on about 3,600 US stocks (liquid today, price >= $5). Forward 21- and 63-session returns from the signal close; excess vs SPY and vs a matched control (same date, same sector and point-in-time market-cap tercile, without the component). Cluster bootstrap 95% intervals (ticker x month, month, ticker; the widest is used). Halves split at 2024-01-03. Rule fixed beforehand: a component or a count>=2 bucket is a candidate if its first-half matched excess is negative with a 95% interval below zero; it is validated only if its second-half interval, at the Bonferroni level over the candidates, is below zero, with at least 100 observations and 30 clusters, the short-hit rate above the control's, and no sign reversal between halves.",
+      "verdict": "No combination of components beats matched controls out of sample. The only measured effect is the technical damage component on its own; the analyst, sell-side and insider components should be read as context, not as evidence that the stock will fall."
+    }
+  },
+  "server_version": "de1858022218-ace",
+  "status": "completed",
+  "trace_id": "aafba195-a557-4277-93e8-c9c4b71167c4"
+}

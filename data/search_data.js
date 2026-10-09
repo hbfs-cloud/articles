@@ -1757,6 +1757,32 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "LEU",
+    "exchange": "NYSE · Enrichissement d’uranium et combustible nucléaire",
+    "name": "LEU — carnet 4,5 Md$ et trésorerie nette, mais dilution lourde (offre de septembre, bons, ATM...",
+    "title": "LEU — carnet 4,5 Md$ et trésorerie nette, mais dilution lourde (offre de septembre, bons, ATM...",
+    "desc": "Centrus Energy, seul enrichisseur d’uranium coté qui produit sur le sol américain : carnet de 4,5 Md$, contrats HALEU qui se multiplient, mais titre à 142,09 $, 69 % sous son plus haut, après une augmentation de capital de 500 M$ assortie de bons sur près de 7 M d’actions. Surveiller.",
+    "tags": "us,energy,commodity,speculative,trade-idea",
+    "grade": "C",
+    "href": "/analyses/LEU/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "IREN",
+    "exchange": "NASDAQ · Cloud IA et centres de données (ancien mineur de bitcoin)",
+    "name": "IREN — 4 Md$ de revenu annualisé contracté et Microsoft comme client, mais 8 Md$ de dette, ATM...",
+    "title": "IREN — 4 Md$ de revenu annualisé contracté et Microsoft comme client, mais 8 Md$ de dette, ATM...",
+    "desc": "IREN : ancien mineur de bitcoin devenu fournisseur de cloud IA, contrat Microsoft de 9,7 Md$ et 4 Md$ de revenu annualisé contracté, mais 8 Md$ de dette, dilution continue et perte nette de 703 M$. Close du 8 octobre, aucun ordre.",
+    "tags": "us,equities,ai-chain,ai,speculative",
+    "grade": "C",
+    "href": "/analyses/IREN/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "VWCG",
     "exchange": "Xetra / London Stock Exchange • ISIN IE00BK5BQX27 • EUR",
     "name": "VWCG — 512 valeurs Europe développée, 0,10 % de frais, +19,4 % sur un an. Quasi jumeau de MEUD...",
@@ -2545,19 +2571,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,ai-chain,infrastructure,industrials",
     "grade": "B",
     "href": "/analyses/BE/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "IREN",
-    "exchange": "NASDAQ · Financial Services",
-    "name": "IREN — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "title": "IREN — fundamentals, SEC filings, technical structure, risks and trade levels.",
-    "desc": "IREN: individual ai/hpc infrastructure beta dossier with official SEC review and actionable trade state.",
-    "tags": "us,equities,ai-chain,infrastructure,financial-services",
-    "grade": "D+",
-    "href": "/analyses/IREN/",
     "date": ""
   },
   {
@@ -4755,19 +4768,6 @@ window.searchDataPrebuilt = [
     "tags": "us,industrials,trade-idea",
     "grade": "B+",
     "href": "/analyses/FDX/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "LEU",
-    "exchange": "NYSE • Energy",
-    "name": "Centrus Energy Corp.",
-    "title": "Centrus Energy Corp.",
-    "desc": "Analyse complete de Centrus Energy Corp. (LEU) - Leader americain\n    de l'enrichissement d'uranium. Fondamentaux, technique, risques et\n    trade idea.",
-    "tags": "",
-    "grade": "B+",
-    "href": "/analyses/LEU/",
     "date": ""
   },
   {
