@@ -1757,6 +1757,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ORCL",
+    "exchange": "NYSE · Logiciels et infrastructure cloud",
+    "name": "ORCL — Oracle à 135,69 $ : RPO 664 Md$, capex au-dessus du flux opérationnel, avis de force ma...",
+    "title": "ORCL — Oracle à 135,69 $ : RPO 664 Md$, capex au-dessus du flux opérationnel, avis de force ma...",
+    "desc": "Oracle : carnet de 664 Md$, infrastructure cloud +121 %, mais un capex qui dépasse le flux opérationnel et un titre 58 % sous son plus haut sur un an. Close du 8 octobre à 135,69 $ après la chute liée à OpenAI : surveiller le haut du couloir.",
+    "tags": "us,tech,software,ai,trade-idea",
+    "grade": "B-",
+    "href": "/analyses/ORCL/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "LEU",
     "exchange": "NYSE · Enrichissement d’uranium et combustible nucléaire",
     "name": "LEU — carnet 4,5 Md$ et trésorerie nette, mais dilution lourde (offre de septembre, bons, ATM...",
@@ -1960,19 +1973,6 @@ window.searchDataPrebuilt = [
     "tags": "us,semis,ai-chain,hardware,technology",
     "grade": "B-",
     "href": "/analyses/LITE/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "ORCL",
-    "exchange": "NYSE · Logiciels et infrastructure cloud",
-    "name": "ORCL — Oracle : infrastructure cloud +121 %, RPO de 664 Md$, mais flux libre négatif et diluti...",
-    "title": "ORCL — Oracle : infrastructure cloud +121 %, RPO de 664 Md$, mais flux libre négatif et diluti...",
-    "desc": "Oracle : un carnet de commandes géant, une facture d’investissement qui l’est tout autant, et un titre qui casse ses plus bas post-résultats. Dossier au close du 25 septembre 2026, statut surveiller, aucune entrée.",
-    "tags": "us,equities,ai-chain,software,technology",
-    "grade": "B-",
-    "href": "/analyses/ORCL/",
     "date": ""
   },
   {
