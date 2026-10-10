@@ -1101,7 +1101,7 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
       <p>${hasEntryZone
         ? `Entrée = zone conditionnelle à l'ouverture (9h30–9h45 ET), uniquement si le prix s'y trouve et tient le VWAP observé.`
         : stopLimit
-          ? `Tests de résistance et suivis de tendance : ordre d'achat stop-limite, déclenché au prix publié et plafonné à ce même prix, valable la seule séance. Si le cours ouvre sous le niveau d'invalidation, annulez l'ordre dès l'ouverture. Si le cours saute au-dessus du plafond, l'ordre ne s'exécute pas : on ne poursuit pas. ${hasPullback ? 'Replis : ordre limité au prix publié. ' : ''}Aucune cotation d'avant-ouverture n'a été relevée : rien ne garantit que ces prix seront traités.`
+          ? `Tests de résistance et suivis de tendance : ordre d'achat stop-limite, déclenché au prix publié et plafonné à ce même prix, valable la seule séance. Si le cours ouvre sous le niveau d'invalidation, annulez l'ordre dès l'ouverture. Si le cours ouvre au-dessus du prix publié, l'ordre se déclenche mais n'achète qu'à ce prix ou moins : il ne passe que si le cours redescend jusque-là. Ne relevez pas le plafond, ne passez pas au marché. ${hasPullback ? 'Replis : ordre limité au prix publié. ' : ''}Aucune cotation d'avant-ouverture n'a été relevée : rien ne garantit que ces prix seront traités.`
           : `Entrée = un prix unique, en ordre à cours limité valable la séance. Pas de zone, pas de condition de VWAP, pas de poursuite : si le marché ouvre au-dessus et n'y revient pas, la ligne ne se déclenche simplement pas.`} Le stop se place dans le système du courtier dès l'achat. ${hasEntryZone
         ? `Le R/R du tableau est calculé au HAUT de la zone d'entrée, soit le pire remplissage autorisé; le plancher du scan est 1:${minRR}.`
         : `L’ordre a un plafond unique ; le prix moyen réellement payé peut être inférieur. Le calcul utilise le prix limite, soit le prix maximal autorisé ; un remplissage inférieur modifie le risque réel et le rapport gain/risque.`
@@ -1149,7 +1149,7 @@ ${d.gates_report.map(g => `        <li><strong>${esc(g.id)} — ${esc(g.name)}</
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:1rem;">
       <h4 style="margin:0 0 0.5rem;">Sources de données</h4>
       <ul style="margin:0;font-size:0.85rem;color:#64748b;">
-        <li>Prix &amp; niveaux : flux d'indicateurs du fournisseur de données de marché, arrêté à la clôture de référence du scan</li>
+        <li>Prix &amp; niveaux : cours journaliers complets du fournisseur de données de marché, niveaux calculés à la clôture de référence du scan</li>
         <li>Régime : modèle 6 composantes (crédit, VIX, dollar, liquidité, actions, taux)</li>
         <li>Screening : filtres techniques multi-stratégies (momentum, breakout, pullback)</li>
         <li>Séance couverte : ${d.session_label || d.date}</li>
