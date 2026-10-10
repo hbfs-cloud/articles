@@ -35,7 +35,8 @@ try {
   for (const file of ['package.json', 'tools/package.json', 'tools/publish.js', 'tools/add_card.js',
     'tools/build_search_index.py', 'tools/build_sitemap_rss.py', 'tools/build_rss.js',
     'tools/build_search_module.js', 'tools/gen-series-catalog.js', 'tools/gen-tech-catalog.cjs',
-    'tools/validate-article.js', 'tools/lib/analysis-publication-gate.js', 'tools/lib/refresh-tech-series.js']) {
+    'tools/validate-article.js', 'tools/lib/analysis-publication-gate.js', 'tools/lib/refresh-tech-series.js',
+    'tools/lib/archive-folders.js']) {
     write(file, fs.readFileSync(path.join(ROOT, file)));
   }
   fs.symlinkSync(path.join(ROOT, 'node_modules'), path.join(temp, 'node_modules'), 'dir');
