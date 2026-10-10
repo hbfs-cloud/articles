@@ -69,6 +69,26 @@ function chaptersFor(slug) {
   return chapters.sort((a, b) => a.number - b.number || a.href.localeCompare(b.href));
 }
 
+// Optional direct download (a book, a PDF guide) declared by the series landing page:
+// <meta name="dt:download" content="/series/<slug>/file.pdf"> plus optional dt:download-label,
+// dt:download-meta and dt:kind. The file must exist in the repository, otherwise it is ignored.
+function downloadFor(slug) {
+  const file = path.join(SERIES_ROOT, slug, 'index.html');
+  if (!fs.existsSync(file)) return null;
+  const html = fs.readFileSync(file, 'utf8');
+  const meta = name => {
+    const tag = (html.match(new RegExp(`<meta[^>]+name=["']${name.replace(/[:-]/g, '\\$&')}["'][^>]*>`, 'i')) || [''])[0];
+    return capture(tag, /content=["']([^"']*)["']/i);
+  };
+  const href = meta('dt:download');
+  if (!new RegExp(`^/series/${slug}/[^/]+\\.(?:pdf|epub|zip)$`, 'i').test(href)) return null;
+  if (!fs.existsSync(path.join(ROOT, href.replace(/^\//, '')))) return null;
+  return {
+    kind: meta('dt:kind'),
+    download: { href, label: meta('dt:download-label') || 'Télécharger', meta: meta('dt:download-meta') },
+  };
+}
+
 const cards = JSON.parse(fs.readFileSync(SOURCE, 'utf8'));
 const bySlug = new Map();
 
@@ -98,6 +118,7 @@ for (const card of cards) {
     href: chapters[0] ? chapters[0].href : href,
     chapterCount: chapters.length || 1,
     chapters: chapters.length ? chapters : [{ number: 1, href, title }],
+    ...(downloadFor(slug) || {}),
   });
 }
 

@@ -39,12 +39,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="DailyTickers">
-  <link rel="stylesheet" href="assets/style.css?v=20260831-2">
+  <link rel="stylesheet" href="assets/style.css?v=20261010-1">
   <link rel="stylesheet" href="assets/sidebar.css?v=20260309">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <!-- ECharts lazy-loaded on radar/scanner tab -->
-  <script src="/data/search_data.js?v=202610101937"></script>
+  <script src="/data/search_data.js?v=202610102307"></script>
   <style>
     /* Landing Specific Overrides */
     body {
@@ -4209,6 +4209,17 @@
           '<strong>' + escapeSeriesHtml(chapter.title || ('Partie ' + (index + 1))) + '</strong></a></li>';
       }).join('');
       const countLabel = item.chapterCount > 1 ? item.chapterCount + ' parties' : 'Article unique';
+      const dl = item.download && item.download.href ? item.download : null;
+      if (dl) {
+        // Livre ou guide téléchargeable : le téléchargement est l'action principale, la page de présentation la seconde.
+        return '<article class="report-card series-catalog-card series-download-card" data-series-parts="' + chapters.length + '" data-lang="' + escapeSeriesHtml(item.lang || 'fr') + '" data-tags="' + escapeSeriesHtml((item.tags || []).join(',')) + '">' +
+          '<div class="series-card-head"><span class="series-card-kind"><i class="fa-solid fa-book"></i> ' + escapeSeriesHtml(item.kind || 'Livre') + '</span><span class="series-card-count">' + escapeSeriesHtml(dl.meta || 'Téléchargement') + '</span></div>' +
+          '<h2>' + escapeSeriesHtml(item.title) + '</h2>' +
+          '<p class="series-card-description">' + escapeSeriesHtml(item.description) + '</p>' +
+          '<a href="' + escapeSeriesHtml(item.href) + '" class="series-card-more">Présentation et sommaire <i class="fa-solid fa-arrow-right"></i></a>' +
+          '<a href="' + escapeSeriesHtml(dl.href) + '" class="series-card-cta series-card-download" download><i class="fa-solid fa-file-arrow-down"></i> ' + escapeSeriesHtml(dl.label) + '</a>' +
+        '</article>';
+      }
       return '<article class="report-card series-catalog-card" data-series-parts="' + chapters.length + '" data-lang="' + escapeSeriesHtml(item.lang || 'fr') + '" data-tags="' + escapeSeriesHtml((item.tags || []).join(',')) + '">' +
         '<div class="series-card-head"><span class="series-card-kind"><i class="fa-solid fa-graduation-cap"></i> Série</span><span class="series-card-count">' + countLabel + '</span></div>' +
         '<h2>' + escapeSeriesHtml(item.title) + '</h2>' +
