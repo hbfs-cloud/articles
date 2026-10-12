@@ -1,0 +1,394 @@
+{
+  "role": "senior_qa",
+  "reviewerId": "ionq-senior-qa-claude-2",
+  "reviewerName": "Claude (revue Senior QA indépendante, tour 4)",
+  "analysisSha256": "ec94838ec15069815947bd4229275668718ff7135e28e0a854180f214ef226bb",
+  "evidenceSha256": "1d070c0d118283c25544d81e11604aa5bc1e93b127c139a25b51c7431fd99f5e",
+  "status": "PASS",
+  "score": 90,
+  "blockingFindings": [],
+  "minorFindings": [
+    {
+      "id": "AQ-QA-001",
+      "where": "technicals.setupNote ; tradeIdea.thesis ; rendu (en-tête, échelle de prix, tableau des bons, métadonnées de transmission)",
+      "problem": "« 42,38 $ (42.38 à la saisie) » reste un contournement du contrôle mentionsLevel. Le gabarit affiche toujours « $39.89 » et « +1.12% » en vert à côté de « 12 octobre 2026 », un jour de −9,2 % en séance (le paragraphe juste dessous date bien ce cours au 9 octobre), « $49.76 », « -8.0% », « 1:2.18 … au plafond 43,29 $ » (deux formats décimaux dans la même case) et des dates ISO (« 2032-07-09 », « Clôture de référence : 2026-10-09 »). S’y ajoute le statut « Expired » affiché en anglais dans le tableau des bons (valeur imposée par l’énumération du schéma). Non modifié à ce tour, comme annoncé.",
+      "fix": "Faire accepter la virgule décimale par mentionsLevel (tools/check-analysis-editorial-quality.js), puis retirer « (42.38 à la saisie) » et « (38.99 à la saisie) ». Dans tools/render-analysis.js : prix, pourcentages et R/R au format français, libellé « Clôture du 9 octobre » sous le cours d’en-tête, dates en toutes lettres. Traduire au rendu les valeurs de statut des bons (Expired → Expirés)."
+    }
+  ],
+  "checks": [
+    {
+      "id": "AQ-VRD-001",
+      "status": "PASS",
+      "rationale": "Le verdict nomme IonQ et ses produits (ions piégés, réseaux et chiffrement quantiques, satellites, fonderie SkyWater), le catalyseur (rachat d’Elisity le 12 octobre, jusqu’à 1,3 Md$ en actions), la contradiction la plus forte (405,1 millions d’actions contre 222,8 millions en février 2025, chiffre d’affaires d’Elisity non publié), la cause du recul formulée sans excès (le groupe quantique bouge en bloc, part propre non isolée) et l’action (aucune entrée avant une clôture au-dessus de 42,38 $).",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#verdict.summary",
+        "data/analyses-data/IONQ.json#blastRadius.missingData[1]"
+      ]
+    },
+    {
+      "id": "AQ-VRD-002",
+      "status": "PASS",
+      "rationale": "Chiffres propres à IonQ, refaits : 80,1 M$ (80 050 / 20 694 k$ = +287 %), +108 % pro forma (81 851 / 39 360 k$, 10-Q), perte opérationnelle de 337,2 M$, 23,2 à 39,3 millions d’actions pour Elisity (1,15 Md$ / 49,61 $ ; 1,3 Md$ / 33,07 $), −9,2 % en séance (36,225 / 39,89 à 16 h 29 UTC). Lien de cause explicite : le marché compte les actions à créer avant les synergies.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#verdict",
+        "analyses/IONQ/_primary/text/q2-2026-ex991.htm.txt",
+        "analyses/IONQ/_primary/text/q2-2026-10q.htm.txt",
+        "analyses/IONQ/_data/elisity_announcement.json",
+        "analyses/IONQ/_data/instrument.json"
+      ]
+    },
+    {
+      "id": "AQ-VRD-003",
+      "status": "PASS",
+      "rationale": "Note C (41/100 = 20 − 8 − 10 − 4 − 12 + 55, refait) justifiée à part de l’état du plan (surveiller ; déclencheur de 42,38 $ non atteint au close du 9 octobre à 39,89 $).",
+      "evidenceRefs": [
+        "analyses/IONQ/_runs/20261012/revision/numeric-evidence.json#score_components",
+        "data/analyses-data/IONQ.json#verdict.confidence",
+        "data/analyses-data/IONQ.json#tradeIdea.statusNote"
+      ]
+    },
+    {
+      "id": "AQ-VRD-004",
+      "status": "PASS",
+      "rationale": "Les cinq raisons d’acheter sont positives, les cinq raisons d’éviter négatives. Trésorerie de 2 959,3 M$ refaite (1 235 729 + 883 240 + 840 365 k$), flux opérationnel de −254,8 M$ au semestre, conclusion du 10-Q sur douze mois reprise. Bons à 99,88 et 155 $ : 2,50 et 3,89 fois le cours. Décret daté du 22 juin 2026, conforme au communiqué.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#verdict.whyBuy",
+        "data/analyses-data/IONQ.json#verdict.whyAvoid",
+        "analyses/IONQ/_primary/text/q2-2026-ex991.htm.txt",
+        "analyses/IONQ/_primary/ionq-elisity-pr-20261012.html"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-001",
+      "status": "PASS",
+      "rationale": "Produit, clients, modèle, coûts (1 132 salariés, perte opérationnelle de 633,7 M$ en 2025) et place dans la chaîne expliqués et sourcés. La logique du rachat d’Elisity est chiffrée (distribution, calendrier fédéral, monnaie à environ 50 fois les revenus, périmètre hors SkyWater, cohérent avec la ligne de valorisation à 49,7×) ; le tunnel de 33,07 à 49,61 $ vaut bien ±20 % autour de 41,34 $, et la moyenne des clôtures pondérée par les volumes sur vingt séances (14 septembre – 9 octobre) refaite à 42,24 $.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#business.overview",
+        "analyses/IONQ/_primary/text/fy25-10k.htm.txt",
+        "analyses/IONQ/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-002",
+      "status": "PASS",
+      "rationale": "Segments conformes à la note 15 du 10-Q : matériel 46,5 M$, services 33,6 M$, Corée 17,8 M$. SkyWater (consolidée depuis le 31 juillet) et Elisity (chiffre d’affaires non publié) sont traitées à part.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#business.segments",
+        "analyses/IONQ/_primary/text/q2-2026-10q.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-003",
+      "status": "PASS",
+      "rationale": "Indicateurs du secteur vérifiés dans le communiqué du 5 août : obligations de performance restantes de 485,0 M$ (+297 %), passif de bons de 3 052 398 k$, EBITDA ajusté de −120 275 k$ dont 24,7 M$ liés à SkyWater, 50 % international et 60 % commercial.",
+      "evidenceRefs": [
+        "analyses/IONQ/_primary/text/q2-2026-ex991.htm.txt",
+        "analyses/IONQ/_primary/text/q2-2026-10q.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-EAR-001",
+      "status": "PASS",
+      "rationale": "Deuxième trimestre 2026 : communiqué du 5 août (8-K pièce 99.1, 0001193125-26-335040) et 10-Q du 10 août (0001193125-26-341001).",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#earnings",
+        "analyses/IONQ/_runs/20261012/revision/primary-manifest.json"
+      ]
+    },
+    {
+      "id": "AQ-EAR-002",
+      "status": "PASS",
+      "rationale": "Pont exact au millier : −337 243 − 1 649 115 + 31 979 + 79 712 = −1 874 667 k$ avant impôt ; + 6 067 = −1 868 600 k$ ; −1 867 742 k$ attribuables. +287 % publié, +108,0 % pro forma (81 851 contre 39 360 k$), avec la réserve exacte que les rachats de 2025 conclus après le deuxième trimestre 2025 ne sont pas neutralisés (Capella 11 juillet, Oxford Ionics 16 septembre, Vector Atomic 2 octobre 2025, 10-K). Seed : 30 076 k$ en 752 264 actions, 14,0 M$ de revenus. Bénéfice du premier trimestre de 805,4 M$ cohérent.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#earnings.beatNote",
+        "analyses/IONQ/_primary/text/q2-2026-ex991.htm.txt",
+        "analyses/IONQ/_primary/text/q2-2026-10q.htm.txt",
+        "analyses/IONQ/_primary/text/fy25-10k.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-EAR-003",
+      "status": "PASS",
+      "rationale": "Prévisions vérifiées : 280–290 M$ hors SkyWater (5 août), puis 450–460 M$ avec SkyWater dès le 31 juillet (8 septembre), désormais qualifiée de changement de périmètre plutôt que de relèvement, ce qui est exact ; croissance organique visée de 100 %.",
+      "evidenceRefs": [
+        "analyses/IONQ/_primary/text/q2-2026-ex991.htm.txt",
+        "analyses/IONQ/_primary/text/sep8-ex991.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-EAR-004",
+      "status": "PASS",
+      "rationale": "Le 10-Q et le communiqué du deuxième trimestre nourrissent le récit : bons réévalués, SkyWater (note 21), pont du résultat, mise en garde sur l’absence d’expérience dans la fonderie, conclusions sur les contrôles et la liquidité.",
+      "evidenceRefs": [
+        "analyses/IONQ/_primary/text/q2-2026-10q.htm.txt",
+        "analyses/IONQ/_primary/text/q2-2026-ex991.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-EAR-005",
+      "status": "PASS",
+      "rationale": "« Vers le 4 novembre 2026, date et heure non confirmées par l’émetteur » : conforme à la source tierce (nextEarningsDate 2026-11-04T20:00Z) ; « après la clôture » est retiré. Le plan est soldé à la clôture du 3 novembre.",
+      "evidenceRefs": [
+        "analyses/IONQ/_data/fundamentals.json",
+        "data/analyses-data/IONQ.json#earnings.nextEarnings"
+      ]
+    },
+    {
+      "id": "AQ-VAL-001",
+      "status": "PASS",
+      "rationale": "Refait : 381 002 314 × 39,89 $ = 15 198,2 M$ ; − 2 959,3 M$ = 12 238,9 M$ ; ÷ 246,474 M$ = 49,66×, arrondi à 49,7× (« 50× » en en-tête) ; 42,9× sur 285 M$. Scénario à 20× : (4 929,5 + 2 959,3) M$ ÷ 381,0 M = 20,71 $, soit −48,1 %. Capitalisation d’en-tête : 405 138 089 × 39,89 $ = 16,16 Md$.",
+      "evidenceRefs": [
+        "analyses/IONQ/_runs/20261012/revision/numeric-evidence.json#valuation_scenario",
+        "analyses/IONQ/_runs/20261012/revision/numeric-evidence.json#gaap_ttm_usd",
+        "analyses/IONQ/_primary/text/q2-2026-ex991.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-VAL-002",
+      "status": "PASS",
+      "rationale": "Bloquant du tour 1 levé : les deux lignes sont datées « clôture du 9 octobre 2026 ». Le périmètre est aligné et déclaré pour les trois termes (revenus GAAP douze mois au 30 juin avant SkyWater, trésorerie publiée au 30 juin, actions au 29 juillet avant les 24 135 775 remises pour SkyWater) ; l’écart avec la capitalisation d’en-tête (405,1 millions d’actions) est expliqué ; les actions d’Elisity sont exclues, et c’est écrit.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#fundamentals.rows[13]",
+        "data/analyses-data/IONQ.json#fundamentals.rows[14]",
+        "analyses/IONQ/_runs/20261012/revision/numeric-evidence.json#valuation_scenario"
+      ]
+    },
+    {
+      "id": "AQ-VAL-003",
+      "status": "PASS",
+      "rationale": "Pairs refaits sur comparison_context.json : Rigetti 321,8×, D-Wave 396,6×, CrowdStrike 51,42×, Zscaler 10,89×, Palo Alto 29,80×, Akamai 4,94×. Statistiques courantes, non point-in-time, déclarées comme telles.",
+      "evidenceRefs": [
+        "analyses/IONQ/_data/comparison_context.json"
+      ]
+    },
+    {
+      "id": "AQ-SEC-001",
+      "status": "PASS",
+      "rationale": "10-Q du 10 août 2026 (0001193125-26-341001) : 381 044 481 actions au 30 juin, 381 002 314 au 29 juillet, 1 milliard autorisées, bons, note 21 SkyWater (24 135 775 actions et 741,3 M$), aucun plan 10b5-1, contrôles efficaces, liquidité suffisante pour douze mois.",
+      "evidenceRefs": [
+        "analyses/IONQ/_primary/text/q2-2026-10q.htm.txt",
+        "analyses/IONQ/_runs/20261012/revision/primary-manifest.json"
+      ]
+    },
+    {
+      "id": "AQ-SEC-002",
+      "status": "PASS",
+      "rationale": "Ventilation de la dilution constatée refaite sur les dépôts. Offres de 2025 : 16 038 460 (ATM) + 14 165 708 + 3 855 557 bons préfinancés de série A (10-K, note 14) + 16 500 000 + 5 005 400 = 55,6 M. Rachats en actions : Oxford Ionics 25 372 150, SkyWater 24 135 775, Capella 9 004 982, Lightsynq 6 185 119, IDQ 4 117 439, Skyloom 2 797 154, Vector Atomic 2 607 452 (2 octobre 2025), Nexus 1 229 698, société d’information de marché 903 195 (9 juin 2025), Seed 752 264 = 77,1 M. Actions remises contre actifs incorporels et accords de recherche : 2 562 642 (10-Q, variation des capitaux propres), celles que revend Cambridge. Solde : 182,3 − 55,6 − 77,1 − 2,6 = 47,1 M, attribué à la rémunération et aux exercices. J.P. Morgan seul souscripteur.",
+      "evidenceRefs": [
+        "analyses/IONQ/_primary/text/fy25-10k.htm.txt",
+        "analyses/IONQ/_primary/text/oct25-424b5-a.htm.txt",
+        "analyses/IONQ/_primary/text/q1-2026-10q.htm.txt",
+        "analyses/IONQ/_primary/text/q2-2026-10q.htm.txt",
+        "data/analyses-data/IONQ.json#capitalStructure.shareHistory"
+      ]
+    },
+    {
+      "id": "AQ-SEC-003",
+      "status": "PASS",
+      "rationale": "Dilution constatée (offres, rachats en actions, actifs incorporels, solde) bien séparée de la dilution potentielle (Elisity, options en circulation et unités non acquises, bons privés). Étagère S-3ASR, ATM clos, reventes secondaires et bons distingués. Dette reprise de SkyWater désormais correcte : « IonQ prévoyait de conserver » le prêt de 39 M$ d’Oxbow Realty et les financements d’équipements (424B3) ; « Aucune dette financière au 30 juin » dans la phrase clé.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#capitalStructure.shareHistory",
+        "data/analyses-data/IONQ.json#fundamentals.rows[11]",
+        "data/analyses-data/IONQ.json#globalScore.keyTakeawaysPositive",
+        "analyses/IONQ/_primary/text/mar31-424b3.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-SEC-004",
+      "status": "PASS",
+      "rationale": "Refait : 405 138 089 = 381 002 314 + 24 135 775 ; +182,3 M (+81,8 %) depuis 222 842 179. 2 339 433 options en circulation + 18 202 947 unités + 4 056 249 unités de performance non acquises = 24,6 M, désormais qualifiées « options en circulation et unités non acquises » ; 8 544 585 actions restreintes hors cumul. Capital dilué 469,0 M ; 548,1 M avec 79,1 M de bons (+35,3 %). Bons : 8,2 % et 9,6 % après exercice.",
+      "evidenceRefs": [
+        "analyses/IONQ/_primary/text/q2-2026-10q.htm.txt",
+        "data/analyses-data/IONQ.json#capitalStructure",
+        "data/analyses-data/IONQ.json#verdict.controlChecklist[1]"
+      ]
+    },
+    {
+      "id": "AQ-SEC-005",
+      "status": "PASS",
+      "rationale": "Les deux conclusions du 10-Q sont reprises et exactes : « disclosure controls and procedures were effective at a reasonable assurance level » au 30 juin 2026, et trésorerie « sufficient … for the next 12 months ». Aucune conclusion n’est tirée du silence.",
+      "evidenceRefs": [
+        "analyses/IONQ/_primary/text/q2-2026-10q.htm.txt",
+        "data/analyses-data/IONQ.json#filingsReview.summary"
+      ]
+    },
+    {
+      "id": "AQ-SEC-006",
+      "status": "PASS",
+      "rationale": "Résumé conforme : dix-sept pièces, seize dépôts d’IonQ et l’avis 25-NSE du NYSE, communiqué d’Elisity archivé à part ; concorde avec filingsReview.filings (17) et le manifeste (inventaire 70, ouvertes 17, revues 17). Le pourcentage non vérifié sur Horizon Quantum est retiré.",
+      "evidenceRefs": [
+        "analyses/IONQ/_runs/20261012/revision/primary-manifest.json",
+        "data/analyses-data/IONQ.json#filingsReview.summary"
+      ]
+    },
+    {
+      "id": "AQ-TEC-001",
+      "status": "PASS",
+      "rationale": "Clôture de référence du 9 octobre 2026 (39,89 $, served_completed_end 2026-10-09, current_bar_included false) et cotation en séance horodatée (36,225 $ à 2026-10-12T16:29:57Z). La valorisation est désormais datée du 9 octobre. Libellé du cours d’en-tête à préciser (mineur).",
+      "evidenceRefs": [
+        "analyses/IONQ/_data/bars.json",
+        "analyses/IONQ/_data/instrument.json"
+      ]
+    },
+    {
+      "id": "AQ-TEC-002",
+      "status": "PASS",
+      "rationale": "Couloir conforme aux barres certifiées : 35,00 $ (14 septembre), 47,9449 $ (13 août), retest 47,91 $ (28 septembre), creux plus haut 36,0601 $ (16 septembre). Supports 38,99 / 36,06 / 35,00 et résistances 42,38 / 45,40 / 47,94 inchangés ; 36,225 / 35,00 = +3,5 %. TP1 désormais décrit exactement : une fois l’écart entre le déclencheur et le bas du couloir (7,38 $).",
+      "evidenceRefs": [
+        "analyses/IONQ/_data/bars.json",
+        "data/analyses-data/IONQ.json#technicals",
+        "data/analyses-data/IONQ.json#tradeIdea.entryNote"
+      ]
+    },
+    {
+      "id": "AQ-TEC-003",
+      "status": "PASS",
+      "rationale": "Raisons distinctes : déclencheur sur clôture au-dessus du haut du 7 octobre (42,38 $) ; plafond 43,29 $ = prix maximal pour un R/R ≥ 1,5 ((49,76 − P) / (P − 38,99) ≥ 1,5 ⇒ P ≤ 43,298) ; stop au plus bas du 9 octobre (1,32 ATR) ; abandon au bas du couloir (35,00 $) ; objectifs mesurés ; expiration avant les résultats.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#tradeIdea",
+        "analyses/IONQ/_runs/20261012/revision/numeric-evidence.json#levels"
+      ]
+    },
+    {
+      "id": "AQ-TEC-004",
+      "status": "PASS",
+      "rationale": "Refait sur les barres : risque 3,39 $, écart 7,38 $ ; TP1 49,76 $ (+17,4 %), TP2 53,45 $ (+26,1 %), stop −8,0 % ; R/R 2,177 et 3,265, au plafond 1,505 et 2,363 ; 0,91 $ = 0,36 ATR ; 53 ouvertures sur 250 au-dessus de la veille de plus de 0,91 $ (21,2 %), écart médian 0,74 $ ; 20 cassures, 5 dans la marge de 2,15 %, 4 achetables ; repli limité : 16 cassures non achetables, 11 exécutions, aucune avec stop la même séance, aucun retrait, résultat identique en appliquant l’annulation après une clôture sous le niveau ; taille 23 → 17 et 232 → 174 ; montant médian échangé 799,3 M$.",
+      "evidenceRefs": [
+        "analyses/IONQ/_data/bars.json",
+        "analyses/IONQ/_runs/20261012/revision/numeric-evidence.json#levels",
+        "tools/lib/analysis-v3-r08.cjs"
+      ]
+    },
+    {
+      "id": "AQ-TEC-005",
+      "status": "PASS",
+      "rationale": "Veto des résultats cohérent sur le calendrier : les cinq séances avant le mercredi 4 novembre sont les 28, 29, 30 octobre, 2 et 3 novembre ; dernière clôture d’activation le lundi 26, dernier achat le 27, sortie à la clôture du 3 novembre ; horizon maximal de 15 séances (14 octobre – 3 novembre). Séance du 12 exclue des niveaux. Indicateurs refaits : EMA 41,69 / 41,85 / 45,34 (amorçage par moyenne simple), RSI 44,0, ATR 2,56, MACD 0,24 / 0,59.",
+      "evidenceRefs": [
+        "analyses/IONQ/_data/bars.json",
+        "analyses/IONQ/_runs/20261012/revision/numeric-evidence.json#technicals_recomputed",
+        "data/analyses-data/IONQ.json#tradeIdea.entryNote"
+      ]
+    },
+    {
+      "id": "AQ-RSK-001",
+      "status": "PASS",
+      "rationale": "Risques propres à IonQ avec mécanisme, preuve et signal : dilution (+81,8 %, Elisity 5,7 à 9,7 % du capital), prix d’Elisity invérifiable, consommation de trésorerie (flux libre −483,9 M$), intégration (écart d’acquisition de 2 185 971 k$), gaps refaits (12 ≥ 5 %, 3 ≥ 10 %, maximum 16,25 % le 26 février ; pire écart baissier en dollars 2,97 $, −5,17 %, le 15 mai).",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#risks.riskCards",
+        "analyses/IONQ/_primary/text/q2-2026-ex991.htm.txt",
+        "analyses/IONQ/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-RSK-002",
+      "status": "PASS",
+      "rationale": "Lecture contraire chiffrée et vérifiée : plancher de 33,07 $ à 17,1 % sous le close, −17,6 % du 30 juin au 30 septembre (53,26 → 43,86 $), +287 % publié contre +108 % pro forma, 53 % du chiffre d’affaires chez trois clients, 17,8 M$ en Corée.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#filingsReview.contrarianRisks",
+        "analyses/IONQ/_data/bars.json",
+        "analyses/IONQ/_primary/text/fy25-10k.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-RSK-003",
+      "status": "PASS",
+      "rationale": "Volet particulier complet : écart d’ouverture (aucune ouverture sous la veille de plus de 3,39 $ sur 250 séances ; réduction d’un quart motivée par un jour de nouvelle comme le 8-K d’Elisity), liquidité (799 M$ échangés en médiane, écart achat-vente déclaré non mesuré), taille sur budget de perte, plafond de 43,29 $ et ordre limité de trois séances, ligne pour le détenteur actuel (clôture sous 35,00 $).",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#tradeIdea.entryNote",
+        "data/analyses-data/IONQ.json#tradeIdea.statusNote",
+        "data/analyses-data/IONQ.json#risks.pedagogy"
+      ]
+    },
+    {
+      "id": "AQ-SRC-001",
+      "status": "PASS",
+      "rationale": "Chaque section cite ses sources (10-K, 10-Q, communiqués 99.1, 424B5, S-3ASR, 424B3, communiqué d’Elisity, dépêche Wedbush/MT Newswires, données de marché hachées). Décret du 22 juin 2026 et condition réglementaire de clôture d’Elisity conformes au communiqué.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json",
+        "analyses/IONQ/_runs/20261012/revision/primary-manifest.json",
+        "analyses/IONQ/_primary/ionq-elisity-pr-20261012.html"
+      ]
+    },
+    {
+      "id": "AQ-SRC-002",
+      "status": "PASS",
+      "rationale": "Liens SEC directs avec date et numéro d’accession pour les 17 pièces ; communiqué de l’émetteur avec URL, heure de collecte et empreinte ; cotation et barres horodatées.",
+      "evidenceRefs": [
+        "analyses/IONQ/_runs/20261012/revision/primary-manifest.json",
+        "analyses/IONQ/_data/elisity_announcement.json",
+        "analyses/IONQ/_data/instrument.json"
+      ]
+    },
+    {
+      "id": "AQ-SRC-003",
+      "status": "PASS",
+      "rationale": "Positions vendeuses FINRA (40 638 080 au 30 septembre, 1,41 jour), base du ratio déclarée (flottant de 378 179 087, 10,7 %), Rigetti 19,8 % et D-Wave 21,2 %, coût d’emprunt 0,44 %. Wedbush désormais « cité par MT Newswires » dans l’actualité, et la dépêche figure en business.sourceRefs.",
+      "evidenceRefs": [
+        "analyses/IONQ/_data/short_squeeze.json",
+        "analyses/IONQ/_data/fundamentals.json",
+        "analyses/IONQ/_data/comparison_context.json",
+        "analyses/IONQ/_data/corporate_actions.json"
+      ]
+    },
+    {
+      "id": "AQ-EDT-001",
+      "status": "PASS",
+      "rationale": "Sur 416 phrases de 55 caractères ou plus, la plus reprise (« Les groupes sont définis par le lien économique, pas par la corrélation. ») apparaît dans 35 des 372 autres fiches (9,4 %), sous le seuil de 10 %.",
+      "evidenceRefs": [
+        "data/analyses-data/"
+      ]
+    },
+    {
+      "id": "AQ-EDT-002",
+      "status": "PASS",
+      "rationale": "Verdict, risques, catalyseurs et invalidations propres à IonQ et Elisity : tunnel de 33,07 à 49,61 $, SkyWater, bons à 99,88 et 155 $, couloir d’août de 35,00 à 47,94 $, décret du 22 juin 2026.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json"
+      ]
+    },
+    {
+      "id": "AQ-EDT-003",
+      "status": "PASS",
+      "rationale": "Limites précises et à jour : Arqit « écarté des comparables certifiés » (terme anglais retiré), part du recul du 12 octobre non isolée faute de cours des pairs en séance, chiffres d’Elisity non publiés, date des résultats non confirmée, agrégats d’avant SkyWater, chaîne d’options refusée.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#blastRadius.missingData",
+        "analyses/IONQ/_runs/20261012/revision/numeric-evidence.json#limitations"
+      ]
+    },
+    {
+      "id": "AQ-QA-001",
+      "status": "PASS",
+      "rationale": "Tour 4, diff limité à quatre champs et vérifié : meta.description ramenée à 291 caractères (chiffres identiques à la fiche : 1,3 Md$, 80,1 M$, +287 % / +108 %, 337 M$, 405 contre 223 millions, 36,23 $ en séance) ; warrants[2].status = « Expired », conforme à l’énumération du schéma ; « surtout en actions » exact (SkyWater payée en partie en numéraire, 741,3 M$) ; « Prévision 2026 portée à 450–460 M$ avec SkyWater », cohérent avec le changement de périmètre. Niveaux, note et plan inchangés (numeric-evidence identique : 42,38 / 38,99 / 35,00 / 49,76 / 53,45 / 43,29). Sidecar et numeric-evidence liés à ec94838e… ; generator_sha256 841cf72e… = shasum de build-ionq.cjs. validate-analysis-evidence PASS (541), check-analysis-editorial-quality --strict --pre-review 0 erreur, rendu de la fiche hachée identique à preview/index.html, check-ai-tells propre. Formats du gabarit en mineur.",
+      "evidenceRefs": [
+        "analyses/IONQ/_runs/20261012/preview/index.html",
+        "data/analyses-data/IONQ.json",
+        "data/analyses-evidence/IONQ.json",
+        "analyses/IONQ/_runs/20261012/revision/numeric-evidence.json"
+      ]
+    },
+    {
+      "id": "AQ-QA-002",
+      "status": "PASS",
+      "rationale": "La présente revue (tour 4) enregistre PASS pour la fiche IONQ sur les empreintes ec94838e… et 1d070c0d… ; le diff de schéma ne modifie aucun chiffre ni aucune condition, et le correctif Telegram demandé au tour 3 est appliqué.",
+      "evidenceRefs": [
+        "analyses/IONQ/_runs/20261012/revision/review-senior_qa.json",
+        "analyses/IONQ/_runs/20261012/revision/review-senior_qa-r3.json"
+      ]
+    },
+    {
+      "id": "AQ-QA-003",
+      "status": "PASS",
+      "rationale": "Score de 90/100, au-dessus de 80, aucun contrôle en BLOCK. Retenue restante : formats du gabarit de rendu.",
+      "evidenceRefs": [
+        "analyses/IONQ/_runs/20261012/revision/review-senior_qa.json"
+      ]
+    }
+  ],
+  "telegramReview": {
+    "status": "PASS",
+    "findings": [
+      "Bloquant du tour 3 levé : « • Tout vendre à la clôture du 3 nov., veille de la date estimée des résultats (4 nov., non confirmée par IonQ). » La règle conditionnelle est retirée ; la sortie concorde avec tradeIdea.statusNote et l’horizon de la fiche.",
+      "Le reste est inchangé et conforme : 1,3 Md$ dont 150 M$, autorisation réglementaire, 23 à 39 millions d’actions (+5,7 à +9,7 %), 80,1 M$ (+287 % / +108 %), 450–460 M$ avec SkyWater (280–290 M$ sans), de 223 à 405 millions d’actions, 36,23 $ en séance (−9,2 % sur 39,89 $), 35,00 / 42,38 / 43,29 / 38,99 / 49,76 / 53,45 $, 26 et 27 octobre, taille 23 → 17. Français, autosuffisant, aucun terme interne, aucun tic (check-ai-tells --strict), HTML valide."
+    ]
+  }
+}

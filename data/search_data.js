@@ -1757,6 +1757,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "IONQ",
+    "exchange": "NYSE · Informatique quantique, réseaux et sécurité quantiques, fonderie",
+    "name": "IONQ — IonQ à 36,23 $ en séance le jour du rachat d’Elisity (jusqu’à 1,3 Md$ en actions) : cro...",
+    "title": "IONQ — IonQ à 36,23 $ en séance le jour du rachat d’Elisity (jusqu’à 1,3 Md$ en actions) : cro...",
+    "desc": "IonQ rachète Elisity (« zero trust ») pour jusqu’à 1,3 Md$ en actions. Deuxième trimestre : 80,1 M$ de chiffre d’affaires (+287 % publié, +108 % pro forma), 337 M$ de perte opérationnelle ; 405 millions d’actions contre 223 en février 2025. 36,23 $ en séance le 12 : surveiller, sans entrée.",
+    "tags": "us,tech,quantum,cybersecurity,speculative,trade-idea",
+    "grade": "C",
+    "href": "/analyses/IONQ/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ORCL",
     "exchange": "NYSE · Logiciels et infrastructure cloud",
     "name": "ORCL — Oracle à 135,69 $ : RPO 664 Md$, capex au-dessus du flux opérationnel, avis de force ma...",
@@ -4183,19 +4196,6 @@ window.searchDataPrebuilt = [
     "tags": "us,materials,speculative,trade-idea",
     "grade": "C+",
     "href": "/analyses/ABAT/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "IONQ",
-    "exchange": "NYSE • Technology • Quantum Computing",
-    "name": "IONQ — world-record fidelity, $3.3B cash, +202% revenue. Quantum leader at -35% YTD discount. ...",
-    "title": "IONQ — world-record fidelity, $3.3B cash, +202% revenue. Quantum leader at -35% YTD discount. ...",
-    "desc": "IonQ deep-dive: 99.99% fidelity world record, $130M revenue (+202% YoY), $3.3B cash fortress. Quantum computing pure-play trading at -35% YTD. Trade Idea inside.",
-    "tags": "us,tech,ai,speculative,trade-idea",
-    "grade": "D",
-    "href": "/analyses/IONQ/",
     "date": ""
   },
   {

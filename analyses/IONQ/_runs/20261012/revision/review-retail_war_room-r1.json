@@ -1,0 +1,431 @@
+{
+  "role": "retail_war_room",
+  "reviewerId": "ionq-retail-claude-1",
+  "reviewerName": "Claude (revue Retail War Room indépendante)",
+  "analysisSha256": "06a91c21255742a873457d69306367fbc36e907e58ff0d0acc48ec3ae698f9af",
+  "evidenceSha256": "ce0ce3d3e4b127d51be9f942b398404042e05b7f045fc8cb10ab572ed8da152d",
+  "status": "BLOCK",
+  "score": 72,
+  "blockingFindings": [
+    {
+      "id": "AQ-TEC-002",
+      "where": "technicals.badges[1] ; technicals.setupNote ; technicals.supports ; tradeIdea.entryNote (justification de TP1) ; tradeIdea.statusNote",
+      "problem": "Le « couloir de 36,06 $ à 47,91 $ depuis août » est faux d'après bars.json : le plus bas depuis août est 35,00 $ le 14 septembre (35,43 $ le 3 août), le plus haut 47,94 $ le 13 août. 36,06 $ n'est que le creux plus haut du 16 septembre. Le 12 octobre, le titre est déjà descendu à 35,89 $ en séance (bougie de 14 h UTC dans instrument.json), sous le seuil d'abandon. La fiche dit pourtant au lecteur que le titre est « à 0,5 % du bas du couloir », alors que le vrai plancher, 35,00 $, est 3,4 % plus bas et que le seuil d'abandon a déjà été franchi en séance. Les niveaux du plan (36,06 / 48,70 / 51,86) restent justes ; c'est leur justification qui est fausse, au niveau précis que le lecteur doit surveiller aujourd'hui.",
+      "fix": "1) technicals.badges[1] = « Couloir de 35,00 $ à 47,94 $ depuis août ». 2) technicals.setupNote : remplacer « Depuis août, il évolue dans un couloir entre le plus bas du 16 septembre (36,06 $) et les plus hauts d'août et du 28 septembre (47,91 $), et fait des sommets plus bas depuis » par « Depuis août, il évolue entre 35,00 $, plus bas du 14 septembre, et 47,94 $, plus haut du 13 août ; le creux du 16 septembre à 36,06 $, plus haut que celui du 14, a lancé la reprise jusqu'à 47,91 $ le 28 septembre, et le titre fait des sommets plus bas depuis ». Remplacer « Supports : 38,99 $, 36,06 $ et 31,81 $, le plus bas de fin juillet. » par « Supports : 38,99 $, 36,06 $ (creux du 16 septembre), 35,00 $ (plus bas du 14 septembre) et 31,81 $ (plus bas du 29 juillet). » Remplacer « à 0,5 % du bas du couloir : une clôture du 12 sous 36,06 $ abandonnerait le scénario » par « à 0,5 % du creux du 16 septembre, après un plus bas de séance à 35,89 $ : l'abandon se juge à la clôture, une clôture du 12 sous 36,06 $ abandonnerait le scénario, et le support suivant est 35,00 $ ». 3) technicals.supports = [38.99, 36.0601, 35.0, 31.8099]. 4) tradeIdea.entryNote : remplacer « TP1 à une hauteur de couloir au-dessus du déclencheur (déclencheur − plus bas du 16 septembre) » par « TP1 à la distance entre le creux du 16 septembre et le déclencheur (6,32 $), reportée au-dessus du déclencheur ». 5) tradeIdea.statusNote : après « (36,23 $ à 16 h 29 UTC) » ajouter « , plus bas de séance 35,89 $, déclencheur à +17 % de ce cours »."
+    },
+    {
+      "id": "AQ-TEC-005",
+      "where": "tradeIdea.statusNote ; tradeIdea.horizon ; tradeIdea.invalidation[3] ; tradeIdea.entryNote ; verdict.controlChecklist[2].action ; earnings.nextEarnings",
+      "problem": "Le veto avant résultats se contredit. entryNote interdit toute entrée dans les cinq séances qui précèdent le 4 novembre (du 28 octobre au 3 novembre). statusNote, horizon, invalidation[3] et la checklist disent au contraire que le plan reste valable jusqu'à la veille des résultats, et l'ordre limité de trois séances peut déborder sur la fenêtre interdite. Un lecteur qui suit la liste d'invalidation peut donc acheter après une clôture d'activation le 30 octobre, ce que le veto interdit. Sur un plan exécutable, la dernière clôture d'activation doit être une date. D'autre part, « après la clôture » n'a pas de source : j'ai vérifié par GetEarningsCalendarFiltered(symbols=IONQ) à 16:39:53Z, qui renvoie 2026-11-04, report_time TNS, date_confidence single_source. Enfin, earnings_risk.json, la pièce versée au dossier, ne contient aucun événement.",
+      "fix": "1) tradeIdea.statusNote : remplacer « Plan valable jusqu'à la clôture de la veille des résultats du troisième trimestre. » par « Dernière clôture d'activation : 26 octobre ; dernier achat le 27 octobre, ordre limité compris ; toute position soldée à la clôture du 3 novembre. Résultats attendus le 4 novembre selon un seul calendrier tiers, date non confirmée par IonQ : décaler ces dates si l'émetteur en annonce une autre. » 2) tradeIdea.horizon = « Cinq à quinze séances après activation, au plus tard jusqu'à la clôture du 3 novembre, veille des résultats attendus le 4 novembre (date non confirmée). Sans clôture au-dessus de 42,38 $ au plus tard le 26 octobre, le plan expire. » 3) tradeIdea.invalidation[3] = « Aucune clôture au-dessus de 42,38 $ au plus tard le 26 octobre, cinq séances avant les résultats attendus le 4 novembre : le plan expire. » 4) tradeIdea.entryNote : après « aucune entrée dans les cinq séances qui précèdent la date publiée » insérer « (du 28 octobre au 3 novembre ; l'ordre limité de trois séances est annulé à la clôture du 27 octobre) ». 5) verdict.controlChecklist[2].action = « Aucune entrée avant une clôture au-dessus de 42,38 $, au plus tard le 26 octobre ; position soldée à la clôture du 3 novembre. » 6) earnings.nextEarnings = « Publication du troisième trimestre attendue le 4 novembre 2026 selon un seul calendrier tiers (Yahoo, heure non précisée), date non confirmée par l'émetteur ; la séance suivante serait exposée au gap. » 7) Remplacer analyses/IONQ/_data/earnings_risk.json par la capture GetEarningsCalendarFiltered(symbols=\"IONQ\", days_ahead=30) et la citer comme source de la date."
+    },
+    {
+      "id": "AQ-VAL-002",
+      "where": "fundamentals.rows[13].signal ; fundamentals.rows[14].signal",
+      "problem": "Les entrées de valorisation sont datées « close du 2026-10-12 ». À la publication, cette séance est en cours et sa clôture n'existe pas. Les calculs utilisent en réalité la clôture du 9 octobre : 405,1 M d'actions × 39,89 $ = 16,2 Md$ ; valeur d'entreprise 14,16 Md$, soit 57,5 fois les revenus ; 17,10 $, soit −57 % sous 39,89 $. La date est donc fausse, et le lecteur peut croire ces multiples calculés à 36,23 $.",
+      "fix": "fundamentals.rows[13].signal : remplacer « au close du 2026-10-12 » par « au close du 2026-10-09 (39,89 $) ». fundamentals.rows[14].signal : remplacer « soit −57 % sous le close du 2026-10-12 » par « soit −57 % sous le close du 2026-10-09 (39,89 $) et −53 % sous la cotation de 36,23 $ du 12 octobre à 16 h 29 UTC »."
+    },
+    {
+      "id": "AQ-SEC-005",
+      "where": "filingsReview.summary",
+      "problem": "La fiche ne conclut nulle part sur la continuité d'exploitation ni sur le contrôle interne. Le texte affirmatif existe pourtant dans le 10-Q du 30 juin 2026. On y lit que « our disclosure controls and procedures were effective at a reasonable assurance level » et qu'il n'y a eu aucun changement du contrôle interne au trimestre. La direction y écrit aussi que « cash, cash equivalents and investments as of June 30, 2026, will be sufficient … for the next 12 months ».",
+      "fix": "Ajouter à la fin de filingsReview.summary : « Le 10-Q conclut que les contrôles et procédures de communication de l'information étaient efficaces au 30 juin 2026, sans changement du contrôle interne au trimestre ; la direction y juge sa trésorerie et ses placements au 30 juin suffisants pour couvrir ses besoins des douze mois suivants. »"
+    },
+    {
+      "id": "AQ-QA-001",
+      "where": "analyses/IONQ/_runs/20261012/revision/telegram-draft.html",
+      "problem": "Le brouillon Telegram n'est pas autosuffisant pour agir. Il omet le plafond anti-poursuite de 42,87 $ et l'achat à l'ouverture suivante. Il écrit « Stop sous 38,99 $ » sans préciser « après achat », alors que le titre cote 36,23 $, sous ce stop. Il ne dit pas que l'abandon peut tomber dès ce soir (titre à 0,5 % de 36,06 $, plus bas du jour 35,89 $). Il ne donne aucune date limite d'activation, ni de taille concrète. Il emploie aussi un anglicisme (« Le move économique ») et un terme ambigu : « Clôture visée au 4e trimestre » se confond avec la clôture de cours.",
+      "fix": "Remplacer le brouillon par telegramReview.suggestedText. Ses chiffres nouveaux (35,89 $, +17 %, 26 oct., 27 oct., 3 nov.) doivent d'abord entrer dans la fiche via les corrections AQ-TEC-002 et AQ-TEC-005."
+    }
+  ],
+  "minorFindings": [
+    {
+      "id": "AQ-RSK-003",
+      "where": "tradeIdea.entryNote (phrase « Gap sous le stop »)",
+      "problem": "La phrase « 0 ouvertures ont sauté … : réduire la taille d'environ un quart pour absorber un tel écart » ne tient pas : elle justifie la réduction par un compte nul. Le recalcul sur bars.json donne 0 et 0, et le plus fort gap baissier en 250 séances vaut −2,97 $ (−5,2 %, 15 mai 2026). Le pluriel avec zéro trahit aussi un gabarit.",
+      "fix": "Remplacer par : « Gap sous le stop : sur les 250 dernières séances, aucune ouverture n'a sauté sous la clôture de la veille de plus de 3,39 $ ; le plus fort gap baissier vaut −2,97 $ (−5,2 %, 15 mai). La réduction d'un quart couvre un risque d'événement absent de cet historique : 8-K d'Elisity, offre d'actions sous la déclaration automatique, décrochage du groupe quantique. »"
+    },
+    {
+      "id": "AQ-RSK-003",
+      "where": "tradeIdea.entryNote ; risks.pedagogy (« spread négligeable »)",
+      "problem": "Le spread n'a pas été mesuré : instrument.json ne contient ni cours acheteur ni cours vendeur. L'affirmation est une déduction tirée du volume.",
+      "fix": "Écrire « spread non collecté ; avec 799 M$ échangés par séance en médiane, un ordre de particulier pèse peu face au volume » au lieu de « spread négligeable à taille de particulier »."
+    },
+    {
+      "id": "AQ-QA-001",
+      "where": "technicals.setupNote ; tradeIdea.thesis ; rendu du ladder (preview/index.html)",
+      "problem": "Des nombres au format anglais apparaissent dans un texte français : « $42.38 » et « $38.99 », quatre fois dans le HTML. Le ladder affiche « $42.38 », « $38.99 », « $48.70 », « -8.0% » et « 1:1.86 ».",
+      "fix": "Dans setupNote et thesis, remplacer « $42.38 » par « 42,38 $ » et « $38.99 » par « 38,99 $ » ; faire formater le ladder en français : « 42,38 $ », « −8,0 % », « 1:1,86 »."
+    },
+    {
+      "id": "AQ-TEC-003",
+      "where": "tradeIdea.statusNote (première phrase) ; carte Stop du ladder",
+      "problem": "Le titre cote 36,23 $, sous le stop de 38,99 $ affiché dans le ladder. Un non-initié peut croire la position déjà stoppée ou le plan cassé.",
+      "fix": "Commencer tradeIdea.statusNote par « Le titre cote sous le futur stop : ce n'est pas un signal, le stop ne s'applique qu'après un achat. » et sous-titrer la carte Stop « après achat seulement »."
+    },
+    {
+      "id": "AQ-TEC-003",
+      "where": "tradeIdea.entryNote",
+      "problem": "Le bloc fait environ 2 400 caractères d'un seul tenant. La règle de sortie partielle reste floue (« prendre une partie des gains ») et rien ne dit quoi faire à TP1.",
+      "fix": "Découper en cinq phrases-repères (Avant / Activation / Après achat / Taille / Calendrier) et chiffrer la sortie, par exemple « vendre la moitié à 48,70 $, remonter le stop à 42,38 $ pour le reste »."
+    },
+    {
+      "id": "AQ-SEC-006",
+      "where": "filingsReview.summary",
+      "problem": "« Dix-sept pièces … plus l'avis du NYSE » laisse croire à dix-huit pièces. Or primary-manifest.json compte 17 pièces ouvertes, avis du NYSE compris : 16 dépôts d'IonQ plus cet avis.",
+      "fix": "Écrire « Dix-sept pièces ouvertes et hachées : seize dépôts d'IonQ, choisis dans un inventaire de 70 formulaires hors déclarations d'initiés, et l'avis de retrait de cote du NYSE ; le communiqué d'Elisity est archivé à part. »"
+    },
+    {
+      "id": "AQ-SRC-001",
+      "where": "business.sourceRefs ; news[0]",
+      "problem": "business.overview développe le rachat d'Elisity et cite Wedbush, alors que business.sourceRefs ne contient que des dépôts SEC. La phrase de Wedbush (« sensible channel play ») ne se trouve que dans une dépêche d'instrument.json, sans lien publié.",
+      "fix": "Ajouter à business.sourceRefs {\"name\":\"IonQ — communiqué Elisity\",\"url\":\"https://www.ionq.com/news/ionq-to-acquire-elisity-to-accelerate-zero-trust-for-the-quantum-era\",\"date\":\"2026-10-12\"}, et citer la dépêche qui rapporte Wedbush avec son URL, ou retirer la citation."
+    },
+    {
+      "id": "AQ-RSK-003",
+      "where": "tradeIdea.statusNote",
+      "problem": "Rien n'est dit au lecteur qui détient déjà le titre, alors que c'est le cas le plus fréquent un jour de baisse de 9 %.",
+      "fix": "Ajouter « Ce plan vise une nouvelle entrée ; il ne donne pas de consigne pour une position déjà détenue. »"
+    }
+  ],
+  "checks": [
+    {
+      "id": "AQ-VRD-001",
+      "status": "PASS",
+      "rationale": "Le résumé nomme IonQ et sa plateforme (ions piégés, réseaux, fonderie SkyWater). Il pose le catalyseur (Elisity, jusqu'à 1,3 Md$ en actions) et la contradiction la plus forte : croissance réelle, mais capital +81,8 % et prix d'Elisity invérifiable. L'action est claire : surveiller, sans entrée avant une clôture au-dessus de 42,38 $.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/verdict/summary"
+      ]
+    },
+    {
+      "id": "AQ-VRD-002",
+      "status": "PASS",
+      "rationale": "Le verdict contient des faits chiffrés propres à IonQ : 80,1 M$ (+287 %), perte opérationnelle de 337,2 M$, 222,8 → 405 M d'actions. Il donne aussi un lien causal : le marché compte les actions à venir avant les synergies.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/verdict/summary",
+        "data/analyses-data/IONQ.json#/tradeIdea/thesis"
+      ]
+    },
+    {
+      "id": "AQ-VRD-003",
+      "status": "PASS",
+      "rationale": "La note C (score additif de 41) et l'état « surveiller » sont justifiés séparément, l'une dans verdict.confidence, l'autre dans tradeIdea.statusNote.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/verdict/confidence",
+        "data/analyses-data/IONQ.json#/tradeIdea/statusNote"
+      ]
+    },
+    {
+      "id": "AQ-VRD-004",
+      "status": "PASS",
+      "rationale": "Les cinq points positifs et les cinq négatifs vont dans le sens de leur titre. Les bons hors de la monnaie sont présentés comme un frein limité, sans contresens.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/verdict/whyBuy",
+        "data/analyses-data/IONQ.json#/verdict/whyAvoid"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-001",
+      "status": "PASS",
+      "rationale": "La section couvre produit, clients (nuages, États, concentration de 53 %), revenus matériel et services, base de coûts et position dans la chaîne : fonderie en amont, Elisity vers l'aval.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/business/overview"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-002",
+      "status": "PASS",
+      "rationale": "Quatre lignes d'activité sont données avec leurs revenus publiés (46,5 M$ de matériel, 33,6 M$ de services), et Elisity est marquée « non publié ».",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/business/segments"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-003",
+      "status": "PASS",
+      "rationale": "La fiche utilise les indicateurs du secteur : obligations de performance restantes (485,0 M$), mix matériel/services, concentration client, réévaluation des bons hors trésorerie.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/fundamentals/rows"
+      ]
+    },
+    {
+      "id": "AQ-EAR-001",
+      "status": "PASS",
+      "rationale": "Le deuxième trimestre 2026 est publié le 5 août, 8-K ex. 99.1 (0001193125-26-335040) en lien direct.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/earnings"
+      ]
+    },
+    {
+      "id": "AQ-EAR-002",
+      "status": "PASS",
+      "rationale": "La fiche analyse le chiffre d'affaires, la croissance, la perte opérationnelle, l'EBITDA ajusté et les obligations de performance restantes, et décompose la perte nette.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/earnings/beatNote"
+      ]
+    },
+    {
+      "id": "AQ-EAR-003",
+      "status": "PASS",
+      "rationale": "La prévision 280–290 M$ du 5 août est comparée aux 450–460 M$ du 8 septembre, SkyWater comprise. L'absence de prévision de résultat est dite.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/earnings/beatNote"
+      ]
+    },
+    {
+      "id": "AQ-EAR-004",
+      "status": "PASS",
+      "rationale": "Le 10-Q du 10 août nourrit le récit (actions, bons, note 21 sur SkyWater).",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/filingsReview/filings/0"
+      ]
+    },
+    {
+      "id": "AQ-EAR-005",
+      "status": "PASS",
+      "rationale": "La date n'est pas confirmée par l'émetteur, et la fiche le dit. J'ai vérifié le 4 novembre via GetEarningsCalendarFiltered(IONQ) : Yahoo, source unique, heure non précisée. La source manque au dossier et « après la clôture » n'est pas sourcé : la correction est rattachée au blocage AQ-TEC-005.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/earnings/nextEarnings",
+        "analyses/IONQ/_data/earnings_risk.json"
+      ]
+    },
+    {
+      "id": "AQ-VAL-001",
+      "status": "PASS",
+      "rationale": "La fiche donne la VE/revenus (57,5× sur douze mois, environ 31× sur la prévision) et un scénario chiffré : 20× → 17,10 $. Recalcul : (20 × 246,5 + 2 000) / 405,1 = 17,11 $.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/fundamentals/rows/13",
+        "data/analyses-data/IONQ.json#/fundamentals/rows/14"
+      ]
+    },
+    {
+      "id": "AQ-VAL-002",
+      "status": "BLOCK",
+      "rationale": "Les entrées sont datées « close du 2026-10-12 », clôture qui n'existe pas encore. Les calculs reposent sur le close du 9 octobre (39,89 $).",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/fundamentals/rows/13/signal",
+        "analyses/IONQ/_runs/20261012/revision/numeric-evidence.json#/levels"
+      ]
+    },
+    {
+      "id": "AQ-VAL-003",
+      "status": "PASS",
+      "rationale": "La fiche compare aux pairs (Rigetti 322×, D-Wave 397×, CrowdStrike 51,4×, Zscaler 10,9×) et à un scénario de re-cotation qui explicite les attentes.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/fundamentals/rows/13/comparison"
+      ]
+    },
+    {
+      "id": "AQ-SEC-001",
+      "status": "PASS",
+      "rationale": "Le 10-Q du 2026-08-10 est donné avec son accession 0001193125-26-341001, son URL directe et des constats précis.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/filingsReview/filings/0"
+      ]
+    },
+    {
+      "id": "AQ-SEC-002",
+      "status": "PASS",
+      "rationale": "Pour les offres 2025 (424B5 d'octobre, juillet), le programme ATM clos, la déclaration S-3ASR et la contrepartie SkyWater, la fiche donne titre, montant et statut.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/capitalStructure"
+      ]
+    },
+    {
+      "id": "AQ-SEC-003",
+      "status": "PASS",
+      "rationale": "ATM clos, déclaration automatique, offres primaires, reventes secondaires, bons privés et publics, rémunération en actions et contrepartie d'acquisition sont bien distingués.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/capitalStructure/shareHistory"
+      ]
+    },
+    {
+      "id": "AQ-SEC-004",
+      "status": "PASS",
+      "rationale": "Le capital est réconcilié : 405,1 M actuelles, environ 478 M diluées hors bons privés (405,1 + 33,1 + 39,3), environ 557 M avec eux. Recalcul conforme.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/capitalStructure/shareHistory"
+      ]
+    },
+    {
+      "id": "AQ-SEC-005",
+      "status": "BLOCK",
+      "rationale": "Aucune conclusion sur la continuité d'exploitation ni sur le contrôle interne, alors que le 10-Q contient le texte affirmatif.",
+      "evidenceRefs": [
+        "analyses/IONQ/_primary/text/q2-2026-10q.htm.txt",
+        "data/analyses-data/IONQ.json#/filingsReview/summary"
+      ]
+    },
+    {
+      "id": "AQ-SEC-006",
+      "status": "PASS",
+      "rationale": "Le manifeste est cohérent : 70 formulaires inventoriés et criblés, 17 ouverts, revus et décisionnels. La formulation de la fiche est ambiguë (mineur).",
+      "evidenceRefs": [
+        "analyses/IONQ/_runs/20261012/revision/primary-manifest.json"
+      ]
+    },
+    {
+      "id": "AQ-TEC-001",
+      "status": "PASS",
+      "rationale": "La clôture de référence (9 octobre, 39,89 $) et la cotation en séance (36,23 $, 12 octobre 16 h 29 UTC) sont explicitement datées.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/meta/description",
+        "analyses/IONQ/_data/instrument.json"
+      ]
+    },
+    {
+      "id": "AQ-TEC-002",
+      "status": "BLOCK",
+      "rationale": "Les niveaux sont présents, mais la structure décrite est fausse : le plus bas depuis août est 35,00 $ (14 septembre), pas 36,06 $. Le 12 octobre, le titre a touché 35,89 $ en séance.",
+      "evidenceRefs": [
+        "analyses/IONQ/_data/bars.json",
+        "analyses/IONQ/_data/instrument.json",
+        "data/analyses-data/IONQ.json#/technicals/setupNote"
+      ]
+    },
+    {
+      "id": "AQ-TEC-003",
+      "status": "PASS",
+      "rationale": "Chaque niveau a sa raison propre : déclencheur au plus haut du 7 octobre (42,38 $, vérifié), stop au plus bas du 9 octobre (38,99 $, vérifié), plafond pour un R/R de 1,5, objectifs en projection de mesure, abandon au creux du 16 septembre (36,0601 $, vérifié). Des précisions d'ergonomie sont listées en mineur.",
+      "evidenceRefs": [
+        "analyses/IONQ/_data/bars.json",
+        "analyses/IONQ/_runs/20261012/revision/numeric-evidence.json#/levels"
+      ]
+    },
+    {
+      "id": "AQ-TEC-004",
+      "status": "PASS",
+      "rationale": "Recalcul : risque 3,39 $, gains 6,32 $ et 9,48 $, d'où R/R de 1,864 et 2,796. Au plafond : risque 3,88 $, R/R de 1,503 et 2,320. Écarts : −8,0 %, +14,9 %, +22,4 %. Hauteur 42,38 − 36,0601 = 6,3199, donc TP1 = 48,70 $ et TP2 = 42,38 + 1,5 × 6,3199 = 51,86 $. Taille : 100 / 3,88 = 25, soit 18 après réduction d'un quart ; 1 000 / 3,88 = 257, soit 192. ATR14 de Wilder 2,560. Tout concorde.",
+      "evidenceRefs": [
+        "analyses/IONQ/_runs/20261012/revision/numeric-evidence.json#/levels",
+        "analyses/IONQ/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-TEC-005",
+      "status": "BLOCK",
+      "rationale": "Le veto est écrit dans entryNote (pas d'entrée dans les cinq séances avant les résultats), mais statusNote, horizon, invalidation et checklist le contredisent : « valable jusqu'à la veille ». Aucune date limite d'activation n'est donnée. Pas de donnée périmée : barres certifiées au 9 octobre, sans séance partielle.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/tradeIdea",
+        "analyses/IONQ/_data/earnings_risk.json"
+      ]
+    },
+    {
+      "id": "AQ-RSK-001",
+      "status": "PASS",
+      "rationale": "Les risques sont propres à IonQ, chacun avec mécanisme, preuve et signal à surveiller : dilution par acquisitions, prix d'Elisity, consommation de trésorerie, intégration (premier 8-K à lire, dépréciation de 2,19 Md$ d'écart d'acquisition), gaps.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/risks/riskCards"
+      ]
+    },
+    {
+      "id": "AQ-RSK-002",
+      "status": "PASS",
+      "rationale": "Le cas contraire est chiffré : scénario à 17,10 $, tunnel 33,07–49,61 $, 23 à 39 M d'actions, prévision gonflée par SkyWater.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/filingsReview/contrarianRisks",
+        "data/analyses-data/IONQ.json#/fundamentals/rows/14"
+      ]
+    },
+    {
+      "id": "AQ-RSK-003",
+      "status": "PASS",
+      "rationale": "Gap, liquidité, glissement, taille et anti-poursuite sont couverts. Recalcul depuis bars.json : 12 gaps de 5 % ou plus, 3 de 10 % ou plus, maximum 16,3 % ; 88 ouvertures à plus de 0,49 $ au-dessus de la veille ; écart médian 0,74 $ ; 799 M$ échangés en médiane sur 20 séances ; 0 gap baissier de plus de 3,39 $. Restent la phrase de réduction de taille et le spread non mesuré (mineurs).",
+      "evidenceRefs": [
+        "analyses/IONQ/_data/bars.json",
+        "data/analyses-data/IONQ.json#/tradeIdea/entryNote"
+      ]
+    },
+    {
+      "id": "AQ-SRC-001",
+      "status": "PASS",
+      "rationale": "Les sections Résultats, Capital et Technique citent la bonne source. Business ne cite pas le communiqué d'Elisity ni la source Wedbush (mineur).",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/business/sourceRefs"
+      ]
+    },
+    {
+      "id": "AQ-SRC-002",
+      "status": "PASS",
+      "rationale": "Liens directs vers EDGAR avec dates et accessions ; communiqué daté ; cotation horodatée.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/filingsReview/filings"
+      ]
+    },
+    {
+      "id": "AQ-SRC-003",
+      "status": "PASS",
+      "rationale": "Les positions vendeuses FINRA et le coût d'emprunt viennent du dossier daté. Les options sont dites non collectées. Les opérations d'initiés sont sourcées par les formulaires 4, sans solde net affirmé. La citation de Wedbush se trouve dans les données (instrument.json), sans lien publié.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/shortInterest",
+        "data/analyses-data/IONQ.json#/options",
+        "data/analyses-data/IONQ.json#/insiders",
+        "analyses/IONQ/_data/instrument.json"
+      ]
+    },
+    {
+      "id": "AQ-EDT-001",
+      "status": "N/A",
+      "rationale": "Revue d'un seul ticker : aucun corpus de lot n'est fourni pour mesurer la répétition à plus de 10 %. La prose relue est spécifique à IonQ, et check-ai-tells ne signale rien sur le HTML.",
+      "evidenceRefs": [
+        "analyses/IONQ/_runs/20261012/preview/index.html"
+      ]
+    },
+    {
+      "id": "AQ-EDT-002",
+      "status": "PASS",
+      "rationale": "Verdict, risques, catalyseurs (8-K d'Elisity, SkyWater) et invalidations ne valent que pour IonQ : on ne peut pas remplacer le ticker par un autre.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/tradeIdea/catalysts",
+        "data/analyses-data/IONQ.json#/risks"
+      ]
+    },
+    {
+      "id": "AQ-EDT-003",
+      "status": "PASS",
+      "rationale": "Les limites sont précises : pas de 8-K d'Elisity, date de résultats non confirmée, données GAAP antérieures à SkyWater, Arqit écarté, pairs non point-in-time.",
+      "evidenceRefs": [
+        "data/analyses-data/IONQ.json#/blastRadius/missingData"
+      ]
+    },
+    {
+      "id": "AQ-QA-001",
+      "status": "BLOCK",
+      "rationale": "La revue Retail War Room bloque : structure de prix fausse, veto calendaire contradictoire, brouillon Telegram non autosuffisant. Les nombres au format anglais dans le rendu sont mineurs.",
+      "evidenceRefs": [
+        "analyses/IONQ/_runs/20261012/preview/index.html",
+        "analyses/IONQ/_runs/20261012/revision/telegram-draft.html"
+      ]
+    },
+    {
+      "id": "AQ-QA-002",
+      "status": "PASS",
+      "rationale": "Cette revue indique BLOCK, nomme chaque erreur et donne sa correction exacte.",
+      "evidenceRefs": [
+        "analyses/IONQ/_runs/20261012/revision/review-retail_war_room.json"
+      ]
+    },
+    {
+      "id": "AQ-QA-003",
+      "status": "BLOCK",
+      "rationale": "Score actuel 72/100, sous 80. Une fois les cinq blocages levés, la fiche devrait dépasser 85 : niveaux et arithmétique du plan justes, mesures de gap et de taille rigoureuses.",
+      "evidenceRefs": [
+        "analyses/IONQ/_runs/20261012/revision/numeric-evidence.json#/levels"
+      ]
+    }
+  ],
+  "telegramReview": {
+    "status": "BLOCK",
+    "problems": [
+      "Le plafond anti-poursuite manque. Le texte dit « Entrée seulement après une clôture au-dessus de 42,38 $ » sans « achat à l'ouverture suivante sous 42,87 $, ou ordre limité à 42,87 $ pendant trois séances ». Le lecteur qui ne clique pas peut acheter à n'importe quel prix après le signal.",
+      "« Stop sous 38,99 $ » n'est pas qualifié, alors que le titre cote 36,23 $, déjà sous ce niveau. Un non-initié peut croire la position stoppée. Il faut écrire « une fois acheté ».",
+      "L'abandon n'est pas situé dans le temps. Le titre est à 0,5 % de 36,06 $ et a touché 35,89 $ dans la séance : le plan peut mourir dès la clôture de ce soir, ce qui n'est pas dit.",
+      "Aucune date limite. « Position soldée avant les résultats » ne dit ni la dernière clôture d'activation (26 oct.), ni le dernier achat (27 oct.), ni le jour de sortie (3 nov.).",
+      "La taille n'est pas chiffrée. « Petite taille » n'est pas actionnable ; la fiche donne 3,88 $ de risque par action et 18 actions pour 100 $ de perte acceptée.",
+      "Jargon et ambiguïtés : « Le move économique » est un anglicisme ; « Clôture visée au 4e trimestre » se confond avec la clôture de cours (écrire « Finalisation ») ; « tunnel » est opaque pour un débutant ; le titre « ce qu'il faut retenir » est un gabarit.",
+      "« +6 à +10 % du capital » arrondit les 5,7 à 9,7 % de la fiche. Reprendre les chiffres exacts.",
+      "Points conformes : HTML Telegram valide (<b> et <a> seulement, pas de <br>), aucun tic IA détecté, chiffres repris exacts (1,3 Md$, 150 M$, 80,1 M$, +287 %, 450–460 M$, 337 M$, 36,23 $, −9,2 %, 39,89 $, 42,38 $, 38,99 $, 48,70 $, 51,86 $, 36,06 $), heure de Paris correcte (16:29 UTC = 18 h 29 en heure d'été)."
+    ],
+    "suggestedText": "<b>IonQ rachète Elisity en actions, le titre perd 9 %</b>\n\n<b>L'annonce (12 oct.)</b> : IonQ achète Elisity, un éditeur de cybersécurité qui cloisonne les réseaux d'entreprise. Prix : jusqu'à 1,3 Md$, payés 100 % en actions, dont 150 M$ versés seulement si Elisity tient ses objectifs. Finalisation prévue au 4e trimestre.\n\n<b>Pourquoi</b> : IonQ vend déjà du chiffrement conçu pour résister aux ordinateurs quantiques, surtout à des États. Elisity lui apporte plus de 100 déploiements en entreprise. Après SkyWater, qui fabrique ses puces, IonQ s'offre un accès direct aux acheteurs de sécurité.\n\n<b>Le coût</b> : 23 à 39 millions d'actions nouvelles selon le cours d'IonQ, soit +5,7 à +9,7 % du capital. Le chiffre d'affaires d'Elisity n'est pas publié.\n\n<b>IonQ en chiffres</b> : 80,1 M$ de ventes au 2e trimestre (+287 % sur un an), 450 à 460 M$ visés en 2026, pas de dette. Mais 337 M$ de perte opérationnelle sur le trimestre, et le nombre d'actions est passé de 223 à 405 millions depuis février 2025.\n\n<b>Le cours</b> : 36,23 $ à 18 h 29 (Paris), −9,2 % sur vendredi (39,89 $). Plus bas du jour : 35,89 $.\n\n<b>Que faire</b> : ne rien acheter aujourd'hui.\n• Clôture sous 36,06 $, dès ce soir ou plus tard : plan abandonné.\n• Signal d'achat : une clôture au-dessus de 42,38 $, soit +17 % depuis le cours actuel. Achat le lendemain à l'ouverture seulement sous 42,87 $, sinon ordre limité à 42,87 $ pendant trois séances. Jamais plus cher.\n• Une fois acheté : stop (vente automatique) sous 38,99 $. Objectifs 48,70 $ puis 51,86 $.\n• Taille : 3,88 $ de risque par action au prix maximal. Pour 100 $ de perte acceptée, 18 actions : un écart d'ouverture peut faire sortir sous le stop.\n• Dernier signal valable : clôture du 26 oct., dernier achat le 27. Tout revendre à la clôture du 3 nov., avant les résultats attendus le 4 nov. (date non confirmée).\n\n<a href=\"https://articles.dailytickers.com/analyses/IONQ/\">La fiche complète</a>"
+  }
+}
