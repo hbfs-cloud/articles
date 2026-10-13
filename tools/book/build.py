@@ -56,16 +56,17 @@ def lookup(path):
             if key in cur: cur = cur[key]; i = j; break
         else: raise KeyError(f"{{{{bt:{path}}}}} introuvable dans {CFG['results']} (segment {segs[i]})")
     return cur
+NB = "\u00a0"  # espace insécable : un nombre ne se coupe jamais en fin de ligne, ni de son unité
 def fr_num(v, fmt):
-    if fmt == "int": s = f"{round(v):,}".replace(",", " ")
-    elif fmt == "pct1": s = f"{v:+.1f}".replace(".", ",") + " %"
-    elif fmt == "pct1u": s = f"{v:.1f}".replace(".", ",") + " %"
-    elif fmt == "pct0": s = f"{v:+.0f} %"
-    elif fmt == "pct0u": s = f"{v:.0f} %"
-    elif fmt == "x": s = f"{v:.2f}".replace(".", ",") + " ×"
-    elif fmt == "d1": s = f"{v:.1f}".replace(".", ",")
-    elif fmt == "d2": s = f"{v:.2f}".replace(".", ",")
-    elif fmt == "plus100": s = f"{round(100 + v):,}".replace(",", " ") + " €"
+    if fmt == "int": s = f"{round(v):,}".replace(",", NB)
+    elif fmt == "pct1": s = f"{v:+,.1f}".replace(",", "_").replace(".", ",").replace("_", NB) + NB + "%"
+    elif fmt == "pct1u": s = f"{v:,.1f}".replace(",", "_").replace(".", ",").replace("_", NB) + NB + "%"
+    elif fmt == "pct0": s = f"{v:+,.0f}".replace(",", NB) + NB + "%"
+    elif fmt == "pct0u": s = f"{v:,.0f}".replace(",", NB) + NB + "%"
+    elif fmt == "x": s = f"{v:,.2f}".replace(",", "_").replace(".", ",").replace("_", NB) + NB + "×"
+    elif fmt == "d1": s = f"{v:,.1f}".replace(",", "_").replace(".", ",").replace("_", NB)
+    elif fmt == "d2": s = f"{v:,.2f}".replace(",", "_").replace(".", ",").replace("_", NB)
+    elif fmt == "plus100": s = f"{round(100 + v):,}".replace(",", NB) + NB + "€"
     else: s = str(v)
     return s.replace("-", "−")
 

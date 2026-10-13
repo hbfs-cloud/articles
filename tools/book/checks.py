@@ -144,7 +144,8 @@ else:
     doc = fitz.open(str(pdfp)); n = doc.page_count
     with open(OUT / "book.txt", "w") as fh:
         for i, pg in enumerate(doc): fh.write(f"\n\n===== PAGE {i + 1} =====\n" + pg.get_text())
-    full = "\n".join(pg.get_text() for pg in doc)
+    norm = lambda t: t.replace("\u00a0", " ").replace("\u202f", " ")  # insécables : comparer comme des espaces
+    full = norm("\n".join(pg.get_text() for pg in doc))
     WP = CFG.get("format", "livre") == "livre-blanc"
     lo, hi = CFG.get("target_pages", [8, 28] if WP else [60, 180])
     if not lo <= n <= hi: add("MAJEUR", "pdf", f"{n} pages, hors de la cible {lo}-{hi}")
@@ -155,7 +156,7 @@ else:
     for pat, why in FORBIDDEN.items():
         hits = sorted(set(re.findall(pat, full)))
         if hits:
-            pages = [i + 1 for i, pg in enumerate(doc) if re.search(pat, pg.get_text())][:6]
+            pages = [i + 1 for i, pg in enumerate(doc) if re.search(pat, norm(pg.get_text()))][:6]
             add("BLOQUANT", "jargon interne", f"{why} : {hits[:5]} (pages {pages})")
     # avertissements obligatoires d'un contenu financier : présents, et lisibles (pas seulement en mentions légales)
     flat = " ".join(full.split()).lower()
@@ -166,7 +167,7 @@ else:
         add("MAJEUR", "conformité", "le mot « garanti » apparaît sans négation proche : vérifier qu'aucun gain n'est promis")
     for s in CFG.get("stale_strings", []):
         if s in full:
-            pages = [i + 1 for i, pg in enumerate(doc) if s in pg.get_text()][:6]
+            pages = [i + 1 for i, pg in enumerate(doc) if s in norm(pg.get_text())][:6]
             add("BLOQUANT", "périmé", f"« {s} » encore présent (pages {pages}) : valeur remplacée après relecture")
     sizes = collections.Counter(); tiny = collections.Counter(); tiny_pages = collections.defaultdict(set); fonts = set(); body_lines = []
     for i, pg in enumerate(doc):
