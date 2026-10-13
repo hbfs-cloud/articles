@@ -976,39 +976,77 @@ function renderTradeIdea(d) {
       </div>`;
 
   const op = isClosed || isDormant ? 'opacity:0.65;' : '';
-  const statusBanner = isNoTrade
-    ? `<div class="alert-box"><strong>${tx(d, 'NO ACTIVE ORDER', 'AUCUN ORDRE ACTIF')}</strong><p>${esc(t.statusNote || tx(d, 'Historical levels only; no new order.', 'Niveaux historiques uniquement; aucun nouvel ordre.'))}</p></div>`
-    : isInvalidated
-    ? `\n        <div style="background:#dc2626;color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-ban"></i> TRADE ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
-    : t.status === 'rejected' || t.status === 'missed'
-    ? `\n        <div style="background:#64748b;color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-circle-pause"></i> ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
-    : t.status === 'watch' || t.status === 'wait' || t.status === 'speculative'
-    ? `\n        <div style="background:${t.status === 'watch' ? '#2563eb' : t.status === 'speculative' ? '#7c3aed' : '#d97706'};color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-eye"></i> ${isFrench(d) ? ({ watch: 'SURVEILLER', wait: 'ATTENDRE', speculative: 'SPÉCULATIF' }[t.status]) : t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
-    : t.status === 'tp1-hit' || t.status === 'tp2-hit'
-    ? `\n        <div style="background:#22c55e;color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-check"></i> ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
-    : '';
-
+  const fr = isFrench(d);
   // Un niveau lu au demi-centime (plus haut de séance à 5,755 $) garde ses trois décimales : l'arrondir
   // à 5,75 $ afficherait un seuil qu'une clôture à 5,75 $ ne franchit pas.
   const lvl = v => Math.abs(v * 100 - Math.round(v * 100)) > 1e-6 ? v.toFixed(3) : v.toFixed(2);
+  const money = v => fr ? lvl(v).replace('.', ',') + ' $' : '$' + lvl(v);
+  // Un stop se lit au centime inférieur : l'ordre se place juste sous le niveau, jamais au-dessus.
+  const stopShown = Math.floor(t.stop * 100 + 1e-9) / 100;
+  const pctTxt = s => { const x = String(s || ''); return fr ? x.replace('.', ',').replace(/^-/, '−').replace(/\s*%$/, ' %') : x; };
+  // Phrase de setup dérivée des niveaux : le bandeau dit en une ligne quoi faire, le détail suit sous les cartes.
+  const price = Number(d.header?.price);
+  const targets = t.tp2 ? `${money(t.tp1)} ${tx(d, 'then', 'puis')} ${money(t.tp2)}` : money(t.tp1);
+  const above = Number.isFinite(price) ? t.entry > price : true;
+  const setup = {
+    watch: tx(d, `Nothing to buy${Number.isFinite(price) ? ' at ' + money(price) : ''}. Trigger: ${above ? 'a close above' : 'a pullback to'} ${money(t.entry)}; then stop ${money(stopShown)}, targets ${targets}.`,
+      `Rien à acheter${Number.isFinite(price) ? ' à ' + money(price) : ''}. Déclencheur : ${above ? 'une clôture au-dessus de' : 'un repli jusqu’à'} ${money(t.entry)} ; ensuite stop ${money(stopShown)}, objectifs ${targets}.`),
+    wait: tx(d, `No entry for now. Reference ${money(t.entry)}, stop ${money(stopShown)}, targets ${targets}.`,
+      `Pas d’entrée pour l’instant. Repère ${money(t.entry)}, stop ${money(stopShown)}, objectifs ${targets}.`),
+    speculative: tx(d, `Speculative entry ${money(t.entry)}, stop ${money(stopShown)}, targets ${targets}.`,
+      `Entrée spéculative ${money(t.entry)}, stop ${money(stopShown)}, objectifs ${targets}.`),
+  }[t.status];
+  const firstSentence = s => { const m = String(s || '').match(/^.{20,240}?[.!?](?=\s|$)/); return m ? m[0] : String(s || '').slice(0, 240); };
+  const bannerText = setup || firstSentence(t.statusNote);
+  const banner = (bg, icon, label) => `\n        <div style="background:${bg};color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;line-height:1.45;"><strong><i class="fa-solid ${icon}"></i> ${label}</strong>${bannerText ? ' &mdash; ' + esc(bannerText) : ''}</div>`;
+  const statusBanner = isNoTrade
+    ? `<div class="alert-box"><strong>${tx(d, 'NO ACTIVE ORDER', 'AUCUN ORDRE ACTIF')}</strong><p>${esc(t.statusNote || tx(d, 'Historical levels only; no new order.', 'Niveaux historiques uniquement; aucun nouvel ordre.'))}</p></div>`
+    : isInvalidated ? banner('#dc2626', 'fa-ban', 'TRADE ' + t.status.toUpperCase())
+    : t.status === 'rejected' || t.status === 'missed' ? banner('#64748b', 'fa-circle-pause', t.status.toUpperCase())
+    : t.status === 'watch' || t.status === 'wait' || t.status === 'speculative'
+    ? banner(t.status === 'watch' ? '#2563eb' : t.status === 'speculative' ? '#7c3aed' : '#d97706', 'fa-eye', fr ? ({ watch: 'SURVEILLER', wait: 'ATTENDRE', speculative: 'SPÉCULATIF' }[t.status]) : t.status.toUpperCase())
+    : t.status === 'tp1-hit' || t.status === 'tp2-hit' ? banner('#22c55e', 'fa-check', t.status.toUpperCase())
+    : '';
+
+  // Cartes : une valeur courte et une indication courte ; les conditions et l'exécution vont sous les cartes.
+  const rr1 = (t.tp1 - t.entry) / (t.entry - t.stop), rr2 = t.tp2 ? (t.tp2 - t.entry) / (t.entry - t.stop) : null;
+  const rrOk = Number.isFinite(rr1) && rr1 > 0;
+  const rrShort = rrOk ? `1:${rr1.toFixed(2)}${rr2 ? ' · 1:' + rr2.toFixed(2) : ''}` : String(t.rr || '');
+  const rrValue = fr ? rrShort.replace(/(\d)\.(\d)/g, '$1,$2') : rrShort;
+  const isTrigger = t.status === 'watch';
   const cards = [
-    { label: isDormant ? tx(d, 'Dormant reference', 'Repère inactif') : tx(d, 'Entry Zone', 'Zone d’entrée'), value: `$${lvl(t.entry)}`, note: t.entryNote || '', color: '#3b82f6', bg: '#f8fafc', tc: '#0f172a' },
-    { label: isDormant ? tx(d, 'Previous stop', 'Ancien stop') : tx(d, 'Stop Loss', 'Stop'),  value: `$${t.stop.toFixed(2)}`,  note: t.stopPct || '',  color: '#ef4444', bg: '#fef2f2', tc: '#ef4444' },
-    { label: isDormant ? tx(d, 'Previous target 1', 'Ancien objectif 1') : tx(d, 'Target 1', 'Objectif 1'),   value: `$${t.tp1.toFixed(2)}`,   note: t.tp1Pct || '',   color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' },
+    { label: isDormant ? tx(d, 'Dormant reference', 'Repère inactif') : isTrigger ? tx(d, 'Trigger', 'Déclencheur') : tx(d, 'Entry Zone', 'Zone d’entrée'), value: money(t.entry), note: isTrigger ? (above ? tx(d, 'close above', 'clôture au-dessus') : tx(d, 'pullback level', 'niveau de repli')) : '', color: '#3b82f6', bg: '#f8fafc', tc: '#0f172a' },
+    { label: isDormant ? tx(d, 'Previous stop', 'Ancien stop') : tx(d, 'Stop Loss', 'Stop'),  value: money(stopShown),  note: pctTxt(t.stopPct),  color: '#ef4444', bg: '#fef2f2', tc: '#ef4444' },
+    { label: isDormant ? tx(d, 'Previous target 1', 'Ancien objectif 1') : tx(d, 'Target 1', 'Objectif 1'),   value: money(t.tp1),   note: pctTxt(t.tp1Pct),   color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' },
   ];
-  if (t.tp2) cards.push({ label: isDormant ? tx(d, 'Previous target 2', 'Ancien objectif 2') : tx(d, 'Target 2', 'Objectif 2'), value: `$${t.tp2.toFixed(2)}`, note: t.tp2Pct || '', color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' });
-  cards.push({ label: isDormant ? tx(d, 'Dormant ratio', 'Ratio inactif') : tx(d, 'Risk/Reward', 'Risque/rendement'), value: t.rr, note: t.horizon || '', color: '#7c3aed', bg: '#f5f3ff', tc: '#7c3aed' });
+  if (t.tp2) cards.push({ label: isDormant ? tx(d, 'Previous target 2', 'Ancien objectif 2') : tx(d, 'Target 2', 'Objectif 2'), value: money(t.tp2), note: pctTxt(t.tp2Pct), color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' });
+  cards.push({ label: isDormant ? tx(d, 'Dormant ratio', 'Ratio inactif') : tx(d, 'Risk/Reward', 'Risque/rendement'), value: rrValue, note: rrOk && t.tp2 ? 'TP1 · TP2' : '', color: '#7c3aed', bg: '#f5f3ff', tc: '#7c3aed', small: true });
+
+  // Conditions (statusNote) en liste de phrases, exécution (entryNote) en paragraphes.
+  const sentences = s => String(s || '').split(/(?<=[.!?])\s+(?=[A-ZÀ-ÖØ-Þ«(])/).map(x => x.trim()).filter(x => x.length > 14);
+  const conditions = isNoTrade ? [] : sentences(t.statusNote);
+  const execParas = String(t.entryNote || '').split(/\n{2,}/).map(x => x.trim()).filter(Boolean);
+  const detailBox = (title, icon, inner) => `\n        <div class="pedagogy-box" style="margin-top:1rem;${op}"><h4><i class="fa-solid ${icon}"></i> ${title}</h4>${inner}</div>`;
+  const conditionsHtml = conditions.length > 1 || (conditions.length === 1 && conditions[0] !== bannerText)
+    ? detailBox(tx(d, 'Plan conditions', 'Conditions du plan'), 'fa-list-check', `<ul style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.35rem;">${conditions.map(x => `<li style="font-size:0.9rem;">${esc(x)}</li>`).join('')}</ul>`) : '';
+  // Le détail d'exécution (mesures, taille, gaps) est replié : le plan tient en un écran, le détail reste à un clic.
+  const execHtml = execParas.length
+    ? `\n        <details class="pedagogy-box" style="margin-top:1rem;${op}"><summary style="cursor:pointer;font-weight:700;"><i class="fa-solid fa-gears"></i> ${tx(d, 'Execution detail: entry, sizing, gaps', 'Détail de l’exécution : achat, taille, gaps')}</summary>${execParas.map(p => `<p style="font-size:0.9rem;margin:0.6rem 0 0;">${esc(p)}</p>`).join('')}</details>` : '';
+  const extraLines = [
+    rrOk && t.rr && String(t.rr).length > rrShort.length + 12 ? `<p style="font-size:0.82rem;color:#64748b;margin:0.5rem 0 0;"><strong>${tx(d, 'Risk/reward detail', 'Détail du R/R')} :</strong> ${esc(t.rr)}</p>` : '',
+    t.horizon ? `<p style="font-size:0.85rem;margin:0.5rem 0 0;"><strong>${tx(d, 'Horizon', 'Horizon')} :</strong> ${esc(t.horizon)}</p>` : '',
+  ].join('');
 
   return `
       <div id="trade" class="content-card">
         <h2><i class="fa-solid fa-crosshairs"></i> ${isNoTrade ? tx(d, 'Archived trade references', 'Repères historiques du trade') : tx(d, 'Trade Idea', 'Plan de trade')}</h2>${statusBanner}
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;${op}">
-${cards.map(c => `          <div style="border-left:4px solid ${c.color};padding:1rem;background:${c.bg};border-radius:0 8px 8px 0;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:0.5rem;${op}">
+${cards.map(c => `          <div style="border-left:4px solid ${c.color};padding:0.85rem 1rem;background:${c.bg};border-radius:0 8px 8px 0;">
             <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">${esc(c.label)}</div>
-            <div style="font-size:1.5rem;font-weight:800;color:${c.tc};margin:0.25rem 0;">${esc(c.value)}</div>
-            <div style="font-size:0.78rem;color:#64748b;">${esc(c.note).split(/\n{2,}/).join('<br><br>')}</div>
+            <div style="font-size:${c.small ? '1.15rem' : '1.45rem'};font-weight:800;color:${c.tc};margin:0.25rem 0;">${esc(c.value)}</div>
+            ${c.note ? `<div style="font-size:0.78rem;color:#64748b;">${esc(c.note)}</div>` : ''}
           </div>`).join('\n')}
-        </div>
+        </div>${extraLines}${conditionsHtml}${execHtml}
 ${t.thesis ? `        <div class="pedagogy-box"${isClosed ? ' style="opacity:0.65;"' : ''}><h4><i class="fa-solid fa-lightbulb"></i> ${tx(d, 'Thesis', 'Thèse')}</h4><p>${esc(t.thesis)}</p></div>` : ''}
 ${t.catalysts && t.catalysts.length ? `        <div style="margin-top:1rem;${op}"><h4 style="font-size:0.95rem;margin-bottom:0.5rem;"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> ${tx(d, 'Catalysts', 'Catalyseurs')}</h4><ul style="display:flex;flex-direction:column;gap:0.4rem;padding-left:1.2rem;">${t.catalysts.map(c => `<li style="font-size:0.9rem;">${esc(c)}</li>`).join('')}</ul></div>` : ''}
 ${t.invalidation && t.invalidation.length ? `        <div class="alert-box" style="margin-top:1rem;${op}"><h4 style="margin:0 0 0.5rem;"><i class="fa-solid fa-triangle-exclamation"></i> Invalidation</h4><ul style="margin:0;padding-left:1.2rem;">${t.invalidation.map(i => `<li style="font-size:0.9rem;">${esc(i)}</li>`).join('')}</ul></div>` : ''}

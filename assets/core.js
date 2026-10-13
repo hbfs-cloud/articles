@@ -1006,3 +1006,77 @@ function initRetentionKit() {
         })
         .catch(function() { if (looksTicker) warnUnverified(L.unverifiedDown); });
 })();
+
+// ─── Plan de trade lisible sur les fiches rendues par l'ancien gabarit ─────────────────────
+// Les fiches publiées avant le 13 octobre 2026 mettent toute la note de statut dans le bandeau et
+// toute la note d'exécution dans la carte d'entrée. Sans toucher au HTML publié, on garde dans le
+// bandeau son libellé et sa première phrase, on vide les notes trop longues des cartes et on replie
+// le texte complet sous les cartes. Les fiches au nouveau gabarit n'ont rien de trop long : aucun effet.
+(function () {
+    function firstSentence(s) {
+        var m = s.match(/^[\s\S]{20,240}?[.!?](?=\s|$)/);
+        return m ? m[0] : s.slice(0, 240) + '…';
+    }
+    function details(title, text) {
+        var el = document.createElement('details');
+        el.className = 'pedagogy-box';
+        el.style.marginTop = '1rem';
+        var sum = document.createElement('summary');
+        sum.style.cursor = 'pointer';
+        sum.style.fontWeight = '700';
+        sum.textContent = title;
+        el.appendChild(sum);
+        text.split(/\n{2,}/).forEach(function (para) {
+            var p = document.createElement('p');
+            p.style.fontSize = '0.9rem';
+            p.style.margin = '0.6rem 0 0';
+            p.textContent = para.trim();
+            el.appendChild(p);
+        });
+        return el;
+    }
+    function enhance() {
+        var trade = document.getElementById('trade');
+        if (!trade || document.documentElement.getAttribute('data-tab') !== 'analyses') return;
+        var fr = (document.documentElement.lang || 'fr').indexOf('fr') === 0;
+        var grid = trade.querySelector('div[style*="grid-template-columns"]');
+        if (!grid) return;
+        var extras = [];
+        var banner = trade.querySelector('h2 + div[style*="text-align:center"]');
+        if (banner) {
+            var full = banner.textContent.replace(/\s+/g, ' ').trim();
+            var cut = full.indexOf(' — ');
+            if (full.length > 260 && cut > 0) {
+                var label = full.slice(0, cut), rest = full.slice(cut + 3).replace(/^(Surveiller|Attendre|Spéculatif|Watch|Wait|Speculative)\.\s+/i, '');
+                banner.style.textAlign = 'left';
+                banner.style.fontWeight = '500';
+                banner.innerHTML = '';
+                var strong = document.createElement('strong');
+                strong.textContent = label;
+                banner.appendChild(strong);
+                banner.appendChild(document.createTextNode(' — ' + firstSentence(rest)));
+                extras.push(details(fr ? 'Conditions du plan' : 'Plan conditions', rest));
+            }
+        }
+        var cards = grid.children;
+        Array.prototype.forEach.call(cards, function (card, idx) {
+            var isRatio = idx === cards.length - 1;
+            var parts = card.children;
+            if (parts.length < 3) return;
+            var label = parts[0].textContent.trim(), value = parts[1], note = parts[2];
+            if (note.textContent.length > 160) {
+                extras.push(details(isRatio ? 'Horizon' : (fr ? 'Détail : ' : 'Detail: ') + label.toLowerCase(), note.innerText || note.textContent));
+                note.textContent = '';
+            }
+            if (value.textContent.length > 24) {
+                extras.push(details(fr ? 'Détail du risque/rendement' : 'Risk/reward detail', value.textContent));
+                var m = value.textContent.match(/1:\d+(?:[.,]\d+)?(?:\s*TP1)?(?:\s*\/\s*1:\d+(?:[.,]\d+)?)?/);
+                value.textContent = m ? m[0].replace(/\s*TP1/, '') : value.textContent.slice(0, 24) + '…';
+                value.style.fontSize = '1.15rem';
+            }
+        });
+        var anchor = grid;
+        extras.forEach(function (el) { anchor.parentNode.insertBefore(el, anchor.nextSibling); anchor = el; });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', enhance); else enhance();
+})();
