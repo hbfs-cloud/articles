@@ -19,5 +19,5 @@ propres erreurs. Un sujet que n'importe quel blog d'épargne traite ne différen
 - les incidents datés (IA, données, exécution) et leurs correctifs ;
 - les protocoles (lecture SEC anti-dilution, contrat de date, relectures adverses) ;
 - l'historique du scanner et ses résultats mesurés.
-Le chiffre dominant doit sortir de ces sources. Décrire la méthode sans jargon interne (pas de noms d'outils, de modes ni
+Le chiffre dominant doit sortir de ces sources. Thèmes validés par l'utilisateur le 13 octobre 2026 : la grille des setups A+, jouer les publications de résultats, la rotation sectorielle et la force relative, les squeezes, les thèses de fond (chaîne de l'IA, rareté), la lecture du régime de marché ; « concis, actionnable, illustré, compréhensible par un enfant de 10 ans ». Montrer les PDF à l'utilisateur AVANT de publier (« j'aurais dû vérifier plus tôt »). Décrire la méthode sans jargon interne (pas de noms d'outils, de modes ni
 de scripts). Voir [[livre-pdf-methode]] et [[feedback-no-hallucination]].
