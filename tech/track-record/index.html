@@ -6,11 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Track record scellé : les carnets, chiffres figés | DailyTickers</title>
     <meta name="description"
-        content="Les performances des carnets publics, recopiées d'un registre scellé en ajout seul : trades clôturés, taux de réussite, facteur de profit, rendement, pire repli. Aucun chiffre recalculé pour l'affichage.">
+        content="Les performances de nos portefeuilles modèles, recopiées d'un registre scellé en ajout seul : trades clôturés, taux de réussite, facteur de profit, cumul à mise fixe, pire repli, et le cumul si les gains avaient été réinvestis.">
     <meta property="og:title" content="Track record scellé : les carnets, chiffres figés">
     <meta property="og:description"
-        content="Trades clôturés, taux de réussite, facteur de profit, rendement, pire repli : recopiés d'un registre scellé, jamais recalculés pour la page.">
-    <meta property="og:image" content="/logo.svg">
+        content="Trades clôturés, taux de réussite, facteur de profit, cumul à mise fixe et pire repli recopiés d'un registre scellé, avec le cumul gains réinvestis à côté.">
+    <meta property="og:image" content="https://articles.dailytickers.com/logo.svg">
     <meta property="og:url" content="https://articles.dailytickers.com/tech/track-record/">
     <meta property="og:type" content="article">
     <meta name="twitter:card" content="summary_large_image">
@@ -185,6 +185,27 @@
             margin: 1.2rem 0 0;
         }
 
+        .tr-reinvest {
+            font-size: 0.92rem;
+            color: #334155;
+            margin: 0 0 0.4rem;
+        }
+
+        .tr-reinvest strong {
+            font-family: var(--mono);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .tr-correction {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 0.9rem 1.1rem;
+            font-size: 0.9rem;
+            color: #334155;
+            margin: 1.2rem 0 0;
+        }
+
         .tr-empty {
             background: #f1f5f9;
             border-radius: 12px;
@@ -249,13 +270,14 @@
         <div class="hero-date">TRACK RECORD SCELLÉ</div>
         <h1 class="hero-title">Les chiffres, tels qu'ils ont été figés</h1>
         <p class="hero-sub">
-            Chaque carnet public tient un registre en ajout seul. Un trade clôturé y reçoit une
-            empreinte et n'en ressort plus. Cette page ne fait que recopier ces registres :
-            ni recalcul, ni arrondi favorable, ni période choisie après coup.
+            Chaque carnet est un portefeuille modèle : les ordres sont calculés aux cours du marché,
+            sans argent engagé chez un courtier. Il tient un registre en ajout seul. Un trade clôturé
+            y reçoit une empreinte et n'en ressort plus. Cette page recopie ces registres, sans arrondi
+            favorable ni période choisie après coup.
         </p>
         <div class="hero-badges">
             <div class="hero-badge"><i class="fa-solid fa-lock"></i> 5 carnets scellés</div>
-            <div class="hero-badge"><i class="fa-solid fa-calendar-check"></i> Au 20 septembre 2026</div>
+            <div class="hero-badge"><i class="fa-solid fa-calendar-check"></i> Au 13 octobre 2026</div>
             <div class="hero-badge"><i class="fa-solid fa-rotate"></i> Mis à jour chaque séance</div>
         </div>
         <div id="article-clickable-tags" class="card-tags"></div>
@@ -271,22 +293,35 @@
                 <li>Un trade clôturé entre dans un registre en ajout seul, avec une empreinte
                     SHA-256 qui intègre celle de l'entrée précédente : retoucher une ligne
                     ancienne casse toute la chaîne, et la routine de mise à jour s'arrête.</li>
-                <li>Les agrégats de cette page (trades clôturés, taux de réussite, facteur de
-                    profit, rendement cumulé, pire repli) sont recopiés depuis ces registres
-                    scellés, jamais recalculés au moment d'afficher la page.</li>
-                <li>Les positions encore ouvertes ne comptent pas. Aucune plus-value latente
-                    n'est fondue dans le rendement affiché, et aucune courbe n'est prolongée
-                    jusqu'à aujourd'hui pour faire joli.</li>
+                <li>Les cinq tuiles de chaque carnet (trades clôturés, taux de réussite, facteur
+                    de profit, cumul à mise fixe, pire repli) sont recopiées depuis ces registres
+                    scellés, jamais recalculées au moment d'afficher la page.</li>
+                <li>Aucune courbe n'est prolongée jusqu'à aujourd'hui par la valorisation des
+                    positions encore ouvertes.</li>
             </ol>
+            <p>« Mise fixe » veut dire que chaque ligne engage toujours la même somme : sa part du
+                capital de départ, fixée par les règles du carnet au moment du trade. Un carnet à
+                une ligne remet 100 % du capital initial à chaque trade. Les gains ne sont pas
+                réinvestis et les pertes ne réduisent pas la mise suivante : le cumul est la somme
+                des résultats des trades, chacun multiplié par la taille de sa ligne. La phrase
+                « gains réinvestis », sous les tuiles, donne l'autre lecture : chaque ligne
+                dimensionnée sur le capital du moment. Elle est calculée sur la même liste de
+                trades. Les gains y grossissent, les replis aussi.</p>
             <p>Conséquence directe : ces chiffres bougent moins vite que le marché. La courbe
                 d'un carnet s'arrête au jour de son dernier trade scellé, pas à la séance
                 d'hier. C'est le prix d'un historique qu'on ne peut pas réécrire.</p>
+            <p class="tr-correction"><strong>Correction du 13 octobre 2026.</strong> Cette page
+                appelait « rendement cumulé » une somme de résultats de trades sur un capital de
+                départ fixe, ce qui n'est pas un rendement composé : la tuile s'appelle désormais
+                « cumul à mise fixe », le résultat avec gains réinvestis est affiché à côté, et les
+                séances où un carnet a engagé plus que son capital sont signalées. La durée de la
+                période du carnet du moteur systématique était aussi fausse (62 jours au lieu de 37).</p>
         </div>
 
 
     <div id="mode-turbo" class="content-card tr-mode" style="border-top: 4px solid #f59e0b">
       <div class="tr-mode-head">
-        <h2>Turbo</h2>
+        <h2>Carnet A</h2>
         <span class="tr-asof">Arrêté au 4 septembre 2026</span>
       </div>
       <p class="tr-blurb">Une seule ligne en portefeuille, tenue trois séances, sur les candidats les mieux notés.</p>
@@ -294,19 +329,27 @@
         <div class="tr-metric"><div class="tr-metric-value ">61</div><div class="tr-metric-label">Trades clôturés</div></div>
         <div class="tr-metric"><div class="tr-metric-value ">39,3 %</div><div class="tr-metric-label">Taux de réussite</div></div>
         <div class="tr-metric"><div class="tr-metric-value ">3,43×</div><div class="tr-metric-label">Facteur de profit</div></div>
-        <div class="tr-metric"><div class="tr-metric-value tr-pos">+104,63 %</div><div class="tr-metric-label">Rendement cumulé</div></div>
-        <div class="tr-metric"><div class="tr-metric-value tr-neg">-9,48 %</div><div class="tr-metric-label">Pire repli</div></div>
+        <div class="tr-metric"><div class="tr-metric-value tr-pos">+104,63 %</div><div class="tr-metric-label">Cumul à mise fixe</div></div>
+        <div class="tr-metric"><div class="tr-metric-value tr-neg">-9,48 %</div><div class="tr-metric-label">Pire repli, mise fixe</div></div>
       </div>
+      <p class="tr-reinvest">Gains réinvestis à chaque trade : <strong class="tr-pos">+163,88 %</strong>,
+        avec un pire repli de -19,16 % mesuré de clôture en clôture.</p>
       <p class="tr-secondary">Sharpe 3,79 · Calmar 20,30 · 1 ligne · horizon 3 séances</p>
+      
       <div class="echart-box"><div id="tr-chart-turbo" class="tr-chart-slot"></div></div>
       <p class="tr-caption">Base 100 au premier jour du registre. La courbe s'arrête au jour du dernier trade scellé. Elle n'est pas prolongée par la valorisation des positions encore ouvertes.</p>
-
+      <p class="tr-warn"><i class="fa-solid fa-triangle-exclamation"></i>
+        Sur 2 séances, entre le 29 avril 2026 et le 6 mai 2026,
+        les lignes ouvertes de ce carnet ont pesé plus que son capital, jusqu'à 200 %. Le registre compte
+        chaque ligne à sa taille prévue, même quand d'autres étaient déjà ouvertes. Les 4 trades ouverts
+        pendant ces séances pèsent +8,24 points du cumul à mise fixe.</p>
+      
       <p class="tr-period">Période couverte : du 26 février 2026 au 4 septembre 2026, soit 190 jours.</p>
     </div>
 
     <div id="mode-dynamic" class="content-card tr-mode" style="border-top: 4px solid #dc2626">
       <div class="tr-mode-head">
-        <h2>Dynamic</h2>
+        <h2>Carnet B</h2>
         <span class="tr-asof">Arrêté au 4 septembre 2026</span>
       </div>
       <p class="tr-blurb">Une ligne, horizon dix séances : la même sélection tenue plus longtemps.</p>
@@ -314,19 +357,27 @@
         <div class="tr-metric"><div class="tr-metric-value ">59</div><div class="tr-metric-label">Trades clôturés</div></div>
         <div class="tr-metric"><div class="tr-metric-value ">37,3 %</div><div class="tr-metric-label">Taux de réussite</div></div>
         <div class="tr-metric"><div class="tr-metric-value ">2,26×</div><div class="tr-metric-label">Facteur de profit</div></div>
-        <div class="tr-metric"><div class="tr-metric-value tr-pos">+59,01 %</div><div class="tr-metric-label">Rendement cumulé</div></div>
-        <div class="tr-metric"><div class="tr-metric-value tr-neg">-19,72 %</div><div class="tr-metric-label">Pire repli</div></div>
+        <div class="tr-metric"><div class="tr-metric-value tr-pos">+59,01 %</div><div class="tr-metric-label">Cumul à mise fixe</div></div>
+        <div class="tr-metric"><div class="tr-metric-value tr-neg">-19,72 %</div><div class="tr-metric-label">Pire repli, mise fixe</div></div>
       </div>
+      <p class="tr-reinvest">Gains réinvestis à chaque trade : <strong class="tr-pos">+72,49 %</strong>,
+        avec un pire repli de -24,62 % mesuré de clôture en clôture.</p>
       <p class="tr-secondary">Sharpe 2,60 · Calmar 5,50 · 1 ligne · horizon 10 séances</p>
+      <p class="tr-secondary">Le cumul figé contient -0,29 point de valorisation de positions encore ouvertes le jour de l'arrêt. Les 59 trades clôturés de la liste font +59,30 % à mise fixe.</p>
       <div class="echart-box"><div id="tr-chart-dynamic" class="tr-chart-slot"></div></div>
       <p class="tr-caption">Base 100 au premier jour du registre. La courbe s'arrête au jour du dernier trade scellé. Elle n'est pas prolongée par la valorisation des positions encore ouvertes.</p>
-
+      <p class="tr-warn"><i class="fa-solid fa-triangle-exclamation"></i>
+        Sur 9 séances, entre le 6 mai 2026 et le 15 juin 2026,
+        les lignes ouvertes de ce carnet ont pesé plus que son capital, jusqu'à 200 %. Le registre compte
+        chaque ligne à sa taille prévue, même quand d'autres étaient déjà ouvertes. Les 9 trades ouverts
+        pendant ces séances pèsent +1,62 points du cumul à mise fixe.</p>
+      
       <p class="tr-period">Période couverte : du 26 février 2026 au 4 septembre 2026, soit 190 jours.</p>
     </div>
 
     <div id="mode-balanced" class="content-card tr-mode" style="border-top: 4px solid #059669">
       <div class="tr-mode-head">
-        <h2>Balanced</h2>
+        <h2>Carnet C</h2>
         <span class="tr-asof">Arrêté au 4 septembre 2026</span>
       </div>
       <p class="tr-blurb">Trois lignes en parallèle, horizon six séances, avec une rotation par jour au maximum.</p>
@@ -334,12 +385,20 @@
         <div class="tr-metric"><div class="tr-metric-value ">93</div><div class="tr-metric-label">Trades clôturés</div></div>
         <div class="tr-metric"><div class="tr-metric-value ">47,3 %</div><div class="tr-metric-label">Taux de réussite</div></div>
         <div class="tr-metric"><div class="tr-metric-value ">1,37×</div><div class="tr-metric-label">Facteur de profit</div></div>
-        <div class="tr-metric"><div class="tr-metric-value tr-pos">+53,96 %</div><div class="tr-metric-label">Rendement cumulé</div></div>
-        <div class="tr-metric"><div class="tr-metric-value tr-neg">-13,87 %</div><div class="tr-metric-label">Pire repli</div></div>
+        <div class="tr-metric"><div class="tr-metric-value tr-pos">+53,96 %</div><div class="tr-metric-label">Cumul à mise fixe</div></div>
+        <div class="tr-metric"><div class="tr-metric-value tr-neg">-13,87 %</div><div class="tr-metric-label">Pire repli, mise fixe</div></div>
       </div>
+      <p class="tr-reinvest">Gains réinvestis à chaque trade : <strong class="tr-pos">+61,37 %</strong>,
+        avec un pire repli de -19,72 % mesuré de clôture en clôture.</p>
       <p class="tr-secondary">Sharpe 2,24 · Calmar 7,26 · 3 lignes · horizon 6 séances</p>
+      <p class="tr-secondary">La liste des trades compte 94 trades clôturés à cette date, contre 93 dans les agrégats figés : un trade était encore ouvert quand ils ont été arrêtés. Le cumul figé contient +0,16 point de valorisation de ce trade le jour de l'arrêt. Les 94 trades clôturés de la liste font +53,96 % à mise fixe.</p>
       <div class="echart-box"><div id="tr-chart-balanced" class="tr-chart-slot"></div></div>
       <p class="tr-caption">Base 100 au premier jour du registre. La courbe s'arrête au jour du dernier trade scellé. Elle n'est pas prolongée par la valorisation des positions encore ouvertes.</p>
+      <p class="tr-warn"><i class="fa-solid fa-triangle-exclamation"></i>
+        Sur 24 séances, entre le 3 mars 2026 et le 22 juin 2026,
+        les lignes ouvertes de ce carnet ont pesé plus que son capital, jusqu'à 300 %. Le registre compte
+        chaque ligne à sa taille prévue, même quand d'autres étaient déjà ouvertes. Les 36 trades ouverts
+        pendant ces séances pèsent +55,72 points du cumul à mise fixe.</p>
       <p class="tr-warn"><i class="fa-solid fa-triangle-exclamation"></i>
         Hors échantillon, ce carnet se dégrade : réussite 53,5 % → 23,5 %,
         facteur de profit 3,46× → 0,26× sur 17 trades.
@@ -349,7 +408,7 @@
 
     <div id="mode-fortress" class="content-card tr-mode" style="border-top: 4px solid #6d28d9">
       <div class="tr-mode-head">
-        <h2>Fortress</h2>
+        <h2>Carnet D</h2>
         <span class="tr-asof">Arrêté au 4 septembre 2026</span>
       </div>
       <p class="tr-blurb">Dix lignes, horizon huit séances : la diversification sert de parachute.</p>
@@ -357,12 +416,16 @@
         <div class="tr-metric"><div class="tr-metric-value ">134</div><div class="tr-metric-label">Trades clôturés</div></div>
         <div class="tr-metric"><div class="tr-metric-value ">38,8 %</div><div class="tr-metric-label">Taux de réussite</div></div>
         <div class="tr-metric"><div class="tr-metric-value ">1,63×</div><div class="tr-metric-label">Facteur de profit</div></div>
-        <div class="tr-metric"><div class="tr-metric-value tr-pos">+19,69 %</div><div class="tr-metric-label">Rendement cumulé</div></div>
-        <div class="tr-metric"><div class="tr-metric-value tr-neg">-4,43 %</div><div class="tr-metric-label">Pire repli</div></div>
+        <div class="tr-metric"><div class="tr-metric-value tr-pos">+19,69 %</div><div class="tr-metric-label">Cumul à mise fixe</div></div>
+        <div class="tr-metric"><div class="tr-metric-value tr-neg">-4,43 %</div><div class="tr-metric-label">Pire repli, mise fixe</div></div>
       </div>
+      <p class="tr-reinvest">Gains réinvestis à chaque trade : <strong class="tr-pos">+21,13 %</strong>,
+        avec un pire repli de -4,63 % mesuré de clôture en clôture.</p>
       <p class="tr-secondary">Sharpe 3,09 · Calmar 8,18 · 10 lignes · horizon 8 séances</p>
+      
       <div class="echart-box"><div id="tr-chart-fortress" class="tr-chart-slot"></div></div>
       <p class="tr-caption">Base 100 au premier jour du registre. La courbe s'arrête au jour du dernier trade scellé. Elle n'est pas prolongée par la valorisation des positions encore ouvertes.</p>
+      
       <p class="tr-warn"><i class="fa-solid fa-triangle-exclamation"></i>
         Hors échantillon, ce carnet se dégrade : réussite 59,2 % → 25,0 %,
         facteur de profit 6,39× → 0,39× sur 20 trades.
@@ -372,7 +435,7 @@
 
     <div id="mode-best" class="content-card tr-mode" style="border-top: 4px solid #2563eb">
       <div class="tr-mode-head">
-        <h2>DTX</h2>
+        <h2>Carnet du moteur systématique</h2>
         <span class="tr-asof">Arrêté au 18 septembre 2026</span>
       </div>
       <p class="tr-blurb">Quinze lignes, horizon quatorze séances, décidées le soir par le moteur systématique.</p>
@@ -380,14 +443,18 @@
         <div class="tr-metric"><div class="tr-metric-value ">6</div><div class="tr-metric-label">Trades clôturés</div></div>
         <div class="tr-metric"><div class="tr-metric-value ">16,7 %</div><div class="tr-metric-label">Taux de réussite</div></div>
         <div class="tr-metric"><div class="tr-metric-value ">0,04×</div><div class="tr-metric-label">Facteur de profit</div></div>
-        <div class="tr-metric"><div class="tr-metric-value tr-neg">-1,61 %</div><div class="tr-metric-label">Rendement cumulé</div></div>
-        <div class="tr-metric"><div class="tr-metric-value tr-neg">-1,94 %</div><div class="tr-metric-label">Pire repli</div></div>
+        <div class="tr-metric"><div class="tr-metric-value tr-neg">-1,61 %</div><div class="tr-metric-label">Cumul à mise fixe</div></div>
+        <div class="tr-metric"><div class="tr-metric-value tr-neg">-1,94 %</div><div class="tr-metric-label">Pire repli, mise fixe</div></div>
       </div>
+      <p class="tr-reinvest">Gains réinvestis à chaque trade : <strong class="tr-neg">-1,61 %</strong>,
+        avec un pire repli de -1,61 % mesuré de clôture en clôture.</p>
       <p class="tr-secondary">Sharpe -2,07 · Calmar -7,46 · 15 lignes · horizon 14 séances</p>
+      
       <div class="echart-box"><div id="tr-chart-best" class="tr-chart-slot"></div></div>
       <p class="tr-caption">Base 100 au premier jour du registre. La courbe s'arrête au jour du dernier trade scellé. Elle n'est pas prolongée par la valorisation des positions encore ouvertes.</p>
-
-      <p class="tr-period">Période couverte : du 12 août 2026 au 18 septembre 2026, soit 39 jours.</p>
+      
+      
+      <p class="tr-period">Période couverte : du 12 août 2026 au 18 septembre 2026, soit 37 jours.</p>
     </div>
 
         <div id="limites" class="content-card">
@@ -396,12 +463,12 @@
                 n'a traversé un marché baissier comparable à 2022 ou à mars 2020. Un rendement obtenu
                 dans un marché porteur ne prouve pas la résistance en marché cassant : il prouve
                 seulement qu'on n'a pas raté le marché porteur.</p>
-            <p>Le taux de réussite se lit avec le facteur de profit, jamais seul. DTX gagne
-       16,7 % de ses trades et affiche -1,61 % cumulés ;
-       Balanced en gagne 47,3 % pour 53,96 %.
+            <p>Le taux de réussite se lit avec le facteur de profit, jamais seul. Le carnet du moteur systématique gagne
+       16,7 % de ses trades et affiche -1,61 % à mise fixe ;
+       le carnet C en gagne 47,3 % pour +53,96 %.
        C'est la taille du gain moyen face à la perte moyenne qui décide, pas la fréquence.</p>
             <p>Deux carnets portent une dégradation hors
-       échantillon signalée plus haut (Balanced, Fortress). Elle est affichée parce
+       échantillon signalée plus haut (Carnet C, Carnet D). Elle est affichée parce
        qu'elle existe, pas parce qu'elle arrange : la partie de l'historique postérieure au dernier réglage est
        systématiquement la plus sincère, et c'est celle-là qu'il faut regarder en premier.</p>
         </div>
@@ -413,8 +480,7 @@
             <ul class="tr-seal">
                 <li><a href="/portfolio/v1/status.json">Statut des carnets</a> : état, date d'ouverture,
                     raison du dernier changement.</li>
-                <li><a href="/portfolio/v1/turbo/equity.json">Courbe et agrégats par carnet</a> :
-                    remplacez <code>turbo</code> par le nom du carnet voulu.</li>
+                <li>Courbe et agrégats par carnet : <a href="/portfolio/v1/turbo/equity.json">Carnet A</a>, <a href="/portfolio/v1/dynamic/equity.json">Carnet B</a>, <a href="/portfolio/v1/balanced/equity.json">Carnet C</a>, <a href="/portfolio/v1/fortress/equity.json">Carnet D</a>, <a href="/portfolio/v1/best/equity.json">Carnet du moteur systématique</a>.</li>
                 <li><a href="/portfolio/v1/trades.json">Trades</a> : chaque ligne clôturée, avec
                     sa date d'entrée, sa sortie et son résultat.</li>
                 <li><a href="/scanner/status/">Tableau de bord des carnets</a> : la vue jour par jour,
@@ -429,11 +495,11 @@
     <div class="fnav" id="floatingNav">
         <div class="fnav-menu" id="fnavMenu">
             <a href="#lecture" class="fnav-item" data-section="lecture"><i class="fa-solid fa-file-signature"></i><span>Ce que vous lisez</span></a>
-            <a href="#mode-turbo" class="fnav-item" data-section="mode-turbo"><i class="fa-solid fa-chart-line"></i><span>Turbo</span></a>
-            <a href="#mode-dynamic" class="fnav-item" data-section="mode-dynamic"><i class="fa-solid fa-chart-line"></i><span>Dynamic</span></a>
-            <a href="#mode-balanced" class="fnav-item" data-section="mode-balanced"><i class="fa-solid fa-chart-line"></i><span>Balanced</span></a>
-            <a href="#mode-fortress" class="fnav-item" data-section="mode-fortress"><i class="fa-solid fa-chart-line"></i><span>Fortress</span></a>
-            <a href="#mode-best" class="fnav-item" data-section="mode-best"><i class="fa-solid fa-chart-line"></i><span>DTX</span></a>
+            <a href="#mode-turbo" class="fnav-item" data-section="mode-turbo"><i class="fa-solid fa-chart-line"></i><span>Carnet A</span></a>
+            <a href="#mode-dynamic" class="fnav-item" data-section="mode-dynamic"><i class="fa-solid fa-chart-line"></i><span>Carnet B</span></a>
+            <a href="#mode-balanced" class="fnav-item" data-section="mode-balanced"><i class="fa-solid fa-chart-line"></i><span>Carnet C</span></a>
+            <a href="#mode-fortress" class="fnav-item" data-section="mode-fortress"><i class="fa-solid fa-chart-line"></i><span>Carnet D</span></a>
+            <a href="#mode-best" class="fnav-item" data-section="mode-best"><i class="fa-solid fa-chart-line"></i><span>Carnet du moteur systématique</span></a>
             <a href="#limites" class="fnav-item" data-section="limites"><i class="fa-solid fa-triangle-exclamation"></i><span>Limites</span></a>
             <a href="#verifier" class="fnav-item" data-section="verifier"><i class="fa-solid fa-magnifying-glass"></i><span>Vérifier</span></a>
         </div>
@@ -453,7 +519,7 @@
 
     <script>
         (function () {
-            var CURVES = [{"id":"tr-chart-turbo","label":"Turbo","color":"#f59e0b","d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04"],"v":[101.38,100.99,102.13,98.57,98.87,102.05,117.53,115.48,127.88,126.36,127.36,126.78,126.36,128.64,129.99,130.33,130.95,132.05,133.66,134.69,140.76,143.74,144.63,142.61,144.21,145.34,145.34,147.79,147.5,150.92,151.1,152.77,153.24,157.08,156.86,158.21,166.46,164.32,162.72,164.8,164.32,162.5,163.74,183.73,181.62,185.33,192.75,190.61,191.76,194.26,193,194.13,194.25,193.15,194.68,194.45,195.14,194.33,194.71,194.58,192.41,197.17,197.17,204.19,200.94,201.69,198.03,199.97,198.46,199.83,204.18,204.76,208.63,208.4,207.46,206.71,207.29,206.1,206.21,205.96,206.13,206.13,205.41,205.8,208.49,212.24,212.24,212.24,212.24,210.44,210.44,210.44,210.44,210.44,210.44,210.44,208.24,208.24,208.24,200.57,206.77,209.41,207.21,208.53,206.92,203.07,203.11,200.57,198.26,194.4,194.93,195.62,192.89,192.12,194.14,194.58,193.12,193.49,193.49,193.49,193.49,193.49,193.49,193.49,193.49,193.29,194.77,194.28,197.99,196.05,196.05,199.07,199.25,203.78,204.63,204.63,204.63]},{"id":"tr-chart-dynamic","label":"Dynamic","color":"#dc2626","d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04"],"v":[101.15,101.54,108.47,111.02,110.63,114.66,131.22,130.19,129.43,131.54,135.19,134.54,134.55,135.13,135.45,135.45,135.45,138.53,140.63,141.13,143.23,147.43,144.44,141.31,143.19,140.66,140.66,140.84,142.68,146.1,146.28,147.95,149.13,151.28,154.06,153.23,154.91,154.91,153.31,155.39,155.39,155.39,154.81,151.61,153.42,155.86,164.32,160.2,174.16,176.66,175.4,176.53,176.65,175.55,175.28,175.02,172.24,172.13,172.45,172.34,171.33,177.68,177.68,184.7,181.45,182.2,178.54,180.48,178.97,180.34,184.69,185.27,186.93,186.51,185.73,188.04,185.42,185.08,183.41,187.76,187.93,187.93,187.21,187.6,190.29,191.85,191.18,177.25,177.25,175.45,175.45,175.45,175.45,175.45,175.45,173.99,171.79,171.79,171.79,171.12,172.5,173.24,175.51,171.89,166.66,165.69,164.86,163.96,161.65,157.79,158.32,159.01,156.28,155.51,157.53,157.97,155.69,155.22,157.71,155.93,154.02,156.58,156.14,155.2,159,158.44,160.05,160.69,161,161.37,158.4,161.76,160.03,155.64,159.61,161.22,159.01]},{"id":"tr-chart-balanced","label":"Balanced","color":"#059669","d":["03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04"],"v":[99.86,96.92,98.78,106.04,103.96,103.76,118.3,118.89,118.89,118.89,118.89,118.76,108.52,116.88,115.94,108.79,109.54,113.07,128.88,130.79,131.88,135.73,136.4,136.4,136.4,136.4,136.4,136.4,136.68,136.67,135.65,135.3,134.08,144.86,143.03,152.12,151.66,152.84,151.67,152.93,152.92,152.23,152.95,156.15,157.24,156.89,159.67,159.36,157.73,158.78,159.05,158.03,158.31,158.87,159.03,159.99,159.47,160.57,161.28,161.55,161.55,161.81,162.88,163.1,161.33,161.25,162.12,159.37,158.75,154.23,155.32,153.94,153.37,153.88,153.32,152.12,151.67,149.88,149.72,149.72,149.73,149.7,149.67,150.38,149.64,145.65,144.13,144.13,145.36,145.36,145.36,145.36,142.53,142.53,142.53,142.04,140.47,143.89,143.7,142.37,142.85,141.99,144.44,144.47,145.04,144.19,143.84,142.92,143.44,143.55,144.66,144.75,143.87,144.59,144.73,145.04,144.91,144.36,143,142.84,146.61,146.37,148.72,147.7,150.69,153.06,155.86,154.51,154.13,156.34,155.86,153.64,153.96,154.7,153.96]},{"id":"tr-chart-fortress","label":"Fortress","color":"#6d28d9","d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04"],"v":[100.19,100.19,100.95,100.89,101.37,102.84,106.16,105.76,105,104.93,106.12,106.24,106.28,106.72,107.02,107.42,107.18,107.26,108.63,108.86,109.63,110.62,109.98,109.69,108.85,109.31,109.31,109.71,109.68,110.18,110.49,110.54,111.13,111.62,111.14,113.87,115.97,115.33,114.92,115.58,115.31,115.35,116.12,119.75,119.03,117.66,120.96,120.52,120.58,120.79,120.41,120.86,121.1,120.91,121.36,121.12,121,121.64,121.45,121.89,122.15,122.53,122.53,123.06,122.59,123.04,123.58,122.98,122.38,120.24,119.64,119.4,119.34,119.5,119.17,119.14,118.92,118.64,118.11,118.16,119.14,119.14,119.88,118.66,118.96,119.31,119.01,119.15,121.75,121.75,121.75,121.75,121.75,121.5,121.04,120.52,120.52,120.52,120.52,120.52,120.42,120.42,120.42,120.42,120.49,120.21,120.21,120.21,120.21,120.21,120.21,120.21,120.41,120.73,120.48,119.99,120.2,119.88,119.87,120,119.96,120.02,120.2,119.86,120.18,120.52,120.66,120.47,120.53,120.33,120.32,120.18,120.24,119.91,119.69,119.75,119.69]},{"id":"tr-chart-best","label":"DTX","color":"#2563eb","d":["08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04","09/07","09/08","09/09","09/10","09/11","09/14","09/15","09/16","09/17","09/18"],"v":[100.11,100.12,99.97,99.35,99.37,99.37,98.96,99.34,99.36,99.29,99.29,99.98,99.23,99.58,98.36,98.41,99.66,99.14,99.3,99.19,99.04,98.73,99.15,99.16,98.53,98.18,98.39,98.39]}];
+            var CURVES = [{"id":"tr-chart-turbo","label":"Carnet A","color":"#f59e0b","d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04"],"v":[101.38,100.99,102.13,98.57,98.87,102.05,117.53,115.48,127.88,126.36,127.36,126.78,126.36,128.64,129.99,130.33,130.95,132.05,133.66,134.69,140.76,143.74,144.63,142.61,144.21,145.34,145.34,147.79,147.5,150.92,151.1,152.77,153.24,157.08,156.86,158.21,166.46,164.32,162.72,164.8,164.32,162.5,163.74,183.73,181.62,185.33,192.75,190.61,191.76,194.26,193,194.13,194.25,193.15,194.68,194.45,195.14,194.33,194.71,194.58,192.41,197.17,197.17,204.19,200.94,201.69,198.03,199.97,198.46,199.83,204.18,204.76,208.63,208.4,207.46,206.71,207.29,206.1,206.21,205.96,206.13,206.13,205.41,205.8,208.49,212.24,212.24,212.24,212.24,210.44,210.44,210.44,210.44,210.44,210.44,210.44,208.24,208.24,208.24,200.57,206.77,209.41,207.21,208.53,206.92,203.07,203.11,200.57,198.26,194.4,194.93,195.62,192.89,192.12,194.14,194.58,193.12,193.49,193.49,193.49,193.49,193.49,193.49,193.49,193.49,193.29,194.77,194.28,197.99,196.05,196.05,199.07,199.25,203.78,204.63,204.63,204.63]},{"id":"tr-chart-dynamic","label":"Carnet B","color":"#dc2626","d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04"],"v":[101.15,101.54,108.47,111.02,110.63,114.66,131.22,130.19,129.43,131.54,135.19,134.54,134.55,135.13,135.45,135.45,135.45,138.53,140.63,141.13,143.23,147.43,144.44,141.31,143.19,140.66,140.66,140.84,142.68,146.1,146.28,147.95,149.13,151.28,154.06,153.23,154.91,154.91,153.31,155.39,155.39,155.39,154.81,151.61,153.42,155.86,164.32,160.2,174.16,176.66,175.4,176.53,176.65,175.55,175.28,175.02,172.24,172.13,172.45,172.34,171.33,177.68,177.68,184.7,181.45,182.2,178.54,180.48,178.97,180.34,184.69,185.27,186.93,186.51,185.73,188.04,185.42,185.08,183.41,187.76,187.93,187.93,187.21,187.6,190.29,191.85,191.18,177.25,177.25,175.45,175.45,175.45,175.45,175.45,175.45,173.99,171.79,171.79,171.79,171.12,172.5,173.24,175.51,171.89,166.66,165.69,164.86,163.96,161.65,157.79,158.32,159.01,156.28,155.51,157.53,157.97,155.69,155.22,157.71,155.93,154.02,156.58,156.14,155.2,159,158.44,160.05,160.69,161,161.37,158.4,161.76,160.03,155.64,159.61,161.22,159.01]},{"id":"tr-chart-balanced","label":"Carnet C","color":"#059669","d":["03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04"],"v":[99.86,96.92,98.78,106.04,103.96,103.76,118.3,118.89,118.89,118.89,118.89,118.76,108.52,116.88,115.94,108.79,109.54,113.07,128.88,130.79,131.88,135.73,136.4,136.4,136.4,136.4,136.4,136.4,136.68,136.67,135.65,135.3,134.08,144.86,143.03,152.12,151.66,152.84,151.67,152.93,152.92,152.23,152.95,156.15,157.24,156.89,159.67,159.36,157.73,158.78,159.05,158.03,158.31,158.87,159.03,159.99,159.47,160.57,161.28,161.55,161.55,161.81,162.88,163.1,161.33,161.25,162.12,159.37,158.75,154.23,155.32,153.94,153.37,153.88,153.32,152.12,151.67,149.88,149.72,149.72,149.73,149.7,149.67,150.38,149.64,145.65,144.13,144.13,145.36,145.36,145.36,145.36,142.53,142.53,142.53,142.04,140.47,143.89,143.7,142.37,142.85,141.99,144.44,144.47,145.04,144.19,143.84,142.92,143.44,143.55,144.66,144.75,143.87,144.59,144.73,145.04,144.91,144.36,143,142.84,146.61,146.37,148.72,147.7,150.69,153.06,155.86,154.51,154.13,156.34,155.86,153.64,153.96,154.7,153.96]},{"id":"tr-chart-fortress","label":"Carnet D","color":"#6d28d9","d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02","07/03","07/06","07/07","07/08","07/09","07/10","07/13","07/14","07/15","07/16","07/17","07/20","07/21","07/22","07/23","07/24","07/27","07/28","07/29","07/30","07/31","08/03","08/04","08/05","08/06","08/07","08/10","08/11","08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04"],"v":[100.19,100.19,100.95,100.89,101.37,102.84,106.16,105.76,105,104.93,106.12,106.24,106.28,106.72,107.02,107.42,107.18,107.26,108.63,108.86,109.63,110.62,109.98,109.69,108.85,109.31,109.31,109.71,109.68,110.18,110.49,110.54,111.13,111.62,111.14,113.87,115.97,115.33,114.92,115.58,115.31,115.35,116.12,119.75,119.03,117.66,120.96,120.52,120.58,120.79,120.41,120.86,121.1,120.91,121.36,121.12,121,121.64,121.45,121.89,122.15,122.53,122.53,123.06,122.59,123.04,123.58,122.98,122.38,120.24,119.64,119.4,119.34,119.5,119.17,119.14,118.92,118.64,118.11,118.16,119.14,119.14,119.88,118.66,118.96,119.31,119.01,119.15,121.75,121.75,121.75,121.75,121.75,121.5,121.04,120.52,120.52,120.52,120.52,120.52,120.42,120.42,120.42,120.42,120.49,120.21,120.21,120.21,120.21,120.21,120.21,120.21,120.41,120.73,120.48,119.99,120.2,119.88,119.87,120,119.96,120.02,120.2,119.86,120.18,120.52,120.66,120.47,120.53,120.33,120.32,120.18,120.24,119.91,119.69,119.75,119.69]},{"id":"tr-chart-best","label":"Carnet du moteur systématique","color":"#2563eb","d":["08/12","08/13","08/14","08/17","08/18","08/19","08/20","08/21","08/24","08/25","08/26","08/27","08/28","08/31","09/01","09/02","09/03","09/04","09/07","09/08","09/09","09/10","09/11","09/14","09/15","09/16","09/17","09/18"],"v":[100.11,100.12,99.97,99.35,99.37,99.37,98.96,99.34,99.36,99.29,99.29,99.98,99.23,99.58,98.36,98.41,99.66,99.14,99.3,99.19,99.04,98.73,99.15,99.16,98.53,98.18,98.39,98.39]}];
             CURVES.forEach(function (c) {
                 var el = document.getElementById(c.id);
                 if (!el || !window.echarts) return;

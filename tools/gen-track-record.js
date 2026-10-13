@@ -18,10 +18,26 @@
  *
  * Interdits explicites, pour que la page ne puisse pas rejouer les incidents
  * du 2026-07-02 et du 2026-07-13 :
- *   - aucun recalcul de return / DD / WR / PF à partir des trades ou des courbes ;
+ *   - aucun recalcul de return / DD / WR / PF scellés à partir des trades ou des courbes ;
  *   - aucun carnet live ni forward-view incl. mark-to-market en chiffre de tête ;
  *   - un mode sans `frozen_<id>` n'est PAS inventé, il est marqué « pas encore de
  *     registre scellé » et ses métriques restent à « — ».
+ *
+ * CONVENTION DE CUMUL (correction du 2026-10-13) — à lire avant toute retouche.
+ * Le cumul scellé (`returnTotal`) est une MISE FIXE : equity = 100 + Σ(pnlPct × poids),
+ * poids = positionSizePct / portfolioSize de la config tamponnée sur le trade
+ * (tools/lib/mode-stats.js). Chaque ligne engage toujours la même part du capital de
+ * DÉPART ; les gains ne sont jamais réinvestis. Ce n'est PAS un rendement composé.
+ * La page l'affichait sous le libellé nu « Rendement cumulé ». Depuis le 2026-10-13 :
+ *   - les tuiles scellées sont libellées « mise fixe » (chiffres inchangés, recopiés) ;
+ *   - une ligne « gains réinvestis » est CALCULÉE à partir de la liste chaînée des
+ *     trades clôturés (data/backtest-trades.json, même poids, chaque ligne
+ *     dimensionnée sur le capital réalisé à l'entrée), avec son pire repli de clôture
+ *     en clôture. Elle s'ajoute au chiffre scellé, elle ne le remplace jamais ;
+ *   - les séances où les lignes ouvertes pèsent plus de 100 % du capital (poids
+ *     tamponnés cumulés) sont signalées, avec le poids des trades concernés ;
+ *   - un écart entre le nombre de trades de l'agrégat figé et la chaîne est signalé.
+ * Ces calculs sont descriptifs, déterministes, et n'écrivent rien dans les registres.
  *
  * Usage :
  *   node tools/gen-track-record.js            # génère tech/track-record/index.html
@@ -47,6 +63,16 @@ const OUT_DEFAULT = path.join(ROOT, 'tech/track-record/index.html');
 // Modes exposés publiquement, dans l'ordre d'affichage voulu. Un mode de cette
 // liste absent de portfolio/v1/status.json (ou non `live`) est simplement ignoré.
 const PUBLIC_MODES = ['turbo', 'dynamic', 'balanced', 'fortress', 'best'];
+
+// Nom public de chaque carnet. Les identifiants internes ne sortent jamais dans le
+// texte publié (ils restent dans les URL de l'API, qui sont des adresses, pas de la prose).
+const PUBLIC_LABEL = {
+  turbo: 'Carnet A',
+  dynamic: 'Carnet B',
+  balanced: 'Carnet C',
+  fortress: 'Carnet D',
+  best: 'Carnet du moteur systématique',
+};
 
 // Une ligne descriptive par carnet — factuelle, dérivée de la config publiée.
 const MODE_BLURB = {
@@ -88,6 +114,93 @@ function readJSON(p) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return null; }
 }
 
+// Écart en jours calendaires entre deux dates ISO affichées (formatage, pas une stat).
+function daysBetween(isoA, isoB) {
+  if (!isoA || !isoB) return null;
+  const d = Math.round((new Date(`${isoB.slice(0, 10)}T00:00:00Z`) - new Date(`${isoA.slice(0, 10)}T00:00:00Z`)) / 86400000);
+  return Number.isFinite(d) ? d : null;
+}
+
+// ─── Lecture descriptive de la chaîne de trades (voir CONVENTION DE CUMUL) ────
+// Rien n'est écrit : on lit les trades clôturés chaînés, avec le poids exact que
+// tools/lib/mode-stats.js leur applique, pour dire (1) ce qu'aurait donné le
+// réinvestissement des gains, (2) si des lignes ouvertes ont dépassé 100 % du capital.
+const RESOLVED = ['tp1', 'tp1_partial', 'tp2', 'sl', 'expired', 'rotated', 'breakeven', 'trail'];
+let _chainCtx = null;
+function chainContext() {
+  if (_chainCtx) return _chainCtx;
+  const trades = readJSON(path.join(ROOT, 'data/backtest-trades.json')) || {};
+  const hist = readJSON(path.join(ROOT, 'data/modes-config-history.json')) || {};
+  const cfgVersions = {};
+  for (const v of (hist.versions || [])) cfgVersions[v.id] = v.config;
+  _chainCtx = { trades, cfgVersions };
+  return _chainCtx;
+}
+
+function chainView(id, cfg, periodEnd) {
+  const { getWeight, BIZ_DAY_FNS } = require('./lib/mode-stats');
+  const { trades, cfgVersions } = chainContext();
+  const defW = (1 / (cfg.portfolioSize || 1)) * (cfg.positionSizePct || 1);
+  const list = (trades[id] || [])
+    .filter(t => t && t.actualEntry > 0 && t.exitDate && RESOLVED.includes(String(t.status || '').replace(/_amb$/, '')))
+    .filter(t => !periodEnd || t.exitDate <= periodEnd)
+    .map(t => ({ t, w: getWeight(t, id, cfgVersions, defW), entry: t.entryDate || t.scanDate, exit: t.exitDate }));
+  if (!list.length) return null;
+
+  // (1) Gains réinvestis : chaque ligne dimensionnée sur le capital réalisé au jour
+  // de son entrée ; sorties avant entrées le même jour ; repli mesuré à chaque clôture.
+  const ev = [];
+  list.forEach((x, i) => { ev.push({ d: x.entry, k: 1, i }); ev.push({ d: x.exit, k: 0, i }); });
+  ev.sort((a, b) => a.d.localeCompare(b.d) || a.k - b.k || a.i - b.i);
+  let cap = 1, peak = 1, dd = 0;
+  const alloc = new Array(list.length).fill(null);
+  ev.forEach((e, n) => {
+    const x = list[e.i];
+    if (alloc[e.i] === null) alloc[e.i] = x.w * cap;
+    if (e.k === 0) cap += alloc[e.i] * (x.t.pnlPct || 0) / 100;
+    // Repli lu une fois toutes les clôtures du jour passées (« de clôture en clôture »),
+    // pour que l'ordre des sorties d'une même séance ne crée pas de creux fictif.
+    const next = ev[n + 1];
+    if (!next || next.d !== e.d) {
+      if (cap > peak) peak = cap;
+      dd = Math.max(dd, (peak - cap) / peak);
+    }
+  });
+
+  // (2) Exposition brute : somme des poids des lignes ouvertes, séance par séance.
+  const first = list.map(x => x.entry).sort()[0];
+  const last = list.map(x => x.exit).sort().pop();
+  let overSessions = 0, maxExposure = 0, overFrom = null, overTo = null;
+  const involved = new Set();
+  for (const d of BIZ_DAY_FNS.allDays(first, last)) {
+    const open = list.filter(x => x.entry <= d && x.exit > d);
+    const expo = open.reduce((s, x) => s + x.w, 0);
+    if (expo > 1 + 1e-9) {
+      overSessions++;
+      if (!overFrom) overFrom = d;
+      overTo = d;
+      if (expo > maxExposure) maxExposure = expo;
+      open.forEach(x => involved.add(x));
+    }
+  }
+  const involvedPts = [...involved].reduce((s, x) => s + x.w * (x.t.pnlPct || 0), 0);
+
+  return {
+    closed: list.length,
+    fixedSum: +list.reduce((s, x) => s + x.w * (x.t.pnlPct || 0), 0).toFixed(2),
+    reinvestedRet: +((cap - 1) * 100).toFixed(2),
+    reinvestedDD: +(-dd * 100).toFixed(2),
+    over: overSessions ? {
+      sessions: overSessions,
+      maxPct: Math.round(maxExposure * 100),
+      from: overFrom,
+      to: overTo,
+      trades: involved.size,
+      pts: +involvedPts.toFixed(2),
+    } : null,
+  };
+}
+
 // ─── Lecture des sources scellées ────────────────────────────────────────────
 function latestSnapshot() {
   const dir = path.join(ROOT, 'scanner/status/history');
@@ -126,9 +239,12 @@ function collectModes(scope = null) {
     const trades = frozen && typeof frozen.trades === 'number' ? frozen.trades : 0;
     const sealed = !!frozen && trades > 0;
 
+    const periodEnd = curve.length ? curve[curve.length - 1].date : null;
+    const chain = sealed ? chainView(id, cfg, periodEnd) : null;
+
     out.push({
       id,
-      label: cfg.label || (id.charAt(0).toUpperCase() + id.slice(1)),
+      label: PUBLIC_LABEL[id] || `Carnet ${id}`,
       color: cfg.color || '#2563eb',
       blurb: MODE_BLURB[id] || '',
       config: {
@@ -141,19 +257,24 @@ function collectModes(scope = null) {
       // Chiffres RECOPIÉS du registre scellé — jamais recalculés.
       stats: frozen ? {
         ret: frozen.returnTotal ?? null,
+        unrealized: frozen.returnUnrealized ?? null,
         dd: frozen.maxDD ?? null,
         wr: frozen.winRate ?? null,
         pf: frozen.profitFactor ?? null,
         trades,
         sharpe: frozen.sharpe ?? null,
         calmar: frozen.calmar ?? null,
-      } : { ret: null, dd: null, wr: null, pf: null, trades: 0, sharpe: null, calmar: null },
+      } : { ret: null, unrealized: null, dd: null, wr: null, pf: null, trades: 0, sharpe: null, calmar: null },
       oos: frozen && frozen.out_sample ? frozen.out_sample : null,
       oosWarn: rel.out_of_sample_warning || null,
       periodStart: curve.length ? curve[0].date : null,
-      periodEnd: curve.length ? curve[curve.length - 1].date : null,
-      sampleDays: rel.sample_period_days ?? null,
+      periodEnd,
+      // Durée = écart entre les deux dates AFFICHÉES. `reliability.sample_period_days`
+      // ne convient pas : pour le carnet du moteur, il court jusqu'au dernier instantané
+      // (62 jours au 13 octobre) alors que la courbe s'arrête au 18 septembre (37 jours).
+      sampleDays: curve.length ? daysBetween(curve[0].date, periodEnd) : null,
       closedTrades: rel.closed_trades ?? null,
+      chain,
       curve,
       since: st.since || null,
     });
@@ -175,9 +296,41 @@ function modeCard(m) {
     metric('Trades clôturés', m.sealed ? String(s.trades) : '—'),
     metric('Taux de réussite', m.sealed ? `${num(s.wr, 1)} %` : '—'),
     metric('Facteur de profit', m.sealed && s.pf ? `${num(s.pf, 2)}×` : '—'),
-    metric('Rendement cumulé', m.sealed ? pct(s.ret) : '—', signClass(m.sealed ? s.ret : null)),
-    metric('Pire repli', m.sealed ? `${num(s.dd, 2)} %` : '—', m.sealed ? 'tr-neg' : ''),
+    metric('Cumul à mise fixe', m.sealed ? pct(s.ret) : '—', signClass(m.sealed ? s.ret : null)),
+    metric('Pire repli, mise fixe', m.sealed ? `${num(s.dd, 2)} %` : '—', m.sealed ? 'tr-neg' : ''),
   ].join('\n        ');
+
+  // Ligne « gains réinvestis » : calculée sur la chaîne de trades, jamais à la place du scellé.
+  const c = m.chain;
+  const reinvestLine = (m.sealed && c)
+    ? `<p class="tr-reinvest">Gains réinvestis à chaque trade : <strong class="${signClass(c.reinvestedRet)}">${pct(c.reinvestedRet)}</strong>,
+        avec un pire repli de ${num(c.reinvestedDD, 2)} % mesuré de clôture en clôture.</p>`
+    : '';
+  const overLine = (m.sealed && c && c.over)
+    ? `<p class="tr-warn"><i class="fa-solid fa-triangle-exclamation"></i>
+        Sur ${c.over.sessions} séance${c.over.sessions > 1 ? 's' : ''}, entre le ${esc(frDate(c.over.from))} et le ${esc(frDate(c.over.to))},
+        les lignes ouvertes de ce carnet ont pesé plus que son capital, jusqu'à ${c.over.maxPct} %. Le registre compte
+        chaque ligne à sa taille prévue, même quand d'autres étaient déjà ouvertes. Les ${c.over.trades} trades ouverts
+        pendant ces séances pèsent ${c.over.pts > 0 ? '+' : ''}${num(c.over.pts, 2)} points du cumul à mise fixe.</p>`
+    : '';
+  // Écarts entre l'agrégat figé et la liste chaînée : on les dit, on ne les corrige pas.
+  const gap = (m.sealed && c) ? c.closed - s.trades : 0;
+  const latent = (m.sealed && typeof s.unrealized === 'number' && Math.abs(s.unrealized) >= 0.01) ? s.unrealized : 0;
+  const parts = [];
+  if (gap > 0) {
+    parts.push(`La liste des trades compte ${c.closed} trades clôturés à cette date, contre ${s.trades} dans les agrégats figés : ` +
+      (gap === 1 ? 'un trade était encore ouvert quand ils ont été arrêtés.' : `${gap} trades étaient encore ouverts quand ils ont été arrêtés.`));
+  } else if (gap < 0) {
+    parts.push(`La liste des trades compte ${c.closed} trades clôturés à cette date, contre ${s.trades} dans les agrégats figés. Cet écart est un défaut signalé, pas une nuance.`);
+  }
+  if (latent) {
+    parts.push(`Le cumul figé contient ${latent > 0 ? '+' : ''}${num(latent, 2)} point${Math.abs(latent) >= 2 ? 's' : ''} de valorisation ` +
+      `${gap === 1 ? 'de ce trade' : 'de positions encore ouvertes'} le jour de l'arrêt.`);
+  }
+  if (parts.length && c) {
+    parts.push(`Les ${c.closed} trades clôturés de la liste font ${pct(c.fixedSum)} à mise fixe.`);
+  }
+  const countLine = parts.length ? `<p class="tr-secondary">${parts.join(' ')}</p>` : '';
 
   const asOf = m.sealed ? frDate(m.periodEnd) : null;
   const from = m.sealed ? frDate(m.periodStart) : null;
@@ -209,8 +362,11 @@ function modeCard(m) {
       <div class="tr-metrics">
         ${metrics}
       </div>
+      ${reinvestLine}
       ${secondary}
+      ${countLine}
       ${chartBlock}
+      ${overLine}
       ${oosLine}
       <p class="tr-period">${from && asOf
         ? `Période couverte : du ${esc(from)} au ${esc(asOf)}${m.sampleDays ? `, soit ${m.sampleDays} jours` : ''}.`
@@ -244,9 +400,9 @@ function buildHTML(modes, snap) {
   const lowWR = byWR[0] || null;
   const highWR = byWR.length > 1 ? byWR[byWR.length - 1] : null;
   const wrPfLine = (lowWR && highWR)
-    ? `Le taux de réussite se lit avec le facteur de profit, jamais seul. ${esc(lowWR.label)} gagne
-       ${num(lowWR.stats.wr, 1)} % de ses trades et affiche ${num(lowWR.stats.ret)} % cumulés ;
-       ${esc(highWR.label)} en gagne ${num(highWR.stats.wr, 1)} % pour ${num(highWR.stats.ret)} %.
+    ? `Le taux de réussite se lit avec le facteur de profit, jamais seul. Le ${esc(lowWR.label.charAt(0).toLowerCase() + lowWR.label.slice(1))} gagne
+       ${num(lowWR.stats.wr, 1)} % de ses trades et affiche ${pct(lowWR.stats.ret)} à mise fixe ;
+       le ${esc(highWR.label.charAt(0).toLowerCase() + highWR.label.slice(1))} en gagne ${num(highWR.stats.wr, 1)} % pour ${pct(highWR.stats.ret)}.
        C'est la taille du gain moyen face à la perte moyenne qui décide, pas la fréquence.`
     : `Le taux de réussite se lit avec le facteur de profit, jamais seul : c'est la taille du gain moyen
        face à la perte moyenne qui décide, pas la fréquence des trades gagnants.`;
@@ -276,11 +432,11 @@ function buildHTML(modes, snap) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Track record scellé : les carnets, chiffres figés | DailyTickers</title>
     <meta name="description"
-        content="Les performances des carnets publics, recopiées d'un registre scellé en ajout seul : trades clôturés, taux de réussite, facteur de profit, rendement, pire repli. Aucun chiffre recalculé pour l'affichage.">
+        content="Les performances de nos portefeuilles modèles, recopiées d'un registre scellé en ajout seul : trades clôturés, taux de réussite, facteur de profit, cumul à mise fixe, pire repli, et le cumul si les gains avaient été réinvestis.">
     <meta property="og:title" content="Track record scellé : les carnets, chiffres figés">
     <meta property="og:description"
-        content="Trades clôturés, taux de réussite, facteur de profit, rendement, pire repli : recopiés d'un registre scellé, jamais recalculés pour la page.">
-    <meta property="og:image" content="/logo.svg">
+        content="Trades clôturés, taux de réussite, facteur de profit, cumul à mise fixe et pire repli recopiés d'un registre scellé, avec le cumul gains réinvestis à côté.">
+    <meta property="og:image" content="https://articles.dailytickers.com/logo.svg">
     <meta property="og:url" content="https://articles.dailytickers.com/tech/track-record/">
     <meta property="og:type" content="article">
     <meta name="twitter:card" content="summary_large_image">
@@ -455,6 +611,27 @@ function buildHTML(modes, snap) {
             margin: 1.2rem 0 0;
         }
 
+        .tr-reinvest {
+            font-size: 0.92rem;
+            color: #334155;
+            margin: 0 0 0.4rem;
+        }
+
+        .tr-reinvest strong {
+            font-family: var(--mono);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .tr-correction {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 0.9rem 1.1rem;
+            font-size: 0.9rem;
+            color: #334155;
+            margin: 1.2rem 0 0;
+        }
+
         .tr-empty {
             background: #f1f5f9;
             border-radius: 12px;
@@ -519,9 +696,10 @@ function buildHTML(modes, snap) {
         <div class="hero-date">TRACK RECORD SCELLÉ</div>
         <h1 class="hero-title">Les chiffres, tels qu'ils ont été figés</h1>
         <p class="hero-sub">
-            Chaque carnet public tient un registre en ajout seul. Un trade clôturé y reçoit une
-            empreinte et n'en ressort plus. Cette page ne fait que recopier ces registres :
-            ni recalcul, ni arrondi favorable, ni période choisie après coup.
+            Chaque carnet est un portefeuille modèle : les ordres sont calculés aux cours du marché,
+            sans argent engagé chez un courtier. Il tient un registre en ajout seul. Un trade clôturé
+            y reçoit une empreinte et n'en ressort plus. Cette page recopie ces registres, sans arrondi
+            favorable ni période choisie après coup.
         </p>
         <div class="hero-badges">
             <div class="hero-badge"><i class="fa-solid fa-lock"></i> ${sealedModes.length} carnet${sealedModes.length > 1 ? 's' : ''} scellé${sealedModes.length > 1 ? 's' : ''}</div>
@@ -541,16 +719,29 @@ function buildHTML(modes, snap) {
                 <li>Un trade clôturé entre dans un registre en ajout seul, avec une empreinte
                     SHA-256 qui intègre celle de l'entrée précédente : retoucher une ligne
                     ancienne casse toute la chaîne, et la routine de mise à jour s'arrête.</li>
-                <li>Les agrégats de cette page (trades clôturés, taux de réussite, facteur de
-                    profit, rendement cumulé, pire repli) sont recopiés depuis ces registres
-                    scellés, jamais recalculés au moment d'afficher la page.</li>
-                <li>Les positions encore ouvertes ne comptent pas. Aucune plus-value latente
-                    n'est fondue dans le rendement affiché, et aucune courbe n'est prolongée
-                    jusqu'à aujourd'hui pour faire joli.</li>
+                <li>Les cinq tuiles de chaque carnet (trades clôturés, taux de réussite, facteur
+                    de profit, cumul à mise fixe, pire repli) sont recopiées depuis ces registres
+                    scellés, jamais recalculées au moment d'afficher la page.</li>
+                <li>Aucune courbe n'est prolongée jusqu'à aujourd'hui par la valorisation des
+                    positions encore ouvertes.</li>
             </ol>
+            <p>« Mise fixe » veut dire que chaque ligne engage toujours la même somme : sa part du
+                capital de départ, fixée par les règles du carnet au moment du trade. Un carnet à
+                une ligne remet 100 % du capital initial à chaque trade. Les gains ne sont pas
+                réinvestis et les pertes ne réduisent pas la mise suivante : le cumul est la somme
+                des résultats des trades, chacun multiplié par la taille de sa ligne. La phrase
+                « gains réinvestis », sous les tuiles, donne l'autre lecture : chaque ligne
+                dimensionnée sur le capital du moment. Elle est calculée sur la même liste de
+                trades. Les gains y grossissent, les replis aussi.</p>
             <p>Conséquence directe : ces chiffres bougent moins vite que le marché. La courbe
                 d'un carnet s'arrête au jour de son dernier trade scellé, pas à la séance
                 d'hier. C'est le prix d'un historique qu'on ne peut pas réécrire.</p>
+            <p class="tr-correction"><strong>Correction du 13 octobre 2026.</strong> Cette page
+                appelait « rendement cumulé » une somme de résultats de trades sur un capital de
+                départ fixe, ce qui n'est pas un rendement composé : la tuile s'appelle désormais
+                « cumul à mise fixe », le résultat avec gains réinvestis est affiché à côté, et les
+                séances où un carnet a engagé plus que son capital sont signalées. La durée de la
+                période du carnet du moteur systématique était aussi fausse (62 jours au lieu de 37).</p>
         </div>
 
 ${modes.map(modeCard).join('\n')}
@@ -572,8 +763,7 @@ ${modes.map(modeCard).join('\n')}
             <ul class="tr-seal">
                 <li><a href="/portfolio/v1/status.json">Statut des carnets</a> : état, date d'ouverture,
                     raison du dernier changement.</li>
-                <li><a href="/portfolio/v1/turbo/equity.json">Courbe et agrégats par carnet</a> :
-                    remplacez <code>turbo</code> par le nom du carnet voulu.</li>
+                <li>Courbe et agrégats par carnet : ${modes.map(m => `<a href="/portfolio/v1/${esc(m.id)}/equity.json">${esc(m.label)}</a>`).join(', ')}.</li>
                 <li><a href="/portfolio/v1/trades.json">Trades</a> : chaque ligne clôturée, avec
                     sa date d'entrée, sa sortie et son résultat.</li>
                 <li><a href="/scanner/status/">Tableau de bord des carnets</a> : la vue jour par jour,

@@ -10,7 +10,7 @@
     <meta property="og:title" content="Harnesses IA en Finance : Contraindre les Modèles à Produire des Résultats Fiables">
     <meta property="og:description"
         content="Comment empêcher un LLM de publier des données financières inventées. Schemas, war rooms, workflows, et la règle MCP Hard Stop née d'un désastre réel.">
-    <meta property="og:image" content="/logo.svg">
+    <meta property="og:image" content="https://articles.dailytickers.com/logo.svg">
     <meta property="og:url" content="https://articles.dailytickers.com/tech/ai-harness-finance/">
     <meta property="og:type" content="article">
     <!-- Google Tag Manager -->
@@ -570,9 +570,9 @@
                         cross-check MCP, aucun schema, aucune war room</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value">3 heures</div>
-                    <div class="metric-label">Temps passé à corriger manuellement chaque chiffre,
-                        narratif, graphique et tableau après détection</div>
+                    <div class="metric-value">8 sur 8</div>
+                    <div class="metric-label">Chiffres du tableau ci-dessus vérifiés après coup :
+                        tous faux, et tout l'article à reprendre à la main</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-value">1 règle</div>
@@ -863,23 +863,23 @@ console.log(result.reasons);    <span class="c">// array — garanti >= 2 élém
                     <tbody>
                         <tr>
                             <td><strong>Temps de publication</strong></td>
-                            <td>2 minutes (génération directe)</td>
-                            <td>5-10 minutes (validation incluse)</td>
+                            <td>De l'ordre de 2 minutes (génération directe)</td>
+                            <td>De l'ordre de 5 à 10 minutes (validation incluse)</td>
                         </tr>
                         <tr>
                             <td><strong>Taux d'erreur factuelle</strong></td>
-                            <td>15-40% des données (variable, catastrophique si MCP down)</td>
-                            <td>&lt;1% (erreurs restantes = jugement, pas faits)</td>
+                            <td>Non mesuré. Lors de l'incident du 21 juin, tous les chiffres vérifiés après coup étaient faux</td>
+                            <td>Non mesuré. Le but : aucun chiffre publié sans recoupement avec la source</td>
                         </tr>
                         <tr>
                             <td><strong>Coût par article</strong></td>
-                            <td>~$0.50 (un seul appel LLM)</td>
-                            <td>~$2-5 (schema + cross-ref + war room)</td>
+                            <td>De l'ordre de $0.50 (un seul appel LLM)</td>
+                            <td>De l'ordre de $2 à $5 (schema + cross-ref + war room)</td>
                         </tr>
                         <tr>
                             <td><strong>Coût d'une erreur publiée</strong></td>
-                            <td>3+ heures de correction + perte de crédibilité</td>
-                            <td>Quasi-nul (erreur bloquée avant publication)</td>
+                            <td>Des heures de correction + perte de crédibilité</td>
+                            <td>Faible si l'erreur est bloquée avant publication</td>
                         </tr>
                         <tr>
                             <td><strong>Comportement si MCP down</strong></td>
@@ -889,6 +889,12 @@ console.log(result.reasons);    <span class="c">// array — garanti >= 2 élém
                     </tbody>
                 </table>
             </div>
+
+            <p class="source-ref"><strong>Correction du 13 octobre 2026.</strong> Ce tableau donnait des
+                taux d'erreur (« 15-40 % des données » sans harness, « moins de 1 % » avec) comme s'ils
+                avaient été mesurés : ils ne l'ont jamais été. Les autres chiffres de cette page qui n'ont
+                pas de source (temps, coûts, volumes du pipeline) sont désormais donnés pour ce qu'ils
+                sont, des ordres de grandeur.</p>
 
             <div class="alert-box">
                 <h4><i class="fa-solid fa-triangle-exclamation"></i> La couche la plus importante : le cross-check MCP</h4>
@@ -940,7 +946,9 @@ console.log(result.reasons);    <span class="c">// array — garanti >= 2 élém
                     l'attaquant (l'erreur) doit franchir toutes les lignes pour atteindre la cible
                     (la publication). Chaque couche réduit le risque de façon multiplicative :
                     si chaque couche attrape 90% des erreurs de son type, quatre couches en série
-                    laissent passer 0,01% — une erreur pour 10 000.</p>
+                    laissent passer 0,01% — une erreur pour 10 000. C'est un calcul d'école, pas une
+                    mesure : il suppose que les couches ratent des erreurs différentes, ce qui n'est
+                    jamais tout à fait vrai.</p>
             </div>
         </div>
 
@@ -1153,10 +1161,11 @@ phase(<span class="s">'Gate'</span>);
                 d'items, qui élimine tôt pour économiser des tokens, et qui parallélise l'enrichissement
                 sans attendre que chaque ticker soit traité séquentiellement.</p>
 
-            <h3>Le pipeline scanner : 5 étapes, 92% d'attrition</h3>
+            <h3>Le pipeline scanner : 5 étapes, une poignée de survivants</h3>
 
             <p>Voici le pipeline réel du scanner nocturne DailyTickers, qui tourne chaque soir
-                entre 22h30 et 23h30 :</p>
+                entre 22h30 et 23h30. Les volumes indiqués entre les étapes (100, 60, 40, 25, 8) sont
+                des ordres de grandeur d'une nuit ordinaire, pas une mesure :</p>
 
             <div class="flow-diagram">
                 <div class="flow-row">
@@ -1543,6 +1552,9 @@ phase(<span class="s">'Gate'</span>);
 
             <h3>Budget type d'un run scanner complet</h3>
 
+            <p>Ordres de grandeur, non tirés d'un relevé de facturation : ils servent à comparer les
+                étapes entre elles, pas à chiffrer une nuit précise.</p>
+
             <div class="data-table">
                 <table>
                     <thead>
@@ -1629,7 +1641,7 @@ phase(<span class="s">'Gate'</span>);
                         </tr>
                         <tr>
                             <td>Correction manuelle d'un article faux</td>
-                            <td>~3 heures humaines + coût de réputation</td>
+                            <td>Des heures de travail humain + coût de réputation</td>
                         </tr>
                         <tr>
                             <td>Article faux publié non détecté</td>
@@ -1640,9 +1652,9 @@ phase(<span class="s">'Gate'</span>);
             </div>
 
             <p>La war room est une <strong>assurance</strong>, pas un coût. Elle représente environ
-                $75/mois pour un scanner nocturne quotidien. Le coût de NE PAS l'avoir a été mesuré
-                précisément le 21 juin 2026 : 3 heures de correction, une rétrospective à réécrire,
-                et une règle HARD STOP immuable ajoutée au code du projet.</p>
+                $75/mois pour un scanner nocturne quotidien. Le coût de NE PAS l'avoir s'est vu le
+                21 juin 2026 : une rétrospective à réécrire chiffre par chiffre, et une règle HARD
+                STOP immuable ajoutée au code du projet.</p>
 
             <p class="source-ref">Source : <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">Anthropic — Model overview &amp; pricing</a></p>
 
@@ -1710,8 +1722,9 @@ phase(<span class="s">'Gate'</span>);
                 pas de war room pour repérer les incohérences narratives, et surtout pas de HARD
                 STOP pour couper quand la source de données est tombée.</p>
 
-            <p>Le coût du harness est réel : +30-50% de tokens, +5-8 minutes de latence par article.
-                Mais ce coût est dérisoire comparé au coût d'une seule publication fausse. Et il
+            <p>Le harness a un coût : plus de tokens, et quelques minutes de plus par article (un
+                ordre de grandeur, que nous n'avons pas mesuré finement). Mais ce coût est dérisoire
+                comparé au coût d'une seule publication fausse. Et il
                 diminue avec l'apprentissage : chaque incident identifié par le harness devient
                 une nouvelle règle, un nouveau filtre, un nouveau persona dans la war room. Le
                 système s'améliore à chaque erreur qu'il attrape.</p>
@@ -1790,8 +1803,7 @@ phase(<span class="s">'Gate'</span>);
     </div>
 
     <footer class="article-footer">
-        &copy; 2026 DailyTickers. Données via DailyTickers Gateway.
-        Ceci n'est pas un conseil financier.
+        &copy; 2026 DailyTickers. Ceci n'est pas un conseil financier.
         <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
     </footer>
 
