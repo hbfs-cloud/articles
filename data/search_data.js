@@ -8833,7 +8833,7 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Investir halal, sans se raconter d'histoires — le livre (PDF gratuit)",
-    "desc": "Le guide de l'investisseur particulier musulman en Europe : 17 chapitres, 141 pages, du bon sens à la gestion systématique, avec dix-huit ans de données testées sur les fonds halal réellement achetables. PDF gratuit, en français.",
+    "desc": "Le guide de l'investisseur particulier musulman en Europe : 17 chapitres, 142 pages, du bon sens à la gestion systématique, avec dix-huit ans de données testées sur les fonds halal réellement achetables. PDF gratuit, en français.",
     "tags": "formation,education,debutant,etf,eu",
     "grade": "",
     "href": "/series/livre-investir-halal/",
