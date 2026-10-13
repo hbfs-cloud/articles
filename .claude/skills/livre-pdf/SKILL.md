@@ -88,11 +88,23 @@ organisé par chapitre du plan, avec une section finale « contradictions et chi
 écrit les chapitres fondés sur ses propres tests.
 
 ### 2. Données et tests (`bt/`)
-- Cours : yfinance `auto_adjust=True` vers `data/*.csv` + `data/provenance.json` (série, nom, première et dernière date,
-  lignes, date d'extraction). Prix du jour, or, change : MCP `QueryData` avec `end_date`. Rejeux de stratégies du moteur :
-  `DtxReplay` + `DtxCatalog`, en citant le cycle de vie, l'éligibilité au réel et les coûts, avec `request_id`. Un rejeu
-  n'est jamais présenté comme un résultat réel. Les carnets scellés se citent depuis `tech/track-record/` et
-  `data/invalid-cohorts.json` (le livre halal attribuait six trades à la mauvaise stratégie).
+- Cours : `python3 tools/book/fetch.py <livre>/data --end <lendemain de la dernière séance> TICKER[::Nom] ...` (yfinance,
+  dividendes réinvestis, `provenance.json` complété : dates, séances, clôtures identiques). Vérifier la dernière clôture
+  contre MCP `QueryData(types=bars_daily, end_date=…)` : c'est le contrat de date. Les lignes européennes de Yahoo ont
+  souvent une séance de retard sur les lignes américaines : dater chaque série. Une ligne avec des centaines de clôtures
+  identiques (IWDA à Londres : 506) se remplace par une ligne liquide du même indice (CW8 à Paris).
+- Séries longues et macro : rendements annuels 1928-2025 d'Aswath Damodaran (NYU Stern, `histretSP.html`, lisible par
+  `pandas.read_html`) ; inflation américaine du BLS (`download.bls.gov/pub/time.series/cu/cu.data.1.AllItems`, série
+  CUUR0000SA0, avec un User-Agent qui donne un contact) ; inflation française de l'INSEE (SDMX `bdm.insee.fr`, série
+  001759970) ; Livret A depuis les arrêtés (tableau historique recoupé avec la Banque de France). FRED a refusé les
+  connexions le 13 octobre 2026 : ne pas en dépendre. Une valeur manquante (« - » au BLS pour octobre 2025) se convertit
+  en `NaN`, jamais en zéro.
+- Moteur systématique : `DtxCatalog` (et `DtxReplay` avec `request_id`), en citant le cycle de vie, l'éligibilité au
+  réel, les coûts, le recul plausible (`dd_p95_boot`) et les mises en garde (`known_caveats`). Un rejeu n'est jamais
+  présenté comme un résultat réel. Vérifier les dates du catalogue : le 13 octobre 2026, `measured_at` portait des dates
+  de novembre ; on cite alors « catalogue consulté le JJ mois AAAA ». Les carnets scellés se citent depuis
+  `tech/track-record/` et `data/invalid-cohorts.json` (le livre halal attribuait six trades à la mauvaise stratégie), avec
+  une description neutre (« carnet à une ligne tenue trois séances »), jamais le nom interne du mode.
 - Un seul script, `bt/backtests.py`, qui importe `tools/book/stats.py` et écrit TOUTES les clés de `results.json`. Ses
   8 règles de méthode sont en tête de `stats.py` :
   - exécution à la séance suivante ;
@@ -101,6 +113,9 @@ organisé par chapitre du plan, avec une section finale « contradictions et chi
   - recul avec ses dates ;
   - cours figés détectés par `stale_runs` (la réparation de la ligne USD de Londres a fait passer le pire recul de
     −47,6 % à −50,1 %) ;
+  - cotations aberrantes d'une séance détectées par `spikes`, corrigées par `repair_spikes` seulement après confirmation
+    sur l'indice sous-jacent (indice PutWrite du CBOE : +35 % le 13 mars 2020 puis −28 %, corrigé ; fonds ×3 le même
+    jour : vrais mouvements, laissés) ;
   - frais explicites ;
   - aucune clé ajoutée à la main ;
   - `diff_results` après chaque changement, puis relecture des phrases concernées.
@@ -273,7 +288,8 @@ Tester dans un dossier vide et comparer tous les résultats avec ceux du livre a
 | `book.css` / `whitepaper.css` | charte du livre (revue impeccable intégrée) / surcouche du livre blanc |
 | `checks.py` | contrôles automatiques + `book.txt` pour les relecteurs + `numbers_audit.md` |
 | `previews.py` | aperçus PNG pour le contrôle visuel |
-| `stats.py` | briques de backtest et 8 règles de méthode |
+| `fetch.py` | téléchargement des cours avec provenance (dates, séances, clôtures identiques) |
+| `stats.py` | briques de backtest, 8 règles de méthode, cours figés et cotations aberrantes |
 | `frfig.py` | style des graphiques, chiffres français, schémas SVG lisibles |
 | `ctx.py`, `patch.py` | appliquer une relecture : contexte exact, puis remplacement unique et vérifié |
 | `templates/` | `book.json.example`, couvertures, quatrième, chapitre et section types, consignes des agents |

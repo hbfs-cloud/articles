@@ -13,6 +13,7 @@ Règles de méthode, toutes issues d'erreurs relevées par les relecteurs d'« I
 4. Pire recul : valeur ET dates (sommet, creux, retour au sommet) ; c'est la date qui se périme en premier.
 5. Cours figés (même clôture plusieurs séances, volume nul) : les détecter (stale_runs) et les réparer depuis une
    autre ligne du même actif, ou exclure la période ; jamais publier un pire recul calculé sur une série figée.
+   Même chose pour les cotations aberrantes d'une séance (spikes / repair_spikes), à lister dans l'annexe méthode.
 6. Frais : un coût par aller-retour explicite dans chaque règle testée ; un test sans frais est un test faux.
 7. Toutes les clés de results.json sont produites par le script : rien d'ajouté à la main, sinon le paquet publié
    ne reproduit pas le livre (relecteur expert : 41 clés dans results.json, 32 produites par le script).
@@ -81,6 +82,20 @@ def stale_runs(s, min_run=3):
             i = j
         else: i += 1
     return runs
+
+def spikes(s, thr=0.2):
+    """Cotations aberrantes d'une séance : saut de plus de thr suivi le lendemain d'un retour en sens inverse de plus
+    de thr (ex. indice PutWrite du CBOE le 13 mars 2020 : +35 % puis −28 %). Renvoie les dates fautives."""
+    r = s.pct_change()
+    return [d for i, d in enumerate(s.index[1:-1], start=1)
+            if abs(r.iloc[i]) > thr and abs(r.iloc[i + 1]) > thr and np.sign(r.iloc[i]) != np.sign(r.iloc[i + 1])]
+
+def repair_spikes(s, thr=0.2):
+    """Remplace chaque cotation aberrante par la moyenne géométrique de ses deux voisines ; renvoie (série, liste)."""
+    s = s.copy(); bad = spikes(s, thr)
+    for d in bad:
+        i = s.index.get_loc(d); s.iloc[i] = math.sqrt(s.iloc[i - 1] * s.iloc[i + 1])
+    return s, [str(d.date()) for d in bad]
 
 def xirr(cash, dates, final, final_date):
     t = np.array([(d - dates[0]).days / 365.25 for d in dates]); tf = (final_date - dates[0]).days / 365.25

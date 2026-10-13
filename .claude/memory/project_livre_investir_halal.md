@@ -24,9 +24,12 @@ modifier la carte de `series.json` n'aurait rien changé à l'écran.
 **Méthode réutilisable (2026-10-13).** Tout le procédé (inventaire des séries, backtests, faits datés,
 relectures adverses, design, paquet, publication) est le skill `.claude/skills/livre-pdf/SKILL.md`, avec
 le kit `tools/book/` (build.py, checks.py, stats.py, frfig.py, gabarits de livre et de livre blanc).
-Le kit reconstruit ce livre à l'identique (141 p., texte identique page par page). `checks.py` y relève
-encore 8 schémas dont le texte sort à 6,8-7,5 pt (viewBox 680 réduit à la largeur du texte) : à corriger
-à la prochaine édition (corps ≥ 13 unités ou viewBox ≤ 520).
+Le kit reconstruit l'édition 1.0 à l'identique (141 p., texte identique page par page).
+
+**Édition 1.1 (13 octobre 2026, commit 4bcdd12af, 142 p.)** : huit schémas redessinés (texte à 8,6 pt imprimés
+au lieu de 6,8-7,8 ; `bt/diagrams.py` à corps 13,2 unités, l'ancien gardé en `diagrams.v1.0.py`), six termes expliqués
+à leur première apparition, historique des éditions en annexe C ; `checks.py --strict` : 0 bloquant, 0 majeur.
+PDF en ligne vérifié octet pour octet. Pas de notification Telegram pour cette correction typographique.
 
 **How to apply:** nouvelle édition → sources dans `.agent/livre-halal/` (non versionné, `book.json` présent) :
 `cd bt && python3 backtests.py && python3 refs_annex.py && cd ../../.. && python3 tools/book/build.py .agent/livre-halal --pdf && python3 tools/book/checks.py .agent/livre-halal --strict`, copier
