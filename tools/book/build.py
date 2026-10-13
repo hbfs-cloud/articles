@@ -68,6 +68,11 @@ def fr_num(v, fmt):
     elif fmt == "d2": s = f"{v:,.2f}".replace(",", "_").replace(".", ",").replace("_", NB)
     elif fmt == "plus100": s = f"{round(100 + v):,}".replace(",", NB) + NB + "€"
     else: s = str(v)
+    # un arrondi ne doit jamais imprimer une ruine totale ou une certitude qui n'existe pas : −99,95 reste −99,95, pas −100,0
+    if fmt in ("pct1", "pct1u", "pct0", "pct0u", "d1") and abs(v) < 100 and round(abs(v), 0 if fmt.startswith("pct0") else 1) >= 100:
+        d = 2
+        while d < 6 and round(abs(v), d) >= 100: d += 1
+        s = (f"{v:+.{d}f}" if fmt in ("pct1", "pct0") else f"{v:.{d}f}").replace(".", ",") + (NB + "%" if fmt != "d1" else "")
     return s.replace("-", "−")
 
 def load_refs(name):
@@ -87,6 +92,8 @@ def subst(html):
         html = re.sub(r"\{\{q:([\d:]+)\|(ar|fr)\}\}", verse, html)
     if HADITH:
         html = re.sub(r"\{\{h:([a-z]+:[\da-z]+)\|(ar|fr|ref)\}\}", lambda m: HADITH[m.group(1)][m.group(2)], html)
+    # une fourchette dont les deux bornes calculées sont égales s'écrit une fois : « 12 à 12 ans » → « 12 ans »
+    html = re.sub(r"(?<![\d,])([−+]?\d[\d\u00a0]*(?:,\d+)?(?:\u00a0%)?) à \1(?![\d,])", r"\1", html)
     return SUP.sub("", html)
 
 def clean_title(t):
@@ -112,7 +119,10 @@ def inline_figs(html):
         return f'<figure class="fig" data-src="{name}">{fr_svg_text(svg)}<figcaption>{m.group(2)}</figcaption></figure>'
     return re.sub(r'<figure data-fig="([^"]+)">(.*?)</figure>', rep, html, flags=re.S)
 
-NUMCELL = re.compile(r"^[−+]?\d[\d\s ]*([,.]\d+)?(\s?(%|×|€|k€|\$|pts?|j))?$")
+_N = r"[−+-]?\d[\d\u00a0\u202f ]*(?:[,.]\d+)?"
+_U = r"(?:[\s\u00a0\u202f]?(?:%|×|€|k€|M€|Md€|\$|pts?|j|ans?|mois|séances?))?"
+# cellule numérique : nombre et unité, fourchette « 6,0 % à 6,8 % », « environ 80 % », « −43,8 % (1931) »
+NUMCELL = re.compile(rf"^(?:environ\s)?{_N}{_U}(?:\s?à\s?{_N}{_U})?(?:\s?\(\d{{4}}\))?$")
 def tidy_tables(html):
     """<thead>/<tbody> (en-tête répété quand la table se coupe) et class="num" sur les cellules purement numériques."""
     def table(m):
@@ -121,6 +131,8 @@ def tidy_tables(html):
             t = re.sub(r"(<table[^>]*>\s*)(<tr>\s*<th.*?</tr>)", r"\1<thead>\2</thead><tbody>", t, count=1, flags=re.S)
             if "<tbody>" in t: t = re.sub(r"(<caption>.*?</caption>\s*)?</table>$", lambda k: "</tbody>" + (k.group(1) or "") + "</table>", t, flags=re.S)
         t = re.sub(r"<td>([^<]*)</td>", lambda k: f'<td class="num">{k.group(1)}</td>' if NUMCELL.match(k.group(1).strip()) else k.group(0), t)
+        head = re.search(r"<tr>(.*?)</tr>", t, flags=re.S)
+        if head and len(re.findall(r"<t[hd][ >]", head.group(1))) <= 2: t = t.replace("<table>", '<table class="narrow">', 1)  # deux colonnes : pas sur toute la mesure
         return t
     return re.sub(r"<table>.*?</table>", table, html, flags=re.S)
 
@@ -144,15 +156,16 @@ for f in chapters:
     if annex:
         if CFG["annex_label"] not in part_seen and CFG["parts"]:
             part_seen.add(CFG["annex_label"]); pid = f"part-{len(part_seen)}"
-            body.append(f'<section class="part" id="{pid}"><div class="part-num">{CFG["annex_label"]}</div><h1>{CFG["annex_title"]}</h1></section>'); toc.append(("part", pid, CFG["annex_label"], None))
+            body.append(f'<section class="part" id="{pid}"><h1>{CFG["annex_label"]} · {CFG["annex_title"]}</h1></section>'); toc.append(("part", pid, CFG["annex_label"], None))
         cid = f"ch-{f.stem}"; h = h.replace('<section class="chapter"', f'<section class="chapter" id="{cid}"', 1)
-        h = re.sub(r"<h1([^>]*)>", f'<h1\\1><span class="chap-num annex">Annexe {annex}</span>', h, count=1)
+        h = re.sub(r"<h1([^>]*)>", f'<h1\\1>Annexe {annex} · ', h, count=1)  # l'ordinal dans le titre, pas en surtitre
         toc.append(("chap", cid, "Annexe " + annex + " · " + clean_title(title), None))
         for s in re.finditer(r'<h2 id="([^"]+)"[^>]*>(.*?)</h2>', h, flags=re.S): toc.append(("sec", s.group(1), clean_title(s.group(2)), None))
         body.append(h); continue
     if part and part not in part_seen and CFG["parts"]:
         part_seen.add(part); pid = f"part-{len(part_seen)}"
-        body.append(f'<section class="part" id="{pid}"><div class="part-num">{CFG["part_label"]} {len(part_seen)}</div><h1>{part}</h1></section>')
+        roman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][len(part_seen) - 1]
+        body.append(f'<section class="part" id="{pid}"><h1>{roman} · {part}</h1></section>')  # l'ordinal dans le titre, pas en surtitre
         toc.append(("part", pid, part, None))
     if not is_front: chap_no += 1
     cid = f"ch-{f.stem}"

@@ -26,7 +26,7 @@ def style():
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 9.5, "xtick.labelsize": 9.5, "ytick.labelsize": 9.5, "legend.fontsize": 9.5,
+    plt.rcParams.update({"font.family": ["Inter", "DejaVu Sans"], "font.size": 9.5, "xtick.labelsize": 9.5, "ytick.labelsize": 9.5, "legend.fontsize": 9.5,
                          "axes.labelsize": 9.5, "axes.edgecolor": "#cbd5e1", "axes.labelcolor": INK2, "xtick.color": "#475569", "ytick.color": "#475569",
                          "axes.spines.top": False, "axes.spines.right": False, "axes.grid": True, "grid.color": GRID, "grid.linewidth": 0.6,
                          "svg.fonttype": "none", "axes.unicode_minus": True, "figure.dpi": 100})

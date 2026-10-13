@@ -34,11 +34,17 @@ def cagr(s):
     yrs = (s.index[-1] - s.index[0]).days / 365.25
     return (s.iloc[-1] / s.iloc[0]) ** (1 / yrs) - 1
 
+def pct_round(x, n=1):
+    """Arrondi qui n'invente jamais une ruine totale : −99,95 % reste −99,95 %, pas −100,0 %."""
+    r = round(x, n)
+    while abs(r) >= 100 and abs(x) < 100 and n < 6: n += 1; r = round(x, n)
+    return r
+
 def drawdown(s):
     """Pire recul avec ses trois dates. recovered=None si le sommet n'est pas encore retrouvé."""
     dd = s / s.cummax() - 1; trough = dd.idxmin(); peak = s[:trough].idxmax()
     after = s[trough:]; rec = after[after >= s[peak]]
-    return {"max_dd_pct": round(dd.min() * 100, 1), "peak": str(peak.date()), "trough": str(trough.date()),
+    return {"max_dd_pct": pct_round(dd.min() * 100, 1), "peak": str(peak.date()), "trough": str(trough.date()),
             "recovered": str(rec.index[0].date()) if len(rec) else None,
             "recovery_days": (rec.index[0] - peak).days if len(rec) else None}
 

@@ -27,8 +27,11 @@ small, .small { font-size: 8.6pt; color: var(--muted); }
 .cover h1 { font-size: 42pt; line-height: 1.05; max-width: 150mm; }
 .cover .sub { font-size: 14.5pt; color: var(--ink2); margin-top: 10mm; max-width: 140mm; font-family: "Source Serif 4", serif; }
 .cover .kicker { font-family: "Source Serif 4", serif; font-style: italic; color: var(--ink2); font-size: 12.5pt; margin-bottom: 6mm; }
+.cover .meta > div:last-child { min-width: 72mm; }
 .cover .meta { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid var(--line); padding-top: 6mm; font-size: 9pt; color: var(--muted); }
 .cover .stripe { height: 2px; background: var(--ink); width: 24mm; }
+.cover .subtitle { font-family: "Source Serif 4", serif; font-style: italic; font-size: 15pt; color: var(--ink2); margin-top: 5mm; max-width: 150mm; }
+.cover .fact { font-family: "Source Serif 4", serif; font-size: 12.5pt; line-height: 1.4; color: var(--ink); margin-top: 12mm; padding-top: 4mm; border-top: 1.5px solid var(--ink); max-width: 135mm; }
 .cover-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8mm; margin-top: 14mm; }
 .cover-facts div { border-top: 1.5px solid var(--ink); padding-top: 3mm; }
 .cover-facts b { display: block; font-family: "JetBrains Mono", monospace; font-size: 17pt; color: var(--ink); }
@@ -51,7 +54,7 @@ small, .small { font-size: 8.6pt; color: var(--muted); }
 /* Pages de partie */
 .part { break-before: page; break-after: page; height: 235mm; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 60mm; }
 .part .part-num { font-family: "Source Serif 4", serif; color: var(--accent); font-size: 12pt; margin-bottom: 4mm; padding-top: 4mm; border-top: 1.5px solid var(--ink); width: 60mm; }
-.part h1 { font-size: 34pt; max-width: 140mm; }
+.part h1 { font-size: 34pt; max-width: 140mm; border-top: 1.5px solid var(--ink); padding-top: 5mm; }
 
 /* Chapitres */
 .chapter { break-before: page; }
@@ -60,8 +63,9 @@ small, .small { font-size: 8.6pt; color: var(--muted); }
 .chap-num:not(:empty)::after { content: ""; display: block; width: 14mm; border-top: 1.5px solid var(--accent); margin-top: 2.5mm; }
 .chap-num.annex { font-size: 13pt; font-variant: small-caps; letter-spacing: 0.04em; }
 .levels { margin: 0 0 5mm; }
-.level { display: inline-block; font-size: 8pt; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border: 1px solid currentColor; border-radius: 2px; margin-right: 4px; }
-.level.deb { color: #166534; } .level.inter { color: #1e40af; } .level.exp { color: #5b21b6; }
+/* Niveaux : petites capitales serif sur une ligne, sans cadre ni couleur (pas d'étiquettes de logiciel) */
+.level { display: inline; font-family: "Source Serif 4", Georgia, serif; font-variant: small-caps; font-size: 10.5pt; letter-spacing: 0.03em; color: var(--ink2); }
+.level + .level::before { content: " · "; }
 
 /* Encadrés : une famille éditoriale (filet, petites capitales serif), pas de kit de cartes pastel */
 .resume, .retenir, .cas, .mythe, .outil, .note-islam, .expert, .attention { border-radius: 2px; margin: 4mm 0; break-inside: avoid; }
@@ -75,8 +79,9 @@ small, .small { font-size: 8.6pt; color: var(--muted); }
 .retenir li { margin-bottom: 1mm; }
 .cas, .mythe, .outil, .attention { background: #fff; border: 1px solid; padding: 3mm 5mm; }
 .cas { border-color: var(--teal); } .cas .lab { color: var(--teal); }
-.mythe { border-color: var(--neg); border-style: dashed; } .mythe .lab { color: var(--neg); }
-.mythe .verdict { font-weight: 600; }
+/* Mythes : une liste à filets, pas une suite d'encadrés en tirets rouges ; seul « Verdict : … » est en gras (<b>) */
+.mythe { background: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 3mm 0 1mm; break-inside: auto; } .mythe .lab { color: var(--neg); }
+.mythe .verdict { font-weight: 400; } .mythe .verdict b { font-weight: 700; }
 .outil { border-color: var(--amber); } .outil .lab { color: var(--amber); }
 .attention { border-color: var(--neg); } .attention .lab { color: var(--neg); }
 .note-islam { border: 1px solid #ddd6fe; background: #faf5ff; padding: 3mm 5mm; }
@@ -101,12 +106,20 @@ figcaption { font-size: 8.6pt; color: var(--muted); margin-top: 1.5mm; line-heig
 table { border-collapse: collapse; width: 100%; font-size: 9pt; margin: 3mm 0 4mm; break-inside: auto; }
 thead { display: table-header-group; }
 tr, caption { break-inside: avoid; }
-th { text-align: left; font-weight: 600; color: var(--ink2); border-bottom: 1.5px solid var(--ink); padding: 1.6mm 2mm; font-size: 8.6pt; text-transform: uppercase; letter-spacing: 0.04em; }
+th { text-align: left; font-weight: 600; color: var(--ink2); border-bottom: 1.5px solid var(--ink); padding: 1.6mm 2mm; font-size: 8.6pt; text-transform: none; letter-spacing: 0; }  /* casse de phrase : un en-tête en capitales s'étalait sur 3 à 5 lignes */
 th.num { font-family: Inter, sans-serif; font-size: 8.6pt; }
 td { padding: 1.6mm 2mm; border-bottom: 1px solid var(--line); vertical-align: top; }
 td.num, th.num { text-align: right; }
-tr.hl td { background: var(--accent-soft); font-weight: 600; }
-tr.hl td:first-child::before { content: "▶ "; font-size: 1em; color: var(--accent); }
+tbody td.num:first-child, thead th:first-child { text-align: left; }  /* la première colonne est une étiquette, même chiffrée */
+tr.hl td { background: var(--accent-soft); font-weight: 600; border-top: 1px solid var(--accent); border-bottom: 1px solid var(--accent); }  /* filets : la ligne reste visible imprimée en gris */  /* pas de glyphe ▶ : il cassait les lignes */
+/* Coupures : un tableau court (8 lignes au plus) ne se coupe jamais ; un long garde ses deux dernières lignes ensemble ;
+   le paragraphe qui annonce un tableau, une liste ou une figure reste avec eux ; une liste de 4 éléments ou moins est insécable */
+table:not(:has(tbody tr:nth-child(9))) { break-inside: avoid; }
+tbody tr:nth-last-child(-n+2) { break-before: avoid; }
+p:has(+ table), p:has(+ ul), p:has(+ ol), p:has(+ figure), p:has(+ .steps) { break-after: avoid; }
+ul:not(:has(li:nth-child(5))), ol:not(:has(li:nth-child(5))) { break-inside: avoid; }
+td, th, .toc li, .cover * { -webkit-hyphens: manual; hyphens: manual; }
+table.narrow { width: auto; min-width: 60%; }
 .pos { color: var(--pos); } .neg { color: var(--neg); }
 td.pos, td.neg { font-weight: 600; }
 caption { caption-side: bottom; text-align: left; font-size: 8.6pt; color: var(--muted); padding-top: 1.5mm; }
@@ -122,7 +135,7 @@ caption { caption-side: bottom; text-align: left; font-size: 8.6pt; color: var(-
 ul, ol { padding-left: 1.3em; margin: 0 0 0.8em; }
 li { margin-bottom: 0.3em; }
 .check li { list-style: none; position: relative; padding-left: 1.4em; }
-.check li::before { content: "☐"; font-family: Inter, "Segoe UI Symbol", sans-serif; position: absolute; left: 0; color: var(--accent); }
+.check li::before { content: ""; position: absolute; left: 0; top: 0.32em; width: 3mm; height: 3mm; border: 1px solid var(--ink2); border-radius: 0.5px; }  /* case dessinée, pas de glyphe ☐ */
 .steps { counter-reset: s; list-style: none; padding: 0; }
 .steps li { counter-increment: s; position: relative; padding-left: 9mm; margin-bottom: 2.5mm; }
 .steps li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 6.5mm; height: 6.5mm; border-radius: 50%; background: var(--ink); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 8.6pt; display: flex; align-items: center; justify-content: center; }
