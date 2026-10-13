@@ -31,6 +31,15 @@ au lieu de 6,8-7,8 ; `bt/diagrams.py` à corps 13,2 unités, l'ancien gardé en 
 à leur première apparition, historique des éditions en annexe C ; `checks.py --strict` : 0 bloquant, 0 majeur.
 PDF en ligne vérifié octet pour octet. Pas de notification Telegram pour cette correction typographique.
 
+**Édition 1.2 (13 octobre 2026, commit 9e3615fc6, 144 p.)** : carnets du site présentés comme portefeuilles modèles
+(sans argent engagé), totaux « à mise fixe » (gains non réinvestis, convention de `tools/lib/mode-stats.js`), carnet C
+corrigé (94 trades, 47,9 %, total gonflé par 23 trades comptés à 100 % alors que trois tournaient en même temps).
+`book.extra.css` remet `break-inside: auto` sur les tableaux : la règle du kit qui rend insécable tout tableau de
+8 lignes au plus laissait des demi-pages blanches sur ce livre à longues cellules (148 p. au lieu de 142).
+Publiée avec « Investir en bon père de famille » (`series/livre-bon-pere-de-famille/`, 81 p.) et « Jouer gros sans se
+ruiner » (`series/livre-jouer-gros/`, 85 p.) ; sources `.agent/livre-pere-famille/` et `.agent/livre-agressif/`,
+publication par `.agent/livres-communs/publier_livres.py [agressif|pere|halal]`. Telegram `learning` 2099.
+
 **How to apply:** nouvelle édition → sources dans `.agent/livre-halal/` (non versionné, `book.json` présent) :
 `cd bt && python3 backtests.py && python3 refs_annex.py && cd ../../.. && python3 tools/book/build.py .agent/livre-halal --pdf && python3 tools/book/checks.py .agent/livre-halal --strict`, copier
 `book.pdf`, régénérer `couverture.png`, mettre à jour le nombre de pages (texte + `dt:download-label`),
