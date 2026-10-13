@@ -61,6 +61,8 @@ def fr_num(v, fmt):
     if fmt == "int": s = f"{round(v):,}".replace(",", NB)
     elif fmt == "pct1": s = f"{v:+,.1f}".replace(",", "_").replace(".", ",").replace("_", NB) + NB + "%"
     elif fmt == "pct1u": s = f"{v:,.1f}".replace(",", "_").replace(".", ",").replace("_", NB) + NB + "%"
+    elif fmt == "pct2": s = f"{v:+,.2f}".replace(",", "_").replace(".", ",").replace("_", NB) + NB + "%"
+    elif fmt == "pct2u": s = f"{v:,.2f}".replace(",", "_").replace(".", ",").replace("_", NB) + NB + "%"
     elif fmt == "pct0": s = f"{v:+,.0f}".replace(",", NB) + NB + "%"
     elif fmt == "pct0u": s = f"{v:,.0f}".replace(",", NB) + NB + "%"
     elif fmt == "x": s = f"{v:,.2f}".replace(",", "_").replace(".", ",").replace("_", NB) + NB + "×"
@@ -73,7 +75,8 @@ def fr_num(v, fmt):
         d = 2
         while d < 6 and round(abs(v), d) >= 100: d += 1
         s = (f"{v:+.{d}f}" if fmt in ("pct1", "pct0") else f"{v:.{d}f}").replace(".", ",") + (NB + "%" if fmt != "d1" else "")
-    return s.replace("-", "−")
+    # signe moins pour les nombres ; dans un texte brut (fmt raw), seulement devant un chiffre : « au-dessus » reste « au-dessus »
+    return re.sub(r"(?<![\w])-(?=\d)", "−", s) if fmt == "raw" and isinstance(v, str) else s.replace("-", "−")
 
 def load_refs(name):
     p = ROOT / "refs" / name
@@ -93,7 +96,7 @@ def subst(html):
     if HADITH:
         html = re.sub(r"\{\{h:([a-z]+:[\da-z]+)\|(ar|fr|ref)\}\}", lambda m: HADITH[m.group(1)][m.group(2)], html)
     # une fourchette dont les deux bornes calculées sont égales s'écrit une fois : « 12 à 12 ans » → « 12 ans »
-    html = re.sub(r"(?<![\d,])([−+]?\d[\d\u00a0]*(?:,\d+)?(?:\u00a0%)?) à \1(?![\d,])", r"\1", html)
+    html = re.sub(r"(?<![\d,−+])([−+]?\d[\d\u00a0]*(?:,\d+)?(?:\u00a0%)?) à \1(?![\d,])", r"\1", html)
     return SUP.sub("", html)
 
 def clean_title(t):

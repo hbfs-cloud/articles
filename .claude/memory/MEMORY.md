@@ -69,6 +69,7 @@
 ## 🎯 Intelligence trading
 - [Analysis Senior Review First](feedback_analysis_senior_review_first.md) — Senior-review AVANT publication + checklist MCP complète (buyback, 13F, FINRA, S-3 par type) — incident TLN 19/07/2026
 - [Publier une fiche vite](feedback_analyse_publication_speed.md) — /analyse : deux tours de relecture au plus, seuls les bloquants rouvrent une relecture, mineurs reportés à la version suivante (TRT, 13/10/2026 : cinq tours jugés beaucoup trop longs)
+- [Telegram d'analyse concis](feedback_telegram_analyse_concis.md) — titre-verdict, deux phrases de faits, une ligne Setup, une ligne Invalidation, le lien ; jamais le plan d'exécution détaillé (TRT, 13/10/2026)
 - [Senior Review Args Shape](feedback_senior_review_args_shape.md) — senior-review attend artifacts=[{path,type,label}] : une chaîne = 0 agent lancé et faux PASS silencieux (02/08/2026)
 - [Dilution Check Window](feedback_dilution_check_window.md) — CRITIQUE : le check anti-dilution n'est JAMAIS borné à 180j (warrant OpenAI 160M actions raté sur AMD, 02/08/2026) — days=1825 + ouvrir tout 8-K item 3.02/1.01 et Ex-4.x
 - [Headline Framing Not Source](feedback_headline_framing_not_source.md) — le cadrage d'un titre sur la déclaration d'un TIERS n'est pas cette déclaration : test d'intérêt économique obligatoire (incident MU 03/08/2026, polarité inversée en argument portant)
