@@ -295,6 +295,7 @@ codifiées). Ne pas générer un daily/weekly/retro/analyse/series « à la main
 | `sector-funnel` | analyse sectorielle, secteur du moment, funnel sectoriel, entonnoir, sector deep dive (commande : `/sector-funnel`) |
 | `sector-rotation` | rotation, rotation sectorielle, force relative, RS, leaders, quel secteur, surpondérer, sous-pondérer, sector tilt |
 | `macro-event-playbook` | CPI, Fed, FOMC, macro, événement, playbook, OPEP, jobs, NFP, calendrier économique, positionnement, de-risk |
+| `livre-pdf` | livre, livre PDF, ebook, guide PDF, livre blanc, white paper, lead magnet, nouvelle édition du livre (kit `tools/book/` : build, contrôles, relectures adverses, publication Séries) |
 
 ## Mode Status State Machine
 Doc complète : [`tools/lib/MODE_STATUS.md`](tools/lib/MODE_STATUS.md). Résumé :

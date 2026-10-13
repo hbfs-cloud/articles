@@ -1,6 +1,6 @@
 ---
 name: livre-investir-halal
-description: 2026-10-10 — livre PDF « Investir halal, sans se raconter d'histoires » publié sur /series/livre-investir-halal/ (141 p.) ; carte livre avec bouton de téléchargement via balises dt:download ; nouvelle édition = rebuild depuis .agent/livre-halal/ + add_card.
+description: 2026-10-10 — livre PDF « Investir halal, sans se raconter d'histoires » publié sur /series/livre-investir-halal/ (141 p.) ; carte livre avec bouton de téléchargement via balises dt:download ; méthode généralisée le 2026-10-13 en skill livre-pdf + kit tools/book/ (livres et livres blancs).
 metadata:
   type: project
 ---
@@ -21,8 +21,15 @@ série, `<meta name="dt:download">` (fichier existant sous `/series/<slug>/`, .p
 `?tab=series`. Le carrousel Séries est rendu depuis `series-catalog.json`, pas depuis `series.json` :
 modifier la carte de `series.json` n'aurait rien changé à l'écran.
 
-**How to apply:** nouvelle édition → sources dans `.agent/livre-halal/` (non versionné) :
-`cd bt && python3 backtests.py && python3 refs_annex.py && cd .. && python3 build.py --pdf`, copier
+**Méthode réutilisable (2026-10-13).** Tout le procédé (inventaire des séries, backtests, faits datés,
+relectures adverses, design, paquet, publication) est le skill `.claude/skills/livre-pdf/SKILL.md`, avec
+le kit `tools/book/` (build.py, checks.py, stats.py, frfig.py, gabarits de livre et de livre blanc).
+Le kit reconstruit ce livre à l'identique (141 p., texte identique page par page). `checks.py` y relève
+encore 8 schémas dont le texte sort à 6,8-7,5 pt (viewBox 680 réduit à la largeur du texte) : à corriger
+à la prochaine édition (corps ≥ 13 unités ou viewBox ≤ 520).
+
+**How to apply:** nouvelle édition → sources dans `.agent/livre-halal/` (non versionné, `book.json` présent) :
+`cd bt && python3 backtests.py && python3 refs_annex.py && cd ../../.. && python3 tools/book/build.py .agent/livre-halal --pdf && python3 tools/book/checks.py .agent/livre-halal --strict`, copier
 `book.pdf`, régénérer `couverture.png`, mettre à jour le nombre de pages (texte + `dt:download-label`),
 puis `node tools/add_card.js series/livre-investir-halal/index.html`. Chiffres uniquement depuis
 `results.json` ou une source nommée et datée ; aucun jargon interne.

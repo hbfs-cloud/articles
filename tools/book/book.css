@@ -1,0 +1,134 @@
+/* Charte DailyTickers (DESIGN.md / PRODUCT.md) : fond clair, encre slate, accent bleu, mono pour les chiffres,
+   serif éditorial sur les titres (direction FT/Economist). Jamais de thème sombre, jamais de beige "AI-default".
+   Révision après revue de finition : mesure de 86 caractères, planchers de taille 8,6 pt, couleurs de texte AA,
+   encadrés éditoriaux (filet et petites capitales serif) plutôt que cartes pastel. */
+:root { --ink:#0f172a; --ink2:#334155; --muted:#64748b; --line:#e2e8f0; --surface:#f8fafc; --accent:#2563eb; --accent-soft:#eff6ff;
+        --pos:#047857; --neg:#b91c1c; --amber:#b45309; --teal:#0f766e; --violet:#6d28d9; }
+@page { size: A4; margin: 20mm 26mm 22mm 28mm; }
+* { box-sizing: border-box; }
+html { font-size: 11pt; }
+body { font-family: Inter, system-ui, sans-serif; color: var(--ink); line-height: 1.48; margin: 0; background: #fff; }
+p, li, td, dd { -webkit-hyphens: auto; hyphens: auto; hyphenate-limit-chars: 7 3 3; }
+h1, h2, h3, h4 { font-family: "Source Serif 4", Georgia, serif; color: var(--ink); line-height: 1.2; margin: 0; break-after: avoid; hyphens: manual; }
+h1 { font-size: 25pt; font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 14.5pt; font-weight: 700; margin: 1.5em 0 0.5em; }
+h3 { font-size: 11.5pt; font-weight: 700; margin: 1.2em 0 0.4em; font-family: Inter, sans-serif; }
+p { margin: 0 0 0.75em; orphans: 3; widows: 3; }
+a { color: var(--accent); text-decoration: none; }
+strong { font-weight: 600; }
+.num, td.num, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 0.93em; }
+small, .small { font-size: 8.6pt; color: var(--muted); }
+.ar, [lang="ar"] { font-family: "Noto Naskh Arabic", "Geeza Pro", serif; direction: rtl; text-align: right; line-height: 1.85; font-size: 12.5pt; }
+
+/* Couverture (rendue sans pied de page, fusionnée en tête) */
+.cover { height: 255mm; display: flex; flex-direction: column; justify-content: space-between; padding: 8mm 0; }
+.cover .brand { display: flex; align-items: center; gap: 10px; color: var(--ink2); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; font-size: 9pt; }
+.cover .brand img { width: 34px; height: 34px; }
+.cover h1 { font-size: 42pt; line-height: 1.05; max-width: 150mm; }
+.cover .sub { font-size: 14.5pt; color: var(--ink2); margin-top: 10mm; max-width: 140mm; font-family: "Source Serif 4", serif; }
+.cover .kicker { font-family: "Source Serif 4", serif; font-style: italic; color: var(--ink2); font-size: 12.5pt; margin-bottom: 6mm; }
+.cover .meta { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid var(--line); padding-top: 6mm; font-size: 9pt; color: var(--muted); }
+.cover .stripe { height: 2px; background: var(--ink); width: 24mm; }
+.cover-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8mm; margin-top: 14mm; }
+.cover-facts div { border-top: 1.5px solid var(--ink); padding-top: 3mm; }
+.cover-facts b { display: block; font-family: "JetBrains Mono", monospace; font-size: 17pt; color: var(--ink); }
+.cover-facts span { font-size: 8.6pt; color: var(--muted); }
+
+/* Sommaire (numéros de page posés par le build, en deux passes) */
+.toc { break-after: page; }
+.toc h1 { margin-bottom: 8mm; }
+.toc ol { list-style: none; padding: 0; margin: 0; column-count: 2; column-gap: 10mm; }
+.toc li { break-inside: avoid; }
+.toc a { display: flex; align-items: baseline; gap: 6px; color: inherit; }
+.toc .t { flex: 1 1 auto; }
+.toc .pg { font-family: "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 8.8pt; margin-left: auto; padding-left: 6px; flex: 0 0 auto; }
+.toc-part { font-family: "Source Serif 4", serif; font-weight: 700; font-size: 11.5pt; margin: 4mm 0 1.5mm; color: var(--accent); }
+.toc-part .pg { color: var(--accent); }
+.toc-chap { font-weight: 600; margin: 1.2mm 0 0.4mm; }
+.toc-chap .n { font-family: "JetBrains Mono", monospace; font-weight: 500; color: var(--muted); display: inline-block; min-width: 18px; text-align: right; flex: 0 0 auto; }
+.toc-sec { font-size: 8.8pt; color: var(--ink2); padding-left: 24px; margin: 0 0 0.6mm; }
+
+/* Pages de partie */
+.part { break-before: page; break-after: page; height: 235mm; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 60mm; }
+.part .part-num { font-family: "Source Serif 4", serif; color: var(--accent); font-size: 12pt; margin-bottom: 4mm; padding-top: 4mm; border-top: 1.5px solid var(--ink); width: 60mm; }
+.part h1 { font-size: 34pt; max-width: 140mm; }
+
+/* Chapitres */
+.chapter { break-before: page; }
+.chapter > h1 { margin-bottom: 3mm; padding-bottom: 3mm; border-bottom: 1px solid var(--line); }
+.chap-num { display: block; font-family: "Source Serif 4", Georgia, serif; font-size: 30pt; font-weight: 400; line-height: 1; color: var(--muted); margin-bottom: 3mm; letter-spacing: 0; }
+.chap-num:not(:empty)::after { content: ""; display: block; width: 14mm; border-top: 1.5px solid var(--accent); margin-top: 2.5mm; }
+.chap-num.annex { font-size: 13pt; font-variant: small-caps; letter-spacing: 0.04em; }
+.levels { margin: 0 0 5mm; }
+.level { display: inline-block; font-size: 8pt; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border: 1px solid currentColor; border-radius: 2px; margin-right: 4px; }
+.level.deb { color: #166534; } .level.inter { color: #1e40af; } .level.exp { color: #5b21b6; }
+
+/* Encadrés : une famille éditoriale (filet, petites capitales serif), pas de kit de cartes pastel */
+.resume, .retenir, .cas, .mythe, .outil, .note-islam, .expert, .attention { border-radius: 2px; margin: 4mm 0; break-inside: avoid; }
+.resume .lab, .retenir .lab, .cas .lab, .mythe .lab, .outil .lab, .note-islam .lab, .expert .lab, .attention .lab { display: block; font-family: "Source Serif 4", serif; font-variant: small-caps; text-transform: none; letter-spacing: 0.04em; font-size: 10pt; font-weight: 700; margin-bottom: 1.5mm; }
+.resume { background: var(--surface); border: 1px solid var(--line); padding: 4mm 5mm; margin: 4mm 0 6mm; }
+.resume .lab { color: var(--accent); }
+.resume p:last-child { margin-bottom: 0; }
+.retenir { border: 1.5px solid var(--ink); padding: 4mm 5mm; margin: 6mm 0 0; }
+.retenir .lab { color: var(--ink); }
+.retenir ul, .resume ul { margin: 0; padding-left: 1.2em; }
+.retenir li { margin-bottom: 1mm; }
+.cas, .mythe, .outil, .attention { background: #fff; border: 1px solid; padding: 3mm 5mm; }
+.cas { border-color: var(--teal); } .cas .lab { color: var(--teal); }
+.mythe { border-color: var(--neg); border-style: dashed; } .mythe .lab { color: var(--neg); }
+.mythe .verdict { font-weight: 600; }
+.outil { border-color: var(--amber); } .outil .lab { color: var(--amber); }
+.attention { border-color: var(--neg); } .attention .lab { color: var(--neg); }
+.note-islam { border: 1px solid #ddd6fe; background: #faf5ff; padding: 3mm 5mm; }
+.note-islam .lab { color: var(--violet); }
+.note-islam .ar { color: var(--ink2); margin: 1mm 0 2mm; }
+.note-islam .ref { font-size: 8.6pt; color: var(--muted); }
+.expert { background: #fff; border: 0; border-top: 1.5px solid var(--ink); border-radius: 0; padding: 2.5mm 0 2mm; }
+.expert .lab { color: var(--ink); font-family: "JetBrains Mono", monospace; font-variant: normal; text-transform: uppercase; letter-spacing: 0.08em; font-size: 8pt; font-weight: 600; }
+.expert, .expert p, .expert li { font-size: 9.8pt; }
+.pull { font-family: "Source Serif 4", serif; font-size: 13pt; line-height: 1.35; color: var(--ink2); margin: 5mm 8mm; font-style: italic; text-indent: -0.4em; }
+.pull::before { content: "« "; color: var(--accent); } .pull::after { content: " »"; color: var(--accent); }
+
+/* Figures */
+figure.fig { margin: 4mm 0 5mm; break-inside: avoid; }
+figure.fig svg { width: 100%; height: auto; display: block; }
+figcaption { font-size: 8.6pt; color: var(--muted); margin-top: 1.5mm; line-height: 1.35; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; align-items: start; }
+.diagram { margin: 4mm 0; break-inside: avoid; }
+.diagram svg { width: 100%; height: auto; display: block; }
+
+/* Tableaux : coupure entre lignes, en-tête répété, chiffres en mono alignés à droite */
+table { border-collapse: collapse; width: 100%; font-size: 9pt; margin: 3mm 0 4mm; break-inside: auto; }
+thead { display: table-header-group; }
+tr, caption { break-inside: avoid; }
+th { text-align: left; font-weight: 600; color: var(--ink2); border-bottom: 1.5px solid var(--ink); padding: 1.6mm 2mm; font-size: 8.6pt; text-transform: uppercase; letter-spacing: 0.04em; }
+th.num { font-family: Inter, sans-serif; font-size: 8.6pt; }
+td { padding: 1.6mm 2mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.num, th.num { text-align: right; }
+tr.hl td { background: var(--accent-soft); font-weight: 600; }
+tr.hl td:first-child::before { content: "▶ "; font-size: 0.7em; color: var(--accent); }
+.pos { color: var(--pos); } .neg { color: var(--neg); }
+td.pos, td.neg { font-weight: 600; }
+caption { caption-side: bottom; text-align: left; font-size: 8.6pt; color: var(--muted); padding-top: 1.5mm; }
+
+/* Rangée de chiffres clés : filets, pas de cartes */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin: 3mm 0 5mm; break-inside: avoid; }
+.kpi { border: 0; border-top: 1.5px solid var(--ink); border-radius: 0; padding: 2mm 0; }
+.kpi b { display: block; font-family: "JetBrains Mono", monospace; font-size: 14pt; font-weight: 600; }
+.kpi span { font-size: 8.6pt; color: var(--muted); }
+.kpis.k3 { grid-template-columns: repeat(3, 1fr); } .kpis.k5 { grid-template-columns: repeat(5, 1fr); }
+
+/* Listes, checklists */
+ul, ol { padding-left: 1.3em; margin: 0 0 0.8em; }
+li { margin-bottom: 0.3em; }
+.check li { list-style: none; position: relative; padding-left: 1.4em; }
+.check li::before { content: "☐"; font-family: Inter, "Segoe UI Symbol", sans-serif; position: absolute; left: 0; color: var(--accent); }
+.steps { counter-reset: s; list-style: none; padding: 0; }
+.steps li { counter-increment: s; position: relative; padding-left: 9mm; margin-bottom: 2.5mm; }
+.steps li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 6.5mm; height: 6.5mm; border-radius: 50%; background: var(--ink); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 8.6pt; display: flex; align-items: center; justify-content: center; }
+.glossaire dt { font-weight: 600; margin-top: 2mm; } .glossaire dd { margin: 0 0 1mm 0; color: var(--ink2); }
+.refs li { font-size: 9pt; margin-bottom: 1.2mm; }
+code { font-family: "JetBrains Mono", monospace; font-size: 0.88em; background: var(--surface); padding: 0 3px; border-radius: 3px; }
+pre { font-family: "JetBrains Mono", monospace; font-size: 8.5pt; background: #0f172a; color: #e2e8f0; padding: 3mm 4mm; border-radius: 4px; white-space: pre-wrap; line-height: 1.4; break-inside: avoid; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 5mm 0; }
+.pb { break-before: page; }
