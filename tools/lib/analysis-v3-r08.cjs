@@ -40,8 +40,21 @@ function build(cfg) {
   const raw = K.loadRun(data, ['bars', 'fundamentals', 'comparison_bars', 'rank_beta', 'status', 'insiders', 'comparison_earnings', 'earnings_risk', 'sec_evidence']);
   // cfg.minBars : émetteur récemment coté (IPO/fusion) dont l'historique certifié est plus court que le
   // défaut de 250 séances ; le seuil reste 250 quand cfg.minBars est absent.
-  const S = K.mainSeries(raw.bars, T, REF, cfg.minBars), { bars, N, B, idx, close, prev } = S;
+  const S = K.mainSeries(raw.bars, T, REF, cfg.minBars);
+  // cfg.splits (R08, optionnel) : division d'actions dans la fenêtre alors que la série certifiée n'est pas ajustée
+  // (source de secours). Chaque élément = { date: première séance cotée sur la nouvelle base, ratio, doc: index du
+  // dépôt primaire qui l'annonce }. Les cours antérieurs sont divisés par le ratio et les volumes multipliés d'autant,
+  // en mémoire seulement : l'artefact certifié reste intact. Les niveaux du plan doivent dater de la nouvelle base,
+  // pour que leur pointeur désigne une valeur brute identique à la valeur ajustée.
+  if (cfg.splits) {
+    for (const [k, l] of Object.entries(cfg.levels)) if (cfg.splits.some(s => l.d < s.date)) throw Error(`${T}: niveau ${k} (${l.d}) antérieur à une division d'actions`);
+    const prevBar = s => S.bars[S.idx(s.date) - 1];
+    for (const s of cfg.splits) { const r = prevBar(s)[4] / S.bars[S.idx(s.date)][1]; if (r < s.ratio * 0.7 || r > s.ratio * 1.3) throw Error(`${T}: division du ${s.date} non visible dans la série (écart ${r.toFixed(2)})`); }
+    S.bars = S.bars.map(b => { const k = cfg.splits.reduce((m, s) => b[0] < s.date ? m * s.ratio : m, 1); return k === 1 ? b : [b[0], b[1] / k, b[2] / k, b[3] / k, b[4] / k, b[5] * k, ...b.slice(6)]; });
+  }
+  const { bars, N, B, idx, close, prev } = S;
   const tech = K.technicals(bars);
+  if (cfg.splits) tech.convention += ' ; cours antérieurs à ' + cfg.splits.map(s => 'la séance du ' + s.date + ' divisés par ' + s.ratio + ' (division d’actions, dépôt primaire n° ' + s.doc + ')').join(', ');
   const STP = findPath(raw.fundamentals, 'instrument_comprehensive_stats'), st = at(raw.fundamentals, STP);
   const TXP = findPath(raw.insiders, 'instrument_insider_transactions'), tx = TXP == null ? { transactions: [] } : at(raw.insiders, TXP);
   const cmpRows = raw.comparison_bars.data.items[0].results[0].data;

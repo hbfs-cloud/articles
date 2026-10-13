@@ -1757,6 +1757,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "TRT",
+    "exchange": "NASDAQ · Test de fiabilité des semi-conducteurs, équipements et distribution électronique",
+    "name": "TRT — Trio-Tech (TRT) à 5,48 $ après −36,6 % le jour des résultats : croissance réelle, marge...",
+    "title": "TRT — Trio-Tech (TRT) à 5,48 $ après −36,6 % le jour des résultats : croissance réelle, marge...",
+    "desc": "Trio-Tech a fait +72 % de chiffre d’affaires sur l’exercice 2026, mais sa marge brute est tombée à 17 % et un seul client pèse 38,7 % des ventes. Le titre a perdu 36,6 % le jour des résultats et cote 5,48 $ : surveiller, sans entrée.",
+    "tags": "us,semis,ai,small-cap,speculative,trade-idea",
+    "grade": "C",
+    "href": "/analyses/TRT/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "IONQ",
     "exchange": "NYSE · Informatique quantique, réseaux et sécurité quantiques, fonderie",
     "name": "IONQ — IonQ à 36,23 $ en séance le jour du rachat d’Elisity (jusqu’à 1,3 Md$ en actions) : cro...",

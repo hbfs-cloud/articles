@@ -988,8 +988,11 @@ function renderTradeIdea(d) {
     ? `\n        <div style="background:#22c55e;color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-check"></i> ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
     : '';
 
+  // Un niveau lu au demi-centime (plus haut de séance à 5,755 $) garde ses trois décimales : l'arrondir
+  // à 5,75 $ afficherait un seuil qu'une clôture à 5,75 $ ne franchit pas.
+  const lvl = v => Math.abs(v * 100 - Math.round(v * 100)) > 1e-6 ? v.toFixed(3) : v.toFixed(2);
   const cards = [
-    { label: isDormant ? tx(d, 'Dormant reference', 'Repère inactif') : tx(d, 'Entry Zone', 'Zone d’entrée'), value: `$${t.entry.toFixed(2)}`, note: t.entryNote || '', color: '#3b82f6', bg: '#f8fafc', tc: '#0f172a' },
+    { label: isDormant ? tx(d, 'Dormant reference', 'Repère inactif') : tx(d, 'Entry Zone', 'Zone d’entrée'), value: `$${lvl(t.entry)}`, note: t.entryNote || '', color: '#3b82f6', bg: '#f8fafc', tc: '#0f172a' },
     { label: isDormant ? tx(d, 'Previous stop', 'Ancien stop') : tx(d, 'Stop Loss', 'Stop'),  value: `$${t.stop.toFixed(2)}`,  note: t.stopPct || '',  color: '#ef4444', bg: '#fef2f2', tc: '#ef4444' },
     { label: isDormant ? tx(d, 'Previous target 1', 'Ancien objectif 1') : tx(d, 'Target 1', 'Objectif 1'),   value: `$${t.tp1.toFixed(2)}`,   note: t.tp1Pct || '',   color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' },
   ];
@@ -1003,7 +1006,7 @@ function renderTradeIdea(d) {
 ${cards.map(c => `          <div style="border-left:4px solid ${c.color};padding:1rem;background:${c.bg};border-radius:0 8px 8px 0;">
             <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">${esc(c.label)}</div>
             <div style="font-size:1.5rem;font-weight:800;color:${c.tc};margin:0.25rem 0;">${esc(c.value)}</div>
-            <div style="font-size:0.78rem;color:#64748b;">${esc(c.note)}</div>
+            <div style="font-size:0.78rem;color:#64748b;">${esc(c.note).split(/\n{2,}/).join('<br><br>')}</div>
           </div>`).join('\n')}
         </div>
 ${t.thesis ? `        <div class="pedagogy-box"${isClosed ? ' style="opacity:0.65;"' : ''}><h4><i class="fa-solid fa-lightbulb"></i> ${tx(d, 'Thesis', 'Thèse')}</h4><p>${esc(t.thesis)}</p></div>` : ''}

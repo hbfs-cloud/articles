@@ -1,0 +1,389 @@
+{
+ "role": "contrarian",
+ "reviewerId": "trt-contrarian-claude-3",
+ "reviewerName": "Claude (revue contradictoire indépendante, tour 3)",
+ "analysisSha256": "b43eded2562469003645c514ff023ae0a481d6712fb2d20939d418966bbc91d8",
+ "evidenceSha256": "5ff1da74a29ff90695b9dab4764e25969c7f692ae8f641033792ea7dbb6678a2",
+ "status": "BLOCK",
+ "score": 85,
+ "blockingFindings": [
+  {
+   "id": "AQ-SEC-002",
+   "where": "capitalStructure.shareHistory (de « Le plafond du tiers du flottant (ventes sur douze mois… » à « …environ 18 M$ au cours actuel. ») ; capitalStructure.atm.remaining ; risks.riskCards[2].verdict ; blastRadius.missingData[6] ; filingsReview.contrarianRisks[2]",
+   "problem": "La fiche affirme que le plafond du tiers du flottant « peut donc déjà s’appliquer de nouveau » et que, s’il s’applique, « la société ne peut plus vendre qu’environ 1,8 à 2,7 M$ d’actions jusqu’au 24 avril 2027 (un tiers du flottant au cours actuel, moins les 10 M$ d’avril) » ; la carte Capital et initiés reprend « s’il joue, environ 1,8 à 2,7 M$ seulement ». Les deux affirmations sont contredites par la méthode que la société a elle-même déposée. (1) Le prix. La déclaration d’enregistrement (page de garde du prospectus de base, reprise dans le 424B5 d’avril) calcule le flottant de l’instruction I.B.6 « at a price per share of $8.14 on October 15, 2025, which was the highest closing price … within the last 60 days prior to the date of this filing ». Le plafond se mesure donc à la plus haute clôture des soixante jours qui précèdent la vente, pas à 5,48 $. La fiche pose d’ailleurs elle-même cette règle (« valeur mesurée à une date des soixante jours qui précèdent la vente ») avant de calculer au cours du jour. Même sur sa base la plus étroite (6 447 342 actions), la clôture du 23 septembre (11,45 $) donne 73,8 M$ de flottant jusqu’au 22 novembre, soit 24,6 − 10 = 14,6 M$ encore vendables, pas 1,8 M$. (2) La base. Le même document chiffre les actions hors initiés à 3 131 233 avant division au 31 octobre 2025, soit 6 262 466 après. Ce nombre correspond au capital (4 312 805 actions au 30 septembre 2025 selon la circulaire, 4 350 555 au 1er novembre selon le 10-Q) moins les seules actions détenues en direct par les dirigeants et administrateurs (1 705 072 − 513 750 options = 1 191 322, soit 3 121 483 au 30 septembre, l’écart venant des exercices d’octobre). A. Charles Wilson et Zeff y sont donc comptés hors initiés. La page de garde du 10-K, que j’ai appelée à tort « base réglementaire » au tour 2, retire en plus les porteurs de 5 % : 4 883 535 + 871 000 (Wilson) + 511 175 (Zeff) = 6 265 710, à 3 244 actions près de la base du S-3. Sur la base de la société, augmentée du seul placement d’avril (7 315 098 actions, sans compter les ventes d’administrateurs ni les exercices d’options de salariés), le seuil tombe à 10,25 $ et la clôture du 23 septembre valorise le flottant 83,8 M$ : le plafond ne joue pas avant le 22 novembre au plus tôt, comme sur le flottant du fournisseur. (3) En outre, l’instruction 3 de l’I.B.6 dispose qu’une fois le flottant passé au-dessus de 75 M$ après la prise d’effet, la déclaration est réputée déposée au titre de l’I.B.1. C’est acquis dès le 24 avril sur toutes les bases (16,52 $ × 4,88 millions d’actions au minimum = 80,7 M$). Selon l’interprétation de la SEC (Compliance and Disclosure Interpretations, Securities Act Forms, question 116.25), le plafond ne peut revenir qu’au 10-K suivant, si le flottant est alors sous 75 M$ à une date des soixante jours qui précèdent ce dépôt. Or, au 10-K du 24 septembre, la clôture du 13 août (11,68 $) dépasse 75 M$ même sur la base la plus étroite de la fiche (75,3 M$). Dans cette lecture, le plafond ne revient pas avant le 10-K de septembre 2027. Dans toutes les lectures, pendant la durée du plan, la borne effective est le plafond statutaire de 3 304 027 actions (environ 18 M$ au cours actuel). La fiche présente donc au lecteur une capacité d’émission jusqu’à dix fois trop basse, sur le risque même qui annule le plan. Cette erreur est née de la correction de mon mineur du tour 2.",
+   "fix": "capitalStructure.shareHistory : remplacer tout le passage, de « Le plafond du tiers du flottant (ventes sur douze mois… » à « …environ 18 M$ au cours actuel. », par : « Le plafond du tiers du flottant (ventes sur douze mois limitées au tiers de la valeur des actions hors initiés tant que celle-ci reste sous 75 M$) ne bride pas la société avant le 22 novembre au plus tôt. La société le calcule elle-même dans sa déclaration d’enregistrement : 3 131 233 actions hors initiés avant division au 31 octobre 2025, soit 6 262 466 après, valorisées à la plus haute clôture des soixante jours précédents. Avec le placement d’avril, cette base compte au moins 7,32 millions d’actions : la clôture du 23 septembre (11,45 $) la valorise 83,8 M$, au-dessus du seuil, et reste dans la fenêtre de soixante jours jusqu’au 22 novembre ; le flottant du fournisseur (6,93 millions d’actions, seuil de 10,83 $) mène à la même date. Même ensuite, le plafond se calculera sur la plus haute clôture des soixante jours précédant chaque vente, pas sur le cours du jour. Pendant toute la durée du plan, la borne effective est donc le plafond statutaire : environ 3,3 millions d’actions émissibles sans vote, 32 % du capital, environ 18 M$ au cours actuel. » — atm.remaining → « Capacité nominale de 40 M$. Le plafond du tiers du flottant ne bride pas la société avant le 22 novembre au plus tôt : sur la base que la société a déposée, augmentée du placement d’avril (au moins 7,32 millions d’actions), la clôture du 23 septembre place le flottant à 83,8 M$, au-dessus du seuil de 75 M$. Borne effective pendant le plan : le plafond statutaire, environ 3,3 millions d’actions. » — risks.riskCards[2].verdict → « Les mieux informés ont vendu cher ; une émission allant jusqu’à environ 3,3 millions d’actions reste possible sans vote, et le plafond du tiers du flottant ne la bride pas avant le 22 novembre au plus tôt. » — blastRadius.missingData[6] → « Flottant en actions lu dans les statistiques du fournisseur (6,93 millions) ; la base que la société a déposée pour le plafond du tiers du flottant (6 262 466 actions hors initiés après division au 31 octobre 2025, plus les 1 052 632 placées en avril) n’a pas été mise à jour depuis. Les deux placent la clôture du 23 septembre au-dessus de 75 M$. La page de garde du 10-K (32,3 M$ à 6,62 $), qui retire aussi les porteurs de plus de 5 %, sert au statut de déclarant, pas à ce plafond. » — filingsReview.contrarianRisks[2] : remplacer « le plafond du tiers du flottant ne la bridant peut-être pas avant fin novembre » par « le plafond du tiers du flottant ne la bridant pas avant le 22 novembre au plus tôt ». Calculs : 3 131 233 × 2 = 6 262 466 ; + 1 052 632 = 7 315 098 ; 75 000 000 / 7 315 098 = 10,253 $ ; 7 315 098 × 11,45 = 83 757 872 $ ; 23 septembre + 60 jours = 22 novembre ; 15 000 000 − 10 384 698 − 1 311 275 = 3 304 027 actions × 5,48 = 18,1 M$, 31,8 % du capital. Le brouillon Telegram (« jusqu’à environ 3,3 millions sans vote ») reste juste."
+  }
+ ],
+ "minorFindings": [
+  {
+   "id": "AQ-VAL-003",
+   "where": "verdict.whyBuy[4]",
+   "problem": "La phrase que j’ai proposée au tour 2 donne la pente sans le point de départ. Un lecteur peut ajouter 0,87 $ par million d’EBITDA au cours de 5,48 $, alors qu’à neuf fois l’EBITDA ce cours suppose déjà 3,5 M$ d’EBITDA, soit 1,4 M$ de plus que l’exercice 2026 (fundamentals.rows[18]). Le premier 1,4 M$ de marge supplémentaire est donc déjà payé.",
+   "fix": "Ajouter à la fin de whyBuy[4] : « ; à ce multiple, le cours de 5,48 $ suppose déjà 1,4 M$ d’EBITDA de plus que l’exercice 2026. » Calcul : 31 631 145 / 9 − 2 087 000 = 1 427 572 $."
+  },
+  {
+   "id": "AQ-EDT-003",
+   "where": "verdict.summary",
+   "problem": "whyAvoid[3], insiders.signal, la carte de risque et le Telegram sont corrigés (« juste après le sommet », « dans les jours qui ont suivi le sommet annuel »). Le résumé du verdict, lu en premier, dit encore « après des ventes d’administrateurs près du sommet de mai », alors que ces ventes se sont faites entre 13,97 $ et 18,76 $, de 12 % à 35 % sous le plus haut de 21,38 $.",
+   "fix": "summary : « après des ventes d’administrateurs près du sommet de mai » → « après des ventes d’administrateurs juste après le sommet de mai »."
+  },
+  {
+   "id": "AQ-TEC-004",
+   "where": "échelle de prix rendue (« Stop $5.35 -7.1% ») ; tradeIdea.stop, stopPct",
+   "problem": "Le R/R est maintenant donné sur les deux bases et il est exact : 1,89 / 2,66 au déclencheur et 1,50 / 2,17 au plafond avec l’ordre à 5,34 $. Mais l’échelle, ce que le lecteur recopie, affiche toujours « Stop $5.35 -7.1% », en notation anglaise sur une page française, alors que l’ordre est à 5,34 $ (−7,2 %).",
+   "fix": "tradeIdea.stop = 5.34 et stopPct « −7,2 % » ; si le générateur impose le niveau de structure, intituler la carte « Plus bas du 30 mars 5,35 $ — ordre stop 5,34 $ (−7,2 %) »."
+  },
+  {
+   "id": "AQ-EAR-003",
+   "where": "globalScore.keyTakeawaysNegative[1]",
+   "problem": "« Marge brute tombée de 25 à 17 %, et le 10-K la voit rester sous ses niveaux passés » : la prévision du 10-K porte sur la marge du segment de test (15,7 % contre 27,4 %), pas sur celle du groupe, et elle est « partially offset by continued growth in service volumes ». Le résumé, la thèse et le Telegram sont corrigés ; ce point-clé ne l’est pas.",
+   "fix": "« Marge brute tombée de 25 à 17 %, et le 10-K prévoit que celle du test reste sous ses niveaux passés, en partie compensée par les volumes. »"
+  }
+ ],
+ "checks": [
+  {
+   "id": "AQ-VRD-001",
+   "status": "PASS",
+   "rationale": "Le verdict nomme Trio-Tech, son métier (test de fiabilité en Asie du Sud-Est, équipements de test), le catalyseur (résultats du 24 septembre, −36,6 %), la contradiction (+72 % de ventes, marge de 25 à 17 % sur un test final sans investissement, client à 38,7 %) et l’action (aucune entrée avant une clôture à 5,76 $ ou plus). Mineur : « près du sommet de mai » subsiste dans le résumé.",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/verdict/summary",
+    "analyses/TRT/_primary/text/sep24-ex991.htm.txt"
+   ]
+  },
+  {
+   "id": "AQ-VRD-002",
+   "status": "PASS",
+   "rationale": "Chiffres revérifiés : 62 605 k$ (+72 %), client à 24 222 k$ (38,7 %), marge 16,6 % contre 25,1 %, −204 k$, 11,45 → 7,26 $ (−36,6 %), 5,48 $ (−52,1 % depuis la veille). Lien causal sourcé (10-Q de mars, 10-K) ; « devrait rester » et la compensation partielle sont désormais dans le résumé.",
+   "evidenceRefs": [
+    "analyses/TRT/_primary/text/fy26-10k.htm.txt (MD&A, « partially offset by continued growth in service volumes »)",
+    "analyses/TRT/_data/bars.json"
+   ]
+  },
+  {
+   "id": "AQ-VRD-003",
+   "status": "PASS",
+   "rationale": "Note C (score additif 40 = 12 − 14 − 5 − 3 − 5 + 55) distincte du statut « surveiller », justifié par la clôture du 12 octobre (5,48 $) sous le déclencheur de 5,76 $.",
+   "evidenceRefs": [
+    "analyses/TRT/_runs/20261013/revision/editorial-judgments.json",
+    "data/analyses-data/TRT.json#/tradeIdea/statusNote"
+   ]
+  },
+  {
+   "id": "AQ-VRD-004",
+   "status": "PASS",
+   "rationale": "Bloquant du tour 2 levé : whyBuy[4] ne prétend plus que le prix suppose déjà la marge basse ; il donne la mécanique (0,87 $ par million d’EBITDA à 9×, 1 000 000 × 9 / 10 384 698 = 0,867 $). Chaque puce est de même signe que sa rubrique.",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/verdict/whyBuy/4",
+    "data/analyses-data/TRT.json#/verdict/whyAvoid"
+   ]
+  },
+  {
+   "id": "AQ-BIZ-001",
+   "status": "PASS",
+   "rationale": "Produits, clients, modèle, coûts et position dans la chaîne expliqués ; cause de la marge tirée du 10-K (« required no capital investment, resulting in lower margin profiles that reflect the reduced risk exposure ») ; rachat de la filiale malaisienne et bail de Penang vérifiés.",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/business/overview",
+    "analyses/TRT/_primary/text/fy26-10k.htm.txt"
+   ]
+  },
+  {
+   "id": "AQ-BIZ-002",
+   "status": "PASS",
+   "rationale": "Segments SBS 49 018 k$ (78,3 %) et IE 13 554 k$ (21,6 %), résultat des segments, concentration 57,6 / 38,7 % : conformes au 10-K.",
+   "evidenceRefs": [
+    "analyses/TRT/_primary/text/fy26-10k.htm.txt (Segment Information)"
+   ]
+  },
+  {
+   "id": "AQ-BIZ-003",
+   "status": "PASS",
+   "rationale": "Indicateurs du métier : carnet de 24,2 M$ (19,8 M$ en test), marge du segment (15,7 % contre 27,4 %), créance du premier client, loyer de Penang, cartes de déverminage restant à livrer (7,9 M$), commandes du premier trimestre en électronique industrielle.",
+   "evidenceRefs": [
+    "analyses/TRT/_primary/text/sep24-ex991.htm.txt",
+    "analyses/TRT/_primary/text/may4-8k.htm.txt"
+   ]
+  },
+  {
+   "id": "AQ-EAR-001",
+   "status": "PASS",
+   "rationale": "Exercice clos le 30 juin 2026 ; communiqué et 10-K du 24 septembre (0001437749-26-031125 et -031124) identifiés.",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/earnings/beatNote",
+    "analyses/TRT/_primary/submissions.json"
+   ]
+  },
+  {
+   "id": "AQ-EAR-002",
+   "status": "PASS",
+   "rationale": "Chiffre d’affaires, croissance, marge brute du groupe (17 %) et du test (15,7 %), résultat opérationnel et net, quatrième trimestre, flux opérationnel de 3 427 k$ : vérifiés.",
+   "evidenceRefs": [
+    "analyses/TRT/_primary/text/sep24-ex991.htm.txt",
+    "analyses/TRT/_primary/text/fy26-10k.htm.txt"
+   ]
+  },
+  {
+   "id": "AQ-EAR-003",
+   "status": "PASS",
+   "rationale": "Absence de prévision chiffrée sourcée ; orientation de marge du 10-K désormais citée au conditionnel avec sa compensation partielle (résumé, thèse, Telegram). Mineur : keyTakeawaysNegative[1] l’attribue à la marge du groupe, sans la compensation.",
+   "evidenceRefs": [
+    "analyses/TRT/_primary/text/fy26-10k.htm.txt",
+    "data/analyses-data/TRT.json#/globalScore/keyTakeawaysNegative/1"
+   ]
+  },
+  {
+   "id": "AQ-EAR-004",
+   "status": "PASS",
+   "rationale": "10-K et 10-Q de mars intégrés : capital, options, concentration, segments, bail, rachat, emprunts, contrôle interne, lien avec l’intelligence artificielle.",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/filingsReview/filings/0",
+    "data/analyses-data/TRT.json#/filingsReview/filings/17"
+   ]
+  },
+  {
+   "id": "AQ-EAR-005",
+   "status": "PASS",
+   "rationale": "Date non confirmée par l’émetteur ; précédent du 14 novembre 2025 ; sortie à la clôture du 6 novembre, ou la veille si la date tombe plus tôt.",
+   "evidenceRefs": [
+    "analyses/TRT/_primary/submissions.json",
+    "data/analyses-data/TRT.json#/earnings/nextEarnings"
+   ]
+  },
+  {
+   "id": "AQ-VAL-001",
+   "status": "PASS",
+   "rationale": "Valeur d’entreprise sur ventes (0,51×), sur EBITDA (15,2×), cours sur valeur comptable (1,27×), scénario à 9× (4,24 $) et à marge de 25 % (8,78 $) recalculés : 56,908 − 25,277 = 31,631 M$.",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/fundamentals/rows/18",
+    "analyses/TRT/_runs/20261013/revision/numeric-evidence.json"
+   ]
+  },
+  {
+   "id": "AQ-VAL-002",
+   "status": "PASS",
+   "rationale": "Trésorerie disponible 21 428 + 4 294 = 25 722 k$, nantis et placement non garanti exclus, dette 445 k$, 10 384 698 actions au 1er septembre ; EBITDA = −204 + 2 291 k$ ; dates et bases GAAP explicites.",
+   "evidenceRefs": [
+    "analyses/TRT/_primary/text/fy26-10k.htm.txt (bilan, notes 3 et 4)"
+   ]
+  },
+  {
+   "id": "AQ-VAL-003",
+   "status": "PASS",
+   "rationale": "Bloquant du tour 2 levé : whyBuy[4] corrigé, ligne 18 complétée (« le cours de 5,48 $ suppose déjà environ 3,5 M$ d’EBITDA, 68 % de plus », 3 514 572 / 2 087 000 = 1,684). Marges d’EBITDA implicites des pairs justes (inTEST 1,38 / 28,3 = 4,9 %, Amkor 1,63 / 9,2 = 17,7 %, Trio-Tech 3,3 %). Mineur : whyBuy[4] ne rappelle pas que les premiers 1,4 M$ d’EBITDA en plus sont déjà payés.",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/verdict/whyBuy/4",
+    "data/analyses-data/TRT.json#/fundamentals/rows/15",
+    "data/analyses-data/TRT.json#/fundamentals/rows/18"
+   ]
+  },
+  {
+   "id": "AQ-SEC-001",
+   "status": "PASS",
+   "rationale": "10-K 0001437749-26-031124 du 24 septembre 2026, lien direct, constat précis, item 9A et opinion de l’auditeur.",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/filingsReview/filings/0"
+   ]
+  },
+  {
+   "id": "AQ-SEC-002",
+   "status": "BLOCK",
+   "rationale": "Placement d’avril complet et juste (1 052 632 actions à 9,50 $, D. Boral, 4,5 %). Chiffres de la fiche exacts en eux-mêmes : 32 329 000 / 6,62 = 4 883 535 ; + 1 052 632 + 511 175 = 6 447 342 ; + 227 245 = 6 674 587 ; seuils 11,633 et 11,237 $ ; fournisseur 10,828 $ ; 13 clôtures à 10,83 $ ou plus depuis le 13 août, dernière le 23 septembre, dernière au-dessus de 11,63 $ le 13 août ; 6 447 342 × 5,48 / 3 − 10 M$ = 1,78 M$ et 6 926 282 × 5,48 / 3 − 10 M$ = 2,65 M$. Mais la mécanique est fausse : le plafond se calcule à la plus haute clôture des soixante jours précédant la vente, pas au cours du jour, et sur la base que la société a déposée (6 262 466 actions hors initiés après division, Wilson et Zeff compris), pas sur la page de garde du 10-K. Résultat : capacité d’émission présentée jusqu’à dix fois trop basse.",
+   "evidenceRefs": [
+    "analyses/TRT/_primary/text/nov25-s3.htm.txt (« 3,131,233 shares … $8.14 on October 15, 2025, which was the highest closing price … within the last 60 days »)",
+    "analyses/TRT/_primary/text/apr26-424b5.htm.txt",
+    "analyses/TRT/_primary/text/dec10-proxy-defr14a.htm.txt (4 312 805 actions ; dirigeants et administrateurs 1 705 072 dont 513 750 options ; Wilson et Zeff en porteurs de 5 %)",
+    "analyses/TRT/_primary/companyfacts.json (EntityCommonStockSharesOutstanding 4 350 555 au 1er novembre 2025)",
+    "analyses/TRT/_data/bars.json"
+   ]
+  },
+  {
+   "id": "AQ-SEC-003",
+   "status": "PASS",
+   "rationale": "Déclaration d’enregistrement (actions, bons, unités), placement direct primaire, options et rémunération en actions distingués ; aucun programme « at-the-market », convertible ni bon en circulation.",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/capitalStructure",
+    "analyses/TRT/_primary/text/nov25-s3.htm.txt"
+   ]
+  },
+  {
+   "id": "AQ-SEC-004",
+   "status": "PASS",
+   "rationale": "10 384 698 + 1 311 275 = 11 695 973 (+12,6 %) ; marge statutaire 15 000 000 − 10 384 698 − 1 311 275 = 3 304 027 actions (31,8 %, 18,1 M$ à 5,48 $). Historique XBRL cohérent : 8 625 610 au 30 juin 2025 (après division), 10 371 192 au 30 juin 2026.",
+   "evidenceRefs": [
+    "analyses/TRT/_primary/companyfacts.json",
+    "analyses/TRT/_primary/text/fy26-10k.htm.txt (page de garde)"
+   ]
+  },
+  {
+   "id": "AQ-SEC-005",
+   "status": "PASS",
+   "rationale": "Contrôle interne jugé efficace (item 9A) et opinion sans réserve : conclusion tirée du texte du 10-K.",
+   "evidenceRefs": [
+    "analyses/TRT/_primary/text/fy26-10k.htm.txt (Item 9A)"
+   ]
+  },
+  {
+   "id": "AQ-SEC-006",
+   "status": "PASS",
+   "rationale": "Dix-sept pièces plus le formulaire 144 : 18 entrées dans filingsReview.filings, cohérent avec le résumé et l’inventaire de 32 formulaires. Aucun formulaire 4 de Horowitz déposé au 13 octobre (submissions.json).",
+   "evidenceRefs": [
+    "analyses/TRT/_runs/20261013/revision/primary-manifest.json",
+    "analyses/TRT/_primary/submissions.json"
+   ]
+  },
+  {
+   "id": "AQ-TEC-001",
+   "status": "PASS",
+   "rationale": "Clôture de référence du 12 octobre (5,48 $, −3,35 %), collecte horodatée 2026-10-13T17:02:46Z, barre du 13 octobre non incluse.",
+   "evidenceRefs": [
+    "analyses/TRT/_data/bars.json"
+   ]
+  },
+  {
+   "id": "AQ-TEC-002",
+   "status": "PASS",
+   "rationale": "Niveaux recalculés sur barres ajustées : 5,45 / 5,3467 / 4,42 et 6,2826 / 6,54 / 6,86, déclencheur 5,755 ; rebonds décroissants 6,86 → 6,54 → 6,28 → 5,755 conformes ; 0,64 ATR.",
+   "evidenceRefs": [
+    "analyses/TRT/_data/bars.json",
+    "data/analyses-data/TRT.json#/technicals/setupNote"
+   ]
+  },
+  {
+   "id": "AQ-TEC-003",
+   "status": "PASS",
+   "rationale": "Déclencheur, plafond, achat après l’ouverture sur trois séances, stop, remontée à 6,28 $, objectifs, expiration, dernier achat et sortie justifiés. Ouverture entre 5,35 et 5,76 $ désormais assumée explicitement (« ne pas renforcer »).",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/tradeIdea"
+   ]
+  },
+  {
+   "id": "AQ-TEC-004",
+   "status": "PASS",
+   "rationale": "R/R exacts sur les deux bases : 0,785 / 0,4083 = 1,92 et 1,105 / 0,4083 = 2,71 ; 0,72 / 0,4733 = 1,52 et 2,20 ; avec 5,34 $ : 1,89 / 2,66 et 1,50 / 2,17. Taille 208/138 et 2 083/1 388 actions, 27 actions à 20 $ ; 80 ouvertures au-dessus de +0,07 $ ; 10 gaps baissiers au-delà de 0,415 $ recomptés. Mineur : l’échelle affiche encore « Stop $5.35 -7.1% ».",
+   "evidenceRefs": [
+    "analyses/TRT/_data/bars.json",
+    "analyses/TRT/_runs/20261013/preview/index.html"
+   ]
+  },
+  {
+   "id": "AQ-TEC-005",
+   "status": "PASS",
+   "rationale": "Veto avant résultats appliqué (sortie le 6 novembre, aucun achat après le 2) ; options et données en séance déclarées non servies.",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/tradeIdea/horizon",
+    "data/analyses-data/TRT.json#/blastRadius/missingData"
+   ]
+  },
+  {
+   "id": "AQ-RSK-001",
+   "status": "PASS",
+   "rationale": "Mineurs du tour 2 levés : formulaire 144 présenté comme une valeur de marché (573 478,17 $ pour 91 173 actions, date approximative du 28 septembre), vente possible à tout prix d’ici fin décembre ; A. Charles Wilson ajouté (12,5 %, porteur de 5 % hors dirigeants dans la circulaire).",
+   "evidenceRefs": [
+    "analyses/TRT/_primary/sep28-144-horowitz.xml",
+    "analyses/TRT/_primary/text/dec10-proxy-defr14a.htm.txt"
+   ]
+  },
+  {
+   "id": "AQ-RSK-002",
+   "status": "PASS",
+   "rationale": "Cas contraire chiffré : concentration, marge du test basse par construction, 15,2× l’EBITDA contre 9,2× pour Amkor, ventes et avis de vente, 15,7 % de positions vendeuses. La capacité d’émission y est fausse (« peut-être pas avant fin novembre ») : traité sous AQ-SEC-002.",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/filingsReview/contrarianRisks"
+   ]
+  },
+  {
+   "id": "AQ-RSK-003",
+   "status": "PASS",
+   "rationale": "Gaps (17 ≥ 5 %, 6 ≥ 10 %, pire −2,31 $), liquidité 1,81 / 1,29 / 0,76 M$, ordres limités, réduction d’un tiers, interdiction de poursuivre au-dessus de 5,82 $ recalculés ; rejeu complété (15 exécutions, 2 stops le jour même, 5 clôtures sous le niveau cassé).",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/tradeIdea/entryNote",
+    "analyses/TRT/_data/bars.json"
+   ]
+  },
+  {
+   "id": "AQ-SRC-001",
+   "status": "PASS",
+   "rationale": "Chaque section cite la source qui la porte ; validate-analysis-evidence : PASS (540 affirmations) sur l’empreinte 5ff1da74….",
+   "evidenceRefs": [
+    "data/analyses-evidence/TRT.json"
+   ]
+  },
+  {
+   "id": "AQ-SRC-002",
+   "status": "PASS",
+   "rationale": "Liens EDGAR directs, dates et numéros d’accession, formulaire 144 compris ; contrats de septembre et d’octobre déclarés comme communiqués non déposés.",
+   "evidenceRefs": [
+    "analyses/TRT/_runs/20261013/revision/primary-manifest.json"
+   ]
+  },
+  {
+   "id": "AQ-SRC-003",
+   "status": "PASS",
+   "rationale": "Positions vendeuses sourcées avec bases non concordantes signalées ; initiés sourcés ; aucun consensus inventé.",
+   "evidenceRefs": [
+    "analyses/TRT/_data/fundamentals.json",
+    "analyses/TRT/_data/insider_current.json"
+   ]
+  },
+  {
+   "id": "AQ-EDT-001",
+   "status": "N/A",
+   "rationale": "Fiche unique hors lot : aucun calcul de répétition inter-dossiers possible. check-ai-tells --strict : aucun tic, sur le rendu comme sur le brouillon Telegram.",
+   "evidenceRefs": [
+    "analyses/TRT/_runs/20261013/preview/index.html",
+    "analyses/TRT/_runs/20261013/revision/telegram-draft.html"
+   ]
+  },
+  {
+   "id": "AQ-EDT-002",
+   "status": "PASS",
+   "rationale": "Verdict, risques, catalyseurs et invalidations propres à Trio-Tech ; les puces d’intelligence artificielle en aval restent présentées comme « pas clients ».",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/blastRadius/groups/4/transmission"
+   ]
+  },
+  {
+   "id": "AQ-EDT-003",
+   "status": "PASS",
+   "rationale": "Limites précises dans l’ensemble ; missingData[6] repose sur une base inadaptée, corrigée sous AQ-SEC-002. Mineur : « près du sommet de mai » dans le résumé.",
+   "evidenceRefs": [
+    "data/analyses-data/TRT.json#/blastRadius/missingData",
+    "data/analyses-data/TRT.json#/verdict/summary"
+   ]
+  },
+  {
+   "id": "AQ-QA-001",
+   "status": "BLOCK",
+   "rationale": "check-analysis-editorial-quality --strict --pre-review : PASS (0 erreur, 0 avertissement) ; check-ai-tells --strict : propre ; validate-analysis-evidence : PASS (540) ; aperçu aligné sur le JSON. Mais la relecture contradictoire laisse un bloquant (AQ-SEC-002).",
+   "evidenceRefs": [
+    "tools/check-analysis-editorial-quality.js",
+    "tools/validate-analysis-evidence.js"
+   ]
+  },
+  {
+   "id": "AQ-QA-002",
+   "status": "PASS",
+   "rationale": "Statut BLOCK consigné ; le bloquant porte une correction exacte, texte et calculs compris.",
+   "evidenceRefs": [
+    "analyses/TRT/_runs/20261013/revision/review-contrarian.json#/blockingFindings"
+   ]
+  },
+  {
+   "id": "AQ-QA-003",
+   "status": "PASS",
+   "rationale": "Score 85/100 (84 au tour 2) : le bloquant du tour 2 est levé, sept mineurs sur neuf le sont entièrement, deux en partie (échelle du stop, « près du sommet » dans le résumé). Le score vaut une fois corrigé le plafond du tiers du flottant.",
+   "evidenceRefs": [
+    "analyses/TRT/_runs/20261013/revision/review-contrarian.json#/score"
+   ]
+  }
+ ],
+ "telegramReview": {
+  "status": "PASS",
+  "findings": [
+   "Conforme : français, HTML Telegram, autosuffisant, aucun terme interne, aucun tic (check-ai-tells --strict). Plan identique à la fiche : 5,35 / 5,76 / 5,82 / 5,34 / 6,28 → 5,75 / 6,54 / 6,86 $, 30 octobre, 2 novembre, 6 novembre ; tailles 208 et 138 actions (1 211 et 803 $), 27 actions (157 $) à 20 $ de risque, recalculées.",
+   "Mineurs du tour 2 levés : formulaire 144 sans prix de vente fixé, « devrait rester … en partie compensée par les volumes », « juste après le sommet de 21,38 $ », remontée du stop à 5,75 $, date des résultats non confirmée.",
+   "La phrase sur la dilution (« jusqu’à environ 3,3 millions sans vote ») est juste et n’est pas touchée par le bloquant de la fiche.",
+   "Mineur : « Pourquoi le regarder » ne donne que des arguments de bas prix (0,51 fois les ventes, trésorerie à 44 % du cours). Ajouter le contrepoids que la fiche juge décisif : « Sur ce qu’elle gagne avant amortissements, elle coûte 15 fois, plus que le grand sous-traitant Amkor (9 fois). »",
+   "Mineur : « Ce service rapporte peu : le groupe garde 17 $ sur 100 $ » mêle encore le service et le groupe. Écrire : « Ce test rapporte peu : 15,7 $ de marge sur 100 $ de ventes, contre 27,4 $ un an plus tôt ; 17 $ contre 25 $ pour tout le groupe. »"
+  ]
+ }
+}

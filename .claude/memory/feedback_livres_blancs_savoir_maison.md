@@ -28,3 +28,11 @@ Suite : les six livres blancs « savoir maison » ont été montrés, validés (
 fact-checke aussi avant publication. Trois pages en contenaient des erreurs : TPR avec les chiffres d'un autre trimestre,
 un « squeeze » démenti par les positions vendeuses publiées ensuite, et des « cas réels » de mars 2026 que les données ne
 confirmaient pas. Elles ont été corrigées par une note datée, et les cas de mars sont devenus des cas d'école.
+
+**La règle vaut aussi pour les livres.** Le 13 octobre 2026, après publication des livres « Jouer gros sans se ruiner »
+et « Investir en bon père de famille » (sujets génériques : cent ans de bourse, inflation, enveloppes, levier, crypto),
+l'utilisateur a dit : « tu m'as fait du main street alors que je voulais un truc qui tape, ça fait quand même presque
+1 an que ce repo existe ». Un livre doit se nourrir de l'historique du dépôt (premier commit le 20 déc. 2025) :
+rétrospectives hebdomadaires (`data/retro-summary.json` : 1 429 signaux, 386 résolus, 34,6 % d'objectifs atteints),
+règles nées des pertes (`data/scanner-lessons.json`, 56 règles), issue des fiches d'analyse (`data/analyses-status.json`),
+carnets, incidents datés. Le chiffre qui dérange passe devant, la méthode derrière.

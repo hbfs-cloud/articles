@@ -1,0 +1,336 @@
+{
+  "role": "retail_war_room",
+  "reviewerId": "trt-retail-war-room-claude-1",
+  "reviewerName": "Claude (war room retail indépendante, tour 1)",
+  "analysisSha256": "72923791bf95315c02390465bb2a503be6ff1b3100393003de818c36e0189b43",
+  "evidenceSha256": "426c2308dd7e08f071feb43a080bdcd6cafa1165122ef07d20ae9e210d2eeae6",
+  "status": "BLOCK",
+  "score": 85,
+  "blockingFindings": [
+    {
+      "id": "AQ-TEC-003",
+      "where": "tradeIdea.statusNote, tradeIdea.entryNote, tradeIdea.thesis, tradeIdea.horizon, tradeIdea.catalysts[0], tradeIdea.invalidation[3], verdict.summary, verdict.controlChecklist[2].action, technicals.setupNote, header.badges[0], meta.ogDescription, meta.statusHistory[0].note, blastRadius.scenarios[0], telegram-draft.html ligne 13",
+      "problem": "Le déclencheur stocké vaut 5,755 $ (plus haut du 9 octobre, au demi-centime), mais tout le texte publie « clôture au-dessus de 5,75 $ ». Une clôture à 5,75 $ exactement n'active pas le plan en lecture stricte, alors qu'un débutant lira « 5,75 $ ou plus ». Le flux certifié imprime aussi des clôtures au demi-centime (6,215 $ le 25 septembre) : une clôture affichée à 5,755 $ activerait le plan selon le texte, pas selon le niveau stocké. La règle d'annulation diverge : statusNote dit « annulé après une clôture sous 5,75 $ » (une clôture à 5,75 $ laisse l'ordre actif), entryNote dit « annulé après toute clôture sous le déclencheur » (5,755 $ : la même clôture l'annule). Le ladder rendu ajoute « Zone d'entrée $5.75 », qui invite à acheter à 5,75 $.",
+      "fix": "Publier le seuil au centime, 5,76 $, et garder entry = 5.755 pour le suivi. (1) statusNote : « Activation : clôture au-dessus de 5,75 $, au plus tard le 30 octobre » → « Activation : clôture à 5,76 $ ou plus (au-dessus du plus haut du 9 octobre, 5,755 $), au plus tard le 30 octobre » ; « annulé après une clôture sous 5,75 $ » → « annulé après une clôture sous 5,76 $ » (texte complet de statusNote au blocage 2). (2) entryNote, première phrase → « Déclencheur : une clôture à 5,76 $ ou plus, au-dessus du plus haut du 9 octobre (5,755 $) ; un franchissement en séance ne compte pas, une clôture à 5,75 $ non plus. » ; « annulé après toute clôture sous le déclencheur » → « abandonné après toute clôture sous 5,76 $ ». (3) verdict.summary, verdict.controlChecklist[2].action, technicals.setupNote, tradeIdea.horizon, tradeIdea.thesis, tradeIdea.catalysts[0], tradeIdea.invalidation[3], meta.ogDescription, blastRadius.scenarios[0].confirmation : « au-dessus de 5,75 $ » → « à 5,76 $ ou plus ». header.badges[0] → « SURVEILLER — CLÔTURE À 5,76 $ OU PLUS ». meta.statusHistory[0].note : « reprise de 5,75 $ » → « clôture à 5,76 $ ou plus ». blastRadius.scenarios[0].firstOrder : « Le titre reprend 5,75 $ » → « Le titre clôture à 5,76 $ ou plus ». technicals.setupNote : « puis 5,75 $ le 9 » → « puis 5,755 $ le 9 ». (4) Telegram : « Achat seulement après une clôture au-dessus de 5,75 $ » → « Achat seulement après une clôture à 5,76 $ ou plus ». Dans numeric-evidence, 5,76 $ se dérive comme le premier cours au centime strictement supérieur à 5,755 $."
+    },
+    {
+      "id": "AQ-RSK-003",
+      "where": "tradeIdea.statusNote ; tradeIdea.entryNote (« Plan de repli ») ; tradeIdea.invalidation[2] ; telegram-draft.html ligne 13",
+      "problem": "Entre la clôture d'activation et l'achat, l'ordre n'est pas exécutable tel qu'écrit. (a) La fiche veut un ordre limité « jamais laissé actif sur une ouverture sous 5,35 $ ». Or un ordre d'achat limité à 5,82 $ posé avant l'ouverture s'exécute dès l'ouverture, au prix du gap, avant que le lecteur puisse l'annuler. Il se retrouve acheteur sous son propre stop, ce que le plan interdit. (b) Le Telegram, que la plupart des lecteurs liront seul, donne un « ordre limité valable 3 séances » sans aucune condition d'annulation : ni clôture repassée sous le déclencheur, ni ouverture sous 5,35 $. Mesure sur bars.json : 11 ouvertures sur 250 ont sauté sous la clôture de la veille de plus de 0,41 $, et 1 des 25 cassures de plus haut de vingt séances a ouvert le lendemain sous le niveau de stop équivalent. Le cas est rare, mais le texte ne dit pas comment l'éviter.",
+      "fix": "(1) statusNote, texte complet : « Surveiller. Avant activation : aucune entrée ; une clôture sous 5,35 $ abandonne le scénario. Activation : clôture à 5,76 $ ou plus (au-dessus du plus haut du 9 octobre, 5,755 $), au plus tard le 30 octobre. Achat : pendant les trois séances suivantes au plus, jamais après le 2 novembre, attendre l'ouverture, puis passer un ordre limité à 5,82 $ valable pour la séance ; ne rien acheter sur une séance qui ouvre sous 5,35 $, et arrêter dès qu'une clôture repasse sous 5,76 $. Une fois acheté : ordre stop de vente juste sous 5,35 $, actif en séance. Position soldée à la clôture du 6 novembre, avant la publication du premier trimestre attendue vers la mi-novembre. Au close du 12 octobre, le titre est sous le déclencheur : le plan n'est pas activé. Pour qui détient déjà le titre : une clôture sous 5,35 $ ouvre le chemin du plus bas de 2026, à 4,42 $. » (2) entryNote : « Plan de repli : si l'ouverture dépasse le plafond, un ordre à cours limité à 5,82 $, valable trois séances, garde le même R/R et le même stop ; il est annulé après toute clôture sous le déclencheur et n'est pas laissé actif à l'ouverture d'une séance sous le stop. » → « Plan de repli : si l'ouverture dépasse le plafond, le même ordre limité à 5,82 $ est repassé après l'ouverture, séance par séance, trois séances au plus ; même R/R, même stop. Il n'est jamais posé avant l'ouverture, pour ne pas être exécuté sur un gap sous 5,35 $, et il est abandonné après toute clôture sous 5,76 $. » (3) invalidation[2] → « Ouverture au-dessus de 5,82 $ après la clôture de déclenchement : ne pas poursuivre le titre ; seul l'ordre limité à 5,82 $, repassé après l'ouverture, reste possible trois séances au plus. Ouverture sous 5,35 $ : aucun achat ce jour-là. » (4) Telegram, remplacer la puce « • Achat seulement après une clôture au-dessus de 5,75 $, au plus tard le 30 oct. Le lendemain, pas au-dessus de 5,82 $ (ordre limité valable 3 séances, aucun achat après le 2 nov.). » par « • Achat seulement après une clôture à 5,76 $ ou plus, au plus tard le 30 oct. Les 3 séances suivantes, jamais après le 2 nov. : attendre l'ouverture, puis ordre d'achat limité, prix maximum 5,82 $. Rien si le titre ouvre sous 5,35 $. On arrête dès qu'une clôture repasse sous 5,76 $. »"
+    }
+  ],
+  "minorFindings": [
+    {
+      "id": "AQ-RSK-003",
+      "where": "tradeIdea.entryNote (« Liquidité ») ; risks.riskCards[3].points[0]",
+      "problem": "1,81 M$ est juste : la médiane recalculée sur les vingt séances du 15 septembre au 12 octobre donne 1 808 267 $. Mais la fenêtre contient le choc des résultats (20,9 M$ le 24 septembre). Les cinq dernières séances vont de 0,76 à 1,79 M$, la médiane des dix dernières vaut 1,29 M$ et le 12 octobre n'a fait que 0,76 M$. « 460 893 actions en moyenne » est gonflé par les 2,88 et 1,57 millions d'actions des 24 et 25 septembre ; la médiane vaut 222 484 actions.",
+      "fix": "entryNote : « Liquidité : 1,81 M$ échangés par séance en médiane sur vingt séances ; » → « Liquidité : 1,81 M$ échangés par séance en médiane sur vingt séances, mais 1,29 M$ sur les dix dernières et 0,76 M$ le 12 octobre ; ». riskCards[3].points[0] → « Médiane de 1,81 M$ échangés par séance sur vingt séances, 1,29 M$ sur les dix dernières ; 222 484 actions en médiane (460 893 en moyenne, gonflée par les 2,88 millions d'actions du 24 septembre). »"
+    },
+    {
+      "id": "AQ-TEC-003",
+      "where": "tradeIdea.catalysts[0] ; blastRadius.scenarios[0].confirmation",
+      "problem": "Le seuil « volume supérieur à la moyenne de vingt séances (460 893 actions) » n'est pas une condition d'activation dans statusNote, mais un lecteur peut le croire. Il bougera aussi tout seul : les séances des 24 et 25 septembre sortent de la fenêtre de vingt séances les 22 et 23 octobre, et la moyenne affichée par un courtier baissera alors nettement.",
+      "fix": "catalysts[0] → « Une clôture à 5,76 $ ou plus sur plus de 222 000 actions, la médiane de vingt séances au 12 octobre. Ce volume n'est pas exigé pour activer le plan ; une reprise sur faible volume mérite seulement moins de confiance. » Même seuil chiffré dans blastRadius.scenarios[0].confirmation."
+    },
+    {
+      "id": "AQ-RSK-003",
+      "where": "tradeIdea.entryNote (« Exemple de taille ») ; telegram-draft.html, puce « Titre peu échangé »",
+      "problem": "L'arithmétique au plafond est juste : 100 / (5,82 − 5,3467) = 211 actions, 1 000 / 0,4733 = 2 112. Mais « 1415 après réduction d'un tiers » applique ×0,67 : retirer un tiers donne 1 408 (141 reste juste). Le montant investi n'apparaît nulle part. Le débutant à 2 000 € ne voit pas que 211 actions coûtent 1 228 $, une part majeure de son compte, ni que 100 $ de perte font déjà plus de 4 % de son capital. Pour l'expert, 2 112 actions valent 12 292 $ : environ 1 % du volume médian de vingt séances (222 484 actions) et 1,5 % de la séance du 12 octobre. C'est faisable par ordres limités, avec un risque d'exécution partielle. Avec 141 à 211 actions (821 à 1 228 $), l'impact sur le cours est négligeable ; le vrai coût est l'écart achat/vente, non mesuré.",
+      "fix": "Dernière phrase d'entryNote → « Exemple de taille, non personnalisé : avec un budget de perte de 100 $, le risque au plafond, 0,47 $ par action, donne 211 actions (1 228 $ investis) avant réduction, 141 (821 $) après réduction d'un tiers pour la liquidité ; avec 1 000 $, 2 112 actions (12 292 $) avant réduction, 1 408 (8 195 $) après, environ 1 % du volume médian d'une séance. Sur un petit compte, fixer d'abord le budget de perte en pourcentage du capital : 100 $, c'est déjà plus de 4 % d'un compte de 2 000 €. » Telegram : « 211 actions au plafond, 141 pour garder une marge » → « 211 actions au plafond (1 228 $), 141 (821 $) pour garder une marge »."
+    },
+    {
+      "id": "AQ-TEC-003",
+      "where": "tradeIdea.entryNote (« Premier frein ») ; telegram-draft.html, puce « Une fois acheté »",
+      "problem": "« y prendre une partie des gains ou remonter le stop au déclencheur » laisse le choix, et rien ne dit quelle part vendre à 6,54 $. Le débutant ne sait quoi faire ni à 6,28 $ ni au premier objectif.",
+      "fix": "« y prendre une partie des gains ou remonter le stop au déclencheur » → « à 6,28 $, remonter le stop à 5,75 $ ; à 6,54 $, vendre la moitié ; le reste vise 6,86 $ ou sort à la clôture du 6 novembre ». Telegram : « Objectifs 6,54 $ puis 6,86 $. » → « Vendre la moitié à 6,54 $, le reste à 6,86 $. »"
+    },
+    {
+      "id": "AQ-TEC-003",
+      "where": "tradeIdea.statusNote, tradeIdea.invalidation[1], tradeIdea.thesis ; ladder « Stop $5.35 »",
+      "problem": "« juste sous 5,35 $ » n'est pas un prix d'ordre, et le ladder affiche 5,35 $ (5,3467 arrondi). Un lecteur posera son stop à 5,35 $, un autre à 5,30 $.",
+      "fix": "« ordre stop de vente juste sous 5,35 $ » → « ordre stop de vente à 5,34 $, sous le plus bas du 30 mars (5,3467 $) », dans les trois champs. L'exemple de taille, calculé sur 5,3467 $, reste juste à trois actions près."
+    },
+    {
+      "id": "AQ-TEC-005",
+      "where": "tradeIdea.statusNote ; tradeIdea.catalysts[3] ; telegram-draft.html, puce « Tout vendre »",
+      "problem": "Le calendrier tient : vendredi 30 octobre, dernière activation ; lundi 2 novembre, dernier achat ; vendredi 6 novembre, sortie. Cela laisse au moins cinq séances de détention et une semaine de marge avant la mi-novembre (10-Q déposé le 14 novembre l'an dernier). Restent deux trous. (a) Rien n'est prévu si Trio-Tech annonce une date avant le 9 novembre. (b) Teradyne (21 octobre) et Amkor (26 octobre) tombent dans la fenêtre et sont présentés comme catalyseurs, alors qu'ils peuvent aussi faire baisser le titre. La corrélation mesurée (0,33 et 0,31, R² proche de 0,1) limite la transmission, et le stop reste en place.",
+      "fix": "statusNote, après « Position soldée à la clôture du 6 novembre » : ajouter « , ou la veille de la publication si Trio-Tech annonce une date plus proche ». catalysts[3] → « Les résultats de Teradyne le 21 octobre et d'Amkor le 26 octobre, lecture du cycle du test dans un sens comme dans l'autre ; pas de sortie imposée, l'ordre stop reste en place. » Telegram : « Tout vendre à la clôture du 6 nov. » → « Tout vendre à la clôture du 6 nov., ou la veille des résultats si leur date tombe plus tôt. »"
+    },
+    {
+      "id": "AQ-TEC-003",
+      "where": "tradeIdea.horizon",
+      "problem": "« Cinq à quinze séances après activation » : une activation dès la clôture du 13 octobre donne 18 séances jusqu'au 6 novembre. Le lecteur ne sait pas si la quinzième séance vaut sortie.",
+      "fix": "« Cinq à quinze séances après activation, au plus tard jusqu'à la clôture du 6 novembre » → « Durée indicative de cinq à quinze séances ; la seule sortie de calendrier obligatoire est la clôture du 6 novembre »."
+    },
+    {
+      "id": "AQ-QA-001",
+      "where": "telegram-draft.html ; tradeIdea.statusNote (dernière phrase)",
+      "problem": "Le Telegram se lit bien pour un adulte débutant, pas encore pour un enfant de 10 ans : « stop », « trésorerie nette », « marge brute » et « 0,57 fois son chiffre d'affaires (dette comprise, trésorerie déduite) » ne sont pas expliqués. La puce « Déjà actionnaire » décrit un risque sans dire ce qu'il change.",
+      "fix": "« La marge brute tombe de 25 à 17 % » → « Sur 100 $ de ventes, il reste 17 $ après le coût direct, contre 25 $ un an plus tôt » ; « l'entreprise vaut 0,57 fois son chiffre d'affaires (dette comprise, trésorerie déduite) » → « la Bourse paie l'entreprise, sans compter sa trésorerie, 0,57 fois ses ventes d'un an » ; « stop sous 5,35 $ » → « ordre de vente automatique (stop) sous 5,35 $ » ; « Déjà actionnaire : une clôture sous 5,35 $ ouvre la voie au plus bas de 2026 (4,42 $). » → « Déjà actionnaire : une clôture sous 5,35 $ casse le dernier appui ; le suivant est le plus bas de 2026, 4,42 $, 17 % plus bas. » Même dernière phrase dans statusNote."
+    },
+    {
+      "id": "AQ-QA-001",
+      "where": "Rendu du gabarit : ladder et hero (tools/render-analysis.js, carte d'entrée `$${t.entry.toFixed(2)}`)",
+      "problem": "Le ladder affiche « Zone d'entrée $5.75 » : en JavaScript, (5.755).toFixed(2) donne 5.75. Le libellé « Zone d'entrée » suggère un achat à 5,75 $, alors que l'entrée suit une clôture au-dessus de 5,755 $ et se fait jusqu'à 5,82 $. Les formats restent anglais (« $5.48 », « -7.1% », « 1:1.92 ») et le prix du hero n'a pas de date propre.",
+      "fix": "Gabarit, statut « watch » : libeller la carte « Déclencheur (clôture) » et afficher « ≥ 5,76 $ », ou la valeur à trois décimales quand elle n'est pas au centime ; montants au format français ; mention « clôture du 12 oct. » sous le prix du hero."
+    },
+    {
+      "id": "AQ-EDT-003",
+      "where": "news[4].detail ; tradeIdea.entryNote ; risks.riskSummary",
+      "problem": "« l'acheteur a payé −42 % de moins que la clôture du jour » cumule le signe moins et « de moins ». « 2112 » et « 1415 » n'ont pas d'espace des milliers. « Le risque de Trio-Tech tient en une ligne : » est une formule d'annonce.",
+      "fix": "« a payé −42 % de moins que la clôture du jour » → « a payé 42 % de moins que la clôture du jour (16,52 $) » ; « 2112 » → « 2 112 » ; « 1415 » → « 1 408 » (voir la taille) ; « Le risque de Trio-Tech tient en une ligne : un client non nommé fait 38,7 % des ventes » → « Un client non nommé fait 38,7 % des ventes »."
+    },
+    {
+      "id": "AQ-VRD-001",
+      "where": "tradeIdea.entryNote ; tradeIdea.statusNote",
+      "problem": "entryNote fait 1 887 caractères d'un seul bloc et statusNote tient en une phrase de six propositions : le débutant décroche avant d'arriver à la taille et au gap.",
+      "fix": "Découper entryNote en cinq paragraphes titrés : Déclencheur, Achat, Après achat, Taille, Risques d'exécution. La réécriture de statusNote proposée au blocage 2 sépare déjà les étapes."
+    },
+    {
+      "id": "AQ-SEC-005",
+      "where": "filingsReview.filings[0] (10-K)",
+      "problem": "La fiche ne dit rien de la continuité d'exploitation ni du contrôle interne. Elle ne tire aucune conclusion du silence, donc pas de blocage, mais le rançongiciel de mars rend la question pertinente.",
+      "fix": "Ajouter au constat du 10-K la conclusion de l'item 9A sur l'efficacité du contrôle interne, citée depuis le texte déposé."
+    }
+  ],
+  "checks": [
+    {
+      "id": "AQ-VRD-001",
+      "status": "PASS",
+      "rationale": "Le résumé nomme Trio-Tech et son métier (test de fiabilité et déverminage de puces en Asie du Sud-Est, équipements de test), le catalyseur (résultats du 24 septembre, −36,6 % sur la séance), la contradiction (+72 % de ventes, marge brute de 25 à 17 %, un client à 38,7 %) et l'action : aucune entrée avant le déclencheur. meta.description suffit à un débutant pour comprendre « surveiller, sans entrée » en moins de deux minutes.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/verdict/summary", "data/analyses-data/TRT.json#/meta/description"]
+    },
+    {
+      "id": "AQ-VRD-002",
+      "status": "PASS",
+      "rationale": "Faits propres au titre : 62,6 M$ (+72 %), 38,7 % pour un client, marge brute de 17 % contre 25 %, perte opérationnelle de 204 000 $, bail de 1,4 M$ par an. Lien causal explicite : les volumes du client d'intelligence artificielle sont facturés à faible marge, donc la croissance ne rapporte rien.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/verdict/summary", "data/analyses-data/TRT.json#/tradeIdea/thesis"]
+    },
+    {
+      "id": "AQ-VRD-003",
+      "status": "PASS",
+      "rationale": "La note C (score additif de 40, non prédictif) est justifiée dans verdict.confidence par la croissance, la trésorerie, le capital et la dilution. L'état « surveiller » est justifié à part par la structure de cours (RSI 25, sous les trois moyennes, plan non activé au 12 octobre).",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/verdict/confidence", "data/analyses-data/TRT.json#/verdict/controlChecklist/2", "data/analyses-data/TRT.json#/tradeIdea/statusNote"]
+    },
+    {
+      "id": "AQ-VRD-004",
+      "status": "PASS",
+      "rationale": "Les cinq « Pourquoi acheter » sont favorables (croissance, carnet, contrats, trésorerie nette, multiple de ventes conditionné à la marge). Les cinq « Pourquoi éviter » sont défavorables (concentration, marge, recul du T4, ventes d'initiés, liquidité). Aucun chiffre négatif n'est présenté comme positif.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/verdict/whyBuy", "data/analyses-data/TRT.json#/verdict/whyAvoid"]
+    },
+    {
+      "id": "AQ-BIZ-001",
+      "status": "PASS",
+      "rationale": "business.overview explique le service (déverminage, tests électriques et système), qui paie (fabricants de puces, dont un client américain d'intelligence artificielle), le modèle (prestations, cartes et équipements, distribution), les coûts (bail de Penang à 115 000 $ par mois, marge de 17 %) et la place dans la chaîne (sous-traitant du test, face à ASE et Amkor).",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/business/overview", "data/analyses-data/TRT.json#/business/moat"]
+    },
+    {
+      "id": "AQ-BIZ-002",
+      "status": "PASS",
+      "rationale": "SBS à 49,0 M$ (78,3 %), électronique industrielle à 13,6 M$ (21,6 %), immobilier en Chine marginal. Le segment moteur et son résultat opérationnel (403 000 $) sont identifiés.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/business/segments", "data/analyses-data/TRT.json#/fundamentals/rows/2"]
+    },
+    {
+      "id": "AQ-BIZ-003",
+      "status": "PASS",
+      "rationale": "La fiche utilise les indicateurs d'un sous-traitant du test : carnet de commandes, résultat de segment, concentration clients, créance sur le premier client, contrats pluriannuels de déverminage. Le multiple de ventes est recoupé par l'EV/EBITDA.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/fundamentals/rows", "data/analyses-data/TRT.json#/risks/riskCards/0"]
+    },
+    {
+      "id": "AQ-EAR-001",
+      "status": "PASS",
+      "rationale": "Exercice clos le 30 juin 2026 ; communiqué du 24 septembre (8-K, 0001437749-26-031125) et 10-K du même jour (0001437749-26-031124), avec liens EDGAR directs.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/earnings/beatNote", "data/analyses-data/TRT.json#/filingsReview/filings/0", "data/analyses-data/TRT.json#/filingsReview/filings/1"]
+    },
+    {
+      "id": "AQ-EAR-002",
+      "status": "PASS",
+      "rationale": "Chiffre d'affaires de 62,6 M$ (+72 %), T4 à 14,9 M$ (+40 % sur un an, −9,7 % sur le T3), perte opérationnelle de 204 000 $, perte nette de 34 000 $, marge brute, flux opérationnel de 3,4 M$, carnet de 24,2 M$.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/earnings/beatNote", "data/analyses-data/TRT.json#/fundamentals/rows"]
+    },
+    {
+      "id": "AQ-EAR-003",
+      "status": "PASS",
+      "rationale": "L'absence de prévision chiffrée est sourcée au communiqué. Seuls le calendrier qualitatif (volumes à partir d'octobre-décembre) et les 7,9 M$ de cartes à livrer sont repris.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/earnings/beatNote", "data/analyses-data/TRT.json#/business/coverageMatrix/1"]
+    },
+    {
+      "id": "AQ-EAR-004",
+      "status": "PASS",
+      "rationale": "Le 10-K (clients, segment, options, plafond d'actions, emprunts) et l'Exhibit 99.1 (marge du T4, carnet, perspectives) nourrissent le récit et le plan.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/filingsReview/filings/0", "data/analyses-data/TRT.json#/filingsReview/filings/1"]
+    },
+    {
+      "id": "AQ-EAR-005",
+      "status": "PASS",
+      "rationale": "La date du premier trimestre de l'exercice 2027 est explicitement non confirmée par l'émetteur. Repère : 10-Q déposé le 14 novembre l'an dernier. Sortie fixée au 6 novembre. Mineur : aucune règle si la société annonce une date plus proche.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/earnings/nextEarnings", "data/analyses-data/TRT.json#/earnings/beatNote"]
+    },
+    {
+      "id": "AQ-VAL-001",
+      "status": "PASS",
+      "rationale": "EV/ventes de 0,57×, EV/EBITDA de 17,0×, cours sur actif net de 1,27×, et un scénario de multiple (9× l'EBITDA, puis marge revenue à 25 %).",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/fundamentals/rows/15", "data/analyses-data/TRT.json#/fundamentals/rows/16", "data/analyses-data/TRT.json#/fundamentals/rows/18"]
+    },
+    {
+      "id": "AQ-VAL-002",
+      "status": "PASS",
+      "rationale": "Valeur d'entreprise à la clôture du 12 octobre, dénominateurs GAAP de l'exercice clos le 30 juin 2026 ; pairs signalés « non point-in-time ».",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/fundamentals/rows/15/comparison", "data/analyses-data/TRT.json#/fundamentals/rows/16/comparison"]
+    },
+    {
+      "id": "AQ-VAL-003",
+      "status": "PASS",
+      "rationale": "inTEST, Amkor, Amtech et Kulicke & Soffa en EV/ventes et en EV/EBITDA. La fiche dit ce qu'il faut pour justifier le cours (marge brute revenue vers 25 %) et que le titre est plus cher qu'Amkor sur l'EBITDA.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/fundamentals/rows/18/comparison", "data/analyses-data/TRT.json#/filingsReview/contrarianRisks/3"]
+    },
+    {
+      "id": "AQ-SEC-001",
+      "status": "PASS",
+      "rationale": "10-K du 24 septembre 2026, accession 0001437749-26-031124, URL directe, constat chiffré (10 384 698 actions, 57,6 % pour trois clients, 403 milliers de dollars de résultat SBS).",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/filingsReview/filings/0"]
+    },
+    {
+      "id": "AQ-SEC-002",
+      "status": "PASS",
+      "rationale": "Placement direct d'avril : actions ordinaires, 1 052 632 titres à 9,50 $, 10 M$ bruts, D. Boral Capital à 4,5 %, clos. S-3 de 50 M$ efficace le 16 décembre 2025, 10 M$ utilisés, plafond d'un tiers du flottant.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/filingsReview/filings/3", "data/analyses-data/TRT.json#/filingsReview/filings/4", "data/analyses-data/TRT.json#/filingsReview/filings/5"]
+    },
+    {
+      "id": "AQ-SEC-003",
+      "status": "PASS",
+      "rationale": "La déclaration d'enregistrement universelle, le placement primaire, les options des dirigeants et les ventes d'administrateurs sont distingués ; l'absence de programme « at-the-market » repose sur l'inventaire des dépôts et sur la lecture du S-3 et du 424B5.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/capitalStructure", "data/analyses-data/TRT.json#/filingsReview/summary"]
+    },
+    {
+      "id": "AQ-SEC-004",
+      "status": "PASS",
+      "rationale": "10 384 698 actions au 1er septembre, 11 695 973 en dilué avec 1 311 275 options (2,25 à 6,92 $), 15 000 000 autorisées ; la capitalisation de 56,9 M$ est cohérente avec 5,48 $.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/capitalStructure/shareHistory", "data/analyses-data/TRT.json#/capitalStructure/sharesAuthorized"]
+    },
+    {
+      "id": "AQ-SEC-005",
+      "status": "PASS",
+      "rationale": "La fiche ne tire du silence aucune conclusion sur la continuité d'exploitation ni sur une faiblesse matérielle : elle n'en affirme aucune. Mineur : citer la conclusion de l'item 9A du 10-K, utile après le rançongiciel de mars.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/filingsReview/filings/0", "data/analyses-data/TRT.json#/filingsReview/filings/6"]
+    },
+    {
+      "id": "AQ-SEC-006",
+      "status": "PASS",
+      "rationale": "Seize pièces ouvertes sur 32 formulaires inventoriés ; le tableau en liste seize ; la matrice de couverture cite deux 13D/A et deux 13G/A, tous présents.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/filingsReview/summary", "data/analyses-data/TRT.json#/filingsReview/filings", "data/analyses-data/TRT.json#/business/coverageMatrix/4"]
+    },
+    {
+      "id": "AQ-TEC-001",
+      "status": "PASS",
+      "rationale": "La clôture de référence est datée (12 octobre, séance complète) dans setupNote, statusNote et le bloc macro ; aucune cotation intrajournalière n'est utilisée. Mineur de gabarit : le prix du hero « $5.48 -3.35% » n'a pas de date propre.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/technicals/setupNote", "data/analyses-data/TRT.json#/macro/indicators/0", "analyses/TRT/_data/bars.json"]
+    },
+    {
+      "id": "AQ-TEC-002",
+      "status": "PASS",
+      "rationale": "Supports 5,45 $ (bas du 12 octobre), 5,3467 $ (bas du 30 mars), 4,42 $ (bas du 24 février) ; résistances 6,2826, 6,54 et 6,86 $ (hauts des 6 octobre, 1er octobre et 29 septembre). Tous retrouvés dans bars.json.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/technicals/supports", "data/analyses-data/TRT.json#/technicals/resistances", "analyses/TRT/_data/bars.json"]
+    },
+    {
+      "id": "AQ-TEC-003",
+      "status": "BLOCK",
+      "rationale": "Chaque niveau a sa raison (plus haut du 9 octobre, plus bas du 30 mars, hauts du 1er octobre et du 29 septembre). Le stop, à 0,41 à 0,47 $ de l'entrée, dépasse les amplitudes réelles des cinq dernières séances (0,17 à 0,42 $) ; l'ATR de 0,65 $ contient encore le choc. Mais la condition de confirmation n'est pas univoque : déclencheur stocké à 5,755 $, publié « au-dessus de 5,75 $ », ladder « Zone d'entrée $5.75 », et deux seuils d'annulation différents (5,75 $ dans statusNote, 5,755 $ dans entryNote). Voir le blocage 1.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/tradeIdea/entry", "data/analyses-data/TRT.json#/tradeIdea/statusNote", "data/analyses-data/TRT.json#/tradeIdea/entryNote", "analyses/TRT/_runs/20261013/preview/index.html", "analyses/TRT/_data/bars.json"]
+    },
+    {
+      "id": "AQ-TEC-004",
+      "status": "PASS",
+      "rationale": "Recalculé : (6,54 − 5,755) / (5,755 − 5,3467) = 1,92 ; (6,86 − 5,755) / 0,4083 = 2,71 ; au plafond de 5,82 $, 0,72 / 0,4733 = 1,52 et 1,04 / 0,4733 = 2,20. Les −7,1 %, +13,6 % et +19,2 % sont exacts depuis 5,755 $. Aucun multiple fixe : les objectifs sont des plus hauts datés.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/tradeIdea/rr", "data/analyses-data/TRT.json#/tradeIdea/stopPct", "data/analyses-data/TRT.json#/tradeIdea/tp1Pct", "data/analyses-data/TRT.json#/tradeIdea/tp2Pct"]
+    },
+    {
+      "id": "AQ-TEC-005",
+      "status": "PASS",
+      "rationale": "Le veto résultats est appliqué : dernière activation le 30 octobre, aucun achat après le 2 novembre, sortie à la clôture du 6 novembre, avant une publication attendue vers la mi-novembre (14 novembre l'an dernier). L'absence de barres intrajournalières et d'écart achat/vente mesuré est déclarée, et les ordres limités sont imposés.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/tradeIdea/statusNote", "data/analyses-data/TRT.json#/earnings/nextEarnings", "data/analyses-data/TRT.json#/blastRadius/missingData"]
+    },
+    {
+      "id": "AQ-RSK-001",
+      "status": "PASS",
+      "rationale": "Mécanisme, preuve et signal sont présents pour chaque risque. Concentration client : 24,2 M$, 38,7 %, créance de 3,0 M$ ; signal, chaque trimestre ou une baisse annoncée des volumes. Marge et bail : 17 %, 1,4 M$ par an ; signal, la marge du T1. Capital et initiés : S-3 ouverte, ventes de mai ; signal, un 8-K d'émission. Liquidité et gaps : 17 gaps d'au moins 5 % sur 250 séances.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/risks/riskCards", "data/analyses-data/TRT.json#/tradeIdea/invalidation/4"]
+    },
+    {
+      "id": "AQ-RSK-002",
+      "status": "PASS",
+      "rationale": "contrarianRisks est chiffré : EV/EBITDA de 17,0× contre 9,2× pour Amkor, scénario à 3,86 $ par action, retour vers 36,5 M$ de chiffre d'affaires si le client part, ventes d'initiés entre 13,97 et 18,76 $.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/filingsReview/contrarianRisks", "data/analyses-data/TRT.json#/fundamentals/rows/18"]
+    },
+    {
+      "id": "AQ-RSK-003",
+      "status": "BLOCK",
+      "rationale": "Gap, liquidité, glissement, taille et non-poursuite sont traités avec des chiffres justes : 11 gaps de plus de 0,41 $ sous la veille, pire de −14,0 % le 27 avril, médiane de 1,81 M$ recalculée à 1 808 267 $, 211 et 141 actions. La fiche interdit clairement d'acheter la baisse et de poursuivre au-dessus de 5,82 $. La taille est réaliste : 141 à 211 actions (821 à 1 228 $) pèsent moins de 0,1 % du volume médian, et 2 112 actions (12 292 $) environ 1 % de celui de vingt séances, 1,5 % de la séance du 12 octobre. Mais l'ordre d'achat entre l'activation et l'exécution ne peut pas être tenu tel qu'écrit, et le Telegram omet ses conditions d'annulation. Voir le blocage 2.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/tradeIdea/entryNote", "data/analyses-data/TRT.json#/tradeIdea/invalidation/2", "analyses/TRT/_runs/20261013/revision/telegram-draft.html", "analyses/TRT/_data/bars.json"]
+    },
+    {
+      "id": "AQ-SRC-001",
+      "status": "PASS",
+      "rationale": "Activité, résultats et capital renvoient au 10-K, aux 8-K et au 424B5. Technique et liquidité renvoient au sidecar de données de marché datées. Les contrats automobiles renvoient au communiqué Business Wire daté, l'absence de 8-K étant dite.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/business/sourceRefs", "data/analyses-data/TRT.json#/technicals/sourceRefs", "data/analyses-data/TRT.json#/blastRadius/missingData"]
+    },
+    {
+      "id": "AQ-SRC-002",
+      "status": "PASS",
+      "rationale": "Liens EDGAR directs avec date et numéro d'accession pour les seize pièces. Le sidecar est lié au hash de la fiche (analysis_sha256 identique).",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/filingsReview/filings", "data/analyses-evidence/TRT.json#/analysis_sha256"]
+    },
+    {
+      "id": "AQ-SRC-003",
+      "status": "PASS",
+      "rationale": "Aucun consensus (aucun analyste, c'est dit) ; options déclarées non servies ; initiés sourcés aux formulaires 4 et aux 13D/A. Les positions vendeuses sont attribuées au fournisseur, signalées comme instantané non daté et ne servent pas au plan.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/shortInterest", "data/analyses-data/TRT.json#/insiders/signal", "data/analyses-data/TRT.json#/options"]
+    },
+    {
+      "id": "AQ-EDT-001",
+      "status": "PASS",
+      "rationale": "La publication ne compte qu'une fiche, il n'y a donc pas de répétition entre fiches à mesurer. Les phrases du plan sont propres à TRT (niveaux, dates, client). statusNote apparaît deux fois sur la page, mais c'est le gabarit qui le rend dans le verdict et dans le plan.",
+      "evidenceRefs": ["analyses/TRT/_runs/20261013/preview/index.html"]
+    },
+    {
+      "id": "AQ-EDT-002",
+      "status": "PASS",
+      "rationale": "Verdict, risques, catalyseurs et invalidations citent Penang, le client à 38,7 %, le placement à 9,50 $, Teradyne et Amkor : rien n'est transposable tel quel à un autre titre.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/risks/riskSummary", "data/analyses-data/TRT.json#/tradeIdea/catalysts", "data/analyses-data/TRT.json#/tradeIdea/invalidation"]
+    },
+    {
+      "id": "AQ-EDT-003",
+      "status": "PASS",
+      "rationale": "Les limites sont précises : client non nommé, options non servies, aucun analyste, aucune barre intrajournalière donc aucun écart achat/vente mesuré, positions vendeuses non historisées, date de résultats non confirmée, pairs non point-in-time.",
+      "evidenceRefs": ["data/analyses-data/TRT.json#/blastRadius/missingData", "data/analyses-data/TRT.json#/business/coverageMatrix/5"]
+    },
+    {
+      "id": "AQ-QA-001",
+      "status": "BLOCK",
+      "rationale": "Hashes vérifiés, sidecar lié à la fiche, check-ai-tells --strict sans alerte sur la page (8 880 mots) comme sur le Telegram, html lang=\"fr\" et data-tab=\"analyses\" présents. La revue retail war room ne passe pas tant que les blocages 1 et 2 ne sont pas corrigés dans la fiche et dans le Telegram.",
+      "evidenceRefs": ["analyses/TRT/_runs/20261013/preview/index.html", "analyses/TRT/_runs/20261013/revision/telegram-draft.html"]
+    },
+    {
+      "id": "AQ-QA-002",
+      "status": "PASS",
+      "rationale": "Ce rapport rend BLOCK pour TRT, avec un texte de remplacement exact pour chacun des deux blocages.",
+      "evidenceRefs": ["analyses/TRT/_runs/20261013/revision/review-retail_war_room.json"]
+    },
+    {
+      "id": "AQ-QA-003",
+      "status": "PASS",
+      "rationale": "Score éditorial de 85/100. Il ne vaut publication qu'après la levée des deux blocages.",
+      "evidenceRefs": ["analyses/TRT/_runs/20261013/revision/review-retail_war_room.json"]
+    }
+  ],
+  "telegramReview": {
+    "status": "BLOCK",
+    "findings": [
+      "Blocage 1 : « clôture au-dessus de 5,75 $ » → « clôture à 5,76 $ ou plus ». Le niveau stocké est 5,755 $ ; une clôture à 5,75 $ ne doit pas activer le plan.",
+      "Blocage 2 : remplacer la puce d'achat par « • Achat seulement après une clôture à 5,76 $ ou plus, au plus tard le 30 oct. Les 3 séances suivantes, jamais après le 2 nov. : attendre l'ouverture, puis ordre d'achat limité, prix maximum 5,82 $. Rien si le titre ouvre sous 5,35 $. On arrête dès qu'une clôture repasse sous 5,76 $. » Sans ces conditions, un ordre posé pour trois séances peut s'exécuter sous le stop sur un gap.",
+      "Conforme sur le reste : en français, HTML Telegram valide (6 <b>, 1 <a>), 2 268 octets, aucun terme interne, check-ai-tells --strict sans alerte. Tous les chiffres sont identiques à la fiche : 5,48 $, −36,6 %, −52 %, 62,6 M$, 38,7 %, 24,2 et 11,0 M$, 0,57×, 2,06 $, 3,03 M$, 21,38 $, 211 et 141 actions, 6,54 et 6,86 $, 6 nov., 4,42 $. Contexte, faits, action et invalidation sont présents ; le message sera autosuffisant une fois les deux blocages levés.",
+      "Mineurs, sans bloquer : lisibilité pour un enfant de 10 ans (marge brute, trésorerie nette, stop, multiple de ventes), puce « Déjà actionnaire » qui ne dit pas quoi faire, montant investi absent de l'exemple de taille, objectifs sans répartition des ventes, sortie anticipée si la date de résultats tombe avant le 6 nov. Les textes de remplacement sont dans minorFindings."
+    ]
+  }
+}

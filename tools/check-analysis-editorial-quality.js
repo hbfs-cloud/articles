@@ -23,7 +23,8 @@ const words = value => strip(value).split(/\s+/).filter(Boolean);
 const hasNumber = value => /(?:\$|\d[\d,.]*\s?(?:%|x|M|B|bn|million|billion)?)/i.test(strip(value));
 const mentionsLevel = (value, level) => {
   if (!Number.isFinite(level)) return false;
-  const candidates = [level.toFixed(2), level.toFixed(4).replace(/0+$/, '').replace(/\.$/, ''), String(level)];
+  // Les fiches françaises écrivent la virgule décimale (« 5,75 $ ») : les deux notations sont acceptées.
+  const candidates = [level.toFixed(2), level.toFixed(4).replace(/0+$/, '').replace(/\.$/, ''), String(level)].flatMap(x => [x, x.replace('.', ',')]);
   return candidates.some(x => strip(value).includes(x));
 };
 const tokenSet = value => new Set(words(value.toLowerCase()).filter(x => x.length > 4));

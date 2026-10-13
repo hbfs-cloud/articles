@@ -1,0 +1,406 @@
+{
+  "role": "senior_qa",
+  "reviewerId": "trt-senior-qa-claude-main-5",
+  "reviewerName": "Claude (agent principal, revue Senior QA de convergence, tour 5)",
+  "analysisSha256": "a303ec79df436a1f7c9ded12178439a23e6bc8c4511df2108d81405bbcd496ee",
+  "evidenceSha256": "4f8428fb0bc3c3ad120d718c039a278f3f1de723e51835fd60b21ab3306f2d53",
+  "status": "PASS",
+  "score": 88,
+  "blockingFindings": [],
+  "minorFindings": [
+    {
+      "id": "AQ-TEC-004",
+      "where": "rendu (échelle de prix « Stop $5.35 -7.1% ») ; tradeIdea.stop (5,3467), tradeIdea.stopPct ; numeric-evidence.json#/levels/sizeExample",
+      "problem": "Défaut connu du gabarit commun, inchangé : la case Stop affiche le niveau d’abandon (5,35 $, −7,1 %) et non l’ordre (5,34 $, −7,2 %), que le texte donne pourtant partout ; levels.sizeExample vaut 211 (base 5,3467 $) quand la fiche publie 208 (base 5,34 $). Le R/R publié sur les deux bases est exact.",
+      "fix": "build-trt.cjs, objet tradeIdea : publier stop: stopOrd (5,34) et stopPct: pct(stopOrd, entry).toFixed(1) + '%' (−7,2 %), en gardant usd(stop) pour l’abandon à 5,35 $ ; ou, côté gabarit, sous-titrer la carte « Ordre stop 5,34 $ — plus bas du 30 mars 5,35 $ » ; régénérer levels.sizeExample = 208.",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-EDT-003",
+      "where": "fundamentals.rows[15].comparison (« Trio-Tech à 0,51× vs ses pairs du secteur ») ; blastRadius.missingData[5] (« non point-in-time », rendu) ; limitations[2] du générateur",
+      "problem": "Anglicismes résiduels : « close certifié », « taux bas » et rows[16] sont corrigés, mais « vs » et « non point-in-time » restent, dont un dans la page rendue.",
+      "fix": "rows[15] : « Trio-Tech à 0,51× vs ses pairs du secteur, statistiques courantes relevées en instantané : » → « Trio-Tech à 0,51× face à ses pairs du secteur (statistiques courantes, relevées en instantané) : » ; missingData[5] : « Statistiques des pairs relevées en instantané, non point-in-time ; » → « Statistiques des pairs relevées en instantané, sans historique daté ; » ; limitations[2] : « non point-in-time » → « relevées en instantané ».",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-QA-001",
+      "where": "rendu (tools/render-analysis.js) : en-tête « $5.48 -3.35% », échelle « Zone d’entrée $5.755 », « Objectif 1 $6.54 +13.6% », « 1:1.92 », « −45,74 % », dates ISO (« 2026-09-24 », « 2026-10-12 », « 2026-09-11 → 2026-10-12 »), « Décision: attendre »",
+      "problem": "Défauts connus du gabarit commun, inchangés depuis le tour 2 : formats anglais des nombres, dates ISO, « Décision: » sans espace, carte « Zone d’entrée » pour un plan en surveillance (le badge et le texte voisin corrigent la lecture), cours du 12 octobre affiché sous la date éditoriale du 13.",
+      "fix": "Hors fiche : dans tools/render-analysis.js, format français des nombres et des dates, espace avant « : », et en statut « watch » carte d’entrée « Déclencheur (clôture) ≥ 5,76 $ » et mention « clôture du 12 oct. » sous le prix, pour toutes les fiches.",
+      "severity": "minor"
+    }
+  ],
+  "checks": [
+    {
+      "id": "AQ-VRD-001",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Le verdict nomme Trio-Tech et son métier (test de fiabilité de puces en Asie du Sud-Est, équipements de test), le catalyseur (résultats du 24 septembre, −36,6 % en séance), la contradiction (+72 % de ventes, marge brute de 25 à 17 %, un client à 38,7 %, test final lancé sans investissement) et l’action (aucune entrée avant une clôture à 5,76 $ ou plus). Mineur du contradicteur levé : « ventes d’administrateurs juste après le sommet de mai » (ventes entre 13,97 et 18,76 $ du 18 au 26 mai, plus haut de 21,38 $ le 15 mai).",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#verdict.summary",
+        "analyses/TRT/_primary/text/sep24-ex991.htm.txt",
+        "analyses/TRT/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-VRD-002",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Chiffres refaits : 62 605 / 36 473 k$ = +71,6 % ; 24 222 k$ = 38,7 % ; 10 417 / 62 605 = 16,6 % contre 25,1 % ; −204 k$ ; 115 k$ × 12 = 1,38 M$ ; 7,26 / 11,45 − 1 = −36,6 % ; VE/CA (56,908 − 25,277) / 62,605 = 0,505. Lien causal sourcé (test final sans investissement, donc marge plus faible, 10-K).",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#verdict.summary",
+        "analyses/TRT/_primary/text/fy26-10k.htm.txt",
+        "analyses/TRT/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-VRD-003",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Note C, score 40 = 12 − 14 − 5 − 3 − 5 + 55 (score_components), distincte de l’état du plan (surveiller, déclencheur 5,755 $ publié au centime à 5,76 $, non atteint à la clôture de 5,48 $).",
+      "evidenceRefs": [
+        "analyses/TRT/_runs/20261013/revision/numeric-evidence.json#score_components",
+        "data/analyses-data/TRT.json#tradeIdea.statusNote"
+      ]
+    },
+    {
+      "id": "AQ-VRD-004",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. whyBuy[4] corrigé (« même à la marge plus basse que prévoit le 10-K ») et complété par le point de départ demandé par le contradicteur, refait : (56 908 − 25 277) k$ / 9 = 3 514,6 k$, moins 2 087 k$ d’EBITDA de l’exercice = 1 427,6 k$, publié « 1,4 M$ » ; 9 000 000 / 10 384 698 = 0,867 $ par million d’EBITDA. Cohérent avec fundamentals.rows[18] (3,5 M$, +68 %). Le point reste un argument d’achat dont la limite est chiffrée ; les cinq raisons d’éviter restent négatives.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#verdict.whyBuy[4]",
+        "data/analyses-data/TRT.json#fundamentals.rows[18]",
+        "analyses/TRT/_runs/20261013/revision/numeric-evidence.json#valuation_scenario"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-001",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Produit, client, modèle, coûts et place dans la chaîne expliqués ; cause de la marge basse tirée du 10-K ; marge brute en dollars +14 % (10 417 contre 9 144 k$) ; frais généraux +1,5 M$ sourcés. Mineur du tour 3 levé : « à mesure que ce service pèse davantage ».",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#business.overview",
+        "analyses/TRT/_primary/text/fy26-10k.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-002",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Segments conformes au 10-K : SBS 49 018 k$ (78,3 %), IE 13 554 k$ (21,6 %), autres 33 k$ ; résultat opérationnel SBS de 403 k$ contre 411 k$.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#business.segments",
+        "analyses/TRT/_primary/text/fy26-10k.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-003",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Indicateurs du métier : carnet de 24,2 M$ (SBS 19,8), concentration (trois clients à 57,6 %, créance de 22,2 %), résultat de segment, 7,9 M$ de cartes à livrer, 4,6 M$ de commandes IE, VE/EBITDA plutôt que PER, marges d’EBITDA implicites des pairs.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#fundamentals.rows",
+        "analyses/TRT/_primary/text/sep24-ex991.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-EAR-001",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Exercice clos le 30 juin 2026, communiqué et 10-K du 24 septembre (0001437749-26-031125 et -031124), dates vérifiées dans submissions.json.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#earnings.beatNote",
+        "analyses/TRT/_primary/submissions.json"
+      ]
+    },
+    {
+      "id": "AQ-EAR-002",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Chiffre d’affaires, croissance, perte nette de 34 k$, marge de 17 %, flux opérationnel de 3 427 k$, flux libre de 1 686 k$, quatrième trimestre (14 931 k$, marge de 19 %, perte nette de 199 k$, −9,6 % en séquentiel).",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#fundamentals.rows[3]",
+        "analyses/TRT/_primary/text/sep24-ex991.htm.txt",
+        "analyses/TRT/_primary/text/may14-ex991.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-EAR-003",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Mineurs du tour 3 et du contradicteur levés : keyTakeawaysNegative[1] (« le 10-K prévoit que celle du test reste sous ses niveaux passés, en partie compensée par les volumes »), filingsReview.summary (« une marge brute du groupe à 17 % et une marge du test que la direction voit rester sous ses niveaux passés ») et business.overview (« à mesure que ») suivent désormais le 10-K, qui vise la marge du segment SBS. Absence de prévision chiffrée sourcée.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#globalScore.keyTakeawaysNegative[1]",
+        "data/analyses-data/TRT.json#filingsReview.summary",
+        "analyses/TRT/_primary/text/fy26-10k.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-EAR-004",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Communiqué du 24 septembre, 10-K, communiqué du 14 mai et 10-Q du 31 mars repris dans le récit.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#filingsReview.filings[17]",
+        "analyses/TRT/_primary/text/q3-fy26-10q.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-EAR-005",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Date du premier trimestre de l’exercice 2027 déclarée non confirmée, précédent du 14 novembre 2025 vérifié ; plan soldé le 6 novembre, ou la veille de la publication si elle est annoncée plus tôt.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#earnings.nextEarnings",
+        "analyses/TRT/_primary/submissions.json"
+      ]
+    },
+    {
+      "id": "AQ-VAL-001",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. VE/CA 0,51×, VE/EBITDA 15,2×, cours/valeur comptable 1,27×, scénario à 9× ; multiples des pairs inchangés ; marges d’EBITDA implicites 3,3 % (Trio-Tech), 17,7 % (Amkor), 4,9 % (inTEST).",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#fundamentals.rows[15]",
+        "data/analyses-data/TRT.json#fundamentals.rows[16]",
+        "analyses/TRT/_data/comparison_context.json"
+      ]
+    },
+    {
+      "id": "AQ-VAL-002",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Trésorerie 21 428 + 4 294 = 25 722 k$, dépôts nantis 2 767 k$ et placement de 368 k$ exclus ; trésorerie nette 25 277 k$, 2,434 $ par action, 44 % du cours ; capitalisation 56,908 M$, VE 31,631 M$ ; entrées datées, bases GAAP et douze mois explicites.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#fundamentals.rows[12]",
+        "analyses/TRT/_primary/text/fy26-10k.htm.txt",
+        "analyses/TRT/_runs/20261013/revision/numeric-evidence.json#valuation_scenario"
+      ]
+    },
+    {
+      "id": "AQ-VAL-003",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Attentes intégrées explicites à deux endroits : rows[18] (à 9×, le cours suppose environ 3,5 M$ d’EBITDA, 68 % de plus ; 31 631 145 / 9 / 2 087 000 = 1,684) et désormais whyBuy[4] (1,4 M$ de plus que l’exercice 2026). Scénario à 9× : 4,24 $ ; cas à 25 % de marge : (9 × (2,087 + 5,234) + 25,277) / 10,3847 = 8,78 $, présenté comme contraire au 10-K, ni central ni objectif.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#fundamentals.rows[18]",
+        "data/analyses-data/TRT.json#verdict.whyBuy[4]"
+      ]
+    },
+    {
+      "id": "AQ-SEC-001",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. 10-K : formulaire, date, accession 0001437749-26-031124, lien direct et constat chiffré (orientation de marge, opinion sans réserve, item 9A).",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#filingsReview.filings[0]",
+        "analyses/TRT/_primary/text/fy26-10k.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-SEC-002",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Bloquant commun du tour 3 levé, dans les six champs et le générateur. Recalculs : 3 131 233 × 2 = 6 262 466 ; + 1 052 632 = 7 315 098 ; 75 000 000 / 7 315 098 = 10,253 $ (« environ 10,25 $ ») ; 7 315 098 × 11,45 = 83,8 M$. Flottant du fournisseur : 75 000 000 / 6 926 282 = 10,828 $ ; 13 clôtures au-dessus depuis le 13 août (11,68 ; 11,46 ; 11,60 ; 11,53 ; 11,32 ; 11,14 ; 11,00 ; 10,83 ; 11,23 ; 10,97 ; 11,02 ; 11,24 ; 11,45 $), la dernière le 23 septembre ; 23 septembre + 60 jours = 22 novembre ; aucune clôture au-dessus de 10,25 $ après le 23 septembre (7,26 $ le 24). Base étroite : 32 329 000 / 6,62 + 1 052 632 + 511 175 = 6 447 342 ; × 11,45 = 73,82 M$ < 75 M$ ; / 3 = 24,61 M$ ; − 10,0 M$ (9,50 × 1 052 632) = 14,61 M$ ; / 5,48 = 2,67 millions d’actions. Fenêtre d’une vente le 6 novembre ouverte le 7 septembre : plus haute clôture 11,45 $ ; pour une vente du 13 au 16 octobre, 11,60 $ (17 août), soit 14,9 M$ : « au moins 14,6 M$ » est une borne basse juste. Plafond statutaire : 15 000 000 − 10 384 698 − 1 311 275 = 3 304 027 actions, 31,8 % du capital, 18,1 M$ à 5,48 $. S-3 relu : 25 488 237 $, 3 131 233 actions, 8,14 $ le 15 octobre 2025 (4,07 $ ajusté dans bars.json) ; la lecture « hors dirigeants et administrateurs » est recoupée par la circulaire (4 312 805 − (1 705 072 − 513 750) = 3 121 483, à 9 750 actions près). Placement d’avril : titre, montant, agent, prix et statut donnés.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#capitalStructure.shareHistory",
+        "data/analyses-data/TRT.json#capitalStructure.atm.remaining",
+        "data/analyses-data/TRT.json#risks.riskCards[2].verdict",
+        "data/analyses-data/TRT.json#blastRadius.missingData[6]",
+        "data/analyses-data/TRT.json#filingsReview.filings[5]",
+        "data/analyses-data/TRT.json#filingsReview.contrarianRisks[2]",
+        "analyses/TRT/_primary/text/nov25-s3.htm.txt",
+        "analyses/TRT/_primary/text/fy26-10k.htm.txt",
+        "analyses/TRT/_primary/text/dec10-proxy-defr14a.htm.txt",
+        "analyses/TRT/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-SEC-003",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Déclaration d’enregistrement (50 M$, 10 M$ utilisés), placement primaire d’avril, ventes et avis de vente d’administrateurs, sortie de Zeff, options et division par deux restent distingués ; aucun programme « at-the-market » présenté comme actif ; plafond du tiers et plafond statutaire désormais séparés et hiérarchisés.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#capitalStructure",
+        "analyses/TRT/_primary/text/jan5-8k.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-SEC-004",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. 10 384 698 actions ; options 549 190 + 762 085 = 1 311 275 ; capital dilué 11 695 973 (+12,6 %), borne haute ; dilution constatée 20,4 % ; exercices 312 714 + 380 236 = 692 950.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#capitalStructure.shareHistory",
+        "analyses/TRT/_primary/text/fy26-10k.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-SEC-005",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Conclusion tirée du texte affirmatif de l’item 9A, citée ; rien n’est inféré du silence.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#filingsReview.filings[0]",
+        "analyses/TRT/_primary/text/fy26-10k.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-SEC-006",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Inventaire de 32 formulaires hors déclarations d’initiés ; manifeste : opened = reviewed = 18 documents (17 pièces plus le formulaire 144), 18 lignes dans filingsReview.",
+      "evidenceRefs": [
+        "analyses/TRT/_primary/submissions.json",
+        "analyses/TRT/_runs/20261013/revision/primary-manifest.json",
+        "data/analyses-data/TRT.json#filingsReview.summary"
+      ]
+    },
+    {
+      "id": "AQ-TEC-001",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Clôture de référence du 12 octobre datée ; aucune cotation intrajournalière ; division par deux appliquée aux barres antérieures au 5 janvier (splits du générateur).",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#technicals.setupNote",
+        "analyses/TRT/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-TEC-002",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Supports et résistances refaits : 5,45 ; 5,3467 ; 4,42 ; 6,2826 ; 6,54 ; 6,86 $ ; bougie du 24 septembre (11,30 → 7,26 $, 2 877 217 actions) et trou du 25 septembre (7,01 / 7,16 $) exacts.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#technicals",
+        "analyses/TRT/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-TEC-003",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Bloquants de la war room levés. Un seul achat : statusNote (« rouvre trois séances d’achat si rien n’a encore été acheté. Un seul achat par plan »), entryNote (« garder le nombre d’actions calculé au plafond, sans l’augmenter parce que le stop est plus proche … ni après une nouvelle clôture à 5,76 $ ou plus ») et Telegram. Stop simple : entryNote, statusNote, thesis (« achats par ordres limités, stop simple et non limité ») et Telegram. Abandon définitif : statusNote, invalidation[0], Telegram. Chaque niveau garde sa raison. Mineur : l’abandon n’est écrit qu’« avant activation » dans la fiche (voir minorFindings).",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#tradeIdea.statusNote",
+        "data/analyses-data/TRT.json#tradeIdea.entryNote",
+        "data/analyses-data/TRT.json#tradeIdea.invalidation",
+        "analyses/TRT/_runs/20261013/revision/telegram-draft.html"
+      ]
+    },
+    {
+      "id": "AQ-TEC-004",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Refait : sur 5,3467 $, 1,92 / 2,71 et 1,52 / 2,20 ; sur l’ordre à 5,34 $, 1,89 / 2,66 et 1,50 / 2,17 ; plafond 5,82 $ ; 0,415 / 0,648 = 0,64 ATR ; tailles 100 / 0,48 = 208 (1 211 $), 138 (803 $), 2 083 (12 123 $), 1 388 (8 078 $), 0,6 % de 222 484 actions. Mineur connu du gabarit : case Stop « $5.35 -7.1% », sizeExample 211.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#tradeIdea.rr",
+        "data/analyses-data/TRT.json#tradeIdea.entryNote",
+        "analyses/TRT/_runs/20261013/revision/numeric-evidence.json#levels",
+        "analyses/TRT/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-TEC-005",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Plan soldé le 6 novembre, avant la publication attendue vers la mi-novembre ; aucun achat après le 2 novembre ; gaps chiffrés ; résultats de Teradyne et d’Amkor sans sortie imposée, stop en place.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#tradeIdea.horizon",
+        "data/analyses-data/TRT.json#tradeIdea.invalidation"
+      ]
+    },
+    {
+      "id": "AQ-RSK-001",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Cinq risques propres au titre avec mécanisme, preuve et signal. riskCards[2].verdict désormais cohérent avec la capacité recalculée (« au moins 14,6 M$ jusqu’au 6 novembre ») et le plafond statutaire de 3,3 millions d’actions.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#risks.riskCards",
+        "analyses/TRT/_primary/text/dec10-proxy-defr14a.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-RSK-002",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Cas contraire chiffré (0,51× contre 15,2× l’EBITDA, 3,5 M$ d’EBITDA implicite à 9×, orientation de marge du test, avis de vente, capacité d’émission) ; contrarianRisks[2] aligné sur AQ-SEC-002 (« calculé sur la plus haute clôture des soixante jours, ne la bridant guère avant fin novembre ») ; parcours 3,25 → 21,38 → 5,48 $ refait.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#filingsReview.contrarianRisks"
+      ]
+    },
+    {
+      "id": "AQ-RSK-003",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Rejeu refait sur bars.json ajusté : 25 cassures, 7 dans la bande de 1,13 %, 3 ouvertures suivantes sous le seuil (cassures des 11 décembre, 8 avril et 24 avril ; ouvertures des 12 décembre, 9 avril et 27 avril), celle du 27 avril (14,21 $) sous le niveau de stop (15,19 $) : la mention ajoutée est exacte. 22 cassures non achetables, 15 exécutions, 2 stops touchés le jour même, 5 clôtures sous le niveau, 0 retrait : le « 14 » de la war room n’est pas reproduit, la cassure du 24 avril étant achetable à l’ouverture selon la règle, donc hors des 22. 80 ouvertures au-dessus de la veille de plus de 0,065 $ (médiane 0,08 $) ; 10 gaps sous la veille de plus de 0,415 $ ; 17 et 6 décalages de 5 et 10 % ; pire 2,31 $ (−14,0 %, 27 avril). Taille, liquidité, écart non mesuré, interdiction de poursuivre et achat unique couverts.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#tradeIdea.entryNote",
+        "data/analyses-data/TRT.json#risks.pedagogy",
+        "analyses/TRT/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-SRC-001",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Activité par le 10-K, le 10-Q et le communiqué ; résultats par les deux communiqués ; capital par le 10-K, le 8-K, le 424B5, le S-3 et la circulaire ; initiés par les formulaires 4, les 13D/A et le formulaire 144 ; technique par les barres datées. Mineur de traçabilité au niveau des affirmations pour les chiffres tirés des barres (voir minorFindings).",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#capitalStructure.sourceRefs",
+        "data/analyses-data/TRT.json#insiders.sourceRefs",
+        "analyses/TRT/_runs/20261013/revision/numeric-evidence.json#claim_provenance"
+      ]
+    },
+    {
+      "id": "AQ-SRC-002",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Dix-huit liens EDGAR directs avec date et accession ; vues rendues pour les 13D/A, 13G/A et 144 ; dépêches des 17 septembre et 7 octobre datées.",
+      "evidenceRefs": [
+        "analyses/TRT/_runs/20261013/preview/index.html",
+        "analyses/TRT/_primary/submissions.json"
+      ]
+    },
+    {
+      "id": "AQ-SRC-003",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Mineur de la war room levé : formulaire 144 relu (91 173 actions, 573 478,17 $, soit 6,290 $, date de vente approximative 28/09/2026, Charles Schwab) ; clôture du 28 septembre 6,42 $ (séance 6,04–6,70 $) ; insiders.signal (« soit environ 6,29 $ par action selon l’avis (clôture du jour : 6,42 $) ») et Telegram (« valorisées 6,29 $ l’action dans l’avis ») corrigés ; les autres mentions attribuent la valeur au déclarant.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#insiders.signal",
+        "analyses/TRT/_primary/sep28-144-horowitz.xml",
+        "analyses/TRT/_data/bars.json",
+        "analyses/TRT/_runs/20261013/revision/telegram-draft.html"
+      ]
+    },
+    {
+      "id": "AQ-EDT-001",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Aucun doublon non autorisé relevé par le contrôle de lot de check-analysis-editorial-quality ; seuls des libellés de source et de fenêtre se répètent.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#performance.windowReturns.label",
+        "data/analyses-data"
+      ]
+    },
+    {
+      "id": "AQ-EDT-002",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Verdict, synthèse des risques, catalyseurs (Teradyne le 21 octobre, Amkor le 26 octobre) et invalidations ne valent que pour Trio-Tech.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#tradeIdea.catalysts",
+        "analyses/TRT/_data/comparison_earnings.json"
+      ]
+    },
+    {
+      "id": "AQ-EDT-003",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Mineurs du tour 3 levés pour « clôture certifiée », rows[16] (« relevées en instantané ») et « taux bas » ; limites de données précises (missingData[6] recalé : 7,3 millions, 10,25 $, 6,4 à 6,7 millions, 11,24 à 11,63 $, 14,6 M$). Restent « vs » et « non point-in-time » : mineur.",
+      "evidenceRefs": [
+        "data/analyses-data/TRT.json#business.coverageMatrix[0]",
+        "data/analyses-data/TRT.json#fundamentals.rows[15]",
+        "data/analyses-data/TRT.json#blastRadius.missingData"
+      ]
+    },
+    {
+      "id": "AQ-QA-001",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. validate-analysis-evidence : PASS (540 affirmations, code 0) ; check-analysis-editorial-quality --strict --pre-review : 0 erreur, 0 avertissement ; qa-content --strict : 30/30 ; check-ai-tells --strict : aucun tic (fiche 11 326 mots, Telegram 613). Chaîne de hachage cohérente : numeric-evidence porte analysis_sha256 c2c3d8d6…, generator_sha256 abaaaadb… (= build-trt.cjs) et template_sha256 3393432d… (= analysis-v3-r08.cjs) ; rendu 03a6cde6…, Telegram a50eb07d… ; lang=\"fr\", GTM présent ; tous les textes modifiés présents dans le rendu (atm.* non rendu par le gabarit quand aucun programme n’est actif, contenu repris dans shareHistory). Restent les défauts connus du gabarit.",
+      "evidenceRefs": [
+        "analyses/TRT/_runs/20261013/preview/index.html",
+        "analyses/TRT/_runs/20261013/revision/numeric-evidence.json",
+        "analyses/TRT/_data/harness.json"
+      ]
+    },
+    {
+      "id": "AQ-QA-002",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Cette revue donne le statut PASS, sans bloquant ; chaque mineur porte une correction exacte et l’état des corrections demandées au tour 3 est vérifié champ par champ.",
+      "evidenceRefs": [
+        "analyses/TRT/_runs/20261013/revision/review-senior_qa.json"
+      ]
+    },
+    {
+      "id": "AQ-QA-003",
+      "status": "PASS",
+      "rationale": "Tour 5 (agent principal, convergence) : version a303ec79 vérifiée — validate-analysis-evidence PASS (540), qualité éditoriale stricte 0 erreur, qa-content 30/30, check-ai-tells propre ; changements depuis le tour 4 (validité du stop jusqu’à annulation, abandon tant que rien n’est acheté, stop ramené après TP1, émission avec position, libellé du rejeu, 4,42 $, provenance du plafond et de insiders.signal) relus et également validés par le contradicteur et la war room au tour 5. Score de 88 sur 100, au-dessus du seuil de 80, aucun bloquant ouvert. Points perdus : abandon définitif limité à l’avant-activation dans la fiche, traçabilité des chiffres tirés des barres, case Stop et sizeExample, deux anglicismes, défauts du gabarit.",
+      "evidenceRefs": [
+        "analyses/TRT/_runs/20261013/revision/review-senior_qa.json"
+      ]
+    }
+  ],
+  "telegramReview": {
+    "status": "PASS",
+    "findings": [
+      "Telegram relu sur la version finale : chiffres identiques à la fiche, achat unique, stop simple valable jusqu’à annulation, achats par ordres limités, abandon pour de bon, avis de vente sans prix fixé, émission avec position ; check-ai-tells --strict propre."
+    ]
+  }
+}
