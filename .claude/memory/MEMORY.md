@@ -25,6 +25,7 @@
 - [Sweep Psize History](feedback_sweep_psize_history.md) — Never assume portfolioSize is constant — check modes-config-history.json before comparing concurrent positions across time
 
 ## 🛰️ Scanner pipeline
+- [Status figé, score plat](feedback_status_stall_flat_score.md) — 13/10/2026 — /scanner/status figé du 4 sept. au 12 oct. : score plat 80 contre minScore 85-90, sharia:false codé en dur, crible fortress-pm sauté ; admettre le score plat aurait perdu 3-4 % sur 30 j, config inchangée, courbes prolongées en liquidités.
 - [Un champ déclaré doit être calculé](feedback_declared_fields_must_be_computed.md) — tp1_atr_multiple recopié à la main était faux sur 5 lignes sur 7, et le gate qui le lit était mort-né parce que scanner-parser.js strippait le champ. Tester tout nouveau gate DANS LES DEUX SENS ; « absent » n'est pas « 0 ».
 - [Contrôle de dilution fail-closed pour les émetteurs européens](feedback_dilution_check_fail_closed_eu_issuers.md) — dilution_clear=false signifie « contrôle NON FAIT », jamais « risque faible » : la ligne ne se publie pas. .PA → eu_filings (AMF) ; .AS/.MC/.L/.BR → aucune source câblée, donc non publiables en éditorial.
 - [Bull 8x Parity](feedback_bull_8x_parity.md) — Bull mode 0 signals on quiet days is LEGITIMATE — high-conviction 8× volume gate, parity with systematic-tss. Never lower the threshold to force sig…

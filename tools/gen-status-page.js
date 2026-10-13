@@ -1424,6 +1424,33 @@ async function main() {
     return terminalToday.length ? [...capped, ...terminalToday] : capped;
   }
 
+  // ── Liquidités jusqu'à la clôture certifiée ──
+  // Une courbe qui s'arrête à la dernière sortie fait passer un mode sans position pour une page
+  // figée : du 4 septembre au 12 octobre 2026, les quatre modes du scanner affichaient une courbe
+  // arrêtée au 09/04 alors que le sweep tournait chaque soir. Sans position ouverte, le portefeuille
+  // est en liquidités et sa valeur ne bouge pas jusqu'à la clôture que le sweep vient de certifier
+  // (frozenUpdate.reference_close). On prolonge donc la courbe à plat, séance par séance au
+  // calendrier US, et le rendu trace ce segment à part (trait gris « Liquidités »).
+  // Affichage seulement : le registre scellé, ses statistiques et l'API ne sont pas modifiés.
+  const CASH_REF_CLOSE = (results.frozenUpdate && /^\d{4}-\d{2}-\d{2}$/.test(results.frozenUpdate.reference_close || ''))
+    ? results.frozenUpdate.reference_close : null;
+  function cashTail(ec, trades) {
+    if (!CASH_REF_CLOSE || !ec || !Array.isArray(ec.d) || !ec.d.length || ec.d.length !== ec.v.length) return null;
+    if ((trades || []).some(t => t._premature && t.status === 'pending')) return null;
+    const lastLbl = ec.d[ec.d.length - 1];
+    const [mm, dd] = String(lastLbl).split('/');
+    if (!/^\d{2}$/.test(mm || '') || !/^\d{2}$/.test(dd || '')) return null;
+    const year = +CASH_REF_CLOSE.slice(0, 4) - (`${mm}-${dd}` > CASH_REF_CLOSE.slice(5) ? 1 : 0);
+    const fromIso = `${year}-${mm}-${dd}`;
+    if (fromIso >= CASH_REF_CLOSE) return null;
+    const d = [...ec.d], v = [...ec.v], last = v[v.length - 1];
+    for (let iso = addUSTradingDays(fromIso, 1); iso <= CASH_REF_CLOSE; iso = addUSTradingDays(iso, 1)) {
+      d.push(iso.slice(5).replace('-', '/'));
+      v.push(last);
+    }
+    return { d, v, cf: lastLbl, fromIso, toIso: CASH_REF_CLOSE };
+  }
+
   // ── Panel builder ──
   function panel(id, cfg, m, trades, ec, chartId, active) {
     const pendingNextSession = MARKET_CLOSED_DAY && scanDir && scanDir !== TODAY_KEY;
@@ -1728,6 +1755,31 @@ ${cfg.assetClass === 'dtx' ? `<div class="section-card">
       <span class="perf-hero-label"><i class="fas fa-chart-line" style="color:${cfg.color};margin-right:.3rem"></i>Equity Curve${m.dtxReconstruction ? ' <small style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--muted)">· reconstructed replay</small>' : m.dtxEngine ? ' <small style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--muted)">· book backtest + live</small>' : ''}</span>
     </div>
     <div class="perf-chart" id="${chartId}"></div>
+    ${(() => {
+      const c = cashTail(ec, trades);
+      if (!c) return '';
+      const under = belowScoreGate(cfg);
+      let cause = '';
+      if (under.n > 0) {
+        cause = ` Cause : ${under.n} ${under.n > 1 ? 'signaux' : 'signal'} du dernier scan compatible${under.n > 1 ? 's' : ''} avec ce mode ${under.n > 1 ? 'sont notés' : 'est noté'} au plus ${under.best}, sous son seuil de ${cfg.minScore}.`;
+      } else if (cfg.filterName === 'fortress_pm') {
+        let fn = null;
+        try { fn = JSON.parse(fs.readFileSync(path.join(SCANNER_DIR, scanDir, 'signals.json'), 'utf8'))._fortressPoolNote; } catch (_) { fn = null; }
+        const f = fn && fn.pm_status === 'step0_executed' ? fn.step0_funnel : null;
+        // Fortress lit deux sources : son pool A+ et, via regimeFilters, les lignes publiées du scan
+        // marquées conformes et notées au moins minScore. La cause doit nommer les deux.
+        const eligibleScan = signals.filter(s => s.sharia === true && Number(s.score) >= cfg.minScore && !s.source).length;
+        if (f && Number.isFinite(f.screened) && (f.aplus || 0) === 0 && eligibleScan === 0) {
+          cause = ` Cause : le crible A+ Halal du dernier scan n’a retenu aucun dossier (${f.screened} titres criblés, ${f.midcap_2_20b} entre 2 et 20 Md$ de capitalisation), et aucune ligne publiée n’est à la fois marquée conforme et notée ${cfg.minScore} ou plus.`;
+        }
+      } else if (cfg.assetClass === 'dtx') {
+        const stg = loadDtxStaging(id);
+        if (stg && stg.actionable === false && stg.failureMode === 'compare_only') {
+          cause = ' Cause : le moteur systématique tourne en évaluation seule tant que sa stratégie n’est pas éligible au live ; il ne publie aucun ordre.';
+        }
+      }
+      return `<div class="bt-ctx" lang="fr"><span class="bt-ctx-note">Aucune position ouverte depuis le ${fmtDateFR(c.fromIso)} : la courbe est prolongée à plat (liquidités) jusqu’à la clôture du ${fmtDateFR(c.toIso)}.${cause}</span></div>`;
+    })()}
     ${m.dtxBacktest ? `<div class="bt-ctx">
       <span class="bt-ctx-tag"><i class="fas fa-clock-rotate-left"></i> ${m.dtxBacktest.reconstruction ? 'Replay reconstruction' : 'Book backtest'} ${m.dtxBacktest.fromYr}→${m.dtxBacktest.toYr}</span>
       <span class="bt-ctx-items">
@@ -2824,7 +2876,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
 <script>
 var _v='${buildVer}';
 document.addEventListener('DOMContentLoaded',function(){
-  function mk(el,dates,vals,color,sinceLbl,simDates,simVals,liveFrom){
+  function mk(el,dates,vals,color,sinceLbl,simDates,simVals,liveFrom,cashFrom){
     if(!document.getElementById(el))return null;
     var dom=document.getElementById(el);
     var existing=echarts.getInstanceByDom(dom);
@@ -2900,12 +2952,26 @@ document.addEventListener('DOMContentLoaded',function(){
           markLine:eqMarkLine||undefined}
       ];
     }
+    // Segment « Liquidités » : sans position ouverte, la courbe est prolongée à plat jusqu'à la
+    // clôture certifiée (cashTail côté serveur). On le trace à part, en gris, pour ne jamais le
+    // confondre avec une performance réalisée.
+    var cashIdx=cashFrom?dates.indexOf(cashFrom):-1;
+    var hasCash=cashIdx>=0&&cashIdx<dates.length-1;
+    if(hasCash){
+      var lastEq=eqSeries[eqSeries.length-1];
+      lastEq.data=lastEq.data.map(function(v,i){return i<=cashIdx?v:null;});
+      eqSeries.push({name:'Liquidités',data:vals.map(function(v,i){return i>=cashIdx?v:null;}),type:'line',symbol:'none',xAxisIndex:0,yAxisIndex:0,z:5,
+        lineStyle:{color:color,width:2,type:'dotted',opacity:.75},itemStyle:{color:color},
+        markLine:{symbol:'none',silent:true,lineStyle:{color:'#94a3b8',width:1,type:'dotted'},
+          label:{show:dom.clientWidth>480&&splitIdx<0,formatter:'Aucune position',position:'insideEndTop',color:'#64748b',fontSize:10,fontWeight:600},
+          data:[{xAxis:dates[cashIdx]}]}});
+    }
     var series=eqSeries.concat([
       {name:'Drawdown',data:ddS,type:'line',smooth:.3,symbol:'none',xAxisIndex:1,yAxisIndex:2,z:2,
         lineStyle:{color:'#ef4444',width:2,opacity:1},
         areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(239,68,68,.18)'},{offset:1,color:'rgba(239,68,68,.02)'}])}}
     ]);
-    var legendItems=(splitIdx>=0?['Backtest','Live']:['Portfolio']).concat(['Drawdown']);
+    var legendItems=(splitIdx>=0?['Backtest','Live']:['Portfolio']).concat(hasCash?['Liquidités']:[]).concat(['Drawdown']);
     if(spyVals){
       series.splice(1,0,{name:'SPY',data:spyVals,type:'line',smooth:.3,symbol:'none',xAxisIndex:0,yAxisIndex:0,z:4,
         lineStyle:{color:'#94a3b8',width:1.6,type:[6,4]},connectNulls:true});
@@ -3107,7 +3173,9 @@ document.addEventListener('DOMContentLoaded',function(){
     // curve into a muted/dashed backtest segment + a solid/colored live segment and draws a "Live"
     // markLine there. When lf is set it replaces the generic promotion marker (avoid a double line).
     const _lf = m.m.liveFromLbl || null;
-    return [id, { d: primEc.d, v: primEc.v, c: m.cfg.color, s: _lf ? null : (_pm ? _pm.lbl : null), sD: null, sV: null, pit: usePit, lf: _lf }];
+    const _cash = cashTail(primEc, m.trades);
+    const _d = _cash ? _cash.d : primEc.d, _v = _cash ? _cash.v : primEc.v;
+    return [id, { d: _d, v: _v, c: m.cfg.color, s: _lf ? null : (_pm ? _pm.lbl : null), sD: null, sV: null, pit: usePit, lf: _lf, cf: _cash ? _cash.cf : null }];
   })))};
   var _regimeMap=${JSON.stringify(regimeMap)};
   var _spyData=${JSON.stringify(spyIndexed)};
@@ -3140,7 +3208,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var chartEl=document.getElementById('chart-'+id);
     if(chartEl){
       var inst=echarts.getInstanceByDom(chartEl);
-      if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c,cfg.s,cfg.sD,cfg.sV,cfg.lf);}
+      if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c,cfg.s,cfg.sD,cfg.sV,cfg.lf,cfg.cf);}
       else{inst.resize();}
     }
     updateLiveActions(id);
@@ -3724,7 +3792,7 @@ document.addEventListener('DOMContentLoaded',function(){
       var existing=window.echarts.getInstanceByDom(chartEl);
       if(existing) existing.dispose();
       var dflt=modeCharts[activeMode];
-      if(dflt) mk('chart-'+activeMode, dflt.d, dflt.v, dflt.c, dflt.s, dflt.sD, dflt.sV, dflt.lf);
+      if(dflt) mk('chart-'+activeMode, dflt.d, dflt.v, dflt.c, dflt.s, dflt.sD, dflt.sV, dflt.lf, dflt.cf);
     }
     document.getElementById('tmBanner').className='tm-banner';
     var fab=document.getElementById('tmFab');
@@ -3764,7 +3832,7 @@ document.addEventListener('DOMContentLoaded',function(){
   };
   // Init chart for the default visible mode
   var dflt=modeCharts[activeMode];
-  if(dflt)mk('chart-'+activeMode,dflt.d,dflt.v,dflt.c,dflt.s,dflt.sD,dflt.sV,dflt.lf);
+  if(dflt)mk('chart-'+activeMode,dflt.d,dflt.v,dflt.c,dflt.s,dflt.sD,dflt.sV,dflt.lf,dflt.cf);
   // Mobile: rotating the device or the address-bar collapsing changes the viewport — resize the
   // active equity chart so it doesn't stay stuck at its pre-rotation (possibly 0) width.
   window.addEventListener('orientationchange',function(){setTimeout(function(){try{var el=document.getElementById('chart-'+activeMode);var inst=el&&window.echarts&&window.echarts.getInstanceByDom(el);if(inst)inst.resize();}catch(_){}},300);});

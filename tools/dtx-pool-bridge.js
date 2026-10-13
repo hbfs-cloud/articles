@@ -214,9 +214,15 @@ function main() {
     ingested.push(`${id} (${kept} ordre${kept > 1 ? 's' : ''}${dropped ? `, ${dropped} skippé(s)` : ''})`);
   }
 
-  const data = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+  const raw = fs.readFileSync(sigPath, 'utf8');
+  const data = JSON.parse(raw);
   data.dtx_pool = pool; // remplacement idempotent — le pool du jour reflète LE staging du jour
-  if (!opts.dryRun) {
+  // Même format que build-scan.js et finalize-scanner-fortress.js (saut de ligne final), et
+  // aucune réécriture quand le pool n'a pas changé : le 2026-10-13, ce pont a réécrit un
+  // signals.json identique au caractère près sans son saut de ligne final, ce qui a changé
+  // l'empreinte d'un snapshot déjà soumis aux relecteurs.
+  const next = JSON.stringify(data, null, 2) + '\n';
+  if (!opts.dryRun && next !== raw) {
     // Écriture ATOMIQUE (tmp + rename). Depuis que le calcul du downstream tourne en
     // parallèle du panel adversarial, des relecteurs lisent signals.json PENDANT que ce
     // pont le réécrit. Un writeFileSync direct tronque le fichier puis le remplit : une
@@ -224,7 +230,7 @@ function main() {
     // relecteur sur un défaut qui n'existe pas. rename() est atomique sur POSIX — un
     // lecteur voit l'ancien fichier entier ou le nouveau entier, jamais un état moyen.
     const tmp = `${sigPath}.tmp-${process.pid}`;
-    fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf8');
+    fs.writeFileSync(tmp, next, 'utf8');
     fs.renameSync(tmp, sigPath);
   }
 

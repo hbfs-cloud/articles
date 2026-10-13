@@ -59,9 +59,18 @@ const watch = Object.entries(review.watch || {}).map(([ticker, manual]) => {
 
 signals.fortress_pool = review.fortress_pool;
 signals.fortress_watch_pool = watch;
+// Le crible A+ propre du PM (STEP 0 du skill fortress-pm) n'a pas tourné entre le 8 septembre et le
+// 12 octobre 2026 : les revues ne relisaient que le panier publié, faute de quoi le pool restait vide
+// sans que la note le dise. Quand le crible a tourné, la note publie son entonnoir et sa source.
+const step0 = review.pm_status === 'step0_executed';
+if (step0 && !(review.funnel && Number.isFinite(review.funnel.screened) && review.step0_source)) {
+  throw new Error('Fortress: crible STEP 0 déclaré sans entonnoir ni source');
+}
 signals._fortressPoolNote = {
   reviewed_at: review.reviewed_at,
   reference_close: review.reference_close,
+  pm_status: review.pm_status || 'executed_on_published_basket',
+  ...(step0 ? { step0_funnel: review.funnel, step0_source: review.step0_source } : {}),
   reviewed_published_candidates: published.size,
   watch_count: watch.length,
   excluded: review.excluded,

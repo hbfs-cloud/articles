@@ -258,7 +258,7 @@ const belowOne = (d.setups || []).map(s => {
   return `${s.ticker} ${r.toFixed(2) === '1.00' ? r.toFixed(3).replace('.', ',') : r.toFixed(2).replace('.', ',')}`;
 }).filter(Boolean);
 const rrBelowOne = nBelowOne
-  ? ` ; ${belowOne.length} ligne${belowOne.length > 1 ? 's' : ''} vise${belowOne.length > 1 ? 'nt' : ''} un peu moins qu'elle${belowOne.length > 1 ? 's ne risquent' : ' ne risque'} (${belowOne.join(', ')}), le stop, posé au plancher de bruit, est plus large que l'objectif 1`
+  ? ` ; ${belowOne.length} ligne${belowOne.length > 1 ? 's' : ''} vise${belowOne.length > 1 ? 'nt' : ''} un peu moins qu'elle${belowOne.length > 1 ? 's ne risquent' : ' ne risque'} (${belowOne.join(', ')}), le stop, calé sur la variation habituelle, est plus large que l'objectif`
   : '';
 
 /** Le dimensionnement n'est affirmé que s'il a été calculé. `sizing_status: not_run` signifiait
@@ -1090,7 +1090,7 @@ ${sectorRotationTable(d.sector_rotation)}
   <div class="content-card">
     <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés sur la clôture de référence. ${hasEntryZone
       ? `Tous les setups restent non exécutables avant l'observation du VWAP de la prochaine séance.`
-      : stopLimit ? `Tests de résistance et suivis de tendance : ordre d'achat stop-limite au prix publié, plafonné à ce prix, annulé si l'ouverture se fait sous l'invalidation ${hasPullback ? ' ; replis : ordre limité au prix publié' : ''}. Si le prix n'est pas atteint, il n'y a pas de trade.` : `L'entrée est un prix unique : un ordre à cours limité valable la séance, sans condition de VWAP. Si le prix n'est pas touché, il n'y a pas de trade.`}${sizingSentence}</p>
+      : stopLimit ? `Tous les ordres se posent après l'ouverture, et aucun si l'ouverture se fait sous l'invalidation. Cassures et suivis de tendance : stop-limite au prix publié si le cours est dessous, ordre limité au même prix s'il est déjà au-dessus${hasPullback ? ' ; replis : ordre limité au prix publié' : ''}. Si le prix n'est pas atteint, il n'y a pas de trade.` : `L'entrée est un prix unique : un ordre à cours limité valable la séance, sans condition de VWAP. Si le prix n'est pas touché, il n'y a pas de trade.`}${sizingSentence}</p>
 ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div class="pedagogy-box" style="border-left:4px solid #b45309;">
       <h4><i class="fas fa-list-ol"></i> Ordre d'exécution et hiérarchie des sorties</h4>
       <p>${esc(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy))}</p>
@@ -1101,13 +1101,13 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
       <p>${hasEntryZone
         ? `Entrée = zone conditionnelle à l'ouverture (9h30–9h45 ET), uniquement si le prix s'y trouve et tient le VWAP observé.`
         : stopLimit
-          ? `Tests de résistance et suivis de tendance : ordre d'achat stop-limite, déclenché au prix publié et plafonné à ce même prix, valable la seule séance. Si le cours ouvre sous le niveau d'invalidation, annulez l'ordre dès l'ouverture. Si le cours ouvre au-dessus du prix publié, l'ordre se déclenche mais n'achète qu'à ce prix ou moins : il ne passe que si le cours redescend jusque-là. Ne relevez pas le plafond, ne passez pas au marché. ${hasPullback ? 'Replis : ordre limité au prix publié. ' : ''}Aucune cotation d'avant-ouverture n'a été relevée : rien ne garantit que ces prix seront traités.`
+          ? `Rien ne se pose avant l'ouverture de New York (15 h 30, heure de Paris). Ouverture sous le niveau d'invalidation : pas d'ordre. Cassures et suivis de tendance : si le cours est sous le prix publié, ordre d'achat stop-limite, déclenchement et plafond au prix publié ; s'il est déjà au-dessus, ordre à cours limité au prix publié, qui n'achète que si le cours redescend. Beaucoup de courtiers refusent un stop d'achat sous le cours du moment. ${hasPullback ? 'Replis : ordre à cours limité au prix publié. ' : ''}Ne relevez jamais le prix, ne passez jamais au marché. Les ordres valent la seule séance. Aucune cotation d'avant-ouverture n'a été relevée : rien ne garantit que ces prix seront traités.`
           : `Entrée = un prix unique, en ordre à cours limité valable la séance. Pas de zone, pas de condition de VWAP, pas de poursuite : si le marché ouvre au-dessus et n'y revient pas, la ligne ne se déclenche simplement pas.`} Le stop se place dans le système du courtier dès l'achat. ${hasEntryZone
         ? `Le R/R du tableau est calculé au HAUT de la zone d'entrée, soit le pire remplissage autorisé; le plancher du scan est 1:${minRR}.`
         : `L’ordre a un plafond unique ; le prix moyen réellement payé peut être inférieur. Le calcul utilise le prix limite, soit le prix maximal autorisé ; un remplissage inférieur modifie le risque réel et le rapport gain/risque.`
       } Aucune quantité n’est proposée : le budget de perte, le cash et les expositions doivent être vérifiés avant achat. ${hasEntryZone
         ? `Si l'ouverture dépasse le haut de la zone de 2%, l'entrée directe est annulée et seul un retour au VWAP peut réarmer la ligne.`
-        : `Si le prix n'est pas touché pendant la séance, la ligne expire : elle n'est pas reportée au lendemain. Sorties : le stop, l'objectif 1 en totalité, ou une clôture sous le niveau d'invalidation (sortie à l'ouverture suivante). Aucune sortie partielle n'est prévue par le plan. Sans objectif ni stop atteint, la position est soldée à la clôture de la ${d.setups && d.setups[0] && d.setups[0].horizon_days ? d.setups[0].horizon_days : 10}e séance.`} ${overextensionNote(d)}</p>
+        : `Si le prix n'est pas touché pendant la séance, la ligne expire : elle n'est pas reportée au lendemain. Sorties : le stop, l'objectif en totalité, ou une clôture sous le niveau d'invalidation (sortie à l'ouverture suivante). Aucune sortie partielle n'est prévue par le plan. Sans objectif ni stop atteint, la position est soldée à la clôture de la ${d.setups && d.setups[0] && d.setups[0].horizon_days ? d.setups[0].horizon_days : 10}e séance.`} ${overextensionNote(d)}</p>
       <p style="font-size:0.85rem;color:#64748b;margin-top:0.5rem;">${(d.setups || []).some(s => s.sharia === true) ? `Badges : <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span> ligne dont le secteur d'activité est conforme aux critères de finance islamique retenus ici (l'endettement, quand vérifié, est précisé ligne par ligne dans les invalidations — non systématiquement audité).` : 'Aucun contrôle de conformité à la finance islamique n’a été réalisé pour cette sélection.'}</p>
     </div>
   </div>
@@ -1133,7 +1133,7 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
       <h4>4. Calcul des niveaux techniques</h4>
       <p>Entrée / stop / TP / R/R calculés sur les données de clôture réelles. ${geometryNote} ${hasEntryZone
         ? `Une ligne ne devient exécutable qu'après confirmation du VWAP de la séance suivante.`
-        : stopLimit ? `Les cassures et suivis de tendance s'exécutent en ordre stop-limite déclenché au prix publié et plafonné à ce prix${hasPullback ? ' ; les replis en ordre limité' : ''}. Tous les ordres valent la séance visée ; les cassures et suivis de tendance sont annulés si l'ouverture se fait sous l'invalidation${hasPullback ? ', les replis se posent après l\'ouverture (un ordre limité posé avant s\'exécuterait sur une ouverture plus basse, y compris sous l\'invalidation)' : ''} ; leur exécution n'est pas garantie.` : `Un ordre limité est valable uniquement pendant la séance visée et sous réserve des contrôles publiés ; son exécution au prix limite ou à un prix inférieur n’est pas garantie.`}</p>
+        : stopLimit ? `Les cassures et suivis de tendance s'exécutent en ordre stop-limite déclenché au prix publié et plafonné à ce prix, ou en ordre limité au même prix si le cours est déjà au-dessus${hasPullback ? ' ; les replis en ordre limité' : ''}. Tous les ordres se posent après l'ouverture et valent la séance visée ; aucun ne se pose si l'ouverture se fait sous l'invalidation ; leur exécution n'est pas garantie.` : `Un ordre limité est valable uniquement pendant la séance visée et sous réserve des contrôles publiés ; son exécution au prix limite ou à un prix inférieur n’est pas garantie.`}</p>
     </div>
 ${Array.isArray(d.gates_report) && d.gates_report.length ? `    <div class="pedagogy-box">
       <h4>Contrôles de publication</h4>
