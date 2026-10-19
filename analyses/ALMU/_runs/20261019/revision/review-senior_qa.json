@@ -1,0 +1,478 @@
+{
+  "role": "senior_qa",
+  "reviewerId": "almu-senior-qa-20261019",
+  "reviewerName": "Claude (revue QA senior indépendante)",
+  "analysisSha256": "52f1fb6f6e59debae25e87cef3a4b143ff4337da52ddce735d2671a6e800688b",
+  "evidenceSha256": "df79ba4d0a2dd0a8b4a05909f9403be1b1bbec8438d130499cbbdaa51afd0add",
+  "renderedHtmlSha256": "2978d2c8190ef8a9cd38beee20d92051cedded8f44bd7fdbce305a2f009bd08c",
+  "status": "BLOCK",
+  "score": 82,
+  "blockingFindings": [
+    {
+      "id": "AQ-SEC-005",
+      "where": "filingsReview.filings[0].finding (10-K), filingsReview.summary, risks.riskCards[4], blastRadius.missingData ; source : analyses/ALMU/_primary/text/fy26-10k.htm.txt (item 9A, partie « Liquidity and Capital Resources »)",
+      "problem": "Le 10-K conclut en toutes lettres à une faiblesse matérielle du contrôle interne au 30 juin 2026 (« insufficient number of personnel with appropriate technical accounting […] to evaluate, account for, and properly record certain non-routine and complex transactions ») et à des contrôles et procédures de communication jugés inefficaces. La fiche n’en dit rien : aucune occurrence de « faiblesse » ni de « contrôle interne » dans le JSON, le générateur ou le rendu. La conclusion sur la continuité d’exploitation manque aussi, alors que le 10-K en donne une affirmative : la direction juge la trésorerie suffisante « for the next twelve months and beyond », sans aucune mention de « substantial doubt ».",
+      "fix": "build-almu.cjs, documents[0].finding (10-K) : ajouter « ; item 9A : faiblesse matérielle du contrôle interne au 30 juin 2026 (effectif comptable insuffisant pour traiter les opérations complexes ou non récurrentes), contrôles de communication jugés inefficaces ; la direction tient les comptes pour fidèles, a recruté un directeur financier à plein temps et mandaté un cabinet externe ; aucun doute sur la continuité d’exploitation, la direction jugeant la trésorerie suffisante pour au moins douze mois ». Ajouter une phrase équivalente à filingsReview.summary et un point à riskCards[4] (« Faiblesse matérielle du contrôle interne au 30 juin 2026, en cours de correction »). Puis régénérer le JSON, l’évidence et le rendu.",
+      "severity": "block"
+    },
+    {
+      "id": "AQ-EDT-003",
+      "where": "insiders.signal (dernière phrase), blastRadius.missingData[4], filingsReview.contrarianRisks[2], verdict.whyAvoid[3] ; source : analyses/ALMU/_primary/text/fy26-10k.htm.txt (item 9B)",
+      "problem": "La fiche écrit : « Le recours à un plan de ventes programmées n’a pas été vérifié dans les formulaires 4 ». Elle en tire ensuite : « les mieux informés ont encaissé avant la chute ». Or le 10-K, ouvert et haché, tranche la question à l’item 9B : le 23 mai 2026, Jonathan Klamkin a adopté un plan 10b5-1 portant sur au plus 300 000 actions, soumis à des conditions de prix et valable jusqu’au 31 mai 2027. Les deux ventes de 100 000 actions, le 21 septembre et le 12 octobre (insiders.json : 13,35 $ et 10,5343 $), restent sous ce plafond. Celle du 21 septembre a lieu à la première séance qui suit le dépôt du 10-K du 16 septembre, donc à la fin du délai de carence. La limite affichée est donc inexacte et l’idée d’une vente « informée » n’est pas étayée. Le défaut touche aussi AQ-SRC-003, puisqu’il s’agit d’une affirmation sur des initiés.",
+      "fix": "insiders.signal : remplacer « Le recours à un plan de ventes programmées n’a pas été vérifié dans les formulaires 4. » par « Selon le 10-K (item 9B), M. Klamkin a adopté le 23 mai 2026 un plan de ventes programmées (règle 10b5-1) portant sur au plus 300 000 actions, sous conditions de prix, jusqu’au 31 mai 2027 ; les ventes des 21 septembre et 12 octobre (200 000 actions) tiennent dans ce plafond, sans que les formulaires 4 aient été relus pour le confirmer. » ; missingData[4] : « Rattachement de chaque vente du fondateur au plan 10b5-1 du 23 mai non vérifié dans les formulaires 4. » ; contrarianRisks[2] : remplacer « : les mieux informés ont encaissé avant la chute. » par « ; le plan programmé du fondateur, adopté le 23 mai pour au plus 300 000 actions, ajoute une offre régulière tant que ses conditions de prix sont remplies. » ; whyAvoid[3] : insérer « , dans le cadre d’un plan programmé adopté le 23 mai » après « 100 000 le 12 octobre à 10,53 $ ».",
+      "severity": "block"
+    },
+    {
+      "id": "AQ-SRC-003",
+      "where": "blastRadius.groups[3].symbols[0].eventRisk (AXTI), blastRadius.groups[4].symbols[2].eventRisk (TDY), rendu du tableau du rayon d’impact ; source : analyses/ALMU/_data/comparison_earnings.json",
+      "problem": "Pour AXT et pour Teledyne, la fiche affirme « Aucune publication dans la fenêtre collectée de quatorze jours ». Or comparison_earnings.json, collecté le 19 octobre à 18:00:55Z sur cette fenêtre (jusqu’au 2 novembre), annonce Teledyne le 21 octobre et AXT le 29 octobre (calendrier Yahoo, une source chacun). AXT est le fournisseur de substrats corrélé à 0,53 et a perdu 24,8 % en cinq séances ; il publie dans la fenêtre d’activation, qui court jusqu’au 30 octobre. La fiche publie donc deux affirmations contredites par sa propre collecte.",
+      "fix": "AXTI.eventRisk : « Résultats du troisième trimestre annoncés le 29 octobre (une seule source), dans la fenêtre d’activation : un mouvement du compartiment ce jour-là peut déclencher ou annuler le plan » ; TDY.eventRisk : « Résultats du troisième trimestre annoncés le 21 octobre (une seule source) ; lecture sur la demande de capteurs infrarouges de défense ». Ajouter à tradeIdea.catalysts « Résultats d’AXT Technologies le 29 octobre (date d’une seule source), fournisseur de substrats du compartiment : pas de sortie imposée ». Régénérer.",
+      "severity": "block"
+    }
+  ],
+  "minorFindings": [
+    {
+      "id": "AQ-TEC-001",
+      "where": "verdict.summary, technicals.setupNote, tradeIdea.statusNote, verdict.controlChecklist[2].action, Telegram (« dès ce soir »)",
+      "problem": "La fiche raisonne sur la séance encore ouverte du 19 octobre : cours de 7,67 $ à 14 h 00 New York, soit 1,0 % au-dessus du seuil d’abandon de 7,595 $. Si la publication a lieu après 16 h 00 New York (20:00Z), « ce soir » est déjà passé, et une clôture sous 7,595 $ aurait abandonné le plan.",
+      "fix": "Publier avant 16 h 00 New York. Sinon, lire d’abord la clôture certifiée du 19 octobre : sous 7,595 $, passer le plan en abandonné et refaire statusNote et Telegram ; à 8,96 $ ou plus, plan activé ; entre les deux, remplacer les phrases intrajournalières par la clôture du 19 octobre.",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-SRC-003",
+      "where": "shortInterest.trend, shortInterest.daysToCover, verdict.whyBuy[4], business.coverageMatrix[5], blastRadius.missingData[2]",
+      "problem": "D’abord, le calcul affiché est faux : 3 722 208 / 14 787 173 = 25,2 %, et non « 25,9 % des 14,79 millions d’actions flottantes » ; 25,91 % est le ratio publié par le fournisseur. Ensuite, la fiche parle d’un « instantané non daté », alors que instrument.json contient le relevé FINRA du 30 septembre 2026 (3 722 208 actions, 4,59 jours pour couvrir). Enfin, elle écrit « volumes vendeurs FINRA non servis », alors que le volume vendeur FINRA du 16 octobre est servi (204 820 actions, 44,4 %).",
+      "fix": "trend : « 3 722 208 actions vendues à découvert au relevé FINRA du 30 septembre, soit 25,2 % des 14,79 millions d’actions flottantes publiées par le fournisseur (25,9 % selon son propre ratio) ; 4,6 jours de volume selon FINRA, 6,0 selon le fournisseur. » Retirer « volumes vendeurs FINRA » de coverageMatrix[5] et de missingData[2], ou préciser que le volume vendeur quotidien est servi mais ne mesure pas la position.",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-TEC-004",
+      "where": "rendu (échelle de prix « Stop 7,59 $ −15,1 % ») ; tradeIdea.stop (7,595), tradeIdea.stopPct ; entryNote (plafond 9,08 $)",
+      "problem": "La case Stop affiche l’ordre arrondi (7,59 $), mais avec le pourcentage du seuil d’abandon : 7,595 / 8,95 − 1 = −15,1 %, alors que 7,59 / 8,95 − 1 = −15,2 %. Le plafond de 9,08 $ est calculé sur 7,595 $ ; sur l’ordre réel à 7,59 $, le rapport vers TP1 vaut (11,31 − 9,08) / 1,49 = 1,497, publié « 1:1.50 » quand le texte écrit « au-delà […] tomberait sous 1,5 ».",
+      "fix": "build-almu.cjs : stopPct = pct(stopOrd, entry) (−15,2 %), en gardant stop pour l’abandon. Dans entryNote, écrire « car au-delà le R/R vers TP1 tomberait sous 1,5 sur le plus bas du 16 octobre (7,595 $) ».",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-SRC-002",
+      "where": "news[0].sourceUrl",
+      "problem": "L’actualité du 16 octobre (source « Barres certifiées ») renvoie au communiqué SEC du 16 septembre, qui ne porte pas ces données.",
+      "fix": "news[0].sourceUrl : https://articles.dailytickers.com/data/analyses-evidence/ALMU.json (données de marché datées).",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-VAL-003",
+      "where": "fundamentals.rows[11].comparison, verdict.whyAvoid[4]",
+      "problem": "La comparaison retient Applied Optoelectronics (10,4×), Coherent (6,7×), nLIGHT (5,2×) et POET (88,2×). Elle omet Lumentum (29,3×) et AXT (24,4×), deux titres du même échantillon payés plus cher qu’Aeluma (21,9×). Lumentum est pourtant présenté comme un leader dans le rayon d’impact (comparison_context.json).",
+      "fix": "rows[11].comparison : ajouter « Lumentum 29,3×, AXT 24,4× » et une demi-phrase : les leaders en forte croissance peuvent valoir plus de 20 fois leurs ventes, Aeluma, elle, les paie sans croissance.",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-SEC-004",
+      "where": "capitalStructure.shareHistory, controlChecklist[1].evidence, riskCards[1].points[1]",
+      "problem": "Les options citées (1 878 953) datent du 17 mars. Le 10-K donne des chiffres au 30 juin 2026 : 1 772 828 options, 216 291 unités d’actions restreintes et 80 507 bons. Le capital dilué hors ATM et CHIPS n’est pas totalisé : 19 314 923 + 2 069 626 = 21 384 549 actions, soit +10,7 %.",
+      "fix": "Remplacer par les chiffres au 30 juin 2026 et ajouter « capital dilué de 21,38 millions d’actions (+10,7 %) avant programme et aide CHIPS ».",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-BIZ-001",
+      "where": "business.overview, business.theme",
+      "problem": "Deux omissions. D’abord, « environ 60 M$ depuis mars 2025 » est détaillé en 25,4 M$ + 20,7 M$ = 46,1 M$ : l’offre de mars 2025 manque (2 628 571 actions, 13,8 M$ bruts selon le 10-K). Ensuite, le 10-K indique que la société « a commencé à accepter de premières commandes commerciales », de petite taille, ce que le thème « pas encore vendue » passe sous silence.",
+      "fix": "overview : « 13,8 M$ en mars 2025, 25,4 M$ en septembre 2025 à 13,00 $ l’action, puis 20,7 M$ bruts… » ; ajouter « Le 10-K mentionne de premières commandes commerciales acceptées, de petite taille. »",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-TEC-001",
+      "where": "verdict.controlChecklist[2].action",
+      "problem": "« 7,67 $, plus bas du jour à 7,61 $, 1,0 % au-dessus du seuil d’abandon » peut se lire comme si 7,61 $ était à 1,0 % du seuil, alors qu’il n’en est qu’à 0,2 % ; le 1,0 % porte sur 7,67 $ (toAb = 7,67 / 7,595 − 1).",
+      "fix": "« 7,67 $, 1,0 % au-dessus du seuil d’abandon (plus bas du jour à 7,61 $) ».",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-SEC-006",
+      "where": "analyses/ALMU/_primary/may19-ex991.htm ; primary-manifest.json",
+      "problem": "La pièce 99.1 du 19 mai 2026 a été téléchargée dans _primary, mais elle n’apparaît ni dans le manifeste (opened_count = 12) ni dans text/. Les comptes restent cohérents, mais le fichier n’est pas déclaré.",
+      "fix": "La déclarer comme pièce non retenue dans review_scope, ou la retirer de _primary.",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-QA-001",
+      "where": "rendu (tools/render-analysis.js) : « 1:1.74 TP1 / 1:2.77 TP2 », « EMA 20 $11.39 », « MACD -1.260 », « Décision: attendre »",
+      "problem": "Défauts connus du gabarit commun, déjà relevés sur TRT : nombres au format anglais dans le détail du R/R et le tableau technique, « Décision: » sans espace.",
+      "fix": "Hors fiche : passer tools/render-analysis.js au format français pour toutes les fiches.",
+      "severity": "minor"
+    }
+  ],
+  "checks": [
+    {
+      "id": "AQ-VRD-001",
+      "status": "PASS",
+      "rationale": "Le verdict nomme Aeluma (Goleta) et son produit : photodétecteurs et lasers en semi-conducteurs composés, sur substrats de grand diamètre au lieu du phosphure d’indium. Il donne le contexte (−30,3 % en cinq séances avec toute la photonique), la contradiction (56,0 M$ de trésorerie, mais 39 % de dilution possible) et l’action (aucune entrée avant une clôture à 8,96 $ ou plus). Chiffres recoupés dans le communiqué du 16 septembre et dans bars.json.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#verdict.summary",
+        "analyses/ALMU/_primary/text/sep16-ex991.htm.txt",
+        "analyses/ALMU/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-VRD-002",
+      "status": "PASS",
+      "rationale": "Chiffres refaits : chiffre d’affaires de 4 461 k$, dont 4,3 M$ de contrats publics et 183 k$ d’autres ventes (10-K) ; perte nette de 9 159 k$ ; trésorerie de 56,0 M$ ; 7,95 / 31,79 − 1 = −75,0 % ; 7,95 / 11,40 − 1 = −30,26 % ; COHR −25,50 %, AAOI −31,07 %. Lien causal explicite : l’ATM et l’aide CHIPS sont fixés en dollars, donc plus le cours baisse, plus ils créent d’actions ; (29,3 + 30) / 7,95 = 7,46 millions d’actions, soit 38,6 % de 19 314 923.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#verdict.summary",
+        "analyses/ALMU/_primary/text/fy26-10k.htm.txt",
+        "analyses/ALMU/_data/comparison_bars.json"
+      ]
+    },
+    {
+      "id": "AQ-VRD-003",
+      "status": "PASS",
+      "rationale": "Note D, score 32 = 10 − 16 − 6 − 3 − 8 + 55 (score_components de editorial-judgments.json), justifiée par l’activité, le capital, la dilution et le calendrier. L’état du plan est distinct : surveiller, déclencheur sur clôture à 8,96 $, non atteint à 7,95 $.",
+      "evidenceRefs": [
+        "analyses/ALMU/_runs/20261019/revision/editorial-judgments.json#score_components",
+        "data/analyses-data/ALMU.json#tradeIdea.statusNote"
+      ]
+    },
+    {
+      "id": "AQ-VRD-004",
+      "status": "PASS",
+      "rationale": "Les cinq raisons d’acheter sont positives : trésorerie de 2,90 $ par action (56,0 / 19,315), lettre d’intention CHIPS, six contrats pour 5,3 M$, partenariats Tower et Sumitomo, 25,9 % du flottant à découvert présenté comme carburant de rebond. Les cinq raisons d’éviter sont négatives. whyAvoid[3] doit toutefois intégrer le plan 10b5-1 (bloquant AQ-EDT-003).",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#verdict.whyBuy",
+        "data/analyses-data/ALMU.json#verdict.whyAvoid"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-001",
+      "status": "PASS",
+      "rationale": "La fiche décrit le produit, l’argument de coût face au phosphure d’indium (tranches de deux à quatre pouces selon le 10-K, 300 mm selon le communiqué du 29 juillet), les clients publics, la charge de 14,6 M$ et la sous-traitance de la fabrication à Tower et Sumitomo. Mineur : offre de mars 2025 absente du détail des 60 M$ et premières commandes commerciales du 10-K non citées.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#business.overview",
+        "analyses/ALMU/_primary/text/fy26-10k.htm.txt",
+        "analyses/ALMU/_primary/text/jul30-ex991.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-002",
+      "status": "PASS",
+      "rationale": "Répartition des ventes conforme au 10-K : 4,3 M$ de contrats publics et 183 k$ d’autres produits et services (« 0,2 M$ ») ; deux clients à 59 % et 14 % ; tous les clients sont des agences publiques ; Navy et DARPA « contributed significantly ». Pas de segment déclaré au-delà de cette répartition.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#business.segments",
+        "analyses/ALMU/_primary/text/fy26-10k.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-003",
+      "status": "PASS",
+      "rationale": "Les indicateurs suivis sont adaptés à une société de recherche peu commerciale : contrats signés (six, 5,3 M$), concentration des clients, consommation de trésorerie (flux opérationnel de −3 266 k$, investissements de −646 k$, flux libre de −3,91 M$), rémunération en actions de 4 519 k$, valeur d’entreprise sur ventes plutôt que PER.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#fundamentals.rows",
+        "analyses/ALMU/_primary/text/sep16-ex991.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-EAR-001",
+      "status": "PASS",
+      "rationale": "Exercice clos le 30 juin 2026 ; 8-K et pièce 99.1 du 16 septembre (0001213900-26-100546) ; 10-K du même jour (0001213900-26-100584) ; dates vérifiées dans submissions.json.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#earnings.beatNote",
+        "analyses/ALMU/_primary/submissions.json"
+      ]
+    },
+    {
+      "id": "AQ-EAR-002",
+      "status": "PASS",
+      "rationale": "Quatrième trimestre recalculé à 582 k$ (4 954 − 4 372), contre 1 222 et 1 317 k$ ; perte nette de 4 013 k$ ; charges de 4 954 k$ ; exercice à 14 647 k$ de charges contre 6 807 k$ ; résultat opérationnel de −10 186 k$ ; EBITDA de −10 186 + 451 = −9 735 k$ ; EBITDA ajusté de −5 216 k$ ; intérêts reçus de 1 027 k$ ; baisse du chiffre d’affaires de 4 665 − 4 461 = 204 k$.",
+      "evidenceRefs": [
+        "analyses/ALMU/_primary/text/sep16-ex991.htm.txt",
+        "data/analyses-data/ALMU.json#fundamentals.rows[3]"
+      ]
+    },
+    {
+      "id": "AQ-EAR-003",
+      "status": "PASS",
+      "rationale": "Le communiqué ne contient aucune prévision chiffrée (pas de « guidance » ; « outlook » n’apparaît qu’à propos de la conférence). Les orientations qualitatives de l’exercice 2027 (négociations NRE pour l’interconnexion optique, machines MOCVD, recrutements) sont citées. Aucune annonce de dépassement du consensus : le consensus est absent des données (consensus_eps null).",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#earnings.beatNote",
+        "analyses/ALMU/_primary/text/sep16-ex991.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-EAR-004",
+      "status": "PASS",
+      "rationale": "Le 10-K et le communiqué du 16 septembre sont repris dans le récit, la valorisation, le capital et les risques.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#filingsReview.filings[0]",
+        "data/analyses-data/ALMU.json#filingsReview.filings[1]"
+      ]
+    },
+    {
+      "id": "AQ-EAR-005",
+      "status": "PASS",
+      "rationale": "Date non confirmée par l’émetteur : aucun 8-K d’annonce dans submissions.json. Yahoo donne le 11 novembre 2026 à 20:00Z, Webull la fenêtre « 11/10-11/16 ». Le 8-K du premier trimestre de l’an dernier date du 12 novembre 2025 (0001213900-25-109273). La position est soldée à la clôture du 10 novembre, ou la veille de la publication si une date plus proche est annoncée : la règle couvre le bas de la fenêtre Webull.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#earnings.nextEarnings",
+        "analyses/ALMU/_data/fundamentals.json",
+        "analyses/ALMU/_data/instrument.json",
+        "analyses/ALMU/_primary/submissions.json"
+      ]
+    },
+    {
+      "id": "AQ-VAL-001",
+      "status": "PASS",
+      "rationale": "Trois mesures : valeur d’entreprise sur ventes de (153,55 − 56,0) / 4,461 = 21,9× ; capitalisation sur fonds propres de 153,55 / 56,932 = 2,70× ; scénario à dix fois les ventes : (44,61 + 56,0) / 19,315 = 5,21 $, soit 34 % sous la clôture.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#fundamentals.rows[11]",
+        "data/analyses-data/ALMU.json#fundamentals.rows[13]"
+      ]
+    },
+    {
+      "id": "AQ-VAL-002",
+      "status": "PASS",
+      "rationale": "Bases explicites : clôture du 16 octobre ; 19 314 923 actions au 23 septembre ; chiffre d’affaires GAAP de l’exercice clos le 30 juin 2026 (XBRL) ; trésorerie et dépôt à terme de 56,0 M$ ; valeur d’entreprise définie hors loyers (le fournisseur affiche 99,18 M$ avec 2,02 M$ de dette locative, différence assumée).",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#fundamentals.rows[11]",
+        "analyses/ALMU/_runs/20261019/revision/primary-manifest.json#gaap_facts",
+        "analyses/ALMU/_data/fundamentals.json"
+      ]
+    },
+    {
+      "id": "AQ-VAL-003",
+      "status": "PASS",
+      "rationale": "Multiples des pairs vérifiés dans comparison_context.json : AAOI 10,389, COHR 6,674, LASR 5,236, POET 88,174. L’attente intégrée au cours est explicite : à 10× les ventes, le titre vaudrait 5,21 $ ; le marché paie donc une montée en production. Mineur : Lumentum (29,3×) et AXT (24,4×) sont omis.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#fundamentals.rows[11].comparison",
+        "analyses/ALMU/_data/comparison_context.json"
+      ]
+    },
+    {
+      "id": "AQ-SEC-001",
+      "status": "PASS",
+      "rationale": "10-K : formulaire, date, accession 0001213900-26-100584, lien direct et constat chiffré (19 265 671 actions au 11 septembre, 50 000 000 autorisées, 29,3 M$ restants sur l’ATM, 830 484 actions vendues, 80 507 bons). Le constat devra intégrer l’item 9A (bloquant AQ-SEC-005).",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#filingsReview.filings[0]",
+        "analyses/ALMU/_primary/text/fy26-10k.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-SEC-002",
+      "status": "PASS",
+      "rationale": "Chaque dépôt d’émission est qualifié. ATM : actions ordinaires, 50 M$, émetteur, quatre agents, commission jusqu’à 3 %, 830 484 × 24,87 = 20,65 M$ bruts, 29,3 M$ restants (10-K). Offre de septembre 2025 : 1 700 000 + 255 000 = 1 955 000 actions à 13,00 $, 25,4 M$. 424B3 : revente par des actionnaires de jusqu’à 14 011 726 actions, sans produit pour la société. CHIPS : titres de capital non enregistrés, d’une valeur égale à l’aide de 30 M$ au plus, documents non signés. S-3 de 100 M$ efficace le 8 août 2025. S-8 : plafond relevé de 5 % chaque 1er janvier.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#capitalStructure.atm",
+        "analyses/ALMU/_primary/text/mar20-424b5-atm.htm.txt",
+        "analyses/ALMU/_primary/text/sep19-2025-8k.htm.txt",
+        "analyses/ALMU/_primary/text/feb9-424b3.htm.txt",
+        "analyses/ALMU/_primary/text/jul30-ex991.htm.txt",
+        "analyses/ALMU/_primary/text/sep18-s8.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-SEC-003",
+      "status": "PASS",
+      "rationale": "La fiche distingue étagère S-3, ATM, émission primaire de 2025, revente secondaire (424B3), émission CHIPS hors ATM, options, bons et plan d’intéressement. Plafond du tiers du flottant : 75 M$ / 14,787 M d’actions = 5,07 $, présenté comme approximation.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#capitalStructure.shareHistory",
+        "data/analyses-data/ALMU.json#blastRadius.missingData[5]"
+      ]
+    },
+    {
+      "id": "AQ-SEC-004",
+      "status": "PASS",
+      "rationale": "Nombre d’actions rapproché : 19 257 755 au 30 juin, 19 265 671 au 11 septembre, 19 314 923 au 23 septembre (circulaire) ; capitalisation de 19 314 923 × 7,95 = 153,6 M$ ; marge statutaire de 50 000 000 − 19 314 923 = 30 685 077. Dilution possible : 3,69 + 3,77 = 7,46 millions d’actions (38,6 %). Mineur : options datées du 17 mars au lieu du 30 juin, capital dilué non totalisé.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#capitalStructure",
+        "analyses/ALMU/_primary/text/sep30-def14a.htm.txt",
+        "analyses/ALMU/_primary/text/fy26-10k.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-SEC-005",
+      "status": "BLOCK",
+      "rationale": "Le 10-K affirme une faiblesse matérielle du contrôle interne au 30 juin 2026 et des contrôles de communication inefficaces ; la fiche n’en dit rien. La conclusion sur la continuité d’exploitation (trésorerie suffisante pour douze mois et au-delà, aucune mention de doute substantiel) manque aussi. Correction exacte dans blockingFindings[0].",
+      "evidenceRefs": [
+        "analyses/ALMU/_primary/text/fy26-10k.htm.txt",
+        "data/analyses-data/ALMU.json#filingsReview"
+      ]
+    },
+    {
+      "id": "AQ-SEC-006",
+      "status": "PASS",
+      "rationale": "Inventaire de 36 formulaires recompté sur submissions.json du 16 octobre 2025 au 16 octobre 2026, hors formulaires d’initiés : dix 8-K, trois 10-Q, un 10-K, un 424B5, quatre 424B3, trois POS AM, deux EFFECT, un S-8, deux DEF 14A, deux DEFA14A, un ARS, cinq 13G ou 13G/A, un 13D/A. Pièces ouvertes et relues : 12 = 9 + 3 hors fenêtre (S-3, 424B5 et 8-K de 2025). 12 lignes dans filingsReview. Mineur : may19-ex991.htm présent dans _primary mais non déclaré.",
+      "evidenceRefs": [
+        "analyses/ALMU/_primary/submissions.json",
+        "analyses/ALMU/_runs/20261019/revision/primary-manifest.json",
+        "data/analyses-data/ALMU.json#filingsReview.summary"
+      ]
+    },
+    {
+      "id": "AQ-TEC-001",
+      "status": "PASS",
+      "rationale": "Clôture de référence du 16 octobre (bars.json : served_completed_end 2026-10-16, barre du 19 non incluse). Cotation du 19 octobre horodatée à 14 h 00 New York (instrument.json : timestamp 2026-10-19T18:00:14Z, session_state « open »), présentée comme séance ouverte. Valeurs conformes : prix 7,67 $, ouverture 8,40 $, plus haut 8,44 $, plus bas 7,61 $, 424 683 actions, −0,28 $ ; 7,67 / 7,95 − 1 = −3,5 % ; 8,96 / 7,67 − 1 = +16,8 %. Mineur : publier avant la clôture, sinon relire la clôture du 19.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#technicals.setupNote",
+        "analyses/ALMU/_data/instrument.json",
+        "analyses/ALMU/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-TEC-002",
+      "status": "PASS",
+      "rationale": "Support à 7,595 $ : plus bas du 16 octobre et des 300 séances certifiées, l’absence de support plus bas étant expliquée. Résistances relues dans bars.json : 9,58 $ (plus haut du 14), 11,31 $ (12), 12,71 $ (8, ouverture en trou sous la clôture de 12,90 $ du 7) ; plus hauts décroissants 11,31, 10,15, 9,58, 8,95 et 8,86 $.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#technicals",
+        "analyses/ALMU/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-TEC-003",
+      "status": "PASS",
+      "rationale": "Chaque niveau a sa raison. Déclencheur : clôture à 8,96 $ ou plus, au-dessus du plus haut du 15 octobre (8,95 $). Plafond d’achat à 9,08 $, plus haut prix gardant un R/R de 1,5 vers TP1. Abandon sous 7,595 $ tant que rien n’est acheté. Ordre stop simple à 7,59 $. Stop remonté à 8,95 $ dès 9,58 $. TP1 à 11,31 $ (moitié), TP2 à 12,71 $. Fenêtres : dernière activation le 30 octobre (vendredi), trois séances d’achat jusqu’au 4 novembre (2, 3 et 4), sortie à la clôture du 10 novembre. Un seul achat.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#tradeIdea.statusNote",
+        "data/analyses-data/ALMU.json#tradeIdea.entryNote",
+        "data/analyses-data/ALMU.json#tradeIdea.invalidation"
+      ]
+    },
+    {
+      "id": "AQ-TEC-004",
+      "status": "PASS",
+      "rationale": "Calculs refaits. Sur 7,595 $ : 2,36 / 1,355 = 1,74 et 3,76 / 1,355 = 2,77 au déclencheur ; 2,23 / 1,485 = 1,50 au plafond, borne (22,7025 / 2,5 = 9,081 $). Sur 7,59 $ : 1,735, 2,765, 1,497 et 2,436. Pourcentages : +26,4 %, +42,0 %, −15,1 %. ATR Wilder 0,922 ; (8,95 − 7,59) / 0,922 = 1,48 ; 0,13 / 0,922 = 0,14. Tailles : 100 / 1,49 = 67 (608 $), 44 (400 $), 671 (6 093 $), 447 ; 447 / 498 193 = 0,09 %. Mineur : case Stop à −15,1 % pour 7,59 $, et 1,497 publié 1,50.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#tradeIdea.rr",
+        "data/analyses-data/ALMU.json#tradeIdea.entryNote",
+        "analyses/ALMU/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-TEC-005",
+      "status": "PASS",
+      "rationale": "Événements binaires traités : sortie avant la publication du premier trimestre (clôture du 10 novembre ou veille de la date annoncée) ; signature de l’aide CHIPS soumise à condition ; assemblée du 19 novembre postérieure à la sortie. La cotation intrajournalière ne sert pas de confirmation, et le volume n’est pas exigé pour activer. Les dates de résultats d’AXT et de Teledyne sont mal renseignées (bloquant AQ-SRC-003), sans effet sur le veto propre à Aeluma.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#tradeIdea.horizon",
+        "data/analyses-data/ALMU.json#tradeIdea.catalysts"
+      ]
+    },
+    {
+      "id": "AQ-RSK-001",
+      "status": "PASS",
+      "rationale": "Cinq risques propres au titre, chacun avec mécanisme et preuve : clients publics (59 % et 14 %, quatrième trimestre à 0,58 M$), dilution (7,46 millions d’actions), pertes (4,95 M$ de charges sur le trimestre), contagion du compartiment (24 et 4 ouvertures en trou de 5 et 10 % ou plus sur 250 séances, pire de −6,59 $ le 14 mai), initiés et gouvernance (quorum abaissé au tiers). La carte « Initiés » devra intégrer le plan 10b5-1 et la faiblesse de contrôle.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#risks.riskCards",
+        "analyses/ALMU/_data/bars.json",
+        "analyses/ALMU/_primary/text/sep30-8k-503.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-RSK-002",
+      "status": "PASS",
+      "rationale": "Le cas contraire est chiffré : CHIPS payée en actions (3,77 millions), aucun client commercial chiffré, quorum abaissé, aucun support sous 7,59 $, objectif des analystes à 23,50 $ (deux analystes, « Strong Buy », fundamentals.json) face aux ventes du fondateur, corrélation la plus forte avec Lightwave Logic (0,7229 refaite sur 126 rendements). contrarianRisks[2] est à corriger (bloquant AQ-EDT-003).",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#filingsReview.contrarianRisks",
+        "data/analyses-data/ALMU.json#blastRadius.contradictions",
+        "analyses/ALMU/_data/comparison_bars.json"
+      ]
+    },
+    {
+      "id": "AQ-RSK-003",
+      "status": "PASS",
+      "rationale": "La war room est couverte. Trous : 6 ouvertures sur 250 sous la veille de plus de 1,36 $, pire −6,59 $. Liquidité : 6,17 M$ médians sur 20 séances (6 174 104 $). Glissement : ordres limités seulement, écart achat-vente non mesuré. Taille réduite d’un tiers, risque de 16 % du prix. Pas de poursuite au-dessus de 9,08 $, aucun achat sur ouverture sous 7,595 $, un seul achat, stop simple et non limité.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#tradeIdea.entryNote",
+        "data/analyses-data/ALMU.json#tradeIdea.invalidation",
+        "analyses/ALMU/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-SRC-001",
+      "status": "PASS",
+      "rationale": "Chaque section cite sa source : activité (10-K, communiqués du 16 septembre et du 29 juillet), résultats (8-K pièce 99.1 et 10-K), capital (10-K, 8-K, 424B5, S-3, circulaire, 8-K de 2025), technique et pairs (données de marché horodatées), initiés (formulaires 4 et circulaire).",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#capitalStructure.sourceRefs",
+        "data/analyses-data/ALMU.json#technicals.sourceRefs",
+        "data/analyses-data/ALMU.json#insiders.sourceRefs"
+      ]
+    },
+    {
+      "id": "AQ-SRC-002",
+      "status": "PASS",
+      "rationale": "Douze liens EDGAR directs, avec date et accession conformes à submissions.json ; données de marché horodatées (2026-10-19T18:00:18Z). Mineur : le lien de news[0] pointe vers le communiqué SEC au lieu des données de marché.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#filingsReview.filings",
+        "data/analyses-data/ALMU.json#news[0]",
+        "analyses/ALMU/_primary/submissions.json"
+      ]
+    },
+    {
+      "id": "AQ-SRC-003",
+      "status": "BLOCK",
+      "rationale": "Plus de 25 chiffres relus sans écart : les initiés (Klamkin 350 000 actions, 5,309 M$ ; DenBaars 75 000, 1,269 M$ ; Tompkins 632 000, 10,533 M$), le consensus (2 analystes, 23,50 $) et les ventes à découvert (3 722 208 actions). En revanche, deux affirmations de calendrier sont contredites par comparison_earnings.json : TDY publie le 21 octobre et AXTI le 29 octobre. S’y ajoutent l’interprétation des ventes du fondateur sans le plan 10b5-1 (bloquant AQ-EDT-003) et, en mineur, le calcul 25,9 % / 14,79 M et le relevé FINRA du 30 septembre présenté comme « non daté ».",
+      "evidenceRefs": [
+        "analyses/ALMU/_data/comparison_earnings.json",
+        "analyses/ALMU/_data/insiders.json",
+        "analyses/ALMU/_data/instrument.json",
+        "data/analyses-data/ALMU.json#blastRadius.groups"
+      ]
+    },
+    {
+      "id": "AQ-EDT-001",
+      "status": "PASS",
+      "rationale": "Contrôle de lot sur 374 fiches de data/analyses-data. Seuls trois libellés de méthode du gabarit dépassent ou frôlent 10 % : le libellé de fenêtre (39 fiches), « Les groupes sont définis par le lien économique… » (38) et la phrase sur les rendements simples (36). Ce sont des bornes de données autorisées. Aucune conclusion, aucun risque ni aucune invalidation n’est partagé. check-analysis-editorial-quality : 0 erreur.",
+      "evidenceRefs": [
+        "data/analyses-data",
+        "data/analyses-data/ALMU.json#performance.windowReturns.label"
+      ]
+    },
+    {
+      "id": "AQ-EDT-002",
+      "status": "PASS",
+      "rationale": "Verdict, synthèse des risques, catalyseurs (contrat d’ingénierie, signature CHIPS, rebond COHR, LITE, AAOI) et invalidations (7,595 $, 8,96 $, 30 octobre, émission sous le cours) ne valent que pour Aeluma.",
+      "evidenceRefs": [
+        "data/analyses-data/ALMU.json#tradeIdea.catalysts",
+        "data/analyses-data/ALMU.json#risks.riskSummary"
+      ]
+    },
+    {
+      "id": "AQ-EDT-003",
+      "status": "BLOCK",
+      "rationale": "missingData[4] et insiders.signal présentent comme non vérifié le plan de ventes programmées du fondateur, que le 10-K ouvert établit (item 9B : plan 10b5-1 du 23 mai 2026, au plus 300 000 actions, jusqu’au 31 mai 2027). Mineur : le relevé FINRA est qualifié de « non daté » et le volume vendeur FINRA de « non servi », alors que les deux sont présents. Correction exacte dans blockingFindings[1].",
+      "evidenceRefs": [
+        "analyses/ALMU/_primary/text/fy26-10k.htm.txt",
+        "data/analyses-data/ALMU.json#blastRadius.missingData",
+        "data/analyses-data/ALMU.json#insiders.signal"
+      ]
+    },
+    {
+      "id": "AQ-QA-001",
+      "status": "PASS",
+      "rationale": "Hachages SHA-256 du JSON, de l’évidence et du HTML conformes à la commande. validate-analysis-evidence : PASS, 450 affirmations. check-analysis-editorial-quality --strict --pre-review : 0 erreur, 0 avertissement. qa-content --strict : 30 sur 30. check-ai-tells --strict : propre (fiche de 9 272 mots, Telegram de 99). check-freshness : 18 sources, 0 bloquante. Schéma : 0 erreur. Le rendu en mémoire est identique octet pour octet à analyses/ALMU/index.html (2978d2c8…) et à preview/index.html ; lang=\"fr\", GTM présent. Restent les défauts connus du gabarit (mineur).",
+      "evidenceRefs": [
+        "analyses/ALMU/index.html",
+        "analyses/ALMU/_runs/20261019/preview/index.html",
+        "analyses/ALMU/_data/harness.json"
+      ]
+    },
+    {
+      "id": "AQ-QA-002",
+      "status": "PASS",
+      "rationale": "Statut BLOCK enregistré pour ALMU, avec une correction exacte (champs et texte) pour chacun des trois bloquants et pour chaque mineur.",
+      "evidenceRefs": [
+        "analyses/ALMU/_runs/20261019/revision/review-senior_qa.json"
+      ]
+    },
+    {
+      "id": "AQ-QA-003",
+      "status": "BLOCK",
+      "rationale": "Score éditorial de 82 sur 100 : verdict 14/15, activité 9/10, résultats 14/15, valorisation 8/10, capital 10/15, technique 14/15, risques 7/10, sources 3/5, rédaction 3/5. La porte reste fermée tant que les trois bloquants sont ouverts. Une fois corrigés, sans changement des niveaux, la fiche devrait dépasser 85.",
+      "evidenceRefs": [
+        "analyses/ALMU/_runs/20261019/revision/review-senior_qa.json"
+      ]
+    }
+  ],
+  "telegramReview": {
+    "status": "PASS",
+    "findings": [
+      "99 mots, sous la limite de 100 ; check-ai-tells --strict propre. Chiffres identiques à la fiche : 7,95 $ le 16 octobre ; 7,67 $ (−3,5 %) et plus bas de 7,61 $ à 14 h 00 New York ; 39 % de dilution possible ; clôture à 8,96 $ ou plus d’ici le 30 octobre ; limite à 9,08 $ ; stop à 7,59 $ ; objectifs à 11,31 et 12,71 $ ; sortie le 10 novembre ; abandon sous 7,595 $ avant l’achat. Les bloquants ne touchent pas le texte Telegram.",
+      "Mineur : « Lundi 14 h 00 à New York » sans date. Écrire « 19 oct., 14 h 00 New York », même nombre de mots. Si la publication a lieu après 16 h 00 New York, refaire le texte sur la clôture du 19 octobre."
+    ]
+  }
+}

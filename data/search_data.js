@@ -1757,6 +1757,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ALMU",
+    "exchange": "NASDAQ · Semi-conducteurs composés pour la photonique et les capteurs",
+    "name": "ALMU — Aeluma (ALMU) à 7,95 $, −30 % en cinq séances. 56,0 M$ en caisse, mais 39 % d’actions n...",
+    "title": "ALMU — Aeluma (ALMU) à 7,95 $, −30 % en cinq séances. 56,0 M$ en caisse, mais 39 % d’actions n...",
+    "desc": "Aeluma fait pousser des semi-conducteurs composés pour la photonique sur de grands substrats. Ventes de 4,5 M$, surtout publiques, 56,0 M$ en caisse, mais un programme d’émission d’actions ouvert et une aide CHIPS payable en actions. Clôture à 7,95 $, −75 % depuis mai : surveiller, sans entrée.",
+    "tags": "us,semis,ai,small-cap,speculative,trade-idea",
+    "grade": "D",
+    "href": "/analyses/ALMU/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "FUFU",
     "exchange": "NASDAQ · Minage de bitcoin, minage en nuage et hébergement de machines",
     "name": "FUFU — BitFuFu (FUFU) à 0,90 $ après −31,3 % le 16 octobre : revenus en chute, dette fournisse...",
@@ -4352,19 +4365,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,semis,ai,trade-idea",
     "grade": "B+",
     "href": "/analyses/FN/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "ALMU",
-    "exchange": "NASDAQ • Technology • Semiconductors — Compound Semiconductors / Optoelectronics",
-    "name": "ALMU — compound semiconductor pioneer for AI/defense/AR optics. Benchmark buy, OFC 2026 cataly...",
-    "title": "ALMU — compound semiconductor pioneer for AI/defense/AR optics. Benchmark buy, OFC 2026 cataly...",
-    "desc": "Aeluma (ALMU) analysis: compound semiconductor play for AI optical interconnects. $271M market cap, $38.6M cash, Benchmark buy rating linked to Nvidia optical push. Price $15.00.",
-    "tags": "us,healthcare,speculative",
-    "grade": "B+",
-    "href": "/analyses/ALMU/",
     "date": ""
   },
   {
