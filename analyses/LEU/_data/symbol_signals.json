@@ -1,28 +1,28 @@
 {
-  "captured_at": "2026-10-09T06:03:09.968483903Z",
+  "captured_at": "2026-10-19T16:31:03.401171266Z",
   "commit": "de18580222185d966999ee478457ee7766e500e4",
   "deployment_id": "de1858022218-ace",
-  "intent_id": "21b52cba-f308-4365-99c8-b7614fbb1670",
+  "intent_id": "49a881e2-b64d-4fb3-afd1-9dab6f2d39e5",
   "results": [
     {
       "symbol": "LEU",
       "opportunity_score": 0,
       "risk_score": 0,
-      "squeeze_score": 52.9,
+      "squeeze_score": 57.6,
       "opportunities": [],
       "risks": [],
       "squeeze": {
-        "score": 52.9,
+        "score": 57.6,
         "components": [
           {
             "name": "short_float",
-            "value": 27.52538,
-            "sub_score": 91.8
+            "value": 30.15735,
+            "sub_score": 100
           },
           {
             "name": "ctb",
-            "value": 0.5296,
-            "sub_score": 1.1
+            "value": 0.5807,
+            "sub_score": 1.2
           }
         ],
         "note": "composite of short_float+ctb over the inputs present (see components); FINRA daily short-sale volume is intentionally excluded because it is non-directional, and days-to-cover/short_ratio is not exposed on this fast path"
@@ -32,7 +32,7 @@
         "status": "measured",
         "active_measured": 1,
         "active_unmeasured": 1,
-        "unknown": 1,
+        "unknown": 2,
         "active_count": 2,
         "components": [
           {
@@ -45,7 +45,7 @@
               "reliable_bullish_views": 0
             },
             "source": "Seeking Alpha contributors passing the reliability gate (GetAnalystTradeIdeas)",
-            "as_of": "2026-10-09",
+            "as_of": "2026-10-19",
             "history": "about 13 months of article history; reliability is scored on the same history, so only the point-in-time rebuild in the event study is out-of-sample"
           },
           {
@@ -58,22 +58,16 @@
               "downgrades": 0
             },
             "source": "Finviz per-symbol dated analyst actions (analysts.Service)",
-            "as_of": "2026-10-09",
+            "as_of": "2026-10-19",
             "history": "about 2 years of dated actions per symbol (Finviz); the event study used a 6-year Yahoo crawl"
           },
           {
             "name": "insider_selling",
-            "state": "inactive",
+            "state": "unknown",
             "measured": true,
             "definition": ">= 2 distinct insiders sold on the open market for >= $1000000 in total, and no open-market purchase, in filings public in the last 30 days",
-            "value": {
-              "bought_usd": 0,
-              "coverage_certified": true,
-              "sellers": 0,
-              "sold_usd": 0
-            },
+            "detail": "SEC insider read failed: context deadline exceeded",
             "source": "SEC EDGAR Form 4 (local corpus; official filings only)",
-            "as_of": "2026-10-09",
             "history": "corpus history is only partly certified (13 of 5820 index days at the time of writing), so live reads are coverage-gated; the event study used SEC's public Form 345 datasets (2020-2026) instead"
           },
           {
@@ -83,15 +77,15 @@
             "definition": "close below SMA200 AND 12-1 month momentum < 0 AND 63-session return below SPY's",
             "value": {
               "below_sma200": true,
-              "close": 142.09,
-              "momentum_12_1": -0.5096,
+              "close": 114.94,
+              "momentum_12_1": -0.6563,
               "negative_momentum": true,
-              "rel_strength_63_vs_spy": -0.1944,
-              "sma200": 198.6718,
+              "rel_strength_63_vs_spy": -0.2936,
+              "sma200": 194.8916,
               "weaker_than_spy": true
             },
             "source": "daily bars (stock and SPY)",
-            "as_of": "2026-10-08",
+            "as_of": "2026-10-16",
             "history": "years of daily bars (point in time by construction)"
           },
           {
@@ -101,7 +95,7 @@
             "definition": "put/call volume ratio > 1.5 (the risk detector's threshold)",
             "detail": "no value available for this symbol",
             "source": "Yahoo options chain, current snapshot",
-            "as_of": "2026-10-09",
+            "as_of": "2026-10-19",
             "history": "none: only today's chain is read; no stored history",
             "unmeasured_reason": "current snapshot only, no point-in-time history to test"
           },
@@ -110,9 +104,9 @@
             "state": "active",
             "measured": false,
             "definition": "short float >= 20% of float (descriptive level, not fitted; can also mean squeeze risk)",
-            "value": 27.5254,
+            "value": 30.1574,
             "source": "static data short float, current snapshot",
-            "as_of": "2026-10-09",
+            "as_of": "2026-10-19",
             "history": "none: the daily snapshot store does not record short interest",
             "unmeasured_reason": "current snapshot only, no point-in-time history to test"
           },
@@ -121,9 +115,9 @@
             "state": "inactive",
             "measured": false,
             "definition": "cost to borrow > 30% (the risk detector's threshold)",
-            "value": 0.5296,
+            "value": 0.5807,
             "source": "iBorrowDesk, current snapshot (US only)",
-            "as_of": "2026-10-09",
+            "as_of": "2026-10-19",
             "history": "none: only the current rate is read",
             "unmeasured_reason": "current snapshot only, no point-in-time history to test"
           },
@@ -135,7 +129,7 @@
             "value": 0,
             "detail": "change over 29 recorded days",
             "source": "StockAnalysis consensus via the daily snapshot store",
-            "as_of": "2026-10-09",
+            "as_of": "2026-10-19",
             "history": "forward-only: recording started with the snapshot worker (about 5 weeks at the time of writing)",
             "unmeasured_reason": "too short a history for an event study"
           }
@@ -190,5 +184,5 @@
   },
   "server_version": "de1858022218-ace",
   "status": "completed",
-  "trace_id": "aafba195-a557-4277-93e8-c9c4b71167c4"
+  "trace_id": "2ce8b0c4-c00f-4546-971d-c341aaf166f8"
 }

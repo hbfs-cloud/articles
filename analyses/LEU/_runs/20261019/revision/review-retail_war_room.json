@@ -1,0 +1,309 @@
+{
+  "role": "retail_war_room",
+  "reviewerId": "leu-retail-war-room-20261019",
+  "reviewerName": "Claude (revue war room indépendante)",
+  "round": 2,
+  "analysisSha256": "7b31ae76aa2f5d3a4856e9e9f877ea135f038fb276ae2a61f16a6dfc8a3a6d67",
+  "evidenceSha256": "963ca593c06776daec03cb8c1e072f48acffedf9a4cde937d2f4cb90507c8263",
+  "pageSha256": "fd69c6d393baad2bec2ac35ad539be962553a4269b49485a90727bbce62f59d0",
+  "telegramSha256": "d260b20ecf8235153a6d96c4ae7c7fb9730998422d81624f7d0aa299d517b809",
+  "referenceClose": "2026-10-16",
+  "status": "PASS",
+  "score": 88,
+  "blockingFindings": [],
+  "resolvedFromRound1": [
+    {
+      "id": "AQ-RSK-003",
+      "finding": "Statistique des écarts d’ouverture mesurée avec l’ATR du jour en dollars (14 cas).",
+      "verification": "Levé. risks.riskCards[3].points[1] compare maintenant chaque ouverture à l’ATR de Wilder de la veille (build-leu.cjs, l. 170 ; provenance l. 131). Recalcul sur bars.json, fenêtre 20 octobre 2025 → 16 octobre 2026 : un seul cas, le 6 novembre 2025, de 325,73 $ à 287,35 $ (−11,8 %) pour un ATR de 35,76 $ la veille ; sept ouvertures à plus de 5 % sous la veille, dont cinq en octobre et novembre 2025 (22 octobre, 4, 6, 7 et 14 novembre) ; pire ouverture d’octobre 2026, −4,47 % le 7 ; chute faite en séance (−7,7 % d’ouverture à clôture le 14, −7,0 % le 16). La pédagogie cite le même −11,8 % au lendemain des résultats. Le sidecar et numeric-evidence.json sont liés au nouveau hash."
+    },
+    {
+      "id": "AQ-RSK-003",
+      "finding": "Mineur : « Aucune position » ambigu pour l’actionnaire déjà investi.",
+      "verification": "Levé. L’horizon dit « Aucun achat au cours actuel », la carte de risque « aucun achat tant que la tendance n’a pas changé ». Le statusNote ajoute une phrase pour l’actionnaire : « cette fiche ne donne pas de consigne de vente » + 112,61 $ + risque de gap à la publication. Même phrase dans le Telegram : « Déjà actionnaire : ce message ne dit pas de vendre. Sous 112,61 $ en clôture, le titre n'a plus de support sur un an. »"
+    },
+    {
+      "id": "AQ-QA-001",
+      "finding": "Mineur Telegram : « Lundi 19 : Centrus rachète Westerman ».",
+      "verification": "Levé : « Centrus a racheté Westerman (annoncé le lundi 19) ». Dans la fiche : « conclu ce jour-là, n’a été annoncé que le 19 »."
+    }
+  ],
+  "minorFindings": [
+    {
+      "id": "AQ-QA-001",
+      "where": "telegram-draft.html, deuxième ligne (« Centrus possède la seule usine occidentale autorisée à produire du HALEU »)",
+      "problem": "Nouveau mineur. La fiche attribue cinq fois cette exclusivité à la société (« selon elle », « selon la société ») ; le Telegram l’affirme comme un fait. Et « possède » est inexact : le 10-K parle du bail du site de Piketon, loué au Département de l’Énergie (« our lease to our facility in Piketon, Ohio »). La suite, « Elle n'en produit plus depuis mi-juin, faute de contrat de production », est juste au regard du 10-Q : production de l’option 1a achevée mi-juin, option 1b à 15,0 M$ sans production, aucune autre option prévue par le Département. Aucun effet sur la consigne.",
+      "fix": "« Centrus possède la seule usine occidentale autorisée à produire du HALEU, » → « Centrus exploite, selon elle, la seule usine occidentale autorisée à produire du HALEU, »"
+    },
+    {
+      "id": "AQ-TEC-001",
+      "where": "technicals.setupNote ; telegram-draft.html (« Ne pas acheter à 114,94 $ » ; « si le titre tient 112,61 $ en clôture »)",
+      "problem": "Reporté par le propriétaire, non bloquant. La cotation collectée le 19 octobre à 12 h 29, heure de New York (110,19 $, plus bas 109,10 $), était déjà sous 112,61 $. La consigne reste juste : aucun achat avant les résultats, réexamen compté après la publication.",
+      "fix": "Prochaine version, comme au tour 1 : ajouter au setupNote la phrase d’observation intrajournalière datée ; Telegram « Ne pas acheter, ni à 114,94 $ ni plus bas » et « clôture au-dessus de 112,61 $ cinq séances de suite »."
+    },
+    {
+      "id": "AQ-TEC-003",
+      "where": "tradeIdea.entryNote (« aucun tirage « at-the-market » ni enregistrement de revente de grande taille entre-temps ») ; blastRadius.scenarios[0]",
+      "problem": "Reporté par le propriétaire. Deux points restent ouverts. Les tirages ATM ne sont pas observables en temps réel. Et le texte ne dit pas si la revente annoncée des quelque 165 000 actions Westerman suffit à bloquer le réexamen. Sans effet sur un ordre : aucun ordre n’existe.",
+      "fix": "Prochaine version : texte de remplacement du tour 1 (review-retail_war_room-r1.json, minorFindings[2])."
+    },
+    {
+      "id": "AQ-RSK-003",
+      "where": "tradeIdea.entryNote (« Ne pas acheter une ouverture en gap à plus d’un ATR (9,79 $) au-dessus du niveau franchi. »)",
+      "problem": "Reporté par le propriétaire. « Le niveau franchi » ne dit pas si c’est 127,11 $ ou 135,75 $, et l’ATR reste figé au 16 octobre.",
+      "fix": "Prochaine version : texte de remplacement du tour 1 (r1, minorFindings[3])."
+    },
+    {
+      "id": "AQ-QA-001",
+      "where": "telegram-draft.html (« avec du volume » ; « (utilisables vers le 8 novembre) » ; « bons sur près de 7 M d'actions »)",
+      "problem": "Reporté par le propriétaire. Il manque le seuil de volume et la condition de dilution du réexamen. Le programme ATM peut servir avant le 8 novembre avec l’accord de Guggenheim. Et « bons » reste trop technique. Le coordinateur raccourcira le texte sans changer les faits.",
+      "fix": "Prochaine version : textes de remplacement du tour 1 (r1, minorFindings[4] et [5], hors point Westerman déjà corrigé)."
+    },
+    {
+      "id": "AQ-EDT-003",
+      "where": "earnings.nextEarnings (« date postérieure à la fenêtre du calendrier collecté ») ; gabarit (date du prix du hero, « Décision: », colonne « % du total » des segments, formats anglais du ladder archivé)",
+      "problem": "Reportés par le propriétaire : mineurs de rédaction et de gabarit, sans effet sur la consigne.",
+      "fix": "Prochaine version : textes de remplacement du tour 1 (r1, minorFindings[6] et [7])."
+    }
+  ],
+  "checks": [
+    {
+      "id": "AQ-VRD-001",
+      "status": "PASS",
+      "rationale": "Le résumé nomme Centrus et son usine HALEU de Piketon, l’exclusivité étant attribuée à la société. Il pose d’emblée la contradiction : production arrêtée depuis mi-juin, 15,0 M$ de maintenance et de stockage seulement, aucune autre option prévue. Puis le catalyseur (−19,1 %, Westerman annoncé le 19) et l’action : « aucun ordre ».",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/verdict/summary", "data/analyses-data/LEU.json#/meta/description", "analyses/LEU/_primary/text/q2-10q.htm.txt"]
+    },
+    {
+      "id": "AQ-VRD-002",
+      "status": "PASS",
+      "rationale": "Faits propres au titre : 15,0 M$ pour l’option 1b sans production (10-Q), carnet de 4,5 Md$, contrat de 900 M$, 114,94 $, −19,1 %, 116 M$ dont 21 M$ en actions, 31 % du flottant à découvert au 30 septembre. Le lien causal (baisse d’abord sectorielle) se recalcule : NuScale −20,36 %, Oklo −19,09 %, Cameco −6,43 % sur comparison_bars.json.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/verdict/summary", "analyses/LEU/_data/comparison_bars.json"]
+    },
+    {
+      "id": "AQ-VRD-003",
+      "status": "PASS",
+      "rationale": "La note C (score 34, non prédictif) reste séparée de l’état « no-trade », justifié par la structure de cours : plan du 9 octobre jamais activé, abandonné à la clôture du 12 à 135,31 $, titre sous ses trois moyennes.",
+      "evidenceRefs": ["analyses/LEU/_runs/20261019/revision/editorial-judgments.json", "data/analyses-data/LEU.json#/tradeIdea/statusNote"]
+    },
+    {
+      "id": "AQ-VRD-004",
+      "status": "PASS",
+      "rationale": "Les « Pourquoi acheter » restent favorables ; le premier dit que la production est arrêtée depuis mi-juin, sans retourner le sens de la puce. Les « Pourquoi éviter » sont défavorables, avec la position vendeuse datée du 30 septembre.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/verdict/whyBuy", "data/analyses-data/LEU.json#/verdict/whyAvoid"]
+    },
+    {
+      "id": "AQ-BIZ-001",
+      "status": "PASS",
+      "rationale": "Produit, clients, modèle, coûts et place dans la chaîne sont décrits. L’activité dit désormais que la cascade de démonstration s’est arrêtée mi-juin 2026 et que le contrat ne payait plus que maintenance et stockage du 1er juillet au 30 septembre.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/business/overview", "analyses/LEU/_primary/text/jul26-haleu-pr.htm.txt"]
+    },
+    {
+      "id": "AQ-BIZ-002",
+      "status": "PASS",
+      "rationale": "LEU à 153,4 M$ (+22 %), Technical Solutions à 22,7 M$ (−21 %) ; la ligne Technical Solutions précise l’arrêt de production et les 15,0 M$ jusqu’au 30 septembre. Mineur de gabarit reporté : colonne « % du total » en mots.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/business/segments"]
+    },
+    {
+      "id": "AQ-BIZ-003",
+      "status": "PASS",
+      "rationale": "Indicateurs propres au métier : SWU vendus, coût et prix moyens, carnet conditionnel ou définitif, statut de la cascade HALEU, investissements. La valorisation repose sur les revenus, l’EBITDA étant trop faible.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/earnings/beatNote", "data/analyses-data/LEU.json#/fundamentals/rows"]
+    },
+    {
+      "id": "AQ-EAR-001",
+      "status": "PASS",
+      "rationale": "Deuxième trimestre 2026 : communiqué du 5 août (0001628280-26-053433) et 10-Q du 6 août (0001628280-26-053863), avec liens EDGAR directs.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/earnings/sourceRefs", "data/analyses-data/LEU.json#/filingsReview/filings/0"]
+    },
+    {
+      "id": "AQ-EAR-002",
+      "status": "PASS",
+      "rationale": "Chiffre d’affaires de 176,1 M$ (+14 %), résultat net GAAP de 16,8 M$ contre 28,9 M$, ajusté de 38,7 M$, marge brute en baisse, volumes de SWU, flux libre sur douze mois de −163,8 M$.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/earnings/beatNote", "data/analyses-data/LEU.json#/fundamentals/rows"]
+    },
+    {
+      "id": "AQ-EAR-003",
+      "status": "PASS",
+      "rationale": "Prévision 2026 inchangée en chiffres (revenus de 450 à 500 M$, investissements de 350 à 500 M$), cible d’embauches relevée de 100 à 175 ; Westerman hors prévision.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/earnings/beatNote"]
+    },
+    {
+      "id": "AQ-EAR-004",
+      "status": "PASS",
+      "rationale": "Le 10-Q nourrit maintenant aussi l’arrêt de la cascade : option 1b de 15,0 M$ sans production, intention du Département de ne lever aucune autre option, budget 2027 sans financement. Le texte se retrouve tel quel dans q2-10q.htm.txt.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/filingsReview/filings/0", "analyses/LEU/_primary/text/q2-10q.htm.txt"]
+    },
+    {
+      "id": "AQ-EAR-005",
+      "status": "PASS",
+      "rationale": "Le 4 novembre vient d’une source unique (nextEarningsDate 2026-11-04T20:00Z), déclarée non confirmée par l’émetteur. Le veto est ancré sur la publication : un décalage de date n’ouvre aucun chemin d’achat. La règle est la même dans la fiche et dans le Telegram.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/earnings/nextEarnings", "analyses/LEU/_data/instrument.json", "analyses/LEU/_runs/20261019/telegram-draft.html"]
+    },
+    {
+      "id": "AQ-VAL-001",
+      "status": "PASS",
+      "rationale": "EV/ventes de 3,0×, EV/EBITDA de 82× déclaré peu informatif, P/E de 53×, scénario à trois fois les ventes (115,86 $). EV ≈ 2,58 + 1,18 − 2,36 = 1,40 Md$.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/fundamentals/rows"]
+    },
+    {
+      "id": "AQ-VAL-002",
+      "status": "PASS",
+      "rationale": "Base datée : close du 16 octobre, GAAP sur douze mois au 30 juin 2026, trésorerie pro forma après l’offre. Exclusions déclarées : ATM du troisième trimestre et Westerman.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/fundamentals/rows", "analyses/LEU/_runs/20261019/revision/numeric-evidence.json"]
+    },
+    {
+      "id": "AQ-VAL-003",
+      "status": "PASS",
+      "rationale": "Cameco (10,3×) et BWX Technologies (4,0×) servent de repères, déclarés non point-in-time. Le scénario de négociant de combustible tombe presque au cours actuel : l’option HALEU n’est plus payée, ce que l’arrêt de la cascade rend plus lisible.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/fundamentals/rows"]
+    },
+    {
+      "id": "AQ-SEC-001",
+      "status": "PASS",
+      "rationale": "10-Q du 6 août 2026, accession 0001628280-26-053863, URL directe, constat chiffré.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/filingsReview/filings/0"]
+    },
+    {
+      "id": "AQ-SEC-002",
+      "status": "PASS",
+      "rationale": "Offre de septembre (424B5 et 8-K), accord ATM du 6 novembre 2025 (554,5 M$ restants au 30 juin) et 8-K du 19 octobre (21,0 M$ d’actions, environ 165 000) : titre, montant, émetteur et statut sont identifiés pour chacun.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/filingsReview/filings/2", "data/analyses-data/LEU.json#/filingsReview/filings/3", "data/analyses-data/LEU.json#/filingsReview/filings/6", "data/analyses-data/LEU.json#/filingsReview/filings/10", "data/analyses-data/LEU.json#/capitalStructure/atm"]
+    },
+    {
+      "id": "AQ-SEC-003",
+      "status": "PASS",
+      "rationale": "ATM, offre primaire, bons pré-financés et ordinaires, convertibles réglées en numéraire jusqu’au principal, actions remises pour un rachat et attributions gratuites restent distingués.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/capitalStructure/shareHistory", "data/analyses-data/LEU.json#/capitalStructure/warrants"]
+    },
+    {
+      "id": "AQ-SEC-004",
+      "status": "PASS",
+      "rationale": "19 233 658 + 719 200 + 500 000 + 2 005 513 = 22 458 371 actions économiques ; × 114,94 $ ≈ 2,58 Md$ ; environ 23,5 M en base diluée dans la monnaie, 30,5 M avec les bons.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/capitalStructure/shareHistory", "data/analyses-data/LEU.json#/header/metrics/marketCap"]
+    },
+    {
+      "id": "AQ-SEC-005",
+      "status": "PASS",
+      "rationale": "Les conclusions viennent du texte des dépôts : 10-K Item 9A (Deloitte), 10-Q Item 4, liquidité jugée suffisante pour douze mois.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/filingsReview/summary", "data/analyses-data/LEU.json#/filingsReview/filings/4"]
+    },
+    {
+      "id": "AQ-SEC-006",
+      "status": "PASS",
+      "rationale": "Le résumé dit maintenant « douze documents décisionnels, issus de onze dépôts », sur un inventaire de 56 : le 8-K Westerman et sa pièce 99.1 partagent l’accession 0001628280-26-066212. Le tableau rendu et primary-manifest.json comptent douze documents.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/filingsReview/summary", "analyses/LEU/_runs/20261019/revision/primary-manifest.json"]
+    },
+    {
+      "id": "AQ-TEC-001",
+      "status": "PASS",
+      "rationale": "Clôture de référence : séance complète du 16 octobre (served_completed_end = 2026-10-16). Aucune cotation intrajournalière n’est utilisée. Mineur reporté : la cotation du 19 octobre à 12 h 29, heure de New York (110,19 $), n’est pas signalée.",
+      "evidenceRefs": ["analyses/LEU/_data/bars.json", "analyses/LEU/_data/instrument.json", "data/analyses-data/LEU.json#/technicals/setupNote"]
+    },
+    {
+      "id": "AQ-TEC-002",
+      "status": "PASS",
+      "rationale": "Niveaux inchangés et revérifiés sur bars.json (112,61, 112,78, 127,11, 135,75, 159,42 et 146,71 $). Aucun ordre n’est émis.",
+      "evidenceRefs": ["analyses/LEU/_data/bars.json", "data/analyses-data/LEU.json#/technicals/supports", "data/analyses-data/LEU.json#/technicals/resistances"]
+    },
+    {
+      "id": "AQ-TEC-003",
+      "status": "PASS",
+      "rationale": "Le plan archivé, son abandon daté et les conditions de réexamen ont chacun leur raison. Mineurs reportés : condition de dilution non observable en temps réel, « de grande taille » ambigu face à la revente Westerman, « niveau franchi » non précisé.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/tradeIdea/entryNote", "data/analyses-data/LEU.json#/blastRadius/scenarios/0"]
+    },
+    {
+      "id": "AQ-TEC-004",
+      "status": "PASS",
+      "rationale": "R/R archivé juste : 23,67 / 12,71 = 1,86 et 35,50 / 12,71 = 2,79. Déclaré non exécutable.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/tradeIdea/rr"]
+    },
+    {
+      "id": "AQ-TEC-005",
+      "status": "PASS",
+      "rationale": "Veto résultats appliqué : aucun réexamen avant la publication, puis cinq séances au moins. Aucune donnée intrajournalière ni volume hors séance n’est utilisé. Les publications de Cameco et de GE Vernova sont signalées.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/tradeIdea/entryNote", "data/analyses-data/LEU.json#/blastRadius/groups"]
+    },
+    {
+      "id": "AQ-RSK-001",
+      "status": "PASS",
+      "rationale": "Les quatre cartes portent désormais une preuve juste. Dilution, TENEX et exécution sont inchangées. La carte « Tendance, positions vendeuses et gaps » a une position vendeuse datée (FINRA, 30 septembre) et un historique des écarts recalculé, qui distingue écarts d’ouverture et baisse en séance.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/risks/riskCards"]
+    },
+    {
+      "id": "AQ-RSK-002",
+      "status": "PASS",
+      "rationale": "contrarianRisks chiffre le carnet conditionnel (3,0 Md$), la perte de la cascade (0,8 Md$), TENEX, Westerman (actions émises à 127,01 $, cible décrite à environ 160 M$ de revenus 2025 dans le prospectus) et la barrière des bons à 226,86 $.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/filingsReview/contrarianRisks"]
+    },
+    {
+      "id": "AQ-RSK-003",
+      "status": "PASS",
+      "rationale": "Blocage du tour 1 levé. L’écart d’ouverture repose sur des chiffres justes : un seul écart au-delà de l’ATR de la veille (−11,8 % le 6 novembre 2025, ATR 35,76 $), au lendemain des résultats ; 7 ouvertures à plus de 5 % sous la veille ; la chute d’octobre s’est faite en séance (pire ouverture −4,47 %). Liquidité (84,1 M$ et 596 550 actions de médiane sur vingt séances), ATR (9,79 $, 8,5 %), petite taille, veto résultats et interdiction de poursuivre un écart sont couverts. Les deux lecteurs savent quoi faire. Sans le titre : rien avant la publication, puis un réexamen sans ordre. Avec le titre : pas de consigne de vente, mais le seuil de 112,61 $ et le risque de gap à la publication sont dits. L’écart achat-vente n’est pas mesuré, sans conséquence en l’absence d’ordre.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/risks/riskCards/3", "data/analyses-data/LEU.json#/risks/pedagogy", "data/analyses-data/LEU.json#/tradeIdea/statusNote", "data/analyses-data/LEU.json#/tradeIdea/horizon", "analyses/LEU/_data/bars.json", "analyses/LEU/_runs/20261019/telegram-draft.html"]
+    },
+    {
+      "id": "AQ-SRC-001",
+      "status": "PASS",
+      "rationale": "L’activité, les résultats et le capital renvoient aux dépôts SEC ; l’arrêt de la cascade, au 10-Q et au communiqué du 1er juillet. La technique et les écarts renvoient aux barres certifiées. Les positions vendeuses ont maintenant leur source FINRA, avec la date de règlement.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/business/sourceRefs", "data/analyses-data/LEU.json#/technicals/sourceRefs", "data/analyses-data/LEU.json#/shortInterest/sourceRefs"]
+    },
+    {
+      "id": "AQ-SRC-002",
+      "status": "PASS",
+      "rationale": "Liens EDGAR directs avec date et accession. Le sidecar et numeric-evidence.json portent le hash vérifié de la fiche, 7b31ae76…6d67 ; la provenance de l’écart d’ouverture est décrite (ATR de Wilder de la veille, date du communiqué lue dans EDGAR).",
+      "evidenceRefs": ["data/analyses-evidence/LEU.json#/analysis_sha256", "analyses/LEU/_runs/20261019/revision/numeric-evidence.json"]
+    },
+    {
+      "id": "AQ-SRC-003",
+      "status": "PASS",
+      "rationale": "La position vendeuse est datée : FINRA, règlement du 30 septembre, 5 937 802 actions, 8,08 jours. Elle est déclarée antérieure à la baisse d’octobre, et le texte reconnaît ignorer les couvertures depuis. Aucun consensus n’est inventé ; options et coût d’emprunt sont déclarés indisponibles.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/shortInterest", "data/analyses-data/LEU.json#/business/coverageMatrix"]
+    },
+    {
+      "id": "AQ-EDT-001",
+      "status": "PASS",
+      "rationale": "La publication ne compte qu’une fiche : aucune répétition entre fiches à mesurer. Le statusNote apparaît deux fois, mais c’est le gabarit qui l’affiche dans le verdict et dans le plan.",
+      "evidenceRefs": ["analyses/LEU/index.html"]
+    },
+    {
+      "id": "AQ-EDT-002",
+      "status": "PASS",
+      "rationale": "La cascade de Piketon (15,0 M$, option 1b), Westerman, TENEX, les bons de 226,86 à 362,98 $, le blocage Guggenheim et les seuils de 112,61, 127,11 et 135,75 $ ne valent que pour Centrus.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/tradeIdea/catalysts", "data/analyses-data/LEU.json#/tradeIdea/invalidation"]
+    },
+    {
+      "id": "AQ-EDT-003",
+      "status": "PASS",
+      "rationale": "Les limites sont précises : position vendeuse antérieure à la baisse, chiffres de Westerman tirés seulement du prospectus, tirages ATM à venir, date de résultats non confirmée. Mineur reporté : « fenêtre du calendrier collecté » reste opaque.",
+      "evidenceRefs": ["data/analyses-data/LEU.json#/blastRadius/missingData", "data/analyses-data/LEU.json#/business/coverageMatrix"]
+    },
+    {
+      "id": "AQ-QA-001",
+      "status": "PASS",
+      "rationale": "Quatre empreintes vérifiées : fiche 7b31ae76…, sidecar 963ca593…, page fd69c6d3…, Telegram d260b20e…. html lang=\"fr\", data-tab=\"analyses\", GTM présent. qa-content --strict : 30 contrôles passés, aucune erreur. check-ai-tells --strict : aucun tic sur la page (9 046 mots) ni sur le Telegram (302 mots). Le rendu reprend les corrections (carte des écarts, « Aucun achat », phrase pour l’actionnaire, FINRA au 30 septembre). Telegram : HTML valide (4 <b>, 1 <a>, balises équilibrées), 1 666 caractères visibles, aucun terme interne ; son raccourcissement par le coordinateur n’est pas jugé ici.",
+      "evidenceRefs": ["analyses/LEU/index.html", "analyses/LEU/_runs/20261019/telegram-draft.html"]
+    },
+    {
+      "id": "AQ-QA-002",
+      "status": "PASS",
+      "rationale": "Ce rapport rend PASS pour LEU au tour 2, sans blocage. Le blocage et les mineurs corrigés du tour 1 sont vérifiés un par un. Les mineurs reportés sont marqués comme tels et renvoient à leur texte exact dans review-retail_war_room-r1.json.",
+      "evidenceRefs": ["analyses/LEU/_runs/20261019/revision/review-retail_war_room.json", "analyses/LEU/_runs/20261019/revision/review-retail_war_room-r1.json"]
+    },
+    {
+      "id": "AQ-QA-003",
+      "status": "PASS",
+      "rationale": "Score éditorial de 88/100, sans blocage. Il monte de 84 à 88 : le seul chiffre de risque faux est corrigé, et la consigne pour l’actionnaire déjà investi est levée. Restent un nouveau mineur dans le Telegram et des mineurs reportés, qui ne touchent aucune consigne.",
+      "evidenceRefs": ["analyses/LEU/_runs/20261019/revision/review-retail_war_room.json"]
+    }
+  ],
+  "telegramReview": {
+    "status": "PASS",
+    "findings": [
+      "Lu seul, le message suffit pour agir. Il donne le contexte (usine HALEU arrêtée depuis mi-juin), les faits décisifs (−19,1 %, plan du 9 octobre annulé, Westerman annoncé le 19), la consigne (aucun ordre, rien avant les résultats), la conduite pour l’actionnaire déjà investi, les conditions de réexamen et trois risques.",
+      "Chiffres identiques à la fiche et recalculés : 114,94 $, 112,61 $, −19,1 %, NuScale −20,4 %, Oklo −19,1 %, Cameco −6,4 %, 135,75 $, 127,11 $, 116 et 21 M$, environ 165 000 actions, 554 M$, 31 % au 30 septembre, 9,79 $ et 8,5 %.",
+      "« Faute de contrat de production » est juste au regard du 10-Q (option 1b sans production, aucune autre option prévue). Nouveau mineur : « Centrus possède » → « Centrus exploite, selon elle », le site de Piketon étant loué au Département de l’Énergie et l’exclusivité attribuée à la société dans la fiche.",
+      "Mineurs reportés par le propriétaire : volume et condition de dilution du réexamen, « utilisables vers le 8 novembre », « bons », « tient 112,61 $ » face à la séance du 19.",
+      "HTML valide, 1 666 caractères visibles, aucun terme interne ; check-ai-tells --strict sans alerte. Le coordinateur raccourcira le texte sans changer les faits : seul le contenu est jugé ici."
+    ]
+  }
+}

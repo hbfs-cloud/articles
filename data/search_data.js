@@ -1757,6 +1757,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "LEU",
+    "exchange": "NYSE · Enrichissement d’uranium et combustible nucléaire",
+    "name": "LEU — 114,94 $ au 16 octobre, plus bas sur un an ; plan du 9 octobre abandonné ; rachat de We...",
+    "title": "LEU — 114,94 $ au 16 octobre, plus bas sur un an ; plan du 9 octobre abandonné ; rachat de We...",
+    "desc": "Centrus Energy, seule usine HALEU sous licence en Occident, sans production depuis mi-juin : 19,1 % de baisse depuis le 8 octobre, avec les développeurs de réacteurs avancés, clôture à 114,94 $ au plus bas sur un an, rachat de Westerman payé en partie en actions. Aucun ordre.",
+    "tags": "us,energy,commodity,speculative",
+    "grade": "C",
+    "href": "/analyses/LEU/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "TRT",
     "exchange": "NASDAQ · Test de fiabilité des semi-conducteurs, équipements et distribution électronique",
     "name": "TRT — Trio-Tech (TRT) à 5,48 $ après −36,6 % le jour des résultats : croissance réelle, marge...",
@@ -1791,19 +1804,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,software,ai,trade-idea",
     "grade": "B-",
     "href": "/analyses/ORCL/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "LEU",
-    "exchange": "NYSE · Enrichissement d’uranium et combustible nucléaire",
-    "name": "LEU — carnet 4,5 Md$ et trésorerie nette, mais dilution lourde (offre de septembre, bons, ATM...",
-    "title": "LEU — carnet 4,5 Md$ et trésorerie nette, mais dilution lourde (offre de septembre, bons, ATM...",
-    "desc": "Centrus Energy, seul enrichisseur d’uranium coté qui produit sur le sol américain : carnet de 4,5 Md$, contrats HALEU qui se multiplient, mais titre à 142,09 $, 69 % sous son plus haut, après une augmentation de capital de 500 M$ assortie de bons sur près de 7 M d’actions. Surveiller.",
-    "tags": "us,energy,commodity,speculative,trade-idea",
-    "grade": "C",
-    "href": "/analyses/LEU/",
     "date": ""
   },
   {
