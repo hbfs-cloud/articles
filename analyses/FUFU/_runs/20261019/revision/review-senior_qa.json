@@ -1,0 +1,533 @@
+{
+  "role": "senior_qa",
+  "reviewerId": "fufu-senior-qa-20261019",
+  "reviewerName": "Claude (revue QA senior indépendante)",
+  "round": 4,
+  "analysisSha256": "365bce8b76d90990c897fb3011f48b4b9b481f2ce21f5eca5c7576283007279f",
+  "evidenceSha256": "d9defe5f9002f9cbe51ba2fce0a3b99d2851d25bb0602773faf6ed03d3a4a911",
+  "status": "PASS",
+  "score": 87,
+  "blockingFindings": [],
+  "roundOneBlockers": [
+    {
+      "id": "AQ-SEC-005",
+      "status": "levé",
+      "verification": "filings[0] du 20-F, nouvelle ligne de contrôle « Contrôle interne » et nouvelle carte de risque : contrôle interne et contrôles de communication non efficaces au 31 décembre 2025, faiblesse importante pas entièrement corrigée (personnel comptable US GAAP), pas d’attestation de l’auditeur (société émergente), trésorerie jugée suffisante « for the next 12 months from the date of this Report ». « Aucun doute sur la continuité exprimé » vérifié par recherche intégrale du 20-F (ni « going concern » ni « substantial doubt »), adossé à la phrase affirmative de liquidité."
+    },
+    {
+      "id": "AQ-SEC-002",
+      "status": "levé",
+      "verification": "atm.used 6,4 M$ bruts (6,16 + 0,2) ; atm.remaining 150 − 6,16 − 0,2 = 143,6 M$ sur l’étagère n° 333-286356 de 300 M$ ; flottant au dépôt du 20-F (31 653 598 − 14 547 440) × 2,72 = 46,5 M$, 82,1 M$ si Bitmain n’était pas affilié (réserve écrite) ; plafond 17 149 194 × 1,59 / 3 = 9,09 M$, × 0,9001 / 3 = 5,15 M$ ; classe A 31 696 634 × 0,9001 = 28,5 M$, 143,6 / 28,5 = 5,0 fois. F-3 de revente : Bitmain Technologies Delaware (582 940 et 1 008 000), Morningstar Universe (156 332), Alpha Alliance (150 319), avis d’efficacité des 18 juillet et 26 novembre 2025 ; tout recoupé avec les dépôts et l’inventaire."
+    },
+    {
+      "id": "AQ-SEC-003",
+      "status": "levé",
+      "verification": "Double compte supprimé dans shareHistory, whyAvoid[2], riskCards[1], controlChecklist[1] et le résumé ; formulaire D rattaché à Bitmain : 5 141 − 2 419 k$ (extinction du premier semestre 2025, 582 940 actions, états semestriels) = 2 722 k$ ≈ 2 721 600 $ = 1 008 000 × 2,70 $. Rachat de 5 M$ ajouté (ligne de dépôt 0001213900-26-070388, whyBuy[5], shareHistory, résumé) : 5 / 0,9001 = 5,55 millions d’actions, 17,5 % de la classe A ; aucune exécution : flux de financement du semestre limités au programme (+76 k$), et les 6-K du 10 juillet au 15 octobre ne citent le rachat qu’une fois (10 juillet, « recently announced »), sans montant racheté."
+    },
+    {
+      "id": "AQ-TEC-003",
+      "status": "levé",
+      "verification": "« 1,28 $ » absent du rendu ; scénarios mixte et baissier écrits « clôture à 1,29 $ ou plus » ; entry 1,29, R/R 0,27 / 0,09 = 3,00 et 0,36 / 0,09 = 4,00, plafond 0,22 / 0,14 = 1,57 ; stop 1,20 / 1,29 − 1 = −6,98 %, objectifs +20,93 % et +27,91 %. Reste un écart de formulation du gabarit (voir minorFindings)."
+    },
+    {
+      "id": "AQ-EDT-003",
+      "status": "levé",
+      "verification": "L’entrée fausse sur le produit brut est supprimée ; nouvelles limites exactes : clients A, B et C (45 + 17 + 10 = 72 %) et fournisseur A non nommés dans le 6-K ; aucune dépêche datée du 16 octobre parmi les 8 titres collectés (corporate_actions.json)."
+    }
+  ],
+  "minorFindings": [
+    {
+      "id": "AQ-TEC-003",
+      "where": "rendu de la carte de plan (gabarit) : « Déclencheur : une clôture au-dessus de 1,29 $ » et case « Déclencheur 1,29 $ clôture au-dessus »",
+      "problem": "Nouveau depuis le passage de tradeIdea.entry de 1,285 à 1,29 : le gabarit écrit « au-dessus de 1,29 $ » (strict) alors que le plan, le badge, la note de statut, entryNote et le Telegram disent « clôture à 1,29 $ ou plus ». Seule une clôture à exactement 1,29 $ est ambiguë ; le bloc « Conditions du plan » juste dessous tranche.",
+      "fix": "tools/render-analysis.js, mode breakout : écrire « une clôture à {entry} ou plus » au lieu de « une clôture au-dessus de {entry} » (et « clôture à ce niveau ou plus » dans la case).",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-SRC-001",
+      "where": "numeric-evidence.json#levels ; primary-manifest.json#financials_source",
+      "problem": "levels garde le calcul brut du kit (entry 1,285, rr1 3,24, rr2 4,29) alors que la fiche publie 1,29 / 3,00 / 4,00, méthode décrite dans methods et claim_provenance. La provenance des agrégats reste étiquetée « Émetteur hors us-gaap (IFRS …) » et « aucune valeur dérivée » (mineur différé du tour 1).",
+      "fix": "build-fufu.cjs : écrire dans levels l’entrée publiée (1,29) et les R/R publiés ; libeller les agrégats us-gaap, reconstitués (exercice 2025 + S1 2026 − S1 2025).",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-SEC-004",
+      "where": "capitalStructure.shareHistory ; capitalStructure.warrants[0].expiration",
+      "problem": "Différé du tour 1 : le « pleinement dilué » (171 948 609) omet l’option de Chardan (jusqu’à 207 000 actions) et 940 887 actions gratuites non acquises ; échéance des bons « Voir le dépôt » alors que la durée résiduelle (3,17 ans au 31 décembre 2025) est connue.",
+      "fix": "« … le capital monterait à environ 173,1 millions d’actions » ; expiration « fin février 2029 environ ».",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-RSK-003",
+      "where": "tradeIdea.entryNote (taille)",
+      "problem": "Différé : distance du stop non rapportée à l’ATR (0,09 $ = 0,61 ATR au seuil de 1,29 $, 0,14 $ = 0,95 ATR au plafond) ; 476 = ⌊714 × 2/3⌋ non expliqué. Le Telegram retient 476 actions « au plus », plus prudent que la fiche (714 au plafond) : cohérent mais différent.",
+      "fix": "Ajouter « 0,95 fois l’ATR de 0,15 $ au plafond ; 476 suppose un stop exécuté 50 % plus bas ».",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-TEC-005",
+      "where": "tradeIdea.horizon",
+      "problem": "Différé : pas de règle si BitFuFu annonce ses résultats avant le 9 novembre.",
+      "fix": "Ajouter « ou à la clôture de la veille si la publication est annoncée avant le 9 novembre ».",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-EAR-002",
+      "where": "earnings.beatNote",
+      "problem": "Différé : marge brute négative du deuxième trimestre (coût des ventes 43,7 M$ pour 42,8 M$ de chiffre d’affaires) non dite.",
+      "fix": "Ajouter « coût des ventes de 43,7 M$, supérieur au chiffre d’affaires ».",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-VAL-002",
+      "where": "fundamentals.rows (Cours / capitaux propres)",
+      "problem": "Différé : 1,59× sur capitaux propres totaux, minoritaires de 4,548 M$ compris (1,67× en part du groupe).",
+      "fix": "Préciser « capitaux propres totaux, dont 4,5 M$ de minoritaires » ou publier 1,67×.",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-VRD-004",
+      "where": "verdict.whyBuy[0] ; verdict.whyBuy[2]",
+      "problem": "Différé : trésorerie au 30 juin (avec 1 671 bitcoins) juxtaposée aux 1 388 bitcoins du 30 septembre ; comparaison du cours / capitaux propres à MARA seul.",
+      "fix": "Ajouter « stock tombé de 1 671 à 1 388 bitcoins entre juin et septembre » ; citer la fourchette des pairs 0,61–1,98×.",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-RSK-002",
+      "where": "risks.riskCards[2].points[0]",
+      "problem": "Différé : exposition éthiopienne non chiffrée (4,1 + 1,74 = 5,84 M$, 3,9 % de la capitalisation) ; la direction juge l’impact supplémentaire « minimal ».",
+      "fix": "Ajouter « exposition maximale d’environ 5,8 M$, 3,9 % de la capitalisation ».",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-SRC-003",
+      "where": "verdict.whyAvoid[4] ; shortInterest.siPct ; insiders.signal",
+      "problem": "Différé : 0,53 % du flottant non reconstituable (160 476 / 16 921 375 = 0,95 %) ; couverture des formulaires 4 classée « insufficient » par la source. La phrase « quelques milliers de dollars » a été retirée au tour 3.",
+      "fix": "siPct : « 160 476 actions, 0,95 % du flottant de 16,9 millions (0,51 % de la classe A) » ; insiders.signal : « couverture non certifiée par la source ».",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-SRC-002",
+      "where": "filingsReview.filings (formulaire D).url",
+      "problem": "Différé : lien vers le XML brut.",
+      "fix": "https://www.sec.gov/Archives/edgar/data/1921158/000121390025097585/xslFormDX01/primary_doc.xml",
+      "severity": "minor"
+    },
+    {
+      "id": "AQ-QA-001",
+      "where": "rendu (tools/render-analysis.js)",
+      "problem": "Défauts connus du gabarit commun : prix du 16 octobre sous la date du 19 sans mention de la clôture, « 1:3.00 » en décimales anglaises dans le détail du R/R, « 0,900 $ ».",
+      "fix": "Correction globale du gabarit, hors fiche.",
+      "severity": "minor"
+    }
+  ],
+  "spotChecks": [
+    "Hachages vérifiés : JSON 365bce8b…, sidecar d9defe5f…, rendu c20f5c4f… ; render(FUFU.json) identique à index.html, schéma propre ; harnais (18 sources) et 14 entrées de numeric-evidence conformes ; sidecar lié au JSON courant (471 affirmations, sources concordantes).",
+    "Seuil 1,29 $ : stop −6,98 %, TP1 +20,93 %, TP2 +27,91 % ; R/R 3,00 / 4,00 ; plafond (1,56 + 1,8) / 2,5 = 1,344 → 1,34, R/R 1,57 ; 714 actions (100 / 0,14), 476 × 1,34 = 637,84 $ (« environ 640 $ »).",
+    "Gaps sur 250 séances : 3 ouvertures à ±10 % ou plus ; 2 ouvertures sous −6,98 % (29 mai −16,0 %, 17 août −15,2 % ; 20 mars −6,7 % exclu).",
+    "Heures : ouverture de New York 15 h 30 à Paris, 14 h 30 du 26 au 30 octobre (heure d’hiver européenne dès le 25 octobre, américaine le 1er novembre) ; clôture du 6 novembre à 22 h à Paris.",
+    "Concentration S1 2026 (6-K) : clients A 45 %, B 17 %, C 10 % = 72 % (S1 2025 : 31 + 15 + 12 = 58 %) ; 0,45 × 115,42 = 51,9 M$ ; fournisseur A 34 % contre 51 % ; Afrique 52 113 / 90 076 = 58 %.",
+    "Bitmain 13 090 940 / 31 696 634 = 41,3 % de la classe A ; 1 590 940 = 582 940 + 1 008 000.",
+    "Programme : 6,16 + 0,2 = 6,36 M$ bruts ; 143,64 M$ ; étagère 300 M$ (prospectus de base du 424B5) ; flottant 46,5 M$ au 20-F (2,72 $), plafond ≈ 9,1 M$ (1,59 $) et 5,1 M$ (0,90 $).",
+    "Rachat : 5 M$ du 24 juin 2026 sur 24 mois ; 5 / 0,9001 = 5,55 millions d’actions, 17,5 % de la classe A ; aucune exécution dans les comptes ni les 6-K.",
+    "Séance du 19 octobre : 1,239 $ (16:38:36Z), +37,65 % sur 0,9001 $ ; O/H/B 1,06 / 1,57 / 1,05 ; 43 479 090 actions, 748,5 fois 58 089 ; quote_api 1,2101 $ à 16:34:24Z ; inventaire EDGAR 16:24:30Z.",
+    "Taille après activation du 19 : ⌊100 / 0,4399⌋ = 227 actions, 304,18 $ ; saut minimal 1,29 / 0,9001 − 1 = +43,3 % ; amplitude du 16 octobre 0,6412 / 1,285 − 1 = −50,1 %.",
+    "Quatre contrôles : validate-analysis-evidence PASS (471 affirmations, code 0) ; check-analysis-editorial-quality --strict --pre-review 0 erreur ; qa-content --strict 30/30 (code 0) ; check-ai-tells --strict propre (fiche 8 913 mots, Telegram 423)."
+  ],
+  "checks": [
+    {
+      "id": "AQ-VRD-001",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; le verdict nomme BitFuFu, son produit (minage en nuage, puissance achetée à des fournisseurs, Bitmain en tête en 2025), la concentration nouvelle (un client à 45 % du premier semestre), le catalyseur (−31,3 % le 16 octobre, cause inconnue, aucun dépôt ce jour-là), la contradiction et l’action (aucune entrée avant une clôture à 1,29 $ ou plus).",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#verdict.summary",
+        "analyses/FUFU/_data/corporate_actions.json"
+      ]
+    },
+    {
+      "id": "AQ-VRD-002",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Faits chiffrés inchangés et vérifiés (42,8 M$, −62,9 %, 20,5 M$, 2,3 %, −31,3 %, 95,5 %, 93,4 M$) plus 45 % (client A, 6-K semestriel) ; lien causal conservé (revente d’une puissance achetée, d’où la marge mince).",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#verdict.summary",
+        "analyses/FUFU/_primary/text/2026-09-10-6-K-098773-ea030480801ex99-1.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-VRD-003",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Note D, score 28 = 8 − 20 − 6 − 3 − 6 + 55, inchangée ; état « surveiller » distinct, seuil d’activation 1,29 $ non atteint à 0,90 $.",
+      "evidenceRefs": [
+        "analyses/FUFU/_runs/20261019/revision/editorial-judgments.json",
+        "data/analyses-data/FUFU.json#tradeIdea.status"
+      ]
+    },
+    {
+      "id": "AQ-VRD-004",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Six raisons d’acheter positives, dont le rachat de 5 M$ assorti de sa limite (« l’autorisation ne vaut pas exécution ») ; raisons d’éviter négatives, whyAvoid[2] désormais exact (143,6 M$ nominaux, environ 9,1 M$ par an probables, 1 590 940 actions Bitmain). Mineurs différés sur whyBuy[0] et [2].",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#verdict.whyBuy",
+        "data/analyses-data/FUFU.json#verdict.whyAvoid"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-001",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Modèle, clients, coûts et position inchangés ; achats décrits auprès de fournisseurs, Bitmain en tête en 2025 (50 % du coût), premier fournisseur à 34 % au premier semestre 2026 contre 51 %, conforme au 6-K.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#business.overview",
+        "analyses/FUFU/_primary/text/2026-09-10-6-K-098773-ea030480801ex99-1.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-002",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Segments 2025 inchangés et exacts ; ajout de la géographie (Afrique 58 % des ventes hors minage propre, 52 113 / 90 076 k$) et de la concentration semestrielle (45 / 72 %).",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#business.segments",
+        "data/analyses-data/FUFU.json#fundamentals.rows"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-003",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Indicateurs du métier inchangés (EH/s, production, bitcoins détenus, MW, contrats payés d’avance, marge brute de douze mois) ; ligne de concentration mise à jour au premier semestre 2026.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#fundamentals.rows"
+      ]
+    },
+    {
+      "id": "AQ-EAR-001",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Deuxième trimestre 2026 (17 août), états semestriels (10 septembre), 20-F (28 avril) identifiés avec accessions ; traitement d’émetteur privé étranger correct.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#earnings.beatNote",
+        "analyses/FUFU/_runs/20261019/_sec-discovery/window-inventory.json"
+      ]
+    },
+    {
+      "id": "AQ-EAR-002",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Chiffre d’affaires, croissance, perte, EBITDA ajusté et indicateurs recoupés au tour 1, inchangés. Mineur différé : marge brute négative du trimestre.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#filingsReview.filings[2]",
+        "analyses/FUFU/_primary/text/2026-08-17-6-K-090474-ea030213301ex99-1.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-EAR-003",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Absence de prévision chiffrée vérifiée dans le communiqué ; aucun dépassement revendiqué.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#earnings.beatNote"
+      ]
+    },
+    {
+      "id": "AQ-EAR-004",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; 20-F, états semestriels et communiqué intégrés ; douze mois recalculés au tour 1 et inchangés (399 513 ; 9 036 ; −119 648 ; −117 023 ; −89 400 k$).",
+      "evidenceRefs": [
+        "analyses/FUFU/_runs/20261019/revision/numeric-evidence.json#valuation_scenario"
+      ]
+    },
+    {
+      "id": "AQ-EAR-005",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Date du troisième trimestre non confirmée, calendrier du fournisseur indisponible, repère du 12 novembre 2025 ; sortie au plus tard le 6 novembre à 22 h (Paris). Mineur différé : règle en cas d’annonce antérieure.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#earnings.nextEarnings",
+        "analyses/FUFU/_data/earnings_risk.json"
+      ]
+    },
+    {
+      "id": "AQ-VAL-001",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; VE/CA 0,32×, cours / capitaux propres 1,59×, scénario à 0,3× le chiffre d’affaires (0,84 $), inchangés et vérifiés.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#fundamentals.rows",
+        "analyses/FUFU/_runs/20261019/revision/numeric-evidence.json#valuation_scenario"
+      ]
+    },
+    {
+      "id": "AQ-VAL-002",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Entrées datées et bases explicites. Mineur différé : capitaux propres totaux, minoritaires compris.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#fundamentals.rows"
+      ]
+    },
+    {
+      "id": "AQ-VAL-003",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Comparaison aux pairs (MARA 6,28×, BTDR 4,42×, HIVE 2,15×, CAN 0,40×, GLXY 0,13×) et attente intégrée (« presque rien au-delà du bilan ») inchangées.",
+      "evidenceRefs": [
+        "analyses/FUFU/_data/comparison_context.json"
+      ]
+    },
+    {
+      "id": "AQ-SEC-001",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; La ligne du 20-F porte désormais formulaire, date, accession, lien direct et un constat complet : comptes, concentration, Bitmain (13 090 940 actions, 41 % de la classe A), contrôle interne non efficace, absence d’attestation, liquidité à douze mois.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#filingsReview.filings[0]",
+        "analyses/FUFU/_primary/text/2026-04-28-20-F-048533-ea0286816-20f_bitfufu.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-SEC-002",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Bloquant du tour 1 levé (vérifié au tour 2, inchangé) : capacité nominale 143,6 M$ (150 − 6,16 − 0,2) sur l’étagère de 300 M$ ; plafond I.B.5 présenté comme probable, avec le calcul du flottant (46,5 M$ au 20-F, 82,1 M$ si Bitmain n’était pas affilié) et la limite d’environ 9,1 M$ (5,1 M$ à 0,90 $) ; porteurs et dates d’efficacité des deux F-3 de revente nommés ; formulaire D rattaché à Bitmain.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#capitalStructure.atm",
+        "data/analyses-data/FUFU.json#filingsReview.filings",
+        "analyses/FUFU/_primary/text/2025-07-08-F-3-061902-ea0246185-f3_bitfufu.htm.txt",
+        "analyses/FUFU/_primary/text/2025-11-07-F-3-107483-ea0262761-f3_bitfufu.htm.txt",
+        "analyses/FUFU/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-SEC-003",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Bloquant du tour 1 levé (vérifié au tour 2, inchangé) : une seule émission à Bitmain (1 590 940 = 582 940 + 1 008 000, 5,14 M$ de dettes), 306 651 actions d’Uni-Titan, programme, reventes, bons distingués ; rachat de 5 M$ ajouté comme distribution autorisée et non exécutée, opposé au programme d’émission.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#capitalStructure.shareHistory",
+        "analyses/FUFU/_primary/2026-06-22-6-K-070388-ea029509001ex99-1.htm",
+        "analyses/FUFU/_primary/text/2026-09-10-6-K-098773-ea030480801ex99-1.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-SEC-004",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; 166 696 634 actions = 31 696 634 A + 135 000 000 B, réconciliées ; Bitmain 41 % de la classe A ajouté. Mineur différé : option de Chardan et actions gratuites non acquises hors du « pleinement dilué ».",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#capitalStructure.sharesOutstanding"
+      ]
+    },
+    {
+      "id": "AQ-SEC-005",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Bloquant du tour 1 levé (vérifié au tour 2, inchangé) : faiblesse importante et contrôle interne non efficace au 31 décembre 2025 tirés du texte affirmatif du 20-F ; continuité : phrase affirmative de liquidité à douze mois, absence de « going concern » et « substantial doubt » vérifiée sur le texte intégral.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#verdict.controlChecklist",
+        "data/analyses-data/FUFU.json#risks.riskCards[4]",
+        "analyses/FUFU/_primary/text/2026-04-28-20-F-048533-ea0286816-20f_bitfufu.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-SEC-006",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Inventaire 26 ; manifeste opened = reviewed = decision_relevant = 12 = filingsReview.filings ; résumé « dix parmi les 26, plus le 424B5 et la F-3 de juillet, hors fenêtre » cohérent.",
+      "evidenceRefs": [
+        "analyses/FUFU/_runs/20261019/revision/primary-manifest.json",
+        "data/analyses-data/FUFU.json#filingsReview.summary"
+      ]
+    },
+    {
+      "id": "AQ-TEC-001",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; clôture de référence du 16 octobre explicite et seule base des niveaux ; la cotation intrajournalière du 19 octobre porte son horodatage exact (12 h 38 à New York, 16:38:36Z), son ouverture, ses extrêmes et son volume, et la fiche dit que seule une clôture active le plan ; source de secours des barres déclarée.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#technicals.setupNote",
+        "analyses/FUFU/_data/instrument.json",
+        "analyses/FUFU/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-TEC-002",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Support 0,6412 $ et résistances 1,42 / 1,56 / 1,65 $ inchangés et datés ; seuil 1,29 $ = plus haut du 16 octobre (1,285 $) arrondi au cent supérieur.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#technicals",
+        "analyses/FUFU/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-TEC-003",
+      "status": "PASS",
+      "rationale": "Tour 4 : seuil, achat unique, plafond, stop simple, objectifs, abandon et expiration gardent leur raison ; la règle de taille du 19 octobre a sa propre raison (retour possible à la clôture du 16). Bloquant du tour 1 levé. Mineur : carte du gabarit « au-dessus de 1,29 $ » contre « 1,29 $ ou plus ».",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#tradeIdea",
+        "data/analyses-data/FUFU.json#blastRadius.scenarios",
+        "analyses/FUFU/index.html"
+      ]
+    },
+    {
+      "id": "AQ-TEC-004",
+      "status": "PASS",
+      "rationale": "Tour 4 : R/R inchangés et refaits sur 1,29 $ (3,00 / 4,00) et au plafond (1,57) ; tailles refaites : 714 = ⌊100 / 0,14⌋, 476 = ⌊714 × 2/3⌋, 227 = ⌊100 / (1,34 − 0,9001)⌋. Mineur : numeric-evidence.levels garde 1,285 et 3,24.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#tradeIdea.rr",
+        "data/analyses-data/FUFU.json#tradeIdea.entryNote",
+        "analyses/FUFU/_runs/20261019/build-fufu.cjs"
+      ]
+    },
+    {
+      "id": "AQ-TEC-005",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; sortie au plus tard le 6 novembre (22 h à Paris) avant des résultats non confirmés (estimation du fournisseur : 10–17 novembre, instrument.json) ; la cotation du 19 est en séance, hors volume de pré ou post-marché, et n’est pas utilisée comme confirmation ; seule la clôture compte. Mineur différé : annonce antérieure.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#tradeIdea.horizon",
+        "data/analyses-data/FUFU.json#tradeIdea.statusNote",
+        "analyses/FUFU/_data/instrument.json"
+      ]
+    },
+    {
+      "id": "AQ-RSK-001",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Cinq risques propres au titre, dont la nouvelle carte « Contrôle interne défaillant » ; carte capital corrigée (143,6 M$ nominaux, environ 9,1 M$ par an, 1 590 940 actions Bitmain revendables, rachat non exécuté).",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#risks.riskCards"
+      ]
+    },
+    {
+      "id": "AQ-RSK-002",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Cas opposé chiffré, désormais avec le rachat de 5 M$ (5,55 millions d’actions, 17,5 % de la classe A) et sa limite. Mineur différé : exposition éthiopienne non chiffrée.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#verdict.whyBuy",
+        "data/analyses-data/FUFU.json#filingsReview.contrarianRisks"
+      ]
+    },
+    {
+      "id": "AQ-RSK-003",
+      "status": "PASS",
+      "rationale": "Tour 4 : bloquant de la war room levé ; taille réduite à 227 actions au plus (environ 304 $) si l’activation vient de la clôture du 19 octobre, calculée pour qu’un retour à 0,90 $ ne coûte pas plus de 100 $ (⌊100 / 0,4399⌋) ; risque de la séance à +43 % au moins sur environ 750 fois le volume, sans dépôt, rappelé avec l’amplitude de −50,1 % du 16 octobre. Le reste de la war room est inchangé (achat unique par ordre limité après l’ouverture, rien sous 1,20 $, stop simple, pas de poursuite au-dessus de 1,34 $, 714 / 476 actions hors cas du 19). Mineur différé : stop rapporté à l’ATR.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#tradeIdea.entryNote",
+        "data/analyses-data/FUFU.json#tradeIdea.statusNote",
+        "analyses/FUFU/_data/bars.json",
+        "analyses/FUFU/_data/instrument.json"
+      ]
+    },
+    {
+      "id": "AQ-SRC-001",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Chaque section cite la source qui la porte, dont le 6-K du rachat ajouté aux références du capital. Mineurs différés de provenance interne.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#capitalStructure.sourceRefs",
+        "analyses/FUFU/_runs/20261019/revision/primary-manifest.json"
+      ]
+    },
+    {
+      "id": "AQ-SRC-002",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Douze liens EDGAR directs avec date et accession, pièces locales hachées. Mineur différé : formulaire D en XML brut.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#filingsReview.filings"
+      ]
+    },
+    {
+      "id": "AQ-SRC-003",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; « cause inconnue » toujours sourcée (aucun dépôt au 16 ni au 19 octobre à 12 h 24, aucune dépêche datée du 16) ; la phrase non mesurée sur les ordres de quelques milliers de dollars est retirée. Mineurs différés : 0,53 % du flottant, couverture des formulaires 4.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#technicals.setupNote",
+        "analyses/FUFU/_runs/20261019/_sec-discovery/window-inventory.json",
+        "analyses/FUFU/_data/corporate_actions.json"
+      ]
+    },
+    {
+      "id": "AQ-EDT-001",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; check-analysis-editorial-quality --strict --pre-review : 0 erreur, 0 avertissement.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json"
+      ]
+    },
+    {
+      "id": "AQ-EDT-002",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Verdict, risques, catalyseurs et invalidations propres à BitFuFu.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#tradeIdea.invalidation"
+      ]
+    },
+    {
+      "id": "AQ-EDT-003",
+      "status": "PASS",
+      "rationale": "Tour 4 (version 365bce8b) : seuls statusNote et entryNote changent, vérifiés ; Bloquant du tour 1 levé (vérifié au tour 2, inchangé) : entrée fausse supprimée ; limites restantes exactes (clients et fournisseur non nommés, options et sentiment non servis, pas de barres intrajournalières, cause du 16 octobre inconnue).",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#blastRadius.missingData"
+      ]
+    },
+    {
+      "id": "AQ-QA-001",
+      "status": "PASS",
+      "rationale": "Tour 4 : quatre contrôles verts (471 affirmations ; 0 erreur ; 30/30 ; aucun tic, fiche 8 913 mots et Telegram 423) ; rendu identique au JSON, schéma propre ; chaîne de hachage complète ; Telegram conforme (227 actions, environ 300 $ pour 304 $). Défauts connus du gabarit en mineur.",
+      "evidenceRefs": [
+        "analyses/FUFU/index.html",
+        "analyses/FUFU/_runs/20261019/telegram-draft.html",
+        "analyses/FUFU/_data/harness.json"
+      ]
+    },
+    {
+      "id": "AQ-QA-002",
+      "status": "PASS",
+      "rationale": "Tour 4 : PASS pour FUFU sur la version 365bce8b ; changements du tour vérifiés champ par champ (roundFourChanges) ; tours 1 à 3 conservés (review-senior_qa-r1.json, -r2.json, -r3.json).",
+      "evidenceRefs": [
+        "analyses/FUFU/_runs/20261019/revision/review-senior_qa-r1.json",
+        "analyses/FUFU/_runs/20261019/revision/review-senior_qa-r2.json",
+        "analyses/FUFU/_runs/20261019/revision/review-senior_qa-r3.json"
+      ]
+    },
+    {
+      "id": "AQ-QA-003",
+      "status": "PASS",
+      "rationale": "Tour 4 : score de 87 sur 100, inchangé, aucun bloquant ouvert ; restent les mineurs différés (dilution complète, ATR, marge du trimestre, part du groupe, Éthiopie, provenance, formulation de la carte de plan, gabarit).",
+      "evidenceRefs": [
+        "plans/analysis-quality-rubric-20260828.md"
+      ]
+    }
+  ],
+  "telegramReview": {
+    "status": "PASS",
+    "findings": [
+      "Tour 4 : taille conforme à la fiche (227 actions au plus, environ 300 $, si l’achat suit la clôture du 19 ; 476 sinon) ; ligne du 19 octobre exacte ; seuil 1,29 $, achat unique ≤ 1,34 $ après l’ouverture, stop simple 1,20 $, moitié à 1,56 $, sortie le 6 novembre avant 22 h, invalidations complètes ; check-ai-tells propre (423 mots)."
+    ]
+  },
+  "roundThreeChanges": [
+    {
+      "field": "technicals.setupNote",
+      "verification": "Cotation Webull du 19 octobre (instrument.json, /data/items/2/quote) : dernier 1,239 $ à 16:38:36Z (12 h 38 à New York, EDT), clôture de référence 0,9001 $ : 1,239 / 0,9001 − 1 = +37,65 %, publié +37,7 % ; ouverture 1,06, plus haut 1,57, plus bas 1,05 ; volume 43 479 090 ; 43 479 090 / 58 089 = 748,5, « environ 750 fois » ; fourchette 1,21–1,24 $ de 12 h 34 à 12 h 39 = cotation quote_api 1,2101 $ à 16:34:24Z et Webull 1,239 $ à 16:38:36Z ; inventaire EDGAR généré à 16:24:30Z (12 h 24 à New York), aucun dépôt le 19 ; plus haut 1,57 ≥ 1,29 et ≥ 1,56 : phrase exacte."
+    },
+    {
+      "field": "tradeIdea.statusNote",
+      "verification": "Activation le soir du 19 sur une clôture à 1,29 $ ou plus ; achat du 20 au 22 octobre = les trois séances suivantes (mardi à jeudi), plafond 1,34 $ inchangé ; cohérent avec entryNote (trois séances, au plus tard le 2 novembre)."
+    },
+    {
+      "field": "verdict.whyAvoid[4]",
+      "verification": "Mêmes chiffres que setupNote ; la phrase non mesurée « un ordre de quelques milliers de dollars déplace le cours » est retirée (mineur AQ-SRC-003 du tour 1 en partie levé)."
+    },
+    {
+      "field": "header.badges[1]",
+      "verification": "« Clôture du 16 oct. sous 1 $ » : vrai (0,9001 $), et n’est plus démenti par la cotation du 19 (1,239 $)."
+    },
+    {
+      "field": "business et contrarianRisks (« à Bitmain »)",
+      "verification": "fundamentals.rows[15].comparison et filingsReview.contrarianRisks[0] disent désormais « des fournisseurs, Bitmain en tête en 2025 » ; 34 % du premier fournisseur au premier semestre conforme au 6-K."
+    },
+    {
+      "field": "provenance",
+      "verification": "instrument.json ajouté aux entrées de numeric-evidence (nom « quote ») avec son hachage ; claim_provenance de setupNote, statusNote et whyAvoid[4] pointe /data/items/2/quote ; méthode explicite (séance ouverte, heure de New York = UTC − 4, seule la clôture compte). Les 14 entrées, le générateur, le kit et le gabarit concordent ; le sidecar vise le JSON courant ; rendu identique au JSON."
+    },
+    {
+      "field": "telegram-draft.html",
+      "verification": "Ligne « Lundi 19 oct., en séance (12 h 38 à New York) : 1,239 $ (+37,7 %), plus haut 1,57 $, 43,5 millions d’actions échangées. Seule la clôture compte pour activer le plan. » : conforme à la fiche ; le 19 octobre 2026 est bien un lundi."
+    }
+  ],
+  "roundFourChanges": [
+    {
+      "field": "tradeIdea.entryNote (Taille)",
+      "verification": "227 actions = ⌊100 / (1,34 − 0,9001)⌋ = ⌊227,32⌋ (100 / 0,44 = 227,27 avec 0,90 $ arrondi) : une perte de 100 $ au plus si le titre acheté au plafond revient à la clôture du 16 octobre ; 227 × 1,34 = 304,18 $, « environ 304 $ ». Calcul du générateur (build-fufu.cjs l. 158 : size19 = Math.floor(100 / (cap − close)), val19 = size19 × cap) sur la clôture certifiée de bars.json ; règle écrite dans le texte."
+    },
+    {
+      "field": "tradeIdea.statusNote",
+      "verification": "« +43 % au moins » = 1,29 / 0,9001 − 1 = +43,32 % (minJump, l. 158) ; « −50,1 % entre le plus haut et le plus bas » du 16 octobre = 0,6412 / 1,285 − 1 = −50,10 % (crashHL, barre du 16 octobre de bars.json) ; « environ 750 fois » = 43 479 090 / 58 089 = 748,5 à 12 h 38, borne basse pour la séance entière ; 227 actions et 304 $ identiques à entryNote. Provenance : instrument.json /data/items/2/quote pour la séance du 19 (méthode horodatée), bars.json pour les niveaux."
+    },
+    {
+      "field": "telegram-draft.html",
+      "verification": "Lignes du 19 octobre et de taille conformes : 227 actions au plus si l’achat suit la clôture du 19, 476 sinon ; « environ 300 $ » arrondit les 304 $ de la fiche."
+    }
+  ]
+}

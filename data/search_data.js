@@ -1757,6 +1757,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "FUFU",
+    "exchange": "NASDAQ · Minage de bitcoin, minage en nuage et hébergement de machines",
+    "name": "FUFU — BitFuFu (FUFU) à 0,90 $ après −31,3 % le 16 octobre : revenus en chute, dette fournisse...",
+    "title": "FUFU — BitFuFu (FUFU) à 0,90 $ après −31,3 % le 16 octobre : revenus en chute, dette fournisse...",
+    "desc": "BitFuFu, mineur de bitcoin de Singapour, a vu son chiffre d’affaires chuter de 62,9 % au deuxième trimestre et perdu 31,3 % le 16 octobre, à 0,90 $. Le président contrôle 95,5 % des votes, un programme d’émission de 150 M$ reste ouvert : surveiller, sans entrée.",
+    "tags": "us,crypto,small-cap,speculative,penny-stocks,trade-idea",
+    "grade": "D",
+    "href": "/analyses/FUFU/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "LEU",
     "exchange": "NYSE · Enrichissement d’uranium et combustible nucléaire",
     "name": "LEU — 114,94 $ au 16 octobre, plus bas sur un an ; plan du 9 octobre abandonné ; rachat de We...",

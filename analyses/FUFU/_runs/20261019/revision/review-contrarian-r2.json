@@ -1,0 +1,364 @@
+{
+ "role": "contrarian",
+ "reviewerId": "fufu-contrarian-20261019",
+ "reviewerName": "Claude (revue contradictoire indépendante)",
+ "round": 2,
+ "previousReview": "analyses/FUFU/_runs/20261019/revision/review-contrarian-r1.json",
+ "analysisSha256": "ba270b5ead91a29b78ccdcf5957649f10659a6ea0fe961a1cd937ddadd661cb9",
+ "evidenceSha256": "b19d3d3cd6381ceeea1d1ced1a48b02cc303494ac146f32bb13e471eb23acf16",
+ "status": "BLOCK",
+ "score": 81,
+ "blockingFindings": [
+  {
+   "id": "AQ-TEC-001",
+   "where": "header.badges[1] (« Cours sous 1 $ »), verdict.whyAvoid[4] (« Titre à 0,90 $, sous 1 $ … médiane de 82 000 $ échangés par séance … : un ordre de quelques milliers de dollars déplace le cours »), technicals.setupNote, tradeIdea.statusNote, page rendue (« Rien à acheter à 0,900 $ »), brouillon Telegram",
+   "problem": "Défaut nouveau. Il figurait déjà dans les données du tour 1 et je ne l’avais pas relevé. Les données que la fiche a elle-même collectées et hachées décrivent la séance du lundi 19 octobre, en cours au moment de la collecte, et la fiche n’en dit rien. Trois sources concordent dans analyses/FUFU/_data/instrument.json. (1) instrument_quote, 16:34:24Z : 1,2101 $ (+34,4 %), ouverture 1,06 $, plus haut 1,57 $, plus bas 1,05 $, 43 354 616 actions. (2) webull_quote, 16:38:36Z : 1,239 $, plus haut 1,570 $, 43 479 090 actions. (3) instrument_realtime_quote, 16:39:14Z : 1,225 $ (+36,3 %), 43 489 933 actions. La dépêche AP « BC-Most Active Stocks » du 19 octobre, 14:30Z, est elle aussi collectée. En séance, le titre a donc dépassé le seuil d’activation (1,29 $) et TP1 (1,56 $), sur environ 750 fois la médiane de 58 089 actions, soit plus de 50 M$ échangés contre 82 000 $ par séance d’ordinaire. Publiée le 19 octobre, la fiche présente pourtant comme actuels un titre « à 0,90 $, sous 1 $ » et une liquidité où « quelques milliers de dollars » font bouger le cours. Elle ne dit pas non plus qu’une clôture du 19 octobre à 1,29 $ ou plus activerait le plan dès ce soir, avec une fenêtre d’achat du 20 au 22 octobre. Le règlement exige l’horodatage du cours en séance et sa séparation d’avec la dernière clôture complète. Il interdit de présenter un fait courant tiré d’un instantané périmé sans le dire.",
+   "fix": "Solution préférée : reconstruire la fiche et le Telegram sur la barre complète du 19 octobre, disponible à partir de 20:30Z selon bars.json (next_complete_available_at), puis réévaluer le statut (activation si la clôture est à 1,29 $ ou plus) et la médiane de volume. À défaut, publier avec un bloc horodaté. (a) technicals.setupNote, à la fin : « Séance du 19 octobre, encore ouverte à la collecte (12 h 39 à New York) : 1,225 $ (+36,3 %), après une ouverture à 1,06 $, un plus haut de 1,57 $ et un plus bas de 1,05 $, sur 43,5 millions d’actions, environ 750 fois la médiane ; aucun dépôt de la société ne l’explique au 15 octobre. Le plus haut a dépassé le seuil d’activation et TP1, mais seule la clôture compte. » (b) tradeIdea.statusNote, à la fin : « Si le 19 octobre clôture à 1,29 $ ou plus, le plan est activé dès ce soir : achat possible du 20 au 22 octobre, 1,34 $ au plus, jamais au-dessus. » (c) verdict.whyAvoid[4] : « Titre à 0,90 $, sous 1 $, après un plus bas de séance à 0,6412 $ le 16 octobre ; médiane de 82 000 $ échangés par séance sur vingt séances : un ordre de quelques milliers de dollars déplace le cours. » → « Clôture du 16 octobre à 0,90 $, après un plus bas de séance à 0,6412 $ ; médiane de 82 000 $ échangés par séance sur les vingt séances précédentes, mais 43,5 millions d’actions échangées le 19 octobre en séance (1,225 $ à 12 h 39, plus haut 1,57 $) : le cours et la liquidité peuvent changer d’un jour à l’autre. » (d) header.badges[1] : « Cours sous 1 $ » → « Clôture du 16 oct. sous 1 $ ». (e) Telegram, après la ligne « Clôture du 16 oct. » : « <b>Lundi 19 oct., en séance (12 h 39 à New York) :</b> 1,22 $ (+36 %), plus haut 1,57 $, 43,5 millions d'actions échangées. Seule la clôture compte pour activer le plan. »"
+  }
+ ],
+ "minorFindings": [
+  {
+   "id": "AQ-BIZ-002",
+   "where": "filingsReview.contrarianRisks[0] (« Le minage en nuage revend surtout une puissance achetée à Bitmain »), fundamentals.rows[15].comparison (« BitFuFu revend une puissance achetée à Bitmain »), analyses/FUFU/_data/documented-client-na.json (reason : « 33 % … 60 % »)",
+   "problem": "Le bloquant du tour 1 est levé dans tout le texte principal : résumé, présentation, avantage concurrentiel, ligne 5, données manquantes et Telegram. Il reste deux formulations au seul millésime 2025 et une pièce annexe non mise à jour. À noter : la note 17 des états semestriels chiffre les services de Bitmain à 40 095 k$, soit 34,6 % des 116 005 k$ de coût des ventes. Le « fournisseur A » à 34 % est donc presque sûrement Bitmain, et la fiche pourrait le nommer.",
+   "fix": "contrarianRisks[0] : « revend surtout une puissance achetée à Bitmain » → « revend une puissance achetée à des fournisseurs, Bitmain en tête (34,6 % du coût des ventes au premier semestre 2026) » ; rows[15].comparison : « BitFuFu revend une puissance achetée à Bitmain » → « BitFuFu revend une puissance achetée à ses fournisseurs » ; documented-client-na.json : remplacer 33 % / 60 % par 45 % / 72 % (premier semestre 2026, note 18)."
+  },
+  {
+   "id": "AQ-QA-002",
+   "where": "Mineurs du tour 1 reportés par règle du propriétaire (deux tours, seuls les bloquants entre les tours)",
+   "problem": "Ces points sont consignés, pas rebloqués. (1) La probabilité d’activation : 2 fenêtres de dix séances sur 290 avec +43 %. (2) Le précédent du 20 mars : seize séances pour reclôturer au-dessus du plus haut, puis 2,52 → 1,92 $. (3) La remarque sur le Nasdaq : aucun avis dans les dépôts, délai de 180 jours, regroupement voté par le seul président. (4) La perte brute du deuxième trimestre : −959 k$, −2,2 %. (5) L’absence d’obligation de formulaires 4 pour un émetteur étranger, avec une couverture jugée « insufficient », et les règlements d’actions gratuites présentés comme des « exercices d’options ». (6) Les compléments du total dilué : environ 580 500 actions gratuites, 115 000 unités Chardan, environ 8,16 millions d’actions de réserve. (7) Le bitcoin à +38,6 % depuis le bilan de juin. (8) L’étiquette « IFRS » du manifeste. (9) Les formats anglais du gabarit et un « vs ».",
+   "fix": "À traiter à la prochaine révision de la fiche ; corrections exactes dans review-contrarian-r1.json."
+  }
+ ],
+ "checks": [
+  {
+   "id": "AQ-VRD-001",
+   "status": "PASS",
+   "rationale": "Le résumé corrigé nomme le métier (puissance achetée « à des fournisseurs, Bitmain en tête en 2025 »), le client à 45 %, le catalyseur (−31,3 % le 16 octobre, « cause inconnue » ; deuxième trimestre à −62,9 %), les contradictions et l’action : aucune entrée avant une clôture à 1,29 $ ou plus. La séance du 19 octobre manque (voir AQ-TEC-001).",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/verdict/summary"
+   ]
+  },
+  {
+   "id": "AQ-VRD-002",
+   "status": "PASS",
+   "rationale": "Chiffres revérifiés : 42 760 k$ contre 115 395 k$ (−62,9 %) ; client A à 45 % de 115 420 k$, soit 51,9 M$ ; 0,9001 contre 1,31 $ (−31,29 %) ; WGMI −9,85 %. Lien causal explicite entre puissance achetée et marge.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2026-09-10-6-K-098773-ea030480801ex99-1.htm.txt (note 18)",
+    "analyses/FUFU/_data/bars.json"
+   ]
+  },
+  {
+   "id": "AQ-VRD-003",
+   "status": "PASS",
+   "rationale": "Note D (28 : 8 − 20 − 6 − 3 − 6 + 55) distincte du statut « surveiller ». Le rachat, ajouté en whyBuy[5], ne change pas une note dominée par l’activité et le capital.",
+   "evidenceRefs": [
+    "analyses/FUFU/_runs/20261019/revision/editorial-judgments.json"
+   ]
+  },
+  {
+   "id": "AQ-VRD-004",
+   "status": "PASS",
+   "rationale": "whyBuy[5] (rachat de 5 M$ ; « l’autorisation ne vaut pas exécution ») et whyAvoid[2] (143,6 M$ nominaux, limite probable de 9,1 M$, actions de Bitmain revendables) vont chacun dans le sens de leur rubrique. Les mineurs du tour 1 sur whyBuy[0], [3] et [4] sont reportés.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/verdict/whyBuy/5",
+    "data/analyses-data/FUFU.json#/verdict/whyAvoid/2"
+   ]
+  },
+  {
+   "id": "AQ-BIZ-001",
+   "status": "PASS",
+   "rationale": "Produit, clients (45 % et 72 %, Afrique 58 %), modèle, coûts et chaîne de valeur expliqués. La créance de 66,2 M$ sur Bitmain reste un mineur reporté.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/business/overview"
+   ]
+  },
+  {
+   "id": "AQ-BIZ-002",
+   "status": "PASS",
+   "rationale": "Bloquant du tour 1 levé. overview, moat et rows[5] donnent le premier semestre 2026 : client A 45 % (environ 51,9 M$), trois premiers 72 % contre 58 %, premier fournisseur 34 % contre 51 %, Afrique 58 % des ventes hors minage propre (52 113 sur 90 076 k$). C’est conforme à la note 18. Bitmain détient 41 % des actions cotées (13 090 940 sur 31 653 598). Restent deux mentions au millésime 2025 et la pièce annexe (mineur).",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2026-09-10-6-K-098773-ea030480801ex99-1.htm.txt (notes 13 et 18)",
+    "data/analyses-data/FUFU.json#/fundamentals/rows/5"
+   ]
+  },
+  {
+   "id": "AQ-BIZ-003",
+   "status": "PASS",
+   "rationale": "Indicateurs du métier inchangés et exacts : EH/s, bitcoins produits et détenus, MW, contrats payés d’avance.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2026-10-13-6-K-109072-ea030842601ex99-1.htm.txt"
+   ]
+  },
+  {
+   "id": "AQ-EAR-001",
+   "status": "PASS",
+   "rationale": "Deuxième trimestre 2026 : communiqué du 17 août (0001213900-26-090474) et états semestriels du 10 septembre (0001213900-26-098773).",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/filingsReview/filings/1",
+    "data/analyses-data/FUFU.json#/filingsReview/filings/2"
+   ]
+  },
+  {
+   "id": "AQ-EAR-002",
+   "status": "PASS",
+   "rationale": "Chiffre d’affaires, croissance, perte, EBITDA ajusté, puissance et douze mois glissants exacts. La perte brute du trimestre est un mineur reporté.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2026-08-17-6-K-090474-ea030213301ex99-1.htm.txt"
+   ]
+  },
+  {
+   "id": "AQ-EAR-003",
+   "status": "PASS",
+   "rationale": "Le communiqué ne donne aucune prévision chiffrée, et la fiche le dit.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/earnings/beatNote"
+   ]
+  },
+  {
+   "id": "AQ-EAR-004",
+   "status": "PASS",
+   "rationale": "Le 20-F (contrôle interne, Bitmain) et les états semestriels (concentration, ventes au fil de l’eau, absence de rachat au 30 juin) nourrissent désormais le récit.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/filingsReview/filings/0",
+    "data/analyses-data/FUFU.json#/filingsReview/filings/1"
+   ]
+  },
+  {
+   "id": "AQ-EAR-005",
+   "status": "PASS",
+   "rationale": "Date « non confirmée ». La source de cours collectée donne une estimation (earningsTimestamp 2026-11-12T12:30:00Z ; Webull « 11/10-11/17 »), cohérente avec « vers la mi-novembre ». La sortie le 6 novembre précède toute la plage estimée.",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/instrument.json (instrument_quote, webull_quote)",
+    "data/analyses-data/FUFU.json#/earnings/nextEarnings"
+   ]
+  },
+  {
+   "id": "AQ-VAL-001",
+   "status": "PASS",
+   "rationale": "0,32× les ventes, 1,59× les capitaux propres et scénario à 0,84 $ : calculs exacts, inchangés depuis le tour 1.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/fundamentals/rows/15"
+   ]
+  },
+  {
+   "id": "AQ-VAL-002",
+   "status": "PASS",
+   "rationale": "Entrées datées et base GAAP explicite. Le bitcoin à +38,6 % depuis le bilan de juin reste un mineur reporté.",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/comparison_bars.json (IBIT)"
+   ]
+  },
+  {
+   "id": "AQ-VAL-003",
+   "status": "PASS",
+   "rationale": "Correspondance des pairs vérifiée au tour 1 ; l’écart est expliqué par la marge.",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/comparison_context.json"
+   ]
+  },
+  {
+   "id": "AQ-SEC-001",
+   "status": "PASS",
+   "rationale": "Le constat sur le 20-F 0001213900-26-048533 intègre désormais l’Item 15, la position de Bitmain (13 090 940 actions de classe A) et la suffisance de la trésorerie à douze mois.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/filingsReview/filings/0"
+   ]
+  },
+  {
+   "id": "AQ-SEC-002",
+   "status": "PASS",
+   "rationale": "Bloquant du tour 1 levé et chaque chiffre revérifié. Les 1 590 940 actions remises à Bitmain ont éteint 5 140 800 $ (« issued 1,590,940 ordinary shares to Bitmain », note des états semestriels), en deux temps : 582 940 au premier semestre, puis 1 008 000 au second. Le formulaire D : 5 141 − 2 419 = 2 722 k$, soit 2,70 $ par action. Les deux F-3 de revente sont au nom de Bitmain Technologies Delaware ; les 306 651 autres actions sont celles des vendeurs d’Uni-Titan. Avis d’efficacité du 18 juillet et du 26 novembre 2025 (inventaire EDGAR). Pour le programme d’émission : 6,16 M$ bruts en 2025 plus 0,2 M$ au premier semestre 2026 laissent environ 143,6 M$ sur l’étagère 333-286356 de 300 M$, efficace le 25 avril 2025. La limite I.B.5 se vérifie aussi. Au dépôt du 20-F : (31 653 598 − 14 547 440) × 2,72 $ (clôture du 4 mars) = 46,5 M$, et 82,1 M$ sans Bitmain parmi les affiliés. Aujourd’hui : 17 149 194 × 1,59 $ / 3 = 9,09 M$, et 5,15 M$ à 0,90 $. Le mot « probablement » est justifié.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2026-09-10-6-K-098773-ea030480801ex99-1.htm.txt (capitaux propres)",
+    "analyses/FUFU/_primary/text/2026-04-28-20-F-048533-ea0286816-20f_bitfufu.htm.txt (Item 7, Use of Proceeds)",
+    "analyses/FUFU/_primary/2025-10-09-D-097585-primary_doc.xml",
+    "analyses/FUFU/_runs/20261019/_sec-discovery/window-inventory.json",
+    "analyses/FUFU/_data/bars.json"
+   ]
+  },
+  {
+   "id": "AQ-SEC-003",
+   "status": "PASS",
+   "rationale": "Bloquant du tour 1 levé. Le rachat de 5 M$ (6-K 0001213900-26-070388, 24 mois à partir du 24 juin 2026, aucune action rachetée au 30 juin, aucune exécution publiée) figure dans shareHistory, filings[11], whyBuy[5], riskCards[1], controlChecklist et le Telegram. 5 000 000 / 0,9001 = 5,55 millions d’actions, 17,5 % de la classe A.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/2026-06-22-6-K-070388-ea029509001ex99-1.htm",
+    "data/analyses-data/FUFU.json#/filingsReview/filings/11"
+   ]
+  },
+  {
+   "id": "AQ-SEC-004",
+   "status": "PASS",
+   "rationale": "166 696 634 actions et 150,04 M$ de capitalisation concordent ; total dilué de 171 948 609. Les compléments du total dilué sont un mineur reporté.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/capitalStructure"
+   ]
+  },
+  {
+   "id": "AQ-SEC-005",
+   "status": "PASS",
+   "rationale": "Bloquant du tour 1 levé. Faiblesse importante (personnel insuffisant en US GAAP, pas entièrement corrigée), contrôles inefficaces au 31 décembre 2025 et absence d’attestation de l’auditeur figurent dans filings[0], controlChecklist[2] et riskCards[4]. L’absence de doute sur la continuité repose sur un texte affirmatif : trésorerie « sufficient … for the next 12 months » ; 0 occurrence de « substantial doubt » dans le 20-F et dans les états semestriels.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2026-04-28-20-F-048533-ea0286816-20f_bitfufu.htm.txt (Item 5B, Item 15)",
+    "data/analyses-data/FUFU.json#/verdict/controlChecklist/2"
+   ]
+  },
+  {
+   "id": "AQ-SEC-006",
+   "status": "PASS",
+   "rationale": "Comptes cohérents : 26 formulaires dans la fenêtre ; 12 pièces ouvertes, soit 10 dans la fenêtre (le 6-K du 22 juin compris) plus 2 hors fenêtre. Le manifeste concorde (opened_count, reviewed_count et decision_relevant_count à 12, documents = 12).",
+   "evidenceRefs": [
+    "analyses/FUFU/_runs/20261019/revision/primary-manifest.json"
+   ]
+  },
+  {
+   "id": "AQ-TEC-001",
+   "status": "BLOCK",
+   "rationale": "La clôture de référence du 16 octobre est bien datée. Mais la séance du 19 octobre, collectée et horodatée (1,2101 $ à 16:34:24Z, 1,239 $ à 16:38:36Z, 1,225 $ à 16:39:14Z ; plus haut 1,57 $ ; 43,5 millions d’actions), n’apparaît nulle part, alors que la fiche présente comme actuels un titre « à 0,90 $, sous 1 $ » et une liquidité de 82 000 $. Voir le bloquant.",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/instrument.json (items 1, 2, 49)",
+    "analyses/FUFU/_data/bars.json (next_complete_available_at 2026-10-19T20:30:00Z)"
+   ]
+  },
+  {
+   "id": "AQ-TEC-002",
+   "status": "PASS",
+   "rationale": "Support à 0,6412 $ ; résistances à 1,42, 1,56 et 1,65 $, vérifiées sur les barres ; un seul seuil, 1,29 $, partout, scénarios compris.",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/bars.json",
+    "data/analyses-data/FUFU.json#/blastRadius/scenarios"
+   ]
+  },
+  {
+   "id": "AQ-TEC-003",
+   "status": "PASS",
+   "rationale": "Le plan reste défendable comme surveillance conditionnelle : déclencheur, plafond, stop, objectifs, abandon et expiration ont chacun leur logique. Les consignes d’exécution sont exactes : ouverture à 15 h 30 heure de Paris, 14 h 30 du 26 au 30 octobre entre les deux changements d’heure, clôture du 6 novembre à 22 h, stop simple et achat unique. Probabilité d’activation et précédent du 20 mars : mineurs reportés.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/tradeIdea"
+   ]
+  },
+  {
+   "id": "AQ-TEC-004",
+   "status": "PASS",
+   "rationale": "Calculs refaits à 1,29 $. TP1 : 0,27 / 0,09 = 3,00 ; TP2 : 0,36 / 0,09 = 4,00 ; au plafond : 0,22 / 0,14 = 1,57. Écarts : −6,98 %, +20,93 % et +27,91 %. Taille : 476 × 1,34 = 638 $.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/tradeIdea"
+   ]
+  },
+  {
+   "id": "AQ-TEC-005",
+   "status": "PASS",
+   "rationale": "Veto avant résultats appliqué : sortie le 6 novembre, avant la fenêtre estimée du 10 au 17 novembre. Les données en séance non certifiées sont déclarées. La limite de fraîcheur du 19 octobre est traitée en AQ-TEC-001.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/tradeIdea/horizon"
+   ]
+  },
+  {
+   "id": "AQ-RSK-001",
+   "status": "PASS",
+   "rationale": "Cinq risques propres à BitFuFu, dont le nouveau « Contrôle interne défaillant », chacun avec mécanisme et chiffres. L’invalidation couvre désormais la saisie en Éthiopie. Les mineurs du tour 1 (canaux de vente non annoncés, Nasdaq) sont reportés.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/risks/riskCards"
+   ]
+  },
+  {
+   "id": "AQ-RSK-002",
+   "status": "PASS",
+   "rationale": "Le cas contraire, haussier, est plus complet avec le rachat de 5 M$ chiffré en actions et en part de la classe A.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/verdict/whyBuy"
+   ]
+  },
+  {
+   "id": "AQ-RSK-003",
+   "status": "PASS",
+   "rationale": "War room complète : ordres limités, stop simple et non limité, achat unique, aucun achat sur une ouverture sous 1,20 $, plafond de 1,34 $, taille de 476 actions. Les écarts d’ouverture sont exacts : 3 à ±10 % ou plus ; 2 sous −7,0 %, à −16,0 % et −15,2 %. Les chiffres de liquidité doivent toutefois être datés (voir AQ-TEC-001).",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/bars.json",
+    "data/analyses-data/FUFU.json#/tradeIdea/entryNote"
+   ]
+  },
+  {
+   "id": "AQ-SRC-001",
+   "status": "PASS",
+   "rationale": "validate-analysis-evidence : PASS sur 471 affirmations, avec un manifeste lié à ba270b5e…. Les sections citent leurs dépôts, dont le 6-K du rachat.",
+   "evidenceRefs": [
+    "data/analyses-evidence/FUFU.json"
+   ]
+  },
+  {
+   "id": "AQ-SRC-002",
+   "status": "PASS",
+   "rationale": "Liens EDGAR directs avec numéros d’accession, F-3 n° 333-286356 compris. L’étiquette « IFRS » du manifeste est un mineur reporté.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/capitalStructure/sourceRefs"
+   ]
+  },
+  {
+   "id": "AQ-SRC-003",
+   "status": "PASS",
+   "rationale": "La cause de la chute est désormais « inconnue » et le constat est exact. Aucun dépôt le 16 octobre ; aucun des huit titres collectés n’est daté du 16 octobre (deux du 13 octobre, cinq d’août, AP du 19 octobre) ; l’explication du mouvement a échoué (délai de 45 s). La réserve sur les formulaires 4 est un mineur reporté.",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/corporate_actions.json (news)",
+    "analyses/FUFU/_data/_collect.json",
+    "data/analyses-data/FUFU.json#/blastRadius/missingData/3"
+   ]
+  },
+  {
+   "id": "AQ-EDT-001",
+   "status": "N/A",
+   "rationale": "Fiche unique hors lot. check-ai-tells --strict ne signale rien, ni sur le rendu (8 512 mots) ni sur le Telegram (330 mots).",
+   "evidenceRefs": [
+    "analyses/FUFU/index.html",
+    "analyses/FUFU/_runs/20261019/telegram-draft.html"
+   ]
+  },
+  {
+   "id": "AQ-EDT-002",
+   "status": "PASS",
+   "rationale": "Le contenu reste propre à BitFuFu (Bitmain, classe B, Éthiopie, Oklahoma, HASH, rachat).",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/filingsReview/contrarianRisks"
+   ]
+  },
+  {
+   "id": "AQ-EDT-003",
+   "status": "PASS",
+   "rationale": "Limites précises : cause inconnue, fournisseur du semestre non nommé, I.B.5 marqué « probablement ». Les formats anglais du gabarit et le « vs » sont des mineurs reportés.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/blastRadius/missingData"
+   ]
+  },
+  {
+   "id": "AQ-QA-001",
+   "status": "BLOCK",
+   "rationale": "Les outils passent : check-analysis-editorial-quality --strict --pre-review à 0 erreur et 0 avertissement ; validate-analysis-evidence PASS sur 471 affirmations ; check-ai-tells propre ; aperçu identique à index.html (94636741…). Le contrôle contradictoire échoue en revanche sur AQ-TEC-001.",
+   "evidenceRefs": [
+    "analyses/FUFU/_runs/20261019/preview/index.html"
+   ]
+  },
+  {
+   "id": "AQ-QA-002",
+   "status": "PASS",
+   "rationale": "Statut BLOCK consigné avec une correction exacte. Les quatre bloquants du tour 1 sont vérifiés levés ; les mineurs reportés sont listés sans être rebloqués.",
+   "evidenceRefs": [
+    "analyses/FUFU/_runs/20261019/revision/review-contrarian-r1.json"
+   ]
+  },
+  {
+   "id": "AQ-QA-003",
+   "status": "PASS",
+   "rationale": "Score de 81 sur 100, contre 74 au tour 1. Détail : verdict 13,5/15, métier 9/10, résultats 12/15, valorisation 7,5/10, dépôts et capital 13,5/15, technique 11,5/15, risques 8/10, sources 4/5, écriture 4/5. Le score atteint le seuil mais ne lève pas le bloquant AQ-TEC-001.",
+   "evidenceRefs": [
+    "plans/analysis-quality-rubric-20260828.md"
+   ]
+  }
+ ],
+ "telegramReview": {
+  "status": "BLOCK",
+  "findings": [
+   "Corrections du tour 1 intégrées et exactes : « Bitmain en tête », client à 45 %, « cause inconnue », rachat de 5 M$ « sans achat annoncé », invalidation sur l’Éthiopie, « date de résultats non confirmée », taille de 476 actions (environ 640 $). Les horaires de Paris sont justes, du 26 au 30 octobre comme le 6 novembre à 22 h. Français, HTML Telegram valide, aucun terme interne, check-ai-tells propre.",
+   "Même défaut que la fiche : le message s’en tient à la clôture du 16 octobre (0,90 $), alors que le titre cotait 1,22 $ (+36 %) le 19 octobre à 12 h 39 à New York, après un plus haut de 1,57 $ sur 43,5 millions d’actions. Ajouter après la ligne « Clôture du 16 oct. » : « <b>Lundi 19 oct., en séance (12 h 39 à New York) :</b> 1,22 $ (+36 %), plus haut 1,57 $, 43,5 millions d'actions échangées. Seule la clôture compte pour activer le plan. » Mieux : régénérer sur la clôture du 19 octobre."
+  ]
+ }
+}

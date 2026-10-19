@@ -1,0 +1,451 @@
+{
+  "role": "retail_war_room",
+  "reviewerId": "fufu-retail-war-room-20261019",
+  "reviewerName": "Claude (revue war room indépendante)",
+  "analysisSha256": "c242cf8e3f4de160f58fe1252d95c607d666379686afbe8b00479d16d5e47a53",
+  "evidenceSha256": "a337e9fd1f8930f76d75f543beace01226fa6d1758db614c0488f282c8b03904",
+  "pageSha256": "7cf8777508fee76ac69ed60bfda7694beb7e98a002ff453ed374d8a7b3d35dcc",
+  "referenceClose": "2026-10-16",
+  "status": "BLOCK",
+  "score": 76,
+  "blockingFindings": [
+    {
+      "id": "AQ-RSK-003",
+      "where": "tradeIdea.entryNote, paragraphe « Achat : … Rien si le titre ouvre sous 1,20 $. » ; telegram-draft.html ligne 8 (« Achat ensuite par ordre limité, 1,34 $ maximum, dans les 3 séances et au plus tard le 2 nov. »)",
+      "problem": "Le plan demande un « ordre limité valable la journée, prix maximum 1,34 $ » et pose la règle « Rien si le titre ouvre sous 1,20 $ ». Il ne dit nulle part que l’ordre se pose après l’ouverture. Or un particulier sur un courtier européen passe souvent son ordre le matin, avant l’ouverture de New York : 15 h 30 à Paris, mais 14 h 30 du 26 au 30 octobre, car l’Europe change d’heure le 25 octobre et les États-Unis le 1er novembre. Un ordre d’achat limité à 1,34 $ s’exécute au prix d’ouverture, quel qu’il soit, dès lors qu’il est sous 1,34 $. Exemple : FUFU clôture à 1,29 $ puis ouvre le lendemain à 1,15 $ (−10,9 %). Ce n’est pas un cas d’école : bars.json compte 3 ouvertures à −10 % ou pire sur 250 séances, dont −16,0 % le 29 mai et −15,2 % le 17 août. Dans ce cas, le lecteur achète sous son propre stop, à l’inverse de la règle « Rien si le titre ouvre sous 1,20 $ ». Son ordre stop à 1,20 $ se retrouve au-dessus du cours : le courtier le refuse, ou il se déclenche aussitôt. Le plan ne dit pas non plus « un seul achat ». Avec un ordre à la journée sur une fenêtre de trois séances, un lecteur déjà servi peut repasser l’ordre le lendemain et doubler sa taille. Le Telegram a les mêmes lacunes. Les plans « surveiller » d’ALMU (même jour) et de TRT (13 octobre) contiennent ces deux règles.",
+      "fix": "(1) tradeIdea.entryNote : « Achat : dans les trois séances qui suivent la clôture d’activation, au plus tard le 2 novembre, ordre limité valable la journée, prix maximum 1,34 $ ; au-delà, le gain vers TP1 tomberait sous 1,5 fois le risque. Rien si le titre ouvre sous 1,20 $. » → « Achat : dans les trois séances qui suivent la clôture d’activation, au plus tard le 2 novembre, ordre limité valable la journée, prix maximum 1,34 $, posé après l’ouverture de New York (15 h 30 à Paris, 14 h 30 du 26 au 30 octobre), jamais avant ; au-delà de 1,34 $, le gain vers TP1 tomberait sous 1,5 fois le risque. Si le titre ouvre sous 1,20 $, aucun achat, ce jour-là comme les suivants. Un seul achat : une fois l’ordre exécuté, il n’est plus repassé ; s’il ne l’a été qu’en partie, seul le solde peut être repassé, dans la même fenêtre. » (2) Telegram, ligne 8 : « Achat ensuite par ordre limité, 1,34 $ maximum, dans les 3 séances et au plus tard le 2 nov. » → « Achat ensuite par ordre limité, 1,34 $ maximum, posé après l'ouverture de New York (15 h 30 à Paris, 14 h 30 du 26 au 30 oct.), jamais avant, dans les 3 séances et au plus tard le 2 nov. Un seul achat. Rien si le titre ouvre sous 1,20 $. »"
+    },
+    {
+      "id": "AQ-TEC-003",
+      "where": "risks.riskCards[3].verdict (« Passer uniquement des ordres limités ») ; tradeIdea.invalidation[1] (« sortie par un ordre stop à 1,20 $ ») ; tradeIdea.entryNote, cartes « Objectif 1 » et « Objectif 2 », tradeIdea.rr (aucune règle de vente aux objectifs)",
+      "problem": "Les règles de sortie ont deux défauts. (a) Le type de stop se contredit. La carte de risque « Liquidité et gaps » dit « Passer uniquement des ordres limités », et l’invalidation dit « ordre stop à 1,20 $ » sans dire s’il est simple ou limité. Un lecteur qui suit la carte pose un stop limité à 1,20 $. Sur un gap, ou sur une chute en séance comme celle du 16 octobre (de 1,285 $ à 0,6412 $ dans la même séance, d’après bars.json), cet ordre peut ne jamais s’exécuter. La perte n’a alors plus de plancher, alors que la taille de 476 actions suppose une sortie vers 1,13 $ (100 $ / 476 = 0,21 $ sous 1,34 $). (b) Le plan fixe deux objectifs mais aucune quantité. Rien ne dit combien vendre à 1,56 $, ni quoi faire de l’ordre stop ensuite : le mot « moitié » n’apparaît nulle part dans la page. Le lecteur ne peut donc pas poser ses ordres de vente, et les R/R affichés (1:3,24 et 1:4,29) ne s’obtiennent pas ensemble. Chez plusieurs courtiers européens, un stop valable jusqu’à annulation bloque les actions : la vente limitée à 1,56 $ est refusée tant que le stop n’est pas réduit. ALMU (même jour) et TRT écrivent ces règles.",
+      "fix": "(1) risks.riskCards[3].verdict : « Passer uniquement des ordres limités, et calculer la taille comme si le stop pouvait être sauté. » → « Acheter et vendre aux objectifs par ordres limités uniquement ; se protéger par un ordre stop simple, jamais un stop limité, qui peut rester sans exécution sur un gap ; calculer la taille comme si le stop pouvait être sauté. » (2) tradeIdea.invalidation[1] : « Une fois acheté : sortie par un ordre stop à 1,20 $, valable jusqu’à annulation, sans attendre la clôture. » → « Une fois acheté : sortie par un ordre stop simple (non limité) à 1,20 $, posé dès l’achat, valable jusqu’à annulation, déclenché en séance sans attendre la clôture. » (3) tradeIdea.entryNote, ajouter après le paragraphe « Taille » : « Après l’achat : à 1,56 $ (plus haut du 5 octobre), vendre la moitié par ordre limité, puis ramener l’ordre stop au nombre d’actions restant ; le reste vise 1,65 $ (plus haut du 24 août) ou se vend au plus tard en fin de séance le 6 novembre (clôture à 22 h, heure de Paris). Une fois tout vendu, annuler l’ordre stop. »"
+    },
+    {
+      "id": "AQ-QA-001",
+      "where": "analyses/FUFU/_runs/20261019/telegram-draft.html, lignes 9, 11 et 12",
+      "problem": "Lu seul, le Telegram ne permet pas de gérer la position une fois achetée. (a) « Stop 1,20 $ » est un mot de métier donné sans mode d’emploi. Le message ne dit pas qu’il s’agit d’un ordre de vente automatique, à poser tout de suite, valable jusqu’à annulation et déclenché en séance. Or toutes les autres règles du message portent sur une clôture (activation, abandon). Le lecteur peut donc attendre une clôture sous 1,20 $, sur un titre tombé de 1,285 $ à 0,6412 $ dans la séance du 16 octobre. (b) « objectifs 1,56 $ puis 1,65 $ » ne donne aucune quantité, comme dans la fiche. (c) « Petite taille. » ne donne aucun chiffre, alors que la fiche donne 476 actions pour 100 $ de perte acceptée. (d) « Plan annulé si : … annonce d'une vente d'actions » ne dit pas quoi faire quand on détient déjà le titre ; la fiche dit « déjà acheté, vendre à la séance suivante ». Le message omet aussi l’invalidation « saisie des machines en Éthiopie », alors que le contrat des canaux exige les mêmes conditions et les mêmes invalidations partout.",
+      "fix": "(1) Ligne 9 : « Stop 1,20 $ · objectifs 1,56 $ puis 1,65 $ · sortie au plus tard à la clôture du 6 nov., avant les résultats. » → « <b>Une fois acheté :</b> poser tout de suite un ordre de vente automatique (stop simple, pas un stop limité) à 1,20 $, valable jusqu'à annulation ; il se déclenche en séance, sans attendre la clôture. Vendre la moitié à 1,56 $ (puis réduire le stop aux actions restantes), le reste à 1,65 $. Tout vendre au plus tard le 6 nov. avant 22 h (heure de Paris), avant les résultats. » (2) Ligne 11 : « <b>Plan annulé si :</b> clôture sous 0,6412 $, ou annonce d'une vente d'actions. » → « <b>Plan annulé si :</b> clôture sous 0,6412 $ avant l'achat, annonce d'une vente d'actions ou saisie des machines en Éthiopie. Déjà acheté : vendre à la séance suivante. » (3) Ligne 12 : « le stop peut être sauté. Petite taille. » → « le cours peut sauter le stop. Taille : pour 100 $ de perte acceptée, 476 actions au plus (environ 640 $). »"
+    }
+  ],
+  "minorFindings": [
+    {
+      "id": "AQ-TEC-004",
+      "where": "blastRadius.scenarios[1].contradiction et [2].contradiction (« au-dessus de 1,28 $ ») ; carte « Déclencheur 1,285 $ clôture au-dessus » ; carte « Risque/rendement 1:3,24 · 1:4,29 » ; tradeIdea.stopPct « -6.6% »",
+      "problem": "Le même seuil s’écrit de trois façons : 1,28 $ dans le tableau des scénarios, 1,285 $ sur la carte, 1,29 $ dans le texte du plan. Les closes à demi-cent existent dans la série (1,495 $ le 5 octobre, 1,375 $ le 9 octobre). Une clôture à 1,285 $ serait donc « au-dessus de 1,28 $ » sans activer le plan. Autre point : la carte R/R et le stop à −6,6 % se calculent à 1,285 $, un prix auquel personne ne peut acheter. L’achat se fait entre 1,29 $ et 1,34 $, soit un R/R vers TP1 de 3,0 à 1,57 et un stop entre −7,0 % et −10,4 %. Le détail du R/R donne bien le chiffre à 1,34 $, donc l’erreur reste mineure.",
+      "fix": "blastRadius.scenarios[1].contradiction : « Une clôture au-dessus de 1,28 $ qui change la lecture vers le scénario haussier. » → « Une clôture à 1,29 $ ou plus, qui active le plan et fait passer au scénario haussier. » ; blastRadius.scenarios[2].contradiction : « Un rebond immédiat au-dessus de 1,28 $ qui efface la séance de la chute. » → « Un rebond immédiat à 1,29 $ ou plus en clôture, qui efface la séance de la chute. » ; gabarit, statut « watch » : carte « Déclencheur » = « ≥ 1,29 $ » (sous-titre « clôture ») ; carte R/R = « 1:3,0 à 1,29 $ · 1:1,57 à 1,34 $ (TP1) » ; stopPct = « −7,0 % à −10,4 % selon le prix d’achat »."
+    },
+    {
+      "id": "AQ-TEC-003",
+      "where": "tradeIdea.catalysts[0]",
+      "problem": "« Une clôture à 1,29 $ ou plus sur un volume supérieur à 58 089 actions » ajoute une condition de volume que statusNote, entryNote et le Telegram n’exigent pas. Le lecteur ne sait pas si une clôture à 1,30 $ sur 40 000 actions active le plan.",
+      "fix": "« Une clôture à 1,29 $ ou plus sur un volume supérieur à 58 089 actions, la médiane des vingt séances précédant le 16 octobre. » → « Une clôture à 1,29 $ ou plus, de préférence sur plus de 58 089 actions (médiane des vingt séances avant le 16 octobre) ; le volume renforce le signal mais n’est pas exigé pour activer le plan. »"
+    },
+    {
+      "id": "AQ-TEC-005",
+      "where": "tradeIdea.horizon ; telegram-draft.html ligne 9",
+      "problem": "La sortie du 6 novembre repose sur une publication attendue vers la mi-novembre (le 12 novembre l’an dernier), date non confirmée. Rien n’est prévu si la société annonce une date plus proche. TRT prévoyait ce cas (« ou la veille »).",
+      "fix": "tradeIdea.horizon : « sortie obligatoire à la clôture du 6 novembre, avant les résultats » → « sortie obligatoire au plus tard en fin de séance le 6 novembre, ou la veille de la publication si une date antérieure est annoncée, avant les résultats » ; Telegram : « avant les résultats. » → « avant les résultats (plus tôt si leur date est avancée). »"
+    },
+    {
+      "id": "AQ-RSK-003",
+      "where": "tradeIdea.entryNote (« Taille : … ») ; verdict.whyAvoid[4] (« un ordre de quelques milliers de dollars déplace le cours. »)",
+      "problem": "La taille n’est donnée qu’en nombre d’actions, sans le montant engagé. Elle n’est pas rapportée à la liquidité pour un budget plus grand : avec 1 000 $ de perte acceptée, 4 761 actions font 6 380 $, près de 8 % d’une séance médiane de 81 596 $. Le texte ne dit rien non plus des frais de courtage et de change d’un courtier européen sur trois ordres. Enfin, « déplace le cours » est affirmé alors que l’écart achat/vente n’est pas mesuré : aucune barre intrajournalière n’est disponible, ce que la fiche reconnaît.",
+      "fix": "entryNote : « Taille : pour 100 $ de perte acceptée au stop, 714 actions au plafond, 476 pour garder une marge en cas de gap. » → « Taille : pour 100 $ de perte acceptée au stop, 714 actions au plafond (957 $), 476 après réduction d’un tiers pour les gaps (638 $). Avec 1 000 $ de perte acceptée, 4 761 actions, soit 6 380 $ : près de 8 % d’une séance médiane, trop pour sortir sans peser sur le cours. Vérifier aussi que les frais de courtage et de change des trois ordres (un achat, deux ventes) restent petits face à ces montants. » ; whyAvoid[4] : « un ordre de quelques milliers de dollars déplace le cours. » → « un ordre de quelques milliers de dollars pèse plusieurs pour cent d’une séance et peut déplacer le cours ; l’écart entre prix d’achat et de vente n’est pas mesuré. »"
+    },
+    {
+      "id": "AQ-EDT-003",
+      "where": "verdict.controlChecklist[0] (premier bloc « Conditions de décision ») ; business.coverageMatrix[0].decision ; verdict.confidence ; fundamentals.rows[15-17].source",
+      "problem": "« servie par une source de cours de secours, la source principale étant incomplète » et « série certifiée » décrivent la tuyauterie des données, pas la donnée elle-même. Le texte occupe l’une des trois cartes de décision en tête de page. Il peut faire douter le lecteur de la clôture à 0,90 $ sans rien lui dire de ce qu’il doit en faire. Le fait est exact et il est utile de le signaler : seule la formulation est en cause. Aucun nom interne n’apparaît, donc l’erreur reste mineure.",
+      "fix": "controlChecklist[0].evidence : « Série quotidienne certifiée à la clôture du 16 octobre, servie par une source de cours de secours, la source principale étant incomplète ce jour-là. » → « Trois cents séances complètes jusqu’à la clôture du 16 octobre ; ce jour-là, les cours viennent d’un second fournisseur de cotations, le premier étant incomplet. » ; controlChecklist[0].action : « Niveaux et moyennes calculés sur la seule série certifiée. » → « Niveaux et moyennes calculés sur ces trois cents séances, contrôlées complètes. » ; coverageMatrix[0].decision : « …clôture certifiée du 16 octobre, base des niveaux ; source de cours de secours, la principale étant incomplète. » → « …clôture du 16 octobre, base des niveaux ; cours fournis ce jour-là par un second fournisseur de cotations, le premier étant incomplet. » ; verdict.confidence : « la clôture certifiée du 16 octobre » → « la clôture du 16 octobre » ; fundamentals.rows[15-17].source : « Clôture certifiée et dépôts SEC » → « Clôture du 16 octobre et dépôts SEC »."
+    },
+    {
+      "id": "AQ-SEC-002",
+      "where": "tradeIdea.invalidation[2] ; verdict.controlChecklist[1].action",
+      "problem": "L’invalidation « Toute vente d’actions annoncée par 6-K ou 424B » laisse croire que le lecteur verra passer chaque vente. Or les ventes du programme au fil de l’eau ne sont pas annoncées une à une. Les 82 686 actions vendues au premier semestre n’ont été connues que par le 6-K semestriel du 10 septembre. Le déclencheur ne capte donc qu’un nouveau 424B ou 6-K.",
+      "fix": "Ajouter à la fin de invalidation[2] : « Les ventes du programme au fil de l’eau ne sont pas annoncées une à une (82 686 actions au premier semestre, connues le 10 septembre) : le plan ne réagit qu’à un nouveau 424B ou 6-K. »"
+    },
+    {
+      "id": "AQ-RSK-003",
+      "where": "tradeIdea.entryNote, paragraphe « Déclencheur »",
+      "problem": "Pour activer le plan, il faut une hausse d’environ 43 % depuis 0,90 $. La règle ne distingue pas une remontée en plusieurs séances d’un bond de 43 % en une seule séance, sur un titre qui échange 82 000 $ par jour. Le plafond de 1,34 $ et le stop bornent le risque, donc ce n’est pas un blocage. C’est un choix de conception à trancher.",
+      "fix": "Ajouter après « un franchissement en séance ne compte pas. » : « Si cette clôture suit une hausse de plus de 25 % en une seule séance, attendre la clôture suivante : elle doit rester à 1,29 $ ou plus pour activer le plan. »"
+    },
+    {
+      "id": "AQ-EDT-002",
+      "where": "risks.pedagogy",
+      "problem": "« attendre les résultats du troisième trimestre avant de renforcer » suppose que l’on garde la position pendant la publication. Or le plan la solde le 6 novembre, avant les résultats. Le lecteur peut croire qu’il faut conserver le titre, puis le renforcer après la publication.",
+      "fix": "« …et attendre les résultats du troisième trimestre avant de renforcer. » → « … ; quoi qu’il arrive, la position est soldée le 6 novembre, avant les résultats du troisième trimestre. »"
+    },
+    {
+      "id": "AQ-QA-001",
+      "where": "telegram-draft.html ligne 4",
+      "problem": "« sans annonce de la société » est plus large que la fiche, qui dit « sans dépôt de la société ce jour-là ». Le jeton HASH a été annoncé la veille, le 15 octobre (6-K 0001213900-26-109550).",
+      "fix": "« trois fois la baisse des mineurs cotés, sans annonce de la société. » → « trois fois la baisse des mineurs cotés, sans annonce de la société ce jour-là. »"
+    },
+    {
+      "id": "AQ-QA-001",
+      "where": "Rendu du gabarit : prix du hero « $0.90 / -31.29% » ; « Bons Arisz Public $11.5 » ; détail R/R « 1:3.24 » ; tableau technique « $1.31 » ; « Supports : $0.64 »",
+      "problem": "Défauts connus du gabarit commun, déjà relevés sur TRT. Les nombres sont au format anglais dans une page en français. Le prix du hero porte la date éditoriale du 19 octobre au lieu de la clôture du 16 octobre.",
+      "fix": "Gabarit : formats français (0,90 $, −31,3 %, 11,50 $, 1:3,24, 1,31 $, 0,6412 $) et mention « clôture du 16 oct. » sous le prix du hero."
+    }
+  ],
+  "checks": [
+    {
+      "id": "AQ-VRD-001",
+      "status": "PASS",
+      "rationale": "Le résumé nomme BitFuFu et son métier : le minage en nuage, avec une puissance achetée à Bitmain. Il cite le catalyseur (−31,3 % le 16 octobre, trois fois le secteur), la contradiction (chiffre d’affaires de −62,9 %, 95,5 % des votes au président, programme de 150 M$, Éthiopie) et l’action à mener : « Aucune entrée avant une clôture à 1,29 $ ou plus ».",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/verdict/summary",
+        "data/analyses-data/FUFU.json#/meta/description"
+      ]
+    },
+    {
+      "id": "AQ-VRD-002",
+      "status": "PASS",
+      "rationale": "Le résumé contient plusieurs faits chiffrés propres à BitFuFu : 42,8 M$ (−62,9 %), perte de 20,5 M$, marge brute de 2,3 % sur douze mois, 93,4 M$ dus à un fournisseur. Lien causal : le client paie une puissance que BitFuFu achète surtout à Bitmain, d’où une marge mince et des ventes qui suivent directement la demande. J’ai recoupé ces chiffres dans le communiqué du 17 août (« down 62.9% from $115.4 million »).",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/verdict/summary",
+        "analyses/FUFU/_primary/text/2026-08-17-6-K-090474-ea030213301ex99-1.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-VRD-003",
+      "status": "PASS",
+      "rationale": "La note D (score additif de 28, déclaré non prédictif) est justifiée par le bilan, le capital et la dilution. L’état « surveiller » est justifié à part, par la structure de cours : clôture à 0,90 $, RSI à 31, cours sous les trois moyennes, activation seulement au-dessus de 1,285 $.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/verdict/confidence",
+        "data/analyses-data/FUFU.json#/verdict/controlChecklist/2",
+        "analyses/FUFU/_runs/20261019/revision/editorial-judgments.json"
+      ]
+    },
+    {
+      "id": "AQ-VRD-004",
+      "status": "PASS",
+      "rationale": "Les cinq « Pourquoi acheter » sont favorables : trésorerie et bitcoins à 0,72 $ par action, production propre en hausse, EV/ventes de 0,32×, bitcoin découplé des mineurs, dette à 3 % jusqu’en 2028. Les cinq « Pourquoi éviter » sont défavorables. Aucun chiffre négatif n’est présenté comme un atout.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/verdict/whyBuy",
+        "data/analyses-data/FUFU.json#/verdict/whyAvoid"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-001",
+      "status": "PASS",
+      "rationale": "La fiche explique les trois métiers : minage en nuage payé d’avance, minage pour compte propre, vente et hébergement de machines. Elle couvre aussi les clients, la dépendance au fournisseur (Bitmain, 50 % du coût des ventes, contrat de trois ans), la marge de 2,3 % et la place de revendeur de puissance dans la chaîne.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/business/overview",
+        "data/analyses-data/FUFU.json#/business/moat"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-002",
+      "status": "PASS",
+      "rationale": "Ventes 2025 par métier : 352,6 M$ (73,8 %), 63,1 M$ et 61,9 M$. Le deuxième trimestre 2026 est détaillé par métier (24,9 M$ contre 94,3 M$). La concentration clients est chiffrée (33 % et 60 %, clients non nommés).",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/business/segments",
+        "data/analyses-data/FUFU.json#/filingsReview/filings/0"
+      ]
+    },
+    {
+      "id": "AQ-BIZ-003",
+      "status": "PASS",
+      "rationale": "Les indicateurs sont ceux d’un mineur : EH/s gérés et en propre, bitcoins produits et détenus, MW, contrats payés d’avance. La fiche précise aussi que le flux d’exploitation exagère la consommation de trésorerie, parce que les bitcoins passent par l’investissement.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/fundamentals/rows"
+      ]
+    },
+    {
+      "id": "AQ-EAR-001",
+      "status": "PASS",
+      "rationale": "Deuxième trimestre 2026, publié le 17 août (6-K 0001213900-26-090474, lien direct vers l’Exhibit 99.1). Les états semestriels viennent du 6-K du 10 septembre.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/filingsReview/filings/2",
+        "data/analyses-data/FUFU.json#/filingsReview/filings/1"
+      ]
+    },
+    {
+      "id": "AQ-EAR-002",
+      "status": "PASS",
+      "rationale": "Chiffre d’affaires de 42,8 M$ (−62,9 %), perte nette de 20,5 M$, EBITDA ajusté de −18,4 M$ dont 16,9 M$ de juste valeur, puissance gérée de 15,3 EH/s, puis 19,4 EH/s et 167 bitcoins en septembre.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/earnings",
+        "data/analyses-data/FUFU.json#/fundamentals/rows"
+      ]
+    },
+    {
+      "id": "AQ-EAR-003",
+      "status": "PASS",
+      "rationale": "« Aucune guidance chiffrée n’est publiée », et la fiche le dit en citant le communiqué du 17 août. La direction attribue la baisse au prix du bitcoin (−27,5 %), à la demande et au tri des capacités.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/earnings",
+        "analyses/FUFU/_primary/text/2026-08-17-6-K-090474-ea030213301ex99-1.htm.txt"
+      ]
+    },
+    {
+      "id": "AQ-EAR-004",
+      "status": "PASS",
+      "rationale": "Le 20-F, le communiqué trimestriel et les états semestriels alimentent le récit (marge, dette, contrats payés d’avance, actions) et le plan de trade.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/filingsReview/filings"
+      ]
+    },
+    {
+      "id": "AQ-EAR-005",
+      "status": "PASS",
+      "rationale": "La fiche indique explicitement que l’émetteur n’a pas confirmé la date : « attendue vers la mi-novembre », avec comme repère le 12 novembre 2025 (6-K 0001213900-25-108472). Le plan est soldé le 6 novembre. Le cas d’une date avancée n’est pas prévu : voir le mineur AQ-TEC-005.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/earnings/nextEarnings",
+        "data/analyses-data/FUFU.json#/filingsReview/filings/9"
+      ]
+    },
+    {
+      "id": "AQ-VAL-001",
+      "status": "PASS",
+      "rationale": "La fiche donne deux multiples, EV/ventes de 0,32× et cours/capitaux propres de 1,59×, plus un scénario de négociant à 0,3× les ventes, présenté comme hypothèse. J’ai refait le calcul : (0,3 × 399,5 − 98,8 + 119,5) / 166,7 M d’actions = 0,84 $, soit −6 % sous 0,90 $.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/fundamentals/rows",
+        "analyses/FUFU/_runs/20261019/revision/numeric-evidence.json#/valuation_scenario"
+      ]
+    },
+    {
+      "id": "AQ-VAL-002",
+      "status": "PASS",
+      "rationale": "La valeur d’entreprise est calculée à la clôture du 16 octobre, sur les agrégats GAAP de douze mois au 30 juin 2026. Le calcul se refait : 150,0 + 98,8 − 119,5 = 129,3 M$, et 129,3 / 399,5 = 0,32×. Capitalisation : 166 696 634 actions × 0,9001 $ = 150,0 M$.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/fundamentals/rows",
+        "analyses/FUFU/_runs/20261019/revision/numeric-evidence.json#/limitations"
+      ]
+    },
+    {
+      "id": "AQ-VAL-003",
+      "status": "PASS",
+      "rationale": "La fiche compare BitFuFu à MARA (6,28×), Bitdeer, HIVE, Canaan et Galaxy en relevé instantané déclaré. L’écart est expliqué par la marge de revendeur. Ce que le prix intègre est dit clairement : « le marché ne paie presque rien au-delà du bilan ».",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/fundamentals/rows"
+      ]
+    },
+    {
+      "id": "AQ-SEC-001",
+      "status": "PASS",
+      "rationale": "20-F du 28 avril 2026, accession 0001213900-26-048533, lien EDGAR direct. Constat chiffré : 477,5 M$, concentration clients, Bitmain, classes d’actions, bons et opinion sans réserve.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/filingsReview/filings/0"
+      ]
+    },
+    {
+      "id": "AQ-SEC-002",
+      "status": "PASS",
+      "rationale": "La fiche détaille le 424B5 (150 M$, agents, 1 692 428 actions vendues = 1 609 742 + 82 686), les deux F-3 de revente (par des actionnaires, sans produit pour la société) et le formulaire D (2,72 M$ d’actions en paiement), chacun avec son statut. La capacité est dite « nominale ». Mineur : les ventes au fil de l’eau ne sont pas annoncées une à une.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/capitalStructure/atm",
+        "data/analyses-data/FUFU.json#/filingsReview/filings/6",
+        "data/analyses-data/FUFU.json#/filingsReview/filings/7",
+        "data/analyses-data/FUFU.json#/filingsReview/filings/8"
+      ]
+    },
+    {
+      "id": "AQ-SEC-003",
+      "status": "PASS",
+      "rationale": "Étagère, programme au fil de l’eau, reventes secondaires, paiement en actions, bons Arisz et dette fournisseur sont distingués. La dette n’est pas présentée comme une dilution.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/capitalStructure",
+        "data/analyses-data/FUFU.json#/filingsReview/summary"
+      ]
+    },
+    {
+      "id": "AQ-SEC-004",
+      "status": "PASS",
+      "rationale": "166 696 634 actions, dont 135 000 000 de classe B. En dilué : 166 696 634 + 7 002 633 × 3/4 = 171 948 609, chiffre que j’ai recalculé. Les 95,5 % des votes se retrouvent : 675 M de voix sur 706,7 M.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/capitalStructure",
+        "data/analyses-data/FUFU.json#/filingsReview/filings/0"
+      ]
+    },
+    {
+      "id": "AQ-SEC-005",
+      "status": "PASS",
+      "rationale": "La conclusion vient du texte du 20-F (« opinion sans réserve de l’auditeur »), pas d’un silence. Aucune conclusion n’est tirée d’une absence de mention.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/filingsReview/filings/0"
+      ]
+    },
+    {
+      "id": "AQ-SEC-006",
+      "status": "PASS",
+      "rationale": "Onze pièces ouvertes, sur 26 formulaires inventoriés plus deux pièces hors fenêtre. Le tableau compte onze lignes et _primary/text contient onze extraits.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/filingsReview/summary",
+        "data/analyses-data/FUFU.json#/filingsReview/filings",
+        "analyses/FUFU/_runs/20261019/revision/primary-manifest.json"
+      ]
+    },
+    {
+      "id": "AQ-TEC-001",
+      "status": "PASS",
+      "rationale": "La clôture de référence est la séance complète du 16 octobre (served_completed_end = expected_completed_end = 2026-10-16, current_bar_included = false), observée le 2026-10-19T16:38:34Z. Aucune cotation intrajournalière n’est utilisée. La baisse de −31,3 % se recalcule : 0,9001 / 1,31 − 1. Mineur de gabarit : le prix du hero porte la date éditoriale.",
+      "evidenceRefs": [
+        "analyses/FUFU/_data/bars.json",
+        "data/analyses-data/FUFU.json#/technicals/setupNote"
+      ]
+    },
+    {
+      "id": "AQ-TEC-002",
+      "status": "PASS",
+      "rationale": "J’ai relu les niveaux dans bars.json. Le 16 octobre : ouverture et plus haut à 1,285 $, plus bas à 0,6412 $, clôture à 0,9001 $, 876 895 actions. Plus bas du 15 octobre : 1,20 $. Plus hauts : 1,42 $ le 12 octobre, 1,56 $ le 5 octobre, 1,65 $ le 24 août.",
+      "evidenceRefs": [
+        "analyses/FUFU/_data/bars.json",
+        "data/analyses-data/FUFU.json#/technicals/supports",
+        "data/analyses-data/FUFU.json#/technicals/resistances"
+      ]
+    },
+    {
+      "id": "AQ-TEC-003",
+      "status": "BLOCK",
+      "rationale": "Chaque niveau a sa raison : déclencheur au plus haut de la séance de la chute, stop au plus bas du 15 octobre, objectifs aux plus hauts du 5 octobre et du 24 août, abandon au plus bas du 16 octobre. La sortie n’est pourtant pas exécutable. Le type de stop se contredit (« uniquement des ordres limités » contre « ordre stop ») : un stop limité peut rester sans exécution sur un gap. Aucune quantité n’est donnée aux deux objectifs, et rien n’est dit sur l’ordre stop après le premier. Voir le blocage AQ-TEC-003.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/risks/riskCards/3/verdict",
+        "data/analyses-data/FUFU.json#/tradeIdea/invalidation/1",
+        "data/analyses-data/FUFU.json#/tradeIdea/entryNote"
+      ]
+    },
+    {
+      "id": "AQ-TEC-004",
+      "status": "PASS",
+      "rationale": "Les R/R sont justes : (1,56 − 1,285) / 0,085 = 3,24 ; (1,65 − 1,285) / 0,085 = 4,29 ; (1,56 − 1,34) / 0,14 = 1,57. stopPct −6,6 %, tp1Pct +21,4 % et tp2Pct +28,4 % se recalculent depuis 1,285 $. Ce ne sont pas des multiples fixes appliqués à toute une série. Mineur : les cartes affichent le R/R à un prix d’achat inaccessible, et le seuil s’écrit 1,28, 1,285 ou 1,29 $.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/tradeIdea/rr",
+        "analyses/FUFU/_runs/20261019/revision/numeric-evidence.json#/levels"
+      ]
+    },
+    {
+      "id": "AQ-TEC-005",
+      "status": "PASS",
+      "rationale": "Le veto résultats est appliqué : dernière activation le 30 octobre, aucun achat après le 2 novembre, sortie le 6 novembre, avant la mi-novembre. L’absence de barres intrajournalières et d’écart achat/vente mesuré est déclarée. Mineur : rien n’est prévu si une date de publication plus proche est annoncée.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/tradeIdea/horizon",
+        "data/analyses-data/FUFU.json#/blastRadius/missingData"
+      ]
+    },
+    {
+      "id": "AQ-RSK-001",
+      "status": "PASS",
+      "rationale": "Quatre cartes propres au titre, chacune avec mécanisme, preuve et signal : activité (minage en nuage de 94,3 à 24,9 M$, point mensuel de production), capital (classe B, programme de 150 M$, 6-K/424B), dossiers en cours (Éthiopie, saisie possible ; Oklahoma), liquidité. Statistiques de gaps vérifiées dans bars.json : 3 ouvertures à 10 % ou plus sur 250 séances, 3 baisses à l’ouverture de plus de 6,6 %, la pire à −16,0 % le 29 mai.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/risks/riskCards",
+        "analyses/FUFU/_data/bars.json"
+      ]
+    },
+    {
+      "id": "AQ-RSK-002",
+      "status": "PASS",
+      "rationale": "Les contrôles contradictoires sont chiffrés : marge de 2,3 % ; 93,4 M$ de dette et 31,0 M$ de contrats payés d’avance face à 119,5 M$ ; 95,5 % des votes ; Éthiopie, 4,1 M$ versés et 13 700 machines ; règle Nasdaq des trente séances sous 1 $.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/filingsReview/contrarianRisks",
+        "data/analyses-data/FUFU.json#/blastRadius/contradictions"
+      ]
+    },
+    {
+      "id": "AQ-RSK-003",
+      "status": "BLOCK",
+      "rationale": "La fiche couvre les gaps, la liquidité (médiane de 81 596 $ par séance, recalculée), la taille (714 actions au plafond, puis 476, sur un stop sauté), le calendrier et l’interdiction de poursuivre au-dessus de 1,34 $. La restriction des courtiers européens sur les titres sous 1 $ ne gêne pas ici : l’achat n’a lieu qu’après une clôture à 1,29 $ ou plus, et le stop est à 1,20 $. En revanche, la fiche ne dit pas de poser l’ordre d’achat après l’ouverture. Un ordre posé le matin s’exécute à une ouverture sous 1,20 $, c’est-à-dire sous le stop. La règle « un seul achat » manque aussi. Voir le blocage AQ-RSK-003. Mineurs : montants engagés, frais, part de la liquidité, achat après un bond de 43 % en une séance.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/tradeIdea/entryNote",
+        "data/analyses-data/FUFU.json#/tradeIdea/invalidation",
+        "data/analyses-data/FUFU.json#/risks/riskCards/3",
+        "analyses/FUFU/_data/bars.json",
+        "data/analyses-data/ALMU.json#/tradeIdea/entryNote"
+      ]
+    },
+    {
+      "id": "AQ-SRC-001",
+      "status": "PASS",
+      "rationale": "Chaque section cite sa propre source : l’activité, les résultats et le capital renvoient au 20-F, aux 6-K, au 424B5, aux F-3 et au formulaire D ; la technique et la liquidité, aux barres datées à provenance hachée ; les multiples des pairs, aux statistiques instantanées déclarées.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/business/sourceRefs",
+        "data/analyses-data/FUFU.json#/technicals/sourceRefs"
+      ]
+    },
+    {
+      "id": "AQ-SRC-002",
+      "status": "PASS",
+      "rationale": "Les liens EDGAR sont directs (document ou pièce 99.1), avec date et accession. Le sidecar et numeric-evidence.json pointent vers le hash vérifié de la fiche (c242cf8e…5e47a53).",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/filingsReview/filings",
+        "data/analyses-evidence/FUFU.json#/analysis_sha256",
+        "analyses/FUFU/_runs/20261019/revision/numeric-evidence.json#/analysis_sha256"
+      ]
+    },
+    {
+      "id": "AQ-SRC-003",
+      "status": "PASS",
+      "rationale": "La fiche n’invente aucun consensus. Elle signale que les options, les analystes et le sentiment ne sont pas servis, et que la position vendeuse est un relevé « instantané non daté du fournisseur ». Les initiés sont limités aux formulaires collectés. La cause de la chute du 16 octobre est déclarée non documentée.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/shortInterest",
+        "data/analyses-data/FUFU.json#/blastRadius/missingData",
+        "data/analyses-data/FUFU.json#/insiders"
+      ]
+    },
+    {
+      "id": "AQ-EDT-001",
+      "status": "PASS",
+      "rationale": "La publication ne compte qu’une fiche : il n’y a pas de répétition entre fiches à mesurer. Les phrases d’introduction du rayon de propagation viennent du gabarit commun. Le statusNote apparaît deux fois parce que le gabarit l’affiche dans le verdict et dans le plan.",
+      "evidenceRefs": [
+        "analyses/FUFU/index.html"
+      ]
+    },
+    {
+      "id": "AQ-EDT-002",
+      "status": "PASS",
+      "rationale": "Verdict, risques, catalyseurs et invalidations citent Bitmain, la classe B, le programme de 150 M$, l’Éthiopie, l’Oklahoma, le jeton HASH et le plus bas à 0,6412 $ : rien n’est transposable à un autre mineur. Mineur : « attendre les résultats … avant de renforcer » contredit la sortie fixée avant les résultats.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/risks/pedagogy",
+        "data/analyses-data/FUFU.json#/tradeIdea/catalysts",
+        "data/analyses-data/FUFU.json#/tradeIdea/invalidation"
+      ]
+    },
+    {
+      "id": "AQ-EDT-003",
+      "status": "PASS",
+      "rationale": "Les limites sont précises : clients non nommés, produit brut du premier semestre non publié, options non servies, aucune barre intrajournalière, cause de la chute non documentée. Mineur : « source de cours de secours » et « série certifiée » parlent de la tuyauterie des données, et ce texte occupe une carte de décision en tête de page.",
+      "evidenceRefs": [
+        "data/analyses-data/FUFU.json#/blastRadius/missingData",
+        "data/analyses-data/FUFU.json#/verdict/controlChecklist/0",
+        "data/analyses-data/FUFU.json#/business/coverageMatrix"
+      ]
+    },
+    {
+      "id": "AQ-QA-001",
+      "status": "BLOCK",
+      "rationale": "J’ai vérifié les trois hashes avant la revue. La page porte html lang=\"fr\" et data-tab=\"analyses\". qa-content.js --strict donne 30 contrôles OK, 0 avertissement et 0 erreur. check-ai-tells.js --strict ne relève aucun tic, ni sur la page (7 177 mots) ni sur le Telegram (190 mots). Le Telegram est en HTML valide (6 <b>, 1 <a>), fait 991 caractères visibles et ne contient aucun terme interne. Ses chiffres concordent avec la fiche : 0,90 $, −31,3 %, 0,6412 $, −62,9 %, 20,5 M$, 95,5 %, 150 M$, 1,29, 1,34, 1,20, 1,56 et 1,65 $, 82 000 $. Mais lu seul, il ne permet pas de gérer la position une fois achetée : stop sans mode d’emploi, aucune taille chiffrée, aucune répartition entre les objectifs, rien sur la conduite à tenir quand on détient déjà le titre, et l’invalidation Éthiopie manque. Voir le blocage AQ-QA-001.",
+      "evidenceRefs": [
+        "analyses/FUFU/index.html",
+        "analyses/FUFU/_runs/20261019/telegram-draft.html"
+      ]
+    },
+    {
+      "id": "AQ-QA-002",
+      "status": "PASS",
+      "rationale": "Ce rapport rend BLOCK pour FUFU, avec trois blocages. Chacun porte un texte de remplacement exact, pour la fiche et pour le Telegram.",
+      "evidenceRefs": [
+        "analyses/FUFU/_runs/20261019/revision/review-retail_war_room.json"
+      ]
+    },
+    {
+      "id": "AQ-QA-003",
+      "status": "BLOCK",
+      "rationale": "Le score éditorial est de 76/100. Le fond est solide : métier, dépôts SEC, valorisation et sources. Mais l’exécution du plan par un particulier sur un courtier européen n’est pas sûre : ordre posé avant l’ouverture, type de stop contradictoire, objectifs sans quantité, Telegram non autonome après l’achat. Une fois les trois blocages levés, la fiche passerait au-dessus de 80.",
+      "evidenceRefs": [
+        "analyses/FUFU/_runs/20261019/revision/review-retail_war_room.json"
+      ]
+    }
+  ],
+  "telegramReview": {
+    "status": "BLOCK",
+    "findings": [
+      "Points forts : le message est court (991 caractères visibles) et en HTML Telegram valide. Le contexte (mineur, Bitmain) et les faits décisifs sont là, et la condition d’achat est datée (clôture à 1,29 $ ou plus au plus tard le 30 oct., ordre limité à 1,34 $ au plus, trois séances, 2 nov.). Les chiffres concordent avec la fiche, il n’y a aucun tic et aucun terme interne.",
+      "Blocage, ligne 8 : il manque « posé après l'ouverture de New York (15 h 30 à Paris, 14 h 30 du 26 au 30 oct.), jamais avant », « Un seul achat » et « Rien si le titre ouvre sous 1,20 $ ».",
+      "Blocage, lignes 9, 11 et 12 : « Stop 1,20 $ » n’est pas expliqué ; il n’y a ni répartition entre 1,56 et 1,65 $, ni taille chiffrée (« Petite taille. »). Le message ne dit pas quoi faire si l’on détient déjà le titre lors d’une annonce de vente d’actions, et l’invalidation Éthiopie manque. Textes de remplacement exacts dans blockingFindings[2].",
+      "Mineurs : « sans annonce de la société » → « sans annonce de la société ce jour-là » ; « avant les résultats. » → « avant les résultats (plus tôt si leur date est avancée). »"
+    ]
+  }
+}

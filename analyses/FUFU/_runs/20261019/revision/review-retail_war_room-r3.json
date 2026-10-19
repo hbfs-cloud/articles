@@ -1,0 +1,289 @@
+{
+  "role": "retail_war_room",
+  "reviewerId": "fufu-retail-war-room-20261019",
+  "reviewerName": "Claude (revue war room indépendante)",
+  "round": 3,
+  "previousRounds": [
+    "analyses/FUFU/_runs/20261019/revision/review-retail_war_room-r1.json",
+    "analyses/FUFU/_runs/20261019/revision/review-retail_war_room-r2.json"
+  ],
+  "analysisSha256": "5c961f5010b4174c9224d145db0b1c8c975ef399c36effc6a7376a4220fc22ee",
+  "evidenceSha256": "2889c1cb09e8180ad60697b3feca44f1b58b05c9e69d0ab8b5d8cdb4540e632f",
+  "pageSha256": "c3cf331cd49c3a6c012184e24a7c0dd0229195144572e88828bdc8838a84b8da",
+  "telegramSha256": "8744dd4c11146f1bae86541cd7e974a1228a2c6b6c6b38a32e31604cb191c8e6",
+  "referenceClose": "2026-10-16",
+  "status": "BLOCK",
+  "score": 82,
+  "blockingFindings": [
+    {
+      "id": "AQ-RSK-003",
+      "where": "tradeIdea.statusNote (« Si le 19 octobre clôture à 1,29 $ ou plus, le plan est activé dès ce soir : achat possible du 20 au 22 octobre, 1,34 $ au plus, jamais au-dessus. ») ; tradeIdea.entryNote, paragraphe « Taille » ; telegram-draft.html, ligne du 19 octobre et ligne « Taille »",
+      "problem": "Défaut nouveau, introduit par le correctif de ce tour. Le lecteur comprend bien ce qu’il doit faire ce soir et demain : regarder la clôture, puis acheter du 20 au 22 octobre si elle atteint 1,29 $. Mais la fiche lui demande maintenant d’acheter juste après un mouvement extrême, sans traiter ni la dépendance au chemin ni la survie à un gap. Le règlement bloque exactement ce cas (§7 : « recommends action after an extreme move without addressing path dependency and gap survivability »). Les faits viennent de la fiche elle-même et d’instrument.json (webull_quote, 16:38:36Z). Une clôture à 1,29 $ ou plus ce soir voudrait dire au moins +43,3 % en une séance (1,29 / 0,9001). La séance compte déjà 43,5 millions d’actions, environ 750 fois la médiane de 58 089, et aucun dépôt de la société ne l’explique. Elle a évolué entre 1,05 et 1,57 $, soit 0,52 $, 3,7 fois l’écart entre le plafond d’achat et le stop (0,14 $). Le titre a même coté sous le stop de 1,20 $ en début de séance (ouverture à 1,06 $). Trois séances plus tôt, le 16 octobre, il a perdu la moitié de son cours en séance, de 1,285 à 0,6412 $ (bars.json). Or la taille de 476 actions a été calibrée sur 250 séances calmes : pire ouverture à −16 %, sortie supposée vers 1,13 $. Un retour à la clôture du 16 octobre après un achat à 1,34 $ coûterait 0,44 × 476 = 209 $, plus du double des 100 $ acceptés. Rien dans la fiche ni dans le Telegram n’adapte la taille, ni ne prévient que ce bond peut s’effacer le lendemain. Le reste du plan est exécutable et ne bloque pas : achat après l’ouverture seulement, aucun achat sous 1,20 $ à l’ouverture, un seul achat, plafond de 1,34 $, stop simple. Version plus prudente, non exigée pour lever le blocage : exiger une deuxième clôture à 1,29 $ ou plus le 20 octobre et acheter du 21 au 23.",
+      "fix": "(1) tradeIdea.statusNote : « Si le 19 octobre clôture à 1,29 $ ou plus, le plan est activé dès ce soir : achat possible du 20 au 22 octobre, 1,34 $ au plus, jamais au-dessus. » → « Si le 19 octobre clôture à 1,29 $ ou plus, le plan est activé dès ce soir : achat possible du 20 au 22 octobre, 1,34 $ au plus, jamais au-dessus, mais 227 actions au plus pour 100 $ de perte acceptée (environ 304 $). Cette activation suivrait une séance à +43 % au moins, sur environ 750 fois le volume habituel et sans dépôt de la société : un tel bond peut s’effacer dès le lendemain, comme le 16 octobre a effacé la moitié du cours en une séance. » (2) tradeIdea.entryNote, à la fin du paragraphe « Taille » : « Si l’activation vient de la clôture du 19 octobre, 227 actions au plus (environ 304 $), pour qu’un retour à la clôture du 16 octobre (0,90 $) ne coûte pas plus de 100 $. » (3) Telegram : « Seule la clôture compte pour activer le plan. » → « Seule la clôture compte. Si ce soir clôture à 1,29 $ ou plus, achat possible du 20 au 22 oct. selon les règles ci-dessous, mais 227 actions au plus pour 100 $ de perte acceptée (environ 300 $) : un bond pareil, sans nouvelle de la société, peut s'effacer dès le lendemain. » (4) Telegram : « 476 actions au plus (environ 640 $). Titre sous 1 $ et peu échangé (environ 82 000 $ par séance) : le cours peut sauter le stop. » → « 476 actions au plus (environ 640 $), 227 (environ 300 $) si l'achat suit la clôture du 19 oct. Titre clôturé sous 1 $ le 16 oct. et d'habitude peu échangé (environ 82 000 $ par séance) : le cours peut sauter le stop. »"
+    }
+  ],
+  "minorFindings": [
+    {
+      "id": "AQ-QA-001",
+      "where": "telegram-draft.html, ligne « Lundi 19 oct., en séance (12 h 38 à New York) … »",
+      "problem": "Le message décrit une séance en cours. S’il part après 22 h (heure de Paris), la clôture du 19 octobre sera connue et la ligne sera périmée. Le lecteur devrait alors deviner lui-même si le plan est activé.",
+      "fix": "Si l’envoi a lieu après la clôture : remplacer la ligne par « Clôture du lundi 19 oct. : X $ (± Y %), Z millions d'actions : plan activé (achat possible du 20 au 22 oct.) » ou « … : plan non activé », avec la barre complète du 19 octobre (disponible à partir de 20:30Z selon bars.json)."
+    },
+    {
+      "id": "AQ-TEC-003",
+      "where": "Rendu du gabarit : « Déclencheur : une clôture au-dessus de 1,29 $ » et carte « clôture au-dessus »",
+      "problem": "Mineur du tour 2, toujours présent : la règle dit « à 1,29 $ ou plus ».",
+      "fix": "« une clôture au-dessus de 1,29 $ » → « une clôture à 1,29 $ ou plus »."
+    },
+    {
+      "id": "AQ-SRC-002",
+      "where": "numeric-evidence.json#/levels",
+      "problem": "Mineur du tour 2, toujours présent : entry vaut 1,285 et rr1 3,235, alors que la fiche publie 1,29 $ et 1:3,00. Le hash de la fiche lié dans ce fichier est à jour (5c961f50…).",
+      "fix": "levels.entry = 1.29 ; rr1 = 3.0 ; rr2 = 4.0."
+    },
+    {
+      "id": "AQ-QA-001",
+      "where": "Mineurs reportés des tours 1 et 2",
+      "problem": "Ils restent ouverts, sans blocage : condition de volume dans catalysts[0] ; « avant de renforcer » dans risks.pedagogy ; jargon « source de cours de secours » ; frais et change ; date de résultats avancée ; ventes au fil de l’eau non annoncées une à une ; vente limitée à 1,56 $ refusée chez les courtiers qui bloquent les actions sous stop ; formats anglais du gabarit.",
+      "fix": "Textes inchangés : review-retail_war_room-r1.json et review-retail_war_room-r2.json."
+    }
+  ],
+  "checks": [
+    {
+      "id": "AQ-VRD-001",
+      "status": "PASS",
+      "rationale": "Inchangé depuis le tour 2. Le résumé nomme la société, son métier, le catalyseur, la contradiction et l’action à mener (« Aucune entrée avant une clôture à 1,29 $ ou plus »).",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/verdict/summary"]
+    },
+    {
+      "id": "AQ-VRD-002",
+      "status": "PASS",
+      "rationale": "Inchangé : 42,8 M$ (−62,9 %), 20,5 M$ de perte, 2,3 % de marge, un client à 45 %, plus le lien causal du revendeur de puissance.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/verdict/summary"]
+    },
+    {
+      "id": "AQ-VRD-003",
+      "status": "PASS",
+      "rationale": "La note D et l’état « surveiller » restent justifiés séparément. Le statut ne change pas tant qu’aucune clôture n’atteint 1,29 $.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/verdict/confidence", "data/analyses-data/FUFU.json#/tradeIdea/statusNote"]
+    },
+    {
+      "id": "AQ-VRD-004",
+      "status": "PASS",
+      "rationale": "whyAvoid[4] reste défavorable. Il sépare maintenant la clôture du 16 octobre de la cotation en séance du 19 octobre, horodatée.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/verdict/whyAvoid/4"]
+    },
+    {
+      "id": "AQ-BIZ-001",
+      "status": "PASS",
+      "rationale": "Inchangé. Deux restes de formulation sont corrigés (« des fournisseurs, Bitmain en tête en 2025 »). Ils concordent avec le 6-K du 10 septembre (fournisseur A à 34 %).",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/business/overview", "data/analyses-data/FUFU.json#/filingsReview/contrarianRisks"]
+    },
+    {
+      "id": "AQ-BIZ-002",
+      "status": "PASS",
+      "rationale": "Inchangé : métiers 2025 et concentration du semestre (45, 17 et 10 %), vérifiés au tour 2.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/business/segments"]
+    },
+    {
+      "id": "AQ-BIZ-003",
+      "status": "PASS",
+      "rationale": "Inchangé : indicateurs de mineur.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/fundamentals/rows"]
+    },
+    {
+      "id": "AQ-EAR-001",
+      "status": "PASS",
+      "rationale": "Inchangé : deuxième trimestre 2026, publié le 17 août (0001213900-26-090474).",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/filingsReview/filings"]
+    },
+    {
+      "id": "AQ-EAR-002",
+      "status": "PASS",
+      "rationale": "Inchangé.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/earnings"]
+    },
+    {
+      "id": "AQ-EAR-003",
+      "status": "PASS",
+      "rationale": "Inchangé : aucune prévision chiffrée, ce que dit le communiqué.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/earnings"]
+    },
+    {
+      "id": "AQ-EAR-004",
+      "status": "PASS",
+      "rationale": "Inchangé.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/filingsReview/filings"]
+    },
+    {
+      "id": "AQ-EAR-005",
+      "status": "PASS",
+      "rationale": "Inchangé : date non confirmée et sortie au plus tard le 6 novembre. Le fournisseur indique une estimation du 10 au 17 novembre (instrument.json, estimateEarningsDate), ce qui est cohérent.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/earnings/nextEarnings", "analyses/FUFU/_data/instrument.json"]
+    },
+    {
+      "id": "AQ-VAL-001",
+      "status": "PASS",
+      "rationale": "Inchangé : 0,32×, 1,59× et le scénario de négociant.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/fundamentals/rows"]
+    },
+    {
+      "id": "AQ-VAL-002",
+      "status": "PASS",
+      "rationale": "Inchangé : valeur d’entreprise datée à la clôture du 16 octobre. La cotation du 19 octobre n’entre dans aucun multiple, ce qui est correct pour une séance non terminée.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/fundamentals/rows"]
+    },
+    {
+      "id": "AQ-VAL-003",
+      "status": "PASS",
+      "rationale": "Inchangé.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/fundamentals/rows"]
+    },
+    {
+      "id": "AQ-SEC-001",
+      "status": "PASS",
+      "rationale": "Inchangé : 20-F 0001213900-26-048533, avec le constat sur le contrôle interne.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/filingsReview/filings/0"]
+    },
+    {
+      "id": "AQ-SEC-002",
+      "status": "PASS",
+      "rationale": "Inchangé : programme, reventes, formulaire D et rachat, vérifiés au tour 2.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/capitalStructure/atm"]
+    },
+    {
+      "id": "AQ-SEC-003",
+      "status": "PASS",
+      "rationale": "Inchangé.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/capitalStructure"]
+    },
+    {
+      "id": "AQ-SEC-004",
+      "status": "PASS",
+      "rationale": "Inchangé : 166 696 634 actions, 171 948 609 en dilué. Le chiffre « outstandingShares » de 16 920 694 donné par le fournisseur en séance n’est pas repris, ce qui est correct.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/capitalStructure", "analyses/FUFU/_data/instrument.json"]
+    },
+    {
+      "id": "AQ-SEC-005",
+      "status": "PASS",
+      "rationale": "Inchangé : « were not effective » et « sufficient … next 12 months » sont cités du 20-F.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/verdict/controlChecklist/2"]
+    },
+    {
+      "id": "AQ-SEC-006",
+      "status": "PASS",
+      "rationale": "Inchangé : douze pièces ouvertes, douze lignes au tableau. Le dernier inventaire EDGAR est daté (19 octobre, 12 h 24 à New York).",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/filingsReview/summary", "data/analyses-data/FUFU.json#/technicals/setupNote"]
+    },
+    {
+      "id": "AQ-TEC-001",
+      "status": "PASS",
+      "rationale": "Blocage du contradicteur levé. La clôture complète du 16 octobre et la cotation en séance du 19 octobre sont séparées et horodatées : 1,239 $ à 12 h 38 à New York, ouverture 1,06 $, plus haut 1,57 $, plus bas 1,05 $, 43 479 090 actions. Ces chiffres concordent avec instrument.json (webull_quote, tradeTime 2026-10-19T16:38:36Z, preClose 0,9001). Le badge du hero indique maintenant « Clôture du 16 oct. sous 1 $ ».",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/technicals/setupNote", "data/analyses-data/FUFU.json#/header/badges/1", "analyses/FUFU/_data/instrument.json"]
+    },
+    {
+      "id": "AQ-TEC-002",
+      "status": "PASS",
+      "rationale": "Inchangé : niveaux vérifiés dans bars.json.",
+      "evidenceRefs": ["analyses/FUFU/_data/bars.json"]
+    },
+    {
+      "id": "AQ-TEC-003",
+      "status": "PASS",
+      "rationale": "Les règles d’achat et de sortie validées au tour 2 sont inchangées. La phrase sur le 19 octobre donne une conduite claire pour ce soir et demain : clôture à 1,29 $ ou plus, puis achat du 20 au 22 octobre, 1,34 $ au plus. Le mineur du gabarit (« au-dessus de 1,29 $ ») reste ouvert.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/tradeIdea/statusNote", "data/analyses-data/FUFU.json#/tradeIdea/entryNote"]
+    },
+    {
+      "id": "AQ-TEC-004",
+      "status": "PASS",
+      "rationale": "Inchangé : 3,00, 4,00 et 1,57, recalculés. Mineur de trace dans numeric-evidence.json.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/tradeIdea/rr"]
+    },
+    {
+      "id": "AQ-TEC-005",
+      "status": "PASS",
+      "rationale": "Veto résultats inchangé. La limite des données est mieux traitée : la séance du 19 octobre est déclarée « encore ouverte à la collecte », et « seule une clôture compte ».",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/technicals/setupNote", "data/analyses-data/FUFU.json#/tradeIdea/horizon"]
+    },
+    {
+      "id": "AQ-RSK-001",
+      "status": "PASS",
+      "rationale": "Inchangé : cinq cartes propres au titre.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/risks/riskCards"]
+    },
+    {
+      "id": "AQ-RSK-002",
+      "status": "PASS",
+      "rationale": "Inchangé.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/filingsReview/contrarianRisks"]
+    },
+    {
+      "id": "AQ-RSK-003",
+      "status": "BLOCK",
+      "rationale": "Le parcours général reste sûr (tour 2). Mais la nouvelle consigne « activé dès ce soir : achat possible du 20 au 22 octobre » fait agir juste après une séance d’au moins +43 %, sur environ 750 fois le volume et sans dépôt, avec une amplitude en séance de 0,52 $ pour un stop à 0,14 $ du plafond. La taille reste à 476 actions : un retour à 0,90 $ coûterait 209 $ pour 100 $ acceptés. Ni la dépendance au chemin ni la survie à un gap ne sont traitées pour ce cas. Voir le blocage AQ-RSK-003.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/tradeIdea/statusNote", "data/analyses-data/FUFU.json#/tradeIdea/entryNote", "data/analyses-data/FUFU.json#/technicals/setupNote", "analyses/FUFU/_data/bars.json", "analyses/FUFU/_data/instrument.json"]
+    },
+    {
+      "id": "AQ-SRC-001",
+      "status": "PASS",
+      "rationale": "La cotation du 19 octobre est rattachée aux données de marché horodatées. Le reste est inchangé.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/technicals/sourceRefs"]
+    },
+    {
+      "id": "AQ-SRC-002",
+      "status": "PASS",
+      "rationale": "Le sidecar et numeric-evidence.json pointent vers le nouveau hash (5c961f50…22ee). Mineur de trace sur levels.",
+      "evidenceRefs": ["data/analyses-evidence/FUFU.json#/analysis_sha256", "analyses/FUFU/_runs/20261019/revision/numeric-evidence.json#/analysis_sha256"]
+    },
+    {
+      "id": "AQ-SRC-003",
+      "status": "PASS",
+      "rationale": "La fiche dit « aucun dépôt de la société ne l’explique » en datant son inventaire EDGAR, et n’avance aucune cause inventée pour la hausse du 19 octobre.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/technicals/setupNote"]
+    },
+    {
+      "id": "AQ-EDT-001",
+      "status": "PASS",
+      "rationale": "La publication ne compte qu’une fiche.",
+      "evidenceRefs": ["analyses/FUFU/index.html"]
+    },
+    {
+      "id": "AQ-EDT-002",
+      "status": "PASS",
+      "rationale": "Les nouveaux textes sont propres au titre et à la date (19 octobre, 1,239 $, 43,5 millions d’actions).",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/verdict/whyAvoid/4"]
+    },
+    {
+      "id": "AQ-EDT-003",
+      "status": "PASS",
+      "rationale": "La séance encore ouverte et l’inventaire EDGAR sont datés avec précision. Les mineurs reportés restent ouverts.",
+      "evidenceRefs": ["data/analyses-data/FUFU.json#/technicals/setupNote"]
+    },
+    {
+      "id": "AQ-QA-001",
+      "status": "PASS",
+      "rationale": "Hashes vérifiés : fiche 5c961f50…, sidecar 2889c1cb…, page c3cf331c…, Telegram 8744dd4c…. qa-content.js --strict donne 30 contrôles OK, 0 avertissement et 0 erreur. check-ai-tells.js --strict ne relève rien, ni sur la page (8 743 mots) ni sur le Telegram (362 mots). Le Telegram est en HTML valide (7 <b>, 1 <a>) et fait 1 886 caractères visibles. Ses chiffres concordent avec la fiche et instrument.json, et il ne contient aucun terme interne. Pour ce soir et demain, la ligne « Seule la clôture compte pour activer le plan » et le bloc « Pour agir » suffisent à comprendre la marche à suivre. Le défaut de taille propre au cas du 19 octobre relève d’AQ-RSK-003. Mineurs : la ligne « Titre sous 1 $ et peu échangé » contredit la ligne sur les 43,5 millions d’actions (corrigée dans le blocage), et la ligne en séance sera périmée si l’envoi a lieu après la clôture.",
+      "evidenceRefs": ["analyses/FUFU/index.html", "analyses/FUFU/_runs/20261019/telegram-draft.html"]
+    },
+    {
+      "id": "AQ-QA-002",
+      "status": "PASS",
+      "rationale": "Ce rapport rend BLOCK pour FUFU au tour 3, avec un blocage nouveau introduit par la consigne « activé dès ce soir ». Il donne un texte de remplacement exact pour la fiche et pour le Telegram. Les tours 1 et 2 sont conservés.",
+      "evidenceRefs": ["analyses/FUFU/_runs/20261019/revision/review-retail_war_room.json", "analyses/FUFU/_runs/20261019/revision/review-retail_war_room-r2.json"]
+    },
+    {
+      "id": "AQ-QA-003",
+      "status": "PASS",
+      "rationale": "Score éditorial de 82/100, au-dessus du seuil de 80, mais la publication reste bloquée par AQ-RSK-003. Le correctif est court : 227 actions au plus si l’achat suit la clôture du 19 octobre, avec une phrase d’avertissement dans la fiche et dans le Telegram. Une fois appliqué, le score remonterait vers 87, le niveau du tour 2.",
+      "evidenceRefs": ["analyses/FUFU/_runs/20261019/revision/review-retail_war_room.json"]
+    }
+  ],
+  "telegramReview": {
+    "status": "BLOCK",
+    "findings": [
+      "Ce soir et demain, le lecteur sait quoi faire : regarder la clôture, puis, si elle atteint 1,29 $ ou plus, acheter en un seul ordre limité à 1,34 $ au plus, posé après 15 h 30 à Paris, du 20 au 22 oct., avec le stop, la moitié vendue à 1,56 $ et la sortie le 6 nov.",
+      "Blocage : la taille reste à 476 actions pour un achat qui suivrait un bond d’au moins +43 % sur environ 750 fois le volume, sans nouvelle de la société. « Titre sous 1 $ et peu échangé » contredit la ligne sur les 43,5 millions d’actions. Textes de remplacement exacts dans blockingFindings[0], points (3) et (4).",
+      "Si le message part après 22 h (heure de Paris), remplacer la ligne en séance par la clôture du 19 oct. et dire si le plan est activé ou non."
+    ]
+  }
+}

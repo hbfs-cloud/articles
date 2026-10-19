@@ -1,0 +1,472 @@
+{
+ "role": "contrarian",
+ "reviewerId": "fufu-contrarian-20261019",
+ "reviewerName": "Claude (revue contradictoire indépendante)",
+ "analysisSha256": "c242cf8e3f4de160f58fe1252d95c607d666379686afbe8b00479d16d5e47a53",
+ "evidenceSha256": "a337e9fd1f8930f76d75f543beace01226fa6d1758db614c0488f282c8b03904",
+ "status": "BLOCK",
+ "score": 74,
+ "blockingFindings": [
+  {
+   "id": "AQ-SEC-005",
+   "where": "filingsReview.filings[0].finding (« … 7 002 633 bons de souscription donnant chacun 3/4 d’action à 11,50 $ ; opinion sans réserve de l’auditeur. »), aucune autre mention dans la fiche ni dans le rendu",
+   "problem": "Le 20-F (0001213900-26-048533, Item 15) dit en toutes lettres que les contrôles de communication et le contrôle interne sur l’information financière n’étaient pas efficaces au 31 décembre 2025, « because of the material weakness » : personnel comptable insuffisant pour traiter les questions complexes en US GAAP. Cette faiblesse avait déjà été relevée, la direction la juge « not fully remediated », et l’auditeur n’atteste pas le contrôle interne, puisque la société est encore émergente. La fiche passe tout cela sous silence et ne garde que « opinion sans réserve de l’auditeur ». Le lecteur en retient une image propre que le dépôt contredit. Ce n’est pas un détail : au premier semestre 2026, 114,6 M$ des 115,4 M$ de chiffre d’affaires ont été encaissés en actifs numériques, 66,2 M$ de créances nettes sont dues par Bitmain, et les états semestriels de 2026 ne sont pas audités. Le 20-F ne contient en revanche aucune mention de doute sur la continuité d’exploitation (« substantial doubt » : 0 occurrence ; idem dans les états semestriels).",
+   "fix": "filingsReview.filings[0].finding : « ; opinion sans réserve de l’auditeur. » → « ; opinion sans réserve de l’auditeur sur les comptes, mais la direction juge le contrôle interne et les contrôles de communication inefficaces au 31 décembre 2025, à cause d’une faiblesse importante (personnel comptable insuffisant en US GAAP) qui n’est pas entièrement corrigée ; l’auditeur n’atteste pas le contrôle interne (société émergente) ; aucun doute sur la continuité d’exploitation n’est exprimé. » Ajouter à filingsReview.contrarianRisks : « Le 20-F juge le contrôle interne inefficace au 31 décembre 2025 (faiblesse importante non corrigée), alors que presque tout le chiffre d’affaires est encaissé en bitcoins et que 66,2 M$ sont dus par Bitmain : les comptes semestriels de 2026, non audités, reposent sur ce dispositif. » Reporter la faiblesse dans la ligne « Structure du capital » ou dans une ligne dédiée de verdict.controlChecklist."
+  },
+  {
+   "id": "AQ-SEC-002",
+   "where": "capitalStructure.shareHistory (« En 2025, la société a aussi remis 1 590 940 actions à Bitmain contre une dette et payé un fournisseur en actions (formulaire D). ») ; risks.riskCards[1].points[1] (« actions remises à Bitmain et à un fournisseur en 2025 ») ; verdict.controlChecklist[1].evidence (« actions remises à des fournisseurs en 2025 ») ; verdict.whyAvoid[2] ; filingsReview.filings[7], [8] et [10] ; filingsReview.summary",
+   "problem": "La fiche compte deux fois la même émission et laisse anonyme un porteur que les dépôts nomment. Je reconstitue la chaîne ainsi. (1) En 2025, le tableau des capitaux propres du 20-F ne connaît que trois émissions : 1 609 742 actions par le programme au fil de l’eau, 306 651 actions liées au rapprochement et 1 590 940 actions en extinction de dette, dont 582 940 au premier semestre selon le comparatif semestriel, donc 1 008 000 au second. (2) Selon le 20-F, Bitmain Technologies Delaware détient exactement 1 590 940 actions de classe A. (3) La F-3 de revente du 7 novembre 2025 porte sur 1 008 000 actions, et la seule venderesse inscrite au tableau est Bitmain Technologies Delaware. (4) Le formulaire D du 9 octobre 2025 concerne un seul souscripteur, pour 2 721 600 $ d’actions remises en paiement « under a framework sales and purchase agreement ». Cela fait 2,70 $ par action pour 1 008 000 actions. La note 19 des états semestriels décrit justement l’accord-cadre d’achat de machines signé avec Bitmain, qui permet de payer une partie du prix en actions. (5) La F-3 de juillet 2025 vise 582 940 actions de Bitmain Technologies Delaware et 306 651 actions de deux autres porteurs, Morningstar Universe (156 332) et Alpha Alliance (150 319). Le « fournisseur » payé par le formulaire D est donc Bitmain, et les deux déclarations de revente servent surtout à Bitmain. La fiche présente au contraire deux événements, « à Bitmain et à un fournisseur », et deux vendeurs anonymes (« un actionnaire vendeur », « des actionnaires vendeurs »). Elle omet aussi la conséquence pour le marché : Bitmain, à la fois fournisseur, créancier de fait et actionnaire, détient 13 090 940 actions de classe A, soit 41 % des actions cotées. Parmi elles, 1 590 940 sont enregistrées pour la revente, soit 27 séances de volume médian (58 089 actions). L’accord-cadre permet enfin de nouveaux paiements en actions.",
+   "fix": "capitalStructure.shareHistory : « En 2025, la société a aussi remis 1 590 940 actions à Bitmain contre une dette et payé un fournisseur en actions (formulaire D). » → « En 2025, la société a aussi payé en actions 1 590 940 actions de classe A dues à Bitmain pour des achats de machines : 582 940 au premier semestre, puis 1 008 000 en octobre, déclarées par le formulaire D du 9 octobre pour 2 721 600 $. Les deux déclarations de revente de juillet et de novembre 2025 couvrent ces 1 590 940 actions au nom de Bitmain Technologies Delaware, plus 306 651 actions de deux autres porteurs : Bitmain peut les vendre à tout moment, soit 27 séances de volume médian. Bitmain détient au total 13 090 940 actions de classe A, 41 % des actions cotées, et l’accord-cadre d’achat de machines permet encore de payer une partie du prix en actions. » ; risks.riskCards[1].points[1] → « Programme d’émission de 150 M$ ouvert ; 1 590 940 actions remises à Bitmain en 2025 en paiement de machines, enregistrées pour la revente. » ; verdict.controlChecklist[1].evidence : « actions remises à des fournisseurs en 2025 » → « 1 590 940 actions remises à Bitmain en 2025, revendables » ; verdict.whyAvoid[2] : « la société a aussi payé des fournisseurs en actions en 2025 » → « la société a aussi payé Bitmain en actions en 2025 (1 590 940 actions, revendables) » ; filingsReview.filings[7].finding : « par un actionnaire vendeur » → « par Bitmain Technologies Delaware, filiale de Bitmain » ; filings[10].finding : « par des actionnaires vendeurs » → « par Bitmain Technologies Delaware (582 940 actions), Morningstar Universe (156 332) et Alpha Alliance (150 319) » ; filings[8].finding, ajouter : « Un seul souscripteur ; ces actions correspondent aux 1 008 000 actions remises à Bitmain au second semestre 2025 (2,70 $ par action), revendables par la F-3 du 7 novembre 2025. » ; filingsReview.summary : « pour se financer et payer ses fournisseurs » → « pour se financer et payer Bitmain »."
+  },
+  {
+   "id": "AQ-SEC-003",
+   "where": "capitalStructure (aucune mention), filingsReview.filings et summary, verdict.whyAvoid[2], business.coverageMatrix[3] (« Capital et dilution — COUVERT — PRIMAIRE »), brouillon Telegram",
+   "problem": "Le 22 juin 2026, le conseil a autorisé un rachat d’actions de classe A pouvant aller jusqu’à 5 M$, sur vingt-quatre mois à partir du 24 juin 2026. Le communiqué est le 6-K 0001213900-26-070388, pièce 99.1, présent dans analyses/FUFU/_primary et dans l’inventaire des 26 formulaires. La fiche n’en dit pas un mot : « rachat » n’y apparaît que pour l’acquisition d’Uni-Titan. La structure du capital se déclare pourtant couverte sur pièces primaires, et le filingsReview conclut à « une société qui émet ou fait circuler des actions ». Le règlement exige de distinguer la dilution par l’émetteur d’une distribution aux actionnaires. L’oubli pèse aussi sur le plan de trade. À 0,90 $, 5 M$ représentent 5,55 millions d’actions, soit 17,5 % des 31 696 634 actions de classe A, ou 61 séances de volume médian (81 596 $). Le programme d’émission de 150 M$ et le rachat sont ouverts en même temps. Aucun rachat n’apparaît dans le tableau des capitaux propres au 30 juin, et aucune exécution n’a été publiée depuis.",
+   "fix": "Ajouter à capitalStructure.shareHistory, après la phrase sur le programme d’émission : « En sens inverse, le conseil a autorisé le 22 juin 2026 un rachat d’actions de classe A de 5 M$ au plus, valable vingt-quatre mois (6-K du 22 juin 2026) ; aucun rachat n’apparaît au 30 juin et aucune exécution n’a été publiée depuis. À 0,90 $, ce plafond vaut 5,55 millions d’actions, 17,5 % des actions de classe A ou soixante séances de volume médian. » Ajouter une entrée à filingsReview.filings : date 2026-06-22, form « 6-K / Exhibit 99.1 », accession 0001213900-26-070388, URL directe de la pièce 99.1, finding « Programme de rachat de 5 M$ d’actions de classe A sur vingt-quatre mois à partir du 24 juin 2026, financé par la trésorerie ; aucune exécution publiée au 15 octobre 2026. ». Passer les compteurs à douze pièces ouvertes (summary et primary-manifest). verdict.whyAvoid[2] : ajouter « un rachat de 5 M$, autorisé en juin, n’a pas d’exécution publiée ». Telegram, après « Un programme de vente d'actions de 150 M$ reste ouvert. » : ajouter « Un rachat d'actions de 5 M$ est aussi autorisé depuis juin, sans achat annoncé. »"
+  },
+  {
+   "id": "AQ-BIZ-002",
+   "where": "business.overview (« La concentration est forte des deux côtés : un client a fait 33 % des ventes de 2025 et les trois premiers 60 %, sans être nommés ; Bitmain a représenté 50 % du coût des ventes et détient environ 7,9 % du capital. ») ; fundamentals.rows[5] ; business.moat ; verdict.summary (« BitFuFu achetant l’essentiel de cette puissance à Bitmain ») ; blastRadius.missingData[0] ; documented-client-na.json ; Telegram",
+   "problem": "La fiche s’appuie sur les états semestriels du 10 septembre 2026 (0001213900-26-098773) pour le bilan et les douze mois glissants, mais elle reprend les concentrations de 2025 (33 % pour le premier client, 60 % pour les trois premiers, Bitmain à 50 % du coût des ventes). Or la note 18 de ces mêmes états donne, pour le premier semestre 2026 : client A 45 %, client B 17 %, client C 10 %, soit 72 % pour les trois premiers (58 % un an plus tôt). Le premier fournisseur ne pèse plus que 34 % du coût des ventes, contre 51 %. Un seul client représente donc 51,9 M$ sur 115,4 M$, dans un métier dont la marge brute du deuxième trimestre est négative. C’est le premier mécanisme de rupture de la thèse, et la fiche le sous-estime. À l’inverse, elle surestime la dépendance d’achat à Bitmain : « l’essentiel de cette puissance » ne vaut que pour 2025 (53 % des achats de puissance). La note donne aussi la répartition géographique hors minage propre : l’Afrique pèse 58 % de ce chiffre d’affaires au premier semestre 2026, contre 38 %.",
+   "fix": "business.overview : remplacer la phrase citée par « La concentration s’est aggravée : au premier semestre 2026, un seul client a fait 45 % du chiffre d’affaires et les trois premiers 72 % (33 % et 60 % sur l’année 2025), sans être nommés ; 58 % des ventes hors minage propre viennent de clients établis en Afrique. Côté achats, Bitmain, premier fournisseur, est revenu à 34 % du coût des ventes contre la moitié en 2025 ; il détient environ 7,9 % du capital, soit 41 % des actions de classe A cotées. » ; fundamentals.rows[5] : metric « Poids du premier client au premier semestre 2026 », value « 45 % », signal « Trois premiers clients : 72 % (60 % en 2025), non nommés » ; business.moat : « la moitié du coût des ventes de 2025 venait de Bitmain » → « la moitié du coût des ventes de 2025, et encore 34 % au premier semestre 2026, venait de Bitmain » ; verdict.summary : « achetant l’essentiel de cette puissance à Bitmain » → « achetant une grande partie de cette puissance à Bitmain » ; blastRadius.missingData[0] : « (60 % des ventes de 2025) » → « (72 % des ventes du premier semestre 2026) » ; mettre à jour documented-client-na.json (reason et review_basis : note 18 des états semestriels) ; Telegram : « Il revend surtout de la puissance de calcul achetée à Bitmain. » → « Il revend surtout de la puissance de calcul achetée en grande partie à Bitmain ; un seul client fait 45 % de ses ventes. »"
+  }
+ ],
+ "minorFindings": [
+  {
+   "id": "AQ-EAR-002",
+   "where": "verdict.summary, business.overview, business.moat, risks.riskCards[0], risks.pedagogy, fundamentals.rows (marge brute présentée uniquement sur douze mois : 2,3 %)",
+   "problem": "La fiche fait de la marge brute le cœur de sa thèse, mais ne la donne que sur douze mois (9,0 M$ sur 399,5 M$, 2,3 %). Le dernier trimestre affiche pourtant une perte brute : −959 k$ sur 42 760 k$, soit −2,2 %, contre +12 852 k$ (11,1 %) un an plus tôt. Sur le semestre, la perte brute est de −585 k$. Les 2,3 % sur douze mois tiennent au second semestre 2025 et masquent le changement de signe.",
+   "fix": "Ajouter une ligne aux fondamentaux : « Marge brute du 2e trimestre 2026 | −1,0 M$ | −2,2 % du chiffre d’affaires, contre 11,1 % un an plus tôt ; perte brute de 0,6 M$ sur le semestre ». verdict.summary : « sur douze mois, la marge brute ne fait que 2,3 % » → « sur douze mois, la marge brute ne fait que 2,3 %, et elle est devenue négative au deuxième trimestre (−2,2 %) »."
+  },
+  {
+   "id": "AQ-TEC-003",
+   "where": "tradeIdea.statusNote / entryNote / horizon, risks.riskCards[3]",
+   "problem": "Le plan est défendable comme surveillance conditionnelle : le déclencheur, plus haut et ouverture de la séance de la chute (1,285 $), est un niveau observé ; l’entrée est plafonnée, la taille réduite et la sortie placée avant les résultats. Le lecteur ignore en revanche sa probabilité. Sur les 300 séances certifiées, une clôture à +43 % dans les dix séances n’est arrivée que dans 2 fenêtres sur 290, celles qui partent du 1er et du 2 avril 2026. Le seul précédent comparable va dans le même sens. Le 20 mars 2026, jour des résultats annuels, le titre a perdu 30,7 % (plus haut 2,19 $, clôture 1,56 $). Le meilleur cours de clôture des dix séances suivantes a été 2,01 $. Il n’a reclôturé au-dessus de 2,19 $ qu’à la seizième séance (2,44 $ le 14 avril), puis il est retombé à 1,92 $ le 28 avril et à 1,41 $ le 30 juin. Les jours de résultats ont aussi provoqué les plus grands écarts d’ouverture de l’année : −16,0 % le 29 mai, −15,2 % le 17 août.",
+   "fix": "statusNote, après « au plus tard le 30 octobre. » : ajouter « En trois cents séances, une hausse de 43 % en dix séances n’est arrivée que deux fois : le plan a peu de chances de s’activer. Le 20 mars 2026, après une chute de 30,7 %, il avait fallu seize séances pour reclôturer au-dessus du plus haut de la séance, puis le titre était retombé de 2,52 $ à 1,92 $ en huit séances. » horizon : ajouter « Les trois dernières publications ont été suivies de −30,7 % (20 mars), puis d’ouvertures à −16,0 % (29 mai) et −15,2 % (17 août). »"
+  },
+  {
+   "id": "AQ-RSK-001",
+   "where": "tradeIdea.invalidation[2] (« Toute vente d’actions annoncée par 6-K ou 424B … annule le plan »), verdict.controlChecklist[1].action, Telegram (« annonce d'une vente d'actions »)",
+   "problem": "Le signal d’alerte retenu ne capte pas les deux canaux de vente les plus probables. Les ventes au fil de l’eau d’un émetteur étranger ne sont publiées qu’avec les comptes périodiques : les 82 686 actions du premier semestre 2026 ne sont apparues que le 10 septembre. Les reventes de Bitmain enregistrées sur F-3 ne font l’objet d’aucune annonce. La fiche le reconnaît dans riskCards[1] (« une émission peut tomber sans préavis »), mais l’invalidation laisse croire qu’un dépôt préviendra le lecteur.",
+   "fix": "invalidation[2], ajouter : « Les ventes au fil de l’eau et les reventes de Bitmain ne sont pas annoncées au moment où elles ont lieu : le seul signe visible est une séance de baisse sur un volume plusieurs fois supérieur à la médiane de 58 089 actions ; déjà acheté, le stop à 1,20 $ reste la seule protection. »"
+  },
+  {
+   "id": "AQ-VAL-002",
+   "where": "verdict.whyBuy[0], fundamentals.rows[12], [16], [17], blastRadius.contradictions[2]",
+   "problem": "Tous les ratios reposent sur le bilan du 30 juin 2026, établi quand le bitcoin était à son point bas : 54 bitcoins nantis valent 3 146 k$, soit environ 58 000 $ l’unité. Le fonds IBIT est passé de 33,29 $ le 30 juin à 46,15 $ le 16 octobre (+38,6 %), et de +42,2 % jusqu’au 30 septembre. Sur la même période, FUFU a reculé de 1,41 $ à 0,90 $ (−36,2 %). Les 1 388 bitcoins détenus au 30 septembre valent donc nettement plus que ne le laisse le bilan de juin. Les capitaux propres (94,4 M$), le ratio de 1,59× et le scénario à 0,84 $ sont prudents. Le troisième trimestre devrait aussi enregistrer un gain de juste valeur, face à une base de comparaison très haute (180,7 M$ de chiffre d’affaires au troisième trimestre 2025). C’est l’argument le plus chiffrable contre la note D, et la fiche ne le donne pas : elle ne cite que +6,6 % sur vingt et une séances.",
+   "fix": "verdict.whyBuy[3], en tête : « Le bitcoin (fonds IBIT) a pris 38,6 % depuis le bilan du 30 juin 2026, quand FUFU perdait 36,2 % : les 1 388 bitcoins détenus valent plus que dans les comptes de juin. » fundamentals.rows[16].comparison, ajouter : « Capitaux propres au 30 juin, avant la hausse du bitcoin au troisième trimestre. »"
+  },
+  {
+   "id": "AQ-SEC-004",
+   "where": "capitalStructure.shareHistory (« Pleinement dilué … 171 948 609 actions »), capitalStructure.warrants[0].expiration (« Voir le dépôt »)",
+   "problem": "Le total dilué ne retient que les bons Arisz. Il omet au moins 580 500 unités d’actions gratuites non encore acquises, chez cinq dirigeants : 809 000 attribuées le 15 avril 2026, dont 228 500 réglées le 1er juillet. Il omet aussi l’option d’achat d’unités de Chardan (115 000 unités à 11,50 $). La réserve du plan d’actions est également absente : 14 657 193 actions au maximum, 6 557 041 attribuées et 56 722 annulées au 31 décembre 2025, soit environ 8,16 millions encore disponibles. C’est 26 % des actions de classe A, émissibles sans vote, et enregistrées sur S-8 (333-282033, 333-287741). Les 6-K de 2026 renvoient encore à la déclaration de revente des souscripteurs du placement privé (333-278207 : F-1 du 25 mars 2024, transformé le 5 mars 2025) ; la fiche ne la lit pas et ne la mentionne pas. Enfin, l’échéance des bons est connue : cinq ans après la réalisation du rapprochement, soit début 2029 selon le 20-F.",
+   "fix": "shareHistory, après le total dilué : « Ce total exclut environ 580 500 actions gratuites non encore acquises par cinq dirigeants, l’option d’unités de Chardan (115 000 unités à 11,50 $) et la réserve du plan d’actions (environ 8,2 millions d’actions disponibles fin 2025, 26 % des actions de classe A). La déclaration de revente du placement privé de 2024 (333-278207) reste active ; le nombre d’actions encore revendables n’est pas lu. » warrants[0].expiration : « Cinq ans après la réalisation du rapprochement (début 2029) »."
+  },
+  {
+   "id": "AQ-SEC-002",
+   "where": "verdict.whyAvoid[2] (« … 150 M$ encore ouvert, à comparer à une capitalisation de 150 M$ »), capitalStructure.shareHistory (« sa capacité dépasse la capitalisation »)",
+   "problem": "Le programme d’émission ne vend que des actions de classe A. Il faut donc le rapporter aux 31 696 634 actions cotées, soit 28,5 M$ à 0,90 $, et non à une capitalisation qui inclut 135 millions d’actions de classe B non cotées. La capacité nominale de 143,7 M$ donne une fausse mesure du risque. Concrètement, le volume (81 596 $ médians par séance) limite les ventes. Par ailleurs, si le flottant hors affiliés passe sous 75 M$, le formulaire F-3 plafonne les ventes à un tiers de ce flottant sur douze mois. La fiche n’examine pas ce point.",
+   "fix": "whyAvoid[2] : « à comparer à une capitalisation de 150 M$ » → « cinq fois la valeur des actions de classe A cotées (28,5 M$ à 0,90 $) ». shareHistory : « mais sa capacité dépasse la capitalisation » → « sa capacité nominale dépasse cinq fois la valeur des actions cotées ; en pratique, le volume et, sous 75 M$ de flottant, le plafond d’un tiers du flottant par an fixé par le formulaire F-3 limitent les ventes effectives »."
+  },
+  {
+   "id": "AQ-SRC-003",
+   "where": "insiders.signal, business.coverageMatrix[4] (« Initiés — COUVERT »)",
+   "problem": "Le 20-F rappelle que BitFuFu, émetteur étranger, est dispensé de la section 16. Ses dirigeants déposent des formulaires 4 de leur propre chef, sans y être tenus. Le fournisseur marque d’ailleurs l’agrégat sur 365 jours comme « insufficient » : couverture de 99,2 %, deux jours incomplets, « partial observations cannot certify absence or direction ». « Aucun achat ni vente de marché relevé » est donc un constat d’absence sans valeur de preuve. Autre point : les opérations du 1er juillet sont des règlements d’actions gratuites (code M sur « Restricted Share Units »), pas des exercices d’options.",
+   "fix": "insiders.signal : « Aucun achat ni vente de marché relevé dans les formulaires 4 collectés sur un an » → « Aucun achat ni vente de marché dans les formulaires 4 déposés sur un an ; émetteur étranger, BitFuFu n’est pas tenu à ces déclarations et la couverture du fournisseur ne permet pas de conclure à l’absence de ventes » ; « des exercices d’options le 1er juillet » → « des règlements d’actions gratuites le 1er juillet ». coverageMatrix[4].status : « COUVERT » → « PARTIEL »."
+  },
+  {
+   "id": "AQ-EDT-003",
+   "where": "blastRadius.contradictions[1] (« sans dépôt ni dépêche collectée qui l’explique »), blastRadius.missingData[4], tradeIdea.thesis",
+   "problem": "Pour le dépôt, le constat est vérifié. L’inventaire EDGAR, généré le 2026-10-19 à 16:24Z, ne contient aucun dépôt le 16 octobre. Le 6-K du 13 octobre (Éthiopie) précède une séance à −9,0 % (1,34 → 1,22 $), et celui du 15 octobre (jeton HASH) une séance à +7,4 % (1,22 → 1,31 $). Pour la presse, en revanche, rien n’a été vérifié : _collect.json montre qu’ExplainSymbolMove et la requête news/sentiment ont échoué (« délai détaché 45000ms dépassé »). « Aucune dépêche collectée » laisse croire qu’une recherche a eu lieu. Le fait que le titre ait ouvert au plus haut (1,285 $) avant de toucher 0,6412 $ indique un événement en séance dont la cause reste inconnue.",
+   "fix": "contradictions[1] : « sans dépôt ni dépêche collectée qui l’explique » → « sans dépôt de la société ; la recherche de dépêches a échoué à la collecte, la cause de la chute reste inconnue ». missingData[4] : « … non documentée par un dépôt ou une dépêche collectée. » → « … : aucun dépôt ce jour-là ; la collecte des dépêches et l’explication du mouvement ont échoué (délai dépassé). »"
+  },
+  {
+   "id": "AQ-RSK-001",
+   "where": "filingsReview.contrarianRisks[4] (« … trente séances de suite sous ce seuil déclenchent un avis de non-conformité, et les remèdes habituels sont un regroupement d’actions ou une sortie de cote. »)",
+   "problem": "Aucun dépôt ne mentionne d’avis de non-conformité ni de regroupement d’actions. Le 20-F ne contient qu’un facteur de risque générique sur la cotation, au Nasdaq Capital Market. À ce jour, le titre n’a clôturé qu’une seule fois sous 1 $. La phrase omet d’ailleurs le remède ordinaire : le délai de 180 jours pour retrouver dix clôtures de suite à 1 $ ou plus. Elle ne dit pas non plus qu’avec 95,5 % des votes, le président fait voter un regroupement sans difficulté. La règle boursière n’a pas de source.",
+   "fix": "Remplacer par : « Le titre a clôturé une fois sous 1 $. Après trente séances de suite sous ce seuil, le Nasdaq envoie un avis de non-conformité et laisse 180 jours pour retrouver dix clôtures de suite à 1 $ ou plus ; à défaut, un regroupement d’actions, que le président peut faire voter seul avec 95,5 % des voix, ou la sortie de cote. Aucun avis ni regroupement ne figure dans les dépôts au 15 octobre 2026. »"
+  },
+  {
+   "id": "AQ-BIZ-001",
+   "where": "business.overview, fundamentals.rows, verdict.whyBuy[1]",
+   "problem": "Trois faits des dépôts ouverts manquent. (1) Au 30 juin 2026, la créance nette sur Bitmain s’élève à 66,2 M$, essentiellement des prépaiements de puissance, sans intérêt ni échéance. C’est 70 % des capitaux propres et une exposition de contrepartie plus forte que la dette de 93,4 M$ n’en a l’air. (2) La vente de machines est nulle au deuxième trimestre, et le chiffre d’affaires est encaissé à 99 % en actifs numériques (114,6 M$ sur 115,4 M$). (3) Les 13 700 machines S19 déployées en Éthiopie produisent 1,57 EH/s, soit 41 % des 3,8 EH/s détenus en propre si elles en font partie, ce que le 6-K ne précise pas. Or whyBuy[1] fonde la progression de la production propre sur ces 3,8 EH/s.",
+   "fix": "Ajouter une ligne aux fondamentaux : « Créance nette sur Bitmain au 30 juin | 66,2 M$ | prépaiements de puissance, sans intérêt ni échéance ; 70 % des capitaux propres ». whyBuy[1], ajouter : « les 1,57 EH/s déployés en Éthiopie, menacés de saisie, pèsent l’équivalent de 41 % de cette puissance propre »."
+  },
+  {
+   "id": "AQ-TEC-002",
+   "where": "technicals.resistances, technicals.setupNote, tradeIdea.stop / tp1",
+   "problem": "Le stop (1,20 $) se trouve à 0,085 $ du déclencheur. C’est 0,57 ATR sur l’ATR du 16 octobre (0,148 $), ou 0,79 ATR sur celui de la veille (0,108 $), moins que l’amplitude d’une séance ordinaire (0,13 $ le 14 octobre). Le seul plus bas du 15 octobre le justifie mal. La vraie zone d’appui va de 1,18 à 1,22 $ : plus bas de 1,18 $ le 2 septembre, 1,22 $ le 15 septembre, 1,21 $ le 14 octobre, 1,20 $ le 15 octobre. Entre l’achat et TP1, le titre doit franchir l’EMA 50 (1,364 $), 1,42 $, puis les clôtures de 1,45 à 1,50 $ (21 au 25 septembre, 5 octobre), sans sortie partielle prévue. Le plus haut de 1,61 $ du 21 septembre manque aussi à la liste des résistances.",
+   "fix": "setupNote : « stop au plus bas du 15 octobre, 1,20 $ » → « stop à 1,20 $, bas de la zone de 1,18 à 1,22 $ qui a tenu le 2 septembre, le 15 septembre et les 14 et 15 octobre ; ce stop est à moins d’une séance ordinaire du déclencheur » ; technicals.resistances : ajouter 1,61 ; entryNote : « Prise partielle possible à 1,42 $, premier plafond. »"
+  },
+  {
+   "id": "AQ-VRD-004",
+   "where": "verdict.whyBuy[0], [3] et [4]",
+   "problem": "Le sens de chaque puce est cohérent, mais trois formulations vont au-delà des preuves. whyBuy[0] donne « 80 % du cours » en brut, alors que la dette (98,8 M$) ramène la trésorerie nette à 20,7 M$, soit 0,12 $ par action. blastRadius.contradictions[2] le dit, pas la puce. whyBuy[3] affirme que « la baisse des titres vient du marché des actions », une causalité sans source. whyBuy[4] présente une dette de 93,4 M$ comme un point positif.",
+   "fix": "whyBuy[0], ajouter : « ; nette de la dette de 98,8 M$, la réserve tombe à 0,12 $ par action ». whyBuy[3] : « la baisse des titres vient du marché des actions, pas du prix du bitcoin » → « les actions des mineurs ont décroché du prix du bitcoin ». whyBuy[4] → « Aucune échéance de dette importante avant juin 2028 : la dette fournisseur de 93,4 M$ coûte 3 % depuis janvier 2026. »"
+  },
+  {
+   "id": "AQ-EDT-003",
+   "where": "blastRadius.scenarios[1].contradiction et [2].contradiction (« au-dessus de 1,28 $ »), page rendue (« $0.90 -31.29% », « EMA 20 $1.31 », « Décision: »), fundamentals.rows[15].comparison (« vs »), revision/primary-manifest.json (financials_source)",
+   "problem": "Au pas d’un cent, « au-dessus de 1,28 $ » revient bien à 1,29 $, mais la fiche affiche ailleurs 1,285 $ et 1,29 $. Trois niveaux différents pour un seul déclencheur, c’est une source d’erreur. Le gabarit garde aussi des formats anglais et un « vs ». Côté preuves, le manifeste qualifie l’émetteur de « hors us-gaap (IFRS) » et affirme qu’« aucun companyfacts us-gaap n’existe ». C’est faux : BitFuFu publie en US GAAP (opinion de l’auditeur, 20-F) et companyfacts.json porte 271 étiquettes us-gaap. La fiche elle-même dit juste (« comptes us-gaap »).",
+   "fix": "scenarios[1] et [2] : « au-dessus de 1,28 $ » → « à 1,29 $ ou plus ». rows[15].comparison : « BitFuFu à 0,32× vs ses pairs, statistiques courantes relevées en instantané : » → « BitFuFu à 0,32× face à ses pairs (statistiques courantes, relevées en instantané) : ». primary-manifest.json : « Émetteur hors us-gaap (IFRS 40-F/20-F/6-K) … aucun companyfacts us-gaap n’existe pour cet émetteur » → « Émetteur en US GAAP ; companyfacts ne couvre pas le premier semestre 2026, d’où la lecture manuelle des états semestriels ». Les tags ifrs:rev et ifrs:ebit deviennent des étiquettes manuelles."
+  }
+ ],
+ "checks": [
+  {
+   "id": "AQ-VRD-001",
+   "status": "PASS",
+   "rationale": "Le résumé nomme BitFuFu et son métier, le minage en nuage revendu. Il donne le catalyseur (−31,3 % le 16 octobre à 0,90 $ ; deuxième trimestre à −62,9 %), la contradiction (trésorerie et actifs numériques de 119,5 M$ face à une dette fournisseur de 93,4 M$, un contrôle à 95,5 % des votes et un programme de 150 M$) et l’action : aucune entrée avant une clôture à 1,29 $ ou plus. « L’essentiel de cette puissance à Bitmain » est à corriger (voir AQ-BIZ-002).",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/verdict/summary",
+    "analyses/FUFU/_primary/text/2026-08-17-6-K-090474-ea030213301ex99-1.htm.txt"
+   ]
+  },
+  {
+   "id": "AQ-VRD-002",
+   "status": "PASS",
+   "rationale": "Chiffres vérifiés. Chiffre d’affaires de 42 760 k$ contre 115 395 k$, soit −62,9 %. Perte nette de −20 542 k$. Marge brute sur douze mois de 9,0 M$ sur 399,5 M$, soit 2,3 %. Clôture de 0,9001 $ contre 1,31 $, soit −31,29 %, contre −9,85 % pour WGMI le même jour (×3,2) et −0,94 % pour IBIT. Lien causal explicite : la marge est mince parce que la puissance est achetée à un fournisseur.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2026-08-17-6-K-090474-ea030213301ex99-1.htm.txt",
+    "analyses/FUFU/_data/bars.json",
+    "analyses/FUFU/_data/comparison_bars.json"
+   ]
+  },
+  {
+   "id": "AQ-VRD-003",
+   "status": "PASS",
+   "rationale": "Note D, score de 28, reconstructible : 8 − 20 − 6 − 3 − 6 + 55 = 28 (editorial-judgments.json). Statut « surveiller » distinct, justifié par une clôture à 0,90 $ sous le déclencheur de 1,285 $. Le biais baissier et le plan d’achat conditionnel ne se contredisent pas : aucun ordre n’est actif.",
+   "evidenceRefs": [
+    "analyses/FUFU/_runs/20261019/revision/editorial-judgments.json",
+    "data/analyses-data/FUFU.json#/tradeIdea/statusNote"
+   ]
+  },
+  {
+   "id": "AQ-VRD-004",
+   "status": "PASS",
+   "rationale": "Chaque puce va dans le sens de sa rubrique. Trois mineurs : « 80 % du cours » en brut, sans la dette de 98,8 M$ ; une causalité « marché des actions » non sourcée ; une dette présentée comme un atout. Le point net est traité dans blastRadius.contradictions[2].",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/verdict/whyBuy",
+    "data/analyses-data/FUFU.json#/blastRadius/contradictions/2"
+   ]
+  },
+  {
+   "id": "AQ-BIZ-001",
+   "status": "PASS",
+   "rationale": "Produit (puissance payée d’avance), clients, modèle, coûts (puissance achetée, dont 53 % à Bitmain en 2025) et place de revendeur dans la chaîne sont expliqués. Les dossiers Oklahoma, Éthiopie et HASH sont conformes aux 6-K du 29 septembre, du 13 et du 15 octobre. Mineur : la créance nette de 66,2 M$ sur Bitmain (70 % des capitaux propres) manque, et le poids des machines éthiopiennes dans la puissance propre n’est pas évalué.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2026-04-28-20-F-048533-ea0286816-20f_bitfufu.htm.txt",
+    "analyses/FUFU/_primary/text/2026-09-10-6-K-098773-ea030480801ex99-1.htm.txt (note 17 c)",
+    "analyses/FUFU/_primary/text/2026-10-13-6-K-109072-ea030842601ex99-1.htm.txt"
+   ]
+  },
+  {
+   "id": "AQ-BIZ-002",
+   "status": "BLOCK",
+   "rationale": "Les segments de 2025 (352,6 / 63,1 / 53,7 / 8,1 M$, total 477,5 M$) et ceux du deuxième trimestre 2026 (24,9 / 14,0 / 0 / 3,9 M$) sont exacts. La concentration, elle, est périmée : la fiche donne 33 % et 60 % pour 2025, alors que les états semestriels qu’elle utilise donnent 45 % pour le premier client et 72 % pour les trois premiers au premier semestre 2026, avec le premier fournisseur à 34 % du coût des ventes. Voir le bloquant.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2026-09-10-6-K-098773-ea030480801ex99-1.htm.txt (note 18)",
+    "data/analyses-data/FUFU.json#/business/overview",
+    "data/analyses-data/FUFU.json#/fundamentals/rows/5"
+   ]
+  },
+  {
+   "id": "AQ-BIZ-003",
+   "status": "PASS",
+   "rationale": "Les indicateurs sont ceux du métier : EH/s (19,4, dont 3,8 en propre), bitcoins produits (167, dont 98 en propre), bitcoins détenus (1 388), MW (324), contrats payés d’avance (31,0 M$), juste valeur du bitcoin dans l’EBITDA ajusté (−16,9 M$). Aucun P/E n’est utilisé sur des pertes.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2026-10-13-6-K-109072-ea030842601ex99-1.htm.txt",
+    "data/analyses-data/FUFU.json#/fundamentals/rows"
+   ]
+  },
+  {
+   "id": "AQ-EAR-001",
+   "status": "PASS",
+   "rationale": "Deuxième trimestre 2026 : communiqué du 17 août 2026 (0001213900-26-090474) et états semestriels du 10 septembre 2026 (0001213900-26-098773), avec liens directs.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/earnings/beatNote",
+    "data/analyses-data/FUFU.json#/filingsReview/filings/1"
+   ]
+  },
+  {
+   "id": "AQ-EAR-002",
+   "status": "PASS",
+   "rationale": "Chiffre d’affaires, croissance, perte nette, EBITDA ajusté de −18,4 M$ (dont −16,9 M$ de juste valeur), puissance de 15,3 contre 36,2 EH/s et douze mois glissants (399,5 / −119,6 / −99,2 / −117,0 / −89,4 M$) vérifiés. Pour le flux de trésorerie : −112 929 − 30 770 + 54 299 = −89 400 k$. Mineur : la perte brute du trimestre (−959 k$, −2,2 %) n’est pas dite.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2026-08-17-6-K-090474-ea030213301ex99-1.htm.txt",
+    "analyses/FUFU/_primary/text/2026-09-10-6-K-098773-ea030480801ex99-1.htm.txt"
+   ]
+  },
+  {
+   "id": "AQ-EAR-003",
+   "status": "PASS",
+   "rationale": "Le communiqué du 17 août ne contient aucune prévision chiffrée, et la fiche le dit. Elle reprend les causes données par la direction : bitcoin moyen en baisse de 27,5 %, à 71 600 $, demande plus faible, tri volontaire des capacités.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2026-08-17-6-K-090474-ea030213301ex99-1.htm.txt",
+    "data/analyses-data/FUFU.json#/earnings/beatNote"
+   ]
+  },
+  {
+   "id": "AQ-EAR-004",
+   "status": "PASS",
+   "rationale": "Le 20-F et les états semestriels nourrissent le récit : chute, bilan, dette, contrats payés d’avance, actions vendues au fil de l’eau. Deux faits de ces dépôts manquent et sont traités ailleurs : la concentration de 2026 (AQ-BIZ-002) et la faiblesse de contrôle interne (AQ-SEC-005).",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/filingsReview/filings/0",
+    "data/analyses-data/FUFU.json#/filingsReview/filings/1"
+   ]
+  },
+  {
+   "id": "AQ-EAR-005",
+   "status": "PASS",
+   "rationale": "La date est « non confirmée par l’émetteur ». Aucun 6-K d’annonce n’existe jusqu’au 15 octobre, et le calendrier du fournisseur a échoué (earnings_risk.json : Yahoo indisponible, page Webull arrêtée au 21 octobre). Le repère retenu est le 12 novembre 2025. Le calendrier de 2026 (premier trimestre le 29 mai, deuxième le 17 août) rend la sortie du 6 novembre prudente.",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/earnings_risk.json",
+    "analyses/FUFU/_runs/20261019/_sec-discovery/window-inventory.json",
+    "analyses/FUFU/_primary/2026-05-29-6-K-062408-ea029230601ex99-1.htm"
+   ]
+  },
+  {
+   "id": "AQ-VAL-001",
+   "status": "PASS",
+   "rationale": "Valeur d’entreprise : 150,0 + 98,8 − 119,5 = 129,3 M$, soit 0,32× les 399,5 M$ de chiffre d’affaires. Cours sur capitaux propres : 150,0 / 94,4 = 1,59×. Scénario à 0,3× : 119,85 − 98,8 + 119,5 = 140,55 M$, divisé par 166 696 634 actions, soit 0,843 $ (−6,3 %). Tout est exact.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/fundamentals/rows/15",
+    "data/analyses-data/FUFU.json#/fundamentals/rows/17"
+   ]
+  },
+  {
+   "id": "AQ-VAL-002",
+   "status": "PASS",
+   "rationale": "Les entrées sont datées (clôture du 16 octobre, bilan du 30 juin) et la base GAAP est explicite. Mineur : le bilan date du creux du bitcoin (environ 58 000 $), qui a pris 38,6 % depuis selon le fonds IBIT (33,29 → 46,15 $), pendant que FUFU perdait 36,2 %.",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/comparison_bars.json (IBIT)",
+    "analyses/FUFU/_primary/text/2026-09-10-6-K-098773-ea030480801ex99-1.htm.txt (note 4)"
+   ]
+  },
+  {
+   "id": "AQ-VAL-003",
+   "status": "PASS",
+   "rationale": "Correspondance des pairs vérifiée dans comparison_context : MARA 6,282× / 1,735×, BTDR 4,419× / 1,975×, HIVE 2,15× / 1,304×, BTBT 0,859×, CAN 0,397× / 0,610×, GLXY 0,129×. L’écart s’explique par la marge, et le scénario de négociant est encadré par Canaan et Galaxy. Une seule réserve : la sélection omet les multiples élevés (CLSK, RIOT, CIFR, WULF).",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/comparison_context.json",
+    "data/analyses-data/FUFU.json#/fundamentals/rows/15"
+   ]
+  },
+  {
+   "id": "AQ-SEC-001",
+   "status": "PASS",
+   "rationale": "20-F 0001213900-26-048533 du 28 avril 2026 : lien direct et constat chiffré (ventes, concentration, classes d’actions, bons). Le constat omet la faiblesse de contrôle interne, comptée en AQ-SEC-005.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/filingsReview/filings/0"
+   ]
+  },
+  {
+   "id": "AQ-SEC-002",
+   "status": "BLOCK",
+   "rationale": "Pour le 424B5, montant, agents, ventes (1 609 742 + 82 686 = 1 692 428 actions, 5,8 M$ nets) et capacité restante (150 − 6,2 − marginal ≈ 143,7 M$ nominaux) sont exacts. En revanche, la venderesse des deux F-3 de revente, Bitmain Technologies Delaware, n’est pas nommée. Le formulaire D d’octobre 2025 est présenté comme un paiement à « un fournisseur » distinct, alors qu’il s’agit de la seconde tranche (1 008 000 actions) des 1 590 940 actions remises à Bitmain. Voir le bloquant. Mineur : le programme est comparé à la capitalisation totale au lieu des actions de classe A cotées.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2025-11-07-F-3-107483-ea0262761-f3_bitfufu.htm.txt (Selling Shareholder)",
+    "analyses/FUFU/_primary/text/2025-07-08-F-3-061902-ea0246185-f3_bitfufu.htm.txt (Selling Shareholders)",
+    "analyses/FUFU/_primary/2025-10-09-D-097585-primary_doc.xml",
+    "analyses/FUFU/_primary/text/2026-04-28-20-F-048533-ea0286816-20f_bitfufu.htm.txt (tableau des capitaux propres, Item 7)"
+   ]
+  },
+  {
+   "id": "AQ-SEC-003",
+   "status": "BLOCK",
+   "rationale": "Programme au fil de l’eau, déclarations de revente, bons, classe B et paiement en actions ne sont pas confondus entre eux. En revanche, le rachat d’actions de 5 M$ autorisé le 22 juin 2026 (6-K 0001213900-26-070388) est absent. La fiche ne distingue donc pas la dilution par l’émetteur d’une distribution aux actionnaires, et conclut à une société qui « émet ou fait circuler des actions ». Voir le bloquant.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/2026-06-22-6-K-070388-ea029509001ex99-1.htm",
+    "data/analyses-data/FUFU.json#/capitalStructure",
+    "data/analyses-data/FUFU.json#/filingsReview/summary"
+   ]
+  },
+  {
+   "id": "AQ-SEC-004",
+   "status": "PASS",
+   "rationale": "166 696 634 actions = 31 696 634 de classe A + 135 000 000 de classe B. Capitalisation : 166 696 634 × 0,9001 = 150,04 M$. Total dilué : 171 948 609 actions (+5 251 975 au titre des bons). Les comptes concordent. Mineur : le total omet environ 580 500 actions gratuites non acquises, l’option de Chardan (115 000 unités) et la réserve du plan (environ 8,16 millions d’actions).",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2026-09-10-6-K-098773-ea030480801ex99-1.htm.txt (bilan)",
+    "analyses/FUFU/_data/insiders.json",
+    "analyses/FUFU/_primary/text/2026-04-28-20-F-048533-ea0286816-20f_bitfufu.htm.txt (plan d’actions)"
+   ]
+  },
+  {
+   "id": "AQ-SEC-005",
+   "status": "BLOCK",
+   "rationale": "Le 20-F, Item 15, conclut à un contrôle interne et à des contrôles de communication inefficaces au 31 décembre 2025, à cause d’une faiblesse importante non entièrement corrigée, sans attestation de l’auditeur. La fiche ne retient que « opinion sans réserve de l’auditeur ». Côté continuité d’exploitation, aucune mention de doute dans le 20-F ni dans les états semestriels ; la fiche ne conclut rien, ce qui est correct. Voir le bloquant.",
+   "evidenceRefs": [
+    "analyses/FUFU/_primary/text/2026-04-28-20-F-048533-ea0286816-20f_bitfufu.htm.txt (Item 15)",
+    "data/analyses-data/FUFU.json#/filingsReview/filings/0"
+   ]
+  },
+  {
+   "id": "AQ-SEC-006",
+   "status": "PASS",
+   "rationale": "Le compte de 26 formulaires est exact pour la fenêtre du 1er octobre 2025 au 16 octobre 2026 : 21 6-K, le 20-F, une F-3, un EFFECT, une CORRESP et un formulaire D. Onze pièces ouvertes, soit 9 dans la fenêtre plus le 424B5 et la F-3 de juillet 2025, la clé de répartition étant cohérente. Le 6-K du rachat, filtré à tort comme non décisif, relève d’AQ-SEC-003.",
+   "evidenceRefs": [
+    "analyses/FUFU/_runs/20261019/_sec-discovery/window-inventory.json",
+    "analyses/FUFU/_runs/20261019/revision/primary-manifest.json"
+   ]
+  },
+  {
+   "id": "AQ-TEC-001",
+   "status": "PASS",
+   "rationale": "Clôture de référence du 16 octobre 2026 (served_completed_end 2026-10-16), collecte horodatée 2026-10-19T16:38:34Z, barre du 19 octobre exclue. Aucun cours en séance n’est utilisé.",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/bars.json"
+   ]
+  },
+  {
+   "id": "AQ-TEC-002",
+   "status": "PASS",
+   "rationale": "Niveaux vérifiés sur les barres. Support à 0,6412 $ (plus bas du 16 octobre). Résistances à 1,42 $ (ouverture et plus haut du 12 octobre), 1,56 $ (plus hauts des 5 et 6 octobre) et 1,65 $ (24 août). Déclencheur à 1,285 $, à la fois ouverture et plus haut du 16 octobre. Mineur : 1,61 $ (21 septembre) manque, et la zone de 1,18 à 1,22 $ n’est pas décrite.",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/bars.json",
+    "data/analyses-data/FUFU.json#/technicals"
+   ]
+  },
+  {
+   "id": "AQ-TEC-003",
+   "status": "PASS",
+   "rationale": "Le plan reste défendable comme surveillance conditionnelle, et je ne demande pas de le transformer en « aucun trade ». Chaque élément a sa logique : déclencheur sur la séance de la chute, plafond à 1,34 $ qui garde un R/R d’au moins 1,5, stop sous la zone d’appui, objectifs sur des plafonds observés, abandon sous 0,6412 $, sortie avant les résultats. Mineur : le lecteur doit savoir que l’activation est improbable (2 fenêtres de dix séances sur 290 avec +43 %), que le précédent du 20 mars a demandé seize séances avant de s’effacer en huit, et que le stop se trouve à moins d’un ATR.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/tradeIdea",
+    "analyses/FUFU/_data/bars.json"
+   ]
+  },
+  {
+   "id": "AQ-TEC-004",
+   "status": "PASS",
+   "rationale": "R/R exacts : (1,56 − 1,285) / 0,085 = 3,24 ; (1,65 − 1,285) / 0,085 = 4,29 ; (1,56 − 1,34) / 0,14 = 1,57. Écarts exacts : −6,6 %, +21,4 %, +28,4 %. Tailles exactes : 100 / 0,14 = 714 actions et 100 / 0,21 = 476. Rien d’un gabarit commun à tout le lot.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/tradeIdea"
+   ]
+  },
+  {
+   "id": "AQ-TEC-005",
+   "status": "PASS",
+   "rationale": "Veto avant résultats appliqué : sortie à la clôture du 6 novembre, activation au plus tard le 30 octobre. L’historique le justifie : −30,7 % le 20 mars, ouvertures à −16,0 % le 29 mai et à −15,2 % le 17 août, toutes des journées de résultats. L’absence de barres en séance est déclarée, et aucun volume hors séance n’est utilisé.",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/bars.json",
+    "data/analyses-data/FUFU.json#/tradeIdea/horizon",
+    "data/analyses-data/FUFU.json#/blastRadius/missingData/2"
+   ]
+  },
+  {
+   "id": "AQ-RSK-001",
+   "status": "PASS",
+   "rationale": "Quatre risques propres à BitFuFu (activité, capital et contrôle, Éthiopie et Oklahoma, liquidité), chacun avec mécanisme et chiffres. Mineurs : l’invalidation « vente annoncée » ne peut pas capter les ventes au fil de l’eau ni les reventes de Bitmain, et le risque Nasdaq est décrit sans constater qu’aucun avis n’a été reçu.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/risks/riskCards",
+    "data/analyses-data/FUFU.json#/tradeIdea/invalidation"
+   ]
+  },
+  {
+   "id": "AQ-RSK-002",
+   "status": "PASS",
+   "rationale": "Le biais est baissier ; le cas contraire est haussier et chiffré : réserve de 0,72 $ par action, 0,32× les ventes, production propre en hausse, scénario à 0,84 $. Mineur : son meilleur argument chiffré manque, le bitcoin à +38,6 % depuis le bilan de juin, et le rachat est absent (compté en AQ-SEC-003).",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/verdict/whyBuy",
+    "data/analyses-data/FUFU.json#/blastRadius/scenarios/0"
+   ]
+  },
+  {
+   "id": "AQ-RSK-003",
+   "status": "PASS",
+   "rationale": "War room complète. Chiffres vérifiés : 3 ouvertures à ±10 % ou plus sur 250 séances (+12,8 % le 23 mars, −16,0 % le 29 mai, −15,2 % le 17 août) et 3 ouvertures sous −6,6 %. Médiane de 81 596 $ échangés par séance et de 58 089 actions (du 18 septembre au 15 octobre). Le plan impose des ordres limités, ne poursuit pas le titre au-dessus de 1,34 $, n’achète rien sur une ouverture sous 1,20 $ et calibre la taille sur un stop qui peut être sauté.",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/bars.json",
+    "data/analyses-data/FUFU.json#/tradeIdea/entryNote",
+    "data/analyses-data/FUFU.json#/risks/riskCards/3"
+   ]
+  },
+  {
+   "id": "AQ-SRC-001",
+   "status": "PASS",
+   "rationale": "validate-analysis-evidence : PASS sur 458 affirmations, avec un manifeste lié à l’empreinte c242cf8e… de la fiche. Les sections métier, résultats et capital citent leurs dépôts ; la technique cite les barres certifiées.",
+   "evidenceRefs": [
+    "data/analyses-evidence/FUFU.json"
+   ]
+  },
+  {
+   "id": "AQ-SRC-002",
+   "status": "PASS",
+   "rationale": "Liens EDGAR directs, avec dates et numéros d’accession. Mineur : le manifeste primaire décrit l’émetteur comme « IFRS, sans companyfacts us-gaap », ce qui est faux (271 étiquettes us-gaap). La fiche, elle, dit juste.",
+   "evidenceRefs": [
+    "analyses/FUFU/_runs/20261019/revision/primary-manifest.json",
+    "analyses/FUFU/_primary/companyfacts.json"
+   ]
+  },
+  {
+   "id": "AQ-SRC-003",
+   "status": "PASS",
+   "rationale": "Les positions vendeuses sont présentées comme un « instantané non daté » ; options, analystes et sentiment sont déclarés absents ; aucun consensus n’est inventé. Mineurs : l’absence de ventes d’initiés est affirmée pour un émetteur étranger, sur une couverture que le fournisseur juge « insufficient », et l’absence de dépêche ne repose sur aucune collecte réussie.",
+   "evidenceRefs": [
+    "analyses/FUFU/_data/insiders.json",
+    "analyses/FUFU/_data/_collect.json"
+   ]
+  },
+  {
+   "id": "AQ-EDT-001",
+   "status": "N/A",
+   "rationale": "Fiche unique hors lot, donc pas de calcul de répétition entre dossiers. check-ai-tells --strict ne signale aucun tic, ni sur le rendu (7 177 mots) ni sur le brouillon Telegram (190 mots).",
+   "evidenceRefs": [
+    "analyses/FUFU/index.html",
+    "analyses/FUFU/_runs/20261019/telegram-draft.html"
+   ]
+  },
+  {
+   "id": "AQ-EDT-002",
+   "status": "PASS",
+   "rationale": "Le verdict, les risques (Éthiopie, Oklahoma, HASH, classe B à cinq voix, Bitmain), les catalyseurs et les invalidations ne valent que pour BitFuFu.",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/filingsReview/contrarianRisks",
+    "data/analyses-data/FUFU.json#/tradeIdea/invalidation"
+   ]
+  },
+  {
+   "id": "AQ-EDT-003",
+   "status": "PASS",
+   "rationale": "Les limites sont précises pour l’essentiel : options, barres en séance, produit brut du programme, identité des clients. Mineurs : « dépêche collectée » alors que la collecte a échoué ; un déclencheur affiché à 1,28, 1,285 et 1,29 $ ; formats anglais du gabarit (« $0.90 », « -31.29% », « Décision: ») et un « vs ».",
+   "evidenceRefs": [
+    "data/analyses-data/FUFU.json#/blastRadius",
+    "analyses/FUFU/index.html"
+   ]
+  },
+  {
+   "id": "AQ-QA-001",
+   "status": "BLOCK",
+   "rationale": "Les outils passent. check-analysis-editorial-quality --strict --pre-review : PASS, 0 erreur, 0 avertissement. validate-analysis-evidence : PASS sur 458 affirmations. check-ai-tells --strict : propre. Aperçu identique à index.html (7cf87775…). Le contrôle contradictoire échoue en revanche sur quatre bloquants démontrés : SEC-005, SEC-002, SEC-003, BIZ-002.",
+   "evidenceRefs": [
+    "analyses/FUFU/_runs/20261019/preview/index.html",
+    "analyses/FUFU/_runs/20261019/revision/review-contrarian.json"
+   ]
+  },
+  {
+   "id": "AQ-QA-002",
+   "status": "PASS",
+   "rationale": "Statut BLOCK consigné. Chaque bloquant porte une correction exacte, champ par champ, y compris pour le Telegram.",
+   "evidenceRefs": [
+    "analyses/FUFU/_runs/20261019/revision/review-contrarian.json"
+   ]
+  },
+  {
+   "id": "AQ-QA-003",
+   "status": "BLOCK",
+   "rationale": "Score de 74 sur 100, sous le seuil de 80. Détail : verdict 13/15, métier 7/10, résultats 12/15, valorisation 7,5/10, dépôts et capital 6,5/15, technique 12,5/15, risques 7,5/10, sources 4/5, écriture 4/5. Une fois les quatre bloquants et les mineurs AQ-EAR-002, AQ-TEC-003 et AQ-RSK-001 corrigés, la fiche peut dépasser 80 : le plan, les calculs et la war room sont solides.",
+   "evidenceRefs": [
+    "plans/analysis-quality-rubric-20260828.md"
+   ]
+  }
+ ],
+ "telegramReview": {
+  "status": "BLOCK",
+  "findings": [
+   "Conforme sur la forme : français, HTML Telegram valide (<b>, <a>), aucun terme interne, check-ai-tells --strict sans alerte. Le message se suffit à lui-même : contexte, faits, conditions d’action, invalidation et risque clé. Ses niveaux concordent avec la fiche : 0,90 / 0,6412 / 1,29 / 1,34 / 1,20 / 1,56 / 1,65 $, avec les dates du 30 octobre, du 2 et du 6 novembre.",
+   "À régénérer après correction de la fiche, puisque le harnais commun impose les mêmes faits. « Il revend surtout de la puissance de calcul achetée à Bitmain. » devient « Il revend surtout de la puissance de calcul achetée en grande partie à Bitmain ; un seul client fait 45 % de ses ventes. » Après « Un programme de vente d'actions de 150 M$ reste ouvert. », ajouter « Un rachat d'actions de 5 M$ est aussi autorisé depuis juin, sans achat annoncé. »",
+   "« Plan annulé si : clôture sous 0,6412 $, ou annonce d'une vente d'actions. » omet l’invalidation sur l’Éthiopie que donne la fiche. Écrire : « Plan annulé si : clôture sous 0,6412 $, annonce d'une vente d'actions ou saisie des machines en Éthiopie (déjà acheté : vendre à la séance suivante). »",
+   "« sortie au plus tard à la clôture du 6 nov., avant les résultats » présente la date comme connue. Écrire : « avant les résultats attendus vers la mi-novembre (date non confirmée) ». « Petite taille. » reste vague : écrire « Pour 100 $ de risque : 476 actions au plus. »"
+  ]
+ }
+}
