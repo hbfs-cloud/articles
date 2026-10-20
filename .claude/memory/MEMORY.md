@@ -69,6 +69,7 @@
 ## 🎯 Intelligence trading
 - [Analysis Senior Review First](feedback_analysis_senior_review_first.md) — Senior-review AVANT publication + checklist MCP complète (buyback, 13F, FINRA, S-3 par type) — incident TLN 19/07/2026
 - [Publier une fiche vite](feedback_analyse_publication_speed.md) — /analyse MODE RAPIDE (décision du 19/10/2026) : un seul passage de relecture, corrections appliquées sans re-relecture, rendu + add_card, cycle de vie + analyses-status.json, Telegram ≤ 100 mots
+- [Avancer sans s'arrêter](feedback_no_stops_during_runs.md) — /scanner, /analyse : appliquer les précédents du propriétaire (exclusions reconduites, dérogation 4+2, doublon ouvert) sans redemander ; scan du 20/10 : seconde passe de vérification en saison des résultats, dividendes à vérifier quand l'invalidation est à quelques centimes.
 - [Telegram d'analyse concis](feedback_telegram_analyse_concis.md) — titre-verdict, deux phrases de faits, une ligne Setup, une ligne Invalidation, le lien ; jamais le plan d'exécution détaillé (TRT, 13/10/2026)
 - [Senior Review Args Shape](feedback_senior_review_args_shape.md) — senior-review attend artifacts=[{path,type,label}] : une chaîne = 0 agent lancé et faux PASS silencieux (02/08/2026)
 - [Dilution Check Window](feedback_dilution_check_window.md) — CRITIQUE : le check anti-dilution n'est JAMAIS borné à 180j (warrant OpenAI 160M actions raté sur AMD, 02/08/2026) — days=1825 + ouvrir tout 8-K item 3.02/1.01 et Ex-4.x

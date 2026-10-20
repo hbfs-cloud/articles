@@ -14,7 +14,7 @@ const crypto = require('crypto');
 // LISTE FERMÉE des séances pour lesquelles le propriétaire a accordé une dérogation. Un fichier
 // déposé pour une autre séance est refusé, même bien formé : ajouter une date ici est un acte
 // délibéré et relu, jamais un effet de bord d'un run.
-const ALLOWED_DATES = Object.freeze(['2026-09-24', '2026-10-15']);
+const ALLOWED_DATES = Object.freeze(['2026-09-24', '2026-10-15', '2026-10-20']);
 
 const KEYS = ['all_other_gates_required', 'date', 'min_etf_count', 'min_us_count', 'provenance', 'public_notice', 'reason', 'refdate', 'user_instruction'];
 
