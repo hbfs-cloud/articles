@@ -1,18 +1,19 @@
 ---
 name: feedback_analyse_publication_speed
-description: Fiche /analyse — publier vite : deux tours de relecture au plus, seuls les bloquants rouvrent une relecture, les mineurs partent dans la version suivante
+description: Fiche /analyse — MODE RAPIDE (19/10/2026) : un seul passage de relecture, corrections appliquées sans re-relecture, publication ; l'empreinte/attestation ne doit plus imposer de tours successifs
 metadata:
   type: feedback
 ---
 
-Une fiche `/analyse` doit sortir vite. Le 13 octobre 2026, la fiche TRT a demandé cinq tours des trois relectures AQ-1.1 (QA senior, contradicteur, war room) et l'utilisateur a jugé le délai inacceptable : « c'est beaucoup trop long ton truc ! il va falloir publier plus vite ».
+**Décision du propriétaire, 19 octobre 2026 (mode « Rapide »).** Après LEU, FUFU et ALMU, où chaque correction changeait l'empreinte du JSON et forçait les trois relecteurs à revalider (FUFU : trois allers-retours, plusieurs heures), l'utilisateur : « ton systeme d'enpreinte est debile, avant tu arrivais a faire une analyse en moins de 5m, la c'est du grand n'importe quoi ». Il a choisi : un seul passage de relecture, corrections appliquées sans re-relire, publication.
 
-**Why:** chaque modification du JSON change son empreinte et invalide l'attestation, ce qui force à relancer les trois relectures. En appliquant aussi les mineurs entre les tours, j'ai rouvert trois tours de plus pour des retouches de forme. Chaque tour corrigé introduisait en outre de nouveaux passages à relire.
+Historique : le 13 octobre 2026, TRT avait déjà demandé cinq tours (« c'est beaucoup trop long ton truc ! il va falloir publier plus vite »).
+
+**Why:** l'attestation AQ-1.1 liée à l'empreinte rend chaque retouche coûteuse (re-relecture complète) ; l'utilisateur préfère la vitesse, les contrôles automatiques restant bloquants.
 
 **How to apply:**
-- Collecte, preuves et contrôles automatiques d'abord ; relectures seulement sur une fiche qui passe tout.
-- Deux tours au plus. Entre deux tours, ne corriger QUE les bloquants démontrés (chiffre faux, consigne d'exécution dangereuse, source contredite), sans réécrire autour.
-- Un tour qui passe (aucun BLOCK, score ≥ 80) est publié tel quel : ses mineurs sont notés pour la version suivante, jamais appliqués avant publication.
-- Pendant les relectures, préparer en parallèle la publication : attestation, carte d'index, liste des fichiers à committer, brouillon Telegram.
-- Si un relecteur se bloque, le relancer aussitôt sur le même hash.
+- Lancer les trois relecteurs (QA senior, contradicteur, war room) en parallèle dès que la fiche passe les contrôles automatiques, un seul passage.
+- Appliquer en une fois les faits faux, omissions de dépôt et consignes d'exécution dangereuses qu'ils relèvent ; reporter le reste.
+- Relancer les contrôles automatiques (preuves, qualité éditoriale --pre-review, qa-content, ai-tells), puis publier sans second tour : rendu par `tools/render-analysis.js` et indexation par `tools/add_card.js` (publish-analysis.js refuse sans attestation à jour). Archiver d'abord l'ancienne page si nécessaire.
+- Après publication : `analyses-lifecycle.js` puis commit de `data/analyses-status.json` (sinon « niveaux non vérifiés »), notification Telegram ≤ 100 mots.
 - Lien : [[feedback_analyses_factcheck]].
