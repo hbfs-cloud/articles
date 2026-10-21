@@ -1,0 +1,102 @@
+{
+  "role": "senior_qa",
+  "reviewerId": "brun-senior-qa-20261021",
+  "reviewerName": "Claude (QA senior indépendante)",
+  "analysisSha256": "0c730c26e5a7aee66d3cf7a50f3bf09a0f2a5134aa7a626251eb5bfa9586f10d",
+  "evidenceSha256": "4bc469c5781b84d70d2a2a3a6bac35271f282e5df8ea2ceaefc8167f01a8df79",
+  "status": "BLOCK",
+  "score": 72,
+  "verifiedOk": [
+    "Niveaux recalculés depuis bars.json (114 séances, Tiingo) : 9,38 = plus haut du 19/10 ; 8,237 = plus bas du 20/10 et plus bas depuis la cotation ; 11,75 = plus haut du 13/10 ; 12,83 = plus haut et ouverture du 12/10 ; plafond 9,642 pour R/R 1,5 ; stopPct −12,19 %, TP1 +25,27 %, TP2 +36,78 % ; R/R 2,07/3,02, 1,50 au plafond, 2,06/3,00 et 1,50/2,26 avec l’ordre à 8,23 ; taille 70→46 (675 $/443 $) et 709→472 (6 835 $) ; ATR Wilder 1,437 ; RSI 27,71 ; EMA20 12,57 ; EMA50 16,03 ; MACD −2,23/−1,74 ; volume médian 3 157 328 ; médiane 36,5 M$ ; gaps 20 ≥5 %, 5 ≥10 %, pire −12,94 % le 4 juin, 26 > 2,77 %, 1 < −12,3 % ; −26,16 % sur 5 séances, −50,67 % sur 21 ; −79,8 % depuis 42,00 $ ; condition de blocage remplie le 5 juin.",
+    "Douze mois glissants conformes au POS AM : rev 26 887 + 42 094 − 12 563 = 56 418 ; EBIT −11 053 − 15 575 − 3 500 = −30 128 ; NI −16 274 − 79 165 − 2 551 = −97 990 ; D&A 10 536 + 22 868 − 3 880 = 29 524 ; OCF 24 930 + 114 249 − 8 606 = 130 573 ; capex 11 553 + 29 617 − 2 898 = 38 272 ; bilan au 30/06 : crédit-bail 82 238 + 155 888, obligation 19 339 + 59 145 (= 316 610), trésorerie 120 166, affectée 13 002, capitaux propres 100 095, avances clients 34 880 + 93 496.",
+    "Actions 49 954 423 A + 29 533 018 B au 17 août (10-Q) ; capitalisation 673,3 M$ ; EV 869,7 M$ ; EV/revenus 15,42× ; EBITDA −0,6 M$ ; cap/capitaux propres 6,73× ; scénario 10× = 4,63 $ (−45,4 %) ; 58 738 753 = 29 533 018 + 14 229 769 + 10 968 750 + 4 007 216 (424B5) = 73,9 % du capital ; 4 590 000 RSU × 16,65 $ = 76,4 M$.",
+    "Pairs : rendements 5 et 21 séances, corrélations, bêtas et R² recalculés à l’identique depuis comparison_bars.json ; CRWV −2,5 % et NBIS −4,2 % le 5 octobre ; multiples EV/revenus des pairs conformes à comparison_context.json ; dates de résultats des pairs conformes à comparison_earnings.json ; date BRUN du 16 novembre 12 h 30 Z (avant ouverture, une seule source).",
+    "Cotation intrajournalière du 21/10 à 16:29 Z (12 h 29 EDT) conforme à instrument.json : 8,53 $, ouverture 8,85, plus haut 9,00, plus bas 8,43, 1 339 428 actions ; +0,7 %, +10,1 % jusqu’à 9,39, +3,6 % au-dessus de 8,237.",
+    "Calendrier : 21/10 mercredi, 28/10 mercredi, 30/10 vendredi, 2-3-4/11 lundi-mardi-mercredi, 13/11 vendredi, 16/11 lundi.",
+    "Rendu : aucun « undefined », « NaN », « null », tableau vide ; EMA 200 affichée « N/A » ; tools/qa-content.js --strict : 30 OK, 0 avertissement, 0 erreur. Les champs non rendus (moat, disclaimer, squeezeScore, sharesOutstanding) le sont aussi sur ORCL : comportement du gabarit, pas une régression."
+  ],
+  "blockingFindings": [
+    {
+      "where": "news[3].title ; news[3].detail ; filingsReview.summary ; filingsReview.contrarianRisks[1] ; risks.riskCards[1].points[1] ; insiders.signal",
+      "problem": "Sean Goodrich est présenté comme « actionnaire à 10 % » (ou « à plus de 5 % »). Or son Formulaire 4 du 16 septembre porte isDirector=1 et isTenPercentOwner=0, insiders.json le classe « Director », et le 13D/A précise : « Mr. Goodrich serves as a non-employee member of the Board of Directors ». Avant la vente, il détenait 4 937 921 actions, soit 9,88 % de la classe A, donc moins de 10 %. Le fait marquant, une vente par un administrateur, est absent de la fiche.",
+      "fix": "news[3].title : « Un administrateur vend 500 000 actions à 14,00 $ ». news[3].detail : « Sean Goodrich, administrateur non salarié, a vendu 500 000 actions à 14,00 $ le 14 septembre, après 198 200 actions à 20,15 $ le 27 août ; il garde 4 437 921 actions, 8,88 % de la classe A. » filingsReview.summary : remplacer « le 13D/A du 16 septembre montre un actionnaire à 10 % vendeur » par « le 13D/A du 16 septembre montre un administrateur, porteur de 8,88 % de la classe A, vendeur ». filingsReview.contrarianRisks[1] : remplacer « un actionnaire à 10 % a vendu 500 000 actions à 14,00 $ le 14 septembre, sous le plus bas de la séance » par « un administrateur, Sean Goodrich, a vendu 500 000 actions à 14,00 $ le 14 septembre ». risks.riskCards[1].points[1] : remplacer « un actionnaire à 10 % a vendu 698 200 actions entre le 27 août et le 14 septembre » par « un administrateur, Sean Goodrich, a vendu 698 200 actions entre le 27 août et le 14 septembre ». insiders.signal : remplacer « Sean Goodrich, actionnaire à plus de 5 % par Goodrich ILMJS LLC » par « Sean Goodrich, administrateur non salarié et actionnaire à plus de 5 % par Goodrich ILMJS LLC »."
+    },
+    {
+      "where": "insiders.signal",
+      "problem": "« une cession négociée hors marché » contredit la source primaire. Le 13D/A du 16 septembre écrit « sold 500,000 shares of Class A Common Stock at a price of $14.00 per share in an open market transaction ». L’écart avec le plus bas des barres (14,46 $) est un constat, pas une preuve d’opération hors marché.",
+      "fix": "Remplacer « sous le plus bas de la séance (14,46 $) : une cession négociée hors marché. » par « un prix déclaré sous le plus bas de la séance relevé sur les barres certifiées (14,46 $), alors que le 13D/A décrit une vente sur le marché ; l’écart n’est pas expliqué. »"
+    },
+    {
+      "where": "capitalStructure.warrants[0].shares",
+      "problem": "« 11 470 722 bons à la fusion » est faux. Le 10-Q et le POS AM écrivent tous deux 11 470 711 (quatre occurrences), ce que confirme le calcul 4 112 176 exercés + 7 358 535 restants = 11 470 711.",
+      "fix": "« 11 470 711 bons à la fusion »"
+    },
+    {
+      "where": "risks.riskCards[4].verdict",
+      "problem": "Calcul faux. « La défaillance ou le report d’un seul client toucherait près de la moitié du carnet annoncé » ne tient pas : Thinking Machines Lab pèse 471,7 M$ et Cohere 525,6 M$ sur un carnet de 2,43 Md$, soit 19,4 % et 21,7 %. Même rapportée aux 1,9 Md$ seuls, Thinking Machines Lab ne fait que 24,8 %.",
+      "fix": "« La défaillance ou le report d’un seul de ces deux clients toucherait environ un cinquième du carnet annoncé (19 à 22 % de 2,43 Md$) ; les deux réunis en pèsent 41 %. »"
+    },
+    {
+      "where": "risks.riskCards[3].verdict",
+      "problem": "Incohérence chiffrée : « Le titre amplifie le compartiment (bêta de 0,85 sur Nebius) ». Un bêta inférieur à 1 signifie qu’en moyenne quotidienne Boost Run bouge moins que Nebius ; le chiffre cité contredit l’affirmation. L’amplification n’apparaît que dans les rendements cumulés : −50,7 % contre −26,4 % sur 21 séances.",
+      "fix": "« Le titre suit le compartiment (corrélation de 0,74 et bêta de 0,85 sur Nebius) mais a perdu presque deux fois plus que lui en vingt et une séances (−50,7 % contre −26,4 %) ; un gap peut sauter un stop. »"
+    },
+    {
+      "where": "shortInterest.ctb ; business.coverageMatrix[5].decision ; blastRadius.missingData[3]",
+      "problem": "La fiche affiche « Non publié » et « coût d’emprunt non publié par la source ». Pourtant symbol_signals.json, collecté pour cette fiche, contient un coût d’emprunt de 0,4277 % relevé sur iBorrowDesk le 21 octobre 2026 (instantané, sans historique). Seul le fichier FINRA ne le publie pas. Ce chiffre pèse sur la thèse du rachat forcé : un titre facile à emprunter subit peu de pression de couverture.",
+      "fix": "shortInterest.ctb : « 0,43 % par an (relevé instantané du 21 octobre, sans historique) : titre facile à emprunter ». business.coverageMatrix[5].decision : « Aucune option cotée sur le titre ; coût d’emprunt de 0,43 % par an au relevé instantané du 21 octobre, sans historique. » blastRadius.missingData[3] : « Aucune option cotée ; coût d’emprunt connu par un seul relevé instantané (0,43 % le 21 octobre), sans historique ; écart entre prix d’achat et de vente non mesuré. »"
+    }
+  ],
+  "nonBlockingFindings": [
+    {
+      "where": "tradeIdea.stopPct (carte « Stop » rendue)",
+      "problem": "La carte rendue affiche « Stop 8,23 $ » avec « −12,2 % ». Ce pourcentage correspond à 8,237 ; pour 8,23 contre 9,38, l’écart est de −12,26 %, soit −12,3 %.",
+      "fix": "Soit afficher 8,237 $ sur la carte, soit passer stopPct à \"-12.3%\" si la carte reste sur l’ordre à 8,23 $."
+    },
+    {
+      "where": "technicals.resistances",
+      "problem": "Le setupNote cite d’abord 9,79 $ (plus haut du 16 octobre) comme résistance, mais la liste rendue (« $10.20 / $11.75 / $12.83 ») l’omet.",
+      "fix": "[9.79, 10.2, 11.75, 12.83]"
+    },
+    {
+      "where": "tradeIdea.entryNote",
+      "problem": "Les 2,77 % sont mesurés depuis 9,38. Or la clôture de déclenchement vaut au moins 9,39 : une ouverture au-dessus de 9,64 n’exige alors qu’un écart de 2,66 %, franchi par 27 ouvertures sur 113, et non 26.",
+      "fix": "« Ce plafond n’est qu’à 0,25 $ au-dessus du seuil de clôture de 9,39 $, soit 2,66 % : sur les 113 ouvertures précédées d’une clôture, 27 ont dépassé la clôture de la veille de plus de 2,66 %. »"
+    },
+    {
+      "where": "blastRadius.contradictions[1]",
+      "problem": "« trente fois supérieur à sa trésorerie » sous-estime l’écart : 4 à 5 Md$ rapportés à 120,2 M$ donnent 33 à 42 fois.",
+      "fix": "« … mais traite un achat de matériel de 33 à 42 fois sa trésorerie. »"
+    },
+    {
+      "where": "earnings.beatNote",
+      "problem": "« trois à quatre fois le premier » : 128 à 138 M$ face à 42,1 M$ donnent 3,0 à 3,3 fois.",
+      "fix": "« … il faudrait 128 à 138 M$ au second semestre, plus de trois fois le premier. »"
+    },
+    {
+      "where": "news[0].sourceUrl",
+      "problem": "La source affichée est « Barres certifiées », mais le lien pointe vers le 10-Q.",
+      "fix": "https://articles.dailytickers.com/data/analyses-evidence/BRUN.json"
+    },
+    {
+      "where": "capitalStructure.shareHistory",
+      "problem": "Les 79 487 441 actions comptées au 17 août n’incluent pas au moins 1 101 986 actions issues de l’exercice de Sean Goodrich du 19 août (Formulaire 4). La capitalisation est donc sous-estimée d’au moins 1,4 %. La fiche le reconnaît en termes généraux sans donner ce minimum connu.",
+      "fix": "Ajouter après « … faute du nombre d’actions issues des derniers bons » : « ; au moins 1 101 986 actions ont été émises après le 17 août (exercice de Sean Goodrich du 19 août) »."
+    },
+    {
+      "where": "capitalStructure.shareHistory",
+      "problem": "« quand le cours a dépassé 12,50, 15,00 et 17,50 $ » simplifie à tort la condition du 10-Q, qui exige un VWAP supérieur ou égal au seuil pendant 20 séances sur 30.",
+      "fix": "« … émises au deuxième trimestre, le cours moyen pondéré ayant tenu 12,50, 15,00 puis 17,50 $ vingt séances sur trente »"
+    },
+    {
+      "where": "risks.riskCards[3].points[1]",
+      "problem": "« sur 113 séances cotées » contredit les « 114 séances » citées ailleurs : 113 est le nombre d’ouvertures précédées d’une clôture.",
+      "fix": "« … sur les 113 ouvertures précédées d’une clôture, 20 ont décalé de 5 % ou plus et 5 de 10 % ou plus … »"
+    },
+    {
+      "where": "primary-manifest.json financials_source / gaap_facts ; numeric-evidence.json levels.sizeExample",
+      "problem": "Deux défauts de métadonnées internes, non publiées. D’abord, les agrégats sont étiquetés « ifrs:* » avec la méthode « Émetteur hors us-gaap (IFRS 40-F/20-F/6-K) », alors que Boost Run publie en US GAAP : la vraie raison de la lecture manuelle est l’absence des états de l’ancienne LLC dans companyfacts. Ensuite, levels.sizeExample vaut 71, calculé avec 8,237, quand la prose donne 70, calculé avec l’ordre à 8,23.",
+      "fix": "Libeller la méthode « Lecture manuelle des états du POS AM : exercice 2025 de l’ancienne Boost Run Holdings, LLC absent de companyfacts » et aligner sizeExample sur 70 (stop d’ordre 8,23)."
+    }
+  ]
+}

@@ -1757,6 +1757,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "BRUN",
+    "exchange": "NASDAQ · Location de calcul GPU pour l’intelligence artificielle (néo-cloud)",
+    "name": "BRUN — Boost Run (BRUN) à 8,47 $, −51 % en 21 séances avec les néo-clouds. Gros contrats, fina...",
+    "title": "BRUN — Boost Run (BRUN) à 8,47 $, −51 % en 21 séances avec les néo-clouds. Gros contrats, fina...",
+    "desc": "Boost Run loue des serveurs GPU aux laboratoires d’intelligence artificielle. Près de 2,4 Md$ de contrats signés, mais 4 à 5 Md$ de matériel à financer, un fondateur à 87 % des voix et 58,7 millions d’actions à la revente. Clôture à 8,47 $, −80 % depuis juin : surveiller, sans entrée.",
+    "tags": "us,tech,ai,small-cap,speculative,trade-idea",
+    "grade": "D",
+    "href": "/analyses/BRUN/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ALMU",
     "exchange": "NASDAQ · Semi-conducteurs composés pour la photonique et les capteurs",
     "name": "ALMU — Aeluma (ALMU) à 7,95 $, −30 % en cinq séances. 56,0 M$ en caisse, mais 39 % d’actions n...",

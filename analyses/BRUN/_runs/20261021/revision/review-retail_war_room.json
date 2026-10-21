@@ -1,0 +1,58 @@
+{
+  "role": "retail_war_room",
+  "reviewerId": "brun-war-room-20261021",
+  "reviewerName": "Claude (war room retail indépendante)",
+  "analysisSha256": "0c730c26e5a7aee66d3cf7a50f3bf09a0f2a5134aa7a626251eb5bfa9586f10d",
+  "evidenceSha256": "400ccbda5d0e60186b843e151c8c824a71756f9ba5e75f88328e6d055349f5b7",
+  "status": "BLOCK",
+  "score": 74,
+  "blockingFindings": [
+    {
+      "where": "tradeIdea.statusNote (phrase « Une émission d’actions ou de convertibles annoncée pendant la détention impose de relire le dossier… ») ; tradeIdea.invalidation[4]",
+      "problem": "Consigne contradictoire sur le risque principal du dossier (74 % du capital enregistré à la revente, 4 à 5 Md$ de matériel à financer). Le plan dit « relire le dossier » (aucune action), l’invalidation dit que l’émission « invalide la thèse » et seulement si elle est « sous le cours ». Le porteur ne sait ni s’il vend, ni quand, ni comment ; une annonce tombe en général après la clôture et le titre gappe le lendemain.",
+      "fix": "statusNote, remplacer la phrase par : « Si Boost Run annonce une émission d’actions ou d’obligations convertibles pendant la détention, quel qu’en soit le prix : à la séance suivante, après l’ouverture, annuler d’abord l’ordre stop, puis vendre toute la position par un ordre limité placé 2 % sous le dernier cours, pour une exécution immédiate. Sans position, le plan est annulé. » — invalidation[4] : « Annonce d’une émission d’actions ou d’obligations convertibles, quel qu’en soit le prix : plan annulé sans position ; avec position, vente totale à la séance suivante, après l’ouverture. »"
+    },
+    {
+      "where": "tradeIdea.statusNote (« Position soldée à la clôture du 13 novembre… ») ; tradeIdea.horizon ; tradeIdea.entryNote (§ Après l’achat, « sort à la clôture du 13 novembre ») ; verdict.controlChecklist[2].action",
+      "problem": "« Soldée à la clôture » n’est pas exécutable tel quel chez un courtier européen (pas d’ordre « à la clôture » sur les actions US chez la plupart d’entre eux) et aucune heure de Paris n’est donnée. Le reste de la fiche apprend au lecteur à lire une clôture puis à agir à la séance suivante : appliqué à la sortie, ce réflexe le fait vendre le lundi 16 novembre, après la publication annoncée avant l’ouverture — exactement le risque que la sortie doit éviter.",
+      "fix": "Remplacer par : « Sortie obligatoire avant les résultats : le vendredi 13 novembre, avant 21 h 50 heure de Paris (New York ferme à 22 h), annuler d’abord l’ordre stop, puis vendre toute la position par un ordre limité placé 1 % sous le dernier cours. Si Boost Run annonce une publication plus tôt, faire de même lors de la dernière séance complète qui la précède (fermeture à 22 h à Paris, 21 h du 26 au 30 octobre). Une date annoncée après le 13 novembre ne prolonge pas la détention. Ne jamais détenir le titre à l’ouverture du lundi 16 novembre. »"
+    }
+  ],
+  "nonBlockingFindings": [
+    {
+      "where": "tradeIdea.statusNote ; verdict.summary ; technicals.setupNote",
+      "problem": "Aucune heure de Paris dans toute la fiche ; « 12 h 29 à New York » et « ce soir » obligent le lecteur français à convertir, alors que le décalage d’horaire d’été tombe en pleine fenêtre d’activation (semaine du 26 octobre). « Attendre l’ouverture » ne dit pas combien de temps.",
+      "fix": "Ajouter après « Seule la clôture compte. » : « Heures de Paris : New York ouvre à 15 h 30 et ferme à 22 h jusqu’au vendredi 23 octobre, ouvre à 14 h 30 et ferme à 21 h du 26 au 30 octobre, puis revient à 15 h 30 – 22 h à partir du lundi 2 novembre. La clôture qui active le plan se lit après la fermeture ; l’ordre d’achat se passe à la séance suivante, au moins cinq minutes après l’ouverture. » Écrire « à 12 h 29 à New York (18 h 29 à Paris) » et « ce mercredi soir à 22 h, heure de Paris » au lieu de « ce soir »."
+    },
+    {
+      "where": "tradeIdea.entryNote (§ Après l’achat, TP1)",
+      "problem": "Ordre des opérations faux chez la plupart des courtiers européens : des actions déjà couvertes par un ordre stop ne peuvent pas être vendues par un second ordre. « Vendre la moitié, puis ramener l’ordre stop » est refusé ; le lecteur risque d’annuler le stop et d’oublier de le reposer.",
+      "fix": "« À 11,75 $ (TP1, plus haut du 13 octobre) : réduire d’abord l’ordre stop à la moitié des actions, puis vendre l’autre moitié par ordre limité à 11,75 $. Le reste vise 12,83 $ (TP2) ou sort le 13 novembre selon la règle de sortie. »"
+    },
+    {
+      "where": "tradeIdea.entryNote (§ Risques d’exécution) ou tradeIdea.statusNote",
+      "problem": "Accessibilité correcte (action ordinaire de classe A cotée au Nasdaq, pas un fonds : aucun document d’informations clés requis), mais rien sur la place d’exécution. Beaucoup de courtiers grand public européens ne cotent les petites valeurs US qu’en euros sur des places allemandes, où les niveaux en dollars ne s’appliquent pas tels quels et où un stop peut partir hors séance américaine sur une cotation large.",
+      "fix": "Ajouter : « Ordres à passer sur le Nasdaq, en dollars, sur un compte-titres ordinaire (titre non éligible au PEA). Si votre courtier ne propose Boost Run qu’en euros sur une place allemande (Tradegate, Lang & Schwarz, gettex), ce plan ne s’y applique pas tel quel. Vérifiez que la date d’expiration de l’ordre stop affichée par le courtier dépasse le 13 novembre. »"
+    },
+    {
+      "where": "tradeIdea.entry (carte « Déclencheur » et bandeau du plan de trade rendus)",
+      "problem": "La zone lue en 30 secondes affiche « Déclencheur 9,38 $ — clôture au-dessus » quand le badge et tout le texte disent « 9,39 $ ou plus » : même règle au centime près, mais deux chiffres pour un seul seuil, et le lecteur risque de poser son alerte à 9,38 $. Le plafond d’achat 9,64 $ et la date limite du 30 octobre manquent dans le bandeau.",
+      "fix": "Carte : « Déclencheur 9,39 $ — clôture à ce niveau ou plus ». Bandeau : « SURVEILLER — Rien à acheter à 8,47 $. Déclencheur : une clôture à 9,39 $ ou plus, au plus tard le 30 octobre ; achat à 9,64 $ au maximum, jamais au-dessus ; ensuite stop 8,23 $, objectifs 11,75 $ puis 12,83 $. »"
+    },
+    {
+      "where": "tradeIdea.stopPct ; tradeIdea.rr (carte « Risque/rendement »)",
+      "problem": "La carte affiche « Stop 8,23 $ −12,2 % », calculé sur 8,237 $ ; avec 8,23 $ depuis 9,38 $ l’écart est de −12,3 % (chiffre repris dans le texte des gaps), et de −14,6 % depuis le plafond 9,64 $. Le R/R mis en avant (1:2,07 · 1:3,02) correspond à un achat à 9,38 $ avec un stop à 8,237 $, ni l’ordre réel ni le pire prix d’achat autorisé (1:1,50 · 1:2,26).",
+      "fix": "stopPct : « −12,3 % au déclencheur, −14,6 % au plafond 9,64 $ ». Carte R/R : « 1:1,50 à 1:2,06 · 1:2,26 à 1:3,00 », légende « TP1 · TP2, achat de 9,64 $ à 9,38 $, stop 8,23 $ »."
+    },
+    {
+      "where": "tradeIdea.entryNote (§ Taille)",
+      "problem": "« Environ 0,01 % du volume médian » : 472 actions font 0,015 % de 3 157 328 et 709 actions 0,022 %. Sans conséquence sur l’exécution, mais arrondi vers le bas.",
+      "fix": "« …472 après, 0,02 % au plus du volume médian d’une séance. »"
+    },
+    {
+      "where": "tradeIdea.horizon ; earnings.nextEarnings",
+      "problem": "La date des résultats ne vient que d’un seul fournisseur ; le lecteur doit surveiller une date plus proche sans savoir où ni à quel rythme.",
+      "fix": "Ajouter : « Vérifier chaque lundi les communiqués de Boost Run (rubrique investisseurs) : la date confirmée par la société remplace celle du 16 novembre si elle est plus proche. »"
+    }
+  ]
+}

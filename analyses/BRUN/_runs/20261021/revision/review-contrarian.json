@@ -1,0 +1,73 @@
+{
+  "role": "contrarian",
+  "reviewerId": "brun-contrarian-20261021",
+  "reviewerName": "Claude (revue contradictoire indépendante)",
+  "analysisSha256": "0c730c26e5a7aee66d3cf7a50f3bf09a0f2a5134aa7a626251eb5bfa9586f10d",
+  "evidenceSha256": "4bc469c5781b84d70d2a2a3a6bac35271f282e5df8ea2ceaefc8167f01a8df79",
+  "status": "BLOCK",
+  "score": 68,
+  "blockingFindings": [
+    {
+      "where": "news[2].detail",
+      "problem": "Causalité fausse. L'index EDGAR du 8-K des attributions (0001493152-26-045765) indique « Accepted 2026-10-05 17:08:39 », soit après la clôture du 5 octobre : la baisse de 13,2 % de cette séance a précédé le dépôt et ne peut pas en être la réaction. Les attributions au directeur financier et au directeur des opérations étaient publiques depuis les formulaires 4 du 1er octobre (16 h 30, après la clôture), et le titre a pris 3,9 % le 2 octobre. La séance qui suit le 8-K, le 6 octobre, finit à +5,9 % (contrat Cohere déposé à 8 h 00). Juxtaposer « le jour du dépôt, le titre a perdu 13,2 % » à cette nouvelle classée négative attribue la chute à une information que le marché ne connaissait pas encore.",
+      "fix": "4 590 000 unités d’actions attribuées le 29 septembre au directeur financier, au directeur des opérations et au directeur technique, plus une prime de 1,0 M$ en numéraire. Les attributions aux deux premiers étaient publiques depuis leurs formulaires 4 du 1er octobre, déposés après la clôture ; le titre a pris 3,9 % le lendemain. Le 8-K est arrivé le 5 octobre à 17 h 08 (New York), après une séance à −13,2 % (CoreWeave −2,5 %, Nebius −4,2 %) qu’aucun dépôt de la société n’explique. Le 6 octobre, le titre a fini à +5,9 %, porté par le contrat Cohere."
+    },
+    {
+      "where": "news[3].title ; filingsReview.contrarianRisks[1] ; risks.riskCards[1].points[1] ; filingsReview.summary ; insiders.signal",
+      "problem": "Qualité du vendeur fausse. Le formulaire 4 du 16 septembre (0001493152-26-042924) coche « Director » et non « TenPercentOwner », et le 13D/A dit « as a director of the Company ». Sean Goodrich est administrateur de Boost Run : il détenait 9,88 % de la classe A avant la vente du 14 septembre et 8,88 % après. La fiche en fait « un actionnaire à 10 % » à quatre endroits et « un actionnaire à plus de 5 % » dans le bloc initiés, sous la phrase « Aucun achat d’initié ». Le signal est donc sous-estimé : c’est un membre du conseil qui a vendu 698 200 actions en trois semaines, dont 500 000 sous le plus bas de la séance.",
+      "fix": "news[3].title : « Un administrateur vend 500 000 actions à 14,00 $ ». filingsReview.contrarianRisks[1] : remplacer « un actionnaire à 10 % a vendu 500 000 actions à 14,00 $ le 14 septembre, sous le plus bas de la séance » par « un administrateur, Sean Goodrich, a vendu 500 000 actions à 14,00 $ le 14 septembre, sous le plus bas de la séance ». risks.riskCards[1].points[1] : remplacer « un actionnaire à 10 % a vendu 698 200 actions » par « un administrateur, Sean Goodrich, a vendu 698 200 actions ». filingsReview.summary : remplacer « le 13D/A du 16 septembre montre un actionnaire à 10 % vendeur » par « le 13D/A du 16 septembre montre un administrateur vendeur, ramené à 8,88 % de la classe A ». insiders.signal : remplacer « Aucun achat d’initié sur le marché relevé dans les formulaires 4 collectés. Sean Goodrich, actionnaire à plus de 5 % par Goodrich ILMJS LLC, » par « Aucun achat d’initié sur le marché relevé dans les formulaires 4 collectés ; un administrateur a vendu. Sean Goodrich, administrateur de Boost Run, actionnaire par Goodrich ILMJS LLC, »."
+    }
+  ],
+  "nonBlockingFindings": [
+    {
+      "where": "capitalStructure.shareHistory ; globalScore.keyTakeawaysNegative[1] ; verdict.whyAvoid[1] ; risks.riskCards[1].points[1]",
+      "problem": "Blocage : le texte du POS AM est bien rendu (« earlier of (i) six months after the Closing, (ii) … closing price … equals or exceeds $12.00 … for any 20 trading days within any 30-trading day period commencing after the Closing », avec 10 % des titres jamais bloqués). Sur les barres certifiées, la vingtième clôture à 12 $ ou plus tombe le 5 juin seulement si la séance du 8 mai, jour même de la clôture de la fusion, compte comme « après la clôture » ; sinon, le 8 juin. La date n’est donc pas certaine au jour près, et la société n’a rien annoncé (ce que dit missingData[2]). keyTakeawaysNegative[1] affirme « blocage levé » sans réserve, et aucune ligne ne rappelle que le délai de six mois expire de toute façon le 8 novembre, avant la sortie du 13 novembre.",
+      "fix": "capitalStructure.shareHistory : remplacer « selon les clôtures certifiées, cette condition a été remplie le 5 juin » par « selon les clôtures certifiées, cette condition a été remplie début juin (le 5 juin si la séance du 8 mai compte, le 8 juin sinon) ; la société ne l’a pas annoncé, et le délai de six mois expire de toute façon le 8 novembre ». keyTakeawaysNegative[1] : « 74 % du capital enregistré à la revente, blocage levé selon la condition de cours (au plus tard le 8 novembre). » Dans whyAvoid[1] et riskCards[1].points[1], remplacer « le 5 juin » par « début juin »."
+    },
+    {
+      "where": "tradeIdea.horizon ; tradeIdea.statusNote ; earnings.nextEarnings",
+      "problem": "Sortie avant résultats fragile. Le deuxième trimestre a été publié avant l’ouverture le vendredi 14 août, quarante-cinquième jour après la fin du trimestre, et la date avait été annoncée une semaine plus tôt par le 8-K du 7 août. Pour le troisième trimestre, le quarante-cinquième jour tombe le samedi 14 novembre : une publication le vendredi 13 avant l’ouverture est plausible, et la sortie « à la clôture du 13 novembre » ferait alors traverser les résultats. La règle « la veille si une date plus proche est annoncée » couvre le cas, mais seulement si le lecteur voit l’annonce.",
+      "fix": "Avancer la sortie de calendrier obligatoire à la clôture du 12 novembre : « Position soldée à la clôture du 12 novembre au plus tard (au deuxième trimestre, la société a publié avant l’ouverture le quarante-cinquième jour, et le quarante-cinquième jour du troisième trimestre tombe le samedi 14 novembre), ou la veille de la publication si Boost Run annonce une date plus proche. »"
+    },
+    {
+      "where": "insiders.signal ; capitalStructure.shareHistory",
+      "problem": "Trois Schedule 13G non exploités alors que coverageMatrix[4] affiche « COUVERT — PRIMAIRE » : TOMS Capital Investment Management 9,8 % de la classe A (13G du 14 août, au 30 juin), FMR LLC 5,6 % (13G du 6 août, au 30 juin), Citadel Advisors 4,8 % (13G du 21 mai, au 14 mai). Deux institutions, hors blocage et hors prospectus de revente, détenaient environ 15 % de la classe A, soit à peu près 7,7 millions d’actions face à un flottant publié de 28,7 millions.",
+      "fix": "Ajouter à insiders.signal : « Côté institutions, TOMS Capital déclarait 9,8 % de la classe A et FMR (Fidelity) 5,6 % au 30 juin (Schedule 13G des 14 et 6 août) : environ 7,7 millions d’actions libres de tout blocage, l’équivalent d’un quart du flottant publié. »"
+    },
+    {
+      "where": "capitalStructure.shareHistory ; capitalStructure.atm.authorized",
+      "problem": "Le S-8 du 20 juillet (effectif dès le dépôt, cité par le 8-K du 5 octobre) enregistre les 9 214 301 actions du plan : les actions gratuites seront vendables dès leur acquisition (premières le 15 mai 2027). Le 25-NSE du 25 août radie les bons (BRUNW), ce qui confirme qu’il n’en reste aucun. L’absence de S-3 n’est pas un choix : ancienne société sans activité, Boost Run ne peut pas en déposer avant douze mois de rapports, donc pas avant mi-2027. Une levée avant cette date passerait par un placement privé, un placement direct ou des convertibles, en général avec une décote.",
+      "fix": "capitalStructure.atm.authorized : « Aucun programme at-the-market ni étagère S-3 : la société, issue d’une SPAC, ne peut pas en déposer avant mi-2027 ; d’ici là, une levée prendrait la forme d’un placement privé ou de convertibles, en général avec une décote. Un S-8 du 20 juillet enregistre les 9 214 301 actions du plan d’intéressement. Prospectus de revente de 58 738 753 actions au profit d’actionnaires vendeurs, sans produit pour la société. »"
+    },
+    {
+      "where": "capitalStructure.shareHistory ; insiders.signal",
+      "problem": "Composition de l’offre à préciser. Les « 14 229 769 actions d’anciens actionnaires » regroupent 9 601 095 actions de porteurs de la fusion et 4 628 674 actions de fondateur du promoteur de la SPAC, au coût quasi nul. Sur les 10 968 750 actions de complément de prix, 7 875 000 reviennent à Andrew Karos. Le fondateur porte donc 37,4 millions d’actions enregistrées, environ 47 % du capital, et pas seulement ses actions B. Selon le 13D/A, Goodrich ILMJS LLC avait repris au promoteur 1 272 885 actions de fondateur et 1 101 986 bons privés pour 2,23 M$, soit 1,75 $ par action de fondateur.",
+      "fix": "Dans shareHistory, remplacer « 14 229 769 actions d’anciens actionnaires, 10 968 750 actions de complément de prix » par « 14 229 769 actions d’anciens actionnaires, dont 4 628 674 actions de fondateur du promoteur de la SPAC acquises pour presque rien, 10 968 750 actions de complément de prix, dont 7 875 000 à Andrew Karos (37,4 millions d’actions enregistrées pour le seul fondateur, environ 47 % du capital) »."
+    },
+    {
+      "where": "verdict.whyAvoid[3] ; earnings.beatNote",
+      "problem": "Le 10-Q/A du 18 août (0001493152-26-039029) n’amende que la partie I, point 4 : les contrôles de communication sont désormais jugés « non efficaces » au 31 mars, avec des certifications mises à jour, et aucun chiffre n’est retraité. « Un 10-Q du premier trimestre amendé » laisse croire à un retraitement des comptes. Par ailleurs, le POS AM reproduit les rapports d’audit de l’exercice 2025 (Elliott Davis) sur Boost Run Holdings LLC et sur Boost Run Inc., qui contiennent chacun un paragraphe sur la continuité d’exploitation. C’était avant la fusion, mais la fiche ne le dit nulle part.",
+      "fix": "whyAvoid[3] : « Des comptes fragiles : contrôles internes non efficaces, deux avis de retard de 10-Q en mai et en août, un 10-Q du premier trimestre amendé le 18 août pour déclarer ses contrôles non efficaces (sans retraitement des chiffres), et une mise en garde sur la continuité d’exploitation dans les audits de l’exercice 2025, avant la fusion ; perte nette de 98,0 M$ sur douze mois glissants. »"
+    },
+    {
+      "where": "blastRadius.contradictions[1]",
+      "problem": "La phrase « assez de liquidités pour douze mois » doit dire sur quoi elle repose. Le 10-Q chiffre ce besoin à 40,31 M$ et précise que ce montant « ne représente pas le capital total requis pour le déploiement GPU 2026 », financé par crédit-bail au niveau des projets et par avances clients.",
+      "fix": "« La société dit avoir assez de liquidités pour douze mois, mais ce calcul ne porte que sur 40,31 M$ de besoins courants et exclut, selon le 10-Q, le déploiement des GPU : un achat de matériel trente fois supérieur à sa trésorerie. »"
+    },
+    {
+      "where": "verdict.whyBuy[0] ; tradeIdea.thesis",
+      "problem": "Rapporter la valeur d’entreprise (870 M$) aux contrats (2,4 Md$) flatte le dossier. Ces revenus ne viendront qu’après 4 à 5 Md$ de matériel, financé par un crédit-bail qui passera avant les actionnaires et ne figure pas dans la valeur d’entreprise. Autre limite, la capitalisation de 673 M$ repose sur le nombre d’actions du 17 août : les quelque 4,4 millions de bons restants ont probablement été exercés avant le rachat du 20 août, ce qui porterait le capital vers 84 millions d’actions et la capitalisation vers 710 M$. La valeur d’entreprise bouge peu, puisque la trésorerie encaissée compense.",
+      "fix": "whyBuy[0] : terminer par « ; la valeur d’entreprise de 870 M$ vaut 36 % des contrats annoncés, mais ces contrats exigent 4 à 5 Md$ de matériel, financé par une dette qui passera avant les actionnaires »."
+    },
+    {
+      "where": "news[0].title ; news[0].detail",
+      "problem": "Causalité du 20 octobre trop sectorielle. Ce jour-là, Boost Run fait −3,5 % quand CoreWeave gagne 1,6 % et Nebius 0,7 %. Sur 21 séances, environ la moitié de la baisse est propre au titre : −13,2 % le 5 octobre contre −2,5 à −4,2 % pour les pairs, −10,6 % le 12 octobre contre −2,2 à −5,0 %. Par ailleurs, la SEC a déclaré le POS AM effectif le 19 octobre (avis EFFECT) : le prospectus de revente à jour est en vigueur depuis, ce que la fiche ne mentionne pas.",
+      "fix": "news[0].title : « Nouveau plus bas depuis la cotation, après une semaine noire des néo-clouds ». Ajouter à news[0].detail : « Le 20 octobre, Boost Run a pourtant reculé seule, quand CoreWeave gagnait 1,6 % et Nebius 0,7 %. Aucun dépôt de la société n’est daté de ces séances ; la SEC a déclaré effectif le 19 octobre l’amendement du prospectus de revente. »"
+    },
+    {
+      "where": "tradeIdea.invalidation[4] ; tradeIdea.statusNote",
+      "problem": "Incohérence. L’invalidation dit qu’une émission « invalide la thèse », mais le plan d’exécution demande seulement de « relire le dossier » si elle tombe pendant la détention. Le lecteur ne sait pas s’il doit vendre.",
+      "fix": "invalidation[4] : « Une émission d’actions ou de convertibles sous le cours invalide la thèse : sans position, ne rien acheter ; position ouverte, la vendre à l’ouverture de la séance suivante, sans attendre l’ordre stop. »"
+    }
+  ]
+}
