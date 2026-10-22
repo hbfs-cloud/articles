@@ -1,0 +1,127 @@
+{
+  "contract_version": "1.0",
+  "workflow": "daily",
+  "plan": "plans/daily-20261022-intraday.json",
+  "plan_sha256": "cd6a8a20b3dbce3197efb30858bfd28cf7aae82299268a860ed03519fdb862b4",
+  "input_sha256": "d4adb9353e571fe6e0feece66835b9b64c1485789b6e2ae98036abb64627862e",
+  "resolved_input": {
+    "artifact": "daily/20261022/index.html",
+    "equity_reference_close": "2026-10-21",
+    "crypto_completed_refdate": null,
+    "as_of_timestamp": "2026-10-22T17:24:52.213Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "equity_reference_close": "2026-10-21"
+            }
+          }
+        ]
+      },
+      {
+        "name": "live-session",
+        "calls": [
+          {
+            "as": "quotes_live",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "quote",
+              "symbols": "SPY,QQQ,DIA,IWM,RSP,SMH,META,NVDA,AMD,AVGO,TSM,MU,AMAT,LRCX,MSFT,GOOGL,AMZN,AAPL,TSLA,BNO,IEF,EWY,EWJ,FXI,EWQ,EWG,EWU",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 1,
+              "required": true
+            },
+            "note": "Instantané en séance (édition publiée avant la clôture, à la demande du propriétaire le 2026-10-22). Les variations sont celles du fournisseur, calculées depuis la clôture précédente certifiée ($refdate) ; aucune clôture du jour n’est affirmée."
+          },
+          {
+            "as": "consensus",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "earnings_quarterly",
+              "symbols": "META",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "daily/20261022/index.html",
+  "reference_date": "2026-10-21",
+  "equity_reference_close": "2026-10-21",
+  "crypto_completed_refdate": null,
+  "started_at": "2026-10-22T17:24:52.213Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 951,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 950,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "ae0e456288d3a9a32bb7d1dc7c78eddd899e36035fc687189aa00ed0a75fb652"
+        }
+      ]
+    },
+    {
+      "name": "live-session",
+      "ms": 8221,
+      "calls": [
+        {
+          "as": "quotes_live",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 7348,
+          "wait_ms": 7131,
+          "error": null,
+          "output_sha256": "6014170c225c5d555752c8a32dca71a0f6ca42c2c62f0fb2d7acffb0de60d664"
+        },
+        {
+          "as": "consensus",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 3095,
+          "wait_ms": 2005,
+          "error": null,
+          "output_sha256": "2042923e905446d292e0e5a6ca3d643ee3db17707069d73541670325b2dee564"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-10-22T17:25:01.405Z",
+  "failures": 0,
+  "executed_calls": 3,
+  "skipped_calls": 0
+}

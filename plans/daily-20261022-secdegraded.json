@@ -1,0 +1,226 @@
+{
+  "artifact": "daily/$date/index.html",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "equity_reference_close": "$equity_reference_close",
+            "crypto_completed_refdate": "$crypto_completed_refdate"
+          },
+          "assert_waiver": {
+            "field": "sec_operation",
+            "canonical_plan": "plans/daily.json",
+            "scope": "single run daily/20261022",
+            "authorized_by": "standing owner directive of 2026-10-22 (proceed on established precedent without stopping); precedent plans/daily-20260907-secdegraded.json",
+            "reason": "run_screener_sec_enriched degraded on 2026-10-22: official SEC coverage of the 2026-07-24..2026-10-21 screener window certified for 58/62 filing days (stale=4). This edition runs no SEC-enriched screener; its SEC facts come from primary filings read directly on EDGAR (Meta, Lam Research). Price, calendar and regime readiness are unaffected.",
+            "server_retry_at": "2026-10-22T20:30:00Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "market-close",
+      "calls": [
+        {
+          "as": "regime",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "args": {
+            "facets": "regime,prediction_markets",
+            "horizon_days": 5
+          },
+          "freshness": {
+            "max_age_h": 6,
+            "required": true
+          }
+        },
+        {
+          "as": "bars_indices",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "SPY,QQQ,IWM,GLD,SLV,TLT,USO",
+            "limit": 15,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$equity_reference_close"
+          }
+        },
+        {
+          "as": "bars_dia",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "DIA",
+            "limit": 15,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only",
+            "source": "tiingo"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$equity_reference_close"
+          },
+          "note": "DIA isolé sur Tiingo : la barre Yahoo du 2026-09-22 a open>high (522.475>522.47) et fait rejeter tout le lot completed_only."
+        },
+        {
+          "as": "bars_sectors",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "XLK,XLB,XLF,XLE,XLV,XLI,XLY,XLP,XLU,XLC,XLRE",
+            "limit": 25,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "us_equity_exchange_sessions",
+            "expected_completed_end": "$equity_reference_close"
+          }
+        },
+        {
+          "as": "bars_crypto",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "bars_daily",
+            "symbols": "BTC-USD,ETH-USD,SOL-USD,XRP-USD",
+            "limit": 15,
+            "as_of_timestamp": "$as_of_timestamp",
+            "completion_policy": "completed_only"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true,
+            "expects_close": true,
+            "asset_calendar": "crypto_24_7_utc",
+            "expected_completed_end": "$crypto_completed_refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "events-flows",
+      "calls": [
+        {
+          "as": "earnings_today",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "args": {
+            "days_ahead": 2,
+            "min_market_cap_usd": 10000000000
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "economic_events",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "economic_events",
+            "days": 5
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "options_sentiment",
+          "server": "marketdata",
+          "tool": "OptionsAnalytics",
+          "args": {
+            "action": "sentiment"
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        },
+        {
+          "as": "insiders_3d",
+          "server": "marketdata",
+          "tool": "GetInsiderActivity",
+          "args": {
+            "days": 3,
+            "limit": 25,
+            "max_symbols": 100
+          },
+          "freshness": {
+            "max_age_h": 96,
+            "required": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "off-hours",
+      "calls": [
+        {
+          "as": "off_hours",
+          "server": "marketdata",
+          "tool": "GetOffHoursContext",
+          "args": {
+            "lookback": "24h",
+            "facets": "crypto,metals,futures,hip3,predictions",
+            "include_series": false
+          },
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "context-only",
+      "detached": true,
+      "deadline_ms": 120000,
+      "calls": [
+        {
+          "as": "overview",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "args": {
+            "facets": "overview",
+            "timeout": 90
+          },
+          "freshness": {
+            "max_age_h": 6,
+            "required": false,
+            "note": "Context only; never governs a number, selection or publication decision."
+          }
+        }
+      ]
+    }
+  ]
+}

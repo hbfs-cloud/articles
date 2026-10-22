@@ -1,0 +1,58 @@
+{
+  "artifact": "daily/$date/index.html",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": {
+            "max_age_h": 2,
+            "required": true
+          },
+          "assert": {
+            "equity_reference_close": "$refdate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "live-session",
+      "calls": [
+        {
+          "as": "quotes_live",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "quote",
+            "symbols": "$symbols",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 1,
+            "required": true
+          },
+          "note": "Instantané en séance (édition publiée avant la clôture, à la demande du propriétaire le 2026-10-22). Les variations sont celles du fournisseur, calculées depuis la clôture précédente certifiée ($refdate) ; aucune clôture du jour n’est affirmée."
+        },
+        {
+          "as": "consensus",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": {
+            "types": "earnings_quarterly",
+            "symbols": "$eq_symbols",
+            "force_async": true
+          },
+          "freshness": {
+            "max_age_h": 24,
+            "required": true
+          }
+        }
+      ]
+    }
+  ]
+}
