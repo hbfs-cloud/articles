@@ -91,6 +91,7 @@
 - [Scanner No Broker Exec](feedback_scanner_no_broker_exec.md) — JAMAIS d'exécution broker auto dans /scanner — run-session retiré du flux; Telegram scanner = canal daily
 
 ## ✍️ Édito & publication
+- [Fiche : plancher et relectures publiés](feedback_analyse_bottom_and_reviews.md) — bottomEstimation (FR, méthode, cas avec baisse des profits, pas un prix d’achat) et reviewPanel dans chaque fiche /analyse ; demande du 26 octobre 2026 (FICO).
 - [Addcard Ordering And Landing](feedback_addcard_ordering_and_landing.md) — Landing renders tab cards in JSON array order (no date sort) + add_card appends (not prepends) for weekly/series/tech → new cards land beyond the fi…
 - [Editorial Voice No Ai](feedback_editorial_voice.md) — Règle #1 de rédaction tout le site — concis, direct, actionnable, JAMAIS "style IA" (lisible enfant 10 ans sur Substack/Telegram)
 - [Macro Date Verify Before Publish](feedback_macro_date_verify.md) — Toute date d'événement macro (CPI/FOMC/PPI/PCE/NFP…) citée dans un digest de signaux ou un daily DOIT être vérifiée AVANT publication ; jamais asser…
