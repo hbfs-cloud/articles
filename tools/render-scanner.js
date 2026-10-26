@@ -13,6 +13,22 @@
 
 'use strict';
 
+/** Heure d'ouverture de New York (9 h 30, heure de New York) exprimée à Paris pour une séance
+ *  YYYY-MM-DD : 15 h 30 d'ordinaire, 14 h 30 quand l'Europe a changé d'heure avant les États-Unis. */
+function parisOpenLabel(isoDate) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(isoDate || '').slice(0, 10));
+  if (!m) return '15 h 30';
+  for (const utcHour of [13, 14]) {
+    const dt = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], utcHour, 30));
+    const ny = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false }).format(dt);
+    if (ny === '09:30') {
+      const [h, mi] = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hour12: false }).format(dt).split(':');
+      return `${+h} h ${mi}`;
+    }
+  }
+  return '15 h 30';
+}
+
 // Libellé de régime explicite sur son échelle. Un « score » sans unité a déjà permis de publier
 // une confiance d'état (0,685 → « 68,5 % ») sous le nom de score de régime, alors que l'autorité
 // donnait une défensivité de 7,7/100. L'échelle voyage donc avec la valeur.
@@ -1101,7 +1117,7 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
       <p>${hasEntryZone
         ? `Entrée = zone conditionnelle à l'ouverture (9h30–9h45 ET), uniquement si le prix s'y trouve et tient le VWAP observé.`
         : stopLimit
-          ? `Rien ne se pose avant l'ouverture de New York (15 h 30, heure de Paris). Ouverture sous le niveau d'invalidation : pas d'ordre. Cassures et suivis de tendance : si le cours est sous le prix publié, ordre d'achat stop-limite, déclenchement et plafond au prix publié ; s'il est déjà au-dessus, ordre à cours limité au prix publié, qui n'achète que si le cours redescend. Beaucoup de courtiers refusent un stop d'achat sous le cours du moment. ${hasPullback ? 'Replis : ordre à cours limité au prix publié. ' : ''}Ne relevez jamais le prix, n'achetez jamais au marché. Les ordres valent la seule séance. Aucune cotation d'avant-ouverture n'a été relevée : rien ne garantit que ces prix seront traités.`
+          ? `Rien ne se pose avant l'ouverture de New York (${parisOpenLabel(d.date)}, heure de Paris). Ouverture sous le niveau d'invalidation : pas d'ordre. Cassures et suivis de tendance : si le cours est sous le prix publié, ordre d'achat stop-limite, déclenchement et plafond au prix publié ; s'il est déjà au-dessus, ordre à cours limité au prix publié, qui n'achète que si le cours redescend. Beaucoup de courtiers refusent un stop d'achat sous le cours du moment. ${hasPullback ? 'Replis : ordre à cours limité au prix publié. ' : ''}Ne relevez jamais le prix, n'achetez jamais au marché. Les ordres valent la seule séance. Aucune cotation d'avant-ouverture n'a été relevée : rien ne garantit que ces prix seront traités.`
           : `Entrée = un prix unique, en ordre à cours limité valable la séance. Pas de zone, pas de condition de VWAP, pas de poursuite : si le marché ouvre au-dessus et n'y revient pas, la ligne ne se déclenche simplement pas.`} Le stop se place dans le système du courtier dès l'achat. ${hasEntryZone
         ? `Le R/R du tableau est calculé au HAUT de la zone d'entrée, soit le pire remplissage autorisé; le plancher du scan est 1:${minRR}.`
         : `L’ordre a un plafond unique ; le prix moyen réellement payé peut être inférieur. Le calcul utilise le prix limite, soit le prix maximal autorisé ; une exécution à un prix inférieur modifie le risque réel et le rapport gain/risque.`

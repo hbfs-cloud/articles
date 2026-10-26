@@ -468,10 +468,16 @@ for (const [sec, n] of Object.entries(bySector)) {
 const byStrat = {};
 signals.forEach(s => { byStrat[s.strategy] = (byStrat[s.strategy] || 0) + 1; });
 const gate = FILTERS.audit_gates?.recent_strategy_performance;
+// Plafond par défaut normal, ou relevé par une dérogation DATÉE et fermée pour cette séance seulement
+// (tools/lib/family-cap-waiver.js). Les plafonds temporaires de l'overlay restent appliqués.
+const CAP = require('./lib/family-cap-waiver').effectiveDefaultShare({
+  root: ROOT, dirRel: path.relative(ROOT, DIR), date: String(manifest.scan_date || '').replace(/-/g, ''),
+  refdate: manifest.reference_close, gate,
+});
 if (gate && signals.length) {
-  const defMax = Math.floor(signals.length * (gate.default_max_share_pct ?? 50) / 100);
+  const defMax = Math.floor(signals.length * CAP.default_max_share_pct / 100);
   for (const [st, n] of Object.entries(byStrat)) {
-    if (n > defMax) problems.push(`${st} : ${n}/${signals.length} dépasse le plafond par défaut ${defMax} (${gate.default_max_share_pct}%)`);
+    if (n > defMax) problems.push(`${st} : ${n}/${signals.length} dépasse le plafond par défaut ${defMax} (${CAP.default_max_share_pct}%)`);
   }
   const ovPath = path.join(ROOT, gate.source);
   if (!fs.existsSync(ovPath)) problems.push(`overlay ${gate.source} absent — plafond immuable invérifiable`);
@@ -531,6 +537,7 @@ const out = {
   tkl_pool: [], dtx_pool: [], fortress_pool: [],
   rejected: [...rejected, ...(manifest.editorial_rejections || [])],
   ...(FLOORS.waiver ? { basket_minimum_waiver: FLOORS.waiver } : {}),
+  ...(CAP.waiver ? { family_cap_waiver: CAP.waiver } : {}),
   provenance,
 };
 

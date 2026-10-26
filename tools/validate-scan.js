@@ -231,7 +231,17 @@ async function main() {
           acc[key] = (acc[key] || 0) + 1;
           return acc;
         }, {});
-        const defaultShare = gate.default_max_share_pct ?? 50;
+        // Plafond normal, ou relevé par une dérogation DATÉE et fermée de la séance
+        // (tools/lib/family-cap-waiver.js). Le signals.json doit déclarer la même dérogation.
+        const rawCapScan = JSON.parse(fs.readFileSync(path.join(dir, 'signals.json'), 'utf8'));
+        const cap = require('./lib/family-cap-waiver').effectiveDefaultShare({
+          root: ROOT, dirRel: path.relative(ROOT, path.resolve(dir)), date: String(rawCapScan.scanDate || dirName),
+          refdate: rawCapScan.referenceClose, gate,
+        });
+        if (JSON.stringify(cap.waiver || null) !== JSON.stringify(rawCapScan.family_cap_waiver || null)) {
+          violations.push({ rule: 'family_cap_waiver', message: 'signals.json family_cap_waiver does not match the dated waiver file of this session.' });
+        }
+        const defaultShare = cap.default_max_share_pct;
         const defaultMax = Math.max(1, Math.floor(editorialCount * defaultShare / 100));
         for (const [strategy, count] of Object.entries(counts)) {
           if (count > defaultMax) {
