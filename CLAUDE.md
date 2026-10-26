@@ -205,6 +205,13 @@ Avant de générer un article ou d'appeler `add_card.js`, **TOUJOURS lire le fic
     - Structure `ticker-header` plate — PAS de nesting `ticker-header-inner`, `ticker-brand`, `ticker-hero`, etc.
     - **Référence** : `analyses/TARA/index.html` = gold standard
 15. **Brand-nav** : `<div class="brand-nav">` (PAS `<nav class="brand-nav">`). JAMAIS `class="active"` en dur.
+16. **Échéances et calendrier = échéancier** (décision du propriétaire, 26 octobre 2026) : toute date à venir
+    (daily, weekly, analyse, scanner et tout contenu qui parle de rendez-vous) se montre sur la frise « Ce qui
+    peut bouger la Bourse », jamais sur une grille de calendrier faite main. Spécification
+    `tools/templates/event-timeline.md`, rendu `tools/lib/event-timeline.cjs`, styles `evt-tl` de
+    `report.css`. Couleur = famille, plein/contour = impact, fenêtre clé avec ses heures, chaînes « si/alors »,
+    heures de Paris. Chaque pastille est datée par une source (claim vérifié sur daily/weekly, `source` sur une
+    fiche) ; `qa-content.js`, `validate-content-claims.js` et `check-analysis-editorial-quality.js` bloquent.
 
 ## Tags — Taxonomie
 | Catégorie | Tags | Couleur |

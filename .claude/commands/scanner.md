@@ -58,7 +58,12 @@ immutable for the run. Do not infer one from the other inside a plan.
    is required or carries a historical explicit waiver. DTX remains informational and must never execute.
 
 6. Write structured `signals.json`/`data.json`, then render. Preserve the existing Finviz chart source
-   unless the user explicitly requests a chart-provider change.
+   unless the user explicitly requests a chart-provider change. The macro section opens on the
+   échéancier (`tools/templates/event-timeline.md`), rendered automatically by `tools/render-scanner.js`
+   over the holding window, from the entry session to the forced exit of the longest line. Give each
+   `macro_calendar` row `date_iso`, `short` (one or two words), `category` and `icon`, or write a full
+   `timeline` object in `data.json` for a key window and chains. Events come only from the validated
+   calendar and the scheduled-events registry.
 
 7. Run the blocking checks:
 

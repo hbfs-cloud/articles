@@ -125,9 +125,10 @@ Utiliser ECharts pour les visualisations (bar, radar, gauge, line). Conteneur : 
 6. **Bilan de la Veille / Semaine** — Tableau récap de la séance précédente
    - Indices US, secteurs top/bottom, volumes
    - ECharts: barplot secteurs ou heatmap performance
-7. **Agenda du Jour & Semaine** — Grille calendrier `.calendar-days-grid` (Lun→Ven)
-   - Événements macro (CPI, FOMC, PMI), earnings, IPO
-   - Codage couleur : critical (rouge), important (jaune), normal (gris)
+7. **Agenda du Jour & Semaine** — **Échéancier** « Ce qui peut bouger la Bourse » (OBLIGATOIRE depuis le 26 octobre 2026, remplace `.calendar-days-grid`) : spécification `tools/templates/event-timeline.md`, rendu `tools/lib/event-timeline.cjs` avec `requireProof: true`
+   - De la séance au vendredi suivant : macro (CPI, FOMC, PMI), résultats, IPO, géopolitique datée
+   - Couleur = famille, plein = impact fort, contour = moyen ; fenêtre clé avec ses heures si les rendez-vous forts se concentrent
+   - Chaque pastille porte un claim de date ou d'heure ; un rendez-vous sans date sourcée reste dans la prose
 8. **Marchés US** — Récap détaillé de la dernière séance
    - Tableau indices (SPY, QQQ, DIA, IWM) : prix, variation, volume, 52W
    - Top 3 / Bottom 3 performers du jour

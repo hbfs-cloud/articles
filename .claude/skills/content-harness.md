@@ -74,6 +74,15 @@ numeric evidence validation.
 The model may explain or reject a structured candidate. It may not invent or repair a missing ticker,
 price, ATR, target, stop, score, SEC classification, correlation, DTX field or historical outcome.
 
+Shared calendar gate (owner decision, 2026-10-26): every content that describes upcoming dates (daily,
+weekly, analysis, scanner, retro, series, A+, macro playbook, earnings reaction, signals desk) shows them
+on the échéancier, spec `tools/templates/event-timeline.md`, renderer `tools/lib/event-timeline.cjs`. On
+claim-gated pages pass `requireProof: true`: `validate-content-claims.js` verifies every day label against
+its ISO date and refuses a chip whose verified date or time claim falls on another Paris day. An event
+without a sourced date stays out of the timeline. `qa-content.js` blocks a daily, weekly or scanner dated
+2026-10-27 or later without it; `check-analysis-editorial-quality.js` blocks an analysis without its
+`timeline` block. Telegram stays text-only: write the two or three decisive dates and Paris times in clear.
+
 ## H3bis - Channel contract
 
 - Web output is French and declares `<html lang="fr">`.

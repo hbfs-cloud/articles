@@ -66,6 +66,19 @@ Le weekly explique une bascule principale et son scenario contraire. Il couvre i
 taux/commodities, metaux, crypto, catalyseurs d'entreprise et calendrier. La densite vient des faits,
 tableaux et niveaux; aucun seuil de taille de fichier ne justifie de dupliquer ou rembourrer la prose.
 
+## Échéancier (OBLIGATOIRE depuis le 26 octobre 2026)
+
+Toute échéance à venir se montre sur la frise « Ce qui peut bouger la Bourse » : spécification
+`tools/templates/event-timeline.md`, rendu `tools/lib/event-timeline.cjs`, styles `evt-tl` de
+`/assets/report.css`. Familles par couleur, impact plein ou contour, fenêtre clé surlignée avec ses
+heures, chaînes « si/alors ». Heures de Paris.
+
+Weekly : la section Agenda s'ouvre sur l'échéancier, du lundi couvert au mardi de la semaine suivante
+au moins, avec `requireProof: true`. Chaque pastille porte un claim de date ou d'heure (flux
+`economic_events`, `earnings_calendar`, registre `data/scheduled-events.json` ou `primary-reference.json`
+de l'édition) ; `validate-content-claims.js` refuse une pastille posée sur un jour que sa source ne
+confirme pas. Le tableau détaillé et le graphique de concentration restent dessous.
+
 Le rendu doit conserver le standard visuel des Weekly riches: synthèse hiérarchisée puis 6 ECharts
 décisionnels minimum lorsque les données existent (multi-actifs, calendrier, earnings/blast radius,
 rotation, risques et allocation). Chaque graphique porte une interprétation et une invalidation; une
@@ -115,6 +128,10 @@ node tools/render-charts-png.js --article weekly/YYYYMMDD/index.html \
      --out weekly/YYYYMMDD/_img/en --labels weekly/YYYYMMDD/_img/labels-en.json
 git add weekly/YYYYMMDD/_img && git commit && git push   # les URL brutes doivent répondre 200
 ```
+
+L'échéancier ne part pas en image sur Substack : il est en français et Substack en anglais. Écrire les
+deux ou trois dates décisives en anglais dans le texte. Pour X, `node tools/render-timeline-png.js
+--article weekly/YYYYMMDD/index.html --out weekly/YYYYMMDD/_img/echeancier.png`.
 
 Le rendeur lit `CHART_SPECS` **dans la page publiée** : le Substack montre les mêmes courbes aux
 mêmes valeurs, jamais une saisie parallèle. Le dictionnaire `--labels` traduit titres, notes et

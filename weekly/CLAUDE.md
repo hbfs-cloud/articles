@@ -124,7 +124,7 @@ Le weekly utilise le FAB flottant comme tous les autres types d'articles. 6 item
 1. **Hero Section** - Titre accrocheur + badges clés + date de la semaine
 2. **FAB Navigation** - Menu flottant avec 6 raccourcis vers les sections principales
 3. **Alerte Banner** - Le sujet #1 de la semaine en rouge
-4. **Calendrier de la Semaine** - Grille Lun-Ven avec événements, earnings, données macro. Codage couleur: critical (rouge), important (jaune), normal.
+4. **Calendrier de la Semaine** - S'ouvre sur l'**échéancier** « Ce qui peut bouger la Bourse » (OBLIGATOIRE depuis le 26 octobre 2026 : `tools/templates/event-timeline.md`, rendu `tools/lib/event-timeline.cjs` avec `requireProof: true`) : frise par semaine, du lundi couvert au moins jusqu'au mardi suivant, familles par couleur (taux et macro, résultats, géopolitique), impact plein ou contour, fenêtre clé surlignée avec ses heures, chaînes « si/alors ». Chaque pastille porte un claim de date ou d'heure. Le tableau détaillé et le graphique de concentration suivent.
 5. **Synthèse Exécutive** - Metric cards (S&P 500, Nasdaq, Dow, Russell, Or, Argent, BTC, VIX) + le paradoxe de la semaine
 6. **Bilan Semaine Précédente** - Tableau anticipations vs résultats + score de validation
 7. **Contexte Macro & Marchés** - Inflation/CPI, Fed, marchés actions US (table indices), Europe & International (table EFA, EEM, FXI, DAX, CAC), Obligations, Matières premières

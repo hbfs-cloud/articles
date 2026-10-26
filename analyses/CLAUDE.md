@@ -193,6 +193,12 @@ Le FAB doit suivre le pattern IOVA (référence) :
   ```
 - **Modal Chart** avant `</body>` : fond dark `#0f172a`, chart agrandi + 3 liens (Finviz, TradingView, Yahoo Finance), fermeture par clic overlay ou Escape
 
+#### 2 bis. Échéances (OBLIGATOIRE dès les fiches du 27 octobre 2026)
+Bloc JSON `timeline` rendu juste après le verdict par l'échéancier « Ce qui peut bouger {TICKER} »
+(`tools/templates/event-timeline.md`) : résultats (`uncertain: true` tant que non confirmés par
+l'émetteur), fin d'horizon du plan, échéances SEC ou de capital, rendez-vous macro forts, en heures de
+Paris. `source` obligatoire par événement ; `unavailableReason` si rien n'est daté et vérifié.
+
 #### 2. Verdict Express (`.score-card` + `.verdict-grid`)
 **Section la plus importante** — doit suffire à elle seule pour comprendre le titre.
 - **Score-card** : Note globale (A+ à D), conviction, biais, confiance %

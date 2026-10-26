@@ -15,6 +15,11 @@ source contract is `.claude/skills/source-policy.md`. Those files override histo
   rendered values independently.
 - Finviz remains the chart source used by the established renderer. Do not replace it with a local chart
   unless the user explicitly requests that product change.
+- The macro section opens on the échéancier « Ce qui peut bouger vos lignes » (owner decision, 2026-10-26;
+  spec `tools/templates/event-timeline.md`): the holding window from the entry session to the forced exit,
+  rendered by `tools/render-scanner.js` from `macro_calendar` (give each row `date_iso`, `short`,
+  `category`, `icon`) or from an explicit `timeline` object in `data.json`. `qa-content.js` blocks a scan
+  dated 2026-10-27 or later without it.
 
 ## Required Sequence
 

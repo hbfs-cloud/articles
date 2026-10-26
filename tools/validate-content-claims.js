@@ -70,26 +70,9 @@ function frenchDigits(fixed) {
 // celle qui coûte le plus cher quand elle est fausse : le 2026-08-25, un mouvement a été attribué
 // à des résultats que la société n'avait pas publiés. Une date saisie à la main ne peut être
 // contrôlée ; une date liée au calendrier collecté l'est. `fr_date` rend la date portée par la
-// source, jamais celle que l'auteur croit se rappeler.
-const MOIS_FR = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
-const JOURS_FR = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
-function renderFrenchDate(value, parts) {
-  if (typeof value !== 'string') return null;
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
-  if (!match) return null;
-  const [, y, mo, da] = match;
-  const date = new Date(`${y}-${mo}-${da}T12:00:00Z`);
-  if (Number.isNaN(date.getTime()) || date.getUTCMonth() + 1 !== Number(mo) || date.getUTCDate() !== Number(da)) return null;
-  const jour = JOURS_FR[date.getUTCDay()];
-  const mois = MOIS_FR[date.getUTCMonth()];
-  // Le premier du mois prend l'ordinal en français. « annonce du mardi 1 septembre » se lit comme
-  // une faute de frappe, ce qui jette le doute sur les chiffres voisins.
-  const n = date.getUTCDate() === 1 ? '1er' : String(date.getUTCDate());
-  if (parts === 'day_month') return `${n} ${mois}`;
-  if (parts === 'weekday_day_month') return `${jour} ${n} ${mois}`;
-  if (parts === undefined || parts === 'full') return `${jour} ${n} ${mois} ${y}`;
-  return null;
-}
+// source, jamais celle que l'auteur croit se rappeler. Le rendu vit dans `lib/fr-calendar.js`,
+// partagé avec l'échéancier, pour qu'il n'en existe qu'un.
+const { renderFrenchDate, renderCalendarLabel, parisDateOf } = require('./lib/fr-calendar');
 
 // ÉCHELLES ET UNITÉS SONT DES LISTES CLOSES.
 //
@@ -336,6 +319,23 @@ function validate(manifest, root = ROOT) {
   }
   for (const text of literals) if (!declaredLiterals.has(text)) errors.push(`declared literal is absent from article: ${text.slice(0, 60)}`);
 
+  // ÉCHÉANCIER (ajouté le 2026-10-26). Une frise de calendrier porte des chiffres qui ne mesurent
+  // rien : « 28 mer. » dit seulement quel jour est le 28. Ces étiquettes ne sont donc ni des
+  // claims ni des littéraux déclarés : elles sont VÉRIFIÉES. Le texte doit être exactement le
+  // rendu de la date ISO portée par `data-calendar-date`, sinon la frise ment sur le jour de la
+  // semaine — l'erreur la plus facile à commettre à la main et la plus coûteuse à la lecture.
+  // Ce qui se passe CE jour-là, en revanche, est une affirmation : voir la vérification des
+  // événements après la boucle des claims.
+  for (const element of main.querySelectorAll('[data-calendar-date]')) {
+    const iso = element.getAttribute('data-calendar-date');
+    const format = element.getAttribute('data-calendar-format');
+    const expected = renderCalendarLabel(iso, format);
+    const text = element.textContent.replace(/\s+/g, ' ').trim();
+    if (expected == null) errors.push(`calendar label has an invalid date or format: ${iso} ${format}`);
+    else if (text !== expected) errors.push(`calendar label ${iso}: « ${text.slice(0, 40)} » is not the rendering « ${expected} »`);
+    if (element.querySelector('[data-claim],[data-literal]')) errors.push(`calendar label wraps a claim or literal: ${iso}`);
+  }
+
   const walker = document.createTreeWalker(main, 4);
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     const parent = node.parentElement;
@@ -344,10 +344,13 @@ function validate(manifest, root = ROOT) {
     // « Objectif +42 % d'ici décembre » à l'écran tout en le rendant invisible au gate, et
     // pénalisait au passage les utilisateurs de lecteurs d'écran. Un cas légitime passe par
     // `data-literal`, qui est déclaré.
-    if (!parent || parent.closest('[data-claim],[data-literal],script,style,template')) continue;
+    if (!parent || parent.closest('[data-claim],[data-literal],[data-calendar-date],script,style,template')) continue;
     const text = node.nodeValue.replace(/\s+/g, ' ').trim();
     if (text && hasNumber(text)) errors.push(`unbound numeric text: ${text.slice(0, 80)}`);
   }
+  // Valeurs dont la provenance ET le pointeur ont été vérifiés : seules celles-là peuvent dater un
+  // événement de l'échéancier.
+  const verifiedValues = new Map();
   for (const claim of claims) {
     if (!claim || !claim.source_artifact || path.isAbsolute(claim.source_artifact)
       || !/^[a-f0-9]{64}$/.test(String(claim.source_sha256 || ''))
@@ -391,6 +394,7 @@ function validate(manifest, root = ROOT) {
     }
     const observed = pointerGet(source, claim.source_pointer);
     if (JSON.stringify(observed) !== JSON.stringify(claim.source_value)) errors.push(`${claim.id}: source_value differs from source_pointer`);
+    else verifiedValues.set(claim.id, observed);
     // `formula.result` DOIT être un nombre. Absent, `Math.abs(x - Number(undefined))` vaut NaN,
     // la comparaison `> 1e-10` est fausse, et l'assertion ne se déclenchait jamais — un garde-fou
     // muet, précisément celui que le test croyait éprouver.
@@ -412,6 +416,22 @@ function validate(manifest, root = ROOT) {
     }
     const expectedText = renderValue(formulaValue, claim.render);
     if (expectedText == null || expectedText !== claim.rendered_text) errors.push(`${claim.id}: rendered_text is not the deterministic rendering of source_value`);
+  }
+  // PLACEMENT DES ÉVÉNEMENTS. Poser « Fed » sous le 28 est une affirmation de date au même titre
+  // qu'écrire « le 28 octobre ». Chaque `[data-calendar-event]` doit donc contenir au moins un
+  // claim vérifié dont la valeur source — une date, ou un instant ramené à Paris — tombe sur le
+  // jour de sa colonne. Un événement sans preuve de date n'a pas sa place sur la frise : il reste
+  // dans la prose, avec son incertitude écrite.
+  for (const event of main.querySelectorAll('[data-calendar-event]')) {
+    const label = (event.querySelector('.evt-tl-name') || event).textContent.replace(/\s+/g, ' ').trim().slice(0, 40);
+    const day = event.closest('[data-calendar-day]');
+    const iso = day && day.getAttribute('data-calendar-day');
+    if (!iso || !parisDateOf(iso)) { errors.push(`calendar event « ${label} » is outside a dated day column`); continue; }
+    const dates = [...event.querySelectorAll('[data-claim]')]
+      .map(element => parisDateOf(verifiedValues.get(element.getAttribute('data-claim'))))
+      .filter(Boolean);
+    if (!dates.length) errors.push(`calendar event « ${label} » on ${iso} carries no verified date claim`);
+    else if (!dates.includes(iso)) errors.push(`calendar event « ${label} » is placed on ${iso} but its claims date it ${[...new Set(dates)].join(', ')}`);
   }
   return [...new Set(errors)];
 }

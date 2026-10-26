@@ -102,6 +102,7 @@
 - [Substack Mcp Tools](reference_substack_tools.md) — Substack MCP full toolset (maj 2026-07-03) — update_draft édite un post PUBLIÉ en place (même URL), delete_draft supprime les publiés, upload_image …
 
 ## 🎨 Site & design
+- [Échéancier partout](feedback_echeancier_format.md) — Échéances et calendrier = frise « Ce qui peut bouger la Bourse » (tools/lib/event-timeline.cjs) dans daily, weekly, analyse, scanner ; dates prouvées, gates bloquants dès le 27 octobre 2026.
 - [Site And Scanner Design](project_site_and_scanner_design.md) — Direction design site + scanner/status : thème clair UNIQUE (dark reverté, ne pas re-tenter), reskin premium scopé, bilingue FR/EN, sync tags 3 sour…
 
 ## ☁️ Cloud & process

@@ -748,6 +748,67 @@ function macroCalendarTable(rows) {
         </table></div>`;
 }
 
+// ─── ÉCHÉANCIER DE LA DÉTENTION ─────────────────────────────────────────────
+// Format retenu le 2026-10-26 pour toutes les échéances (spécification :
+// tools/templates/event-timeline.md). Sur un scan, la fenêtre utile est la détention : de la
+// séance d'entrée à la sortie forcée de la ligne la plus longue. Les rendez-vous viennent du
+// `macro_calendar` déjà publié dans le tableau ; un champ `timeline` explicite dans data.json
+// prend le pas (fenêtre clé, chaînes). Le tableau reste à côté : il porte les horaires.
+const { renderEventTimeline } = require('./lib/event-timeline.cjs');
+const { addUSTradingDays } = require('./lib/market-calendar');
+const MOIS_INDEX = { janvier: 1, février: 2, fevrier: 2, mars: 3, avril: 4, mai: 5, juin: 6, juillet: 7, août: 8, aout: 8, septembre: 9, octobre: 10, novembre: 11, décembre: 12, decembre: 12 };
+function frenchDayMonthToIso(text, refIso) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(text || ''))) return text;
+  const m = /^(?:[a-zéû]+\s+)?(\d{1,2})(?:er)?\s+([a-zéû]+)/i.exec(String(text || '').trim());
+  if (!m || !MOIS_INDEX[m[2].toLowerCase()]) return null;
+  const month = MOIS_INDEX[m[2].toLowerCase()];
+  const refYear = Number(refIso.slice(0, 4));
+  const refMonth = Number(refIso.slice(5, 7));
+  // Un scan de décembre qui cite « 6 janvier » parle de l'année suivante.
+  const year = month < refMonth - 6 ? refYear + 1 : refYear;
+  return `${year}-${String(month).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
+}
+// Libellés courts des rendez-vous récurrents ; à défaut, `short` dans la ligne, sinon l'intitulé.
+const SHORT_EVENTS = [
+  [/R[ée]serve f[ée]d[ée]rale|\bFOMC\b/i, 'Fed', 'bank'], [/Banque centrale europ[ée]enne|\bBCE\b/i, 'BCE', 'bank'],
+  [/Banque du Japon|\bBoJ\b/i, 'BoJ', 'bank'], [/Banque d'Angleterre|\bBoE\b/i, 'BoE', 'bank'],
+  [/zone euro/i, 'Zone euro', 'data'], [/\bPCE\b/i, 'PCE', 'data'], [/prix [àa] la consommation|\bCPI\b/i, 'CPI US', 'data'], [/prix [àa] la production|\bPPI\b/i, 'PPI US', 'data'],
+  [/emploi|\bNFP\b|non[- ]farm/i, 'Emploi US', 'data'], [/[ée]lection|scrutin|vote/i, 'Élections', 'vote'], [/OPEP|p[ée]trole/i, 'Pétrole', 'oil'],
+];
+function scannerTimeline(d) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(d.date || ''))) return '';
+  const setups = (d.setups || []).filter(s => s && s.ticker);
+  try {
+    if (d.timeline && typeof d.timeline === 'object') return renderEventTimeline({ asof: d.date, ...d.timeline });
+    const horizon = setups.length ? Math.max(...setups.map(s => Number(s.horizon_days) || 10)) : 10;
+    const exit = addUSTradingDays(d.date, horizon - 1);
+    const last = new Date(`${d.date}T12:00:00Z`); last.setUTCDate(last.getUTCDate() + 20);
+    const to = exit < last.toISOString().slice(0, 10) ? exit : last.toISOString().slice(0, 10);
+    const events = [];
+    if (setups.length) events.push({ date: d.date, category: 'plan', impact: 'strong', label: 'Entrée', detail: 'ordres de la séance', icon: 'entry', href: '#synthese' });
+    for (const r of d.macro_calendar || []) {
+      const iso = frenchDayMonthToIso(r.date_iso || r.date, d.date);
+      const impact = String(r.impact ?? r.importance ?? '');
+      if (!iso || iso < d.date || iso > to || /faible|low/i.test(impact)) continue;
+      const known = SHORT_EVENTS.find(([re]) => re.test(r.event || ''));
+      events.push({ date: iso, category: r.category || (known && known[2] === 'oil' ? 'geo' : known && known[2] === 'vote' ? 'geo' : 'macro'),
+        impact: /HIGH|[ÉE]LEV|fort/i.test(impact) ? 'strong' : 'medium', label: r.short || (known ? known[1] : r.event),
+        icon: r.icon || (known ? known[2] : 'data'), href: '#macro' });
+    }
+    if (setups.length && exit <= to) events.push({ date: exit, category: 'plan', impact: 'strong', label: 'Sortie forcée', detail: 'à la clôture, sans stop ni objectif touché', icon: 'exit', href: '#synthese' });
+    events.sort((a, b) => a.date.localeCompare(b.date));
+    return renderEventTimeline({
+      id: 'echeancier', asof: d.date, from: d.date, to, events,
+      title: setups.length ? 'Ce qui peut bouger vos lignes' : 'Ce qui peut bouger la Bourse',
+      note: 'Heures et détails dans le tableau ci-dessous. Si/alors, pas une prévision.',
+    });
+  } catch (error) {
+    // Un échéancier invalide ne doit pas casser la page : le tableau reste, et l'erreur est visible.
+    console.warn(`[render-scanner] échéancier non rendu : ${error.message}`);
+    return '';
+  }
+}
+
 /** Direction d'une ligne de tableau : `dir`/`trend` explicite, sinon dérivée du SIGNE de la
  *  variation. Sans cela une variation positive tombait dans le `else` et s'affichait en rouge
  *  (bug de contrat de champs, scans <= 20260804). */
@@ -1083,6 +1144,7 @@ ${(d.market_snapshot || []).map(r => `        <tr><td><strong>${esc(r.name ?? r.
 <section id="macro" class="section-block">
   <div class="section-header"><h2><i class="fas fa-globe"></i> Contexte macro — ${d.session_label || d.date}</h2></div>
   <div class="content-card">
+${scannerTimeline(d)}
     <div class="chart-grid-2col">
       <div>
         <h3 style="font-weight:700;margin-bottom:0.6rem;">Calendrier des événements</h3>

@@ -451,6 +451,26 @@ ${(verdict.whyAvoid || []).map(p => `              <li style="font-size:0.9rem;l
       </div>`;
 }
 
+// Échéancier (format retenu le 2026-10-26, tools/templates/event-timeline.md) : publication de
+// résultats, fin d'horizon du plan, rendez-vous macro, placés sur une frise en heures de Paris.
+// Juste après le verdict : c'est là que le lecteur décide QUAND agir.
+const { renderEventTimeline } = require('./lib/event-timeline.cjs');
+function renderTimeline(d) {
+  const tl = d.timeline;
+  if (!tl) return '';
+  const events = (tl.events || []).map(({ source, ...event }) => event);
+  const figure = renderEventTimeline({
+    id: 'echeancier', asof: d.meta.date, title: tl.title || `Ce qui peut bouger ${d.header.ticker}`,
+    from: tl.from, to: tl.to, keyWindow: tl.keyWindow, events, chains: tl.chains,
+    note: tl.note, emptyText: tl.unavailableReason,
+  });
+  return `
+      <div id="echeances" class="content-card">
+        <h2><i class="fa-solid fa-calendar-days"></i> ${tx(d, 'Upcoming dates', 'Échéances')}</h2>
+        ${figure}
+      </div>`;
+}
+
 function renderBusiness(d) {
   if (!d.business) return '';
   const b = d.business;
@@ -1216,6 +1236,7 @@ function render(data) {
     renderHeader(data),
     '\n    <div class="container">',
     renderVerdict(data),
+    renderTimeline(data),
     renderTradeIdea(data),
     progressiveDeepDive,
     renderDisclaimer(data),

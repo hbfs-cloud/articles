@@ -2,6 +2,7 @@
 'use strict';
 
 const fs = require('fs');
+const { renderEventTimeline } = require('./lib/event-timeline.cjs');
 const path = require('path');
 const crypto = require('crypto');
 const { rubricCheckIds, validateReviewRecord } = require('./lib/analysis-review-attestation');
@@ -188,6 +189,19 @@ function check(file) {
   require(trade.status !== 'pending', 'pending is not a publishable retail trade state');
   require(!/trade state pending|status pending|remains pending/i.test(`${d.filingsReview?.summary || ''} ${trade.statusNote || ''}`), 'stale pending lifecycle prose conflicts with the published trade state');
   require(!(d.header?.badges || []).some(x => /pending/i.test(x?.text || '')), 'header retains a stale pending badge');
+  // Échéancier (format retenu le 2026-10-26, tools/templates/event-timeline.md) : toute fiche
+  // datée à partir du 27 octobre 2026 pose ses échéances sur la frise — résultats, fin d'horizon du
+  // plan, rendez-vous macro. Une fenêtre sans aucun rendez-vous vérifié se DÉCLARE, elle ne s'omet pas.
+  if (String(d.meta?.date || '') >= '2026-10-27') {
+    const tl = d.timeline;
+    require(tl && typeof tl === 'object', 'timeline (échéancier) required for dossiers dated from 2026-10-27, see tools/templates/event-timeline.md');
+    if (tl && typeof tl === 'object') {
+      require((tl.events || []).length >= 1 || String(tl.unavailableReason || '').length >= 20,
+        'timeline needs >=1 dated event or an explicit unavailableReason');
+      try { renderEventTimeline({ asof: d.meta.date, ...tl, events: (tl.events || []).map(({ source, ...e }) => e) }); }
+      catch (error) { errors.push(`timeline invalid: ${error.message}`); }
+    }
+  }
   require((trade.catalysts || []).length >= 3, 'trade catalysts need >=3 items');
   require((trade.invalidation || []).length >= 3, 'trade invalidations need >=3 items');
   const hasTp2 = trade.tp2 != null;

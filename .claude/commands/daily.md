@@ -84,6 +84,18 @@ instruction explicite. Separer:
 - scenario de base, scenario contraire et invalidation datee;
 - actions simples: attendre, surveiller un niveau, eviter de poursuivre un gap.
 
+## Échéancier (OBLIGATOIRE depuis le 26 octobre 2026)
+
+Toute échéance à venir se montre sur la frise « Ce qui peut bouger la Bourse » : spécification
+`tools/templates/event-timeline.md`, rendu `tools/lib/event-timeline.cjs`, styles `evt-tl` de
+`/assets/report.css`. Familles par couleur, impact plein ou contour, fenêtre clé surlignée avec ses
+heures, chaînes « si/alors ». Heures de Paris.
+
+Daily : la section Agenda du jour et de la semaine s'ouvre sur l'échéancier, de la séance au vendredi
+suivant, avec `requireProof: true` : chaque pastille porte un claim de date ou d'heure, vérifié par
+`validate-content-claims.js`. Un rendez-vous sans date sourcée reste dans la prose, avec son
+incertitude écrite.
+
 Le nombre de sections vient du template courant, pas d'un quota de mots ou d'octets. Toute mise a jour
 mi-seance annote l'article d'origine et conserve le texte initial.
 

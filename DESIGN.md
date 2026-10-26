@@ -70,6 +70,10 @@ sur les titres d'articles (axe de contraste serif+sans) — registre brand uniqu
   `didactic-box`, `checklist`.
 - **Éditorial** : `quote-block`, `code-block-wrapper` (Shiki/`astro-code`), `chart-modal`,
   `article-switcher`, `variant-switcher` (multilingue/multi-niveau).
+- **Échéancier** (`evt-tl`, depuis le 2026-10-26) : frise des rendez-vous à venir par semaine, pastilles
+  couleur = famille (accent = taux et macro, encre = résultats, ambre = géopolitique, violet = vos lignes),
+  plein = impact fort, contour = moyen, fenêtre clé surlignée, chaînes « si/alors ». Agenda vertical sur
+  mobile. Spécification `tools/templates/event-timeline.md`, rendu `tools/lib/event-timeline.cjs`.
 - **Footer** : `article-footer` (jamais `report-footer`/`site-footer`).
 
 État d'interaction (hover/focus/active/disabled/loading) : partiel — ⚠︎ refonte : compléter le

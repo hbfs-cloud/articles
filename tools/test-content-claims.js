@@ -367,5 +367,44 @@ try {
       claims: [corrClaim({ source_sha256: h2 })] }, root).some(e => e.includes('formula result differs')));
   }
 
+  // A15 — échéancier : les étiquettes de la frise sont VÉRIFIÉES contre leur date ISO, et chaque
+  // événement doit porter un claim vérifié qui le date sur le jour de sa colonne, à Paris.
+  {
+    const src = JSON.stringify({ fed: '2026-10-28T18:00:00Z', late: '2026-10-28T20:00:00-04:00' });
+    const hash = crypto.createHash('sha256').update(src).digest('hex');
+    fs.writeFileSync(path.join(root, 'source.json'), src);
+    const input = { artifact: 'article', refdate: '2026-08-28', waves: [{ calls: [{ as: 'source', server: 'marketdata', tool: 'QueryData' }] }] };
+    const ih = crypto.createHash('sha256').update(stableStringify(input)).digest('hex');
+    fs.writeFileSync(path.join(root, 'harness.json'), JSON.stringify({
+      reference_close: '2026-08-28', plan: 'plan.json', plan_sha256: crypto.createHash('sha256').update(plan).digest('hex'),
+      input_sha256: ih, sources: [{ name: 'source', sha256: hash, required: true }] }));
+    fs.writeFileSync(path.join(root, '_collect.json'), JSON.stringify({
+      reference_date: '2026-08-28', plan: 'plan.json', plan_sha256: crypto.createHash('sha256').update(plan).digest('hex'),
+      input_sha256: ih, resolved_input: input,
+      waves: [{ calls: [{ as: 'source', server: 'marketdata', tool: 'QueryData', ok: true, output_sha256: hash }] }] }));
+    const write = html => { fs.writeFileSync(path.join(root, 'article.html'), html); return crypto.createHash('sha256').update(html).digest('hex'); };
+    const at = (id, pointer, value, text) => ({ id, rendered_text: text, source_artifact: 'source.json', source_sha256: hash,
+      source_pointer: pointer, source_value: value, render: { format: 'fr_time', zone: 'Europe/Paris' } });
+    const page = (day, label, event) => `<!doctype html><main><ol><li data-calendar-day="${day}">`
+      + `<time data-calendar-date="${day}" data-calendar-format="axis">${label}</time>${event}</li></ol></main>`;
+    const run = (html, claims) => validate({ reference_close: '2026-08-28', article_path: 'article.html', article_sha256: write(html), claims }, root);
+    const fed = at('fed', '/fed', '2026-10-28T18:00:00Z', '19h00');
+    // le 28 octobre 2026 est un mercredi, 18:00 UTC est 19h00 à Paris (heure d'hiver depuis le 25)
+    assert.deepStrictEqual(run(page('2026-10-28', '<b>28</b> <span>mer.</span>',
+      '<div data-calendar-event>Fed <span data-claim="fed">19h00</span></div>'), [fed]), []);
+    // un jour de semaine faux sur la frise est refusé
+    assert(run(page('2026-10-28', '28 jeu.', '<div data-calendar-event>Fed <span data-claim="fed">19h00</span></div>'), [fed])
+      .some(e => e.includes('is not the rendering')));
+    // un événement posé sur la mauvaise colonne est refusé
+    assert(run(page('2026-10-29', '29 jeu.', '<div data-calendar-event>Fed <span data-claim="fed">19h00</span></div>'), [fed])
+      .some(e => e.includes('is placed on 2026-10-29')));
+    // un événement sans claim de date n'a pas sa place sur la frise
+    assert(run(page('2026-10-28', '28 mer.', '<div data-calendar-event>Fed</div>'), [])
+      .some(e => e.includes('no verified date claim')));
+    // 20:00 à New York le 28 tombe le 29 à Paris : c'est le 29 que la frise doit montrer
+    assert.deepStrictEqual(run(page('2026-10-29', '29 jeu.',
+      '<div data-calendar-event>Annonce <span data-claim="late">01h00</span></div>'), [at('late', '/late', '2026-10-28T20:00:00-04:00', '01h00')]), []);
+  }
+
   console.log('content claims tests: PASS');
 } finally { fs.rmSync(root, { recursive: true, force: true }); }

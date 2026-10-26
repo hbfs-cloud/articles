@@ -46,4 +46,6 @@ Fail-closed + MCP HARD STOP conservés (la perf n'assouplit aucun invariant).
 ## Format de sortie (schéma pivot)
 En plus des niveaux (entry/stop/cible — inchangés), émettre pour chaque idée le méta-objet PIVOT commun au desk : `{ signal: 'bullish'|'bearish'|'neutral', confidence: 0-100, reasoning: string }` (contrat + validateur : `tools/lib/signal-schema.js`). `source='earnings'` dans le state partagé du desk (`tools/lib/signals-desk-state.js`). Confidence déterministe, dérivée de la réaction réelle (beat + guidance relevée + gap tenu sur volume ⇒ plus haute ; gap-risk avant print ⇒ prudente) — jamais inventée. Le desk agrège ces pivots (confidence-weighted). Voir signals-desk « Contrat des signaux ».
 
+Dans un contenu publié, les dates de publication à venir, la fenêtre de réaction (veille → lendemain) et la sortie du plan se montrent sur l'échéancier (`tools/templates/event-timeline.md`, famille `earnings`, `uncertain: true` tant que l'émetteur n'a pas confirmé la date).
+
 Voir aussi : `swing-signals`, `aplus-setups` (les 4 éliminatoires incluent guidance relevée + ≥5 beats), `mcp-gateway-tools`.

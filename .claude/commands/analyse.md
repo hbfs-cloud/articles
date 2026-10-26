@@ -76,6 +76,15 @@ Avant `run-collect`, faire la decouverte avec les schemas visibles du MCP et `TO
 - Le grade de dossier n'est pas un label A+. A+ passe exclusivement par
   `validate-aplus-candidates.js`.
 
+## Échéancier
+
+Depuis les fiches du 27 octobre 2026, le JSON porte un bloc `timeline` (schéma
+`tools/lib/analysis-schema.json`, spécification `tools/templates/event-timeline.md`), rendu juste après
+le verdict : publication de résultats (`uncertain: true` tant que l'émetteur ne l'a pas confirmée), fin
+d'horizon du plan, échéances SEC ou de capital (expiration de lock-up, échéance d'une dette, assemblée),
+rendez-vous macro forts. Chaque événement nomme sa `source`. Sans rendez-vous vérifié dans la fenêtre,
+`unavailableReason` le déclare. `check-analysis-editorial-quality.js` bloque l'absence ou l'invalidité.
+
 ## JSON Et QA
 
 Produire un contenu individualise, avec sources proximales et consequences financieres. Puis:

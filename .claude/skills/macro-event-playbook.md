@@ -21,5 +21,9 @@ it does not predict the release.
   observable trigger, likely factor transmission, no-chase condition and invalidation.
 - Do not use portfolio positions, accounts or broker tools. “De-risk” remains general factor-risk guidance.
 
+When the playbook is published, its dates (the event, the following releases that can confirm or
+invalidate a branch) go on the échéancier (`tools/templates/event-timeline.md`), with the release window
+as the key window and each branch's transmission as a « si/alors » chain.
+
 Review the prior playbook using its original branches and horizon. Do not score a branch as correct merely
 because one instrument eventually moved in the same direction.

@@ -39,6 +39,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { renderCalendarLabel } = require('./lib/fr-calendar');
 
 const ROOT = path.resolve(__dirname, '..');
 const ARGV = process.argv.slice(2);
@@ -265,6 +266,27 @@ function validate(file) {
     if (!minSec) return;
     const n = (html.match(/<h2\b/g) || []).length;
     if (n < minSec) return `${n} section(s) <h2> < ${minSec} attendues (${type}) — article incomplet`;
+  });
+
+  // ── ÉCHÉANCIER (format retenu le 2026-10-26, tools/templates/event-timeline.md) ──
+  // Daily, weekly et scanner datés du 27 octobre 2026 ou après décrivent leurs échéances sur la
+  // frise. Les fiches d'analyse sont contrôlées sur leur JSON (check-analysis-editorial-quality).
+  const pageDate = (rel.match(/^(?:daily|weekly|scanner)\/(\d{8})\//) || [])[1];
+  check('échéancier présent (daily, weekly, scanner à partir du 27 octobre 2026)', () => {
+    if (isArchiveNotice || !pageDate || pageDate < '20261027' || !['daily', 'weekly', 'scanner'].includes(type)) return;
+    if (/data-scanner-publication="review_only"/.test(html)) return;
+    if (!/<figure class="evt-tl"/.test(html)) return 'aucun <figure class="evt-tl"> : rendre les échéances avec tools/lib/event-timeline.cjs';
+  });
+  // Les étiquettes de la frise disent quel jour est chaque date : une erreur de jour de semaine
+  // se contrôle ici pour TOUTES les pages, y compris celles que le contrôle des claims ne voit pas.
+  check('étiquettes de l\'échéancier conformes à leur date', () => {
+    const bad = [];
+    for (const m of html.matchAll(/data-calendar-date="([^"]*)" data-calendar-format="([^"]*)">([\s\S]*?)<\/time>/g)) {
+      const text = m[3].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+      const expected = renderCalendarLabel(m[1], m[2]);
+      if (text !== expected) bad.push(`${m[1]} « ${text} » au lieu de « ${expected} »`);
+    }
+    if (bad.length) return bad.slice(0, 3).join(' ; ');
   });
 
   // ── COMMUN : balise <html> ──
