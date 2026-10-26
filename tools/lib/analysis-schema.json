@@ -572,6 +572,7 @@
       "additionalProperties": false,
       "description": "Expert-only section",
       "properties": {
+        "method":         { "type": "string", "maxLength": 900, "description": "Méthode de l’estimation, en une phrase lisible." },
         "probability":    { "type": "integer", "minimum": 0, "maximum": 100 },
         "scenarios": { "type": "array", "items": {
           "type": "object",
@@ -594,6 +595,22 @@
             "progress":     { "type": "integer", "minimum": 0, "maximum": 100 }
           }
         }}
+      }
+    },
+
+    "reviewPanel": {
+      "type": "object",
+      "description": "Relectures indépendantes publiées dans la fiche (QA senior, contradicteur, war room retail) : verdict, points contestés, corrections appliquées.",
+      "required": ["reviews"],
+      "additionalProperties": false,
+      "properties": {
+        "summary": { "type": "string", "maxLength": 600 },
+        "reviews": { "type": "array", "minItems": 1, "maxItems": 3, "items": { "type": "object", "required": ["role", "verdict"], "additionalProperties": false, "properties": {
+          "role": { "type": "string", "enum": ["senior_qa", "contrarian", "retail_war_room"] },
+          "verdict": { "type": "string", "maxLength": 400 },
+          "findings": { "type": "array", "maxItems": 8, "items": { "type": "string", "maxLength": 500 } },
+          "corrections": { "type": "array", "maxItems": 8, "items": { "type": "string", "maxLength": 500 } }
+        } } }
       }
     },
 
@@ -746,6 +763,7 @@
       "required": ["entry", "stop", "tp1", "rr"],
       "additionalProperties": false,
       "properties": {
+        "banner":      { "type": "string", "maxLength": 320, "description": "Phrase de setup du bandeau, quand la phrase dérivée des niveaux omettrait une condition décisive." },
         "archiveReferenceClose": {"type": "string", "pattern": "^20[0-9]{2}-[0-9]{2}-[0-9]{2}$"},
         "entry":       { "type": "number" },
         "entryNote":   { "type": "string", "description": "e.g. 'Momentum entry'" },

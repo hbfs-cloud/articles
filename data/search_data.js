@@ -1783,6 +1783,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "FICO",
+    "exchange": "NYSE · Scores de crédit et logiciels de décision",
+    "name": "FICO — FICO à 708,07 $ (−13,2 %) : prix du score immobilier gelé à 10 $ le lot de deux, Vantag...",
+    "title": "FICO — FICO à 708,07 $ (−13,2 %) : prix du score immobilier gelé à 10 $ le lot de deux, Vantag...",
+    "desc": "FICO gèle le prix de son score immobilier et chute de 13 % : la fin des hausses de prix, après l’arrivée de VantageScore chez Fannie Mae et Freddie Mac. Rien à acheter avant les résultats du 4 novembre, puis seulement sur une clôture à 783,52 $ ou plus ; une clôture sous 586,05 $ abandonne le plan.",
+    "tags": "us,software,financials,earnings,trade-idea",
+    "grade": "C",
+    "href": "/analyses/FICO/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "BRUN",
     "exchange": "NASDAQ · Location de calcul GPU pour l’intelligence artificielle (néo-cloud)",
     "name": "BRUN — Boost Run (BRUN) à 8,47 $, −51 % en 21 séances avec les néo-clouds. Gros contrats, fina...",

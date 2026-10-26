@@ -845,27 +845,34 @@ ${metricStrip([metricTile(cf.netFlow, tx(d, 'Net Flow', 'Flux net')), metricTile
 function renderBottomEstimation(d) {
   if (!d.bottomEstimation) return '';
   const be = d.bottomEstimation;
+  // Prix au format de la page : « 586,05 $ » en français, « $586.05 » en anglais.
+  const price = v => typeof v !== 'number' ? esc(String(v)) : isFrench(d)
+    ? esc(v.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/[\u202f\u00a0]/g, ' ') + ' $')
+    : '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const probColor = be.probability < 30 ? '#ef4444' : be.probability < 60 ? '#f59e0b' : '#22c55e';
   let html = `
       <div id="bottom-estimation" class="content-card">
-        <h2><i class="fa-solid fa-bullseye"></i> Bottom Estimation & Setups</h2>`;
+        <h2><i class="fa-solid fa-bullseye"></i> ${tx(d, 'Bottom Estimation &amp; Setups', 'Estimation du plancher')}</h2>`;
+  if (be.method) html += `
+        <p style="font-size:0.9rem;line-height:1.6;color:#475569;margin-bottom:1rem;">${esc(be.method)}</p>`;
   if (be.probability != null) {
     html += `
         <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1.5rem;">
           <div class="risk-gauge" style="border-color:${probColor};width:80px;height:80px;">
             <div class="risk-gauge-score" style="color:${probColor};font-size:1.3rem;">${be.probability}%</div>
-            <div class="risk-gauge-label" style="font-size:0.65rem;">Bottom Prob.</div>
+            <div class="risk-gauge-label" style="font-size:0.65rem;">${tx(d, 'Bottom Prob.', 'Probabilité')}</div>
           </div>
-          <div style="font-size:0.85rem;color:#64748b;">Confidence based on ${be.confluences ? be.confluences.length : 0} confluence(s)</div>
+          <div style="font-size:0.85rem;color:#64748b;">${tx(d, `Confidence based on ${be.confluences ? be.confluences.length : 0} confluence(s)`, `Confiance fondée sur ${be.confluences ? be.confluences.length : 0} confluence(s)`)}</div>
         </div>`;
   }
   if (be.scenarios && be.scenarios.length) {
     const scenarioColors = { optimistic: '#22c55e', base: '#3b82f6', pessimistic: '#ef4444' };
+    const scenarioLabels = { optimistic: tx(d, 'optimistic', 'Plancher haut'), base: tx(d, 'base', 'Plancher intermédiaire'), pessimistic: tx(d, 'pessimistic', 'Plancher bas') };
     html += `
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;">
 ${be.scenarios.map(s => `          <div style="border-left:4px solid ${scenarioColors[s.label]||'#64748b'};padding:1rem;background:#f8fafc;border-radius:0 8px 8px 0;">
-            <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">${esc(s.label)}</div>
-            <div style="font-size:1.5rem;font-weight:800;color:#0f172a;margin:0.25rem 0;">$${typeof s.price === 'number' ? s.price.toLocaleString() : esc(String(s.price))}</div>
+            <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">${esc(scenarioLabels[s.label] || s.label)}</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#0f172a;margin:0.25rem 0;">${price(s.price)}</div>
             <div style="font-size:0.78rem;color:#64748b;">${esc(s.basis)}</div>
           </div>`).join('\n')}
         </div>`;
@@ -873,7 +880,7 @@ ${be.scenarios.map(s => `          <div style="border-left:4px solid ${scenarioC
   if (be.confluences && be.confluences.length) {
     html += `
         <div style="margin-bottom:1.5rem;">
-          <h4 style="margin-bottom:0.5rem;">Confluences</h4>
+          <h4 style="margin-bottom:0.5rem;">${tx(d, 'Confluences', 'Ce qui soutient ou contredit ces planchers')}</h4>
 ${be.confluences.map(c => `          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
             <div style="width:8px;height:8px;border-radius:50%;background:#6366f1;flex-shrink:0;"></div>
             <span style="font-size:0.85rem;">${esc(c)}</span>
@@ -882,25 +889,48 @@ ${be.confluences.map(c => `          <div style="display:flex;align-items:center
   }
   if (be.setups && be.setups.length) {
     html += `
-        <h4 style="margin-bottom:0.75rem;">Setups in Formation</h4>
+        <h4 style="margin-bottom:0.75rem;">${tx(d, 'Setups in Formation', 'Configurations en formation')}</h4>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:1rem;">
 ${be.setups.map(s => `          <div class="setup-card" style="border:1px solid #e2e8f0;border-radius:12px;padding:1rem;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
               <span style="font-weight:700;font-size:0.9rem;">${esc(s.pattern)}</span>
               <span class="badge badge-blue">${esc(s.timeframe||'')}</span>
             </div>
-            <p style="font-size:0.82rem;margin:0.25rem 0;"><strong>Trigger:</strong> ${esc(s.trigger||'')}</p>
-            <p style="font-size:0.82rem;margin:0.25rem 0;"><strong>Target:</strong> ${esc(s.target||'')}</p>
-            <p style="font-size:0.82rem;margin:0.25rem 0;"><strong>Invalidation:</strong> ${esc(s.invalidation||'')}</p>
+            <p style="font-size:0.82rem;margin:0.25rem 0;"><strong>${tx(d, 'Trigger:', 'Déclencheur :')}</strong> ${esc(s.trigger||'')}</p>
+            <p style="font-size:0.82rem;margin:0.25rem 0;"><strong>${tx(d, 'Target:', 'Objectif :')}</strong> ${esc(s.target||'')}</p>
+            <p style="font-size:0.82rem;margin:0.25rem 0;"><strong>${tx(d, 'Invalidation:', 'Invalidation :')}</strong> ${esc(s.invalidation||'')}</p>
 ${s.progress != null ? `            <div style="margin-top:0.5rem;background:#e2e8f0;border-radius:4px;height:6px;overflow:hidden;">
               <div style="width:${s.progress}%;height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:4px;"></div>
             </div>
-            <div style="font-size:0.72rem;color:#64748b;margin-top:0.25rem;">Formation: ${s.progress}%</div>` : ''}
+            <div style="font-size:0.72rem;color:#64748b;margin-top:0.25rem;">${tx(d, `Formation: ${s.progress}%`, `Avancement : ${s.progress} %`)}</div>` : ''}
           </div>`).join('\n')}
         </div>`;
   }
   html += `\n      </div>`;
   return html;
+}
+
+// Relectures indépendantes (QA senior, contradicteur, war room retail) publiées dans la fiche, à la demande du
+// propriétaire (26 octobre 2026) : le lecteur voit ce que chaque relecteur a contesté et ce qui a été corrigé.
+function renderReviewPanel(d) {
+  const rp = d.reviewPanel;
+  if (!rp || !Array.isArray(rp.reviews) || !rp.reviews.length) return '';
+  const roles = { senior_qa: tx(d, 'Senior QA', 'Contrôle qualité senior'), contrarian: tx(d, 'Contrarian', 'Contradicteur'), retail_war_room: tx(d, 'Retail war room', 'War room retail') };
+  const icons = { senior_qa: 'fa-list-check', contrarian: 'fa-scale-unbalanced', retail_war_room: 'fa-users' };
+  const list = items => items && items.length ? `<ul style="display:flex;flex-direction:column;gap:0.35rem;padding-left:1.1rem;margin:0.35rem 0 0.75rem;">${items.map(x => `<li style="font-size:0.86rem;line-height:1.5;">${esc(x)}</li>`).join('')}</ul>` : '';
+  return `
+      <div id="relectures" class="content-card">
+        <h2><i class="fa-solid fa-user-check"></i> ${tx(d, 'Independent reviews', 'Relectures indépendantes')}</h2>
+${rp.summary ? `        <p style="font-size:0.9rem;line-height:1.6;color:#475569;margin-bottom:1rem;">${esc(rp.summary)}</p>` : ''}
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:1rem;">
+${rp.reviews.map(r => `          <div style="border:1px solid #e2e8f0;border-radius:12px;padding:1rem;">
+            <h3 style="font-size:1rem;margin:0 0 0.4rem;"><i class="fa-solid ${icons[r.role] || 'fa-user'}"></i> ${esc(roles[r.role] || r.role)}</h3>
+            <p style="font-size:0.88rem;font-weight:600;line-height:1.5;margin:0;">${esc(r.verdict)}</p>
+            ${r.findings && r.findings.length ? `<h4 style="font-size:0.82rem;margin:0.75rem 0 0;">${tx(d, 'What was challenged', 'Ce qui a été contesté')}</h4>${list(r.findings)}` : ''}
+            ${r.corrections && r.corrections.length ? `<h4 style="font-size:0.82rem;margin:0.25rem 0 0;">${tx(d, 'Fixed in this page', 'Corrigé dans la fiche')}</h4>${list(r.corrections)}` : ''}
+          </div>`).join('\n')}
+        </div>
+      </div>`;
 }
 
 function renderManipulations(d) {
@@ -1017,7 +1047,9 @@ function renderTradeIdea(d) {
       `Entrée spéculative ${money(t.entry)}, stop ${money(stopShown)}, objectifs ${targets}.`),
   }[t.status];
   const firstSentence = s => { const m = String(s || '').match(/^.{20,240}?[.!?](?=\s|$)/); return m ? m[0] : String(s || '').slice(0, 240); };
-  const bannerText = setup || firstSentence(t.statusNote);
+  // `banner` (optionnel) : phrase de setup rédigée quand la phrase dérivée des niveaux omettrait une condition
+  // décisive, par exemple « seulement après la publication des résultats ».
+  const bannerText = (typeof t.banner === 'string' && t.banner.trim()) ? t.banner.trim() : (setup || firstSentence(t.statusNote));
   const banner = (bg, icon, label) => `\n        <div style="background:${bg};color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;line-height:1.45;"><strong><i class="fa-solid ${icon}"></i> ${label}</strong>${bannerText ? ' &mdash; ' + esc(bannerText) : ''}</div>`;
   const statusBanner = isNoTrade
     ? `<div class="alert-box"><strong>${tx(d, 'NO ACTIVE ORDER', 'AUCUN ORDRE ACTIF')}</strong><p>${esc(t.statusNote || tx(d, 'Historical levels only; no new order.', 'Niveaux historiques uniquement; aucun nouvel ordre.'))}</p></div>`
@@ -1221,10 +1253,10 @@ function render(data) {
   const deepDive = [
     renderBusiness(data), renderNews(data), renderFundamentals(data), renderEarnings(data),
     renderInsiders(data), renderCapitalStructure(data), renderFilingsReview(data), renderShortInterest(data),
-    renderOptions(data), renderTechnicals(data), renderPerformance(data), renderForecast(data),
+    renderOptions(data), renderTechnicals(data), renderBottomEstimation(data), renderPerformance(data), renderForecast(data),
     renderSectorComparison(data), renderBlastRadius(data), renderMacro(data), renderRisks(data),
-    renderSocial(data), renderBottomEstimation(data), renderManipulations(data), renderCapitalFlow(data),
-    renderPredictionMarkets(data), renderGlobalScore(data)
+    renderSocial(data), renderManipulations(data), renderCapitalFlow(data),
+    renderPredictionMarkets(data), renderReviewPanel(data), renderGlobalScore(data)
   ].filter(Boolean).join('\n');
   // The analysis is a reference document: primary facts must remain visible on first visit.
   // Keep the dossier in the normal document flow; navigation and section headings provide the hierarchy.
