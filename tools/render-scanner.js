@@ -228,7 +228,7 @@ function describeGeometry(setups) {
     return { ticker: s.ticker, stopAtr: (entry - stop) / atr, tpAtr: (target - entry) / atr };
   }).filter(s => s && s.stopAtr > 1.55 && s.stopAtr > s.tpAtr + 0.05);
   const widest = wide.map(s => `${s.ticker} (${s.stopAtr.toFixed(2).replace('.', ',')} ATR)`).join(', ');
-  return `${clustered} objectifs sur ${mult.length} sont regroupés autour de ${med.toFixed(2).replace('.', ',')} ATR. Cette géométrie ne prouve pas à elle seule une résistance de marché. `
+  return `${clustered} objectifs sur ${mult.length} sont regroupés autour de ${med.toFixed(2).replace('.', ',')} fois la variation quotidienne moyenne (ATR). Cette géométrie ne prouve pas à elle seule une résistance de marché. `
     + `Lorsque la cible et le stop sont à des distances proches, le rapport gain/risque est mécaniquement voisin de 1.`
     + (wide.length ? ` Certains stops dépassent 1,55 ATR et la distance à la cible : ${widest}. Leur rapport gain/risque est inférieur à 1.` : '');
 }
@@ -785,7 +785,7 @@ function scannerTimeline(d) {
     const last = new Date(`${d.date}T12:00:00Z`); last.setUTCDate(last.getUTCDate() + 20);
     const to = exit < last.toISOString().slice(0, 10) ? exit : last.toISOString().slice(0, 10);
     const events = [];
-    if (setups.length) events.push({ date: d.date, category: 'plan', impact: 'strong', label: 'Entrée', detail: 'ordres de la séance', icon: 'entry', href: '#synthese' });
+    if (setups.length) events.push({ date: d.date, category: 'plan', impact: 'strong', label: 'Entrée', detail: "ordres après l'ouverture", icon: 'entry', href: '#synthese' });
     for (const r of d.macro_calendar || []) {
       const iso = frenchDayMonthToIso(r.date_iso || r.date, d.date);
       const impact = String(r.impact ?? r.importance ?? '');
@@ -795,7 +795,7 @@ function scannerTimeline(d) {
         impact: /HIGH|[ÉE]LEV|fort/i.test(impact) ? 'strong' : 'medium', label: r.short || (known ? known[1] : r.event),
         icon: r.icon || (known ? known[2] : 'data'), href: '#macro' });
     }
-    if (setups.length && exit <= to) events.push({ date: exit, category: 'plan', impact: 'strong', label: 'Sortie forcée', detail: 'à la clôture, sans stop ni objectif touché', icon: 'exit', href: '#synthese' });
+    if (setups.length && exit <= to) events.push({ date: exit, category: 'plan', impact: 'strong', label: 'Sortie forcée', detail: 'avant la clôture, sans stop ni objectif touché', icon: 'exit', href: '#synthese' });
     events.sort((a, b) => a.date.localeCompare(b.date));
     return renderEventTimeline({
       id: 'echeancier', asof: d.date, from: d.date, to, events,
