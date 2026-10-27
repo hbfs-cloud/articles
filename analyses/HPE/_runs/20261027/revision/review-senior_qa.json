@@ -1,0 +1,123 @@
+{
+  "ticker": "HPE",
+  "role": "senior_qa",
+  "verdict": "Gabarit du 27 octobre respecté et niveaux, R/R, taille, indicateurs, performances, corrélations et agrégats XBRL recalculés exacts ; quatre blocages de fait à corriger avant publication (chronologie du titre, plans de cession des dirigeants, libellé de la capitalisation, historique du short faussement déclaré absent).",
+  "blocks": [
+    {
+      "path": "meta.description ; meta.ogDescription ; verdict.summary",
+      "problem": "« HPE a perdu 25 % en cinq séances après la dégradation de Barclays » est faux dans l'ordre des faits. Les cinq séances du 9 au 16 octobre (clôtures 73,46 -> 55,13, soit -24,95 %) commencent deux séances AVANT la dégradation du 14 : -4,3 % le 12 et -2,2 % le 13, soit -6,3 % avant Barclays (Dell -2,3 % et Super Micro -6,7 % sur les mêmes deux séances). Depuis la clôture du 13 (68,81) jusqu'au 16 : -19,9 % (dont -8,3 % le jour du 14). Le titre de la fiche attribue donc à Barclays un quart de baisse dont un quart avait déjà eu lieu.",
+      "fix": "Remplacer par « HPE a perdu 25 % du 9 au 16 octobre, dont 20 % depuis la clôture du 13, veille de la dégradation de Barclays » (meta.description), « −25 % du 9 au 16 octobre, dont −20 % depuis la veille de Barclays » (ogDescription) et « puis a perdu 25 % en cinq séances, du 9 au 16 octobre, dont 20 % depuis la veille de la dégradation de Barclays du 14 » (verdict.summary). Le tribunal et les cartes de risque, qui datent la fenêtre (9-16 octobre), restent corrects.",
+      "evidence": "analyses/HPE/_data/bars.json, barres 2026-10-09 (73,46), 10-12 (70,33), 10-13 (68,81), 10-14 (63,11), 10-16 (55,13) ; analyses/HPE/_data/comparison_bars.json (DELL, SMCI) ; Barclays daté du 14 octobre : https://www.marketbeat.com/instant-alerts/analyst-hewlett-packard-enterprise-nyse-hpe-rating-lowered-to-equal-weight-at-barclays-2026-10-14/"
+    },
+    {
+      "path": "risks.riskCards[3].points[0] ; verdict.whyAvoid[2] ; filingsReview.filings (Form 4 du 2026-10-01 et du 2026-10-23) ; tribunal.rounds[2] ; globalScore.keyTakeawaysNegative[2]",
+      "problem": "La fiche traite les ventes de dirigeants comme un signal sans dire qu'elles sont toutes programmées. Carte de risque : « 500 000 actions vendues les 11 septembre et 5 octobre, dont 250 000 par plan programmé » est faux : les DEUX ventes de Neri (11 septembre, accession 0001648401-26-000009 ; 5 octobre, 0001648401-26-000011) relèvent du même plan adopté le 4 juin 2026 (note du formulaire 4). Les deux ventes de Rami Rahim (29 septembre et 21 octobre, formulaires 4 0001560849-26-000010 et -000013, ouverts et hachés dans _primary) relèvent d'un plan adopté le 30 juin 2026 par sa fiducie : la fiche ne le dit nulle part et écrit « la veille de la journée investisseurs », ce qui suggère un calage sur l'événement alors que le calendrier était fixé en juin. Seule la vente de l'administrateur Reiner (17 000 actions, 14 septembre) ne mentionne aucun plan. Le tribunal plaide « ceux qui voient les commandes vendent » sur 568 899 actions (500 000 + 68 899) dont la totalité relève de plans adoptés les 4 et 30 juin, deux mois avant les résultats du 2 septembre.",
+      "fix": "Corriger la carte : « Directeur général : 500 000 actions les 11 septembre et 5 octobre, toutes deux par un plan de cession adopté le 4 juin. Patron du réseau : 68 899 actions les 29 septembre et 21 octobre, par un plan adopté le 30 juin. Administrateur Reiner : 17 000 actions le 14 septembre, sans mention de plan. » Supprimer « la veille de la journée investisseurs » de la ligne du formulaire 4 du 1er octobre ou y ajouter « plan adopté le 30 juin 2026 ». Dans le tribunal, ronde 3 de l'accusation, remplacer la formule par ce qui reste vrai : aucun achat, ventes en bloc de 250 000 actions de la part du directeur général, plans adoptés avant la hausse ; ronde 4 de la défense : citer les deux ventes de Neri et celles de Rahim comme programmées. Le fait gardé contre le titre est l'absence d'achat après la baisse (aucun formulaire 4 d'achat dans submissions.json depuis le 14 octobre).",
+      "evidence": "analyses/HPE/_primary/text/2026-10-07-4-000011-neri-form4.xml.txt (« trading plan adopted on 06/04/26 ») ; analyses/HPE/_primary/text/2026-10-01-4-000010-rahim-form4.xml.txt et 2026-10-23-4-000013-rahim-form4.xml.txt (« trading plan adopted on 06/30/26 ») ; formulaire 4 du 11 septembre : https://www.sec.gov/Archives/edgar/data/1645590/000164840126000009/form4.xml (même note, plan du 06/04/26, 1 432 393 actions détenues après = 1 182 393 + 250 000) ; analyses/HPE/_primary/submissions.json (aucun formulaire 4 d'achat après le 2026-10-07)."
+    },
+    {
+      "path": "header.metrics.marketCap ; fundamentals.rows[Rachats d'actions].signal (« 3,9 % de la capitalisation ») ; bottomEstimation.confluences[4] ; numeric-evidence.json (string_numeric_claims header.metrics.marketCap)",
+      "problem": "« Capitalisation 82,4 Md$ » n'est pas la capitalisation : c'est 58,72 $ x 1 403,5 M d'actions, soit le cours multiplié par les actions ordinaires PLUS les 76,1 M d'actions issues de la conversion future des préférentielles. La capitalisation ordinaire est 58,72 x 1 327 464 779 = 77,95 Md$, valeur que donne le fournisseur (marketCap 77 948 731 823) et que le lecteur retrouvera partout. La méthode inscrite dans les preuves (« capitalisation = close x actions en circulation ») contredit le chiffre. L'écart (+5,7 %) se répercute sur les « 3,9 % de la capitalisation » du rachat (3,2 / 77,95 = 4,1 %) et sur le P/E GAAP de 29,5x (27,9x sur 77,95).",
+      "fix": "Afficher 77,9 Md$ sous « Capitalisation » (et corriger les 3,9 % en 4,1 % ; le P/E GAAP en 27,9x, ou garder 29,5x en le libellant « préférentielles converties »). Si le choix éditorial est de montrer le pro forma, écrire « 82,4 Md$ (préférentielles converties) » et aligner la phrase de méthode du sidecar. L'EV/EBITDA de 15,8x, calculé sur le pro forma, reste juste et doit garder son libellé « préférentielles converties ».",
+      "evidence": "analyses/HPE/_data/instrument.json (marketCap 77948731822.88, quote_price_with_latest_shares) ; analyses/HPE/_runs/20261027/revision/numeric-evidence.json (valuation_scenario.shares 1403520779, method de header.metrics.marketCap) ; 10-Q couverture : 1 327 464 779 actions au 27 août 2026."
+    },
+    {
+      "path": "shortInterest.trend ; business.coverageMatrix[Positions vendeuses]",
+      "problem": "« relevé pris au milieu de la chute, sans historique daté : aucune tendance affirmée » est faux. La collecte contient la série FINRA complète : 24 règlements du 31 octobre 2025 au 15 octobre 2026, avec dates, actions, % du flottant et jours à couvrir. La fiche écarte la seule lecture que la série permet : l'intérêt vendeur n'a pas grossi pendant la chute. 52,15 M d'actions (3,95 % du flottant) au 15 octobre, contre 50,24 M (3,80 %) au 30 septembre (+3,8 %) et un pic de 94,79 M (7,17 %) au 30 janvier ; c'est le plus bas niveau de l'année avec celui du 30 septembre. Les vendeurs à découvert n'ont donc pas attaqué la baisse, ce qui nuance la thèse « technique cassée » et compte pour le plan d'achat sur cassure.",
+      "fix": "Réécrire trend : « 52 153 793 actions vendues à découvert au règlement FINRA du 15 octobre, soit 3,9 % des 1 321,7 millions d'actions flottantes ; le 30 septembre : 50 240 337 (3,8 %), le pic de l'année : 94 785 356 (7,2 %) le 30 janvier. Le short a reculé de moitié depuis janvier et n'a progressé que de 3,8 % pendant la chute : pas de ruée vendeuse, pas de ressort non plus. » Ajouter les dates à la ligne de la matrice de couverture.",
+      "evidence": "analyses/HPE/_data/short_squeeze.json, results[0].data[0].points (settlement_date 2026-01-30 : 94785356 / 7,17 % ; 2026-09-30 : 50240337 / 3,80 % ; 2026-10-15 : 52153793 / 3,95 %, days_to_cover 2,42)."
+    }
+  ],
+  "fixes": [
+    {
+      "path": "tradeIdea.entry ; tradeIdea.rr ; rendu « Plan de trade » (tuile Déclencheur et tuile Risque/rendement)",
+      "problem": "Trois nombres différents pour le même niveau : tuile Déclencheur « 59,50 $ clôture au-dessus » ; tuile R/R « 1:1,67 · 1:2,52 » (calculé sur entry 59,50) ; ligne de détail « 1:1.66 / 1:2.51 au déclencheur » (calculé sur 59,51) ; pire exécution au plafond 59,87 : 1:1,50 / 1:2,30 (calculs vérifiés exacts). La tuile affiche donc le meilleur R/R, non le pire fill, et le séparateur décimal du détail est un point dans une page française.",
+      "fix": "Poser entry à 59,51 (ou afficher « 59,51 $ ou plus ») et faire afficher dans la tuile le pire fill : « 1:1,50 · 1:2,30 au plafond 59,87 $ ; 1:1,66 · 1:2,51 au déclencheur ». Recalculer stopPct/tp1Pct/tp2Pct sur la base choisie (depuis 59,87 : -10,0 % / +14,9 % / +22,9 %). Écrire « 1:1,66 », « 1:2,51 », « 1:1,50 », « 1:2,30 ».",
+      "evidence": "levels dans analyses/HPE/_runs/20261027/revision/numeric-evidence.json (rr1 1,6655 ; rr2 2,5152 ; cap 59,87 ; capRr 1,5000) ; recalcul : (68,81-59,87)/(59,87-53,91) = 1,50 ; (73,56-59,87)/5,96 = 2,30."
+    },
+    {
+      "path": "tools/render-analysis.js (rendu), technicals, initiés, performance, blast radius",
+      "problem": "Français incomplet sur la page publique : en-têtes « Recent Transactions », « Insider », « Type », « Shares », « Value » et badges « sell » (tools/render-analysis.js:617) ; séparateur décimal anglais dans le haut de page et les tableaux (« $58.72 », « +3.58% », « RSI 46.1 », « EMA 20 $60.82 », « Supports : $56.83 / $53.91 / $49.80 », « Corrélation 0.687 », « -17.0% », « -6.70 % ») à côté de décimales françaises ailleurs ; « ITM » dans la table du bon Oracle. Même motif que le gabarit FICO, donc correctif de rendu plutôt que de contenu.",
+      "fix": "Traduire les en-têtes (Dernières opérations, Initié, Type, Actions, Montant ; « vente ») et formater les nombres des tuiles et tableaux avec la virgule et l'espace avant % et $. Remplacer « ITM » par « dans la monnaie ». À faire une fois dans le moteur pour toutes les fiches.",
+      "evidence": "analyses/HPE/index.html, sections Initiés et institutions, Analyse technique, Performance et références, Rayon de propagation."
+    },
+    {
+      "path": "blastRadius.method (ligne « Clôture de référence ... Observation : ... »)",
+      "problem": "Horodatage brut visible : « Observation : 2026-10-27T10:26:26.833786945Z » (nanosecondes, format machine) et « Fenêtre : Rendements quotidiens communs du 2026-02-09 au 2026-10-26 » alors que le premier rendement commun est du 10 février (179 observations, première barre du 9).",
+      "fix": "Écrire « Observation : 27 octobre 2026, 10 h 26 UTC » et « du 10 février au 26 octobre 2026 (179 séances) ».",
+      "evidence": "analyses/HPE/index.html (détail par groupe) ; recalcul des 179 rendements logarithmiques communs : première date commune 2026-02-10."
+    },
+    {
+      "path": "technicals.supports ; technicals.resistances ; technicals.setupNote",
+      "problem": "Les listes affichées ne reprennent pas la prose : « Supports : 56,83 / 53,91 / 49,80 » alors que la prose cite 53,91, 49,80 et 45,70 (56,83 n'est que le plus bas de la séance du 26 octobre) ; « Résistances : 60,19 / 68,81 / 73,56 » alors que la prose cite aussi 66,18, plus haut du 14.",
+      "fix": "Aligner les listes sur la prose : supports 53,91 / 49,80 / 45,70 ; résistances 60,19 / 66,18 / 68,81 / 73,56.",
+      "evidence": "analyses/HPE/_data/bars.json : bas du 26 octobre 56,83 ; haut du 14 octobre 66,18 ; bas du 3 septembre 45,70."
+    },
+    {
+      "path": "business.overview ; blastRadius (ligne ORCL, contradictions) ; tribunal.rounds[1]",
+      "problem": "« Oracle reçoit, depuis le 2 juillet, des actions HPE à mesure qu'il achète du réseau » et « Oracle qui déploie ce réseau » dépassent le 10-Q : Oracle détient depuis le 2 juillet un bon de souscription de 4 156 466 actions à 0,01 $ qui s'acquiert par tranches si des jalons d'achats sont atteints, exerçable jusqu'au 25 juin 2029 ; aucune tranche acquise ni action remise n'est déclarée, et le texte ne parle que d'une collaboration pour déployer le réseau dans ses centres de données d'IA.",
+      "fix": "« Oracle détient depuis le 2 juillet un bon de souscription de 4,16 M d'actions, acquis par tranches selon ses achats de réseau pour ses centres de données d'IA » ; « Oracle qui s'est engagé à déployer ce réseau ».",
+      "evidence": "analyses/HPE/_primary/text/q3-10q__hpe-20260731.htm.txt, note sur le bon (« will vest and become exercisable in tranches, upon the achievement of specific milestones »)."
+    },
+    {
+      "path": "news[0] (Barclays) ; blastRadius.groups (NTAP) ; business.overview",
+      "problem": "« Barclays dégrade HPE et Dell le même jour » omet NetApp : la même note du 14 octobre a ramené Dell, HPE et NetApp à « pondération neutre » (objectif NetApp maintenu à 219 $). NetApp est utilisé dans la fiche comme pair direct et fait +10,4 % sur 21 séances (-7,0 % le 14) : le lecteur ne peut pas juger que la thèse « serveurs gonflés par la mémoire » ne s'applique pas à tout le groupe dégradé. Le motif de Barclays est aussi plus large que la mémoire : « pas d'inflexion de l'IA significative », 5 % des budgets informatiques vers l'IA.",
+      "fix": "Écrire « Barclays dégrade Dell, HPE et NetApp le même jour » et ajouter à la ligne NTAP « dégradé le même jour, +10,4 % sur 21 séances ». Citer le motif complet de Barclays avec la source.",
+      "evidence": "https://finance.yahoo.com/markets/stocks/articles/hpe-dell-ntap-stocks-downgraded-102255493.html ; https://www.tikr.com/blog/dell-sinks-18-5-in-a-month-on-barclays-downgrade-no-meaningful-ai-inflection-yet ; analyses/HPE/_data/comparison_bars.json (NTAP : -7,0 % le 14 octobre, +10,41 % sur 21 séances)."
+    },
+    {
+      "path": "business.coverageMatrix ; earnings.quarters (vide) ; Initiés et institutions",
+      "problem": "Matrice de couverture incomplète au regard de /analyse (« marquer explicitement UNAVAILABLE ou non pertinent au lieu d'omettre ») et de la leçon TLN (13F, analystes). Absents alors que collectés : analystes (consensus Achat, 24 analystes, objectif moyen 71,74 $ ; quatre actions sur 90 jours : Daiwa relevé à Surperformance, objectif 75, le 2 octobre ; Morgan Stanley relevé à Surpondérer, 69, le 10 août ; Evercore dégradé à En ligne, 65, le 14 septembre ; Barclays dégradé le 14 octobre : 2 hausses, 2 baisses), détention institutionnelle (91,4 % du capital selon le fournisseur ; aucun 13F collecté), quatre dépassements de bénéfice consécutifs (+6,5 %, +10,8 %, +48,0 %, +18,4 %), sentiment (+0,28, confiance 0,19), saisonnalité, VWAP du 26 octobre (58,53). La fiche ne cite que les deux dégradations, ce qui rend la lecture analystes unilatérale.",
+      "fix": "Ajouter des lignes à la matrice (analystes, institutionnels 13F « non collectés », réactions et surprises, sentiment, saisonnalité) et remplir earnings.quarters avec les quatre trimestres ; citer en une phrase les deux relèvements et le consensus à 71,74 $.",
+      "evidence": "analyses/HPE/_data/analyst_actions.json ; fundamentals.json (analyst_trend, holders, earnings_surprises, earnings_reactions) ; sentiment.json ; vwap.json."
+    },
+    {
+      "path": "timeline.events ; timeline.note ; timeline.to",
+      "problem": "Incohérence de sélection : Cisco publie le 12 novembre (même source unique que Super Micro, Arista, AMD, Extreme, SanDisk et Intel, qui figurent avec `uncertain: true`) et la date est DANS la fenêtre 27 octobre - 16 novembre, mais la note la déclare « hors frise ». Cisco est pourtant le premier concurrent réseau cité par le 10-K et nommé dans le scénario haussier. Par ailleurs, la date la plus importante du plan, la sortie forcée du 30 novembre, n'est pas sur la frise (bornée à 3 semaines) ; la pastille « Fin du plan » porte la dernière activation, pas la sortie.",
+      "fix": "Ajouter Cisco au 12 novembre (résultats, impact moyen, `uncertain: true`, même source). Ajuster la note : « Nvidia (17 nov.), Dell (fin nov.) et la sortie du 30 nov. : au-delà de la frise ». Renommer la pastille du 16 novembre « Dernière activation » pour qu'elle ne passe pas pour la fin d'horizon.",
+      "evidence": "analyses/HPE/_data/comparison_calendar_ctb.json (CSCO nextEarningsDate 2026-11-12) ; tools/templates/event-timeline.md règles 1 et 6."
+    },
+    {
+      "path": "bottomEstimation.method ; bottomEstimation.scenarios[2] (pessimistic 40,07 $)",
+      "problem": "Rapprochement d'unités : « la perte d'un milliard de dollars d'EBITDA annuel, l'équivalent de la hausse du résultat des serveurs et du cloud sur un an au troisième trimestre ». Le 1,0 Md$ du 10-Q est le gain d'UN trimestre ; annualisé il vaut environ 4 Md$. Le scénario « mémoire qui se détend » n'efface donc qu'un quart de ce gain et le plancher bas de 40,07 $ n'est pas un pire cas, contrairement à ce que laisse lire le libellé. De plus l'EBITDA des douze mois contient le quatrième trimestre 2025 à -8 M$ (déjà signalé) : il sous-estime le rythme actuel et rend le mélange difficile à lire.",
+      "fix": "Écrire explicitement « un trimestre de gain effacé (1,0 Md$ d'EBITDA annuel) » et ajouter une ligne de sensibilité « avec 4 Md$ d'EBITDA en moins (gain du troisième trimestre annualisé) : valeur par action n'ayant plus de sens à 13,8x, la décote se lit sur le multiple ». Ou retirer le qualificatif « pessimistic » du libellé du plancher bas.",
+      "evidence": "10-Q : « Cloud & AI earnings from operations increased by $1.0 billion » (trois mois clos le 31 juillet 2026) ; analyses/HPE/_runs/20261027/revision/numeric-evidence.json (valuation_scenario, gaap_ttm_usd)."
+    },
+    {
+      "path": "fundamentals.rows[EV/EBITDA GAAP].comparison ; verdict.whyBuy[2]",
+      "problem": "Le multiple de HPE (15,8x) est calculé à la main sur l'EBITDA GAAP des douze mois au 31 juillet (D&A des équipements loués par la division de financement compris), alors que Dell, Super Micro, Cisco, NetApp, IBM et HP Inc viennent du champ enterpriseToEbitda du fournisseur, de base différente. « Sous Dell (17,9x) et Cisco (24,1x) » compare deux méthodes.",
+      "fix": "Ajouter à la note « bases de calcul différentes : HPE sur l'EBITDA GAAP des douze mois, pairs selon le fournisseur » et retirer « sous Dell et Cisco » de whyBuy, ou donner aussi le multiple de HPE selon le fournisseur.",
+      "evidence": "analyses/HPE/_data/comparison_context.json (enterpriseToEbitda DELL 17,893 ; SMCI 9,657 ; CSCO 24,134) ; numeric-evidence.json (derived.ebitda 6 092 000 000)."
+    },
+    {
+      "path": "tradeIdea.entryNote (phrase sur les 29 cassures)",
+      "problem": "Phrase peu lisible et résultat non dit : « sur les 29 cassures ..., 6 ont laissé une ouverture sous un tel seuil ; sur les 23 autres, un ordre limité de trois séances aurait été exécuté 15 fois ». Recalcul exact (29 ; 7 clôtures dans la bande dont 6 ouvertures sous le plafond ; 23 non achetables ; 15 exécutions, 0 stop touché le même jour), donc 21 exécutions sur 29, et 8 cassures sur 29 (28 %) n'auraient jamais donné d'exécution : le lecteur doit savoir qu'il rate environ une cassure sur quatre avec ce plafond.",
+      "fix": "Écrire : « Sur 29 cassures passées, 6 se sont ouvertes sous le plafond ; avec un ordre limité renouvelé trois séances, 15 de plus auraient été exécutées. Pour 8 cassures sur 29, l'ordre n'aurait jamais été exécuté. »",
+      "evidence": "Recalcul indépendant sur analyses/HPE/_data/bars.json avec la définition de tools/lib/analysis-v3-r08.cjs (breakoutStats, retestStats) : n = 29, buyable = 6, miss = 23, back = 15, stopSame = 0, gapUnder = 0."
+    },
+    {
+      "path": "tradeIdea.horizon ; tradeIdea.entryNote",
+      "problem": "Exécution : l'horizon demande un ordre stop sur la position entière à 53,91 $ ET un ordre de vente limité sur la moitié à 68,81 $, ouverts en même temps sur les mêmes actions. Sans ordre lié ou sans quantités séparées, une exécution du limit puis un déclenchement du stop sur la quantité entière peut créer une position vendeuse chez certains courtiers. Le stop est aussi posé exactement sur le plus bas du 22 octobre (53,91) : une simple retouche le déclenche, ce qui est cohérent avec « plancher de la base » mais doit être dit.",
+      "fix": "Préciser : « stop sur la totalité jusqu'à l'exécution du premier objectif, puis stop ramené à la quantité restante (ordre OCO si le courtier l'accepte) » et « le stop se déclenche dès que 53,91 $ est touché en séance ».",
+      "evidence": "levels.stop 53,91 ; analyses/HPE/_data/bars.json : bas du 2026-10-22 = 53,91."
+    },
+    {
+      "path": "archiveHistory ; verdict.summary",
+      "problem": "Le plan précédent de la même fiche (achat au-dessus de 65,65 $, activé le 2 octobre, arrêté au stop le 15 octobre à la clôture de 58,63 $) n'apparaît que dans la fenêtre « Historique ». Le lecteur qui a suivi la version du 25 septembre a subi cette sortie ; le corps de la fiche ne la mentionne pas alors que le nouveau plan est un achat sur cassure du même titre.",
+      "fix": "Ajouter une phrase dans le verdict ou la thèse : « La version du 25 septembre (achat au-dessus de 65,65 $) a été arrêtée au stop le 15 octobre, clôture à 58,63 $. » avec la perte par rapport à la clôture d'activation (69,33 $ le 2 octobre).",
+      "evidence": "meta.statusHistory (2026-10-10 active ; 2026-10-19 stopped, close 58,63) ; analyses/HPE/_data/bars.json (clôture du 2 octobre 69,33 ; du 15 octobre 58,63)."
+    },
+    {
+      "path": "tradeIdea.thesis ; technicals.setupNote",
+      "problem": "« TP1 à 68,81 $, haut du trou d'ouverture du 14 octobre » : l'écart entre la clôture du 13 (68,81) et l'ouverture du 14 (64,84) est un écart clôture-ouverture ; il n'y a de trou de cotation qu'entre le plus haut du 14 (66,18) et le plus bas du 13 (67,05). La séance du 26 octobre (+3,6 %) n'est par ailleurs attribuée à rien : la hausse est largement sectorielle (XLK +1,7 %, SMH +2,7 %, Dell +2,3 %, Cisco +3,5 % le même jour).",
+      "fix": "Écrire « 68,81 $, clôture du 13 octobre, point de départ de la chute » et ajouter « hausse du 26 octobre en ligne avec le secteur (XLK +1,7 %, SMH +2,7 %, Dell +2,3 %) » dans la lecture technique.",
+      "evidence": "analyses/HPE/_data/bars.json et comparison_bars.json, séance du 2026-10-26 ; barres du 13 et du 14 octobre."
+    },
+    {
+      "path": "analyses/HPE/_data/harness.json (source status)",
+      "problem": "check-freshness.js sort avec 1 bloquante : la source `status` a 2,3 h pour une limite de 2 h (collecte à 10 h 26 UTC). Aucune donnée de la fiche n'est périmée (barres du 26 octobre certifiées), mais le garde-fou refusera la publication tel quel.",
+      "fix": "Relancer GetStatus seul (lecture, ni RefreshBars ni écriture de barres) et réécrire status.json/harness.json juste avant la publication ; vérifier de nouveau que equity_reference_close reste 2026-10-26.",
+      "evidence": "node tools/check-freshness.js analyses/HPE/_data/harness.json : « status: STALE — 2.3h > max 2h »."
+    }
+  ]
+}

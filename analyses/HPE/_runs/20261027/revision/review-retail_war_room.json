@@ -1,0 +1,93 @@
+{
+  "ticker": "HPE",
+  "role": "retail_war_room",
+  "verdict": "Plan lisible et sourcé, mais pas exécutable en l'état par un particulier : la taille \"perte maximale\" n'est pas un maximum, l'activation (1,35 % du cours) tombera très probablement avant SanDisk (29/10) et la fenêtre Super Micro-Arista-AMD (3-4/11) sans règle chiffrée, le badge et l'aperçu social omettent \"sur une clôture\", les chiffres d'en-tête sont au meilleur fill et les ordres de sortie (stop plein + vente limitée sur la moitié) ne tiennent pas chez un courtier standard.",
+  "blocks": [
+    {
+      "path": "tradeIdea.entryNote (paragraphe Taille)",
+      "problem": "\"Pour 1 000 $ de perte maximale acceptée : 159 actions au plus\" n'est pas une borne. Le calcul applique l'écart d'ouverture de -10,44 % (14/09/2026, ouverture 55,605 contre clôture 62,09) au prix d'achat 59,87 $ : 6,25 $ par action. Mais l'écart peut survenir depuis un cours proche du stop : clôture à 53,92 $, ouverture suivante -10,44 % = 48,29 $, soit 11,58 $ de perte par action (19,3 %) et 1 842 $ pour 159 actions. Le régime actuel est plus violent que l'année : écart d'ouverture absolu moyen de 3,29 % sur les 10 dernières séances contre 1,57 % sur 250 ; ouvertures du 14/10 -5,8 % et du 15/10 -5,1 %. Le texte du Risque (\"la taille se calcule sur le pire écart\") laisse croire que le plafond de perte est tenu.",
+      "fix": "Remplacer par : \"Pour 1 000 $ de perte visée avec un écart d'ouverture de 10,4 % appliqué au prix d'achat : 159 actions (environ 9 519 $ engagés). Le même écart depuis un cours proche du stop coûterait jusqu'à 11,6 $ par action, soit 1 842 $ pour 159 actions ; pour borner ce cas à 1 000 $ : 86 actions (environ 5 149 $ engagés).\" Donner aussi la formule pour un montant personnel : actions = perte acceptée en dollars / 6,25 (ou / 11,58 pour le cas extrême), et conseiller de raisonner en pourcentage du capital (0,5 à 1 %) plutôt qu'en 1 000 $.",
+      "evidence": "analyses/HPE/_data/bars.json (results[0].data[0].bars, tableau [date,open,high,low,close,volume], 300 séances au 2026-10-26) ; écart 2026-09-14 : [open 55.605, close veille 62.09] ; calcul : 59.87-(53.91+0.01)*(1-0.104447)=11.58 ; gapStats et size1k dans analyses/HPE/_runs/20261027/compose-hpe-body.cjs ligne 22-23 (max(riskSh,gapLoss))"
+    },
+    {
+      "path": "tradeIdea.thesis, tradeIdea.entryNote, timeline.keyWindow, tradeIdea.catalysts",
+      "problem": "Le déclencheur (59,51 $) est à 1,35 % de la clôture (58,72 $), soit 0,22 ATR en pourcentage (ATR 3,67 $ = 6,25 % du cours). Sur les 250 dernières séances, une clôture à +1,35 % ou plus se produit dans les 5 séances suivantes dans 67 % des fenêtres (75-79 % sur les 60-120 dernières, échantillon haussier donc biaisé) ; elle se produit à la première séance dans 36 % des cas. L'activation, donc l'achat, tombera très probablement avant les résultats de SanDisk et Intel (29/10 après clôture) et avant la fenêtre clé du 3-4 novembre (Super Micro, Arista, AMD), que la fiche elle-même désigne comme décisive. Le texte dit seulement \"taille réduite, pas d'anticipation\" : \"réduite\" n'est ni définie ni chiffrée, alors que la section Taille donne la taille pleine (159 actions) sans réduction. Un particulier ne sait pas s'il peut acheter le 28 octobre et passer la nuit du 3 novembre avec un stop à 10 %.",
+      "fix": "Ajouter une règle chiffrée dans entryNote et dans thesis (supprimer \"taille réduite\" non défini). Exemple : \"Tout achat exécuté avant la clôture du 4 novembre traverse les résultats de SanDisk (29/10) et de Super Micro, Arista et AMD (3/11 après 22 h, Paris) : taille divisée par deux (80 actions pour 1 000 $ visés) ou ordre posé seulement à partir de l'ouverture du 4 novembre, si le titre cote encore au-dessus de 59,51 $.\" Reporter la même consigne dans horizon et dans la frise (note).",
+      "evidence": "analyses/HPE/_data/bars.json (results[0].data[0].bars, tableau [date,open,high,low,close,volume], 300 séances au 2026-10-26) ; fenêtres glissantes calculées sur les clôtures (max des 5 clôtures suivantes >= clôture*1,0135) ; analyses/HPE/_runs/20261027/revision/peer-calendar.json et analyses/HPE/_data/comparison_earnings.json (SMCI, ANET, AMD 2026-11-03, single_source ; SNDK, INTC 2026-10-29)"
+    },
+    {
+      "path": "blastRadius.scenarios (haussier et baissier, champ confirmation) contre tradeIdea.statusNote, tradeIdea.entryNote, technicals.setups",
+      "problem": "Deux définitions du déclencheur. Le scénario haussier exige \"une clôture à 59,51 $ ou plus avec un volume supérieur à la moyenne des vingt séances\" ; le scénario baissier confirme une clôture sous 53,91 $ \"sur un volume supérieur à la moyenne\" ; le plan, la configuration et le verdict activent sur la seule clôture. Le contrôle \"Point d'entrée\" relève lui-même que la hausse du 26/10 s'est faite à 0,48 fois la moyenne des vingt séances précédentes (9,75 M contre 20,3 M) : un lecteur ne sait pas si une clôture à 59,6 $ sur 10 M d'actions active ou non l'ordre. Les statistiques 29/6/23/15 de la section Achat n'ont aucun filtre de volume.",
+      "fix": "Garder une seule règle. Recommandé, pour rester cohérent avec les statistiques publiées : le plan s'active sur la seule clôture >= 59,51 $ ; réécrire les deux lignes Confirmation en \"un volume supérieur à la moyenne des vingt séances (environ 20 M d'actions) renforce le signal, mais le plan ne l'exige pas\". Variante si l'auteur veut le filtre : l'ajouter à statusNote, entryNote, banner, technicals.setups.0.trigger et recalculer 29/6/23/15 avec ce filtre.",
+      "evidence": "data/analyses-data/HPE.json blastRadius.scenarios ; analyses/HPE/index.html section Rayon de propagation (Confirmation) ; volume moyen des 20 séances précédant le 26/10 : 20 260 283 (bars.json)"
+    },
+    {
+      "path": "header.badges.0.text, meta.ogDescription",
+      "problem": "Le badge \"SURVEILLER - ACHAT SEULEMENT AU-DESSUS DE 59,50 $\" et l'aperçu social \"Achat seulement au-dessus de 59,50 $, stop 53,91 $\" omettent \"sur une clôture\". Un franchissement en séance de 59,50 $ est quasi acquis dès demain (plus haut du 26/10 : 59,3997 $ ; plus haut du 21/10 : 59,50 $ clôturé à 58,17 $ ; deux cassures intraday non tenues les 24 et 25/09 d'après statusHistory). C'est exactement le faux départ que le plan interdit (\"Un franchissement en séance ne compte pas\"). Ces deux surfaces sont celles que le lecteur voit en premier (carte, partage, notification dérivée).",
+      "fix": "header.badges.0.text : \"SURVEILLER - ACHAT SEULEMENT APRES UNE CLOTURE A 59,51 $ OU PLUS\" (avec accents : \"APRÈS UNE CLÔTURE À 59,51 $ OU PLUS\"). meta.ogDescription : \"HPE à 58,72 $ : -25 % en cinq séances après Barclays, serveurs gonflés par la mémoire selon le 10-Q. Achat seulement après une clôture à 59,51 $ ou plus, stop 53,91 $.\" Vérifier que la notification Telegram reprend la même formulation.",
+      "evidence": "analyses/HPE/_data/bars.json (results[0].data[0].bars, tableau [date,open,high,low,close,volume], 300 séances au 2026-10-26) (2026-10-21 high 59.5 close 58.17 ; 2026-10-26 high 59.3997) ; data/analyses-data/HPE.json meta.statusHistory.1.note ; analyses/HPE/index.html lignes 9 et 65"
+    },
+    {
+      "path": "tradeIdea.stopPct, tradeIdea.tp1Pct, tradeIdea.tp2Pct, tradeIdea.rr (affichage carte), tradeIdea.thesis (\"Le risque est large, 9,4 %\")",
+      "problem": "Les chiffres de la carte sont calculés sur entry = 59,50 $ (déclencheur) et non sur le pire prix exécutable 59,87 $ : stop -9,4 %, objectifs +15,6 % et +23,6 %, R/R \"1:1,67 - 1:2,52\", et la thèse écrit \"risque ... 9,4 %\". La section Achat dit 10,0 % de risque et R/R 1:1,50 / 1:2,30 au plafond, et le détail donne 1:1.66 / 1:2.51 : trois couples de valeurs pour le même plan. Règle du dépôt (feedback_analysis_senior_review_first, point 3) : le R/R d'une zone d'entrée s'atteste au pire fill, jamais à la borne favorable (précédent TLN, 1,0 réel contre 1,6 affiché). Le lecteur qui s'arrête à la carte surestime son gain relatif de 0,17 point de R/R et sous-estime sa perte de 0,6 point.",
+      "fix": "Afficher sur la carte les valeurs au plafond 59,87 $ : stop -10,0 % (5,96 $), TP1 +14,9 %, TP2 +22,9 %, R/R 1:1,50 / 1:2,30 ; remplacer dans la thèse \"9,4 %\" par \"10,0 % au prix d'achat maximal\". Garder entry = 59,50 comme niveau de déclenchement du suivi, mais ne plus l'afficher comme prix d'entrée. Corriger le format français du détail : \"1:1,66 / 1:2,51 au déclencheur ; 1:1,50 / 1:2,30 au plafond 59,87 $\".",
+      "evidence": "(68.81-59.87)/(59.87-53.91)=1.500 ; (73.56-59.87)/5.96=2.297 ; 53.91/59.87-1=-9.955 % ; data/analyses-data/HPE.json tradeIdea.rr et entryNote ; analyses/HPE/_runs/20261027/compose-hpe-body.cjs (rrC1, rrC2, riskSh) ; .claude/memory/feedback_analysis_senior_review_first.md règle 3"
+    },
+    {
+      "path": "tradeIdea.horizon",
+      "problem": "Ordres de sortie non exécutables tels qu'écrits : \"ordre stop à 53,91 $ ... ordre de vente limité à 68,81 $ sur la moitié, puis stop remonté au prix d'achat ; le reste à 73,56 $\". Un stop sur la totalité (159 actions) et une vente limitée sur 80 actions représentent 239 actions à vendre pour 159 détenues : la plupart des courtiers de détail refusent le second ordre, ou l'acceptent sans lien OCO. Après exécution de la moitié à 68,81 $, un stop resté sur 159 actions peut vendre à découvert 80 actions (ou être refusé) ; le texte ne dit pas de réduire la quantité du stop. Sont aussi non précisés : stop au marché ou stop limité (un stop limité n'est pas exécuté dans un écart d'ouverture, donc ne protège pas), quantité des deux lots (159 est impair), annulation des ordres restants à la sortie du 30 novembre, durée de validité des ordres (certains courtiers plafonnent à 30-90 jours), et méthode pour vendre \"à la clôture\".",
+      "fix": "Réécrire : \"Scinder la position en deux lots (80 et 79 actions). Lot A : stop au marché à 53,91 $ et vente limitée à 68,81 $, liés en OCO (l'exécution de l'un annule l'autre). Lot B : stop au marché à 53,91 $ et vente limitée à 73,56 $, liés en OCO. Quand le lot A est vendu à 68,81 $, remonter le stop du lot B à 59,87 $ (prix d'achat) sans toucher à sa quantité. Si le courtier n'offre pas l'OCO, ne placer que les stops et surveiller les objectifs. Ne jamais laisser un stop de quantité supérieure aux actions détenues. À la sortie du 30 novembre, annuler tous les ordres restants avant ou en même temps que la vente, et vendre au marché dans la dernière demi-heure (21 h 30-22 h, Paris) ou par ordre de clôture si le courtier le propose.\"",
+      "evidence": "data/analyses-data/HPE.json tradeIdea.horizon ; tradeIdea.entryNote (159 actions) ; analyses/HPE/index.html bloc Horizon"
+    }
+  ],
+  "fixes": [
+    {
+      "path": "tradeIdea.entryNote (statistique 29/6/23/15)",
+      "problem": "La phrase \"un ordre limité de trois séances aurait été exécuté 15 fois, sans que le stop soit touché la même séance\" est exacte (recalculé : 29 cassures, 7 clôtures dans la bande, 6 ouvertures sous le plafond, 23 autres, 15 exécutions, 0 stop touché), mais le générateur calcule aussi fillCloseUnder = 6 : 6 des 15 exécutions (40 %) ont fini la séance sous le niveau cassé. La version du 25 septembre publiait ce chiffre (\"6 de ces exécutions ont fini la séance sous le niveau cassé\") ; la nouvelle version l'a retiré. Autres limites non dites : échantillon d'une seule action en tendance haussière (21 $ à 73 $), exécutions groupées (les cassures du 9 et 10/12/2025 donnent la même exécution du 11/12 ; 5, 6 et 8/05/2026 aussi), donc bien moins de 15 épisodes indépendants. De plus 8 des 23 cas n'ont jamais été exécutés en 3 séances : le plan se solde par un non-achat dans plus d'un tiers des cas où l'ouverture dépasse le plafond.",
+      "fix": "Ajouter après \"15 fois\" : \", dont 6 ont fini la séance sous le niveau cassé\" et \"8 n'auraient pas été exécutés\" ; ajouter \"sur une seule action en tendance haussière, avec des épisodes qui se recoupent\". Passer fillCloseUnder (rt.fillCloseUnder) dans la composition.",
+      "evidence": "Recalcul indépendant sur analyses/HPE/_data/bars.json ; tools/lib/analysis-v3-r08.cjs retestStats (champ fillCloseUnder) ; analyses/HPE/_runs/20261027/original/HPE.json tradeIdea.entryNote (version précédente)"
+    },
+    {
+      "path": "tradeIdea.entryNote (paragraphe Achat)",
+      "problem": "Mécanique de l'ordre d'achat incomplète. (1) \"après l'ouverture\" sans durée : l'ouverture à 15 h 30 (14 h 30 jusqu'au 30/10) est la minute la plus large en écart. (2) L'ordre limité à 59,87 $ s'exécute à tout cours inférieur : la condition \"cote au-dessus de 59,51 $\" n'est vérifiée qu'à la pose ; si le titre plonge sous 59,51 $ en séance, l'ordre peut être servi sous le déclencheur, c'est-à-dire sur une cassure déjà ratée. (3) Le texte ne dit pas que chaque renouvellement se pose à nouveau après l'ouverture et après vérification de la clôture de la veille, ni qu'aucun ordre d'achat ne reste actif de nuit.",
+      "fix": "Ajouter : \"Poser l'ordre au plus tôt 30 minutes après l'ouverture (16 h 00 Paris à partir du 2 novembre, 15 h 00 jusqu'au 30 octobre), seulement si la clôture de la veille est >= 59,51 $ et que le cours est >= 59,51 $ au moment de la pose ; ordre valable pour la séance uniquement, jamais en validité permanente ; l'annuler à la main si le cours passe sous 59,51 $ avant exécution ; à refaire chaque jour, trois séances au plus.\"",
+      "evidence": "data/analyses-data/HPE.json tradeIdea.entryNote ; ouvertures NY converties en heures de Paris avec les dates de changement d'heure du 25/10 (Europe) et du 01/11 (États-Unis)"
+    },
+    {
+      "path": "tradeIdea.entryNote (dernière phrase du paragraphe Compte)",
+      "problem": "\"sinon surveiller le cours et vendre soi-même\" : le marché est ouvert de 15 h 30 à 22 h (Paris) et un stop se déclenche en séance ; un particulier au travail ne surveille pas ce créneau, et la fiche elle-même dit que le stop peut être sauté à l'ouverture. Sans stop côté courtier, le plan n'a plus de borne de perte.",
+      "fix": "Remplacer par : \"Si le courtier n'accepte pas d'ordre stop sur cette action, ne pas prendre la position.\"",
+      "evidence": "data/analyses-data/HPE.json tradeIdea.entryNote ; risks.riskCards.2 (Écarts d'ouverture)"
+    },
+    {
+      "path": "tradeIdea.entryNote (phrase sur la liquidité)",
+      "problem": "\"l'écart entre prix d'achat et de vente s'élargit les jours de publication des pairs\" : aucune mesure de fourchette n'est collectée ni citée dans la fiche. Affirmation non prouvée ; la liquidité en valeur (1,11 Md$ en médiane sur 20 séances, recalculé : 1 108 699 000 $) est elle exacte, et très supérieure à la taille d'un particulier (9 519 $).",
+      "fix": "Supprimer cette proposition, ou la remplacer par \"la liquidité ne limite pas la taille ; éviter les ordres au marché dans les premières minutes de séance\".",
+      "evidence": "Aucune fourchette (bid/ask) dans analyses/HPE/_data/ ; médiane close*volume sur 20 séances calculée sur bars.json"
+    },
+    {
+      "path": "header.metrics.marketCap",
+      "problem": "\"Capitalisation 82,4 Md$\" est calculée sur 1 403,5 millions d'actions (ordinaires plus conversion future des préférentielles, 1er septembre 2027). Le fournisseur et les cotations publiques affichent 77,9 Md$ (77 948 739 584 $, 1 327,5 millions d'actions). Un lecteur qui compare avec son courtier voit un écart de 5,7 % sans explication au même endroit.",
+      "fix": "Libeller \"Capitalisation (préférentielles converties)\" ou afficher 77,9 Md$ et renvoyer au détail de dilution.",
+      "evidence": "QueryData quote HPE du 2026-10-27 : marketCap 77948739584 (quote_api, 2026-10-26T20:03:35Z) ; verdict.controlChecklist.1 (1 403,5 contre 1 327,5 millions)"
+    },
+    {
+      "path": "tradeIdea.banner, tradeIdea.statusNote, verdict.summary",
+      "problem": "\"Rien à acheter à 58,72 $\" est daté de la clôture du 26/10 mais sera lu après la séance du 27 ou plus tard (le titre aura peut-être déjà clôturé au-dessus de 59,51 $, donc l'ordre sera armé le jour de la lecture). Format anglais résiduel dans l'en-tête et le détail : \"$58.72\", \"+3.58%\", \"1:1.66 TP1\".",
+      "fix": "Écrire \"Rien à acheter au cours du 26 octobre (58,72 $)\" et ajouter en tête de la carte : \"Vérifier d'abord la dernière clôture : si elle est >= 59,51 $, l'ordre est armé pour la séance suivante\". Passer les décimales du détail du R/R et du prix de l'en-tête au format français.",
+      "evidence": "analyses/HPE/index.html (header \"$58.72 +3.58%\", Détail du R/R) ; data/analyses-data/HPE.json tradeIdea.rr"
+    },
+    {
+      "path": "tradeIdea.entryNote (calendrier)",
+      "problem": "Pas de mention du dividende : la fiche ne dit pas qu'aucune date de détachement ne tombe dans la fenêtre. Vérifié : dernier dividende 0,1425 $, date d'enregistrement 17/09/2026, paiement 16/10/2026 (8-K du 02/09) ; les deux précédents suivent le même rythme (19/12/2025 après les résultats du 4/12, 16/06/2026) ; le prochain tombera donc après les résultats de décembre, hors horizon.",
+      "fix": "Optionnel, une phrase : \"Aucun détachement de dividende (0,1425 $) avant le 30 novembre ; le prochain suit les résultats de décembre.\"",
+      "evidence": "analyses/HPE/_primary/text/q3-8k__ex-991x922026x8k.htm.txt (dividend of $0.1425 ... record September 17, 2026) ; 2025-12-04-8-K (record December 19, 2025) ; jun01-8k (record June 16, 2026) ; QueryData calendar HPE nextExDividendDate vide"
+    },
+    {
+      "path": "tradeIdea.horizon (date des résultats)",
+      "problem": "Date de sortie du 30 novembre cohérente avec la source de place (3 décembre 2026 après clôture, relevé sur le web le 27/10 ; 4 décembre en 2025, 8-K du 04/12/2025), et la précaution \"si la société annonce une date antérieure\" est bonne. Seule imprécision : \"vendre à la clôture de la veille\" est plus prudent que nécessaire pour une publication après clôture (la sortie de la veille de la date suffit) mais ne dit pas quoi faire si HPE annonce une date postérieure au 3 décembre.",
+      "fix": "Préciser : \"Si HPE annonce une date postérieure au 3 décembre, la sortie du 30 novembre reste inchangée (le plan ne traverse jamais la publication).\"",
+      "evidence": "Recherche web du 27/10/2026 (date du 3 décembre 2026 après clôture, non confirmée par la société) ; QueryData calendar HPE : nextEarningsDate vide, earningsCalendarStatus unavailable ; analyses/HPE/_primary/text/2025-12-04-8-K-000126-hpe-20251204.htm.txt"
+    }
+  ]
+}

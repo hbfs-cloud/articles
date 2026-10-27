@@ -12,3 +12,13 @@ clos le 31 juillet 2026 (accession 0001645590-26-000080) ne nomme aucun client.
 Un distributeur n'est pas un client final. Les acheteurs de serveurs d'IA restent dans la carte
 économique comme aval, jamais comme clients documentés. Conclusion révisable si un dépôt nommait un client
 coté représentant une part significative du chiffre d'affaires.
+
+## Révision du 27 octobre 2026 — branche `applicable` (ORCL)
+
+Le 10-Q du trimestre clos le 31 juillet 2026 (accession 0001645590-26-000080, note « Warrant » et Part II,
+Item 2) nomme un client coté : le 2 juillet 2026, HPE a émis au profit d'Oracle Corp. un bon de souscription
+de 4 156 466 actions ordinaires à 0,01 $, lié à une collaboration stratégique pour déployer les solutions
+réseau de HPE dans les centres de données d'IA d'Oracle ; il s'acquiert par tranches selon les achats
+d'Oracle et reste exerçable jusqu'au 25 juin 2029. La note du 24 septembre l'avait manqué. Oracle entre donc
+dans la carte économique comme client documenté (`documented_client_symbols=ORCL`), sans que sa part du
+chiffre d'affaires soit publiée.
