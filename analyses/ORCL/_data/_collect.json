@@ -3,12 +3,12 @@
   "workflow": "analyse",
   "plan": "plans/analyse.json",
   "plan_sha256": "f54acbc8ad7bedcd138edec019fc5df0098570220074f504610952749a472048",
-  "input_sha256": "ac7c1478e1cb67446d870a504b35eaa514df3e1f996c4f69716be4256a78744f",
+  "input_sha256": "a996a8244c4b0d8261898bdbbcd77a1c68b1554e3ed856080de091196f0b51f4",
   "resolved_input": {
     "artifact": "analyses/ORCL/index.html",
-    "equity_reference_close": "2026-10-08",
+    "equity_reference_close": "2026-10-26",
     "crypto_completed_refdate": null,
-    "as_of_timestamp": "2026-10-09T19:58:10.204Z",
+    "as_of_timestamp": "2026-10-27T12:56:25.439Z",
     "waves": [
       {
         "name": "preflight",
@@ -24,7 +24,7 @@
               "required": true
             },
             "assert": {
-              "equity_reference_close": "2026-10-08"
+              "equity_reference_close": "2026-10-26"
             }
           }
         ]
@@ -53,7 +53,7 @@
               "types": "bars_daily",
               "symbols": "ORCL",
               "limit": 300,
-              "as_of_timestamp": "2026-10-09T19:58:10.204Z",
+              "as_of_timestamp": "2026-10-27T12:56:25.439Z",
               "completion_policy": "completed_only"
             },
             "freshness": {
@@ -61,7 +61,7 @@
               "required": true,
               "expects_close": true,
               "asset_calendar": "us_equity_exchange_sessions",
-              "expected_completed_end": "2026-10-08"
+              "expected_completed_end": "2026-10-26"
             }
           },
           {
@@ -85,7 +85,7 @@
             "args": {
               "types": "technicals,support_resistance,volume_profile,obv,trading_signals",
               "symbols": "ORCL",
-              "end_date": "2026-10-08"
+              "end_date": "2026-10-26"
             },
             "freshness": {
               "max_age_h": 24,
@@ -117,7 +117,7 @@
             "tool": "RankBeta",
             "args": {
               "reference": "ORCL",
-              "as_of": "2026-10-08",
+              "as_of": "2026-10-26",
               "lookback_days": 180,
               "min_overlap": 60,
               "min_correlation": 0.25,
@@ -138,12 +138,12 @@
             "tool": "QueryData",
             "args": {
               "types": "bars_daily",
-              "symbols": "MSFT,AMZN,GOOGL,META,NBIS,CRWV,SAP,CRM,IBM,NOW,NVDA,AMD,AVGO,ANET,VRT,DELL,MU,CEG,TLN,GEV,APLD,IGV,XLK,SMH",
-              "start_date": "2025-10-08",
+              "symbols": "MSFT,AMZN,GOOGL,CRWV,NBIS,IBM,SAP,CRM,NOW,NVDA,AMD,AVGO,ANET,MU,DELL,VRT,BE,CEG,TLN,GEV,APLD,META,IGV,XLK,SMH",
+              "start_date": "2026-02-09",
               "limit": 180,
               "include_partial": false,
               "force_async": true,
-              "as_of_timestamp": "2026-10-09T19:58:10.204Z",
+              "as_of_timestamp": "2026-10-27T12:56:25.439Z",
               "completion_policy": "completed_only"
             },
             "freshness": {
@@ -151,7 +151,30 @@
               "required": true,
               "expects_close": true,
               "asset_calendar": "us_equity_exchange_sessions",
-              "expected_completed_end": "2026-10-08"
+              "expected_completed_end": "2026-10-26"
+            }
+          },
+          {
+            "as": "comparison_client_bars",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "META,NVDA,AMD",
+              "start_date": "2026-02-09",
+              "limit": 180,
+              "include_partial": false,
+              "force_async": true,
+              "as_of_timestamp": "2026-10-27T12:56:25.439Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "note": "Economically documented clients are explicit inputs; they are not inferred from correlation.",
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-10-26"
             }
           },
           {
@@ -160,7 +183,7 @@
             "tool": "QueryData",
             "args": {
               "types": "metadata,financials,stats,technicals,earnings_reactions,earnings_surprises,analyst_trend,short_interest,sec_catalysts",
-              "symbols": "MSFT,AMZN,GOOGL,META,NBIS,CRWV,SAP,CRM,IBM,NOW,NVDA,AMD,AVGO,ANET,VRT,DELL,MU,CEG,TLN,GEV,APLD,IGV,XLK,SMH",
+              "symbols": "MSFT,AMZN,GOOGL,CRWV,NBIS,IBM,SAP,CRM,NOW,NVDA,AMD,AVGO,ANET,MU,DELL,VRT,BE,CEG,TLN,GEV,APLD,META,IGV,XLK,SMH",
               "force_async": true
             },
             "freshness": {
@@ -168,10 +191,10 @@
               "required": true,
               "note": "Current-only context: label observation time and never present it as point-in-time at refdate.",
               "client_applicability": {
-                "mode": "not_applicable",
-                "reason": "Aucun client cote nomme dans les depots SEC (10-K FY2026 : aucun client au-dessus de 10 % du chiffre d'affaires)",
-                "evidence_path": "analyses/ORCL/_data/documented-client-na.json",
-                "evidence_sha256": "386a52504a87714f758346b85b8ffa65b970173d25af66b81b3aea0cfc347e8a"
+                "mode": "applicable",
+                "reason": "",
+                "evidence_path": "",
+                "evidence_sha256": ""
               }
             }
           },
@@ -180,7 +203,7 @@
             "server": "marketdata",
             "tool": "GetEarningsCalendarFiltered",
             "args": {
-              "symbols": "MSFT,AMZN,GOOGL,META,NBIS,CRWV,SAP,CRM,IBM,NOW,NVDA,AMD,AVGO,ANET,VRT,DELL,MU,CEG,TLN,GEV,APLD,IGV,XLK,SMH",
+              "symbols": "MSFT,AMZN,GOOGL,CRWV,NBIS,IBM,SAP,CRM,NOW,NVDA,AMD,AVGO,ANET,MU,DELL,VRT,BE,CEG,TLN,GEV,APLD,META,IGV,XLK,SMH",
               "days_ahead": 14,
               "include_implied_move": true
             },
@@ -244,7 +267,7 @@
             "args": {
               "types": "news,flags",
               "symbols": "ORCL",
-              "end_date": "2026-10-08",
+              "end_date": "2026-10-26",
               "days": 180
             },
             "freshness": {
@@ -259,7 +282,7 @@
             "args": {
               "types": "insider,insider_transactions,institutional_holdings",
               "symbols": "ORCL",
-              "end_date": "2026-10-08",
+              "end_date": "2026-10-26",
               "days": 365
             },
             "freshness": {
@@ -320,7 +343,7 @@
             "args": {
               "types": "short_interest,ctb,ctb_history,ftd_threshold,finra_short_volume",
               "symbols": "ORCL",
-              "end_date": "2026-10-08",
+              "end_date": "2026-10-26",
               "days": 365
             },
             "freshness": {
@@ -335,7 +358,7 @@
             "tool": "QueryData",
             "args": {
               "types": "calendar,ctb",
-              "symbols": "MSFT,AMZN,GOOGL,META,NBIS,CRWV,SAP,CRM,IBM,NOW,NVDA,AMD,AVGO,ANET,VRT,DELL,MU,CEG,TLN,GEV,APLD,IGV,XLK,SMH",
+              "symbols": "MSFT,AMZN,GOOGL,CRWV,NBIS,IBM,SAP,CRM,NOW,NVDA,AMD,AVGO,ANET,MU,DELL,VRT,BE,CEG,TLN,GEV,APLD,META,IGV,XLK,SMH",
               "force_async": true
             },
             "freshness": {
@@ -365,7 +388,7 @@
             "args": {
               "types": "vwap",
               "symbols": "ORCL",
-              "end_date": "2026-10-08"
+              "end_date": "2026-10-26"
             },
             "freshness": {
               "max_age_h": 24,
@@ -380,7 +403,7 @@
             "args": {
               "types": "options_chain,vol_surface,options_history,unusual_options,max_pain",
               "symbols": "ORCL",
-              "end_date": "2026-10-08",
+              "end_date": "2026-10-26",
               "max_expirations": 3,
               "moneyness_min": 0.8,
               "moneyness_max": 1.2
@@ -411,7 +434,7 @@
             "args": {
               "types": "sentiment_overall,sentiment_stocktwits,sentiment_reddit,news",
               "symbols": "ORCL",
-              "end_date": "2026-10-08",
+              "end_date": "2026-10-26",
               "days": 14
             },
             "freshness": {
@@ -451,14 +474,14 @@
     ]
   },
   "artifact": "analyses/ORCL/index.html",
-  "reference_date": "2026-10-08",
-  "equity_reference_close": "2026-10-08",
+  "reference_date": "2026-10-26",
+  "equity_reference_close": "2026-10-26",
   "crypto_completed_refdate": null,
-  "started_at": "2026-10-09T19:58:10.204Z",
+  "started_at": "2026-10-27T12:56:25.439Z",
   "waves": [
     {
       "name": "preflight",
-      "ms": 1149,
+      "ms": 383,
       "calls": [
         {
           "as": "status",
@@ -467,16 +490,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 1148,
+          "ms": 382,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "6b44480f009b7d9b31ec5e2b86119b88e28859e716dc783cc9261eb9e9927a76"
+          "output_sha256": "b607fda8298c560529995110b87eb43c2ab69eebc2ce3d0a226ccff5772ff8e8"
         }
       ]
     },
     {
       "name": "price-fundamentals",
-      "ms": 79916,
+      "ms": 14849,
       "calls": [
         {
           "as": "instrument",
@@ -485,10 +508,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 48957,
-          "wait_ms": 48904,
+          "ms": 727,
+          "wait_ms": 56,
           "error": null,
-          "output_sha256": "b87dacd4b68466d2453b896d79f381a90d57fe6d1786cacc2f6a8f78df04f434"
+          "output_sha256": "82246957def7384501bc66b5f5abdc193511743034e143a21aec0302a46c4f0f"
         },
         {
           "as": "bars",
@@ -497,10 +520,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 1967,
+          "ms": 2107,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "7c45bd7c6b5d4d9d2faff64eceb72347e0e385557aa010ce5a30edd695023cda"
+          "output_sha256": "7948adcccf4b2c2bdc407ee81fb62892da8dc3cefcc1ac0493d769574a456793"
         },
         {
           "as": "fundamentals",
@@ -509,10 +532,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 3117,
-          "wait_ms": 1076,
+          "ms": 3775,
+          "wait_ms": 1103,
           "error": null,
-          "output_sha256": "eafa584b25773af87444ed2a6e5c5a541534c7ba545dc2bdacdac4d061d8c20d"
+          "output_sha256": "fbaf77bc5e2a480b7cbdd3f3944acb405b38349018f1ec56029ff7993929c7b1"
         },
         {
           "as": "technicals",
@@ -521,10 +544,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 5094,
-          "wait_ms": 2054,
+          "ms": 5745,
+          "wait_ms": 2043,
           "error": null,
-          "output_sha256": "f4d62b48d7f69d83a91bfdbb95c3a6323e43b38ac2ecb194204f49c5cc65378b"
+          "output_sha256": "c1fead873bda812e6e5f57aa2776561bed183e6b782fd9df72fd96085647d239"
         },
         {
           "as": "current_correlations",
@@ -533,16 +556,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 31011,
+          "ms": 12805,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "d57f32fe23a784e81a58157ad4840975a8bb03fb78c8cbc01288eccf41343a9d"
+          "output_sha256": "58415d69d2809eb86376729c27d3f92591d2e96051eb73ddc1c1d7fc8414802b"
         }
       ]
     },
     {
       "name": "blast-radius",
-      "ms": 57532,
+      "ms": 34904,
       "calls": [
         {
           "as": "rank_beta",
@@ -551,10 +574,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 25554,
+          "ms": 1442,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "134474899e60eb20dc6f010d56d29c1c014e4aee98657ec9e3f57f460543f7ca"
+          "output_sha256": "5057b390b431a03f961cd4899375f774a1a6fc4c65d50d63fcd710ed55ec46a6"
         },
         {
           "as": "comparison_bars",
@@ -563,10 +586,22 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 4556,
-          "wait_ms": 2714,
+          "ms": 15554,
+          "wait_ms": 13537,
           "error": null,
-          "output_sha256": "cd1aac524fd4d0ee3f4af05eeaa54845e816ac20fe8a50816d5ba2d9337d907c"
+          "output_sha256": "3da6a48377b61605055dcad8d786bfe4bbbac2320f5e636727088b0181d2b113"
+        },
+        {
+          "as": "comparison_client_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 4079,
+          "wait_ms": 1079,
+          "error": null,
+          "output_sha256": "2f2f5fbb6651e2448b7adb0fb7a09fa1b753573bfcbedebc1e5700e8076e38dd"
         },
         {
           "as": "comparison_context",
@@ -575,10 +610,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 29508,
-          "wait_ms": 26692,
+          "ms": 13257,
+          "wait_ms": 9256,
           "error": null,
-          "output_sha256": "6ddd1df7ca1e94beae1060d639808dda4d5cf50ffcbe8fe0ab6c3bd70fc99c32"
+          "output_sha256": "6d74e1aac49b075288d3a52e4b3a3160aad19f7430be7ba703ad742c41cf3c39"
         },
         {
           "as": "comparison_earnings",
@@ -587,10 +622,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 28178,
+          "ms": 12916,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "0808dc272c01ee5d3d4a72d66f50b2668274763c255ba0f67aad58c7373b345b"
+          "output_sha256": "369d01c6cf7e3bb6ababf06e79cdbd893cfe6743cb2337c84b8e767c6e7c5b2c"
         },
         {
           "as": "market_regime",
@@ -599,10 +634,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 20183,
+          "ms": 21367,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "a988918be563ef93769a8cdbe3756b76a312dd3a76daa2287b863ca83cb33601"
+          "output_sha256": "062e96ab3c30aa1cd4e0c0f1914ae9a6e3d6b6f3cec41148b9baf52577a18b91"
         },
         {
           "as": "symbol_seasonality",
@@ -611,16 +646,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 30839,
+          "ms": 7099,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "3a38aeb063e544745a1283d8291f9756d584dce50062b0dc3649cbfeffc0be53"
+          "output_sha256": "de6d6300c340047e7fe93a0124d7fba04158faa09421d7917cad165a64457560"
         }
       ]
     },
     {
       "name": "risk-evidence",
-      "ms": 45309,
+      "ms": 14951,
       "calls": [
         {
           "as": "sec_evidence",
@@ -629,10 +664,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 534,
-          "wait_ms": 137,
+          "ms": 607,
+          "wait_ms": 74,
           "error": null,
-          "output_sha256": "137fdb14d812f34675f4b42542b62be6cf05b2528e075b05f5fdc7281504b039"
+          "output_sha256": "e6c869050cfa42a2d583817215d00acae38c430775b24b2859457983d6c36f08"
         },
         {
           "as": "corporate_actions",
@@ -641,10 +676,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 1402,
+          "ms": 1520,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "4eb85d06eef401bb40b9244bdb88a28acd66430ac9c31e7e42a5bb0b1f69203c"
+          "output_sha256": "e54ed5d5e302ca7d815b4fcfdeb394dbef48a1bb96ee156ff8e295497bfc98c5"
         },
         {
           "as": "insiders",
@@ -653,10 +688,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 3292,
+          "ms": 3434,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "010b12906a336683a9832c94b925eba90da7e28417f6368b026edbcfd41457f2"
+          "output_sha256": "24987aa5386809d0cf777bd762340c918e8de83dfec919f1a6325281af0e8052"
         },
         {
           "as": "insider_current",
@@ -665,10 +700,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 4257,
+          "ms": 4594,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "83568ab368d538c916d0999d98258afff7e9bfb3677fc6e808d5d7e2ce055e9d"
+          "output_sha256": "bd15f8f35c302a0452a1fc1e6c609b67f7f59d6c64fe753558b7c614cf55cdc0"
         },
         {
           "as": "symbol_signals",
@@ -677,10 +712,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 45172,
+          "ms": 14877,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "d13591eb6e2287b45fd28d5b3e06bd754028880915d7ab51b0a4d2cc1c0a029d"
+          "output_sha256": "32098c1ea10f3b2a053ef167d7b5480e0bbc96884c9f022dcd3e90850b540605"
         },
         {
           "as": "earnings_risk",
@@ -689,16 +724,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 5994,
+          "ms": 5860,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "5723b80b0858c78d088139b5419356067f78456f32800e7aaba2a3e73ffdc9bd"
+          "output_sha256": "bf7506529bcf942983f6945dca1e14416255614e562bf307ff0f6e9fc4fe8dd3"
         }
       ]
     },
     {
       "name": "context",
-      "ms": 48100,
+      "ms": 36461,
       "calls": [
         {
           "as": "short_squeeze",
@@ -707,10 +742,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 1103,
-          "wait_ms": 186,
+          "ms": 1036,
+          "wait_ms": 70,
           "error": null,
-          "output_sha256": "1159d167fcc1855c0a8d54e3b99cde3757b921958ea00cd7ba6a39cf37d0a656"
+          "output_sha256": "b08909758a7eb19df7d2bf21ecd40f1d736b5e4769ad90128d0aa7eca9d75dcf"
         },
         {
           "as": "comparison_calendar_ctb",
@@ -718,11 +753,12 @@
           "tool": "QueryData",
           "required": false,
           "detached": true,
-          "ok": true,
-          "ms": 3375,
-          "wait_ms": 1455,
-          "error": null,
-          "output_sha256": "92dd7613e1ec02e332b5fea35291669ab8ac1320de88c7ab17877c6092d56440"
+          "ok": false,
+          "ms": 21283,
+          "wait_ms": 19311,
+          "error": "marketdata QueryData incomplete: ctb[NOW]: failed to fetch CTB: failed to fetch ticker: context deadline exceeded; 1 facet(s) failed; failed to fetch CTB: failed to fetch ticker: context deadline exceeded",
+          "output_sha256": "a7598a0d620ec6f25b416e2ff39c009b5a26ab830efbd1fca09b8949f84b1152",
+          "artifact_preserved": true
         },
         {
           "as": "analyst_actions",
@@ -731,10 +767,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 2912,
+          "ms": 2973,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "cf8b093414e0a504c013f7130d813a283f9168c03e553cbda0c90ffeca0c8dd9"
+          "output_sha256": "5870bb7c26c33a7c96963d91505450c1b7288fe91976772df8cf8d7d29aeafcf"
         },
         {
           "as": "vwap",
@@ -743,10 +779,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 4187,
+          "ms": 3978,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "133226e1f0906d363ebdd8f2cd509d41c7eb9aa028b8a6841cde34ea5cfe8134"
+          "output_sha256": "da338dab79465285b3b59c7b38b4199a78b23a0e9a5d3a90e2163832266b47ae"
         },
         {
           "as": "options",
@@ -754,12 +790,11 @@
           "tool": "QueryData",
           "required": false,
           "detached": true,
-          "ok": false,
-          "ms": 7091,
-          "wait_ms": 2160,
-          "error": "marketdata QueryData incomplete: options_chain[ORCL]: optchain: base chain fetch: yahoo options rate limited by Yahoo (429) after retry: retryable=true retry_after_seconds=30; vol_surface[ORCL]: optchain: base chain fetch: yahoo options rate limited by Yahoo (429) after retry: retryable=true retry_after_seconds=30; unusual_options[ORCL]: unusual options chain unavailable: yahoo options rate limited by Yahoo (429) after retry: retryable=true retry_after_seconds=30",
-          "output_sha256": "f1019d7102c4b6f67ae4afb4cd0b7976af4967284a7ba84a92e66d85f716b9d7",
-          "artifact_preserved": true
+          "ok": true,
+          "ms": 7037,
+          "wait_ms": 2070,
+          "error": null,
+          "output_sha256": "53adb40b07e840774d427235503d5149d0dbcd912a719dffc947baadeb2d7703"
         },
         {
           "as": "move_explanation",
@@ -767,10 +802,11 @@
           "tool": "ExplainSymbolMove",
           "required": false,
           "detached": true,
-          "ok": false,
-          "ms": 45008,
+          "ok": true,
+          "ms": 17149,
           "wait_ms": 0,
-          "error": "Timeout 39137ms"
+          "error": null,
+          "output_sha256": "c02a17c7ced995d3df55c03f3ebfd16f88e4eef581fc528da6082949bcf1a591"
         },
         {
           "as": "sentiment",
@@ -779,10 +815,10 @@
           "required": false,
           "detached": true,
           "ok": false,
-          "ms": 10006,
-          "wait_ms": 3091,
+          "ms": 10109,
+          "wait_ms": 3079,
           "error": "marketdata QueryData incomplete: sentiment_reddit[ORCL]: no Reddit data available; 1 facet(s) failed; sentiment_reddit",
-          "output_sha256": "41c9a179de50add97d131dc1566626331067bb708ba39d5a4bc50f84e614f6c4",
+          "output_sha256": "826da77a03382a83eae34cd6a95a9935dc4e0b2181befefaa23310010e7ac7d4",
           "artifact_preserved": true
         },
         {
@@ -792,10 +828,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 7938,
+          "ms": 8001,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "09a1905e45dafad156fd0fc1be41db165336261c40f63eeb7d8adf501859b229"
+          "output_sha256": "f39ac855cd725c9d08f5801e6fcb90e4183908da1b382e5671700cfeaa1d24ea"
         },
         {
           "as": "search_trends",
@@ -804,17 +840,17 @@
           "required": false,
           "detached": true,
           "ok": false,
-          "ms": 8003,
+          "ms": 8002,
           "wait_ms": 0,
           "error": "marketdata QueryData incomplete: trends[ORCL]: no Google Trends data available; facet failed; trends",
-          "output_sha256": "523017bb42641b3aa01dec371729bfdc91dc3e40e697776686200583aa514188",
+          "output_sha256": "48b90e0b9681b1255498bf6291914aee71620a54ea0dd7c9603a57dc6309c2ac",
           "artifact_preserved": true
         }
       ]
     }
   ],
-  "finished_at": "2026-10-09T20:02:02.518Z",
+  "finished_at": "2026-10-27T12:58:07.284Z",
   "failures": 0,
-  "executed_calls": 27,
+  "executed_calls": 28,
   "skipped_calls": 0
 }

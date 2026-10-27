@@ -3,12 +3,12 @@
   "workflow": "analyse",
   "plan": "plans/analyse.json",
   "plan_sha256": "f54acbc8ad7bedcd138edec019fc5df0098570220074f504610952749a472048",
-  "input_sha256": "89a4c2f48eac74ea4e44e40181f6c7c4e3cbfd2e05776011c7937baa15632153",
+  "input_sha256": "48f20fd39a9de1a69ba36282eb352eb1f0adc86a5e70c54df6d7b8dbd0c9202d",
   "resolved_input": {
     "artifact": "analyses/APLD/index.html",
-    "equity_reference_close": "2026-09-25",
+    "equity_reference_close": "2026-10-26",
     "crypto_completed_refdate": null,
-    "as_of_timestamp": "2026-09-27T21:39:45.005Z",
+    "as_of_timestamp": "2026-10-27T12:56:40.467Z",
     "waves": [
       {
         "name": "preflight",
@@ -24,7 +24,7 @@
               "required": true
             },
             "assert": {
-              "equity_reference_close": "2026-09-25"
+              "equity_reference_close": "2026-10-26"
             }
           }
         ]
@@ -53,7 +53,7 @@
               "types": "bars_daily",
               "symbols": "APLD",
               "limit": 300,
-              "as_of_timestamp": "2026-09-27T21:39:45.005Z",
+              "as_of_timestamp": "2026-10-27T12:56:40.467Z",
               "completion_policy": "completed_only"
             },
             "freshness": {
@@ -61,7 +61,7 @@
               "required": true,
               "expects_close": true,
               "asset_calendar": "us_equity_exchange_sessions",
-              "expected_completed_end": "2026-09-25"
+              "expected_completed_end": "2026-10-26"
             }
           },
           {
@@ -85,7 +85,7 @@
             "args": {
               "types": "technicals,support_resistance,volume_profile,obv,trading_signals",
               "symbols": "APLD",
-              "end_date": "2026-09-25"
+              "end_date": "2026-10-26"
             },
             "freshness": {
               "max_age_h": 24,
@@ -117,7 +117,7 @@
             "tool": "RankBeta",
             "args": {
               "reference": "APLD",
-              "as_of": "2026-09-25",
+              "as_of": "2026-10-26",
               "lookback_days": 180,
               "min_overlap": 60,
               "min_correlation": 0.25,
@@ -138,12 +138,12 @@
             "tool": "QueryData",
             "args": {
               "types": "bars_daily",
-              "symbols": "CIFR,DELL,DTCR,GLXY,HPE,IREN,LITE,NBIS,NVDA,ORCL,SMCI,SMH,VRT,WGMI,WULF,XLK",
-              "start_date": "2025-09-25",
+              "symbols": "DLR,IRM,CORZ,IREN,CIFR,WULF,GLXY,CRWV,NBIS,ORCL,NVDA,VRT,GEV,BE,MSFT,META,MARA,WGMI,DTCR,SMH",
+              "start_date": "2026-02-09",
               "limit": 180,
               "include_partial": false,
               "force_async": true,
-              "as_of_timestamp": "2026-09-27T21:39:45.005Z",
+              "as_of_timestamp": "2026-10-27T12:56:40.467Z",
               "completion_policy": "completed_only"
             },
             "freshness": {
@@ -151,7 +151,30 @@
               "required": true,
               "expects_close": true,
               "asset_calendar": "us_equity_exchange_sessions",
-              "expected_completed_end": "2026-09-25"
+              "expected_completed_end": "2026-10-26"
+            }
+          },
+          {
+            "as": "comparison_client_bars",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "CRWV",
+              "start_date": "2026-02-09",
+              "limit": 180,
+              "include_partial": false,
+              "force_async": true,
+              "as_of_timestamp": "2026-10-27T12:56:40.467Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "note": "Economically documented clients are explicit inputs; they are not inferred from correlation.",
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-10-26"
             }
           },
           {
@@ -160,7 +183,7 @@
             "tool": "QueryData",
             "args": {
               "types": "metadata,financials,stats,technicals,earnings_reactions,earnings_surprises,analyst_trend,short_interest,sec_catalysts",
-              "symbols": "CIFR,DELL,DTCR,GLXY,HPE,IREN,LITE,NBIS,NVDA,ORCL,SMCI,SMH,VRT,WGMI,WULF,XLK",
+              "symbols": "DLR,IRM,CORZ,IREN,CIFR,WULF,GLXY,CRWV,NBIS,ORCL,NVDA,VRT,GEV,BE,MSFT,META,MARA,WGMI,DTCR,SMH",
               "force_async": true
             },
             "freshness": {
@@ -168,10 +191,10 @@
               "required": true,
               "note": "Current-only context: label observation time and never present it as point-in-time at refdate.",
               "client_applicability": {
-                "mode": "not_applicable",
-                "reason": "CoreWeave (CRWV) est le locataire d'ancrage d'Ellendale mais sa serie quotidienne certifiee est rejetee pour discontinuite de seances (IPO recente) ; traite qualitativement et exclu du blast radius certifie faute de barres point-in-time.",
-                "evidence_path": "analyses/APLD/_data/documented_client_na_evidence.json",
-                "evidence_sha256": "198ac4ee25c5e1864586f33257ba98f0b1c2e617674388050000dd6579c2d389"
+                "mode": "applicable",
+                "reason": "",
+                "evidence_path": "",
+                "evidence_sha256": ""
               }
             }
           },
@@ -180,7 +203,7 @@
             "server": "marketdata",
             "tool": "GetEarningsCalendarFiltered",
             "args": {
-              "symbols": "CIFR,DELL,DTCR,GLXY,HPE,IREN,LITE,NBIS,NVDA,ORCL,SMCI,SMH,VRT,WGMI,WULF,XLK",
+              "symbols": "DLR,IRM,CORZ,IREN,CIFR,WULF,GLXY,CRWV,NBIS,ORCL,NVDA,VRT,GEV,BE,MSFT,META,MARA,WGMI,DTCR,SMH",
               "days_ahead": 14,
               "include_implied_move": true
             },
@@ -244,7 +267,7 @@
             "args": {
               "types": "news,flags",
               "symbols": "APLD",
-              "end_date": "2026-09-25",
+              "end_date": "2026-10-26",
               "days": 180
             },
             "freshness": {
@@ -259,7 +282,7 @@
             "args": {
               "types": "insider,insider_transactions,institutional_holdings",
               "symbols": "APLD",
-              "end_date": "2026-09-25",
+              "end_date": "2026-10-26",
               "days": 365
             },
             "freshness": {
@@ -320,7 +343,7 @@
             "args": {
               "types": "short_interest,ctb,ctb_history,ftd_threshold,finra_short_volume",
               "symbols": "APLD",
-              "end_date": "2026-09-25",
+              "end_date": "2026-10-26",
               "days": 365
             },
             "freshness": {
@@ -335,7 +358,7 @@
             "tool": "QueryData",
             "args": {
               "types": "calendar,ctb",
-              "symbols": "CIFR,DELL,DTCR,GLXY,HPE,IREN,LITE,NBIS,NVDA,ORCL,SMCI,SMH,VRT,WGMI,WULF,XLK",
+              "symbols": "DLR,IRM,CORZ,IREN,CIFR,WULF,GLXY,CRWV,NBIS,ORCL,NVDA,VRT,GEV,BE,MSFT,META,MARA,WGMI,DTCR,SMH",
               "force_async": true
             },
             "freshness": {
@@ -365,7 +388,7 @@
             "args": {
               "types": "vwap",
               "symbols": "APLD",
-              "end_date": "2026-09-25"
+              "end_date": "2026-10-26"
             },
             "freshness": {
               "max_age_h": 24,
@@ -380,7 +403,7 @@
             "args": {
               "types": "options_chain,vol_surface,options_history,unusual_options,max_pain",
               "symbols": "APLD",
-              "end_date": "2026-09-25",
+              "end_date": "2026-10-26",
               "max_expirations": 3,
               "moneyness_min": 0.8,
               "moneyness_max": 1.2
@@ -411,7 +434,7 @@
             "args": {
               "types": "sentiment_overall,sentiment_stocktwits,sentiment_reddit,news",
               "symbols": "APLD",
-              "end_date": "2026-09-25",
+              "end_date": "2026-10-26",
               "days": 14
             },
             "freshness": {
@@ -451,14 +474,14 @@
     ]
   },
   "artifact": "analyses/APLD/index.html",
-  "reference_date": "2026-09-25",
-  "equity_reference_close": "2026-09-25",
+  "reference_date": "2026-10-26",
+  "equity_reference_close": "2026-10-26",
   "crypto_completed_refdate": null,
-  "started_at": "2026-09-27T21:39:45.005Z",
+  "started_at": "2026-10-27T12:56:40.467Z",
   "waves": [
     {
       "name": "preflight",
-      "ms": 183,
+      "ms": 379,
       "calls": [
         {
           "as": "status",
@@ -467,16 +490,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 182,
+          "ms": 377,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "7f0b4a03c894a38877914324a26beaa2625edeacc06587ad55c74331760bd48f"
+          "output_sha256": "487640adbceaf24260a6576ee020fa6347167596bf0504aa8e407dcc40aa88e8"
         }
       ]
     },
     {
       "name": "price-fundamentals",
-      "ms": 28446,
+      "ms": 35587,
       "calls": [
         {
           "as": "instrument",
@@ -485,10 +508,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 7079,
-          "wait_ms": 6140,
+          "ms": 766,
+          "wait_ms": 95,
           "error": null,
-          "output_sha256": "31fb3d787613cfe66c1103f2c407ff53a210438355c3893a41b406b73651e32a"
+          "output_sha256": "27a44c147326930bcb4bb46e2258f7136f583ed90499ebde26b0808224751ffe"
         },
         {
           "as": "bars",
@@ -497,10 +520,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 2384,
+          "ms": 2442,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "d05b80b05cac1a031a7b40586f6d9a9e7aa75ca2dfd252f323bdb4737e529474"
+          "output_sha256": "9775a0c763b3b70457138dc6b72e436b60f9d4a78e11a970911c446025a83c4f"
         },
         {
           "as": "fundamentals",
@@ -509,10 +532,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 3955,
-          "wait_ms": 1066,
+          "ms": 3739,
+          "wait_ms": 1064,
           "error": null,
-          "output_sha256": "6892f67965e0cb46a2864272e3d0a4bf7c9073100bab7e63f23d311779bc4af6"
+          "output_sha256": "a0e9e434321690c4d34c5681dc9cfe8c05aff52167c9abda041c4ca756128916"
         },
         {
           "as": "technicals",
@@ -521,10 +544,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 5944,
-          "wait_ms": 2062,
+          "ms": 5722,
+          "wait_ms": 2043,
           "error": null,
-          "output_sha256": "499cbfab993a72922c12726d7c45610ed33459a05e9ab2e987c2e271fdf09381"
+          "output_sha256": "fa4a5544a0445c6af38115f0c7d282cae83ea9a0cf3967f280119d6acfd2c762"
         },
         {
           "as": "current_correlations",
@@ -533,16 +556,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 22304,
+          "ms": 33542,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "29ad33a2aafe4f71dcddd2858757bd0e3b9bb567f324b8be9ec54e4d3cb07bcd"
+          "output_sha256": "f372fb77a70f48401fb758d9aa7108f19098b3dbd4dac9d3c2b4eae2c702674b"
         }
       ]
     },
     {
       "name": "blast-radius",
-      "ms": 25367,
+      "ms": 24586,
       "calls": [
         {
           "as": "rank_beta",
@@ -551,10 +574,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 970,
+          "ms": 1498,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "41e1f4b266bff0c3ba0eec1f422d4ff5f23fd0e7353ef75d6a18bf6ecdccf801"
+          "output_sha256": "f45ceef210c08308fa5285e5d83755650709dcdecf5d1eb57a573fcc953f66fa"
         },
         {
           "as": "comparison_bars",
@@ -563,10 +586,22 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 21240,
-          "wait_ms": 19288,
+          "ms": 2100,
+          "wait_ms": 131,
           "error": null,
-          "output_sha256": "ba496ca7a9109280a2c3e4470d69ff695cd551a0fee5558bef486b1bc092fee7"
+          "output_sha256": "6dd85172ec3ee3ff59d8acdf351f3a66958ff1a5ef199a206ec1a04423808f45"
+        },
+        {
+          "as": "comparison_client_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 4018,
+          "wait_ms": 1037,
+          "error": null,
+          "output_sha256": "d9dba716c105ab7545acaf5766dedd67be8ce737a5eb9dfb6e4efa4ce7d415dd"
         },
         {
           "as": "comparison_context",
@@ -575,10 +610,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 17054,
-          "wait_ms": 14096,
+          "ms": 7094,
+          "wait_ms": 3121,
           "error": null,
-          "output_sha256": "7c4268b857a2c76a810e5710e61c63a976ce82d54dfc6249ae754fc1407c0ff5"
+          "output_sha256": "d8fd98a54fbcedf03309a2a4842303022be530f4fc9c65c9364df43e5bd17f31"
         },
         {
           "as": "comparison_earnings",
@@ -587,10 +622,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 4263,
+          "ms": 7276,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "e1657cd8775359c9071e9c7af594598fd2d1ed4b733e12a04ae7a25e6a435362"
+          "output_sha256": "42fca70e9972b0ca8fee2313506e63490045df823bc8a820116750547ce5af5b"
         },
         {
           "as": "market_regime",
@@ -599,10 +634,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 4951,
+          "ms": 21465,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "6ee21616aa4b79b57d06ef4600c38276a144f90b36140d08dc49e461b144a6b7"
+          "output_sha256": "e8adc5967daf6b3aa52486bfe8e98c71267200a8103f5738abad91fc16baec27"
         },
         {
           "as": "symbol_seasonality",
@@ -611,16 +646,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 6079,
-          "wait_ms": 0,
+          "ms": 7067,
+          "wait_ms": 1,
           "error": null,
-          "output_sha256": "0bf884bee0e8718cfd934963ba061d86d1229fc4361eb16c19fd82ca51c70614"
+          "output_sha256": "33874e158365e588eca763d8a2d475bc9fddf271737da63e788d205c5c714b88"
         }
       ]
     },
     {
       "name": "risk-evidence",
-      "ms": 34009,
+      "ms": 11128,
       "calls": [
         {
           "as": "sec_evidence",
@@ -629,10 +664,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 804,
-          "wait_ms": 86,
+          "ms": 723,
+          "wait_ms": 42,
           "error": null,
-          "output_sha256": "7d55d0e589968498371fcfa365b9a8fde1e862a4ff296f2309590e92cf146c20"
+          "output_sha256": "9c3446abdee844a5174678045aafd27c1edfa20e02484d38289b86dbf2bebc0c"
         },
         {
           "as": "corporate_actions",
@@ -641,10 +676,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 1716,
+          "ms": 1685,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "8485ae20fa92ad27007ae4bf47e3d92d048b421a435fcd627465e8ad3282b649"
+          "output_sha256": "b291e87fc8a3f81c62b7797d922c9bf6348e19de1d3a90edd0e919f8c9232307"
         },
         {
           "as": "insiders",
@@ -653,10 +688,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 33923,
+          "ms": 3125,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "8fb03f4872d3f06773f1a525532f7c3f23c2ff6ed89b97a9528505032990ee07"
+          "output_sha256": "e4b21f107c3a4cb7b4a3edfe867a8174d85264f51fe62b3e722016873263a9ec"
         },
         {
           "as": "insider_current",
@@ -665,10 +700,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 4089,
+          "ms": 4461,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "08ed814fb5ca8afc5499f63ccea7955779d5224c50a3443737695ed21824652b"
+          "output_sha256": "a3cd1b99bfdbf3172c0f6293d99f3ad0c601d2edf3877a2a11d7cd08965d4b68"
         },
         {
           "as": "symbol_signals",
@@ -677,10 +712,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 13920,
+          "ms": 11086,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "a299378bd6acc148cef12bfc24400c13f77513ac48b363766c5ac9e5e55097b8"
+          "output_sha256": "c3102954da0ba3c76f6745c8402d8b4f5ca15e61a3176084068bb3ba75359c02"
         },
         {
           "as": "earnings_risk",
@@ -689,16 +724,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 5986,
+          "ms": 5891,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "f7e2cec87955002a534b4bce4d8c72ae22e84a476ebb1afd55258bb8752b8ae0"
+          "output_sha256": "39592f71bbb993e593b1bd8cf124ffc4a0a7c773efa1a3691cb31bb232ea59ef"
         }
       ]
     },
     {
       "name": "context",
-      "ms": 17054,
+      "ms": 26802,
       "calls": [
         {
           "as": "short_squeeze",
@@ -707,10 +742,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 1856,
-          "wait_ms": 891,
+          "ms": 1042,
+          "wait_ms": 58,
           "error": null,
-          "output_sha256": "0a36f2240983540127b2d8cc5dc51ef35000402e7bb79b6ae66c245448c0ddb1"
+          "output_sha256": "4950b145cc4f10bed907bba6a92dcc419486638b8ed79f5b705ec08b09bb0eee"
         },
         {
           "as": "comparison_calendar_ctb",
@@ -719,10 +754,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 9919,
-          "wait_ms": 7953,
+          "ms": 15275,
+          "wait_ms": 13275,
           "error": null,
-          "output_sha256": "7b9224443b97035afdbc82c84f5463ed1584532efef0bebb056b4052544652ec"
+          "output_sha256": "1158008f59091d94f5452747979ec087a03e59eb11ec925521fac8c97d308592"
         },
         {
           "as": "analyst_actions",
@@ -731,10 +766,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 2967,
+          "ms": 2990,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "134f527d37eaf34f65747d65f2e85ca13200899236ea4d095ea8ba59a1261796"
+          "output_sha256": "3d61f81a2158563aeb0e1c0557a5e0ef3dcb698ef91a41f2ab601c41a94b2dfe"
         },
         {
           "as": "vwap",
@@ -743,10 +778,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 4097,
+          "ms": 4024,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "0320b4a878cdc40f7968bb62dd8a4b67d2fad266e3558d173a722a9a86312f66"
+          "output_sha256": "d4ebb1b04c8b8e0779f867838f69789d468f90e859a925062a862e0ee0838c1d"
         },
         {
           "as": "options",
@@ -755,10 +790,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 7861,
-          "wait_ms": 2893,
+          "ms": 7079,
+          "wait_ms": 2093,
           "error": null,
-          "output_sha256": "5205fe592ba6c08e4c0942dad6bf1226aa1352a737675d89d33d975e7b780c29"
+          "output_sha256": "5ceec343ef661a2d912e9290bb7ec5ddc7c855fc5034e2d101d5e5f4d1040c0c"
         },
         {
           "as": "move_explanation",
@@ -767,10 +802,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 9100,
+          "ms": 13527,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "b62a5648160c39d912a31033096cdd95a4436050b34225ad58bd097c32641aec"
+          "output_sha256": "5df42f92cc3f869e78b16d51308a922cd213c785d2ef4af0659620fe772239e5"
         },
         {
           "as": "sentiment",
@@ -779,10 +814,10 @@
           "required": false,
           "detached": true,
           "ok": false,
-          "ms": 10854,
-          "wait_ms": 3882,
+          "ms": 10025,
+          "wait_ms": 3036,
           "error": "marketdata QueryData incomplete: sentiment_reddit[APLD]: no Reddit data available; 1 facet(s) failed; sentiment_reddit",
-          "output_sha256": "481cbf93857b4b2e99ad2a9e5b42ed7d99eecd4c70b18f6182fa2bf83904b5bf",
+          "output_sha256": "27c199d57b47a2dc76e1dabedc354f08b2a09cae2d3b81117da673359aad4c65",
           "artifact_preserved": true
         },
         {
@@ -792,10 +827,10 @@
           "required": false,
           "detached": true,
           "ok": true,
-          "ms": 7976,
+          "ms": 7990,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "5d135184fd21e9e22d3239e75c6b250e5e5ed799b1f09bc2c5cb156f9f91383f"
+          "output_sha256": "41bcae96c251148d13eac0ebf8c9ba09efe7be23e38030e18a7e294f405847f1"
         },
         {
           "as": "search_trends",
@@ -804,17 +839,17 @@
           "required": false,
           "detached": true,
           "ok": false,
-          "ms": 8008,
+          "ms": 8015,
           "wait_ms": 0,
           "error": "marketdata QueryData incomplete: trends[APLD]: no Google Trends data available; facet failed; trends",
-          "output_sha256": "615997c105d85bc6fdec95f5b459b198534a7cf0d25eabfb736f887a7a71fc72",
+          "output_sha256": "5b307e676ed6c838a5c3e3696675f9ed26b57350b3d69d5af695cfeb4b423346",
           "artifact_preserved": true
         }
       ]
     }
   ],
-  "finished_at": "2026-09-27T21:41:30.293Z",
+  "finished_at": "2026-10-27T12:58:19.254Z",
   "failures": 0,
-  "executed_calls": 27,
+  "executed_calls": 28,
   "skipped_calls": 0
 }

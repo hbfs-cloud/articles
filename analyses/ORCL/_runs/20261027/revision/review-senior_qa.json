@@ -1,0 +1,99 @@
+{
+  "ticker": "ORCL",
+  "role": "senior_qa",
+  "verdict": "BLOCK : gabarit, rendu, niveaux, R/R, pourcentages, agrégats XBRL, corrélations/bêtas et rendements recalculés sans écart, mais un 8-K décisionnel du 10 juin 2026 n'a pas été ouvert (plan de levée de ~40 Md$ sur l'exercice 2027 : ~20 Md$ restent à lever, ce qui contredit le cadrage « financement consommé »), la tuile ratio d'options inverse son sens, et « relevé unique » est faux pour les positions vendeuses.",
+  "checks_passed": [
+    "node tools/qa-content.js analyses/ORCL/index.html --strict : 32 OK, 0 erreur",
+    "node tools/check-ai-tells.js analyses/ORCL/index.html --strict : aucun tic",
+    "node tools/check-analysis-editorial-quality.js --strict --pre-review : 0 erreur, 0 avertissement",
+    "node tools/validate-analysis-evidence.js : PASS, 576 claims",
+    "Gabarit du 27 octobre : graphique avant tableau (ladder EV/EBITDA, barres de performance, nuage de propagation), 6 groupes de fondamentaux, échéancier juste après le verdict, tribunal dernière section avant l'avertissement, détails dépliables (data-details), structure identique à FICO",
+    "Niveaux sur barres certifiées : stop 127,36 (bas du 16/10), déclencheur 135,08 (haut du 15/10), 144,18 (13/10), 153,60 (22/09), 166,00 (11/09), 122,76 (22/10), 114,50 (28/07), 170,70 (08/09) ; EMA20/50/200, RSI, MACD, ATR recalculés ; pire gap -14,52 % le 11/12/2025 (190,62 vs 223,01) ; aucun split",
+    "R/R recalculé : 2,40 / 4,01 à 135,08 ; 1,50 / 2,68 au plafond 137,85 ; pourcentages -5,7 / +13,7 / +22,9 ; risque 10,49 $ = 7,6 % ; 117,83 $ et 20,02 $ de perte ; 49 actions / 6 755 $ ; 3,48 Md$ de volume médian ; 1,7x le volume du 14/10",
+    "Agrégats TTM XBRL (71,776 Md$ ; EBIT 23,057 ; EBITDA 33,938 ; FCF -28,72 ; EV/EBITDA 14,13 ; dette nette/EBITDA 2,87 ; 68,25 $ au multiple EV/CA d'IBM) et dépôts SEC (10-Q, communiqué du 10/09, 424B5, 8-K du 04/02, DEF 14A, Form 4) vérifiés contre _primary",
+    "Blast radius : corrélation, bêta, 5 et 21 séances recalculés sur 179 observations (écart max 0,1 point sur SMH 5 séances) ; rang 14/26 et médiane -7,89 % corrects ; performances des pairs dans les actualités (8, 14, 22 octobre) corrects",
+    "Heures de Paris (CET/EST, 16 h 55 = 10 h 55 CT confirmé par le communiqué IR), jours de semaine, dates limites 16/11 et 08/12 corrects"
+  ],
+  "blocks": [
+    {
+      "path": "filingsReview.filings (+ filingsReview.summary, business.coverageMatrix « Capital, dette et dilution », capitalStructure.shareHistory/dilutionRisk, verdict.summary, verdict.whyAvoid.1, verdict.controlChecklist.1, risks.riskCards.0, tribunal.rounds.2/4, tradeIdea.invalidation.3, meta.description/ogDescription)",
+      "problem": "Dépôt décisionnel non ouvert : le 8-K du 10 juin 2026 (items 2.02, 8.01, 9.01 ; accession 0001193125-26-265848) figure dans l'inventaire de 29 formulaires mais pas parmi les 9 pièces ouvertes. Il contient le plan de financement en cours : « In fiscal year 2027, Oracle expects to raise approximately $40 billion through a combination of debt and equity financing including its previously announced $20 billion at-the-market equity issuance » et « Oracle does not expect to issue additional debt in calendar year 2026 », plus 75 Md$ de contrats IA prépayés ou à matériel fourni par les clients. Le plan de février (45-50 Md$) est bien consommé, mais l'exercice 2027 (clos le 31 mai 2027) comporte encore environ 20 Md$ à lever (40 moins les 20 Md$ du programme d'actions déjà exécutés au T1) en dette et actions. La fiche écrit « financement de 2026 consommé/épuisé », « la suite passera par des actions, des partenaires ou du hors-bilan » et fait annuler le plan par « un nouveau programme d'émission d'actions » sans dire que la société a déjà annoncé ce solde. La fiche affirme aussi que la société « s'est engagée » / « a promis » de ne plus émettre d'obligations en 2026 : cette phrase ne figure dans aucune des 9 pièces ouvertes, et la source (8-K du 10 juin) dit « does not expect » (anticipation, pas engagement) et couvre « additional debt », pas seulement les obligations. Le capex de l'exercice 2027 (conférence du 10 juin : 90-95 Md$ bruts, environ 70 Md$ nets des prépaiements ; S&P : flux opérationnel libre -42 Md$) est absent alors que la fiche ne cite que le TTM (-28,7 Md$) et renvoie à la journée investisseurs pour le « capex de l'exercice ».",
+      "fix": "1) Ouvrir et hacher le 8-K du 10/06/2026 (primary-manifest : 10 pièces ouvertes, mise à jour du texte « Neuf pièces » -> « Dix pièces ») et l'ajouter à filingsReview.filings : date 2026-06-10, form « 8-K / Exhibit 99.1 », accession 0001193125-26-265848, constat : « Exercice 2027 : levée d'environ 40 Md$ en dette et actions, y compris les 20 Md$ du programme d'actions ; aucune dette supplémentaire prévue en 2026 ; 75 Md$ de contrats IA prépayés ou à matériel fourni par les clients ; RPO 638 Md$ ; flux de trésorerie libre -23,7 Md$ sur l'exercice 2026 ». 2) Remplacer « plan 2026 consommé/épuisé » par « plan de février (50 Md$) consommé ; plan de l'exercice 2027 : ~40 Md$ dont 20 Md$ déjà levés, ~20 Md$ restent à lever d'ici mai 2027, sans dette nouvelle en 2026 » dans verdict.summary, whyAvoid.1, controlChecklist.1, capitalStructure.shareHistory, risks.riskCards.0, tribunal (rounds 2 et 4), meta.description/ogDescription. 3) « s'est engagée / a promis » -> « ne prévoit pas d'émettre de dette supplémentaire en 2026 (8-K du 10 juin) » (capitalStructure.shareHistory, verdict.summary, filingsReview.contrarianRisks.1). 4) Réécrire tradeIdea.invalidation.3 et le verdict du tribunal : l'annonce d'un solde d'environ 20 Md$ est attendue ; fixer la condition d'annulation sur ce que la fiche tient pour une mauvaise surprise (montant supérieur au solde, titres convertibles ou structure hors bilan), pas sur « un nouveau programme d'actions » en général. 5) Ajouter une ligne « capex de l'exercice 2027 : 90 à 95 Md$ bruts, environ 70 Md$ nets selon la direction (conférence du 10 juin) » avec sa source, ou la déclarer indisponible dans business.coverageMatrix. 6) Régénérer data/analyses-evidence/ORCL.json et refaire le rendu.",
+      "evidence": "https://www.sec.gov/Archives/edgar/data/0001341439/000119312526265848/orcl-ex99_1.htm ; analyses/ORCL/_primary/submissions.json et analyses/ORCL/_data/sec_evidence.json (8-K 2026-06-10, items 2.02,8.01,9.01) ; analyses/ORCL/_runs/20261027/revision/primary-manifest.json (opened_count 9) ; https://seekingalpha.com/news/4602439-oracle-expects-34-percent-fy27-revenue-growth-as-it-plans-70b-net-cash-capex-outlay (capex 70 Md$ net) ; https://thenextweb.com/news/oracle-sp-downgrade-ai-spending-junk-risk (S&P : capex 90-95 Md$, FOCF -42 Md$)"
+    },
+    {
+      "path": "options.cpRatio (+ options.skew, options.unusual) ; rendu : tuile « Ratio d'intérêt ouvert calls/puts = 0,58 (volumes du 26 octobre) »",
+      "problem": "Le rendu étiquette 0,58 comme un ratio d'intérêt ouvert calls/puts. La valeur est en réalité le ratio de VOLUME puts/calls (put_call_volume_ratio 0,5819 = 32 324 puts / 55 551 calls). Lue sous son étiquette, elle signifie 0,58 call par put (pente baissière) alors que les calls dominent à 1,72 pour 1 (pente haussière). L'intérêt ouvert, lui, est indisponible (totalCallOI/totalPutOI = 0, chaîne sans cotations).",
+      "fix": "options.cpRatio = « Non retenu : intérêt ouvert indisponible (chaîne relevée sans cotations) » ; options.unusual = « Volumes du 26 octobre : 55 551 calls pour 32 324 puts, soit 1,72 call pour 1 put (ratio puts/calls 0,58) ; aucune activité inhabituelle signalée par le fournisseur. » (champ rendu dans l'encadré « Activité inhabituelle »). Ne pas laisser un ratio de volume sous l'étiquette « intérêt ouvert ».",
+      "evidence": "analyses/ORCL/_data/instrument.json (instrument_options_volume_ratio : call_volume 55551, put_volume 32324, put_call_volume_ratio 0.5818797 ; instrument_max_pain : totalCallOI 0, totalPutOI 0) ; tools/render-analysis.js:684 (libellé « Ratio d'intérêt ouvert calls/puts »)"
+    },
+    {
+      "path": "shortInterest.trend (+ shortInterest.squeezeScore, siPct)",
+      "problem": "« relevé unique, aucune tendance affirmée » est faux : la collecte contient 24 relevés FINRA bimensuels du 31/10/2025 au 15/10/2026. Le nombre d'actions vendues à découvert a plus que doublé sur un an (20,6 M soit 1,1 % du flottant en octobre 2025 ; pic à 50,8 M soit 2,7 % le 15 septembre 2026) et reste dans une bande de 2,4 à 2,7 % depuis le 15 juillet. Le fournisseur donne 2,55 % au 15/10 (la fiche, avec son propre flottant de 1,859 Md, calcule 2,556 % : l'arrondi 2,6 % est défendable mais l'écart avec la source doit être dit).",
+      "fix": "shortInterest.trend = « 24 relevés FINRA depuis le 31 octobre 2025 : 20,6 M d'actions (1,1 % du flottant) alors, 50,8 M (2,7 %) au pic du 15 septembre 2026, 47,5 M (2,5 à 2,6 %) au 15 octobre ; bande de 2,4 à 2,7 % depuis le 15 juillet. Pas de tension d'emprunt mesurée (coût d'emprunt indisponible : source en échec). » squeezeScore « Faible » peut rester ; supprimer « relevé unique ».",
+      "evidence": "analyses/ORCL/_data/short_squeeze.json (/data/items/0/results/0/data/0/points, 24 points ; dernier : 2026-10-15, short_interest_shares 47521444, days_to_cover 1.66, short_pct_float 2.5494 ; 2026-09-15 : 50840436, 2.7275 ; 2025-10-31 : 20573306, 1.1037)"
+    }
+  ],
+  "fixes": [
+    {
+      "path": "fundamentals.rows[EV/EBITDA] (header.metrics.evEbitda, verdict.whyBuy.1, bottomEstimation.confluences.0, tribunal.rounds.3, globalScore.keyTakeawaysPositive.1)",
+      "problem": "Bases mélangées : le 14,1x d'Oracle est calculé par la fiche (XBRL, EV 479,6 Md$, EBITDA 33,9 Md$) alors que les 6 multiples des pairs sont ceux du fournisseur. Sur la base du fournisseur, Oracle cote 15,06x (EV 518,6 Md$, EBITDA 34,43 Md$). Oracle reste le moins cher des six (15,1x contre 16,4x pour Meta), mais l'écart passe de 2,3 à 1,3 tour, et les valeurs « payé comme Amazon » (154,46 $) et « médiane des six » (167,59 $) sont surestimées d'environ 7 à 10 $ à base comparable : environ 144 $ à 16,67x et 158 $ à 17,84x.",
+      "fix": "Soit afficher 15,1x (base fournisseur) à côté des pairs et recalculer 154,46 / 167,59 sur cette base, soit conserver 14,1x en le disant (« base fiche, EV hors loyers simples ; 15,1x sur la base des pairs ») et marquer 154 $ / 168 $ comme approximatifs. Citer la différence dans comparison.",
+      "evidence": "analyses/ORCL/_data/fundamentals.json et instrument.json (ORCL enterpriseToEbitda 15.062, enterpriseValue 518616154112, ebitda 34432999424) ; analyses/ORCL/_data/comparison_context.json (META 16.406, AMZN 16.668, IBM 17.812, CRM 17.87, MSFT 20.664, GOOGL 22.017)"
+    },
+    {
+      "path": "insiders.signal ; business.coverageMatrix",
+      "problem": "Section « Initiés et institutions » sans institutions et matrice de couverture sans ligne « Institutionnels », alors que analyse.md exige de marquer chaque facette (UNAVAILABLE/partielle/non pertinente) et que les 13F ont été collectés (point-in-time, 18 fonds suivis). Vente non citée : Maria Smith (EVP, directrice comptable) 2 631 actions à 151,70 $ le 22/09 (0,4 M$).",
+      "fix": "Ajouter une ligne de matrice « Institutionnels — PARTIEL » et une phrase : « 13F du T2 2026 (30 juin), 18 fonds suivis seulement : Citadel 4,76 M d'actions (+2,45 M), Point72 3,41 M (+2,23 M), AQR 2,76 M (+0,99 M), Millennium 2,26 M (+1,18 M), Bridgewater 1,43 M (-0,16 M) ; ce n'est pas l'ensemble des détenteurs, et la photo précède la baisse depuis juin. » Ajouter la vente de Maria Smith à la liste des opérations.",
+      "evidence": "analyses/ORCL/_data/insiders.json (institutional_holdings, filers_tracked 18 ; Form 4 0001341439-26-000096)"
+    },
+    {
+      "path": "globalScore.keyTakeawaysPositive.2 ; verdict.whyBuy.3",
+      "problem": "« un administrateur a acheté près des plus bas » est inexact : l'achat à 139,35 $ (29/09) est à 22 % au-dessus du plus bas sur un an (114,50 $) et à 10,5 % au-dessus du cours actuel.",
+      "fix": "« un administrateur a acheté 3,5 M$ à 139,35 $ le 29 septembre, soit 10 % au-dessus du cours actuel ».",
+      "evidence": "analyses/ORCL/_primary/oct1-form4.xml (25 000 actions, 139,352 $) ; bars.json (126,06 le 26/10 ; plus bas 114,50 le 28/07)"
+    },
+    {
+      "path": "news[0..4].sourceUrl, news[1].detail",
+      "problem": "Liens source qui ne portent pas le chiffre cité : (a) la prime de défaut de 288 pb « selon Reuters repris par GuruFocus » est rattachée à l'URL Motley Fool du 14/10, qui ne la mentionne pas, ni les mouvements de CoreWeave, Dell, Nebius, Microsoft, panier logiciel (calculés sur nos barres) ; le Motley Fool donne 50,4 M d'actions et 61 % au-dessus de la moyenne trois mois, la fiche 50,8 M et 1,7x la moyenne vingt séances (calcul propre, juste mais à nommer) ; (b) les 87 M d'actions nanties du WSJ (contre ~30 M) ne figurent pas dans l'article 24/7 Wall St. du 20/10 lié à la ligne ; (c) « Oracle monte avec Apollo et Goldman Sachs une entité distincte » : la source (Bloomberg via Yahoo) parle de discussions.",
+      "fix": "(a) ajouter l'URL GuruFocus https://www.gurufocus.com/news/9124975/credit-default-swaps-surge-for-us-tech-firms-amid-ai-sector-strain-oracle-orcl-spreads-hit-record-high et écrire « selon nos barres » pour les mouvements des pairs ; (b) rattacher les 87 M au WSJ (20/10) ou à l'article 24/7 du 21/10 sur les nantissements d'Ellison ; (c) « est en discussion avec Apollo et Goldman Sachs pour une entité distincte » dans business.overview, news[4] et verdict.whyAvoid.1.",
+      "evidence": "WebFetch du 27/10 des pages citées ; recherche web : CDS 288 pb le 15/10 (260 une semaine avant), WSJ 87 M contre ~30 M"
+    },
+    {
+      "path": "filingsReview.summary ; filingsReview.filings[8-K du 14/09]",
+      "problem": "« la journée investisseurs du 28 octobre n'a pas donné lieu à un 8-K » est au passé pour un événement futur (la fiche est datée du 27). Le « plan de cession de 50 millions d'actions jusqu'au 24 octobre » n'est pas dans le communiqué du 12/09 rattaché à la ligne mais dans l'Item 5 du 10-Q (plan adopté le 22 juin 2026). L'action collective du 10-Q est une action de détenteurs d'actions (Delaware, déposée le 3 février 2026, déclarations jugées trompeuses sur l'infrastructure cloud), pas une action « sur l'infrastructure cloud » tout court.",
+      "fix": "« l'annonce du 23 octobre n'a donné lieu à aucun 8-K à ce jour » ; ligne du 14/09 : « plan adopté le 22 juin (10-Q, Item 5) pour vendre jusqu'à 50 millions d'actions avant le 24 octobre ; annulé le 12 septembre, aucune action vendue » ; « action collective d'actionnaires (Delaware, 3 février 2026) alléguant des déclarations trompeuses sur l'infrastructure cloud ; défense contestée, pas d'impact significatif attendu selon la société ».",
+      "evidence": "analyses/ORCL/_primary/text/q1fy27-10q.htm.txt (Item 5 ; note 11 « Securities Class Action Regarding Oracle Cloud Infrastructure ») ; analyses/ORCL/_primary/text/sep14-ex991.htm.txt"
+    },
+    {
+      "path": "capitalStructure.dilutionRisk",
+      "problem": "« moderate » est incohérent avec la page : +5,0 % d'actions en un trimestre (141 M), ~20 Md$ encore à lever, étagère automatique ouverte, risque de financement classé « critique ». L'étagère n° 333-277990 est automatique (émetteur bien connu : 10-K coché « Yes »), donc sans plafond de montant ; la fiche dit seulement « reste ouverte ».",
+      "fix": "dilutionRisk « high » ; ajouter « étagère automatique d'émetteur bien connu, sans plafond de montant ; déposée le 15/03/2024, amendée le 02/02/2026 ».",
+      "evidence": "analyses/ORCL/_primary/text/fy26-10k.htm.txt (WKSI : Yes) ; feb04-8k.htm.txt (S-3 333-277990 du 15/03/2024, amendement du 02/02/2026)"
+    },
+    {
+      "path": "macro.regime",
+      "problem": "« Régime : neutre » alors que la collecte donne current_state = risk_on (51,9 % contre 48,1 % neutre) et le régime dtx « recovery » (score 0,577, indice sous sa moyenne à 50 séances).",
+      "fix": "« Régime : risk-on à 52 %, neutre à 48 % (cinq jours) » ou garder « neutre » avec la phrase de nuance ; ne pas contredire l'étiquette de la source sans l'expliquer.",
+      "evidence": "analyses/ORCL/_data/market_regime.json (facets.regime.current_state, probabilities)"
+    },
+    {
+      "path": "fundamentals.rows[Prévision du 2e trimestre]",
+      "problem": "Le bénéfice ajusté de 1,85 à 1,93 $ est donné sans la note du communiqué : hors gain Ampere du T2 de l'exercice 2026 la croissance est de +21 à +25 %, avec ce gain la prévision recule de 14 à 18 %. Le dividende (0,50 $ par trimestre, 1,6 Md$ versés au T1) n'apparaît nulle part, alors que le flux libre publié est avant dividendes.",
+      "fix": "Ajouter « +21 à +25 % hors gain unique sur Ampere du T2 de l'exercice 2026 (-14 à -18 % avec) » et une mention « dividende de 2,00 $ par an, environ 6 Md$ par an, non inclus dans le flux libre ».",
+      "evidence": "analyses/ORCL/_primary/text/q1fy27-ex991.htm.txt (Guidance for Q2 FY 2027, footnote 1 ; dividende 0,50 $) ; q1fy27-10q.htm.txt (dividendes payés 1 565 M$)"
+    },
+    {
+      "path": "tradeIdea.horizon / entryNote ; technicals.resistances",
+      "problem": "Obstacles en chemin : 144,18 $ est cité, mais le plus haut du 6 octobre (146,93 $) et celui du 5 octobre (146,65 $) se situent entre 144,18 et TP1 et ne figurent ni dans les résistances ni dans l'horizon. Par ailleurs un achat le 29 octobre traverse les résultats d'Amazon (29 au soir, une seule source), classés « impact fort » dans l'échéancier mais non mentionnés comme risque de nuit dans le texte d'exécution (à traiter aussi par la revue retail).",
+      "fix": "Ajouter 146,93 $ (6 octobre) aux résistances et à « obstacles en chemin » ; ajouter dans entryNote « un achat le 29 octobre porte la position à travers les résultats d'Amazon (29 au soir, date d'une seule source) ; attendre le 30 si l'on ne veut pas ce risque ».",
+      "evidence": "bars.json (2026-10-06 : haut 146,9317 ; 2026-10-05 : 146,65)"
+    },
+    {
+      "path": "rendu (tools/render-analysis.js, tradeIdea.rr, verdict.summary)",
+      "problem": "Formats non français dans une page lang=fr : décimales à point et préfixe $ (« $126.06 », « -0.08% », « RSI 39.0 », « MACD -4.630 », « Supports : $122.76 / $114.50 », tableaux « -8.05 % », corrélations « 0.60 », chaîne rr « 1:2.40 »), tiret ASCII au lieu de « − ». Même comportement sur la fiche FICO (gabarit) : défaut du moteur, pas propre à ORCL. Phrase lourde dans verdict.summary : « plus bas depuis le 30 juillet le 22 à 122,76 $ ».",
+      "fix": "Au minimum, passer tradeIdea.rr en virgule (« 1:2,40 TP1 / 1:4,01 TP2 ... ») et réécrire « le 22 octobre, plus bas depuis le 30 juillet, à 122,76 $ ». Le formatage global relève d'un correctif du renderer.",
+      "evidence": "analyses/ORCL/index.html (lignes de l'en-tête, du bloc technique et des tableaux) ; analyses/FICO/index.html pour comparaison"
+    }
+  ]
+}

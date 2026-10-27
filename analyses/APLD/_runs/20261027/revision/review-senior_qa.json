@@ -1,0 +1,129 @@
+{
+  "ticker": "APLD",
+  "role": "senior_qa",
+  "verdict": "Gabarit du 27 octobre respecté (graphique avant tableau, 6 groupes de fondamentaux, performance en barres, propagation, tribunal en dernier, frise) et la quasi-totalité des chiffres se recalcule (barres, EMA/RSI/ATR/MACD, corrélations et bêtas des 20 comparables, SEC, multiples), mais 7 blocages : séances comptées à tort, gap et taille incohérents avec les barres, R/R d'en-tête au meilleur prix, timing des dirigeants faux, taux de livraison du tribunal faux, dates de résultats de CoreWeave/Nebius/Nvidia omises, perte Babcock & Wilcox mal attribuée : BLOCK.",
+  "blocks": [
+    {
+      "path": "technicals.wyckoff ; bottomEstimation.scenarios[0].basis (compose-apld-body.cjs l. 107 et 149)",
+      "problem": "« deux plus bas proches à dix séances d'écart » / « deux creux à dix séances d'écart » est faux. Le plus bas du 16 octobre (17,651 $) et celui du 26 octobre (17,50 $) sont séparés de SIX séances (19, 20, 21, 22, 23 puis 26 octobre) ; dix est l'écart en jours calendaires. Le texte est écrit en dur dans le générateur, il apparaît deux fois dans la fiche rendue et soutient le double creux qui fonde le plan.",
+      "fix": "Remplacer par « à six séances d'écart » dans les deux phrases (ou « à dix jours d'écart »). Régénérer le HTML.",
+      "evidence": "analyses/APLD/_data/bars.json : indice de 2026-10-26 moins indice de 2026-10-16 = 6 ; bas 2026-10-16 = 17,651, bas 2026-10-26 = 17,50."
+    },
+    {
+      "path": "tradeIdea.entryNote (paragraphe « Taille ») ; tribunal.rounds[4].text ; tribunal.verdict",
+      "problem": "Le gap est mal décrit et la taille ne le couvre pas. (1) Le pire jour de l'année (−17,52 %, 15 décembre 2025) n'est pas un écart d'ouverture : ouverture 27,86 $ = clôture de la veille 27,86 $, plus bas 22,895 $, clôture 22,98 $. Un ordre stop aurait été exécuté en séance. « Un pire jour à −17,5 % : un stop ne protège pas d'un tel saut » (tribunal) et « le pire jour ferait sauter le stop » (entryNote) confondent baisse en séance et saut. (2) Le vrai pire saut est −8,15 % à l'ouverture du 14 novembre 2025 (23,06 → 21,18), au lendemain d'une séance à −12,68 %. (3) L'exemple « ferait ouvrir vers 20,45 $ depuis le plafond » (22,27 × 0,91847) reste au-dessus du stop 19,87 $ : il ne montre aucun saut du stop. Un saut de −8,15 % dépasse le stop dès que la veille clôture à 21,63 $ ou moins (19,87 / 0,91847). (4) tribunal.verdict écrit « une taille calculée sur le risque de gap » alors que les 416 actions sont calculées au stop exact (1 000 / 2,40 = 416,7) et que « la moitié si l'on veut couvrir un saut » n'est pas chiffré : à 416 actions, un saut de −8,15 % depuis une clôture à 21,00 $ coûte 416 × (22,27 − 19,29) = 1 240 $, depuis 19,88 $ environ 1 670 $, soit +24 % à +67 % sur la perte de 1 000 $ annoncée.",
+      "fix": "entryNote, « Taille » : « Entre le plafond et le stop, le risque est de 2,40 $ par action (10,8 %), moins de deux variations moyennes quotidiennes : une séance ordinaire peut toucher le stop. Un écart d'ouverture se mesure depuis la clôture de la veille : le pire de l'année, −8,2 % le 14 novembre 2025 (de 23,06 $ à 21,18 $), saute le stop dès que la veille clôture à 21,63 $ ou moins. Le pire jour (−17,5 %, 15 décembre 2025) s'est fait en séance, sans écart à l'ouverture : le stop l'aurait exécuté. Pour 1 000 $ de perte maximale, saut compris (4,02 $ par action depuis une clôture juste au-dessus du stop) : 248 actions au plus, environ 5 523 $ engagés. À 416 actions, 1 000 $ au stop exact, ce saut coûterait environ 1 670 $. » tribunal.rounds[4] : « …avec un pire écart d'ouverture à −8,2 % sur un an (14 novembre 2025) : un stop ne protège pas d'un tel saut. » tribunal.verdict : garder « avec une taille calculée sur le risque de gap » seulement si la taille par défaut passe à 248 actions ; sinon supprimer ces mots.",
+      "evidence": "analyses/APLD/_data/bars.json : 2025-12-12 clôture 27,86 ; 2025-12-15 [27,86 ; 27,86 ; 22,895 ; 22,98] ; 2025-11-13 clôture 23,06 (−12,68 %) ; 2025-11-14 ouverture 21,18 (−8,15 %). Calculs : 19,87 / 0,91847 = 21,634 ; 19,87 × 0,91847 = 18,25 ; 22,27 − 18,25 = 4,02 ; 1 000 / 4,02 = 248,8 ; 248 × 22,27 = 5 523 ; 21,00 × 0,91847 = 19,29."
+    },
+    {
+      "path": "tradeIdea.stopPct / tp1Pct / tp2Pct / rr, cartes du plan (tools/render-analysis.js l. 1166 à 1185 : R/R et pourcentages tirés de t.entry)",
+      "problem": "Les cartes visibles affichent le meilleur cas : stop −7,8 %, objectifs +20,1 % et +35,0 %, R/R « 1:2,56 · 1:4,46 », tous calculés depuis 21,56 $, prix qui ne peut pas être payé (déclencheur = clôture à 21,57 $ ou plus, achat à la séance suivante, plafond 22,27 $). Le pire fill (1:1,51 · 1:2,85) n'est que dans une ligne grise sous les cartes. Règle codifiée après l'incident TLN (feedback_analysis_senior_review_first.md, règle 3) : le R/R s'atteste au pire fill. Recalcul : risque 2,40 $ ; TP1 (25,89 − 22,27) / 2,40 = 1,508 ; TP2 (29,10 − 22,27) / 2,40 = 2,846 ; depuis 22,27 : stop −10,78 %, TP1 +16,26 %, TP2 +30,67 %.",
+      "fix": "Faire piloter les cartes par le plafond : ajouter au schéma et au renderer un champ de prix maximal exécutable (ex. entryMax: 22.27) utilisé pour le R/R et les pourcentages quand le statut est watch ; afficher stopPct « −10,8 % », tp1Pct « +16,3 % », tp2Pct « +30,7 % » et la carte R/R « 1:1,51 · 1:2,85 » avec la mention « au plafond 22,27 $ ». Mettre le pire fill en tête de la chaîne rr : « 1:1.51 TP1 / 1:2.85 TP2 au plafond 22,27 $, pire prix exécutable ; à 21,57 $, 1:2.54 / 1:4.43 ». À défaut de changement de renderer, ne pas afficher de carte R/R calculée depuis 21,56 $.",
+      "evidence": "data/analyses-data/APLD.json tradeIdea.entry = 21,56, stop 19,87, tp1 25,89, tp2 29,10 ; analyses/APLD/_runs/20261027/revision/numeric-evidence.json levels.cap = 22,27, capRr = 1,508. HTML rendu : carte « Risque/rendement 1:2,56 · 1:4,46 »."
+    },
+    {
+      "path": "insiders.signal ; globalScore.keyTakeawaysPositive[1]",
+      "problem": "« Deux dirigeants ont acheté le 16 octobre, au plus bas de la chute » et « ont acheté 6,66 M$ d'actions au plus bas d'octobre » sont faux. Ils ont payé 18,04 $ (Cummins) et 18,86 $ en moyenne (Zhang), soit 18,73 $ de moyenne : 6 % au-dessus du plus bas du jour (17,651 $) et 7,0 % au-dessus du plus bas d'octobre, 17,50 $, touché dix jours plus tard ; la clôture du 26 octobre (17,83 $) est elle-même sous leurs deux prix moyens. Le texte fait croire à un achat du point bas.",
+      "fix": "insiders.signal : « Deux dirigeants ont acheté le 16 octobre, en pleine chute (−11,5 % ce jour-là), 355 803 actions pour 6,66 M$, à 18,73 $ en moyenne, soit 5 % au-dessus de la clôture du 26 octobre (17,83 $). » globalScore : « Deux dirigeants ont acheté 6,66 M$ d'actions le 16 octobre, à 18,73 $ de moyenne, au-dessus du plus bas d'octobre (17,50 $). » Le titre « Dirigeants acheteurs » du badge reste exact.",
+      "evidence": "Form 4 0001900445-26-000006 (300 000 à 18,86 $, fourchette 18,40-19,16 $) et 0001391935-26-000009 (55 803 à 18,04 $) ; analyses/APLD/_data/bars.json : bas 2026-10-16 = 17,651, bas 2026-10-26 = 17,50, clôture 2026-10-26 = 17,83. 6 664 700 / 355 803 = 18,73 ; 18,73 / 17,50 = 1,070."
+    },
+    {
+      "path": "tribunal.rounds[1].text (compose-apld-body.cjs l. 174 : F.live = 250)",
+      "problem": "« Ces loyers sont ceux d'un parc livré à 18 % » est faux. Les 65,8 M$ de loyers de base sont ceux du trimestre clos le 31 août, où la capacité en service est de 100 MW puis 175 MW à partir du 1er juillet, soit au plus 12,4 % de 1,41 GW (175 / 1 410). Les 250 MW (17,7 %, arrondis à 18 %) ne datent que du 1er octobre. La fiche le dit elle-même ailleurs (bottomEstimation : « au plus 175 MW livrés »), d'où l'incohérence interne.",
+      "fix": "« Ces loyers sont ceux d'un parc livré à 12 % au 31 août (175 MW sur 1,41 GW) ; il est à 18 % depuis le 1er octobre (250 MW). » Adapter le générateur : utiliser 175 pour le trimestre et 250 pour la date du 1er octobre.",
+      "evidence": "Communiqué 8-K du 7 octobre 2026 : « Delivered Phase 1 of Building 2 (75 MW) ... July 1, 2026, bringing total live capacity at the campus to 175 MW » et « October 1 ... to 250 MW ». 175 / 1410 = 12,4 % ; 250 / 1410 = 17,7 %."
+    },
+    {
+      "path": "timeline.events ; timeline.note ; blastRadius.groups[1].symbols[CRWV, NBIS, ORCL].eventRisk ; blastRadius.groups[3].symbols[NVDA, BE].eventRisk ; blastRadius.groups[4].symbols[META].eventRisk ; blastRadius.missingData[3]",
+      "problem": "La frise court jusqu'au 16 novembre (20 jours) mais le calendrier de résultats n'a été collecté que sur quatorze jours (page de calendrier pleine, close au 28 octobre ; fenêtre jusqu'au 10 novembre, voir comparison_earnings.json et earnings_risk.json). La fiche écrit donc « Aucune publication datée dans la fenêtre collectée de quatorze jours » et « CoreWeave sans date collectée », alors que les dates existent : relevé du 27 octobre 12 h 35 UTC (GetEarningsCalendarFiltered, symbols=CRWV,NVDA,META,ORCL,NBIS,BE,APLD, days_ahead=30) : Nebius 10 novembre, CoreWeave 11 novembre (premier locataire, Polaris Forge 1), Nvidia 17 novembre, toutes à source unique (Yahoo), heure non fournie ; META, ORCL, BE et APLD sans date dans les 30 jours. Les résultats de CoreWeave tombent à l'intérieur de la frise et de la fenêtre d'achat (jusqu'au 16 novembre), sans être dits ; les chaînes « Si le crédit se ferme » désignent justement les néoclouds.",
+      "fix": "Recollecter le calendrier sur 30 jours dans analyses/APLD/_data/ (nouvel artefact haché, repris par la preuve numérique) puis ajouter à la frise : {date 2026-11-10, category earnings, impact medium, label « Nebius », detail « néocloud », uncertain true} et {date 2026-11-11, category earnings, impact strong, label « CoreWeave », detail « premier locataire », uncertain true}, source « calendrier de résultats, une seule source, relevé du 27 octobre 2026 ». Corriger timeline.note (retirer « CoreWeave sans date collectée »), les eventRisk de CRWV, NBIS et NVDA (« Résultats annoncés le 11 novembre (une seule source) », « …le 10 novembre… », « …le 17 novembre, hors frise… ») et supprimer la ligne missingData sur CoreWeave. Dire dans tradeIdea.horizon que Nvidia (17 novembre) tombe dans la durée de détention.",
+      "evidence": "Relevé GetEarningsCalendarFiltered du 2026-10-27T12:35:22Z : NBIS 2026-11-10, CRWV 2026-11-11, NVDA 2026-11-17, date_confidence single_source (yahoo_quote_summary_calendar_events). analyses/APLD/_data/comparison_earnings.json warnings : « Webull calendar page is full (200 events) and ends at 2026-10-28, before the requested window end 2026-11-10 »."
+    },
+    {
+      "path": "fundamentals.rows[8].signal ; earnings.beatNote ; blastRadius.contradictions[3]",
+      "problem": "« 60,9 M$ de pertes de juste valeur sur Babcock & Wilcox » est mal attribué. 60,9 M$ = 49,5 M$ (ligne « dérivés ») + 11,4 M$ (ligne « placement »). Selon le 10-Q, la ligne dérivés de 49,5 M$ est la différence entre −56,1 M$ sur le bon de souscription Babcock & Wilcox et +6,6 M$ sur les dérivés liés aux parts préférentielles de Macquarie ; les 11,4 M$ sont l'action Babcock & Wilcox. La perte propre à Babcock & Wilcox est donc de 67,5 M$ (56,1 + 11,4), et 60,9 M$ est une perte nette de juste valeur mêlant un gain sans rapport.",
+      "fix": "Écrire « 60,9 M$ de pertes nettes de juste valeur (67,5 M$ sur Babcock & Wilcox, bon de souscription et actions, moins 6,6 M$ de gain sur des dérivés liés aux parts de Macquarie), sans sortie de trésorerie » dans fundamentals.rows[8], earnings.beatNote et blastRadius.contradictions[3] (retirer « sur Babcock & Wilcox » si le détail est jugé trop long).",
+      "evidence": "10-Q 0001144879-26-000059, Management's Discussion : « Loss on the change in fair value of derivatives was $49.5 million ... due to a decrease of $56.1 million in the fair value of our B&W common stock warrant and an increase of $6.6 million in the fair value of the derivative assets related to the preferred units ... Loss on change in fair value of investment was $11.4 million ... decrease in fair value of our investment in B&W common stock » ; états financiers : dérivés 49 511, placement 11 352 (en milliers)."
+    }
+  ],
+  "fixes": [
+    {
+      "path": "verdict.whyAvoid[0] ; risks.riskCards[0].points ; header.badges[1] ; tribunal.rounds[0]",
+      "problem": "Le thème central « intérêts au-dessus des loyers » compare des intérêts bruts (77,4 M$ en charges, ou 113,1 M$ avec les 35,7 M$ incorporés aux chantiers) aux 65,8 M$ de loyers de base, sans les 35,8 M$ d'intérêts perçus sur la trésorerie (10-Q : « Interest income » 35 821). Net, la charge est de 41,6 M$, sous les loyers de base ; ce chiffre n'apparaît que dans earnings.beatNote. De plus « 242,9 M$ d'intérêts payés en trésorerie » (exact dans le 10-Q) dépasse la charge du trimestre (113,1 M$) : il reflète le calendrier des coupons semestriels et du préfinancement, pas un rythme trimestriel, et se lit comme tel à côté de 65,8 M$. À arbitrer par la revue contrarian (la défense du tribunal n'a pas cet argument).",
+      "fix": "Ajouter « 35,8 M$ d'intérêts perçus sur la trésorerie ramènent la charge nette à 41,6 M$ » dans whyAvoid[0], dans le premier point de la carte de risque critique et dans la défense du premier tour du tribunal ; préciser « 242,9 M$ payés sur le trimestre, coupons semestriels et préfinancement compris, contre 113,1 M$ de charge » ou retirer ce chiffre de whyAvoid[0].",
+      "evidence": "8-K du 7 octobre 2026 et 10-Q : « Interest income increased $35.0 million ... to $35.8 million ... due to an increase in funds held in interest-bearing accounts » ; 10-Q, flux de trésorerie : « Interest paid $ 242,852 »."
+    },
+    {
+      "path": "tools/render-analysis.js l. 617-619 (tableau des opérations d'initiés) ; formats numériques du renderer",
+      "problem": "Libellés anglais visibles dans une page française : « Recent Transactions », « Date | Insider | Type | Shares | Value », badges « buy » et « sell ». Formats anglais mélangés au français : « $17.83 », « -2.30% », « $21.46 », « RSI 32.5 », « $17.50 / $16.64 / $13.16 », « 0.749 », « -9.9% », « -32.08 % » dans les tableaux, contre « 17,83 $ » ailleurs. Le tableau des bons affiche « N/A » en prix d'exercice pour CoreWeave (7,19 $ et 10,75 $), AI Bridge (7,50 $ et 10,00 $) et les convertibles (environ 9,76 $ = 450 M$ / 46,1 M d'actions), prix pourtant connus. Défaut du renderer commun (HOOD porte le même tableau), à corriger à la source.",
+      "fix": "Traduire dans le renderer : « Opérations récentes », « Date | Dirigeant | Sens | Actions | Montant », « achat » / « vente » ; formater les nombres en français (virgule, espace avant % et $). Renseigner strike en texte pour les bons à deux prix (« 7,19 $ et 10,75 $ ») et pour les convertibles (« environ 9,76 $ »).",
+      "evidence": "HTML rendu de analyses/APLD/index.html, sections Initiés, Analyse technique, Structure du capital ; tools/render-analysis.js l. 617-619."
+    },
+    {
+      "path": "verdict.controlChecklist[0].evidence ; verdict.controlChecklist[0].statusLabel ; sourceRefs[].name « Données de marché datées (provenance hashée) » ; filingsReview.summary ; verdict.whyAvoid[4] ; shortInterest.trend",
+      "problem": "Vocabulaire d'infrastructure dans un texte public (règle EDITORIAL_STYLE : décrire la donnée, pas l'infra) : « provenance hashée » (7 occurrences), « ouvertes et hachées », « trois comparables à trous de juillet ont été remplacés », « selon le fournisseur de statistiques » (9 occurrences). Le remplacement de EQIX, HUT et ETN est un détail de collecte sans valeur pour le lecteur.",
+      "fix": "« Données de marché datées » (sans « provenance hashée ») ; « Dix pièces décisionnelles ouvertes et relues sur un inventaire de 60 formulaires » ; retirer « trois comparables à trous de juillet ont été remplacés » ; remplacer « le fournisseur de statistiques » par « les statistiques de marché ».",
+      "evidence": "analyses/APLD/index.html, texte extrait ; data/analyses-data/APLD.json."
+    },
+    {
+      "path": "business.segments[2] ; business.overview (2e paragraphe)",
+      "problem": "Le tableau des segments ne retombe pas sur le total : 262,6 + 37,8 + 23,0 = 323,4 M$ pour 341,9 M$. Le chiffre d'affaires de ChronoScale est de 41,5 M$ (dont 23,0 M$ de ventes de processeurs graphiques), et la colonne « % du total » affiche « filiale détenue à environ 96 % », qui se lit comme 96 % des ventes. Le texte « L'essentiel du reste vient de … ventes de processeurs graphiques (23,0 M$) » laisse 18,5 M$ sans explication.",
+      "fix": "Ligne ChronoScale : revenus « 41,5 M$ dont 23,0 M$ de ventes de processeurs graphiques », « environ 12 % des ventes », description « filiale détenue à environ 96 %, consolidée mais exclue des mesures ajustées ». Phrase du texte : « Le reste vient de l'hébergement historique de mineurs de bitcoin (37,8 M$) et de ChronoScale (41,5 M$, dont 23,0 M$ de ventes de processeurs graphiques). »",
+      "evidence": "8-K Exhibit 99.1 : réconciliation « Total revenue (GAAP) 341,875 ; ChronoScale revenue (41,482) ; Adjusted revenue 300,393 » ; « $23.0 million in GPU hardware sales related to ChronoScale »."
+    },
+    {
+      "path": "header.badges[0] ; meta.ogDescription ; tradeIdea.banner ; tradeIdea.statusNote",
+      "problem": "Le seuil d'achat s'écrit de trois façons : « au-dessus de 21,57 $ » (badge, ogDescription), « au-dessus de 21,56 $ » (bandeau, tribunal, technique), « à 21,57 $ ou plus » (conditions). Une clôture à exactement 21,57 $ est refusée par le badge et acceptée par les conditions.",
+      "fix": "Uniformiser : « clôture à 21,57 $ ou plus » (badge : « SURVEILLER — ACHAT SEULEMENT SUR CLÔTURE À 21,57 $ OU PLUS » ; ogDescription : « Achat seulement sur une clôture à 21,57 $ ou plus. »).",
+      "evidence": "data/analyses-data/APLD.json, chemins listés ; bars.json : sommet du 21 octobre = 21,56."
+    },
+    {
+      "path": "filingsReview.filings[5] et [6] ; insiders (texte)",
+      "problem": "« 2 839 227 actions détenues directement » (Zhang) et « 5 874 453 actions détenues directement » (Cummins) incluent des actions gratuites non acquises : 500 000 RSU accordées le 6 février 2026 et 375 000 RSU restantes de l'octroi d'août 2025 pour Zhang (875 000 au total) ; 1 500 000 RSU et 742 166 actions en IRA pour Cummins (notes de bas de page des Form 4).",
+      "fix": "« 2 839 227 titres détenus après l'opération, dont 875 000 actions gratuites non acquises » et « 5 874 453 titres détenus directement après l'opération, dont 1 500 000 actions gratuites non acquises ».",
+      "evidence": "Form 4 0001900445-26-000006 notes F2 et F3 ; Form 4 0001391935-26-000009 notes."
+    },
+    {
+      "path": "blastRadius.groups[0].symbols[CORZ].readThrough",
+      "problem": "« corrélation la plus stable du groupe avec Applied Digital » : non démontré, et la corrélation de CORZ (0,749) est inférieure à celles d'IREN (0,778) et de WULF (0,759) dans le même groupe. Aucune mesure de stabilité n'est calculée.",
+      "fix": "Remplacer par « corrélation de 0,75 avec Applied Digital, bêta de 0,95, le plus proche de 1 du groupe » (0,9545 est bien le bêta le plus proche de 1 des cinq pairs directs).",
+      "evidence": "blastRadius.groups[0] : corrélations CORZ 0,7486, IREN 0,778, CIFR 0,7465, WULF 0,7592, GLXY 0,6504 ; bêtas 0,9545, 0,7127, 0,6428, 0,8153, 0,6792."
+    },
+    {
+      "path": "business.coverageMatrix ; section « Initiés et institutions » ; earnings.quarters",
+      "problem": "Le gabarit de collecte demande de marquer chaque facette absente au lieu de l'omettre. Absentes de la matrice : analystes (aucune action en 90 jours, absence réelle selon la source), institutionnels (13F collectés, par exemple Citadel 1 372 681 actions au 30 juin, mais la section ne montre que les initiés), saisonnalité, réactions et surprises de résultats (earnings.quarters vide), sentiment social (social.platforms vide), coût d'emprunt (« Non retenu »).",
+      "fix": "Ajouter trois ou quatre lignes à coverageMatrix : « Analystes : COUVERT — aucune action sur 90 jours » ; « Institutionnels (13F) : COUVERT — non retenu dans la fiche, lecture à joindre ou à écarter explicitement » ; « Saisonnalité, surprises de résultats, sentiment social : NON RETENU » avec la cause. Renommer la section « Initiés » si les 13F restent absents.",
+      "evidence": "analyses/APLD/_data/analyst_actions.json (total_actions 0, window_days 90) ; analyses/APLD/_data/insiders.json (institutional_holdings) ; analyses/APLD/_data/symbol_seasonality.json."
+    },
+    {
+      "path": "verdict.whyBuy[4]",
+      "problem": "Comparaison choisie : « 12,5 fois … contre 15,8 fois pour Core Scientific et 16,9 fois pour IREN » ne cite que les pairs plus chers. Le graphique de la même fiche place Applied Digital au-dessus d'Iron Mountain (7,1×) et de CoreWeave (10,6×) et à peine sous Digital Realty (12,7×).",
+      "fix": "« 12,5 fois les revenus GAAP des douze derniers mois : au niveau de Digital Realty (12,7×), au-dessus de CoreWeave (10,6×) et d'Iron Mountain (7,1×), sous Core Scientific (15,8×) et IREN (16,9×) ».",
+      "evidence": "fundamentals.rows (valorisation, champ comparison) ; graphique factLadder16 du HTML."
+    },
+    {
+      "path": "macro.impact ; verdict.summary ; news[2]",
+      "problem": "La fiche cite TIKR pour l'émission de convertibles de Cipher, mais passe sous silence le canal principal de cette même source : les paris sur une hausse des taux américains (« rates are running the stock », inflation et prix à la production de la semaine du 12 octobre). macro.impact écrit « Plus que les taux, c'est l'accès au crédit des néoclouds qui fait le titre » alors que la frise place la Fed du 28 octobre en événement fort. L'article date aussi la baisse d'Applied Digital du 13 octobre à « environ 5 % » (barres : −3,48 %) : garder les barres. La causalité est à arbitrer par la revue contrarian.",
+      "fix": "Reformuler : « Deux canaux se superposent depuis trois semaines : l'accès au crédit des néoclouds (émission de Cipher, déclaration d'Elon Musk) et les paris sur une hausse des taux (inflation et prix à la production de la semaine du 12 octobre, selon TIKR) ; la Fed du 28 octobre et le CPI du 10 novembre pèsent sur les deux. »",
+      "evidence": "https://finance.yahoo.com/markets/stocks/articles/applied-digital-just-dropped-31-181139517.html (lu le 27 octobre 2026) : « The pain hit the whole group of debt-funded companies building AI data centers as bets on a US rate hike grew. »"
+    },
+    {
+      "path": "business.overview (4e paragraphe) ; news[0].detail ; risks.riskCards[3].points[1]",
+      "problem": "Paraphrase qui durcit la citation : Elon Musk écrit que les marchés de la dette se ferment « pour toute société qui n'a pas de revenus substantiels indépendants des centres de données IA » ; la fiche écrit « sociétés sans revenus hors centres de données » (le mot « substantiels » disparaît). Applied Digital, avec 37,8 M$ de revenus de mineurs, n'est pas « sans revenus hors centres de données » au sens littéral.",
+      "fix": "« …se ferment presque entièrement aux sociétés sans revenus substantiels hors centres de données. »",
+      "evidence": "Blockspace, 26 octobre 2026 (analyses/APLD/_data/instrument.json) : « debt markets have almost entirely shut off access to money for any company that doesn't have substantial revenue independent of AI data centers »."
+    },
+    {
+      "path": "timeline.events[3] (Assemblée APLD)",
+      "problem": "L'assemblée générale est rangée dans la famille « earnings » : la légende et le texte pour lecteur d'écran la rendent « Résultats, impact moyen ». La spécification n'offre que macro, earnings, geo, market, plan.",
+      "fix": "Passer la catégorie à « market » (séance) ou sortir l'assemblée de la frise et la garder dans la prose (elle y est déjà : catalyseurs, filingsReview).",
+      "evidence": "tools/templates/event-timeline.md, champs d'un événement ; HTML rendu : « Assemblée APLD … Résultats, impact moyen »."
+    },
+    {
+      "path": "business.overview (1er paragraphe) ; verdict.summary ; globalScore ; tribunal.rounds[1]",
+      "problem": "« CoreWeave et deux grands clouds de qualité investissement » : le communiqué parle d'« an investment-grade hyperscaler » (Polaris Forge 2) et de « a tier-one investment-grade hyperscaler » (trois autres campus), sans établir qu'il s'agit de deux sociétés distinctes ; le 10-Q ne liste que trois clients (56 %, 21 %, 11 %).",
+      "fix": "« CoreWeave et deux baux signés avec un ou deux grands clouds de qualité investissement, non nommés » ou « un grand cloud de qualité investissement et un grand cloud de premier rang, non nommés ».",
+      "evidence": "8-K Exhibit 99.1, paragraphe « HPC Hosting Update » ; 10-Q note 5 (concentration des clients)."
+    }
+  ]
+}

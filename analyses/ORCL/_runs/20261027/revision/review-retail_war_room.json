@@ -1,0 +1,87 @@
+{
+  "ticker": "ORCL",
+  "role": "retail_war_room",
+  "verdict": "Plan exécutable par un particulier (déclencheur sur clôture, plafond d'achat, stop, heures de Paris, hors PEA, sortie avant les résultats d'Oracle), sauf la taille : 49 actions sont présentées comme une perte maximale de 1 000 $, alors que le pire écart de -14,52 % coûterait 1 420 $ si le titre a d'abord glissé vers le stop.",
+  "blocks": [
+    {
+      "path": "tradeIdea.entryNote (paragraphe « Taille »)",
+      "problem": "« Pour 1 000 $ de perte maximale acceptée : 49 actions au plus » n'est pas un maximum. Le calcul (compose-orcl-body.cjs, size1k) applique le pire écart d'ouverture (-14,52 %, 11 décembre 2025 : ouverture 190,62 $ contre clôture 223,01 $, vérifié sur bars.json) au prix d'achat de 137,85 $ : 117,83 $, soit 20,02 $ par action, 981 $ pour 49 actions. Cela ne vaut que si l'écart tombe la nuit de l'achat. Le plan reste ouvert jusqu'au 8 décembre avec un stop à 127,36 $ : si le titre clôture d'abord juste au-dessus du stop (127,37 $) puis ouvre à -14,52 %, la vente se fait vers 108,88 $, soit 28,97 $ par action et 1 420 $ pour 49 actions (+42 % sur le budget annoncé). Le stop n'évite pas ce cas, c'est lui que l'écart saute. Un retail qui fixe sa taille sur « perte maximale » prend donc un risque sous-estimé de plus d'un tiers, sur le chiffre même que le brief désigne comme point d'attention.",
+      "fix": "Remplacer la phrase par un calcul au pire cas : « Taille : jusqu'au stop, le risque est de 10,49 $ par action (7,6 %). Un écart d'ouverture peut sauter le stop. Le pire des 251 dernières séances, -14,52 % (11 décembre 2025, lendemain des résultats), appliqué à une clôture juste au-dessus du stop (127,37 $), ferait vendre vers 108,88 $ : 28,97 $ de perte par action. Pour qu'une perte de 1 000 $ tienne dans ce cas : 34 actions au plus (environ 4 687 $ engagés, 985 $ de perte). 49 actions ne limitent la perte à 981 $ que si l'écart tombe la nuit de l'achat ; elles coûteraient 1 420 $ après une glissade vers le stop. Hors résultats d'Oracle, le pire écart de la période est -6,24 % (28 avril 2026) : 903 $ pour 49 actions à partir du stop. » Formule générale à donner : actions = perte maximale acceptée / 28,97 $. Si le propriétaire garde 49 actions, remplacer « perte maximale » par « perte si l'écart tombe la nuit de l'achat » et ajouter le chiffre de 1 420 $. Même correction dans la formulation de risks.riskCards[4] si le chiffre y est repris.",
+      "evidence": "analyses/ORCL/_data/bars.json, /results/0/data/0/bars (2025-12-10 clôture 223,01 ; 2025-12-11 ouverture 190,62) ; analyses/ORCL/_runs/20261027/compose-orcl-body.cjs lignes 12-15 (gapOpen = cap * (1 + worstGap), size1k) ; recalcul : 127,37 x (1 - 0,1452) = 108,88 ; 137,85 - 108,88 = 28,97 ; 49 x 28,97 = 1 419,7 ; 1 000 / 28,97 = 34,5."
+    }
+  ],
+  "fixes": [
+    {
+      "path": "tradeIdea.entryNote et risks.riskCards[4].points[0] (« Pire écart d'ouverture de l'année »)",
+      "problem": "Le -14,52 % est exact (pire ouverture sur 251 séances, aussi sur les 300 séances certifiées) mais il date du 11 décembre 2025 : « de l'année » est faux pour 2026, dont le pire écart est -10,73 % (11 juin 2026). Le lecteur ne voit pas non plus que les écarts de -5 % à -6 % sont fréquents : cinq ouvertures sous -5 % en 251 séances (-14,52 %, -10,73 %, -6,24 % le 28 avril, -5,90 % le 14 septembre, -5,01 % le 24 septembre), dont deux sur les six dernières semaines.",
+      "fix": "Écrire « pire écart d'ouverture des douze derniers mois (251 séances) » et ajouter une ligne : « cinq ouvertures sous -5 % sur la période, dont -5,90 % le 14 septembre et -5,01 % le 24 septembre ; quatre dépassent la distance déclencheur-stop (5,7 %) : -14,52 %, -10,73 %, -6,24 %, -5,90 % ; deux dépassent 7,6 %, la distance plafond-stop ». Ne pas attribuer de cause aux écarts de juin, avril et septembre sans source.",
+      "evidence": "analyses/ORCL/_data/bars.json : calcul ouverture / clôture veille sur les 251 dernières séances."
+    },
+    {
+      "path": "tradeIdea.entryNote (paragraphe « Achat »), tradeIdea.horizon",
+      "problem": "L'achat du 29 octobre traverse la même nuit les résultats d'Amazon (29 au soir, date d'une seule source), puis AMD (3 novembre), l'inflation du 10 novembre, les néo-clouds et Nvidia à la mi-novembre. Seul l'enchaînement avec Microsoft et Alphabet est dit dans le paragraphe d'exécution ; le reste n'est que dans les catalyseurs, sans lien avec le stop. La version précédente de la fiche écrivait « pas d'activation la veille d'une de ces publications » : la règle a disparu sans être remplacée par une phrase d'exposition.",
+      "fix": "Ajouter : « Acheté le 29, vous détenez le titre pendant les résultats d'Amazon le soir même, puis AMD le 3 novembre et Nvidia vers la mi-novembre : un écart à l'ouverture suivante peut sauter le stop. » Ou, si le propriétaire veut la règle prudente, « ne pas acheter la veille des résultats d'Amazon : attendre l'ouverture du 30 ».",
+      "evidence": "analyses/ORCL/_data/comparison_earnings.json (AMZN 2026-10-29, AMD 2026-11-03, single_source, report_time TNS) ; data/analyses-data/ORCL.json#/tradeIdea/catalysts."
+    },
+    {
+      "path": "tradeIdea.horizon (ordres de sortie)",
+      "problem": "« ordre stop à 127,36 $ valable jusqu'à révocation ; vente limitée à 153,60 $ sur la moitié » : un stop sur 49 actions plus une vente limitée sur 24 ou 25 dépasse la quantité détenue ; beaucoup de courtiers de particuliers refusent deux ordres de vente qui totalisent plus que la position, et n'offrent pas d'ordre OCO. La moitié de 49 n'est pas un nombre entier. Rien ne précise stop au marché ou stop limité : avec un stop limité, un écart d'ouverture sous le stop laisse la position sans protection.",
+      "fix": "Ajouter : « Stop au marché, jamais stop limité (un écart le sauterait). Moitié = 24 actions. Si votre courtier refuse le stop et la vente limitée en même temps, gardez le stop sur les 49 actions et mettez une alerte à 153,60 $ pour vendre 24 actions à la main, puis remonter le stop au prix d'achat sur le reste. »",
+      "evidence": "data/analyses-data/ORCL.json#/tradeIdea/horizon ; 49 / 2 = 24,5."
+    },
+    {
+      "path": "meta.ogDescription, meta.description, verdict.summary",
+      "problem": "ogDescription : « Rien avant la journée investisseurs du 28 octobre » sans déclencheur ni heure. La présentation a lieu à 16 h 55 à Paris (10 h 55 à Chicago, vérifié sur le communiqué d'Oracle du 23 octobre), séance ouverte : un lecteur qui ne voit que l'aperçu de partage peut acheter dans l'après-midi du 28. Description et résumé donnent « clôture à 135,09 $ ou plus » mais pas le plafond de 137,85 $, donc rien contre la poursuite d'un saut.",
+      "fix": "ogDescription : « Rien avant la clôture du 28 octobre (21 h à Paris) : achat seulement sur une clôture à 135,09 $ ou plus, limité à 137,85 $. » Ajouter « achat limité à 137,85 $ » dans description et verdict.summary.",
+      "evidence": "https://investor.oracle.com/investor-news/news-details/2026/ORACLE-INVESTOR-DAY-MEETING-TO-BE-HELD-OCTOBER-28-2026/default.aspx (« Wednesday, October 28, 2026 », « 10:55 a.m. Central Time », Oracle AI World)."
+    },
+    {
+      "path": "tradeIdea.statusNote (Conditions du plan)",
+      "problem": "L'invalidation par nouveau programme d'actions (invalidation[3]) n'a pas de geste concret : le lecteur n'a pas de lieu où vérifier avant de passer l'ordre le 29. La consigne « relire tout supplément de prospectus ou 8-K de financement » est dans controlChecklist, pas dans le plan. Dernier dépôt de financement au 27 octobre : aucun depuis le 23 juin ; dernier 8-K le 14 septembre (liste EDGAR des soumissions, aucun 8-K lié à la convocation du 23 octobre).",
+      "fix": "Ajouter à « Conditions du plan » : « Avant l'ordre du 29, ouvrir la liste des dépôts d'Oracle sur le site de la SEC et vérifier qu'aucun 8-K, 424B5 ou S-3 de financement n'a été déposé depuis le 23 juin ; s'il y en a un, le plan est abandonné. »",
+      "evidence": "analyses/ORCL/_primary/submissions.json (derniers dépôts : Formulaires 4 du 19 octobre, 8-K du 14 septembre)."
+    },
+    {
+      "path": "tradeIdea.horizon (sortie du 8 décembre)",
+      "problem": "La date du 14 décembre vient d'une seule source de calendrier (champ nextEarningsDate de Yahoo, horodaté 20:00Z, probablement une estimation) ; la fiche dit elle-même qu'Oracle avait publié le 10 décembre l'an dernier. La sortie du 8 reste valable seulement si la société ne publie pas avant le 9 ; la marge est d'une séance.",
+      "fix": "Ajouter : « Si Oracle confirme une date avant le 14 décembre, sortir à la clôture de la veille de cette date ; vérifier la page investisseurs d'Oracle chaque semaine à partir du 15 novembre. »",
+      "evidence": "analyses/ORCL/_data/instrument.json (nextEarningsDate 2026-12-14T20:00:00Z, source yahoo_quote_summary_calendar_events) ; data/analyses-data/ORCL.json#/earnings/nextEarnings."
+    },
+    {
+      "path": "tradeIdea.entryNote (« après l'ouverture »)",
+      "problem": "« après l'ouverture » est vague pour un particulier : le 29, la séance suit les résultats de Microsoft et d'Alphabet et les premières minutes sont celles où l'écart entre acheteur et vendeur est le plus large.",
+      "fix": "Écrire « pas avant 15 h 00 à Paris (30 minutes après l'ouverture) ; avant le 2 novembre l'ouverture est à 14 h 30 ». Après le 2 novembre : pas avant 16 h 00.",
+      "evidence": "data/analyses-data/ORCL.json#/risks/riskSummary (écart acheteur-vendeur plus large les jours d'annonce)."
+    },
+    {
+      "path": "tradeIdea.stopPct, rendu « Stop -5,7 % » et rr",
+      "problem": "La tuile affiche « Stop 127,36 $ -5,7 % » (depuis le déclencheur 135,08 $) alors que le stop réel au pire prix exécutable (137,85 $) est à -7,6 %. Le champ rr utilise le point décimal (« 1:2.40 ») alors que la tuile affiche « 1:2,40 ».",
+      "fix": "Libellé de tuile : « -5,7 % du déclencheur, -7,6 % du plafond ». Uniformiser la virgule dans rr (« 1:2,40 »).",
+      "evidence": "recalcul : (135,08 - 127,36) / 135,08 = 5,71 % ; (137,85 - 127,36) / 137,85 = 7,61 %."
+    },
+    {
+      "path": "tradeIdea.entryNote (Taille, Compte)",
+      "problem": "Le budget de 1 000 $ est un exemple mais la formule n'est donnée pour aucun autre budget, et la position engagée (6 755 $) est en dollars sans équivalent en euros ni mention des frais de change du courtier.",
+      "fix": "Donner la formule (actions = perte maximale acceptée / perte par action au pire cas) et rappeler que le montant engagé se convertit au taux du jour, frais de change du courtier en plus.",
+      "evidence": "data/analyses-data/ORCL.json#/tradeIdea/entryNote."
+    },
+    {
+      "path": "data/analyses-evidence/ORCL.json, analyses/ORCL/_runs/20261027/revision/numeric-evidence.json (levels.sizeExample)",
+      "problem": "levels.sizeExample vaut 9 (budget de 100 $ : floor(100 / (cap - stop)) dans analysis-v3-r04.cjs) alors que la fiche publie 49 (budget de 1 000 $, calculé dans compose-orcl-body.cjs). Les valeurs 117,83, 20,02, 49 et 6 755 ne figurent pas comme valeurs dérivées ; la provenance de entryNote pointe sur le tableau entier des barres.",
+      "fix": "Ajouter aux valeurs dérivées : clôture du 10 décembre 2025 (223,01), ouverture du 11 décembre (190,62), écart -14,52 %, ouverture simulée, perte par action et nombre d'actions, avec pointeurs vers les barres 2025-12-10 et 2025-12-11 ; retirer ou renommer sizeExample. À refaire avec les nouveaux chiffres (28,97 $, 34 actions) si le blocage est corrigé.",
+      "evidence": "analyses/ORCL/_runs/20261027/revision/numeric-evidence.json#/levels/sizeExample ; tools/lib/analysis-v3-r04.cjs ligne 88."
+    },
+    {
+      "path": "filingsReview.summary (dernière phrase)",
+      "problem": "« la journée investisseurs du 28 octobre n'a pas donné lieu à un 8-K » : la journée n'a pas encore eu lieu (nous sommes le 27). Seule la convocation du 23 octobre, communiqué de presse sans 8-K, est établie.",
+      "fix": "« Aucun 8-K n'a accompagné la convocation du 23 octobre (communiqué de presse seul) ; le contenu de la journée investisseurs est inconnu. »",
+      "evidence": "analyses/ORCL/_primary/submissions.json (dernier 8-K : 14 septembre, items 8.01 et 9.01)."
+    },
+    {
+      "path": "timeline.events[0].source, blastRadius.groups (eventRisk de MSFT, GOOGL, AMZN)",
+      "problem": "La source de l'événement Oracle se lit « communiqué du 23 octobre 2026 (10 h 55, heure de Chicago) » : on croit que le communiqué est sorti à 10 h 55, alors que 10 h 55 CT est l'heure de la présentation. Les eventRisk disent « après la clôture » pour Microsoft, Alphabet et Amazon alors que la source de calendrier donne report_time « TNS » (heure non communiquée).",
+      "fix": "« communiqué du 23 octobre 2026 ; présentation le 28 à 10 h 55, heure de Chicago ». Pour les trois grands : « heure non confirmée, habituellement après la clôture ».",
+      "evidence": "analyses/ORCL/_data/comparison_earnings.json (report_time TNS, date_confidence single_source) ; page investisseurs d'Oracle."
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "ticker": "APLD",
+  "role": "retail_war_room",
+  "verdict": "Plan de surveillance exécutable sur le principe (déclencheur en clôture, plafond 22,27 $, no-chase, heures de Paris, CTO et non PEA justes, R/R au plafond exact), mais la taille de 416 actions n'est pas calculée sur le risque de gap contrairement à ce qu'affirme le verdict, le pire jour est présenté à tort comme un saut, les cartes affichent le R/R d'un prix non exécutable et les résultats de CoreWeave (11 novembre) tombent dans la fenêtre d'achat sans être dits : BLOCK.",
+  "blocks": [
+    {
+      "path": "tradeIdea.entryNote (paragraphe « Taille ») + tribunal.verdict",
+      "problem": "L'écart d'ouverture est appliqué au prix d'achat (« vers 20,45 $ depuis le plafond »), alors qu'un gap se mesure depuis la clôture de la veille. Le pire gap de l'année (−8,15 %, 14 novembre 2025) saute le stop de 19,87 $ dès que la veille clôture à 21,63 $ ou moins, c'est-à-dire dès la zone de déclenchement (21,57 $) et après tout échec de cassure. Depuis une clôture juste au-dessus du stop, l'ouverture tomberait vers 18,25 $ : 4,02 $ perdus par action au plafond, soit environ 1 672 $ avec 416 actions (+67 % sur le budget de 1 000 $) ; depuis une clôture à 21,00 $, ouverture à 19,29 $ et 1 241 $ perdus. La taille par défaut (416) est calculée au stop exact, pas sur le gap, alors que tribunal.verdict écrit « avec une taille calculée sur le risque de gap » : affirmation fausse et consigne de taille trompeuse.",
+      "fix": "Réécrire le paragraphe Taille : « Taille : entre le plafond et le stop, 2,40 $ par action (10,8 %), moins de deux variations moyennes quotidiennes : une séance ordinaire peut toucher le stop. Un écart d'ouverture se mesure depuis la clôture de la veille : le pire de l'année, −8,2 % le 14 novembre 2025, saute le stop dès que la veille clôture à 21,63 $ ou moins. Depuis une clôture juste au-dessus du stop, l'ouverture tomberait vers 18,25 $, soit 4,02 $ perdus par action au plafond. Pour 1 000 $ de perte maximale, saut compris : 248 actions au plus, environ 5 523 $ engagés. À 416 actions, 1 000 $ au stop exact, ce saut coûterait environ 1 670 $. » Garder alors tribunal.verdict tel quel (il devient vrai) ; sinon retirer « avec une taille calculée sur le risque de gap ».",
+      "evidence": "analyses/APLD/_data/bars.json : 2025-11-13 clôture 23,06 ; 2025-11-14 ouverture 21,18 (−8,15 %). Calculs : 19,87 / 0,91847 = 21,634 ; 19,87 × 0,91847 = 18,250 ; 22,27 − 18,25 = 4,02 ; 1 000 / 4,02 = 248,8 → 248 ; 248 × 22,27 = 5 522,96 ; 416 × 4,02 = 1 672 ; 21,00 × 0,91847 = 19,29 → 416 × 2,98 = 1 241."
+    },
+    {
+      "path": "tribunal.rounds[4].text (accusation) + tradeIdea.entryNote (« le pire jour … ferait sauter le stop »)",
+      "problem": "Le pire jour de l'année (−17,5 %, 15 décembre 2025) a ouvert sans écart (ouverture 27,86 $ = clôture de la veille 27,86 $) puis chuté en séance (plus bas 22,895 $, clôture 22,98 $). Un ordre stop aurait été exécuté en séance près de son niveau. « Un pire jour à −17,5 % sur un an : un stop ne protège pas d'un tel saut » est donc faux, et le lecteur confond baisse en séance (couverte par le stop) et saut à l'ouverture (non couvert), ce qui fausse sa lecture de la taille.",
+      "fix": "Accusation : « …avec un pire écart d'ouverture à −8,2 % sur un an, le 14 novembre 2025, au lendemain d'une séance à −12,7 % : un stop ne protège pas d'un tel saut. » entryNote : « le pire jour (−17,5 %, le 15 décembre 2025) s'est fait en séance, sans écart à l'ouverture : il aurait déclenché le stop, exécuté près de 19,87 $ avec un glissement. »",
+      "evidence": "analyses/APLD/_data/bars.json : 2025-12-12 clôture 27,86 ; 2025-12-15 [ouv. 27,86, haut 27,86, bas 22,895, clôt. 22,98] ; 2025-11-13 −12,68 % (26,41 → 23,06)."
+    },
+    {
+      "path": "tradeIdea.entry / stopPct / tp1Pct / tp2Pct / rr → cartes du plan (tools/render-analysis.js l. 1174-1185)",
+      "problem": "Les cartes visibles affichent le meilleur cas : stop −7,8 %, objectifs +20,1 % et +35,0 %, R/R 1:2,56 · 1:4,46, tous calculés depuis 21,56 $, prix qui ne peut pas être acheté (déclencheur = clôture à 21,57 $ ou plus, achat à la séance suivante jusqu'à 22,27 $). Le pire fill (1:1,51 · 1:2,85) n'apparaît que dans une ligne grise, et la taille dans un bloc replié. Contraire à la règle « le R/R s'atteste au PIRE fill » (incident TLN).",
+      "fix": "Mesurer depuis le plafond : stopPct « −10,8 % », tp1Pct « +16,3 % », tp2Pct « +30,7 % » ; R/R affiché 1:1,51 · 1:2,85 « au plafond 22,27 $ ». Le renderer calcule la carte R/R depuis t.entry : ajouter un champ plafond (ex. entryMax: 22.27) utilisé pour la carte R/R et les pourcentages quand le statut est watch, et mettre le pire fill en tête de la chaîne rr (« 1:1.51 TP1 / 1:2.85 TP2 au plafond 22,27 $, pire prix exécutable ; à 21,57 $, 1:2.54 / 1:4.43 »).",
+      "evidence": "19,87/22,27 − 1 = −10,78 % ; 25,89/22,27 − 1 = +16,26 % ; 29,10/22,27 − 1 = +30,67 % ; (25,89 − 22,27)/2,40 = 1,508 ; (29,10 − 22,27)/2,40 = 2,846. HTML rendu : carte « Risque/rendement 1:2,56 · 1:4,46 ». Règle : .claude/memory/feedback_analysis_senior_review_first.md §3."
+    },
+    {
+      "path": "timeline.events / timeline.note / tradeIdea.entryNote / blastRadius.missingData",
+      "problem": "Résultats de CoreWeave, premier locataire (Polaris Forge 1), annoncés le 11 novembre, et de Nvidia le 17 novembre (une seule source chacun) : les deux tombent dans la fenêtre d'activation et d'achat (achat possible jusqu'au 19 novembre). Le plan permet d'acheter la séance même où CoreWeave publie le soir, sans le dire. La fiche écrit « CoreWeave sans date collectée » parce que le calendrier n'a couvert que quatorze jours (fenêtre close au 10 novembre), alors que le plan court jusqu'à mi-décembre. CoreWeave a perdu 15,5 % le 14 octobre, jour où APLD a perdu 9,4 % : c'est exactement le risque de gap que la thèse désigne.",
+      "fix": "Ajouter à la frise : {date 2026-11-11, earnings, impact strong, label « CoreWeave », detail « premier locataire », uncertain true, source « calendrier de résultats, une seule source, relevé du 27 octobre 2026 »} et {date 2026-11-17, earnings, impact medium, label « Nvidia », uncertain true}. Ajouter à l'entryNote : « Pas d'achat les séances du 11 et du 17 novembre : CoreWeave, premier locataire, puis Nvidia publient ces soirs-là (dates d'une seule source). Une position déjà ouverte les traverse avec le stop en place et la taille calculée sur le gap. » Retirer « CoreWeave sans date collectée » de timeline.note et la ligne correspondante de blastRadius.missingData.",
+      "evidence": "GetEarningsCalendarFiltered(symbols=CRWV,NVDA,APLD, days_ahead=30), capturé 2026-10-27T10:44:37Z : CRWV 2026-11-11 TNS single_source (yahoo_quote_summary_calendar_events) ; NVDA 2026-11-17 TNS single_source. analyses/APLD/_data/earnings_risk.json warning (fenêtre close 2026-11-10). news[2] : CoreWeave −15,5 %, APLD −9,4 % le 14 octobre."
+    }
+  ],
+  "fixes": [
+    {
+      "path": "tradeIdea.horizon / timeline.to",
+      "problem": "La frise s'arrête au 16 novembre (fin d'activation) alors qu'une position achetée jusqu'au 19 novembre peut être tenue vingt séances, soit jusqu'au 17-18 décembre (Thanksgiving le 26 novembre, marché fermé). La Fed du 9 décembre et le CPI du 10 décembre tombent dans la détention sans être cités ; aucune date de sortie au plus tard n'est donnée.",
+      "fix": "Ajouter au texte : « Sortie au plus tard le vendredi 18 décembre 2026 à la clôture. » et à la frise (ou à sa note) Fed du 9 décembre à 20 h (Paris) et CPI du 10 décembre à 14 h 30.",
+      "evidence": "data/scheduled-events.json : fomc 2026-12-09, cpi 2026-12-10. Décompte des séances NYSE du 20 novembre au 18 décembre 2026 = 20."
+    },
+    {
+      "path": "tradeIdea.horizon (stop sur la totalité + vente limitée sur la moitié)",
+      "problem": "Chez la plupart des courtiers français, deux ordres de vente qui portent ensemble sur plus de titres que la position (stop sur 416 + limite sur 208) sont refusés faute de titres disponibles, sauf ordre OCO. Le second ordre risque d'être rejeté sans que le lecteur le comprenne.",
+      "fix": "« Stop sur la totalité ; alerte de cours à 25,89 $ et vente de la moitié à la main, ou ordre OCO (stop + limite) sur chaque moitié si le courtier le propose ; puis stop du reste remonté au prix d'achat. »",
+      "evidence": "Contrainte de disponibilité des titres sur ordres de vente en compte-titres ; texte actuel tradeIdea.horizon."
+    },
+    {
+      "path": "tradeIdea.horizon (« vendre à la clôture »)",
+      "problem": "L'ordre à la clôture n'est généralement pas proposé sur les actions américaines par les courtiers français.",
+      "fix": "« Sans objectif ni stop touché après vingt séances, vendre dans la dernière demi-heure, entre 21 h 30 et 22 h (Paris). »",
+      "evidence": "Clôture de New York à 22 h à Paris à partir du 2 novembre (texte de la fiche, exact)."
+    },
+    {
+      "path": "header.badges[0] / meta.ogDescription / tradeIdea.banner",
+      "problem": "Seuil d'achat écrit de trois façons : « au-dessus de 21,57 $ » (badge, ogDescription), « au-dessus de 21,56 $ » (bandeau), « à 21,57 $ ou plus » (conditions). Une clôture à exactement 21,57 $ est refusée par le badge et acceptée par les conditions.",
+      "fix": "Harmoniser partout : « clôture à 21,57 $ ou plus » (badge : « ACHAT SEULEMENT SUR CLÔTURE À 21,57 $ OU PLUS »).",
+      "evidence": "data/analyses-data/APLD.json header.badges[0], meta.ogDescription, tradeIdea.banner, tradeIdea.statusNote."
+    },
+    {
+      "path": "tradeIdea.thesis (« Stop à 19,87 $… sous ce niveau, la cassure aurait échoué »)",
+      "problem": "Un ordre stop placé à 19,87 $ se déclenche au simple contact du plus bas du 21 octobre, pas sous ce niveau ; un niveau visible est souvent touché.",
+      "fix": "Écrire « le retour à ce plus bas signe l'échec de la cassure », ou placer le stop à 19,86 $ avec un plafond à 22,26 $ (risque inchangé de 2,40 $, R/R au plafond 1:1,51 / 1:2,85).",
+      "evidence": "bars.json 2026-10-21 bas 19,87 ; (25,89 − 22,26)/2,40 = 1,51 ; (29,10 − 22,26)/2,40 = 2,85."
+    },
+    {
+      "path": "tradeIdea.entryNote (budget de perte)",
+      "problem": "Le budget de 1 000 $ ignore le courtage et le change aller-retour (souvent 0,1 à 0,5 % par sens chez les courtiers français sur des titres en dollars), soit 10 à 55 $ sur 5 523 $ engagés.",
+      "fix": "Ajouter : « Frais de courtage et de change en plus, à retrancher du budget de perte. »",
+      "evidence": "Montant engagé recalculé : 248 × 22,27 = 5 523 $."
+    },
+    {
+      "path": "tradeIdea.thesis / risks.riskCards[4].points[1] (« l'écart de prix reste étroit »)",
+      "problem": "Aucune fourchette achat-vente de l'action dans la collecte (seule la chaîne d'options porte bid/ask, à zéro). La liquidité, elle, est prouvée : 577 M$ échangés par séance en médiane sur vingt séances, 416 actions en représentent une fraction infime.",
+      "fix": "Remplacer « l'écart de prix reste étroit » par « 577 M$ échangés par séance : une taille de particulier ne déplace pas le cours ».",
+      "evidence": "Médiane(clôture × volume) des vingt dernières séances de bars.json = 576,96 M$ ; aucun champ bid/ask action dans analyses/APLD/_data/."
+    }
+  ]
+}
