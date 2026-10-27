@@ -1,0 +1,51 @@
+{
+  "ticker": "EQX",
+  "role": "retail_war_room",
+  "verdict": "Plan exécutable sur le calendrier (résultats du 9 novembre après la clôture confirmés par le 6-K du 13 octobre, heures de Paris justes, aucun achat qui traverse la publication, plafond et no-chase clairs), mais la règle de vente GLD est incohérente entre plan, tribunal et rayon de propagation et peut forcer une vente le lendemain de l'achat, et la taille annoncée pour 1 000 $ de perte ne tient pas face au pire écart d'ouverture cité : BLOCK.",
+  "blocks": [
+    {
+      "path": "tradeIdea.statusNote / tradeIdea.entryNote / tradeIdea.invalidation[3] / tradeIdea.horizon / tribunal.verdict / blastRadius.scenarios[0].confirmation",
+      "problem": "Trois traitements différents de GLD à 364,96 $. (1) Le plan : la règle ne joue qu'APRÈS l'achat (vente à l'ouverture suivante), et le déclencheur d'achat n'exige rien sur GLD. (2) Le tribunal : « Le dossier se rouvre si la prévision 2026 est abaissée ou si GLD clôture sous 364,96 $ » : « rouvre » ne dit ni annuler ni acheter, alors que le plan dit qu'une prévision abaissée « annule le plan ». (3) Le rayon de propagation fait de « GLD au-dessus de 364,96 $ » une condition de confirmation du scénario haussier, et de « une hausse d'EQX pendant que GLD casse ses plus bas » une contradiction. Conséquence pratique : si GLD clôture sous 364,96 $ avant le 10 novembre (il en est à 0,8 % et a touché 364,33 $ en séance le 23 octobre), puis qu'EQX clôture à 11,42 $ ou plus sur ses résultats, le plan achète et sa propre règle impose de vendre à l'ouverture suivante. Ordre des déclenchements non dit : avec un bêta de 1,92, le stop à 10,84 $ (−5,1 % depuis 11,42 $, −6,9 % depuis 11,64 $) correspond à une baisse de GLD d'environ 2,6 à 3,6 %. Si GLD vaut plus d'environ 375 à 379 $ à l'achat, le stop d'EQX part en premier et la règle GLD ne sert à rien. Entre 364,96 et environ 375 $, la règle GLD devient le vrai stop (sortie au marché à l'ouverture), sans que le R/R ni la taille en tiennent compte. Rien n'est dit sur l'annulation de l'ordre stop et de l'ordre limité avant la vente, ni sur la moitié restante après TP1. La règle n'apparaît ni dans le bandeau ni dans la séquence de sortie (horizon), où un particulier place ses ordres.",
+      "fix": "Activation : ajouter dans statusNote, entryNote et banner « l'achat exige aussi une clôture de GLD à 364,96 $ ou plus le jour du déclencheur ; une clôture de GLD sous 364,96 $ avant l'achat suspend l'activation jusqu'à une nouvelle clôture de GLD au-dessus ». Sortie, dans horizon : « Si GLD clôture sous 364,96 $ (22 h à Paris) et que le stop à 10,84 $ n'a pas été touché : annuler l'ordre stop et l'ordre limité à 12,85 $, puis vendre toute la position restante le lendemain dès 15 h 30 (Paris). Si le stop a déjà été exécuté, la règle ne s'applique plus. Après TP1, elle vaut pour la moitié restante. » Scinder invalidation[3] en deux puces : avant l'achat, une prévision abaissée sous 870 000 onces annule le plan ; après l'achat, la règle GLD ci-dessus. Tribunal, verdict : remplacer la dernière phrase par « Une prévision 2026 abaissée annule le plan ; une clôture de GLD sous 364,96 $ interdit l'achat, puis fait vendre à l'ouverture suivante une fois acheté. » Autre option cohérente : supprimer la règle GLD partout, le stop d'EQX portant déjà le risque or, et retirer la mention du tribunal.",
+      "evidence": "analyses/EQX/_data/comparison_bars.json GLD : clôture 2026-07-16 = 364,96, clôture 2026-10-26 = 367,82, plus bas en séance 2026-10-23 = 364,33 ; data/analyses-data/EQX.json tribunal.verdict, tradeIdea.invalidation[3], blastRadius.scenarios[0] ; générateur analyses/EQX/_runs/20261027/compose-eqx-body.cjs:119-123"
+    },
+    {
+      "path": "tradeIdea.entryNote (paragraphe « Taille ») ; générateur analyses/EQX/_runs/20261027/compose-eqx-body.cjs:13",
+      "problem": "La taille applique le pire écart d'ouverture (−9,68 % le 30 janvier : ouverture 14,46 $ contre une clôture de 16,01 $ la veille) au prix plafond : 11,64 × (1 − 9,68 %) = 10,51 $, soit 1,13 $ de perte par action, d'où 887 actions pour 1 000 $. Ce calcul ne mesure pas le saut du stop : le pire cas part d'une clôture juste au-dessus de 10,84 $. 10,84 × 0,9032 = 9,79 $, soit 1,85 $ de perte par action depuis 11,64 $. Avec 887 actions, la perte atteint environ 1 640 $, 64 % au-dessus des « 1 000 $ de perte maximale acceptée » affichés. La consigne contredit aussi la pédagogie de la fiche (« dimensionner la taille sur le pire écart d'ouverture, pas sur le stop »).",
+      "fix": "Calculer gapOpen = stop × (1 + worstGap) et non cap × (1 + worstGap). Texte : « Mais le pire écart d'ouverture de l'année (−9,7 % le 30 janvier), s'il part d'une clôture juste au-dessus du stop, ferait vendre vers 9,79 $, soit environ 1,85 $ de perte par action depuis 11,64 $. Pour 1 000 $ de perte maximale acceptée : 540 actions au plus, environ 6 286 $ engagés. »",
+      "evidence": "analyses/EQX/_data/bars.json : 2026-01-29 clôture 16,01, 2026-01-30 ouverture 14,46 ; calcul 1000 / (11,64 − 10,84 × 14,46/16,01) = 540,7"
+    }
+  ],
+  "fixes": [
+    {
+      "path": "tradeIdea.entryNote (paragraphe « Compte »)",
+      "problem": "« Action cotée à New York et à Toronto » sans dire quelle ligne acheter. Un courtier français peut proposer la ligne TSX en dollars canadiens, où les niveaux 11,42/11,64/10,84 $ n'ont aucun sens.",
+      "fix": "Ajouter : « Acheter la ligne NYSE American (EQX, en dollars) ; la ligne de Toronto cote en dollars canadiens et les niveaux de la fiche ne s'y appliquent pas. »",
+      "evidence": "6-K du 13 octobre 2026 (TSX: EQX, NYSE American: EQX)"
+    },
+    {
+      "path": "tradeIdea.entryNote / tradeIdea.horizon",
+      "problem": "Pas de date limite d'achat ni de date de sortie au calendrier. Une activation le 16 novembre, avec un ordre renouvelé trois séances, mène à un achat possible jusqu'au jeudi 19 novembre. « Vendre à la clôture après vingt séances » suppose un ordre à la clôture, rarement proposé par les courtiers français sur une action américaine.",
+      "fix": "« Dernier achat possible : jeudi 19 novembre. Sortie forcée au plus tard le vendredi 18 décembre (vingt séances après un achat le 19 novembre ; marché fermé le 26 novembre, séance courte le 27 jusqu'à 19 h à Paris), par ordre limité proche du dernier cours avant 22 h (Paris). »",
+      "evidence": "Calendrier NYSE 2026 (Thanksgiving le 26 novembre, demi-séance le 27)"
+    },
+    {
+      "path": "tradeIdea.horizon",
+      "problem": "Ordre stop sur toute la position et ordre limité sur la moitié : sans ordre OCO (cas fréquent chez les courtiers français), une fois TP1 exécuté, le stop couvre encore plus d'actions que la position.",
+      "fix": "« Après exécution de TP1, modifier l'ordre stop : quantité ramenée à la moitié restante, prix remonté au prix d'achat. »",
+      "evidence": "tradeIdea.horizon"
+    },
+    {
+      "path": "tradeIdea.entryNote",
+      "problem": "La première clôture qui compte (mardi 10 novembre, 22 h) suit la publication de l'inflation américaine du même jour à 14 h 30. Sur un titre au bêta de 1,92 sur l'or, cette clôture mêle la réaction aux résultats et celle à l'inflation.",
+      "fix": "Ajouter : « Le 10 novembre, l'inflation américaine tombe à 14 h 30 : la clôture de ce jour-là mesure aussi la réaction de l'or. »",
+      "evidence": "timeline.events[5] (CPI 2026-11-10, data/scheduled-events.json)"
+    },
+    {
+      "path": "earnings.beatNote",
+      "problem": "« Le troisième trimestre a livré 237 019 onces ; il en faut 277 313 au quatrième » compare deux bases différentes. 237 019 inclut 1 508 onces résiduelles de Castle Mountain, absentes de la prévision par mine, alors que 277 313 est calculé sur les mines de la prévision. Le reste de la fiche utilise 235 511 et 260 178.",
+      "fix": "« Le troisième trimestre a livré 235 511 onces sur les mines de la prévision (260 178 avec trois mois d'Orla) ; il en faut 277 313 au quatrième pour tenir le bas de la fourchette. »",
+      "evidence": "analyses/EQX/_primary/text/2026-10-13-6-K-006596-exh_991.htm.txt (Others 1 508 oz) ; 2026-08-06-6-K-005267 (tableau de prévision par mine, sans Castle Mountain)"
+    }
+  ]
+}

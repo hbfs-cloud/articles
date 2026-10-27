@@ -91,6 +91,7 @@
 - [Scanner No Broker Exec](feedback_scanner_no_broker_exec.md) — JAMAIS d'exécution broker auto dans /scanner — run-session retiré du flux; Telegram scanner = canal daily
 
 ## ✍️ Édito & publication
+- [Lot /analyse : vitesse](feedback_analyse_batch_speed.md) — chaque constructeur fait sa passe de trois relectures ; vagues de 5 ; publication au fil de l'eau (27 oct. 2026, « c pas normal que ce soit aussi lent »).
 - [Fiche : gabarit FICO, plancher et tribunal](feedback_analyse_bottom_and_reviews.md) — gabarit du 27 oct. 2026 pour toutes les fiches : graphique avant tableau, fondamentaux groupés, tribunal en fin de fiche ; relectures faites mais plus publiées (révoqué le 27/10) ; bottomEstimation publié.
 - [Addcard Ordering And Landing](feedback_addcard_ordering_and_landing.md) — Landing renders tab cards in JSON array order (no date sort) + add_card appends (not prepends) for weekly/series/tech → new cards land beyond the fi…
 - [Editorial Voice No Ai](feedback_editorial_voice.md) — Règle #1 de rédaction tout le site — concis, direct, actionnable, JAMAIS "style IA" (lisible enfant 10 ans sur Substack/Telegram)
