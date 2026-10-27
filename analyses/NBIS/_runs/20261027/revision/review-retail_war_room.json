@@ -1,0 +1,66 @@
+{
+  "ticker": "NBIS",
+  "role": "retail_war_room",
+  "verdict": "Plan exécutable par un particulier : rien avant les résultats, déclencheur sur clôture, plafond 183,35 $, taille calculée sur le pire écart d'ouverture du 1er juillet (−13,0 %), heures de Paris justes. Un blocage : l'horizon affirme « pas d'autre publication de résultats » alors que CoreWeave (baromètre du crédit cité par la fiche) publie dans la fenêtre d'activation et Nvidia pendant la détention.",
+  "blocks": [
+    {
+      "path": "tradeIdea.horizon + tradeIdea.catalysts + timeline.events",
+      "problem": "« Pas d'autre publication de résultats pendant la durée du plan » est vrai pour Nebius seul, mais la fiche fait de CoreWeave le baromètre du crédit du secteur et omet ses résultats du troisième trimestre, annoncés le 11 novembre (une seule source, heure non communiquée ; un agrégateur web indique le 9). Ils tombent soit la veille de la clôture-déclencheur du 10, soit le premier jour d'achat possible (mercredi 11 à 15 h 30) : un acheteur du 11 traverse la publication de CoreWeave sans le savoir, et une clôture du 10 au-dessus de 178,86 $ peut refléter CoreWeave plutôt que Nebius. Nvidia est aussi annoncé le 17 novembre (une seule source), dans la durée de détention. Aucun des deux n'est dans l'échéancier.",
+      "fix": "Ajouter à l'échéancier : « CoreWeave · résultats T3 » le 11 novembre, impact fort, uncertain:true, source calendrier de résultats (yahoo_quote_summary_calendar_events, une seule source, date divergente selon les agrégateurs) ; « Nvidia · résultats » le 17 novembre, impact fort, uncertain:true. Remplacer dans horizon « Pas d'autre publication de résultats pendant la durée du plan » par : « Nebius ne publie plus pendant la durée du plan, mais CoreWeave publie autour du 11 novembre et Nvidia le 17 (une seule source chacun) : deux séances où le titre peut ouvrir loin du stop. » Dans entryNote, ajouter : « Si CoreWeave publie après la clôture du 11 novembre, ne pas acheter ce jour-là : premier achat le jeudi 12 à 15 h 30. » Ajouter CoreWeave aux catalyseurs.",
+      "evidence": "GetEarningsCalendarFiltered(symbols=NBIS,IREN,CRWV,NVDA, 2026-10-27T10:44Z) : CRWV report_date 2026-11-11, NVDA 2026-11-17, date_confidence single_source, report_time TNS ; analyses/NBIS/_data/comparison_earnings.json ne couvre pas CRWV (fenêtre de collecte arrêtée au 10 novembre) ; https://www.marketbeat.com/stocks/NASDAQ/CRWV/earnings/"
+    }
+  ],
+  "fixes": [
+    {
+      "path": "tradeIdea.entryNote (Heures de Paris)",
+      "problem": "« Résultats le 10 novembre avant l'ouverture ; première clôture qui compte : ce même jour à 22 h » tient l'horaire pour acquis. Le calendrier de l'instrument donne 12:30 UTC (avant l'ouverture), mais le calendrier filtré relu le 27 octobre renvoie report_time TNS (heure non communiquée), et la date elle-même n'a qu'une source.",
+      "fix": "Ajouter : « Si la publication tombe après la clôture du 10, la première clôture qui compte est celle du mercredi 11 à 22 h et le premier achat possible le jeudi 12 à 15 h 30. »",
+      "evidence": "analyses/NBIS/_data/instrument.json data.items[4].nextEarningsDate 2026-11-10T12:30:00Z ; GetEarningsCalendarFiltered NBIS report_time TNS"
+    },
+    {
+      "path": "tradeIdea.horizon (ordres simultanés stop + vente limitée)",
+      "problem": "« Dès l'achat, ordre stop à 149,49 $ … ; ordre de vente limité à 234,16 $ sur la moitié » : chez la plupart des courtiers français, un ordre de vente en attente réserve les titres. Avec 18 actions, un stop sur 18 et une vente limitée sur 9 font 27 titres à vendre : le second ordre est refusé, et si le particulier passe d'abord la vente limitée, 9 actions restent sans stop.",
+      "fix": "Écrire : « Stop à 149,49 $ sur toute la ligne dès l'achat. Pour l'objectif 1, utiliser un ordre lié (OCO) si le courtier le propose ; sinon, garder le stop sur toute la ligne et poser une alerte de cours à 234,16 $ pour vendre la moitié à la main, puis remonter le stop au prix d'achat sur le reste. Ne jamais laisser des actions sans stop. »",
+      "evidence": "tradeIdea.horizon ; taille de 18 actions dans tradeIdea.entryNote"
+    },
+    {
+      "path": "tradeIdea.horizon / tradeIdea.entryNote (type d'ordre stop)",
+      "problem": "« Ordre stop » est ambigu pour un particulier : un stop limite (« à plage de déclenchement ») à 149,49 $ ne s'exécute pas sur un écart d'ouverture à 130 $, et la perte n'a alors plus de borne. Tout le calcul de taille au pire écart suppose une exécution au marché.",
+      "fix": "Préciser : « ordre à seuil de déclenchement (stop au marché) à 149,49 $, pas un ordre à plage de déclenchement : sur un écart d'ouverture, seul le premier vend. »",
+      "evidence": "tradeIdea.entryNote : sortie « vers 130,06 $ » après un écart de 13 % sous le stop"
+    },
+    {
+      "path": "tradeIdea.entryNote (Compte)",
+      "problem": "« action américaine d'une société néerlandaise … pas en PEA » : le titre est l'action d'une société néerlandaise cotée au Nasdaq, pas une action américaine ; l'éligibilité au PEA dépend du siège de l'émetteur, pas de la place de cotation. La conclusion pratique est juste (les courtiers n'ouvrent pas le Nasdaq en PEA), le motif est faux.",
+      "fix": "« Action d'une société néerlandaise cotée au Nasdaq, en dollars : en pratique en compte-titres ordinaire, les courtiers n'acceptant pas les titres cotés à New York dans un PEA. »",
+      "evidence": "header.name Nebius Group N.V., exchange NASDAQ"
+    },
+    {
+      "path": "tradeIdea.entryNote (Taille)",
+      "problem": "« le risque est de 33,86 $ par action, soit 18 % » : 33,86 / 183,35 = 18,5 %. La perte acceptée est en dollars pour un lecteur qui raisonne en euros.",
+      "fix": "« soit 18,5 % » ; et « Pour 1 000 $ de perte maximale acceptée (convertir sa perte acceptée en euros au cours du jour) : 18 actions au plus, soit 959 $ de perte au pire écart et environ 3 300 $ engagés. »",
+      "evidence": "183,35 − 149,49 = 33,86 ; 149,49 × 0,87 = 130,06 ; 183,35 − 130,06 = 53,29 ; 18 × 53,29 = 959,22 ; 18 × 183,35 = 3 300,30"
+    },
+    {
+      "path": "tradeIdea.horizon (date de sortie)",
+      "problem": "La sortie est exprimée en « vingt séances » sans date calendaire ; Thanksgiving (jeudi 26 novembre, bourse fermée) et la séance courte du vendredi 27 (clôture à 19 h, Paris) tombent dans la détention.",
+      "fix": "Ajouter : « Sortie à la clôture au plus tard le jeudi 10 décembre pour un achat le 11 novembre, le vendredi 18 décembre pour un achat le 19 novembre (dernier jour possible). Bourse fermée le 26 novembre ; le 27, clôture à 19 h. »",
+      "evidence": "Calendrier NYSE 2026 ; décompte de vingt séances après l'achat"
+    },
+    {
+      "path": "tradeIdea.entryNote (annulation de l'ordre)",
+      "problem": "« Une clôture repassée sous 178,86 $ avant l'achat annule l'ordre » ne dit pas si une nouvelle clôture à 178,86 $ ou plus avant le 16 novembre réarme le plan.",
+      "fix": "Préciser : « … annule l'ordre ; une nouvelle clôture à 178,86 $ ou plus au plus tard le 16 novembre le réarme, aux mêmes conditions. » (ou « l'annule pour de bon »), au choix de l'auteur, mais explicitement.",
+      "evidence": "tradeIdea.entryNote"
+    }
+  ],
+  "checked_ok": [
+    "Niveaux sur la série certifiée (290 séances, au 26 octobre) : 178,85 = plus haut du 21 octobre, 182,70 = 16 octobre, 149,49 = plus bas du 26 octobre, 145,80 = plus bas du 29 juillet, 234,16 = plus haut du 8 octobre, 255,08 = plus haut du 6 octobre.",
+    "Pire écart d'ouverture sur la série : −13,00 % le 1er juillet (276,17 → 240,27) ; 14 octobre −5,7 % (arrondi 6 %).",
+    "R/R : au déclencheur 1,88 / 2,60 ; au plafond 1,50 / 2,12 ; stopPct −16,4 %, tp1Pct +30,9 %, tp2Pct +42,6 %.",
+    "−38,7 % depuis le 6 octobre (249,87 → 153,27) ; −10,1 % le 14 et −12,2 % le 16 octobre.",
+    "Heures de Paris : clôture 21 h jusqu'au 30 octobre, 22 h dès le 2 novembre, ouverture 15 h 30 ; jours de semaine des dates citées exacts ; Fed 28 octobre 19 h.",
+    "Liquidité : 3,64 Md$ échangés par séance en médiane sur vingt séances ; ATR 15,93 $ (10,4 % du cours).",
+    "No-chase explicite (plafond 183,35 $, pas d'achat sur un saut du matin) ; aucun achat avant la publication de Nebius."
+  ]
+}

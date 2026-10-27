@@ -3,12 +3,12 @@
   "workflow": "analyse",
   "plan": "plans/analyse.json",
   "plan_sha256": "f54acbc8ad7bedcd138edec019fc5df0098570220074f504610952749a472048",
-  "input_sha256": "70c1554cad3561656eb9d16314e1dd798cb8e496a1318589d75dcea91b592cb7",
+  "input_sha256": "df795686d637795d8a8be4d77872a56d46b166c0091be2fd5552e32836994d23",
   "resolved_input": {
     "artifact": "analyses/NBIS/index.html",
-    "equity_reference_close": "2026-09-25",
+    "equity_reference_close": "2026-10-26",
     "crypto_completed_refdate": null,
-    "as_of_timestamp": "2026-09-28T05:37:13.441Z",
+    "as_of_timestamp": "2026-10-27T12:29:36.642Z",
     "waves": [
       {
         "name": "preflight",
@@ -24,7 +24,7 @@
               "required": true
             },
             "assert": {
-              "equity_reference_close": "2026-09-25"
+              "equity_reference_close": "2026-10-26"
             }
           }
         ]
@@ -53,7 +53,7 @@
               "types": "bars_daily",
               "symbols": "NBIS",
               "limit": 300,
-              "as_of_timestamp": "2026-09-28T05:37:13.441Z",
+              "as_of_timestamp": "2026-10-27T12:29:36.642Z",
               "completion_policy": "completed_only"
             },
             "freshness": {
@@ -61,7 +61,7 @@
               "required": true,
               "expects_close": true,
               "asset_calendar": "us_equity_exchange_sessions",
-              "expected_completed_end": "2026-09-25"
+              "expected_completed_end": "2026-10-26"
             }
           },
           {
@@ -85,7 +85,7 @@
             "args": {
               "types": "technicals,support_resistance,volume_profile,obv,trading_signals",
               "symbols": "NBIS",
-              "end_date": "2026-09-25"
+              "end_date": "2026-10-26"
             },
             "freshness": {
               "max_age_h": 24,
@@ -117,7 +117,7 @@
             "tool": "RankBeta",
             "args": {
               "reference": "NBIS",
-              "as_of": "2026-09-25",
+              "as_of": "2026-10-26",
               "lookback_days": 180,
               "min_overlap": 60,
               "min_correlation": 0.25,
@@ -138,12 +138,12 @@
             "tool": "QueryData",
             "args": {
               "types": "bars_daily",
-              "symbols": "APLD,NVDA,AMD,MSFT,GOOGL,AMZN,ORCL,DELL,SMCI,HPE,VRT,ANET,SMH,XLK,QQQ,IGV",
-              "start_date": "2025-09-25",
+              "symbols": "NVDA,CRWV,IREN,DELL,SMCI,VRT,BE,PLTR,ORCL,APLD,CIFR,WULF,CORZ,SMH,IGV,QQQ",
+              "start_date": "2026-02-09",
               "limit": 180,
               "include_partial": false,
               "force_async": true,
-              "as_of_timestamp": "2026-09-28T05:37:13.441Z",
+              "as_of_timestamp": "2026-10-27T12:29:36.642Z",
               "completion_policy": "completed_only"
             },
             "freshness": {
@@ -151,7 +151,30 @@
               "required": true,
               "expects_close": true,
               "asset_calendar": "us_equity_exchange_sessions",
-              "expected_completed_end": "2026-09-25"
+              "expected_completed_end": "2026-10-26"
+            }
+          },
+          {
+            "as": "comparison_client_bars",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "MSFT,META",
+              "start_date": "2026-02-09",
+              "limit": 180,
+              "include_partial": false,
+              "force_async": true,
+              "as_of_timestamp": "2026-10-27T12:29:36.642Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "note": "Economically documented clients are explicit inputs; they are not inferred from correlation.",
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-10-26"
             }
           },
           {
@@ -160,7 +183,7 @@
             "tool": "QueryData",
             "args": {
               "types": "metadata,financials,stats,technicals,earnings_reactions,earnings_surprises,analyst_trend,short_interest,sec_catalysts",
-              "symbols": "APLD,NVDA,AMD,MSFT,GOOGL,AMZN,ORCL,DELL,SMCI,HPE,VRT,ANET,SMH,XLK,QQQ,IGV",
+              "symbols": "NVDA,CRWV,IREN,DELL,SMCI,VRT,BE,PLTR,ORCL,APLD,CIFR,WULF,CORZ,SMH,IGV,QQQ",
               "force_async": true
             },
             "freshness": {
@@ -168,10 +191,10 @@
               "required": true,
               "note": "Current-only context: label observation time and never present it as point-in-time at refdate.",
               "client_applicability": {
-                "mode": "not_applicable",
-                "reason": "Nebius est un neocloud GPU coté (émetteur privé étranger 20-F/6-K IFRS) dont les dépôts primaires ne nomment aucun client coté à part décisive et documentée du chiffre d'affaires.",
-                "evidence_path": "analyses/NBIS/_data/documented-client-na.json",
-                "evidence_sha256": "2b722aad219215d9e5de9bb7d19f17cd7cafd4b5808faa10915f59ece4ab1d6c"
+                "mode": "applicable",
+                "reason": "",
+                "evidence_path": "",
+                "evidence_sha256": ""
               }
             }
           },
@@ -180,7 +203,7 @@
             "server": "marketdata",
             "tool": "GetEarningsCalendarFiltered",
             "args": {
-              "symbols": "APLD,NVDA,AMD,MSFT,GOOGL,AMZN,ORCL,DELL,SMCI,HPE,VRT,ANET,SMH,XLK,QQQ,IGV",
+              "symbols": "NVDA,CRWV,IREN,DELL,SMCI,VRT,BE,PLTR,ORCL,APLD,CIFR,WULF,CORZ,SMH,IGV,QQQ",
               "days_ahead": 14,
               "include_implied_move": true
             },
@@ -244,7 +267,7 @@
             "args": {
               "types": "news,flags",
               "symbols": "NBIS",
-              "end_date": "2026-09-25",
+              "end_date": "2026-10-26",
               "days": 180
             },
             "freshness": {
@@ -259,7 +282,7 @@
             "args": {
               "types": "insider,insider_transactions,institutional_holdings",
               "symbols": "NBIS",
-              "end_date": "2026-09-25",
+              "end_date": "2026-10-26",
               "days": 365
             },
             "freshness": {
@@ -320,7 +343,7 @@
             "args": {
               "types": "short_interest,ctb,ctb_history,ftd_threshold,finra_short_volume",
               "symbols": "NBIS",
-              "end_date": "2026-09-25",
+              "end_date": "2026-10-26",
               "days": 365
             },
             "freshness": {
@@ -335,7 +358,7 @@
             "tool": "QueryData",
             "args": {
               "types": "calendar,ctb",
-              "symbols": "APLD,NVDA,AMD,MSFT,GOOGL,AMZN,ORCL,DELL,SMCI,HPE,VRT,ANET,SMH,XLK,QQQ,IGV",
+              "symbols": "NVDA,CRWV,IREN,DELL,SMCI,VRT,BE,PLTR,ORCL,APLD,CIFR,WULF,CORZ,SMH,IGV,QQQ",
               "force_async": true
             },
             "freshness": {
@@ -365,7 +388,7 @@
             "args": {
               "types": "vwap",
               "symbols": "NBIS",
-              "end_date": "2026-09-25"
+              "end_date": "2026-10-26"
             },
             "freshness": {
               "max_age_h": 24,
@@ -380,7 +403,7 @@
             "args": {
               "types": "options_chain,vol_surface,options_history,unusual_options,max_pain",
               "symbols": "NBIS",
-              "end_date": "2026-09-25",
+              "end_date": "2026-10-26",
               "max_expirations": 3,
               "moneyness_min": 0.8,
               "moneyness_max": 1.2
@@ -411,7 +434,7 @@
             "args": {
               "types": "sentiment_overall,sentiment_stocktwits,sentiment_reddit,news",
               "symbols": "NBIS",
-              "end_date": "2026-09-25",
+              "end_date": "2026-10-26",
               "days": 14
             },
             "freshness": {
@@ -451,14 +474,14 @@
     ]
   },
   "artifact": "analyses/NBIS/index.html",
-  "reference_date": "2026-09-25",
-  "equity_reference_close": "2026-09-25",
+  "reference_date": "2026-10-26",
+  "equity_reference_close": "2026-10-26",
   "crypto_completed_refdate": null,
-  "started_at": "2026-09-28T05:37:13.441Z",
+  "started_at": "2026-10-27T12:29:36.642Z",
   "waves": [
     {
       "name": "preflight",
-      "ms": 161,
+      "ms": 401,
       "calls": [
         {
           "as": "status",
@@ -467,16 +490,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 159,
+          "ms": 401,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "a33c5248935988bad4aa27c6ff23dbcfcfc1af7a49c6a0588a16e7505750e383"
+          "output_sha256": "cb783d214d52c0b4a04c931fda75d3abec7190cf8e258be2aaed935e9ae57c69"
         }
       ]
     },
     {
       "name": "price-fundamentals",
-      "ms": 17901,
+      "ms": 17285,
       "calls": [
         {
           "as": "instrument",
@@ -485,10 +508,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 7003,
-          "wait_ms": 6115,
+          "ms": 6798,
+          "wait_ms": 6158,
           "error": null,
-          "output_sha256": "f14877fca1e146dff6b845f85f24a3c2aecb935faa81336eecf9d8b7cf656965"
+          "output_sha256": "ca1f93733ac849d030f27a772dfe8cabb61fae0a2fa0a3fae8351eb322a985ab"
         },
         {
           "as": "bars",
@@ -497,10 +520,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 2281,
+          "ms": 2069,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "ad24a648dbed9fa8777f4e13369d00f1deb2618c198235bd9cf1490e583251d8"
+          "output_sha256": "4faa7c7d39f49f35663abec7c209cb6ccd77f072ed62a49867b37792ce163f38"
         },
         {
           "as": "fundamentals",
@@ -509,10 +532,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 3962,
-          "wait_ms": 1060,
+          "ms": 3661,
+          "wait_ms": 1032,
           "error": null,
-          "output_sha256": "30386392ab8e6ce3a0127d6ac7f5b07cd718188cf440b562e2623e5f60abdf06"
+          "output_sha256": "ef0f9b79da4c0df7413656ffb0811b320684056b589bc7301510c34b9fe0c171"
         },
         {
           "as": "technicals",
@@ -521,10 +544,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 5957,
-          "wait_ms": 2054,
+          "ms": 5735,
+          "wait_ms": 2064,
           "error": null,
-          "output_sha256": "7ea5737f02159dd3e309de06e44206dd57719f9f5051ac098ae02713524f2422"
+          "output_sha256": "688dd09a91ddee948711394635883d9b7d6c1fc531936fc0fc8bc0df1aa56bca"
         },
         {
           "as": "current_correlations",
@@ -533,16 +556,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 11786,
+          "ms": 11126,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "9c882425b0237927e0f9402c22964096a69b48ffdb41205fd34222321d7c9314"
+          "output_sha256": "bce80ced73c4231a23a44f4f9aca7f41e65beb2ed97dd3048cac543106a002c9"
         }
       ]
     },
     {
       "name": "blast-radius",
-      "ms": 33151,
+      "ms": 17511,
       "calls": [
         {
           "as": "rank_beta",
@@ -551,10 +574,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 990,
-          "wait_ms": 0,
+          "ms": 1193,
+          "wait_ms": 1,
           "error": null,
-          "output_sha256": "021a0af1032979d9eae3f0795a1c150ed590ea2b4ab045969028baf462b7468a"
+          "output_sha256": "c5521fef6648f374526989ad9376aabfdadaa632aaa5f683e8ca25d5dcf9274b"
         },
         {
           "as": "comparison_bars",
@@ -563,10 +586,22 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 2169,
-          "wait_ms": 221,
+          "ms": 2065,
+          "wait_ms": 102,
           "error": null,
-          "output_sha256": "97e8fb07b05a4b2e5dac84905653a2cda6ef89f9967e2170972153a13c08e8ce"
+          "output_sha256": "ebb419ab048c5162e678fc2f2e31ea1743a6998ff768b3ff054e3fe6681918db"
+        },
+        {
+          "as": "comparison_client_bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 3969,
+          "wait_ms": 1041,
+          "error": null,
+          "output_sha256": "515e9f9d1b74acc7fb00eb6cca49cd69724d4e65ed41a2b0af50d090f4b54570"
         },
         {
           "as": "comparison_context",
@@ -575,10 +610,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 5141,
-          "wait_ms": 2183,
+          "ms": 7003,
+          "wait_ms": 3084,
           "error": null,
-          "output_sha256": "957271332d2e1e29ca7b02ee4264a5d6ae45675ab1ea543c8ba4851ed20d9282"
+          "output_sha256": "774a77ddb968d3f9cb43ae579b498ccf4e3c48f3ea54fa52c9a246b7e2bc7fdc"
         },
         {
           "as": "comparison_earnings",
@@ -587,10 +622,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 29272,
+          "ms": 8407,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "85acc2de4d72fbdc657a14182314676cf6d5c8ccec52d5893bc9c2405e931d5a"
+          "output_sha256": "d830068c6cf0a02cabf64d90f1b9a18965e8324da950cd6388564f7253e44f0e"
         },
         {
           "as": "market_regime",
@@ -599,10 +634,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 4964,
+          "ms": 14426,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "b70f29e8862f3fbb56b8003c41a0fc696d9b396f9a40c173e612124656fb3516"
+          "output_sha256": "cedd25d4b85174f2fc4cd36183d2a7b46e8c90c98e74ca44b856e83be43f2b53"
         },
         {
           "as": "symbol_seasonality",
@@ -611,16 +646,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 30968,
+          "ms": 7099,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "c6bce9418b84b1f052dca9326f2c4c5dcc58f72c927b8608809c5a033a6da56f"
+          "output_sha256": "ee041c97ca6584c35cfcf6ee0d06aa2c26d4c702e53617db73869c1b017161a3"
         }
       ]
     },
     {
       "name": "risk-evidence",
-      "ms": 61177,
+      "ms": 6858,
       "calls": [
         {
           "as": "sec_evidence",
@@ -629,10 +664,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 783,
-          "wait_ms": 69,
+          "ms": 800,
+          "wait_ms": 36,
           "error": null,
-          "output_sha256": "626dc92c5246b7102a295de0859c6e51632ec43d9bf10e82e0b18de19466d01d"
+          "output_sha256": "5515646a31d5845600136a3d7df9fa6c4864bb60da23375f0e4e5edb598321d6"
         },
         {
           "as": "corporate_actions",
@@ -641,10 +676,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 1717,
+          "ms": 1768,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "f5669de01f9bfbbda29d350bf2bad7a3e55cb0f41d979c66cb50b165a956e1ad"
+          "output_sha256": "7860bd240cb03a03b22b6469e65cebd61ab6a5531a74fb1a66e3b5acadc5388d"
         },
         {
           "as": "insiders",
@@ -653,10 +688,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 61108,
+          "ms": 3278,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "31eb742be39f44a4d2c88dc6ff145bdebc0beef324a4b0e94e646645f6175b43"
+          "output_sha256": "1ab8b28b720ac91dd45d71d6c93d7e982329c76d7268a2882f8396ffc4ab8816"
         },
         {
           "as": "insider_current",
@@ -665,10 +700,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 5123,
+          "ms": 4246,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "229e0d2bc7fef3936a1936bddca48ff2aef9d9ea1882b46a8e8b1feb12fcb436"
+          "output_sha256": "00feaa2a5dcf2c951fc22472f8ef853af075d6140921b9308b1bfa0c98a8a0ea"
         },
         {
           "as": "symbol_signals",
@@ -677,10 +712,10 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 41401,
+          "ms": 6821,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "39d2c02ea846b007e8595e093b69ed9338ad9eb86bcb5aba65488c8f7772ce68"
+          "output_sha256": "fc83577701221a78ec385d184f3a29fa5b00731a7ef628170c6a0832a958acc3"
         },
         {
           "as": "earnings_risk",
@@ -689,16 +724,16 @@
           "required": true,
           "detached": false,
           "ok": true,
-          "ms": 6025,
+          "ms": 6231,
           "wait_ms": 0,
           "error": null,
-          "output_sha256": "fc19ff53d28aa273f719bd9333ffc6afa7b3bc44fd672239fe7dd59e3bbb2fab"
+          "output_sha256": "c87d038eb7b9020017c5aad2acab00b0e046b9c3041b0c9778ab0ac6673f9017"
         }
       ]
     },
     {
       "name": "context",
-      "ms": 45003,
+      "ms": 23195,
       "calls": [
         {
           "as": "short_squeeze",
@@ -706,10 +741,11 @@
           "tool": "QueryData",
           "required": false,
           "detached": true,
-          "ok": false,
-          "ms": 45000,
-          "wait_ms": 0,
-          "error": "délai détaché 45000ms dépassé"
+          "ok": true,
+          "ms": 1745,
+          "wait_ms": 762,
+          "error": null,
+          "output_sha256": "273f879e7853864cfd4d590493e37c8a567fe482378c8f9009490c255c20d731"
         },
         {
           "as": "comparison_calendar_ctb",
@@ -717,10 +753,11 @@
           "tool": "QueryData",
           "required": false,
           "detached": true,
-          "ok": false,
-          "ms": 45000,
-          "wait_ms": 0,
-          "error": "délai détaché 45000ms dépassé"
+          "ok": true,
+          "ms": 15938,
+          "wait_ms": 13938,
+          "error": null,
+          "output_sha256": "5fea7dde6e6bb12541f07012e4689fc856b36249a72b44756582081e29c61781"
         },
         {
           "as": "analyst_actions",
@@ -728,10 +765,11 @@
           "tool": "QueryData",
           "required": false,
           "detached": true,
-          "ok": false,
-          "ms": 45000,
+          "ok": true,
+          "ms": 2983,
           "wait_ms": 0,
-          "error": "délai détaché 45000ms dépassé"
+          "error": null,
+          "output_sha256": "beea3517a160fb4a177558d67297674f5610cf093a0d7756b205a69066b02eb2"
         },
         {
           "as": "vwap",
@@ -739,10 +777,11 @@
           "tool": "QueryData",
           "required": false,
           "detached": true,
-          "ok": false,
-          "ms": 45000,
+          "ok": true,
+          "ms": 3990,
           "wait_ms": 0,
-          "error": "délai détaché 45000ms dépassé"
+          "error": null,
+          "output_sha256": "94f6ad4d7fb588788eedf9618aee65c64ef76cea264adfea579a96cfd8cacb1c"
         },
         {
           "as": "options",
@@ -750,10 +789,11 @@
           "tool": "QueryData",
           "required": false,
           "detached": true,
-          "ok": false,
-          "ms": 45000,
-          "wait_ms": 0,
-          "error": "délai détaché 45000ms dépassé"
+          "ok": true,
+          "ms": 7811,
+          "wait_ms": 2808,
+          "error": null,
+          "output_sha256": "c1dac8bb7c85ad87225763febac098544dd244da123d3f7e6c96c60bb3dd14aa"
         },
         {
           "as": "move_explanation",
@@ -761,10 +801,11 @@
           "tool": "ExplainSymbolMove",
           "required": false,
           "detached": true,
-          "ok": false,
-          "ms": 45000,
+          "ok": true,
+          "ms": 9255,
           "wait_ms": 0,
-          "error": "délai détaché 45000ms dépassé"
+          "error": null,
+          "output_sha256": "cc698339872f2ddd447ebbafea6f960ad62d8a98b073f28c458d6d1479ce01df"
         },
         {
           "as": "sentiment",
@@ -773,9 +814,11 @@
           "required": false,
           "detached": true,
           "ok": false,
-          "ms": 45000,
-          "wait_ms": 0,
-          "error": "délai détaché 45000ms dépassé"
+          "ms": 10740,
+          "wait_ms": 3748,
+          "error": "marketdata QueryData incomplete: sentiment_reddit[NBIS]: no Reddit data available; 1 facet(s) failed; sentiment_reddit",
+          "output_sha256": "ae7a2124aade6618fd8b74c08fffe7f3eef56dbaa282b0fe796c7eb04d161870",
+          "artifact_preserved": true
         },
         {
           "as": "peers",
@@ -783,10 +826,11 @@
           "tool": "GetReferentialData",
           "required": false,
           "detached": true,
-          "ok": false,
-          "ms": 45000,
+          "ok": true,
+          "ms": 7992,
           "wait_ms": 0,
-          "error": "délai détaché 45000ms dépassé"
+          "error": null,
+          "output_sha256": "ce2040898eef2138eb5eedc46d17c260218afc0f4cd65080f3b270890eb60949"
         },
         {
           "as": "search_trends",
@@ -795,15 +839,17 @@
           "required": false,
           "detached": true,
           "ok": false,
-          "ms": 45000,
+          "ms": 8006,
           "wait_ms": 0,
-          "error": "délai détaché 45000ms dépassé"
+          "error": "marketdata QueryData incomplete: trends[NBIS]: no Google Trends data available; facet failed; trends",
+          "output_sha256": "ade09d36b19c6670d2f39b636989c6776fd8a5da3069a5a965c027c7bde9f477",
+          "artifact_preserved": true
         }
       ]
     }
   ],
-  "finished_at": "2026-09-28T05:39:51.057Z",
+  "finished_at": "2026-10-27T12:30:42.187Z",
   "failures": 0,
-  "executed_calls": 27,
+  "executed_calls": 28,
   "skipped_calls": 0
 }
