@@ -1,0 +1,109 @@
+{
+  "ticker": "PURR",
+  "role": "senior_qa",
+  "verdict": "Le calcul de la valeur du HYPE par action est exact et sourcé (33,2 M ÷ 264 506 935 = 0,1255 ; × 78,41 $ = 9,84 $ ; 9,07 / 9,84 = 0,92×) et le remplacement d'ETHA par FETH est justifié et propre ; mais la fiche affirme que personne ne connaît les HYPE détenus après le 8 septembre alors que la société les publie chaque semaine (38,8 M au 15 octobre, soit environ 0,90×), et deux autres phrases publiées ne tiennent pas : 4 blocages.",
+  "checked": {
+    "nav_per_share": {
+      "hype_stock_sept8": "OK. 424B3 du 23/09 (_primary/424b3_20260923.htm) : 'As of September 8, 2026, the Company holds approximately 33.2 million HYPE Tokens' (deux occurrences). Valeur arrondie à 0,1 M près (±0,15 %).",
+      "share_count": "OK. 237 919 288 ordinaires au 8/09 (même 424B3) + 26 587 647 issues des 166 173 préférentielles = 264 506 935. Numérateur et dénominateur sont à la même date (8 septembre), donc cohérents. Recoupé avec le tableau de bord de l'émetteur : ligne du 17/09 = 33,6 M HYPE et 265,0 M d'actions, cohérente.",
+      "token_price": "OK. HYPE-USD, barre du 2026-10-26, clôture 78,41 (crypto/hype_bars.json, calendrier crypto_24_7_utc, served_completed_end 2026-10-26) ; 92,42 le 25/09 ; 90,97 le 30/09 ; le tableau de bord de la société affiche 78,45 à 12 h 33 UTC le 27/10.",
+      "arithmetic": "0,12552 HYPE/action ; × 78,41 = 9,842 $ ; 9,07 / 9,842 = 0,9216 (0,92×) ; implicite 9,07 / 0,12552 = 72,26 $ (−7,84 % sous 78,41) ; 25/09 : 0,12552 × 92,42 = 11,60 $ et 12,85 / 11,60 = 1,108 (1,11×) ; 30 juin : 29 275 085 / 227 138 105 = 0,12889. Variations 21 séances : titre −29,42 %, HYPE −15,16 %, ETH −13,64 %, BTC −4,70 %, HYPE vs 30/09 −13,81 %, 30/06→30/09 +39,9 % : tout recalculé, tout juste.",
+      "market_cap_buyback_dilution": "2 524 M$ = 9,07 × 278 271 288 ; 72 M$ / 2 524 M$ = 2,85 % ; +40 352 000 = +16,96 % ; +77 720 830 depuis le 30/06 ; 42 641 847 / 278 271 288 = 15,3 % ; capital dilué 333,5 M : tous justes.",
+      "trade_levels": "Trigger 9,85 (haut du 21/10), stop 8,47 (bas du 22/10), TP1 12,34 (bas du 06/10), TP2 13,05 (haut du 05/10) : conformes aux barres. -14,0 % / +25,3 % / +32,5 % ; R/R 1,80 / 2,32 au déclencheur et 1,51 / 1,97 au plafond 10,01 (formule (12,34 + 1,5 × 8,47) / 2,5 = 10,018 arrondi à 10,01) ; 1 000 $ / 1,54 = 649 actions, 6 496 $ : justes. Pire gap d'ouverture −10,5 % le 19/03 : confirmé dans les barres. Heures de Paris (changement d'heure UE le 25/10, US le 01/11) : justes."
+    },
+    "etha_to_feth": {
+      "why_replaced": "Justifié. ETHA : clôture 20,43 le 05/10 puis ouverture 61,32 / clôture 60,89 le 06/10 (×3,0) ; le magasin de données ne l'a pas ajusté (adj_close = close). Confirmé par le dépôt de l'émetteur : regroupement (reverse split) 1 pour 3 effectif le 6 octobre 2026, valeur liquidative post-regroupement 61,30 $ au 5 octobre (424B3 iShares Ethereum Trust du 02/10/2026, 8-K du 03/08/2026). Gardé tel quel, ETHA aurait donné +158 % sur 21 séances.",
+      "feth_quality": "OK. FETH (Fidelity Ethereum Fund) : 180 barres du 09/02 au 26/10, complètes, même source que les autres comparables, plus gros saut quotidien 11,8 % (24→25/02), aucun saut d'échelle. 21 séances : 23,04 / 26,82 − 1 = −14,09 % (publié −14,09 %), cohérent avec ETH-USD −13,64 % (écart de calendrier). Corrélation, bêta et R² recalculés en rendements logarithmiques sur 179 observations : 0,6035 / 1,1629 / 0,3642, identiques à la fiche. Groupe 'amont' toujours ≥ 3 lignes (IBIT, FETH, CRCL) ; 17 comparables, 6 groupes. Aucune trace d'ETHA dans le JSON publié, la preuve ou le HTML.",
+      "caveat": "FETH est 7 fois moins liquide qu'ETHA (2,29 M de titres, environ 53 M$ le 26/10) : sans conséquence pour une lecture de prix, mais il ne faut pas le présenter comme référence de marché de l'ether."
+    },
+    "other_gabarit_checks": "qa-content --strict : 32 contrôles, 0 anomalie. check-ai-tells --strict : aucun tic. validate-analysis-evidence : PASS (523 claims). Pas de NaN, undefined ni [object] dans le HTML. Gabarit : fondamentaux en 4 thèmes, performance en barres, 17 comparables / 6 groupes / 3 scénarios, échéancier sourcé, tribunal en dernière section de contenu, pas de reviewPanel : conformes."
+  },
+  "blocks": [
+    {
+      "path": "tribunal.rounds.4.text (et blastRadius.missingData.0, qui dit le contraire)",
+      "problem": "Phrase fausse : 'Personne ne sait encore combien de jetons la société détient après le 8 septembre'. La société publie ce chiffre chaque semaine sur son tableau de bord (hypestrat.xyz/dashboard), site que le 424B3 cité par la fiche désigne comme source du décompte. Dernière mise à jour : 22/10/2026, données au 15/10 : 38,8 M HYPE, 300,8 M d'actions (ordinaires + préférentielles), 245,4 M$ de trésorerie. La fiche se contredit : missingData.0 reconnaît que 'le site de la société en publie un chaque semaine, non audité, non repris ici'. Le tribunal ne doit plaider que des faits prouvés dans la fiche.",
+      "fix": "Réécrire le tour d'accusation : 'Le dernier décompte déposé à la SEC s'arrête au 8 septembre. Le site de la société annonce 38,8 millions de HYPE au 15 octobre, un chiffre non audité ; personne ne sait à quel prix elle a vendu ses 40 352 000 actions de septembre, ni si elle vend ou rachète depuis. Acheter avant le 5 novembre, c'est parier sur ce décompte, avec un titre qui bouge de 0,82 $ par séance.' Appliquer le même correctif à controlChecklist.1 (action : 'Recalculer avec le décompte du 30 septembre publié le 5 novembre' devient 'avec le décompte du 30 septembre du 10-Q, après avoir lu le site de la société') et aux formulations 'ne figurent dans aucun dépôt' en précisant 'dans aucun dépôt SEC'.",
+      "evidence": "https://hypestrat.xyz/dashboard (lu le 27/10/2026 à 12 h 33 UTC : 'Date of last update: 10/22/2026', HYPE Tokens Held 38.8 M, Cash Holdings 245.4, historique daté depuis le 19/08). 424B3 p. 'Current HYPE Token Holdings' : 'tracked on its website (hypestrat.xyz), updated weekly with a one-week delay'. Fiche : blastRadius.missingData.0."
+    },
+    {
+      "path": "meta.description, meta.ogDescription, verdict.summary, verdict.whyBuy.0, fundamentals.rows.6 (mNAV), business.overview, risks.pedagogy, tradeIdea.thesis, globalScore.keyTakeawaysPositive.0, bottomEstimation.method, tribunal.question, tribunal.rounds.1",
+      "problem": "Le multiple de 0,92× est affirmé au présent ('le HYPE qu'il détient par action') sur une structure vieille de sept semaines (8 septembre) alors que l'émetteur affiche une structure plus récente et son propre multiple, sans que la fiche les rapproche. Sur les données de la société au 15 octobre : 38,8 / 300,8 = 0,1290 HYPE par action (contre 0,1255), soit 10,11 $ au HYPE de 78,41 $ et 9,07 / 10,11 = 0,90× (0,83× en ajoutant la trésorerie de 245,4 M$ ; la société affiche elle-même 0,91× après impôt différé à 9,17 $). Un lecteur qui ouvre le site de l'émetteur trouve 0,91× et 0,84× et un écart non expliqué. La comparaison '1,11× le 25 septembre' souffre du même défaut : la société comptait 35,1 M HYPE et 270,2 M d'actions fin septembre (0,1299 par action, 12,00 $, soit 1,07×). Le sens de la thèse ne change pas (la décote est un peu plus large), mais le chiffre de tête n'est pas celui que la source primaire de l'émetteur donne aujourd'hui. La simplification 'hors trésorerie et impôt différé' tient : trésorerie 245,4 M$ contre impôt différé 253,4 M$ chez l'émetteur.",
+      "fix": "Garder 0,92× comme chiffre prouvé par dépôt SEC, mais le dater dans chaque phrase de tête ('0,92 fois sur le dernier décompte déposé, au 8 septembre') et ajouter dans fundamentals (ligne 'Valorisation par l'actif') une ligne signal sourcée : 'Tableau de bord de la société, mise à jour du 22 octobre (données au 15 octobre, non audité) : 38,8 M HYPE, 300,8 M d'actions, 245,4 M$ de trésorerie, soit 0,1290 HYPE par action, 10,11 $ de jeton et 0,90× au cours du 26 octobre.' Idem dans meta.description : 'environ 0,9 fois'. Option préférable : hacher une capture du tableau de bord dans analyses/PURR/_primary/ (la page propose un PNG) et recalculer la grille sur cette structure en gardant le 424B3 comme ancre déposée. Mettre à jour le 1,11× du 25 septembre sur la même base (1,07×) ou retirer la comparaison.",
+      "evidence": "https://hypestrat.xyz/dashboard : 'Date of last update 10/22/2026' ; HYPE Tokens Held 38.8 ; Shares (common + preferred) 300.8 ; Cash Holdings 245.4 ; Fully Diluted Shares 301.2 ; Adjusted NAV per FD share $10.10 ; multiple 0.91x à 9,17 $ (0.84x impôt différé réintégré). Historique du 10/01 : 35,1 M HYPE, 270,2 M d'actions."
+    },
+    {
+      "path": "risks.pedagogy ('et la société a basculé vers le rachat') ; business.overview ('La société a changé de levier') ; tribunal.rounds.1 ('a choisi l'autre levier')",
+      "problem": "Fait non prouvé : la fiche écrit que la société 'a basculé vers le rachat'. Le 8-K du 23 octobre relève seulement une autorisation (30 à 100 M$) et précise qu'il n'y a aucune garantie sur le nombre d'actions rachetées. Aucun rachat n'est prouvé : le tableau de bord de la société montre un nombre d'actions stable (300,8 M aux données des 8 et 15 octobre) et une trésorerie qui baisse de 8 à 10 M$ par semaine pendant que les HYPE détenus montent de 0,1 à 0,2 M, donc l'argent va au jeton, pas au rachat.",
+      "fix": "risks.pedagogy : 'PURR est passé de 1,11 à 0,92 fois en un mois, et la société a relevé son autorisation de rachat à 100 M$.' business.overview : 'La société a relevé son autorisation de rachat trois jours plus tôt, de 30 à 100 M$.' tribunal.rounds.1 : 'La société a relevé son autorisation de rachat à 100 M$ …'. Le scénario haussier ('montre, le 5 novembre, qu'elle rachète') est correct tel quel.",
+      "evidence": "8-K 0001193125-26-431200 (analyses/PURR/_primary/8k_20261026.htm : 'no assurance … number of shares repurchased') ; https://hypestrat.xyz/dashboard (historique hebdomadaire des actions et de la trésorerie)."
+    },
+    {
+      "path": "verdict.controlChecklist.0.evidence ; business.coverageMatrix.0.decision",
+      "problem": "Termes d'infrastructure dans le contenu publié, contre la règle de voix éditoriale : 'les séances des 21 et 24 juillet, absentes du magasin du serveur, ont été rechargées avant la collecte' et 'séances des 21 et 24 juillet rechargées avant la collecte'. Le lecteur n'a pas à connaître le magasin de données ni le rechargement.",
+      "fix": "controlChecklist.0.evidence : 'Série quotidienne continue et certifiée au 26 octobre, sans séance manquante. La moyenne à deux cents séances reste à peine amorcée.' coverageMatrix.0.decision : '225 séances certifiées depuis la cotation de décembre 2025, sans trou.' Garder la mention du rechargement uniquement dans build-purr.cjs.",
+      "evidence": "CLAUDE.md racine, § Voix éditoriale : 'JAMAIS de terme interne/technique dans le contenu publié'. Texte repéré dans data/analyses-data/PURR.json."
+    }
+  ],
+  "fixes": [
+    {
+      "path": "analyses/PURR/_runs/20261027/build-purr.cjs lignes 11-12 et 133 (limitations)",
+      "problem": "ETHA a subi un regroupement d'actions 1 pour 3 (reverse split), pas une 'division' : en français une division d'actions est un split vers le haut. Le commentaire et la limitation disent 'division d'actions non ajustée' et 'division non ajustée'. N'apparaît pas dans la page publiée.",
+      "fix": "Écrire 'regroupement 1 pour 3 (reverse split) du 6 octobre non ajusté dans la série' dans les deux endroits.",
+      "evidence": "ETHA : 20,43 (05/10) puis 60,89 (06/10), adj_close identique ; 424B3 iShares Ethereum Trust du 02/10/2026 (valeur liquidative post-regroupement 61,30 $ au 05/10)."
+    },
+    {
+      "path": "fundamentals.rows.5, rows.6, rows.7 (HYPE du 26 octobre)",
+      "problem": "La clôture du HYPE est celle de la journée UTC (fin à 00 h UTC le 27/10) alors que PURR clôture à 20 h UTC : quatre heures d'écart, pendant une journée où le HYPE a évolué entre 74,99 $ et 80,65 $. Le ratio mélange donc deux instants. Pas de barre horaire disponible pour le HYPE (404 du service de données). Sensibilité : ±1 % sur le HYPE = ±0,009 sur le multiple.",
+      "fix": "Ajouter dans la ligne mNAV : 'HYPE à la clôture UTC, quatre heures après la clôture de New York ; ±1 % sur le jeton change le multiple d'environ 0,01'.",
+      "evidence": "crypto/hype_bars.json, barre 2026-10-26 : 76,35 / 80,65 / 74,99 / 78,41."
+    },
+    {
+      "path": "fundamentals.rows.4 (HYPE par action 0,1255)",
+      "problem": "Quatre décimales pour un numérateur arrondi à 0,1 M ('approximately 33.2 million') : précision apparente de ±0,00005 alors que la source permet ±0,0002.",
+      "fix": "Écrire 'environ 0,1255' ou '0,125 à 0,126' ; le 9,84 $ et le 0,92× restent valables à ±0,015 $ et ±0,002.",
+      "evidence": "424B3 : 'approximately 33.2 million HYPE Tokens'."
+    },
+    {
+      "path": "header.metrics.marketCap ; fundamentals.rows.8 ; bottomEstimation.confluences.0",
+      "problem": "La capitalisation de 2 524 M$ ne compte que les ordinaires (278,27 M) alors que le multiple divise par une base qui inclut les 26,59 M d'actions issues des préférentielles. En base convertie, 9,07 $ × 304,86 M = 2 765 M$ ; la société retient 301,2 M d'actions diluées (2 732 M$).",
+      "fix": "Libeller le chiffre d'en-tête 'Capitalisation (actions ordinaires)' et ajouter 'environ 2 765 M$ préférentielles converties' dans le signal.",
+      "evidence": "424B3 (26 587 647 actions issues des préférentielles) ; tableau de bord : Fully Diluted Shares 301.2."
+    },
+    {
+      "path": "fundamentals.rows.9 ; verdict.whyAvoid.1 ; risks.riskCards.1 ; globalScore.keyTakeawaysNegative.1 (+17,0 %)",
+      "problem": "Écart non rapproché entre la circulaire (278 271 288 ordinaires au 30/09) et le tableau de bord de la société (274,2 M ordinaires aux données du 15/10, 273,4 M à celles du 08/10), soit 4 à 5 M d'actions (1,5 à 1,8 %). Sur le compte de l'émetteur, la hausse depuis le 8 septembre est d'environ +15 % et non +17,0 %. Le chiffre de la circulaire est le plus fiable, mais l'écart mérite une ligne.",
+      "fix": "Conserver 278 271 288 (dépôt) et ajouter dans missingData : 'Le site de la société compte environ 274 M d'actions ordinaires au 15 octobre, 4 M de moins que la circulaire au 30 septembre ; à rapprocher dans le 10-Q.'",
+      "evidence": "DEF 14A : 'As of the Record Date, we had 278,271,288 issued and outstanding shares' ; tableau de bord : Common Shares 274.2M, Preferred 26.6M, total 300.8M."
+    },
+    {
+      "path": "verdict.whyAvoid.1 ; verdict.summary ; risks.riskCards.1 ; tribunal.rounds.0",
+      "problem": "Cadrage de la dilution de septembre : la fiche la présente comme une destruction de valeur par action ('La dilution a précédé la baisse', 'se vide de l'intérieur'). Sur les chiffres de la société, le HYPE par action a monté pendant ces émissions : 0,1255 au 8 septembre, 0,1299 (données du 24/09), 0,1283 (08/10), 0,1290 (15/10), soit environ +2,8 %, avec les actions (ordinaires + préférentielles) à +13,7 %. Cela veut dire que les ventes de septembre se sont faites au-dessus de la valeur du jeton. La phrase 'chaque action vendue réduit le HYPE par action' reste vraie, mais seulement pour des ventes sous la valeur du jeton, donc à partir de maintenant. Un contradicteur relèvera le cadrage.",
+      "fix": "Remplacer 'se vide de l'intérieur' par 'a émis 40 352 000 actions en trois semaines' et préciser, avec la source de l'émetteur, que le HYPE par action n'a pas baissé sur la période ; garder l'avertissement sur les ventes sous la valeur du jeton, qui est l'enjeu du vote du 4 novembre.",
+      "evidence": "https://hypestrat.xyz/dashboard, tableau 'Historic Update Entries' (HYPE détenus / actions / trésorerie par date)."
+    },
+    {
+      "path": "business.overview (paragraphe 3) ; filingsReview.filings.6",
+      "problem": "'à 97,5 % du cours moyen pondéré' est le prix initial ; l'amendement n° 3 (8-K du 15/09, que la fiche cite) le remplace après les 160 000 000 premières actions par 98,5 % (séance) et 97,0 % (hors séance). Le texte ne dit pas lequel s'applique à cette date.",
+      "fix": "'à 97,5 % du cours moyen pondéré, puis 98,5 % en séance et 97,0 % hors séance après 160 millions d'actions vendues (amendement n° 3)'.",
+      "evidence": "8k_20260915.htm (needle chef3) ; 424B3 (needle facility0908 : 97.5 %)."
+    },
+    {
+      "path": "fundamentals.rows.6.comparison ; bottomEstimation.confluences.1",
+      "problem": "Le cours sur valeur comptable des pairs (Bitmine 1,05×, Strategy 1,85×, Hyperion 0,43×) est mis face à un multiple de valeur nette calculé sur le jeton au prix du jour : ce n'est pas la même mesure (bilans de dates différentes, comptabilisation différente). Le texte le dit en parenthèse, mais la phrase de conclusion ('l'écart dit jusqu'où une décote peut aller') le traite comme comparable.",
+      "fix": "Remplacer par 'ordre de grandeur seulement : cours sur valeur comptable, pas multiple de valeur nette' dans la conclusion.",
+      "evidence": "Provenance de la ligne dans numeric-evidence.json (priceToBook des statistiques collectées le 27/10)."
+    },
+    {
+      "path": "insiders.recentTransactions (en-têtes et type) ; capitalStructure.warrants (prix d'exercice, échéance)",
+      "problem": "Libellés anglais sur une page française : en-tête 'Recent Transactions', type 'grant', prix d'exercice '$9.38', '$12.5', '$18.75', '$6.25' (format anglais, 12,50 $ attendu), échéance 'N/A' pour les 'Autres bons' alors que la note donne une durée moyenne de quatre ans. Même défaut sur d'autres fiches (HOOD) : c'est le gabarit commun, pas un écart propre à PURR.",
+      "fix": "Dans le JSON : type 'attribution', échéance 'Durée moyenne restante de quatre ans au 30 juin 2026'. Côté rendu partagé (non modifié ici) : traduire 'Recent Transactions' et formater les prix d'exercice en '12,50 $'.",
+      "evidence": "analyses/PURR/index.html section #insiders et #capital."
+    },
+    {
+      "path": "capitalStructure.warrants.3 ; fundamentals.rows.12",
+      "problem": "Les 28 658 614 bons du 30 juin se décomposent en 27 394 800 (conseiller) + 1 263 814 (anciens bons Sonnet) ; la fiche liste 1 237 334 à 6,25 $ et laisse 26 480 bons sans ligne. Écart de 0,1 % du total, sans effet sur les ratios.",
+      "fix": "Ajouter 'dont 26 480 à d'autres prix d'exercice' dans la note de la ligne 'Autres bons'.",
+      "evidence": "424B3 : 'Certain warrants previously issued by Sonnet, exercisable for up to an aggregate of 1,263,814 shares' ; 28 658 614 − 27 394 800 = 1 263 814."
+    }
+  ]
+}
