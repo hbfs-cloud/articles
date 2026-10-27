@@ -74,7 +74,7 @@ if [ "$DTX_REQUIRED" = "1" ]; then
 (
   # request_id doit être un UUID v4 (tools/lib/workflow-contract.js). Dérivé du nom logique de la
   # séance : stable d'une relance à l'autre (idempotence DTX), conforme au contrat.
-  REQUEST_ID=$(node -e 'const h=require("crypto").createHash("sha256").update(process.argv[1]).digest("hex");const v=((parseInt(h[16],16)&3)|8).toString(16);console.log(`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-${v}${h.slice(17,20)}-${h.slice(20,32)}`)' "scanner-${DATE}-etf-us-evening-001")
+  REQUEST_ID=$(node -e 'const h=require("crypto").createHash("sha256").update(process.argv[1]).digest("hex");const v=((parseInt(h[16],16)&3)|8).toString(16);console.log(`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-${v}${h.slice(17,20)}-${h.slice(20,32)}`)' "scanner-${DATE}-etf-us-evening-002")
   # Mode piloté par le catalogue (décision du propriétaire du 2026-09-24, jusqu'à nouvel ordre) :
   # compare_only tant qu'etf_us n'est pas eligible_for_live, décision Contract V2 sinon.
   DTX_MODE=$(node tools/dtx-live-mode.js --portfolio etf_us 2>> "$B_LOG") \

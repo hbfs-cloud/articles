@@ -79,7 +79,11 @@ function proofFor(cell, row) {
     expectedCompletedEnd: scalar(cell, ['expected_completed_end']) || scalar(row, ['expected_completed_end']) || scalar(coverage, ['expected_completed_end', 'expected_session_end']),
     servedCompletedEnd: scalar(cell, ['served_completed_end']) || scalar(row, ['served_completed_end']) || scalar(coverage, ['served_completed_end', 'served_end']),
     requestedEndState: scalar(cell, ['requested_end_state']) || scalar(row, ['requested_end_state']) || scalar(coverage, ['requested_end_state']),
-    lastBarComplete: boolean(scalar(cell, ['last_bar_complete']) ?? scalar(row, ['last_bar_complete']) ?? scalar(coverage, ['last_bar_complete', 'complete'])),
+    // Only the explicit last_bar_complete flag proves tail completeness. coverage.complete
+    // means the full requested RANGE was served (false on limit truncation or a post-IPO
+    // short history) and must NOT be read as a partial tail — served_completed_end vs
+    // expected_completed_end below is the authoritative close proof.
+    lastBarComplete: boolean(scalar(cell, ['last_bar_complete']) ?? scalar(row, ['last_bar_complete']) ?? scalar(coverage, ['last_bar_complete'])),
     retryAt: scalar(cell, ['retry_at', 'next_complete_available_at']) || scalar(row, ['retry_at', 'next_complete_available_at']) || scalar(coverage, ['retry_at', 'next_complete_available_at']),
   };
 }

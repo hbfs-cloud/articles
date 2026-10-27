@@ -525,7 +525,7 @@ function socleRead(c) {
     }
   }
   const replay = replayDir ? loadReplay({ originalDir: replayDir, outDir, planPath, expectedJournalSha256: arg('--replay-journal-sha256') }) : null;
-  const collectionTimestamp = replay ? replay.timestamp : new Date().toISOString();
+  const collectionTimestamp = replay ? replay.timestamp : (cliVars.as_of_timestamp || new Date().toISOString());
   if (replay && cliVars.as_of_timestamp != null && cliVars.as_of_timestamp !== collectionTimestamp) throw new Error('Replay as_of_timestamp override differs from original');
   const equityReferenceClose = cliVars.equity_reference_close || cliVars.refdate || plan.reference_date || null;
   const cryptoCompletedRefdate = cliVars.crypto_completed_refdate || cliVars.crypto_refdate || null;
