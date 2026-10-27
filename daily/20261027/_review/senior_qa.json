@@ -1,0 +1,139 @@
+{
+  "role": "senior_qa",
+  "snapshot": {
+    "index_html_sha256": "dd085a058b6c82a92471a86a360da454c074739b600a4ce484b1b82351221261",
+    "claims_sha256": "81cbc808deb17b003259298ae1c60dbbf6a7c712a279e768ca43d0a3a743ea74",
+    "build_sha256": "520d9dfb1143cc8f486f47064d06b9fd0e3bab908c36b7d0d484b738c627ad36",
+    "selection_sha256": "4acb8b9c60a6e5e58e3aa0d672928a78fe8348f9026478a021515d74203e8fd3",
+    "primary_reference_sha256": "5ce1b1a6cbb6ebe4fb45a5e02d007e1ce78a49a24d3702e7865c632c9d481bdb",
+    "hash_check": "les 5 hachages annoncés concordent ; les 2 copies _primary concordent avec primary-reference.json"
+  },
+  "verdict": "BLOCK",
+  "blocks": [
+    {
+      "id": "B1",
+      "where": "#bilan, ligne « 21 juin » (XAUUSD) : « Sur GLD, l’or a fait −5,5 % entre la clôture du 18 juin et celle du 24 juin, plus que les 4,3 % qui séparaient l’entrée du stop. »",
+      "issue": "La preuve compare deux choses différentes. Les −5,5 % partent de la clôture du 18 juin, avant la publication du 21 juin, et avant la baisse de 1,42 % de l’once du 19 juin que notre fiche affichait déjà (4 155,59 $, soit le niveau d’entrée de 4 160 $). Mesurée depuis l’entrée, la baisse de clôture à clôture jusqu’au 24 juin vaut environ −4,1 %, sous les 4,3 % : le stop n’est pas atteint en clôture. Seul le plus bas du 24 juin (363,32 $, −6,1 % contre la clôture du 18 juin, environ −4,8 % depuis l’entrée) le franchit. Le verdict « Stop très probable » tient, mais pas la démonstration écrite, et un lecteur qui refait le calcul la réfute.",
+      "evidence": "analyses/EQX/_data/comparison_bars.json GLD /data/items/0/results/0/data/9/bars/90 = [2026-06-18, …, close 387.12] ; /bars/93 = [2026-06-24, low 363.32, close 365.92] ; analyses/XAUUSD/index.html : hero « $4155.59 −1.42% », Trade Idea « Entry $4160.00 · Stop $3980.00 −4.3% risk · Horizon 30-day ».",
+      "required_fix": "Remplacer la cellule « Ce qui s’est passé » par : « Nous n’avons pas de série certifiée de l’once. Sur GLD, le plus bas du 24 juin (363,32 $) est 6,1 % sous la clôture du 18 juin, dernière séance avant la publication ; l’once avait déjà cédé 1,42 % avant notre entrée, à 4 155,59 $. Même ce recul retiré, la baisse en séance dépasse les 4,3 % qui séparaient l’entrée du stop ; en clôture, elle reste juste en deçà. Ce plan n’a jamais été soldé dans nos pages. » Claims : 363,32 $ → comparison_bars /data/items/0/results/0/data/9/bars/93/3 ; 6,1 % → ratio_pct numérateur /bars/93/3, dénominateur /bars/90/4 (résultat −6,148) ; 18 juin et 24 juin : claims existants ; 1,42 % et 4 155,59 $ en littéraux relus de la fiche XAUUSD. Verdict inchangé : « Stop très probable »."
+    },
+    {
+      "id": "B2",
+      "where": "#bilan : intro « Tout ce que nous avons publié sur l’or et ses mines depuis février » ; paragraphe « Eldorado, seul de ce palier que nos données suivent sur toute la période, n’est jamais revenu dans sa zone »",
+      "issue": "Exhaustivité fausse dans une section titrée « sans retouche ». analyses/EQX/archive contient d’autres plans de la période, dont celui du 11 juillet (entrée 9,75 $ « scale in at spot », stop 8,85 $, objectifs 11,40 $ et 12,90 $), stoppé le 16 juillet (plus bas 8,66 $) : une perte que notre propre version du 16 juillet reconnaissait. S’y ajoutent les versions du 16 et du 20 juillet (achat limité 7,80–8,20 $, jamais exécuté, plus bas 8,48 $), du 3 août (conditionnel, clôture > 10,26 $ après le 5 août, stop 9,80 $, objectifs 11,10 $ et 12,93 $) et du 28 août (activation > 13,56 $, jamais atteinte), et la fiche ITRG du 8 août (neutre). Par ailleurs, EQX (300 séances dans analyses/EQX/_data/bars.json) et GDXJ (comparison_bars) sont suivis sur toute la période : « Eldorado, seul de ce palier que nos données suivent » est faux.",
+      "evidence": "analyses/EQX/archive/20260711/index.html (Entry $9.75, Stop $8.85, TP $11.40/$12.90) ; analyses/EQX/_data/bars.json /results/0/data/0/bars/228 = [2026-07-16, 9.17, 9.21, 8.6599, 8.75] ; archives 20260716, 20260720, 20260814 (daté 3 août), 20260828 ; comparison_bars /data/items/0/results/0/data/15 = GDXJ, 180 séances.",
+      "required_fix": "1) Intro : « Nos principaux appels sur l’or et ses mines depuis février, mesurés sur des barres certifiées. » 2) Ajouter une ligne : « 11 juillet | Equinox Gold (fiche EQX) : entrée 9,75 $, stop 8,85 $, objectifs 11,40 $ et 12,90 $. | Stop touché en séance le 16 juillet (plus bas 8,66 $), trois semaines avant la hausse d’août. Les versions suivantes de la fiche (16 et 20 juillet, 3 et 28 août) ne sont pas reprises ici. | Perdu » ; claims : 16 juillet → analyses/EQX/_data/bars.json /results/0/data/0/bars/228/0 ; 8,66 $ → /bars/228/3 ; niveaux en littéraux relus de l’archive du 11 juillet. 3) Remplacer « Eldorado, seul de ce palier que nos données suivent sur toute la période, n’est jamais revenu dans sa zone » par « Eldorado n’est jamais revenu dans sa zone »."
+    },
+    {
+      "id": "B3",
+      "where": "#dashboard, légende du graphique : « Lecture : plus la mine est petite, plus la barre est longue. »",
+      "issue": "Les données de la page contredisent cette lecture. Coeur, la plus grosse capitalisation du tableau (14,0 Md$), a la deuxième plus longue barre (−11,0 %). Integra, la plus petite, fait −6,8 %, moins qu’Equinox (11,7 Md$, −9,4 %). Hecla (9,4 Md$) fait −7,1 %.",
+      "evidence": "CHART_SPECS movesChart ; claims cap_cde_53 / m_cde_cde_52, m_itrg_itrg_79, cap_eqx_77 / m_eqx_eqx_76, cap_hl_49 / m_hl_hl_48.",
+      "required_fix": "« Lecture : toutes les mines baissent plus que l’or ; les grands producteurs et redevances (Franco-Nevada, Kinross, Agnico Eagle, Newmont) baissent le moins. La taille n’explique pas tout : Coeur fait −11,0 %, Integra, la plus petite, −6,8 %. Invalidation de cette lecture : un rebond de l’or que les mines ne suivent pas. » Les deux pourcentages reprennent, sous de nouveaux identifiants, les pointeurs de m_cde_cde_52 et m_itrg_itrg_79."
+    }
+  ],
+  "fixes": [
+    {
+      "id": "F1",
+      "where": "#bilan, tableau « Le panier du 26 juin », colonne « Plus bas touché »",
+      "issue": "Les valeurs sont les plus bas des séances où le stop a été touché pour la première fois, pas les plus bas atteints. AEM est descendu à 134,38 $ le 17 juillet, FNV à 195,29 $, WPM à 101,59 $, AGI à 27,05 $ le 31 juillet, IAG à 13,62 $ le 29 juillet et RGLD à 186,33 $ le 20 juillet.",
+      "suggested_fix": "Renommer la colonne « Stop touché le (plus bas de la séance) ». Les dates et les valeurs ne changent pas."
+    },
+    {
+      "id": "F2",
+      "where": "#scenarios, scénario contraire : « si GLD clôture jeudi au-dessus de 378,95 $, sa clôture du 21 octobre, le repli de la semaine est effacé »",
+      "issue": "Le repli de la semaine (−3,1 %) part de 379,69 $, la clôture du 19 octobre. Une clôture entre 378,95 $ et 379,69 $ ne l’efface pas.",
+      "suggested_fix": "« … le décrochage du 22 octobre est effacé ; on réexamine les mines vendredi, sans niveau fixé d’avance. »"
+    },
+    {
+      "id": "F3",
+      "where": "#trade, carte « Mines » : « aucun ne passe notre contrôle des idées de trade avant la Fed »",
+      "issue": "Aucune validation des idées de trade n’est enregistrée pour HL, CDE ou AEM (selection.json : « Aucune nouvelle idée »). La phrase affirme un test qui n’a pas eu lieu.",
+      "suggested_fix": "« Pas de niveau d’entrée publié aujourd’hui : nous n’ouvrons aucune nouvelle idée avant la Fed. »"
+    },
+    {
+      "id": "F4",
+      "where": "#trade, carte EQX (« plan publié ce matin, inchangé ») et provenance « recopié sans changement »",
+      "issue": "Une condition d’annulation de la fiche manque : une prévision 2026 abaissée sous 870 000 onces le 9 novembre annule le plan.",
+      "suggested_fix": "Ajouter après la phrase sur 8,48 $ : « Une prévision 2026 abaissée sous 870 000 onces le 9 novembre annule aussi le plan. » (870 000 en littéral relu de analyses/EQX/index.html)."
+    },
+    {
+      "id": "F5",
+      "where": "<html data-tags=…>",
+      "issue": "Le tag « options » ne correspond à aucun contenu visible : le mot n’apparaît pas dans la page.",
+      "suggested_fix": "data-tags=\"gold,mining,commodity,special-edition,macro,us\""
+    },
+    {
+      "id": "F6",
+      "where": "#bilan : « GLD … a confirmé au-dessus de 391 $ le 7 août. Le palier agressif … ne devait s’ouvrir qu’à ce moment »",
+      "issue": "La règle de la fiche OR-REPRISE avait deux conditions : GLD au-dessus de 391 $ et une probabilité de crise sous 20 %. Seule la première est datée.",
+      "suggested_fix": "« … le 7 août, première des deux conditions de la fiche ; la seconde, une probabilité de crise sous 20 %, n’est pas datée dans nos données. »"
+    },
+    {
+      "id": "F7",
+      "where": "#essentiel, carte « Ce qui pèse » : « Pas la guerre, ni l’inflation : … »",
+      "issue": "La phrase contredit la page elle-même : la section #pourquoi et la troisième chaîne de l’échéancier font passer la guerre par le pétrole, l’inflation et la Fed.",
+      "suggested_fix": "« Ni la guerre ni l’inflation en elles-mêmes : la hausse de taux qu’elles font attendre en décembre, et un dollar qui monte. »"
+    },
+    {
+      "id": "F8",
+      "where": "#dashboard « Dollar (contrat DXY) », #pourquoi « le contrat DXY », #sources « contrat sur le dollar »",
+      "issue": "La source est DX-Y.NYB, l’indice du dollar (metadata instrument_type INDEX), pas un contrat à terme.",
+      "suggested_fix": "« Indice du dollar (DXY) » partout."
+    },
+    {
+      "id": "F9",
+      "where": "Claims rot_d_gld_85, rb_d_gld_94, tl_aem_154 ; lien de la pastille « Agnico Eagle, Kinross »",
+      "issue": "Les faits sont exacts, mais trois claims pointent vers des sources faibles. « Rotation recalculée sur la clôture du 26 octobre » et « classement … sur la clôture du 26 octobre » renvoient à la date d’une barre GLD, au lieu de data/rotation-beta.json /asof et de la fenêtre de rank_beta. La date d’Agnico Eagle vient d’un calendrier à source unique (date_confidence single_source) alors que l’avis 6-K est en local. Kinross n’a pas de claim. La pastille renvoie à #mines, où ni Agnico Eagle ni Kinross ne figurent.",
+      "suggested_fix": "Repointer rot_d sur data/rotation-beta.json /asof et rb_d sur analyses/EQX/_data/rank_beta.json /data/items/0/window. Citer l’avis 6-K (daily/20261027/_primary) pour Agnico Eagle et Kinross. Faire pointer la pastille vers #dashboard ou #agenda."
+    },
+    {
+      "id": "F10",
+      "where": "#agenda, prose : « Wheaton publie le 5 novembre »",
+      "issue": "La date vient d’une seule source (comparison_earnings events/8, date_confidence single_source). Le contrat demande d’écrire l’incertitude d’une date non confirmée.",
+      "suggested_fix": "« Wheaton devrait publier le 5 novembre (date d’une seule source, non confirmée par la société) »."
+    },
+    {
+      "id": "F11",
+      "where": "#mines, tableau, ligne AYA « or et argent »",
+      "issue": "Dans data/rotation-beta.json, AYA figure aussi dans la liste cuivre (references/6, COPX).",
+      "suggested_fix": "« or, argent et cuivre »."
+    },
+    {
+      "id": "F12",
+      "where": "#bilan, légende de pathChart : « la hausse d’août a eu lieu, plus forte sur les mines, puis tout est revenu »",
+      "issue": "Sur la base 100 du 25 juin, GLD est à 99,6, mais GDX est à 107,1, Agnico Eagle à 112,5 et Equinox Gold à 106,8. Les mines ne sont pas revenues à leur point de départ.",
+      "suggested_fix": "« … puis l’or est revenu à son point de départ ; les mines gardent une partie de leur avance. »"
+    },
+    {
+      "id": "F13",
+      "where": "#mines : « Depuis le sommet de clôture du 25 août »",
+      "issue": "C’est le sommet de l’été, pas celui de l’année : GLD a clôturé à 490 $ le 2 mars, chiffre cité dans le Bilan de la même page.",
+      "suggested_fix": "« Depuis le sommet de l’été, la clôture du 25 août, … »"
+    },
+    {
+      "id": "F14",
+      "where": "#mines, tableau ITRG « sous 10 M$ » et carte ITRG",
+      "issue": "C’est une déduction tirée de l’absence d’ITRG au classement (filtre min_dollar_adv 10 000 000 dans analyses/EQX/_data/_collect.json). Elle est plausible : sur les 15 séances collectées, ITRG n’a jamais échangé plus de 5,2 M$ par jour. Mais elle n’est pas mesurée sur la fenêtre du classement.",
+      "suggested_fix": "Cellule : « absente du classement (seuil 10 M$) »."
+    }
+  ],
+  "checked": [
+    "179 claims : pointeurs résolus, bon ticker à chaque index (GLD=9, GDX=14, GDXJ=15, FNV=12, AEM=2, WPM=13, AGI=3, IAG=5, RGLD=11, EGO=6), hachages des sources concordants ; validate-content-claims PASS",
+    "Toutes les formules ratio_pct recalculées : semaine 19→26 octobre (GLD −3,13, GDX −6,30, SIL −8,82, SLV −5,59, TLT +2,79, HL, CDE, AUGO, EXK, NG, AYA, HYMC, USAS, EQX, ITRG, COPX), 22 octobre (GLD, SLV, USAS, CDE, TLT), depuis le 25 août (GLD −14,07, GDX −23,22, GDXJ −26,46, EQX −28,11), depuis le 25 juin (GLD et les 6 lignes du panier)",
+    "Barres du graphique movesChart non liées à des claims (WPM, NEM, AEM, KGC, FNV, GDXJ, USO) et base 100 de pathChart recalculées : exactes",
+    "Panier du 26 juin : premier stop touché le 8 juillet pour FNV 199,00/200, AEM 141,61/143, WPM 105,40/105,5, AGI 28,17/28,2, RGLD 187,53/193, et le 15 juillet pour IAG 14,48/14,55 ; plus hauts suivants (28 août ou 25 août) exacts",
+    "GLD : plus bas de clôture depuis juin 364,96 le 16 juillet (aucune clôture de juin plus basse), jamais sous 363 en clôture ; premier plus haut ≥ 391 le 5 août (391,51) ; première clôture > 391 le 7 août (398,47)",
+    "Plan de février : zone 450–465 touchée le 17 février, clôture la plus haute 490,00 le 2 mars (plus haut de séance 492,15, sous 510), stop 420 touché en séance le 19 mars (416,80)",
+    "Setups du 28 juillet : GLD objectif 389 le 5 août et 400 le 7 août sans stop ; GDX 80 et AEM 160 le 5 août sans stop ; EQX stop 8,75 touché en séance le 29 juillet (8,7049, clôture 8,96), objectif 11 le 7 août",
+    "Plan EQX du 25 septembre : abandon à la clôture du 28 septembre (11,23 < 11,42), 12,87 jamais atteint ensuite ; EGO jamais revenu dans 29,8–30,6 après le 7 août (plus bas 30,67 le 26 octobre)",
+    "Niveaux publiés conformes aux pages d’origine : XAU et XAG (15 février : 450–465 / 420 / 510 / 550 ; SLV stop 58), XAUUSD (4160 / 3980 / 4360 / 4545 / 30 jours), OR-REPRISE (GLD <370 / 363 / 391, FNV 200, AEM 143, WPM 105,5, AGI 28,2, IAG 14,55, RGLD 193 hors paliers, palier 3 verrouillé sous 391, ITRG choix agressif), 28 juillet, USAS (« ne pas acheter » à 3,82), EQX du 27 octobre (11,42 après le 9 novembre, au plus tard le 16 novembre, limite 11,64, stop 10,84, objectifs 12,85 sur la moitié puis 13,19, abandon < 8,48)",
+    "Citations conformes : daily du 17 septembre, hebdo du 26 octobre (« Or et pétrole : rien à changer »), hebdo du 10 août (raté sur USAS reconnu), registre analyses-status (XAUUSD actif, XAU et XAG « sans plan »)",
+    "Heures de Paris : FOMC 14:00 EDT = 19h00, conférence 19h30, PCE et PIB 08:30 EDT = 13h30, BCE 14h15, HICP 11h00, clôture de New York 20:00Z = 21h00 (heure d’hiver en France depuis le 25 octobre, aux États-Unis le 1er novembre) ; fenêtre clé 19h00 → 21h00",
+    "Avis 6-K : Agnico Eagle (28 septembre) et Kinross (6 octobre) publient le mercredi 28 octobre après la clôture ; Banque du Japon le 30 octobre, emploi le 6 novembre, Fed relevée le 16 septembre à 3,75–4 %, CPI 3,7 %, Brent 112,68 le jeudi 22 octobre (daily du 22 octobre)",
+    "Listes Rotation au 26 octobre (data/rotation-beta.json) : or HYMC, USAS, AUGO, NG, AYA, HL ; argent HYMC, USAS, EXK, AYA, AUGO, CDE ; cuivre avec EQX ; lien /rotation/ et /analyses/EQX/ présents dans le dépôt",
+    "Polymarket : items 0 et 2 portent bien sur la réunion d’octobre 2026 (inchangé 93,55 %, +25 pb 6,5 %) ; RSI sur la barre du 26 octobre ; once 4 026,30 $ cohérente avec XAUT, PAXG et COMEX",
+    "Gabarit : lang=fr, data-tab=daily, data-tags avec gold, mining, commodity, special-edition, brand-bar avec div brand-nav sans class=active, FAB à 6 items et ancres résolues, footer article-footer, report.css seul, GTM en tête et en noscript, core.js, tag-renderer.js et echarts-responsive.js ; bloc <style> identique au daily du 22 octobre (pas de régression) ; aucun jargon interne visible ; pas de section portefeuille ; accents corrects",
+    "qa-content --strict : 0 erreur, 1 avertissement (10 sections, mise en page de l’édition spéciale déclarée dans selection.json) ; check-ai-tells --strict : aucun tic"
+  ]
+}

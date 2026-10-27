@@ -1,0 +1,421 @@
+{
+  "contract_version": "1.0",
+  "workflow": "daily",
+  "plan": "plans/daily-20261022-secdegraded.json",
+  "plan_sha256": "c794d4de1480b9fd50313dcb77ea791ed53fa107a38278f7e9055ba7a9a32612",
+  "input_sha256": "00c17e904a561ab94da37ed1e1f7ed9a66a3b664b66494fb72309fe7d18b2eab",
+  "resolved_input": {
+    "artifact": "daily/20261027/index.html",
+    "equity_reference_close": "2026-10-26",
+    "crypto_completed_refdate": "2026-10-26",
+    "as_of_timestamp": "2026-10-27T13:33:48.426Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "equity_reference_close": "2026-10-26",
+              "crypto_completed_refdate": "2026-10-26"
+            },
+            "assert_waiver": {
+              "field": "sec_operation",
+              "canonical_plan": "plans/daily.json",
+              "scope": "single run daily/20261022",
+              "authorized_by": "standing owner directive of 2026-10-22 (proceed on established precedent without stopping); precedent plans/daily-20260907-secdegraded.json",
+              "reason": "run_screener_sec_enriched degraded on 2026-10-22: official SEC coverage of the 2026-07-24..2026-10-21 screener window certified for 58/62 filing days (stale=4). This edition runs no SEC-enriched screener; its SEC facts come from primary filings read directly on EDGAR (Meta, Lam Research). Price, calendar and regime readiness are unaffected.",
+              "server_retry_at": "2026-10-22T20:30:00Z"
+            }
+          }
+        ]
+      },
+      {
+        "name": "market-close",
+        "calls": [
+          {
+            "as": "regime",
+            "server": "marketdata",
+            "tool": "GetMarketContext",
+            "args": {
+              "facets": "regime,prediction_markets",
+              "horizon_days": 5
+            },
+            "freshness": {
+              "max_age_h": 6,
+              "required": true
+            }
+          },
+          {
+            "as": "bars_indices",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "SPY,QQQ,IWM,GLD,SLV,TLT,USO",
+              "limit": 15,
+              "as_of_timestamp": "2026-10-27T13:33:48.426Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-10-26"
+            }
+          },
+          {
+            "as": "bars_dia",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "DIA",
+              "limit": 15,
+              "as_of_timestamp": "2026-10-27T13:33:48.426Z",
+              "completion_policy": "completed_only",
+              "source": "tiingo"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-10-26"
+            },
+            "note": "DIA isolé sur Tiingo : la barre Yahoo du 2026-09-22 a open>high (522.475>522.47) et fait rejeter tout le lot completed_only."
+          },
+          {
+            "as": "bars_sectors",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "XLK,XLB,XLF,XLE,XLV,XLI,XLY,XLP,XLU,XLC,XLRE",
+              "limit": 25,
+              "as_of_timestamp": "2026-10-27T13:33:48.426Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-10-26"
+            }
+          },
+          {
+            "as": "bars_crypto",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "BTC-USD,ETH-USD,SOL-USD,XRP-USD",
+              "limit": 15,
+              "as_of_timestamp": "2026-10-27T13:33:48.426Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "crypto_24_7_utc",
+              "expected_completed_end": "2026-10-26"
+            }
+          }
+        ]
+      },
+      {
+        "name": "events-flows",
+        "calls": [
+          {
+            "as": "earnings_today",
+            "server": "marketdata",
+            "tool": "GetEarningsCalendarFiltered",
+            "args": {
+              "days_ahead": 2,
+              "min_market_cap_usd": 10000000000
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "economic_events",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "economic_events",
+              "days": 5
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "options_sentiment",
+            "server": "marketdata",
+            "tool": "OptionsAnalytics",
+            "args": {
+              "action": "sentiment"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "insiders_3d",
+            "server": "marketdata",
+            "tool": "GetInsiderActivity",
+            "args": {
+              "days": 3,
+              "limit": 25,
+              "max_symbols": 100
+            },
+            "freshness": {
+              "max_age_h": 96,
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "off-hours",
+        "calls": [
+          {
+            "as": "off_hours",
+            "server": "marketdata",
+            "tool": "GetOffHoursContext",
+            "args": {
+              "lookback": "24h",
+              "facets": "crypto,metals,futures,hip3,predictions",
+              "include_series": false
+            },
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "context-only",
+        "detached": true,
+        "deadline_ms": 120000,
+        "calls": [
+          {
+            "as": "overview",
+            "server": "marketdata",
+            "tool": "GetMarketContext",
+            "args": {
+              "facets": "overview",
+              "timeout": 90
+            },
+            "freshness": {
+              "max_age_h": 6,
+              "required": false,
+              "note": "Context only; never governs a number, selection or publication decision."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "daily/20261027/index.html",
+  "reference_date": "2026-10-26",
+  "equity_reference_close": "2026-10-26",
+  "crypto_completed_refdate": "2026-10-26",
+  "started_at": "2026-10-27T13:33:48.426Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 361,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 360,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "183a517776f7960a07599f184cf611e8dcecc0477cbff0af77fa58da38ce0f3c"
+        }
+      ]
+    },
+    {
+      "name": "market-close",
+      "ms": 4703,
+      "calls": [
+        {
+          "as": "regime",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2937,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "b67c07ea72ebb4fa69116dfed66e04e7ecf31340134ef7fc3b728cddc820a30b"
+        },
+        {
+          "as": "bars_indices",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1705,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "b96643d6fc89baeba17f99510acdfa06504283d2c67c2ac831f1975d209e44fd"
+        },
+        {
+          "as": "bars_dia",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2840,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "52532d5d1ff93e662dbcd991587c84f440563b9299dc8f85f6502b38229511a3"
+        },
+        {
+          "as": "bars_sectors",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 3706,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "c8d9d8752fd38647b378bfe2ae54dad28e39b6b7e91b02183cd041531fa70dc0"
+        },
+        {
+          "as": "bars_crypto",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 4703,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "656e3faa09af2577cdd27b14eb3934be801598c5ec067ad4c5a3f84164583d5a"
+        }
+      ]
+    },
+    {
+      "name": "events-flows",
+      "ms": 12481,
+      "calls": [
+        {
+          "as": "earnings_today",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 6300,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "319886d78ffa76e840b51c685de5b28d5b53593fa0233556c0b2e42cd369fb3c"
+        },
+        {
+          "as": "economic_events",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2319,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "afb24374dcf3d6c77df09fea0ad2d19ff9212dc9949ebd24ae3c691b9884a29b"
+        },
+        {
+          "as": "options_sentiment",
+          "server": "marketdata",
+          "tool": "OptionsAnalytics",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 3429,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "008beb083eccd11a3b8d72203b8eaeb59e530de62900bbae033afbe7342a2a89"
+        },
+        {
+          "as": "insiders_3d",
+          "server": "marketdata",
+          "tool": "GetInsiderActivity",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 10128,
+          "wait_ms": 6181,
+          "error": null,
+          "output_sha256": "ad614b9f871b68a59b48c6c45331a778381118ebea8f85108afb03154e12c2f4"
+        }
+      ]
+    },
+    {
+      "name": "off-hours",
+      "ms": 3626,
+      "calls": [
+        {
+          "as": "off_hours",
+          "server": "marketdata",
+          "tool": "GetOffHoursContext",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 3626,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "00e2e213db171addd60a34bf205193c382670089f572f94abe73b08f534076f2"
+        }
+      ]
+    },
+    {
+      "name": "context-only",
+      "ms": 23373,
+      "calls": [
+        {
+          "as": "overview",
+          "server": "marketdata",
+          "tool": "GetMarketContext",
+          "required": false,
+          "detached": true,
+          "ok": true,
+          "ms": 23373,
+          "wait_ms": 23318,
+          "error": null,
+          "output_sha256": "e0f644df67bc0abeb37d3c9294244194f1ebd924a48142ff1261309bd09ba1a5"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-10-27T13:34:33.043Z",
+  "failures": 0,
+  "executed_calls": 12,
+  "skipped_calls": 0
+}
