@@ -135,6 +135,14 @@ fi
 (
   REFDATE="$REF" node tools/gen-rotation-beta.js --out-dir "$DIR/_rotation" > "$D_LOG" 2>&1
   D_RC=$?
+  # Le mode --out-dir ne fait que préparer : sans cette promotion, la page /rotation/ est restée figée au
+  # 18 septembre 2026 pendant que chaque scan validait un résultat neuf. On ne promeut qu'un run PASS,
+  # par renommage atomique, comme le mode par défaut du générateur.
+  if [ "$D_RC" -eq 0 ] && node -e 'process.exit(require(process.argv[1]).status==="PASS"?0:1)' "$PWD/$DIR/_rotation/_wf/rotation.json" 2>> "$D_LOG"; then
+    for TARGET in data/rotation-beta.json portfolio/v1/rotation.json; do
+      cp "$DIR/_rotation/rotation-beta.json" "$TARGET.$$.tmp" && mv "$TARGET.$$.tmp" "$TARGET" || D_RC=1
+    done
+  fi
   echo "D rc=$D_RC" > "$D_STATUS"
   exit "$D_RC"
 ) & PD=$!

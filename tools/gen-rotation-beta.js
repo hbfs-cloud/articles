@@ -30,15 +30,15 @@ const THEMES = [
   { rank:1, key:'semis', label:'Semi-conducteurs / AI compute', ref:'SMH', group:'IA & numérique', theme:'semis' },
   { rank:2, key:'nuclear', label:'Uranium + nucléaire', ref:'URA', group:'Énergie & ressources' },
   { rank:3, key:'grid', label:'Électrification / réseau / AI power', ref:'GRID', group:'Énergie & ressources' },
-  { rank:4, key:'copper', label:'Mines de cuivre', ref:'COPX', group:'Énergie & ressources' },
+  { rank:4, key:'copper', minCorr:0.75, label:'Mines de cuivre', ref:'COPX', group:'Énergie & ressources' },
   { rank:5, key:'ai_broad', label:'IA large / Big Data', ref:'AIQ', group:'IA & numérique' },
   { rank:6, key:'cyber', label:'Cybersécurité', ref:'CIBR', group:'IA & numérique' },
   { rank:7, key:'datacenters', label:'Data centers', ref:'VPN', group:'Infrastructure' },
   { rank:8, key:'robotics', label:'Robotique / automatisation', ref:'BOTZ', group:'Industrie & rupture' },
   { rank:9, key:'rareearth', label:'Terres rares / métaux stratégiques', ref:'REMX', group:'Énergie & ressources' },
-  { rank:10, key:'goldminers', label:"Mines d'or", ref:'GDX', group:'Énergie & ressources' },
-  { rank:11, key:'silverminers', label:"Mines d'argent", ref:'SIL', group:'Énergie & ressources' },
-  { rank:12, key:'uraniumminers', label:"Mines d'uranium", ref:'URNM', group:'Énergie & ressources' },
+  { rank:10, key:'goldminers', minCorr:0.75, label:"Mines d'or", ref:'GDX', group:'Énergie & ressources' },
+  { rank:11, key:'silverminers', minCorr:0.75, label:"Mines d'argent", ref:'SIL', group:'Énergie & ressources' },
+  { rank:12, key:'uraniumminers', minCorr:0.75, label:"Mines d'uranium", ref:'URNM', group:'Énergie & ressources' },
   { rank:13, key:'defense', label:'Défense / aérospatial', ref:'PPA', group:'Industrie & rupture' },
   { rank:14, key:'bitcoinminers', label:'Bitcoin miners / HPC', ref:'WGMI', group:'Actifs numériques' },
   { rank:15, key:'quantum', label:'Informatique quantique', ref:'QTUM', group:'IA & numérique' },
@@ -57,7 +57,9 @@ const THEMES = [
   { rank:28, key:'water', label:'Eau', ref:'PHO', group:'Ressources durables' },
   { rank:29, key:'agribusiness', label:'Agribusiness / agriculture', ref:'MOO', group:'Ressources durables' },
   { rank:30, key:'timber', label:'Bois / forêt', ref:'WOOD', group:'Ressources durables' },
-].map(theme => ({...theme, minCorr:0.50, minOverlap:50, allowEmpty:true}));
+// Les mines suivent leur métal à 0,85-0,93 : sous 0,75, le classement par bêta remontait des co-mouvements
+// parasites (PURR, trésorerie de jetons HYPE, et ABTC, mineur de bitcoin, dans les mines d'or au 27 octobre 2026).
+].map(theme => ({minCorr:0.50, minOverlap:50, allowEmpty:true, ...theme}));
 const REFERENCES = [...CRYPTO_REFERENCES, ...THEMES];
 
 // Relations économiques explicites et contrôlées séparément des simples
