@@ -237,6 +237,22 @@ function check(file) {
   }
   require((d.globalScore?.keyTakeawaysPositive || []).length === 3, 'positive takeaways need exactly 3 items');
   require((d.globalScore?.keyTakeawaysNegative || []).length === 3, 'negative takeaways need exactly 3 items');
+  // Gabarit du 27 octobre 2026 (décision du propriétaire) : tribunal en fin de fiche et fondamentaux regroupés par
+  // thème, obligatoires pour les fiches datées du 28 octobre 2026 ou après ; contrôlés dès qu'ils sont présents.
+  const templateV2026 = Number(d.meta?.version || 0) >= 3 && String(d.meta?.date || '') >= '2026-10-28';
+  if (templateV2026) {
+    require(Boolean(d.tribunal), 'tribunal section is required for dossiers dated 2026-10-28 or later');
+    require(new Set(rows.map(row => row.group).filter(Boolean)).size >= 3, 'fundamentals need >=3 display groups (rows[].group) for dossiers dated 2026-10-28 or later');
+  }
+  if (d.tribunal) {
+    const rounds = Array.isArray(d.tribunal.rounds) ? d.tribunal.rounds : [];
+    require(rounds.filter(r => r.speaker === 'prosecution').length >= 2 && rounds.filter(r => r.speaker === 'defense').length >= 2, 'tribunal needs >=2 prosecution and >=2 defence rounds');
+    require(rounds[0]?.speaker === 'prosecution', 'tribunal opens with the prosecution');
+    require(rounds.every((r, i) => i === 0 || r.speaker !== rounds[i - 1].speaker), 'tribunal rounds must alternate prosecution and defence');
+    require(words(d.tribunal.question).length >= 10, 'tribunal question is too short');
+    require(words(d.tribunal.verdict).length >= 20, 'tribunal verdict is too short');
+    rounds.forEach((r, i) => require(words(r.text).length >= 15, `tribunal round ${i + 1} is too short`));
+  }
   if (Number(d.meta?.version || 0) >= 3) {
     const groups = Array.isArray(blast.groups) ? blast.groups : [];
     const symbols = groups.flatMap(group => Array.isArray(group.symbols) ? group.symbols : []);

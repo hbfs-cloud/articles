@@ -24,7 +24,9 @@
     return window.innerWidth <= TABLET_BP && window.innerWidth > MOBILE_BP;
   }
 
-  function patchAxis(axis) {
+  // Axe vertical de catégories (barres horizontales) : chaque ligne a sa hauteur, donc toutes les étiquettes
+  // restent visibles et ne sont tronquées qu'au-delà de 12 caractères (fiches d'analyse, 27 octobre 2026).
+  function patchAxis(axis, vertical) {
     if (!axis) return;
     var axes = Array.isArray(axis) ? axis : [axis];
     axes.forEach(function (a) {
@@ -33,7 +35,7 @@
         if (isMobile()) {
           a.axisLabel.fontSize = Math.min(a.axisLabel.fontSize || 12, 8);
           a.axisLabel.rotate = a.axisLabel.rotate || 0;
-          if (a.type === 'category' && a.data && a.data.length > 6) {
+          if (!vertical && a.type === 'category' && a.data && a.data.length > 6) {
             a.axisLabel.interval = Math.ceil(a.data.length / 5) - 1;
           }
         } else if (isTablet()) {
@@ -49,7 +51,8 @@
         var origFormatter = a.axisLabel.formatter;
         if (!origFormatter) {
           a.axisLabel.formatter = function (v) {
-            return typeof v === 'string' && v.length > 8 ? v.substring(0, 7) + '\u2026' : v;
+            var max = vertical ? 12 : 8;
+            return typeof v === 'string' && v.length > max ? v.substring(0, max - 1) + '\u2026' : v;
           };
         }
       }
@@ -159,7 +162,7 @@
     }
 
     patchAxis(opt.xAxis);
-    patchAxis(opt.yAxis);
+    patchAxis(opt.yAxis, true);
     patchSeries(opt.series);
   }
 

@@ -516,17 +516,61 @@ ${n.sourceUrl ? `            <a href="${esc(safeUrl(n.sourceUrl))}" class="sourc
       </div>`;
 }
 
+// Fondamentaux en fiches de faits plutôt qu'en tableau : la valeur se lit d'abord, la qualification ensuite.
+// La tonalité (favorable, défavorable, à surveiller, neutre) porte une icône en plus de la couleur.
+const FACT_TONE = { green: 'pos', red: 'neg', amber: 'warn', blue: 'info', gray: 'info' };
+const FACT_ICON = { pos: 'fa-circle-check', neg: 'fa-circle-exclamation', warn: 'fa-triangle-exclamation', info: 'fa-circle-info' };
+const FACT_TONE_LABEL = { pos: ['favorable', 'favourable'], neg: ['défavorable', 'unfavourable'], warn: ['à surveiller', 'watch'], info: ['repère', 'reference'] };
+// Un multiple comparé à ses pairs (« Equifax 12,7×, TransUnion 13,1×… ») se lit mieux en échelle qu'en phrase. Les
+// valeurs viennent mot pour mot du texte certifié de la ligne : aucun chiffre n'est ajouté au dossier.
+function parseMultiples(text) {
+  const out = [];
+  const re = /([A-ZÀ-Ý][A-Za-zÀ-ÿ’'&.\- ]{0,30}?)\s+(\d+(?:[.,]\d+)?)\s?×/g;
+  let m;
+  while ((m = re.exec(String(text || '')))) out.push({ label: m[1].trim(), value: Number(m[2].replace(',', '.')) });
+  return out.filter(x => Number.isFinite(x.value));
+}
+function fundamentalLadders(d) {
+  return (d.fundamentals?.rows || []).map((r, i) => {
+    const own = /^(\d+(?:[.,]\d+)?)\s?×/.exec(String(r.value || '').trim());
+    const peers = own ? parseMultiples(r.comparison) : [];
+    return own && peers.length >= 3 ? { id: `factLadder${i}`, index: i, own: Number(own[1].replace(',', '.')), peers } : null;
+  }).filter(Boolean);
+}
+
 function renderFundamentals(d) {
   const f = d.fundamentals;
+  const ladders = Object.fromEntries(fundamentalLadders(d).map(l => [l.index, l]));
+  const tile = (r, i) => {
+    const tone = FACT_TONE[r.signalColor] || 'info';
+    const ladder = ladders[i];
+    return `          <div class="fact-tile${ladder ? ' fact-tile-wide' : ''}" data-tone="${tone}">
+            <div class="fact-label"><i class="fa-solid ${FACT_ICON[tone]}" aria-hidden="true"></i><span class="sr-only">${tx(d, FACT_TONE_LABEL[tone][1], FACT_TONE_LABEL[tone][0])} : </span>${esc(r.metric)}</div>
+            <div class="fact-value">${esc(r.value)}</div>
+${r.signal ? `            <div class="fact-signal">${esc(r.signal)}</div>\n` : ''}${ladder ? `            <div id="${ladder.id}" class="echart-box fact-ladder chart-tall" style="height:${Math.max(180, (ladder.peers.length + 1) * 30 + 30)}px;" role="img" aria-label="${esc(r.metric)} : ${esc(d.header.ticker)} face à ses pairs"></div>\n` : ''}${r.note ? `            <p class="fact-note">${esc(r.note)}</p>\n` : ''}${r.comparison ? `            <p class="fact-note">${esc(r.comparison)}</p>\n` : ''}          </div>`;
+  };
+  const grouped = f.rows.some(r => r.group);
+  let body;
+  if (grouped) {
+    const order = [];
+    const byGroup = {};
+    f.rows.forEach((r, i) => { const g = r.group || tx(d, 'Other', 'Autres'); if (!byGroup[g]) { byGroup[g] = []; order.push(g); } byGroup[g].push(tile(r, i)); });
+    body = order.map(g => `        <section class="fact-group">
+          <h3 class="fact-group-title">${esc(g)}</h3>
+          <div class="fact-grid">
+${byGroup[g].join('\n')}
+          </div>
+        </section>`).join('\n');
+  } else {
+    body = `        <div class="fact-grid">
+${f.rows.map(tile).join('\n')}
+        </div>`;
+  }
   return `
       <div id="fondamentaux" class="content-card">
         <h2><i class="fa-solid fa-chart-line"></i> ${tx(d, 'Fundamentals', 'Fondamentaux')}</h2>
-        <table class="data-table">
-          <thead><tr><th>${tx(d, 'Metric', 'Métrique')}</th><th>${tx(d, 'Value', 'Valeur')}</th><th>Signal</th></tr></thead>
-          <tbody>
-${f.rows.map(r => `            <tr><td>${esc(r.metric)}</td><td><strong>${esc(r.value)}</strong></td><td>${r.signal ? `<span class="badge ${signalBadgeClass(r.signalColor)}">${esc(r.signal)}</span>` : ''}${r.note ? `<p>${esc(r.note)}</p>` : ''}${r.comparison ? `<p>${esc(r.comparison)}</p>` : ''}</td></tr>`).join('\n')}
-          </tbody>
-        </table>${sourceRefsHtml(f.sourceRefs)}
+        <p class="fact-legend"><span data-tone="pos"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> ${tx(d, 'favourable', 'favorable')}</span><span data-tone="warn"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> ${tx(d, 'watch', 'à surveiller')}</span><span data-tone="neg"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> ${tx(d, 'unfavourable', 'défavorable')}</span><span data-tone="info"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> ${tx(d, 'reference', 'repère')}</span></p>
+${body}${sourceRefsHtml(f.sourceRefs)}
       </div>`;
 }
 
@@ -681,10 +725,25 @@ function renderPerformance(d) {
 ${p.windowReturns ? '' : metricStrip([metricTile(p.ytd, 'YTD'), metricTile(p.oneYear, '1Y'), metricTile(p.threeYear, '3Y'), metricTile(p.alpha, 'Alpha')])}`;
   if (p.windowReturns && p.windowReturns.rows && p.windowReturns.rows.length) {
     const w = p.windowReturns;
-    html += `\n        <p>${esc(w.label)} · ${esc(w.startDate)} → ${esc(w.endDate)}</p>
+    const T = d.header.ticker;
+    const own = w.rows.find(r => r.ticker === T);
+    const others = w.rows.filter(r => r.ticker !== T).map(r => r.returnPct).sort((a, b) => a - b);
+    const median = others.length ? (others.length % 2 ? others[(others.length - 1) / 2] : (others[others.length / 2 - 1] + others[others.length / 2]) / 2) : null;
+    const sorted = [...w.rows].sort((a, b) => b.returnPct - a.returnPct || a.ticker.localeCompare(b.ticker));
+    const rank = own ? sorted.findIndex(r => r.ticker === T) + 1 : null;
+    const pctTxt = v => `${v > 0 ? '+' : v < 0 ? '−' : ''}${isFrench(d) ? Math.abs(v).toFixed(2).replace('.', ',') : Math.abs(v).toFixed(2)} %`;
+    const tone = v => v > 0 ? 'pos' : v < 0 ? 'neg' : 'info';
+    html += `\n        <p class="data-context-line">${esc(w.label)} · ${esc(w.startDate)} → ${esc(w.endDate)}</p>
+${own ? `        <div class="perf-headline">
+          <div class="perf-stat" data-tone="${tone(own.returnPct)}"><div class="perf-stat-value">${esc(pctTxt(own.returnPct))}</div><div class="perf-stat-label">${esc(T)}</div></div>
+${median != null ? `          <div class="perf-stat" data-tone="${tone(median)}"><div class="perf-stat-value">${esc(pctTxt(median))}</div><div class="perf-stat-label">${tx(d, `median of ${others.length} references`, `médiane des ${others.length} références`)}</div></div>\n` : ''}          <div class="perf-stat"><div class="perf-stat-value">${rank} / ${w.rows.length}</div><div class="perf-stat-label">${tx(d, 'rank, best first', 'rang, du meilleur au pire')}</div></div>
+        </div>` : ''}
+        <div id="perfChart" class="echart-box perf-chart chart-tall" style="height:${Math.max(200, w.rows.length * 24 + 40)}px;" role="img" aria-label="${tx(d, 'Returns over the window, sorted', 'Rendements sur la période, du meilleur au pire')}"></div>
+        <details class="data-details"><summary>${tx(d, `Full table (${w.rows.length} returns)`, `Tableau complet (${w.rows.length} rendements)`)}</summary>
         <table class="data-table"><thead><tr><th>Ticker</th><th>${tx(d, 'Price return', 'Variation de clôture')}</th></tr></thead><tbody>
 ${w.rows.map(row => `          <tr><td>${esc(row.ticker)}</td><td>${row.returnPct >= 0 ? '+' : ''}${row.returnPct.toFixed(2)} %</td></tr>`).join('\n')}
-        </tbody></table>`;
+        </tbody></table>
+        </details>`;
   } else if (p.benchmarks && p.benchmarks.length) {
     html += `\n        <table class="data-table"><thead><tr><th>Benchmark</th><th>Ticker</th><th>YTD</th>${p.benchmarks[0].oneYear ? '<th>1Y</th>' : ''}</tr></thead><tbody>
 ${p.benchmarks.map(b => `            <tr><td>${esc(b.name)}</td><td>${esc(b.ticker||'')}</td><td>${esc(b.ytd)}</td>${b.oneYear ? `<td>${esc(b.oneYear)}</td>` : ''}</tr>`).join('\n')}
@@ -736,10 +795,37 @@ function renderBlastRadius(d) {
   const confidenceLabel = value => ({ high: 'Élevée', medium: 'Moyenne', low: 'Faible' }[value] || value);
   const scenarioLabel = value => ({ bullish: 'Haussier', mixed: 'Mixte', bearish: 'Baissier' }[value] || value);
   const scenarioColor = value => ({ bullish: 'green', mixed: 'amber', bearish: 'red' }[value] || 'gray');
+  const scenarioIcon = value => ({ bullish: 'fa-arrow-trend-up', mixed: 'fa-arrows-left-right', bearish: 'fa-arrow-trend-down' }[value] || 'fa-circle');
+  const all = blast.groups.flatMap(group => (group.symbols || []).map(symbol => ({ ...symbol, groupName: group.name, order: group.order })));
+  const strongest = all.filter(s => Number.isFinite(s.correlation)).sort((a, b) => Math.abs(b.correlation) - Math.abs(a.correlation) || a.ticker.localeCompare(b.ticker)).slice(0, 6);
   return `
       <div id="blast-radius" class="content-card">
         <h2><i class="fa-solid fa-diagram-project"></i> Rayon de propagation : qui bouge avec ${esc(d.header.ticker)} ?</h2>
-        <div class="interpretation-band"><strong>À retenir :</strong> Les comparaisons ci-dessous associent liens économiques et mesures statistiques. Une corrélation ne démontre pas une causalité; les contradictions propres à chaque société restent déterminantes.</div><div id="blastChart" class="echart-box blast-chart" aria-label="Comparaison des valeurs absolues des corrélations disponibles"></div>
+        <div class="interpretation-band"><strong>À retenir :</strong> Les comparaisons ci-dessous associent liens économiques et mesures statistiques. Une corrélation ne démontre pas une causalité; les contradictions propres à chaque société restent déterminantes.</div>
+        <div id="blastChart" class="echart-box blast-chart chart-tall" style="height:380px;" role="img" aria-label="Corrélation avec ${esc(d.header.ticker)} (horizontal) et rendement sur 21 séances (vertical) de chaque valeur liée, par groupe"></div>
+        <p class="chart-caption">Plus un point est à droite, plus la valeur a bougé avec ${esc(d.header.ticker)} sur la fenêtre ; plus il est haut, plus elle a monté sur 21 séances. La taille du point suit le bêta.</p>
+        <h3 class="blast-subtitle">Les liens les plus forts</h3>
+        <div class="blast-table-wrap"><table class="data-table blast-top-table"><thead><tr><th>Valeur</th><th>Groupe</th><th>Corrélation</th><th>Bêta</th><th>21 séances</th><th>Ce que ça dit</th></tr></thead><tbody>
+${strongest.map(s => `          <tr><td><strong>${esc(s.ticker)}</strong><br><span class="cell-sub">${esc(relationLabel(s.relationClass))}</span></td><td>${esc(s.groupName)}</td><td>${esc(metric(s.correlation, 2))}</td><td>${esc(metric(s.beta, 2))}</td><td>${esc(returnPct(s.return21d))}</td><td>${esc(s.readThrough)}</td></tr>`).join('\n')}
+        </tbody></table></div>
+        <h3 class="blast-subtitle">Trois scénarios de transmission</h3>
+        <div class="scenario-grid">
+${blast.scenarios.map(scenario => `          <article class="scenario-card" data-tone="${scenarioColor(scenario.scenario)}">
+            <header><i class="fa-solid ${scenarioIcon(scenario.scenario)}" aria-hidden="true"></i> ${esc(scenarioLabel(scenario.scenario))}</header>
+            <dl>
+              <dt>Déclencheur</dt><dd>${esc(scenario.trigger)}</dd>
+              <dt>Premier ordre</dt><dd>${esc(scenario.firstOrder)}</dd>
+              <dt>Second ordre</dt><dd>${esc(scenario.secondOrder)}</dd>
+              <dt>Confirmation</dt><dd>${esc(scenario.confirmation)}</dd>
+              <dt>Ce qui le contredit</dt><dd>${esc(scenario.contradiction)}</dd>
+            </dl>
+          </article>`).join('\n')}
+        </div>
+        <div class="blast-notes">
+          <div><h4><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i> Contradictions</h4><ul>${blast.contradictions.map(item => `<li>${esc(item)}</li>`).join('')}</ul></div>
+          <div><h4><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Données manquantes ou non historiques</h4><ul>${blast.missingData.map(item => `<li>${esc(item)}</li>`).join('')}</ul></div>
+        </div>
+        <details class="data-details"><summary>Détail par groupe (${all.length} valeurs) et méthode</summary>
         <p>${esc(blast.methodology)}</p>
         <p style="font-size:0.78rem;color:#64748b;"><strong>Clôture de référence :</strong> ${esc(blast.asOf)} · <strong>Observation :</strong> ${esc(blast.observationTime)} · <strong>Fenêtre :</strong> ${esc(blast.window)}</p>
 ${blast.groups.map(group => `        <section style="margin-top:1.35rem;">
@@ -749,12 +835,7 @@ ${blast.groups.map(group => `        <section style="margin-top:1.35rem;">
 ${group.symbols.map(symbol => `            <tr><td><strong>${esc(symbol.ticker)}</strong><br><span style="font-size:0.72rem;color:#64748b;">${esc(relationLabel(symbol.relationClass))}</span></td><td>${esc(symbol.role)}<br><span style="font-size:0.72rem;color:#64748b;">Confiance ${esc(confidenceLabel(symbol.confidence).toLowerCase())}</span></td><td>${esc(metric(symbol.correlation, 3))}</td><td>${esc(metric(symbol.beta, 3))}</td><td>${esc(metric(symbol.r2, 3))}</td><td>${esc(Number.isFinite(symbol.observations) ? symbol.observations : 'INDISPONIBLE')}</td><td>${esc(returnPct(symbol.return5d))}</td><td>${esc(returnPct(symbol.return21d))}</td><td>${esc(symbol.readThrough)}</td><td>${esc(symbol.eventRisk)}</td></tr>`).join('\n')}
           </tbody></table></div>
         </section>`).join('\n')}
-        <h3 style="font-size:1rem;margin-top:1.5rem;">Scénarios de transmission</h3>
-        <div class="blast-table-wrap"><table class="data-table blast-table blast-scenario-table"><thead><tr><th>Scénario</th><th>Déclencheur</th><th>Premier ordre</th><th>Second ordre</th><th>Confirmation</th><th>Contradiction</th></tr></thead><tbody>
-${blast.scenarios.map(scenario => `          <tr><td><span class="badge badge-${scenarioColor(scenario.scenario)}">${esc(scenarioLabel(scenario.scenario))}</span></td><td>${esc(scenario.trigger)}</td><td>${esc(scenario.firstOrder)}</td><td>${esc(scenario.secondOrder)}</td><td>${esc(scenario.confirmation)}</td><td>${esc(scenario.contradiction)}</td></tr>`).join('\n')}
-        </tbody></table></div>
-        <div class="pedagogy-box"><h4><i class="fa-solid fa-scale-balanced"></i> Contradictions</h4><ul>${blast.contradictions.map(item => `<li>${esc(item)}</li>`).join('')}</ul></div>
-        <div class="pedagogy-box"><h4><i class="fa-solid fa-circle-exclamation"></i> Données manquantes ou non historiques</h4><ul>${blast.missingData.map(item => `<li>${esc(item)}</li>`).join('')}</ul></div>${sourceRefsHtml(blast.sourceRefs)}
+        </details>${sourceRefsHtml(blast.sourceRefs)}
       </div>`;
 }
 
@@ -929,6 +1010,35 @@ ${rp.reviews.map(r => `          <div style="border:1px solid #e2e8f0;border-rad
             ${r.findings && r.findings.length ? `<h4 style="font-size:0.82rem;margin:0.75rem 0 0;">${tx(d, 'What was challenged', 'Ce qui a été contesté')}</h4>${list(r.findings)}` : ''}
             ${r.corrections && r.corrections.length ? `<h4 style="font-size:0.82rem;margin:0.25rem 0 0;">${tx(d, 'Fixed in this page', 'Corrigé dans la fiche')}</h4>${list(r.corrections)}` : ''}
           </div>`).join('\n')}
+        </div>
+      </div>`;
+}
+
+// Tribunal en fin de fiche (retour du format des fiches TARA, CDIO, SRPT, demande du propriétaire du 27 octobre
+// 2026) : le juge pose la question, l'accusation plaide contre l'achat et la défense pour, avec les seuls faits de
+// la fiche, puis le juge rend un verdict cohérent avec la note. Les relectures restent des contrôles internes.
+function renderTribunal(d) {
+  const t = d.tribunal;
+  if (!t || !Array.isArray(t.rounds) || !t.rounds.length) return '';
+  const who = {
+    prosecution: { cls: 'prosecution', avatar: 'A', label: tx(d, 'The prosecution', 'L’accusation') },
+    defense: { cls: 'defense', avatar: 'D', label: tx(d, 'The defence', 'La défense') },
+  };
+  const msg = (cls, avatar, speaker, text) => `          <div class="tribunal-msg ${cls}">
+            <div class="tribunal-avatar" aria-hidden="true">${avatar}</div>
+            <div class="tribunal-bubble"><div class="tribunal-speaker">${speaker}</div><p>${esc(text)}</p></div>
+          </div>`;
+  return `
+      <div id="tribunal" class="content-card tribunal">
+        <h2><i class="fa-solid fa-scale-balanced"></i> ${esc(t.title || tx(d, `The court: ${d.header.ticker} on trial`, `Le tribunal : ${d.header.ticker} à la barre`))}</h2>
+        <p class="tribunal-intro">${tx(d, 'The prosecution argues against buying, the defence for it, using only facts from this page. The judge decides.', 'L’accusation plaide contre l’achat, la défense pour, avec les seuls faits de cette fiche. Le juge tranche.')}</p>
+        <div class="tribunal-dialogue">
+${msg('judge', '<i class="fa-solid fa-gavel"></i>', tx(d, 'The judge', 'Le juge'), t.question)}
+${t.rounds.map(r => { const w = who[r.speaker]; return msg(w.cls, w.avatar, w.label, r.text); }).join('\n')}
+          <div class="tribunal-msg judge verdict">
+            <div class="tribunal-avatar" aria-hidden="true"><i class="fa-solid fa-scale-balanced"></i></div>
+            <div class="tribunal-bubble"><div class="tribunal-speaker">${tx(d, 'Verdict', 'Verdict')} <span class="tribunal-grade" style="background:${gradeColor(d.meta.grade)};">${esc(d.meta.grade)}</span></div><p>${esc(t.verdict)}</p></div>
+          </div>
         </div>
       </div>`;
 }
@@ -1156,6 +1266,7 @@ function renderFab(d) {
     d.predictionMarkets && d.predictionMarkets.markets && { id: 'predictions', icon: 'fa-chart-pie', label: 'Predict' },
     d.tradeIdea         && { id: 'trade',         icon: 'fa-crosshairs',               label: 'Trade' },
     d.globalScore       && { id: 'score',         icon: 'fa-star',                     label: 'Score' },
+    d.tribunal && d.tribunal.rounds && { id: 'tribunal', icon: 'fa-scale-balanced', label: tx(d, 'Court', 'Tribunal') },
   ].filter(Boolean);
   return `
     <div class="fnav" id="floatingNav">
@@ -1221,20 +1332,54 @@ function radarAxes(values, fallback) {
   };
 }
 
+// ─── Graphiques des sections refondues (27 octobre 2026) ─────────────────────
+// Données lues dans le dossier certifié, rien d'autre ; décimales à la française sur les fiches en français.
+const jsonForScript = v => JSON.stringify(v).replace(/</g, '\\u003c');
+const CHART_INK = '#0f172a', CHART_POS = '#047857', CHART_NEG = '#b91c1c', CHART_MUTED = '#94a3b8';
+const GROUP_PALETTE = ['#0f172a', '#0f766e', '#b45309', '#7e22ce', '#be123c', '#475569', '#1d4ed8'];
+function chartNumberFormatter(d) {
+  return isFrench(d)
+    ? "function(v,dg,sg){var s=Math.abs(v).toFixed(dg).replace('.',',');return (sg&&v>0?'+':v<0?'−':'')+s;}"
+    : "function(v,dg,sg){var s=Math.abs(v).toFixed(dg);return (sg&&v>0?'+':v<0?'−':'')+s;}";
+}
+function perfChartScript(d) {
+  const w = d.performance?.windowReturns;
+  if (!w || !Array.isArray(w.rows) || !w.rows.length) return '';
+  const rows = [...w.rows].sort((a, b) => a.returnPct - b.returnPct || b.ticker.localeCompare(a.ticker));
+  const vals = rows.map(r => r.returnPct);
+  const xMin = Math.min(0, Math.floor((Math.min(...vals) - 6) / 5) * 5), xMax = Math.max(0, Math.ceil((Math.max(...vals) + 6) / 5) * 5);
+  return `    (function(){var el=document.getElementById('perfChart');if(!el)return;var f=${chartNumberFormatter(d)};var rows=${jsonForScript(rows)};var T=${jsonForScript(d.header.ticker)};var c=echarts.init(el);c.setOption({animation:false,grid:{left:58,right:64,top:8,bottom:24},tooltip:{trigger:'item',formatter:function(p){return p.name+' : '+f(p.value,2,true)+' %';}},xAxis:{type:'value',min:${xMin},max:${xMax},axisLabel:{formatter:function(v){return f(v,0,true)+' %';},fontSize:10},splitLine:{lineStyle:{color:'#e2e8f0'}}},yAxis:{type:'category',data:rows.map(function(r){return r.ticker;}),axisLabel:{interval:0,fontSize:11,fontWeight:600,color:'${CHART_INK}'},axisTick:{show:false}},series:[{type:'bar',barMaxWidth:16,data:rows.map(function(r){var own=r.ticker===T;return {value:r.returnPct,itemStyle:{color:own?'${CHART_INK}':(r.returnPct>=0?'${CHART_POS}':'${CHART_NEG}'),opacity:own?1:0.78},label:{show:true,position:r.returnPct>=0?'right':(r.returnPct<=-10?'insideLeft':'left'),formatter:function(p){return f(p.value,1,true)+' %';},fontSize:10,fontWeight:own?700:400,color:r.returnPct<=-10?'#fff':(own?'${CHART_INK}':'#334155')}};})}]});window.addEventListener('resize',function(){c.resize();});})();`;
+}
+function factLadderScript(d, l) {
+  const rows = [...l.peers, { label: d.header.ticker, value: l.own, own: true }].sort((a, b) => a.value - b.value);
+  return `    (function(){var el=document.getElementById(${jsonForScript(l.id)});if(!el)return;var f=${chartNumberFormatter(d)};var rows=${jsonForScript(rows)};var c=echarts.init(el);c.setOption({animation:false,grid:{left:96,right:48,top:6,bottom:20},tooltip:{trigger:'item',formatter:function(p){return p.name+' : '+f(p.value,1,false)+'×';}},xAxis:{type:'value',axisLabel:{formatter:function(v){return f(v,0,false)+'×';},fontSize:10},splitLine:{lineStyle:{color:'#e2e8f0'}}},yAxis:{type:'category',data:rows.map(function(r){return r.label;}),axisLabel:{interval:0,fontSize:11,color:'${CHART_INK}'},axisTick:{show:false}},series:[{type:'bar',barMaxWidth:14,data:rows.map(function(r){return {value:r.value,itemStyle:{color:r.own?'${CHART_INK}':'${CHART_MUTED}'},label:{show:true,position:'right',formatter:function(p){return f(p.value,1,false)+'×';},fontSize:10,fontWeight:r.own?700:400}};})}]});window.addEventListener('resize',function(){c.resize();});})();`;
+}
+function blastScatterScript(d) {
+  const blast = d.blastRadius;
+  if (!blast || !Array.isArray(blast.groups) || !blast.groups.length) return '';
+  const groups = blast.groups.map((g, i) => ({ name: String(g.name).includes(' — ') ? String(g.name).split(' — ').slice(1).join(' — ') : g.name, color: GROUP_PALETTE[i % GROUP_PALETTE.length], points: (g.symbols || []).filter(s => Number.isFinite(s.correlation) && Number.isFinite(s.return21d)).map(s => [s.correlation, s.return21d, Number.isFinite(s.beta) ? s.beta : 0, s.ticker]) })).filter(g => g.points.length);
+  const ownRow = d.performance?.windowReturns?.rows?.find(r => r.ticker === d.header.ticker);
+  const minX = Math.min(0, ...groups.flatMap(g => g.points.map(p => p[0])));
+  const ys = [0, ...groups.flatMap(g => g.points.map(p => p[1])), ...(ownRow ? [ownRow.returnPct] : [])];
+  const yMin = Math.floor((Math.min(...ys) - 3) / 5) * 5, yMax = Math.ceil((Math.max(...ys) + 3) / 5) * 5;
+  return `    (function(){var el=document.getElementById('blastChart');if(!el)return;var f=${chartNumberFormatter(d)};var groups=${jsonForScript(groups)};var own=${ownRow ? jsonForScript({ ticker: d.header.ticker, value: ownRow.returnPct }) : 'null'};var narrow=el.clientWidth<520;var c=echarts.init(el);var series=groups.map(function(g,i){var s={name:g.name,type:'scatter',data:g.points,symbolSize:function(v){return 8+12*Math.min(Math.abs(v[2]),1.5)/1.5;},itemStyle:{color:g.color,opacity:0.85,borderColor:'#fff',borderWidth:1},label:{show:true,formatter:function(p){return p.data[3];},position:'right',fontSize:10,color:'#334155'},labelLayout:{hideOverlap:true}};if(i===0){s.markLine={silent:true,symbol:'none',lineStyle:{type:'dashed',color:'${CHART_MUTED}'},label:{formatter:function(p){return p.name;},position:'insideEndTop',fontSize:10,color:'#475569'},data:[{yAxis:0,name:'0 %'}].concat(own?[{yAxis:own.value,name:own.ticker+' '+f(own.value,1,true)+' % sur la période',lineStyle:{type:'solid',color:'${CHART_INK}'},label:{position:'insideEndTop',color:'${CHART_INK}',fontWeight:700}}]:[])};}return s;});c.setOption({animation:false,grid:{left:48,right:24,top:16,bottom:narrow?96:72},legend:{type:'scroll',bottom:0,itemWidth:10,itemHeight:10,textStyle:{fontSize:10}},tooltip:{trigger:'item',formatter:function(p){var v=p.data;return '<strong>'+v[3]+'</strong> · '+p.seriesName+'<br>Corrélation '+f(v[0],2,false)+' · bêta '+f(v[2],2,false)+'<br>21 séances : '+f(v[1],1,true)+' %';}},xAxis:{type:'value',name:'Corrélation',nameLocation:'middle',nameGap:24,min:${minX < 0 ? -1 : 0},max:1,axisLabel:{formatter:function(v){return f(v,1,false);},fontSize:10},splitLine:{lineStyle:{color:'#e2e8f0'}}},yAxis:{type:'value',name:'21 séances',min:${yMin},max:${yMax},axisLabel:{formatter:function(v){return f(v,0,true)+' %';},fontSize:10},splitLine:{lineStyle:{color:'#e2e8f0'}}},series:series});window.addEventListener('resize',function(){c.resize();});})();`;
+}
+
 function renderScripts(d) {
   const t = d.header.ticker;
   const chartId = t.replace(/[^a-zA-Z0-9]/g, '');
   const rv = (d.technicals && d.technicals.radarValues) || {};
   const techRadar = radarAxes(rv);
   const riskRadar = radarAxes(d.risks.riskRadarValues);
-  const blastRows = (d.blastRadius?.groups || []).flatMap(g => (g.symbols || []).map(s => ({ ticker: s.ticker, value: Number.isFinite(s.correlation) ? Math.abs(s.correlation) : null }))).filter(s => s.value !== null).sort((a,b) => b.value - a.value).slice(0, 14);
   return `
     <script>
     (function(){var el=document.getElementById('gaugeScore');if(!el)return;var c=echarts.init(el);c.setOption({series:[{type:'gauge',radius:'90%',axisLine:{lineStyle:{width:12,color:[[0.3,'#ef4444'],[0.5,'#f59e0b'],[0.7,'#3b82f6'],[1,'#22c55e']]}},pointer:{itemStyle:{color:'auto'}},axisTick:{distance:-12,length:6,lineStyle:{color:'#fff',width:1}},splitLine:{distance:-14,length:12,lineStyle:{color:'#fff',width:2}},axisLabel:{color:'auto',distance:16,fontSize:11},detail:{valueAnimation:true,formatter:'{value}',color:'auto',fontSize:28,fontWeight:800,offsetCenter:[0,'70%']},data:[{value:${d.verdict.score}}]}]});window.addEventListener('resize',function(){c.resize();});})();
 ${techRadar ? `    (function(){var el=document.getElementById('radarTech${chartId}');if(!el)return;var c=echarts.init(el);c.setOption({radar:{indicator:${techRadar.indicator},shape:'circle',splitArea:{areaStyle:{color:['rgba(59,130,246,0.02)','rgba(59,130,246,0.04)']}}},series:[{type:'radar',data:[{value:${techRadar.values},name:'${t}',areaStyle:{color:'rgba(59,130,246,0.15)'},lineStyle:{color:'#3b82f6'},itemStyle:{color:'#3b82f6'}}]}]});window.addEventListener('resize',function(){c.resize();});})();` : ''}
     (function(){var el=document.getElementById('riskGaugeChart');if(!el)return;var c=echarts.init(el);c.setOption({series:[{type:'gauge',radius:'90%',center:['50%','60%'],startAngle:200,endAngle:-20,min:0,max:10,axisLine:{lineStyle:{width:10,color:[[0.3,'#22c55e'],[0.5,'#3b82f6'],[0.7,'#f59e0b'],[1,'#ef4444']]}},pointer:{length:'60%',width:4,itemStyle:{color:'auto'}},axisTick:{show:false},splitLine:{show:false},axisLabel:{show:false},detail:{valueAnimation:true,formatter:'{value}/10',color:'auto',fontSize:16,fontWeight:800,offsetCenter:[0,'40%']},data:[{value:${d.risks.riskScore}}]}]});window.addEventListener('resize',function(){c.resize();});})();
 ${d.risks.riskRadarValues ? `    (function(){var el=document.getElementById('riskRadarChart');if(!el)return;var rr=${JSON.stringify(d.risks.riskRadarValues).replace(/<\//g, '<\\/')};var c=echarts.init(el);c.setOption({radar:{indicator:[{name:'Dilution',max:100},{name:'Burn Rate',max:100},{name:'Beta',max:100},{name:'Short Int.',max:100},{name:'Insider Sell',max:100},{name:'Macro Risk',max:100}],shape:'circle',splitArea:{areaStyle:{color:['rgba(239,68,68,0.02)','rgba(239,68,68,0.04)']}}},series:[{type:'radar',data:[{value:[rr.dilution||0,rr.burnRate||0,rr.beta||0,rr.shortInterest||0,rr.insiderSelling||0,rr.macroRisk||0],areaStyle:{color:'rgba(239,68,68,0.15)'},lineStyle:{color:'#ef4444'},itemStyle:{color:'#ef4444'}}]}]});window.addEventListener('resize',function(){c.resize();});})();` : ''}
-    (function(){var el=document.getElementById('blastChart');if(!el)return;var rows=${JSON.stringify(blastRows)};var c=echarts.init(el);c.setOption({grid:{left:42,right:18,top:20,bottom:58},tooltip:{trigger:'axis'},xAxis:{type:'category',data:rows.map(function(x){return x.ticker;}),axisLabel:{rotate:40,fontSize:10}},yAxis:{type:'value',name:'|corr.|',max:1},series:[{type:'bar',data:rows.map(function(x){return x.value;}),itemStyle:{color:'#2563eb'},barMaxWidth:28}]});window.addEventListener('resize',function(){c.resize();});})();
+${blastScatterScript(d)}
+${perfChartScript(d)}
+${fundamentalLadders(d).map(l => factLadderScript(d, l)).join('\n')}
     </script>
     <script>
     function openChartModal(){document.getElementById('chartModal').style.display='flex';}
@@ -1256,8 +1401,10 @@ function render(data) {
     renderOptions(data), renderTechnicals(data), renderBottomEstimation(data), renderPerformance(data), renderForecast(data),
     renderSectorComparison(data), renderBlastRadius(data), renderMacro(data), renderRisks(data),
     renderSocial(data), renderManipulations(data), renderCapitalFlow(data),
-    renderPredictionMarkets(data), renderReviewPanel(data), renderGlobalScore(data)
+    renderPredictionMarkets(data), renderGlobalScore(data), renderTribunal(data)
   ].filter(Boolean).join('\n');
+  // Les relectures indépendantes (reviewPanel) restent dans le JSON et les contrôles, mais ne sont plus publiées dans
+  // la fiche (décision du propriétaire du 27 octobre 2026) ; renderReviewPanel est conservée pour les rendus d'audit.
   // The analysis is a reference document: primary facts must remain visible on first visit.
   // Keep the dossier in the normal document flow; navigation and section headings provide the hierarchy.
   const progressiveDeepDive = `\n      <div class="analysis-dossier">${deepDive}\n      </div>`;

@@ -85,6 +85,27 @@ d'horizon du plan, échéances SEC ou de capital (expiration de lock-up, échéa
 rendez-vous macro forts. Chaque événement nomme sa `source`. Sans rendez-vous vérifié dans la fenêtre,
 `unavailableReason` le déclare. `check-analysis-editorial-quality.js` bloque l'absence ou l'invalidité.
 
+## Gabarit de la fiche (décision du propriétaire, 27 octobre 2026)
+
+La fiche FICO du 27 octobre 2026 est le gabarit de toutes les fiches suivantes. Rendu par
+`tools/render-analysis.js` ; gate `check-analysis-editorial-quality.js` bloquant dès les fiches du 28 octobre.
+
+- **Un graphique avant le tableau.** Le détail chiffré exhaustif passe dans un bloc dépliable (`data-details`).
+  Les tableaux visibles se limitent aux faits les plus forts.
+- **Fondamentaux** : fiches de faits regroupées par thème. Chaque ligne porte `group` (Activité, Prévisions de
+  la société, Rentabilité sur douze mois, Bilan, Valorisation…) ; au moins trois groupes. Un multiple comparé
+  à au moins trois pairs dans `comparison` (« Equifax 12,7×, TransUnion 13,1×… ») est tracé en échelle.
+- **Performance et références** : `windowReturns` tracé en barres triées, avec le rendement du titre, la
+  médiane des références et le rang.
+- **Rayon de propagation** : nuage corrélation × rendement sur 21 séances, les six liens les plus forts,
+  trois cartes de scénarios ; le détail par groupe est dépliable.
+- **Tribunal en dernière section**, avant l'avertissement. Clé `tribunal` : `question` du juge, au moins
+  quatre `rounds` qui alternent `prosecution` (contre l'achat) et `defense` (pour), en commençant par
+  l'accusation, puis `verdict`. On n'y plaide qu'avec les faits déjà prouvés dans la fiche, et les chiffres
+  sont calculés dans le générateur, jamais recopiés.
+- **Les relectures indépendantes restent obligatoires, mais elles ne sont plus publiées dans la fiche.**
+  `reviewPanel` peut rester dans le JSON pour l'audit ; le moteur ne le rend plus.
+
 ## JSON Et QA
 
 Produire un contenu individualise, avec sources proximales et consequences financieres. Puis:

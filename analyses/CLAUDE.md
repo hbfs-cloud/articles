@@ -134,6 +134,16 @@ Analyse complète d'un ticker, lisible en 2 minutes. Style direct et punchy insp
 - Le verdict initial doit tenir dans le premier viewport desktop et rester compréhensible sans ouvrir un
   accordéon ni parcourir le dossier complet.
 
+### Gabarit du 27 octobre 2026 (prime sur les listes ci-dessous)
+
+Référence : la fiche FICO (`analyses/FICO/`). Spécification complète dans `.claude/commands/analyse.md`
+(§ Gabarit de la fiche). En bref, un graphique avant tout tableau, avec le détail dépliable :
+- fondamentaux en fiches de faits regroupées par thème ;
+- performance en barres triées ;
+- propagation en nuage, six liens forts et trois scénarios ;
+- tribunal (le juge, l'accusation et la défense, puis le verdict) en dernière section ;
+- relectures indépendantes faites mais non publiées.
+
 ### Règles AI Forecast (CRITIQUE)
 
 1. **NE JAMAIS mentionner le nom du modèle** (TimesFM, etc.) NI "AI" dans l'article. Utiliser "forecast", "our model", "price forecast" — le lecteur ne doit voir ni le nom technique ni le terme "AI".

@@ -187,7 +187,8 @@
               "signalColor": { "type": "string", "enum": ["green", "red", "blue", "amber", "gray"] },
               "comparison": { "type": "string", "description": "vs sector/peer context" },
               "note": { "type": "string", "description": "Visible qualification of the metric, period or denominator" },
-              "source": { "type": "string", "description": "Proximate source label for this metric" }
+              "source": { "type": "string", "description": "Proximate source label for this metric" },
+              "group": { "type": "string", "maxLength": 40, "description": "Thème d'affichage (Croissance, Rentabilité, Bilan, Valorisation…) : les lignes d'un même thème sont regroupées." }
             }
           }
         },
@@ -595,6 +596,28 @@
             "progress":     { "type": "integer", "minimum": 0, "maximum": 100 }
           }
         }}
+      }
+    },
+
+    "tribunal": {
+      "type": "object",
+      "description": "Tribunal publié en fin de fiche : le juge pose la question, l'accusation (contre l'achat) et la défense (pour) plaident à tour de rôle avec les faits de la fiche, puis le juge rend son verdict.",
+      "required": ["question", "rounds", "verdict"],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string", "maxLength": 120 },
+        "question": { "type": "string", "minLength": 20, "maxLength": 600 },
+        "rounds": {
+          "type": "array", "minItems": 4, "maxItems": 8,
+          "items": {
+            "type": "object", "required": ["speaker", "text"], "additionalProperties": false,
+            "properties": {
+              "speaker": { "type": "string", "enum": ["prosecution", "defense"] },
+              "text": { "type": "string", "minLength": 20, "maxLength": 900 }
+            }
+          }
+        },
+        "verdict": { "type": "string", "minLength": 40, "maxLength": 900 }
       }
     },
 
