@@ -1,0 +1,51 @@
+{
+  "ticker": "IOVA",
+  "role": "retail_war_room",
+  "verdict": "Plan exécutable sur la forme : aucun achat avant les résultats, dont la date reste non confirmée ; déclencheur sur clôture, plafond à 15,89 $, pas de poursuite du saut, heures de Paris justes, compte-titres et non PEA, liquidité suffisante. Deux blocages : la carte affiche un R/R impossible à obtenir, et la taille repose sur un écart d'ouverture de −14,2 % alors que le titre a déjà ouvert à −38,8 %, avec une mise à jour du programme poumon attendue pendant la détention.",
+  "blocks": [
+    {
+      "path": "tradeIdea.entry / tradeIdea.stopPct / tradeIdea.tp1Pct / tradeIdea.tp2Pct / tradeIdea.rr (carte #trade : « Déclencheur 15,37 $ … Stop −13,3 % … Objectif 1 +28,5 % … Objectif 2 +42,7 % … Risque/rendement 1:2,14 · 1:3,21 »)",
+      "problem": "Pourcentages et R/R calculés depuis 15,37 $, un prix auquel personne ne peut acheter. Le plan exige une clôture à 15,38 $ ou plus, puis un achat à la séance suivante avec un cours au-dessus de 15,38 $ et une limite à 15,89 $. Le R/R affiché de 1:2,14 dépasse même le meilleur fill possible (1:2,12 à 15,38 $). Au pire fill, il tombe à 1:1,50, soit le défaut du précédent TLN (R/R « fictif » en tête de carte, R/R réel au pire fill relégué dans le texte).",
+      "fix": "Afficher les niveaux au pire fill, 15,89 $ : stop −16,2 % (13,3234/15,89), TP1 +24,3 % (19,75/15,89), TP2 +38,1 % (21,94/15,89), R/R 1:1,50 TP1 et 1:2,36 TP2, avec un risque de 2,5666 $ par action. On peut aussi afficher la zone d'achat 15,38–15,89 $ avec ses deux bornes : R/R TP1 de 1:2,12 à 1:1,50, R/R TP2 de 1:3,19 à 1:2,36, stop de −13,4 % à −16,2 %. Remplacer partout « Déclencheur 15,37 $ clôture au-dessus » et « clôture au-dessus de 15,37 $ » (banner, thèse, setupNote) par « clôture à 15,38 $ ou plus ». Corriger levelsMethod (« pourcentages depuis l'entrée ») pour que l'entrée de calcul soit le plafond d'achat, puis regénérer les preuves.",
+      "evidence": "data/analyses-data/IOVA.json tradeIdea.entry=15.37, rr='1:2.14 TP1 / 1:3.21 TP2', entryNote (« R/R de 1 pour 1,50 au plafond ») ; analyses/IOVA/_runs/20261027/build-iova.cjs l.57 levelsMethod ; .claude/memory/feedback_analysis_senior_review_first.md règle 3 (le R/R d'une zone s'atteste au pire fill)"
+    },
+    {
+      "path": "tradeIdea.entryNote (paragraphe « Taille ») + risks.riskCards[4] (« Écarts d'ouverture et volatilité »)",
+      "problem": "La taille maximale (224 actions, 3 559 $) suppose un écart d'ouverture comme celui du 7 mai 2026 (−14,2 %). C'est seulement le pire écart des 300 séances certifiées. Le titre a ouvert beaucoup plus bas juste avant cette fenêtre : −38,8 % le 9 mai 2025 (3,17 $ → 1,94 $), −27,7 % le 8 août 2025 et −25,3 % le 28 février 2025. La détention commence après les résultats mais reste exposée à deux chocs possibles : une émission d'actions et la mise à jour du programme pivot dans le poumon (IOV-LUN-202) attendue au quatrième trimestre, sans date. Sur un écart de −38,8 % pris au niveau du stop, la sortie se fait vers 8,15 $, soit 7,74 $ de perte par action. Avec 224 actions, la perte atteint environ 1 733 $, contre les 1 000 $ « maximum » annoncés.",
+      "fix": "Dimensionner sur le pire écart connu de l'émetteur : 13,3234 × (1,94/3,17) = 8,15 $ ; perte par action 15,89 − 8,15 = 7,74 $ ; pour 1 000 $ de perte acceptée, 129 actions au plus, environ 2 050 $ engagés. Garder 224 actions seulement si le texte annonce la perte de ~1 733 $ dans ce scénario. Dans les deux cas, écrire que la série certifiée de 300 séances ne contient pas cet écart. Ajouter les barres des 8 et 9 mai 2025 au dossier de preuves (collecte bars_daily point-in-time), ainsi que dans la carte de risque « Écarts d'ouverture ».",
+      "evidence": "QueryData bars_daily IOVA du 2024-10-01 au 2025-08-15 (market_snapshot_id bars-59508a794582fb28, captured_at 2026-10-27T10:43:54Z) : 2025-05-08 C 3,17 / 2025-05-09 O 1,94 L 1,6499 C 1,75 ; 2025-08-07 C 2,64 / 2025-08-08 O 1,9099 ; 2025-02-27 C 5,26 / 2025-02-28 O 3,93. Pire écart de la série certifiée (analyses/IOVA/_data/bars.json, 300 barres) : −14,2 % le 2026-05-07. Programme poumon : 8-K du 2026-08-06, Ex. 99.1 (« IOV-LUN-202 … program updates are expected in 4Q26 »), https://www.sec.gov/Archives/edgar/data/1425205/000110465926091619/tm2622322d1_ex99-1.htm"
+    }
+  ],
+  "fixes": [
+    {
+      "path": "timeline.keyWindow.label",
+      "problem": "Le libellé « résultats annoncés le 5, clôture du 6 à 22 h » contredit le cas de base du texte : la société publie d'habitude avant l'ouverture (appel à 8 h 30 le 6 août), donc la clôture décisive serait celle du 5 novembre à 22 h, et l'achat possible dès le 6 à 15 h 30.",
+      "fix": "« Fenêtre clé · résultats annoncés le 5 (non confirmé) : clôture décisive le 5 à 22 h si publication avant l'ouverture, le 6 sinon »",
+      "evidence": "tradeIdea.entryNote ; earnings.nextEarnings ; GetEarningsCalendarFiltered IOVA du 2026-10-27T10:43:55Z : report_date 2026-11-05, report_time TNS, date_confidence single_source"
+    },
+    {
+      "path": "tradeIdea.invalidation[3]",
+      "problem": "« suspend le plan jusqu'à la première clôture qui suit le prix de l'offre » ne peut pas s'exécuter tel quel : un particulier ne sait pas quelle clôture compte.",
+      "fix": "« Une offre d'actions annoncée avant l'achat suspend le plan. Il ne reprend qu'à la première clôture qui suit l'annonce du prix de l'offre, et seulement si cette clôture est à 15,38 $ ou plus, au plus tard le 16 novembre. »",
+      "evidence": "data/analyses-data/IOVA.json tradeIdea.invalidation[3]"
+    },
+    {
+      "path": "tradeIdea.horizon / tradeIdea.catalysts[3] / timeline.note / unavailableReason",
+      "problem": "« résultats du cancer du poumon promis pour le quatrième trimestre » dit plus que la source (« program updates are expected in 4Q26 »). Le plan nomme le risque mais ne dit pas quoi faire s'il tombe pendant la détention.",
+      "fix": "Écrire « une mise à jour du programme pivot dans le poumon, attendue au quatrième trimestre sans date ». Ajouter la règle : si la société date cette mise à jour (communiqué, congrès) pendant la détention, vendre au moins la moitié à la clôture qui précède.",
+      "evidence": "8-K 2026-08-06 Ex. 99.1 (IOV-LUN-202 : « program updates are expected in 4Q26 »)"
+    },
+    {
+      "path": "tradeIdea.horizon + timeline (to, events)",
+      "problem": "Aucune date de sortie au calendrier. L'échéancier s'arrête au 16 novembre (dernière activation), alors qu'un achat le 19 novembre se détient jusqu'au 18 décembre. Cette période traverse Thanksgiving, la Fed du 9 décembre et l'inflation du 10 décembre.",
+      "fix": "Ajouter : « sortie au plus tard à la clôture du vendredi 18 décembre (22 h à Paris) ; marché fermé le 26 novembre, clôture avancée à 19 h le 27 novembre ». Ajouter en contexte, ou dans la frise, la Fed du 9 décembre et l'inflation du 10 décembre (data/scheduled-events.json : fomc 2026-12-09, cpi 2026-12-10).",
+      "evidence": "Calcul : dernier achat possible le 19 novembre (activation le 16, ordre les 17, 18 et 19), puis 20 séances jusqu'au 18 décembre ; data/scheduled-events.json"
+    },
+    {
+      "path": "tradeIdea.entryNote (« renouvelé trois séances au plus »)",
+      "problem": "La règle peut se lire « trois séances en tout » ou « la première séance plus trois renouvellements ». La date d'achat la plus tardive change selon la lecture.",
+      "fix": "« ordre limité à 15,89 $, valable trois séances en tout, la première comprise »",
+      "evidence": "data/analyses-data/IOVA.json tradeIdea.entryNote"
+    }
+  ]
+}

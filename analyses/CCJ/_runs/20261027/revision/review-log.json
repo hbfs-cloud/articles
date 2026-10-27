@@ -1,0 +1,28 @@
+{
+  "ticker": "CCJ",
+  "run": "20261027",
+  "mode": "rapide (un seul passage, décision du 19 octobre 2026)",
+  "reviews": [
+    { "role": "contrarian", "file": "rapport transmis par l'orchestrateur (additif du constructeur)", "blocks": 5 },
+    { "role": "senior_qa", "file": "analyses/CCJ/_runs/20261027/revision/review-senior_qa.json", "blocks": 4 },
+    { "role": "retail_war_room", "file": "analyses/CCJ/_runs/20261027/revision/review-retail_war_room.json", "blocks": 2 }
+  ],
+  "applied": [
+    { "id": "C1/W2/Q2", "fix": "Catalyseur réécrit : le prix réalisé (93,13 $ CA au T2, 92,15 au S1) est déjà dans la prévision 91–96 $ CA ; le 30 octobre se lit sur le coût unitaire face à 63–67,50 $ CA, les livraisons (14,9 Mlb au S1 pour 29–32), l'arrêt de Key Lake et la quote-part de Westinghouse au S2. Table de sensibilité publiée (66–67 $ US en 2026, 69–74 $ US en 2027) ajoutée. Prévision convertie au taux de 1,35 retenu par la société.", "evidence": "q2-6k-mda (needles realizedCad, sensitivity, fx135)" },
+    { "id": "Q1", "fix": "Cause de la compression de marge corrigée : 2,8 Mlb achetées (0,7 un an plus tôt) à 91,40 $ CA, −6 %, presque au prix de revente ; volume vendu −18 % ; prêts de produit ; arrêt de Cigar Lake avancé. Suppression de « rachète plus cher ».", "evidence": "q2-6k-mda (needles purch2, costCause, realizedCad)" },
+    { "id": "C2", "fix": "Arrêt annuel prolongé de Key Lake au T3 et risque de retard ajoutés (fondamentaux, risques, scénario baissier, invalidation implicite via la production) ; hausse du coût unitaire +11 % au semestre ajoutée.", "evidence": "q2-6k-mda (needle keyLake)" },
+    { "id": "C3", "fix": "Westinghouse : « qu'environ 37 Md$ » retiré des raisons d'acheter ; lecture inverse publiée avec ses hypothèses (28 à 53 Md$ selon les multiples, 42 Md$ avec le bon de l'État) et la dette nette de Westinghouse (4 463,3 M$ CA, 40-F) : 46 à 54 fois la prévision d'EBITDA 2026 dans l'hypothèse centrale.", "evidence": "fy25-40f-fs (needle wecNet), fy25-40f-mda (needle fyavg, EBITDA de JV Inkai)" },
+    { "id": "C4", "fix": "Cause de la baisse requalifiée : décote des actions de l'uranium (depuis le 9 février CCJ −34,5 %, URA −37,4 %, URNM −41,4 %, uranium physique −9,7 %, Constellation −7,2 % ; corrélation 0,93 avec URNM contre 0,43 avec Constellation) ; l'uranium physique a aussi baissé le 22 octobre.", "evidence": "comparison_bars.json, bars.json" },
+    { "id": "C5/W1", "fix": "Capacité d'émission : programme de 500 M$ US imputé sur le prospectus de base de 2,0 Md$ US, les deux jusqu'à décembre 2026 ; nombre d'actions prouvé au 29 juillet seulement ; ventes au fil du marché publiées avec les comptes (clause du supplément) ; invalidation[4] remplacée par une règle vérifiable le 30 octobre (nombre d'actions au rapport de gestion) et une règle post-achat sur placements annoncés.", "evidence": "SUPPL 2024-11-12 (needle atmDisclosure), q2-6k-mda (sharesMda)" },
+    { "id": "Q3", "fix": "Inventaire EDGAR calculé depuis submissions.json (55 formulaires hors 144 et 13G, dont 42 6-K, tous examinés par leur pièce principale) ; quatre 6-K ajoutés et hachés : contrat avec l'Inde (2 mars 2026), inondations et arrêt de Key Lake (10 mai), reprise (27 mai), accord TEPCO (1er juin) ; contrat indien intégré aux raisons d'acheter et aux fondamentaux.", "evidence": "_primary/submissions.json, _primary/2026-03-02-6-K-085244-d27416dex991.htm" },
+    { "id": "Q4", "fix": "Ratio put/call : tuile vidée (positions ouvertes non servies) ; volume du 26 octobre décrit en clair (10 081 puts, 2 037 calls, 0,20 call par put).", "evidence": "instrument.json (instrument_options_volume_ratio)" },
+    { "id": "Q-fixes", "fix": "Sensibilité au taux moyen des flux publiée (≈3 %) ; trésorerie nette pro forma après le rachat de Cigar Lake (115,8 M$ CA, note 20) ; quote-part Westinghouse du S1 convertie (≈206 M$ US) ; « 170 M$ US de quote-part » ; Denison/NexGen dans le scénario baissier ; valorisation citée face à la médiane des pairs ; attribution de 24/7 Wall St. limitée à GE Vernova et Meta ; pédagogie corrigée ; date du 6-K 0001193125-26-295796 au 6 juillet ; noms de groupes sans tiret cadratin ; institutions 70,1 % ; tag « nucleaire » retiré ; texte Vistra corrigé (prêt pour moderniser et augmenter la puissance)." },
+    { "id": "W-fixes", "fix": "Déclencheur écrit partout « clôture à 83,94 $ ou plus » ; R/R au pire prix d'achat dans le bandeau ; stop au marché, OCO ou vente manuelle de la moitié ; formule de taille ; date de sortie au plus tard le 17 décembre ; fermeture du 26 novembre et séance écourtée du 27 ; dividende annuel ; abandon définitif ; « écart achat-vente serré » retiré." }
+  ],
+  "not_applied": [
+    { "id": "W-rr-order", "reason": "Le contrôle éditorial impose que le premier « 1:x » du champ rr corresponde au niveau d'entrée (83,93) ; le R/R au pire prix (1,50) est donc placé en tête du bandeau et en second dans rr." },
+    { "id": "Q-render-decimals", "reason": "Séparateurs décimaux mixtes du moteur de rendu (tools/render-analysis.js), fichier partagé hors périmètre ; défaut identique sur la fiche FICO." },
+    { "id": "Q-fx-average", "reason": "Méthode du run précédent conservée (taux de clôture du 30 juin, consigne du lot) ; sensibilité au taux moyen publiée." }
+  ],
+  "recollect": "Collecte relancée le 27 octobre vers 12 h 48 UTC avec refdate=2026-10-26 (source status périmée de plus de 2 h) : 27 appels sur 27, multiples des pairs et relevés inchangés."
+}

@@ -1,0 +1,70 @@
+{
+  "ticker": "CCJ",
+  "role": "retail_war_room",
+  "verdict": "Le plan est exécutable par un particulier français sur le fond (publication du 30 octobre vérifiée, aucun achat à travers les résultats, plafond d'achat, stop, taille et heures de Paris exacts), mais deux blocages : la règle d'invalidation sur les ventes au fil du marché est invérifiable pour un particulier, et le cadrage du « prix réalisé » face à la prévision est faux.",
+  "checked_ok": [
+    "Date des résultats du troisième trimestre : vendredi 30 octobre 2026 avant l'ouverture de New York, conférence à 8 h 00 (Est) = 13 h 00 à Paris. Confirmée par le communiqué de Cameco du 21 octobre (analyses/CCJ/_primary/2026-10-21-IR-cameco-q3-date.html) et par la page cameco.com 'Cameco Provides Date for 2026 Q3 Results' (relue sur le web le 27 octobre).",
+    "Aucun achat ne traverse la publication : le plan interdit tout achat avant le 30 octobre, la clôture du 30 octobre (21 h Paris) est le premier déclencheur possible, premier achat lundi 2 novembre après 15 h 30. Horaires vérifiés : fin de l'heure d'été en Europe le 25 octobre, aux États-Unis le 1er novembre, donc ouverture 14 h 30 / clôture 21 h le 30 octobre, puis 15 h 30 / 22 h. Fed 19 h le 28 octobre et emploi US 14 h 30 le 6 novembre exacts. Le 13 novembre est bien un vendredi.",
+    "Arithmétique du plan recalculée sur les barres certifiées : risque 6,51 $ entre le plafond 84,78 $ et le stop 78,27 $ (7,7 %) ; R/R au plafond 9,77/6,51 = 1:1,50 et 19,34/6,51 = 1:2,97 ; au déclencheur 83,93 : 1:1,88 et 1:3,57 ; 1 000 $ / 6,51 = 153 actions, 153 x 84,78 = 12 971 $. Pire écart d'ouverture sur un an : -6,16 % le 3 mars (118,00 contre 125,74) ; 84,78 x (1 - 0,06156) = 79,56 $, au-dessus du stop. Séance de résultats la plus ample : 10,08 % (5 mai).",
+    "Niveaux lus sur les barres : plus haut du 16 octobre 83,93 ; plus haut du 13 octobre 87,09 ; plus haut du 6 octobre 94,55 ; plus haut du 8 septembre 104,12 ; plus bas du 22 octobre 78,2701 ; plus bas du 23 octobre 76,92. Quatre clôtures de jours de résultats -1,76 / -3,00 / -3,21 / -2,10 %. Liquidité : 245,3 M$ de turnover médian sur vingt séances.",
+    "Compte-titres ordinaire, pas de PEA : exact (émetteur canadien coté à New York)."
+  ],
+  "blocks": [
+    {
+      "path": "tradeIdea.invalidation[4] ; capitalStructure.shareHistory ; capitalStructure.atm.used ; blastRadius.missingData",
+      "problem": "La règle « l'annonce d'un placement d'actions de Cameco fait vendre à l'ouverture suivante » ne couvre pas le programme d'émission au fil du marché, alors que la fiche le désigne elle-même comme le risque du plan (« Un tel programme se tire plutôt dans la hausse, donc au moment où le plan achèterait »). Un particulier ne peut pas appliquer une règle sur des ventes qu'aucun communiqué n'annonce : selon le supplément de prospectus du 12 novembre 2024 (p. S-13), l'agent ne confirme les ventes de la veille qu'à Cameco ; la société ne publie le nombre d'actions vendues et le prix moyen que dans les états financiers et le rapport de gestion de la période où les ventes ont eu lieu. Pour des ventes d'octobre à décembre, la première publication est le rapport annuel 2026 (février 2027), bien après la fin du plan (vente forcée au plus tard le 17 décembre 2026). Pendant la détention, aucun signal public n'existe. De plus, « nombre inchangé » et « aucune émission visible » ne sont prouvés que jusqu'au 29 juillet 2026 : la fenêtre du 30 juillet au 26 octobre n'est pas observable avant le 30 octobre et n'est pas déclarée dans les données manquantes.",
+      "fix": "1) Remplacer invalidation[4] par deux règles distinctes. Avant l'achat, vérifiable le 30 octobre : « Lire dans le rapport de gestion du troisième trimestre (rubrique Actions et options en circulation) le nombre d'actions à la date la plus récente et, dans la note Capital-actions des états financiers, toute vente au fil du marché ; plus de 435 532 978 actions (chiffre du 29 juillet) = le programme a servi, plan annulé. » Après l'achat : « Un placement annoncé (communiqué, 6-K, supplément de prospectus, offre à bon de commande) ou un report annoncé de l'introduction en Bourse de Westinghouse fait vendre à l'ouverture suivante. Les ventes au fil du marché ne sont ni annoncées ni visibles en séance (publiées seulement au rapport de la période, février 2027 pour octobre-décembre) : elles ne peuvent pas servir de règle de sortie ; seuls le stop à 78,27 $ et la taille protègent. » 2) Ajouter à blastRadius.missingData : « Ventes au fil du marché du 30 juillet au 26 octobre non observables : nombre d'actions à jour dans le rapport du 30 octobre. » 3) Dans capitalStructure.shareHistory et atm.used, borner l'affirmation à « au 29 juillet 2026 » et retirer la lecture « dilutionRisk faible » comme constat pour août-octobre, ou la qualifier. Chiffres exacts utiles : 500 M$ US = 1,45 % de 34,4 Md$ (6,3 millions d'actions au cours de 79,07 $, environ 2,1 séances du volume médian de 2,95 millions).",
+      "evidence": "analyses/CCJ/_primary/text/2024-11-12-SUPPL-256073-d890781dsuppl.htm.txt, passage 'The applicable Agent will provide written confirmation to the Company ... The Company will disclose the number and average price of the Offered Shares sold ... in the Company's annual and interim financial statements and related management's discussion and analysis ... for any annual and interim period in which sales of Offered Shares occur' (https://www.sec.gov/Archives/edgar/data/1009001/000119312524256073/d890781dsuppl.htm) ; analyses/CCJ/_primary/text/q2-6k-mda__d125942dex992.htm.txt 'SHARES AND STOCK OPTIONS OUTSTANDING At July 29, 2026, we had: 435,532,978 common shares' ; dernier dépôt EDGAR : 6-K du 1er octobre 2026 (analyses/CCJ/_primary/submissions.json)."
+    },
+    {
+      "path": "tradeIdea.thesis ; blastRadius.scenarios[0].trigger ; tribunal.verdict ; tradeIdea.catalysts[0]",
+      "problem": "La fiche dit que les résultats du 30 octobre « diront si le prix réalisé remonte vers la prévision de 91 à 96 $ CA la livre » (thèse et déclencheur haussier) et que le dossier se rouvre « si le prix réalisé rattrape la prévision » (verdict du tribunal). C'est faux : le prix réalisé est déjà dans la fourchette. Deuxième trimestre : 93,13 $ CA la livre (67,79 $ US) ; premier semestre : 92,15 $ CA (66,96 $ US) ; la fiche écrit elle-même « environ 64 à 68 $ US » pour la prévision, donc 67,79 $ US est dedans. Ce qui est en retard est l'écart avec le comptant (85,18 $ US) et la marge (coût unitaire 70,81 $ CA, +26 %), pas le niveau face à la prévision. Un particulier qui lit le communiqué du 30 octobre avec ce critère aurait une grille de lecture sans objet.",
+      "fix": "Remplacer par des critères lisibles dans le communiqué : « prix réalisé du troisième trimestre comparé à 93,13 $ CA (67,79 $ US) du deuxième et à 92,15 $ CA du semestre ; coût unitaire des ventes comparé à 70,81 $ CA ; livraisons cumulées comparées à 14,9 millions de livres au semestre pour viser 29 à 32 ; prévision de prix réalisé relevée, maintenue ou abaissée ». Dans le déclencheur haussier : « le prix réalisé et la marge de l'uranium progressent sur le deuxième trimestre et la prévision est maintenue ou relevée ». Dans le verdict du tribunal : « si la marge de l'uranium cesse de se comprimer » au lieu de « si le prix réalisé rattrape la prévision ».",
+      "evidence": "analyses/CCJ/_primary/text/q2-6k-mda__d125942dex992.htm.txt (tableau uranium : prix réalisé 67,79 $ US / 93,13 $ CA au T2, 66,96 / 92,15 au semestre ; coût unitaire des ventes 70,81 $ CA ; prévision 91 à 96 $ CA) ; data/analyses-data/CCJ.json fundamentals.rows 'Prix moyen réalisé visé en 2026 ... environ 64 à 68 $ US'."
+    }
+  ],
+  "fixes": [
+    {
+      "path": "tradeIdea.rr ; header 'Risque/rendement' (1:1,88 · 1:3,57)",
+      "problem": "Le chiffre en gros utilise un prix d'entrée de 83,93 $ qu'on ne peut pas acheter (c'est le niveau de clôture du déclencheur ; l'achat se fait à la séance suivante, au plus à 84,78 $). Le R/R réellement exécutable est au détail seulement.",
+      "fix": "Afficher en gros 1:1,50 / 1:2,97 (pire fill 84,78 $) et garder 1:1,88 / 1:3,57 en légende « au déclencheur ». Même logique pour stopPct : -6,7 % au déclencheur, -7,7 % au plafond.",
+      "evidence": "(94,55-84,78)/(84,78-78,27) = 1,50 ; (104,12-84,78)/6,51 = 2,97."
+    },
+    {
+      "path": "tradeIdea.banner ; tradeIdea.entry ; tradeIdea.thesis ; carte 'Déclencheur'",
+      "problem": "Deux formulations du même seuil : « clôture au-dessus de 83,93 $ » (bandeau, carte, thèse) et « clôture à 83,94 $ ou plus » (statusNote, entryNote, invalidation). Équivalentes au centime, mais deux nombres pour un déclencheur sont une source d'erreur au moment d'armer une alerte.",
+      "fix": "Écrire partout « clôture à 83,94 $ ou plus » ; réserver 83,93 $ à « plus haut du 16 octobre ».",
+      "evidence": "Barre du 2026-10-16 : haut 83,93."
+    },
+    {
+      "path": "tradeIdea.horizon ; tradeIdea.entryNote",
+      "problem": "« Stop à 78,27 $ valable jusqu'à révocation » sur toute la ligne et « vente limitée à 94,55 $ sur la moitié » au même moment : chez beaucoup de courtiers le second ordre de vente est refusé (quantité déjà réservée) ou, s'il est accepté, deux ordres peuvent vendre 153 + 76 actions et laisser une position vendeuse. Le type de stop n'est pas dit (un stop-limite ne se déclenche pas dans un écart d'ouverture). La validité « jusqu'à révocation » est plafonnée à 30 à 90 jours chez certains courtiers français, et le stop doit être annulé à la sortie.",
+      "fix": "Ajouter : « Stop au marché (pas stop-limite) sur les 153 actions. Poser la vente limitée à 94,55 $ sur 76 actions seulement si le courtier accepte un ordre OCO ou deux ordres de vente ; sinon surveiller 94,55 $, vendre 76 actions à la main, puis ramener le stop à 77 actions au prix d'achat. Annuler tout ordre restant dès la sortie. »",
+      "evidence": "Règle de sécurité d'exécution retail ; aucun pointeur de données."
+    },
+    {
+      "path": "tradeIdea.horizon",
+      "problem": "Pas de date de sortie au calendrier. « Vingt séances après l'achat » mène, pour un achat au plus tard le 18 novembre (déclenchement le 13, trois renouvellements), au 17 décembre 2026. Cette fenêtre contient : la fin du programme au fil du marché (12 décembre), la séance écourtée du 27 novembre (fermeture 19 h Paris) et le dividende annuel de Cameco (2025 : 0,24 $ CA déclaré avec le troisième trimestre le 5 novembre, enregistrement le 1er décembre, paiement le 16 décembre), que la fiche ne mentionne pas (environ 0,2 % du cours).",
+      "fix": "Ajouter : « Sortie au plus tard le 17 décembre 2026 à la clôture (22 h Paris) si l'achat a lieu le 18 novembre ; dans tous les cas, 20 séances après l'achat. Le dividende annuel est habituellement déclaré avec le troisième trimestre : à lire le 30 octobre ; la date d'enregistrement tombe dans la fenêtre. »",
+      "evidence": "Calendrier NYSE (Thanksgiving 26 novembre fermé, 27 novembre écourté) ; 6-K du 5 novembre 2025 (analyses/CCJ/_primary/2025-11-05-6-K-265699-d98134dex991.htm) : dividende payable le 16 décembre 2025 ; cameco.com/invest/stock-information/dividends."
+    },
+    {
+      "path": "risks.riskCards[4].points[1] ; risks.pedagogy ; tradeIdea.thesis",
+      "problem": "« écart achat-vente serré » et « glissement faible » ne sont pas mesurés : aucune fourchette achat-vente de l'action n'a été collectée (les champs bid/ask des options valent 0). Seul le turnover médian (245,3 M$) est prouvé.",
+      "fix": "Remplacer par « 245 M$ échangés par séance en médiane : 153 actions (12 971 $) pèsent 0,005 % du turnover, mais un écart d'ouverture le jour d'une annonce peut sauter tout niveau ». Retirer « écart achat-vente serré » ou le sourcer.",
+      "evidence": "analyses/CCJ/_data/bars.json (turnover médian sur 20 séances) ; analyses/CCJ/_data/options.json (bid/ask à 0)."
+    },
+    {
+      "path": "tradeIdea.entryNote (Taille)",
+      "problem": "La taille est donnée par un seul exemple (1 000 $ de perte, 153 actions, 12 971 $). Un particulier français raisonne en euros et en pourcentage de son capital ; la formule n'est pas écrite.",
+      "fix": "Ajouter la formule : « nombre d'actions = perte maximale acceptée (en dollars) ÷ 6,51 $ ; arrondir à l'entier inférieur ; vérifier que la ligne ne dépasse pas votre plafond par valeur. » Préciser que la perte réelle peut dépasser la perte calculée si le titre ouvre sous le stop.",
+      "evidence": "Risque unitaire 84,78 - 78,27 = 6,51 $."
+    },
+    {
+      "path": "tradeIdea.statusNote ; tradeIdea.invalidation[0]",
+      "problem": "« Une clôture sous 76,92 $ abandonne le plan à tout moment avant l'achat » ne dit pas si l'abandon est définitif ou si le plan se réarme (par exemple clôture à 76,50 $ le 28 octobre puis résultats excellents le 30).",
+      "fix": "Préciser : « abandon définitif jusqu'à la prochaine fiche » ou « le plan se réarme sur une nouvelle clôture à 83,94 $ ou plus avant le 13 novembre ».",
+      "evidence": "Texte de la fiche, sections Plan de trade et Invalidation."
+    }
+  ]
+}

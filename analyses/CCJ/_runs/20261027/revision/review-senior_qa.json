@@ -1,0 +1,140 @@
+{
+  "ticker": "CCJ",
+  "role": "senior_qa",
+  "verdict": "Gabarit, niveaux, R/R, agrégats douze mois, conversions de base et statistiques de propagation recalculés et exacts, mais quatre blocages : cause du coût unitaire contredite par le 6-K, prix réalisé US comparé à une prévision CA, inventaire des dépôts faux (contrat Inde non lu), ratio put/call inversé.",
+  "blocks": [
+    {
+      "path": "verdict.summary ; fundamentals.rows[2].signal ; business.overview (2e paragraphe) ; filingsReview.contrarianRisks[0] ; blastRadius.contradictions[3] ; tribunal.rounds[0] ; risks.pedagogy ; risks.riskCards[0]",
+      "problem": "La cause du recul de la marge de l’uranium est inversée. La fiche dit que Cameco « rachète des livres plus cher pour livrer », que le coût unitaire +26 % vient de « livres rachetées plus cher », que « les livres rachetées pour livrer coûtent plus cher que celles vendues sous contrat » et que, sur un achat, il « paie le prix du jour tout de suite ». Le rapport de gestion du 2e trimestre dit l’inverse : le coût d’achat moyen est de 91,40 $ CA la livre (66,60 $ US), soit 6 % de moins qu’un an plus tôt (97,00 $ CA, 69,30 $ US), donc inférieur au prix réalisé (93,13 $ CA, 67,79 $ US) et très inférieur au comptant (85,18 $ US). La société attribue la hausse de 26 % du coût unitaire à des quantités achetées plus fortes (2,8 contre 0,7 M lb), à la réévaluation des prêts de produit et à l’arrêt annuel de Cigar Lake passé au 2e trimestre (3e en 2025). Le volume vendu a aussi reculé de 18 % (7,1 contre 8,7 M lb), absent de la fiche. L’histoire « contrats en retard sur le marché » reste vraie côté prix réalisé ; l’histoire « achats plus chers que les ventes » est fausse.",
+      "fix": "Remplacer par : « La part de livres achetées a quadruplé (2,8 contre 0,7 M lb) et le volume vendu recule de 18 % (7,1 contre 8,7 M lb) ; les livres achetées coûtent en moyenne 91,40 $ CA (66,60 $ US), 6 % de moins qu’un an plus tôt, soit à peu près leur prix de revente réalisé (93,13 $ CA ; 67,79 $ US) : marge quasi nulle sur ces livres. La société explique la hausse de 26 % du coût unitaire par les quantités achetées, la réévaluation des prêts de produit et l’arrêt annuel de Cigar Lake passé au 2e trimestre. » Supprimer « coûtent plus cher que celles vendues sous contrat », « rachète des livres plus cher », « il paie le prix du jour tout de suite » et la tournure causale « D’où un coût unitaire… » de business.overview ; ajouter le volume −18 % dans fundamentals (groupe Activité) et dans le tribunal (round 1) ; corriger l’intitulé de contrarianRisks[0] (le risque est la part achetée à marge nulle, pas des achats plus chers que les ventes).",
+      "evidence": "analyses/CCJ/_primary/text/q2-6k-mda__d125942dex992.htm.txt : tableau Uranium (« Average realized price ($/lb) 93.13 81.03 15 % », « Sales volume 7.1 8.7 (18)% », « unit cost 70.81 56.12 26 % ») ; paragraphe « The average unit cost of sales increased due to higher purchased quantities … product loans … annual maintenance shutdown at Cigar Lake occurred in the second quarter of 2026 compared to the third quarter in 2025 » ; tableau coûts « Purchased Cash cost 91.40 97.00 (6)% ; Quantity purchased 2.8 0.7 » et « US$66.60 … compared to … US$69.30 »."
+    },
+    {
+      "path": "tradeIdea.thesis ; blastRadius.scenarios[0].trigger ; tribunal.verdict ; fundamentals.rows[5].signal (« Prix moyen réalisé visé en 2026 »)",
+      "problem": "Comparaison de deux devises. La thèse écrit que les résultats diront si « le prix réalisé remonte vers la prévision de 91 à 96 $ CA la livre » (idem scénario haussier et verdict du tribunal : « si le prix réalisé rattrape la prévision »), alors que le seul prix réalisé affiché est en dollars US (67,79). En dollars canadiens, le prix réalisé est de 93,13 $ CA au 2e trimestre (+15 %) et 92,15 $ CA au semestre : il est déjà dans la fourchette 91–96 $ CA. La ligne de fondamentaux convertit 91–96 $ CA en « environ 64 à 68 $ US au taux du 30 juin » (1,4210) : à ce taux le 67,79 $ US réalisé serait déjà en haut de la fourchette, ce qui contredit « remonte vers » ; et la société bâtit sa prévision sur 1,35 USDCAD (91–96 $ CA = 67 à 71 $ US). La fiche n’affiche jamais le prix réalisé en $ CA, d’où le rapprochement incohérent entre 67,79 $ US et un coût unitaire de 70,81 $ CA dans deux lignes voisines.",
+      "fix": "Ajouter dans fundamentals (groupe Activité) « Prix moyen réalisé, 2e trimestre : 93,13 $ CA la livre (+15 %) ; 92,15 $ CA au semestre ; 67,79 $ US (+18 %) ». Réécrire la thèse : « Les résultats du 30 octobre diront si le prix réalisé reste dans la prévision de 91 à 96 $ CA (92,15 $ CA au semestre) et si le coût unitaire redescend vers 63–67,50 $ CA (prévision annuelle). » Scénario haussier : remplacer « remonte vers » par « se maintient dans » ou « sort par le haut de ». Verdict du tribunal : remplacer « rattrape la prévision » par « dépasse le haut de la prévision ». Ligne de prévision : « 91 à 96 $ CA, soit 67 à 71 $ US au taux de 1,35 retenu par la société » (supprimer « 64 à 68 $ US au taux du 30 juin »).",
+      "evidence": "q2-6k-mda__d125942dex992.htm.txt : « Average realized price (US$/lb) 67.79 57.35 18 % ; ($/lb) 93.13 81.03 15 % ; six mois 66.96 / 92.15 » ; Outlook : « average realized price … between $91.00 and $96.00 per pound … exchange rate of 1.35 USDCAD » ; « Average unit cost of sales … $63.00 to 67.50/lb »."
+    },
+    {
+      "path": "filingsReview.summary ; business.coverageMatrix ; analyses/CCJ/_runs/20261027/revision/primary-manifest.json (inventory_count) ; build-ccj.cjs ligne 67 (inventory: 41) ; omission du 6-K du 2 mars 2026",
+      "problem": "L’inventaire des dépôts annoncé est faux et non calculé : « seize pièces décisionnelles sur un inventaire de 41 formulaires », « vingt et un 6-K ». Le listing EDGAR conservé (_primary/submissions.json) compte, du 12/11/2024 au 26/10/2026, 42 six-K et 55 formulaires hors 144 et 13G ; le 41 est codé en dur dans build-ccj.cjs. Conséquence : au moins un dépôt décisionnel n’a pas été ouvert, le 6-K du 2 mars 2026 (accession 0001193125-26-085244) : contrat d’approvisionnement avec l’Inde, près de 22 M lb sur neuf ans (livraisons 2027–2035), environ 2,6 Md$ CA, à prix liés au marché (« market-related price terms »), soit une valeur totale proche de 75 % du chiffre d’affaires d’un exercice, étalée sur neuf ans (≈290 M$ CA par an). Il touche directement la thèse « contrats en retard sur le marché » (le carnet récent est indexé sur le marché) et il est absent de la fiche. Autres 6-K non ouverts à lire avant de déclarer la revue complète : 0001193125-25-203091 (12/09/2025, contrat UF6 Slovaquie), -26-216519 (10/05/2026, inondation Key Lake/McArthur River), -26-243228 (reprise 27/05), -26-251389 (1er juin, achat TEPCO), -26-293855 (1er juillet) et -26-304516 (14 juillet, Cigar Lake arrêt/reprise).",
+      "fix": "Recalculer l’inventaire depuis submissions.json (55 formulaires hors 144/13G, dont 42 6-K) et corriger « 41 » et « vingt et un 6-K » dans filingsReview.summary, reviewScope et primary-manifest ; ouvrir, hacher et ajouter à filingsReview au moins le 6-K du 02/03/2026 ; ajouter au « Pourquoi acheter » et aux catalyseurs : « Contrat de neuf ans avec l’Inde (≈22 M lb, ≈2,6 Md$ CA, 2027–2035, prix liés au marché) » ; nuancer « Aucune [annonce] n’a encore produit de commande ferme » par la distinction commandes de réacteurs / contrats d’uranium. Si l’un des autres 6-K change un chiffre (production, stocks), le reporter.",
+      "evidence": "analyses/CCJ/_primary/submissions.json (filings.recent, filtre filingDate ≥ 2024-11-12 : 6-K = 42) ; https://www.sec.gov/Archives/edgar/data/1009001/000119312526085244/d27416dex991.htm (« nearly 22 million pounds … nine-year period … approximately $2.6 billion … market-related price terms » ; en-tête « All amounts in Canadian dollars ») ; analyses/CCJ/_runs/20261027/build-ccj.cjs:67."
+    },
+    {
+      "path": "options.cpRatio (rendu : tuile « Ratio d’intérêt ouvert calls/puts »)",
+      "problem": "Indicateur directionnel inversé et mal étiqueté. La tuile affiche « 4,9 en volume » sous l’intitulé « Ratio d’intérêt ouvert calls/puts ». Or 4,9 = puts/calls en volume (10 081 puts pour 2 037 calls, 10 081/2 037 = 4,95) ; calls/puts vaut 0,20. Un lecteur lit « 4,9 calls pour 1 put » (haussier) alors que la séance est massivement put. Ce n’est pas non plus un ratio d’intérêt ouvert (les positions ouvertes ne sont pas servies).",
+      "fix": "options.cpRatio : « 0,20 en volume (2 037 calls pour 10 081 puts, soit 4,9 puts par call), séance du 26 octobre » ; corriger aussi le titre de l’encadré « Activité inhabituelle » (le texte dit que l’activité est signalée non inhabituelle) en « Séance du 26 octobre » ; si le moteur impose l’intitulé « Ratio d’intérêt ouvert calls/puts », vider la tuile (valeur « Non retenu : positions ouvertes non servies ») et garder le chiffre dans le texte.",
+      "evidence": "analyses/CCJ/_data/instrument.json items[26] : call_volume 2037, put_volume 10081, put_call_volume_ratio 4.9489, unusual_activity false ; tools/render-analysis.js ligne 684 (libellé « Ratio d’intérêt ouvert calls/puts »)."
+    }
+  ],
+  "fixes": [
+    {
+      "path": "fundamentals.rows (groupe Rentabilité, Valorisation) ; valuationBasis ; business.overview (¶4)",
+      "problem": "Les flux douze mois (CAD) sont convertis au taux spot de fin de période (1,4210, 30 juin) et non au taux moyen de la période. Le rapport de gestion du 40-F donne 1,40 en moyenne 2025 et le 6-K 1,38 en moyenne au 2e trimestre 2026 (1,37 fin 2025, 1,39 fin mars) : la moyenne douze mois est proche de 1,38–1,39. Le choix est divulgué mais biaise les ratios d’environ 2,5 à 3 % : EV/EBITDA ajusté ≈ 26,3–26,6× (27,1× publié), EV/EBITDA d’exploitation ≈ 59–60× (61,1×), SOTP ≈ 37,4–37,7 $ (36,61 $), P/E ≈ 134×. Le bilan au 30 juin reste correctement au taux de clôture.",
+      "fix": "Soit convertir les flux au taux moyen (série Banque du Canada 01/07/2025–30/06/2026 à télécharger et hacher), soit ajouter dans la ligne « Taux de change appliqué » : « flux au taux de clôture ; au taux moyen (≈1,38–1,39) les multiples baissent de 2,5 à 3 % ».",
+      "evidence": "fy25-40f-mda__d34605dex993.htm.txt (« The exchange rate averaged USD 1.00/CAD 1.40 over the year ») ; q2-6k-mda__d125942dex992.htm.txt (« averaged USD 1.00/CAD 1.38 over the quarter », 1,39 au 31/03, 1,42 au 30/06)."
+    },
+    {
+      "path": "fundamentals.rows (Bilan : « Trésorerie et dette au 30 juin 2026 ») ; verdict.whyBuy[2] ; business.sourceRefs",
+      "problem": "La trésorerie nette de 82 M$ US (« favorable ») est celle du 30 juin, sans l’événement postérieur déclaré dans la même pièce : note 20 des états du 6-K, acquisition le 2 juillet de la part de TEPCO dans Cigar Lake pour 115,755 M$ CA (≈81,5 M$ US). Pro forma, la trésorerie nette tombe à ≈0 (115,97 − 115,76 = 0,2 M$ CA), avant flux du 3e trimestre. La fiche cite le rachat mais jamais son prix.",
+      "fix": "Ajouter « Pro forma après l’acquisition de Cigar Lake du 2 juillet (115,8 M$ CA) : trésorerie nette ≈ 0 » dans la ligne Bilan et nuancer « bilan sans dette nette » (« dette nette nulle après le rachat de Cigar Lake »). Passer la couleur de la tuile de favorable à repère.",
+      "evidence": "q2-6k-fs__d125942dex993.htm.txt, note « 20. Subsequent event … The acquisition cost for the additional 2.871% interest is $115,755,000 » ; 6-K du 1er juin 2026 (0001193125-26-251389)."
+    },
+    {
+      "path": "fundamentals.rows[7].signal (Quote-part de l’EBITDA ajusté de Westinghouse)",
+      "problem": "Comparaison de devises dans une même phrase : « 284 M$ CA au premier semestre » face à une prévision de « 370 à 430 M$ US ». Le lecteur ne peut pas mesurer l’avancement (284 M$ CA ≈ 206 M$ US à 1,38, soit environ la moitié de la prévision).",
+      "fix": "« ≈206 M$ US au premier semestre (284 M$ CA convertis à 1,38) ; la société attend un 4e trimestre plus fort ».",
+      "evidence": "q2-6k-mda__d125942dex992.htm.txt (Westinghouse H1 2026 : 284 ; prévision US$370–430 M)."
+    },
+    {
+      "path": "business.overview (¶3) ; filingsReview.filings[2].finding",
+      "problem": "« environ 170 M$ US de chiffre d’affaires pour Cameco » : le rapport de gestion parle de 170 M$ US de la QUOTE-PART de chiffre d’affaires ET d’EBITDA ajusté de Westinghouse au 2e trimestre 2025 ; Westinghouse n’est pas consolidée, ce n’est pas du chiffre d’affaires de Cameco.",
+      "fix": "« environ 170 M$ US de quote-part de chiffre d’affaires et d’EBITDA ajusté de Westinghouse ».",
+      "evidence": "q2-6k-mda__d125942dex992.htm.txt (« contributed approximately US$170 million to our share of Westinghouse’s 2025 second quarter revenue and adjusted EBITDA »)."
+    },
+    {
+      "path": "blastRadius.scenarios[2].secondOrder",
+      "problem": "« Les mineurs sans production (Denison, Energy Fuels) » : Energy Fuels produit de l’uranium (et se présente « Producteur américain diversifié » dans le tableau de la même page).",
+      "fix": "« Les développeurs sans production (Denison, NexGen) … ».",
+      "evidence": "Même fiche : blastRadius.groups[1].symbols UUUU (« Producteur américain diversifié »)."
+    },
+    {
+      "path": "verdict.whyAvoid[2] ; tribunal.rounds[2] ; risks.riskCards[3]",
+      "problem": "Valorisation présentée à charge : « 27,1 fois … contre 14,3 fois pour Constellation et 10,6 fois pour Vistra », alors que la fiche retient ailleurs la médiane des cinq pairs, 28,2×, supérieure à 27,1× (BWXT 28,2×, Talen 43,9×, GE Vernova 56,0×). Le même chiffre sert « Payée comme ses pairs rentables » en tête de page et « prix exigeant » en accusation. Le graphique en échelle montre bien CCJ au milieu. Côté carte de risque : « corrélation de 0,69 avec Oklo, plus forte qu’avec la fiducie (0,66) » omet que les corrélations avec URNM (0,93), URA (0,92) et NXE (0,87) sont bien plus fortes.",
+      "fix": "Citer la médiane : « 27,1×, sous la médiane de cinq pairs (28,2×) mais le double de Constellation et Vistra » ; pour le risque IA, écrire « moins corrélé à l’électricité de l’IA (Oklo 0,69) qu’aux paniers d’uranium (URNM 0,93) ».",
+      "evidence": "analyses/CCJ/_data/comparison_context.json (enterpriseToEbitda : CEG 14,311 ; VST 10,552 ; BWXT 28,19 ; TLN 43,899 ; GEV 55,998) ; blastRadius.groups corrélations."
+    },
+    {
+      "path": "news[0] (22 octobre) ; news[1] (14 octobre)",
+      "problem": "Attribution de source : l’article 24/7 Wall St. cité ne mentionne ni Cameco, ni Vistra, ni Constellation, ni Duke ; il parle de GE Vernova (−11 %), Vertiv, Eaton et du flux de trésorerie négatif de Meta. Les pourcentages (CEG −5,74 %, VST −9,81 %, GEV −10,64 %, CCJ −3,77 %, DUK +3,90 %) viennent des barres (recalculés, exacts), et le lien Cameco ↔ Meta est une inférence de la fiche. Le Motley Fool du 14 octobre confirme l’inflation et « Cameco ~5 % » (−5,43 % recalculé).",
+      "fix": "Ajouter « variations de clôture lues sur les barres ; rapprochement avec Meta, analyse de la fiche » et citer la source pour GE Vernova/Meta seulement.",
+      "evidence": "Lecture de https://247wallst.com/investing/2026/10/22/ge-vernova-slumps-11-as-metas-spending-outlook-stokes-ai-financing-worries-vertiv-holdings-drops-7-eaton-slides-6/ ; analyses/CCJ/_data/comparison_bars.json."
+    },
+    {
+      "path": "risks.pedagogy",
+      "problem": "« il le touche avec un ou deux ans de retard » : durée non sourcée dans les dépôts (la société parle de contrats à prix fixés, indexés ou à planchers/plafonds, et de contrats signés plus bas) ; « il paie le prix du jour tout de suite » est contredit par les achats à 66,60 $ US contre 85,18 $ US au comptant (voir blocage 1).",
+      "fix": "« il le touche avec retard, au fil des contrats signés plus bas qui arrivent à échéance ».",
+      "evidence": "q2-6k-mda__d125942dex992.htm.txt (Purchased cash cost US$66.60)."
+    },
+    {
+      "path": "tradeIdea.entry ; tradeIdea.rr ; tradeIdea.entryNote (déclencheur)",
+      "problem": "Le champ entry vaut 83,93 (plus haut du 16 octobre) alors que le déclencheur publié est « clôture à 83,94 $ ou plus ». R/R au déclencheur recalculé à 83,94 : 10,61/5,67 = 1,87 (TP1) et 20,18/5,67 = 3,56 (TP2), contre 1,88 et 3,57 publiés. Au plafond 84,78 $ (pire fill) : 9,77/6,51 = 1,50 et 19,34/6,51 = 2,97, exacts. Pourcentages depuis 83,93 exacts (−6,7 % ; +12,7 % ; +24,1 %) mais pas depuis le prix réellement payé (stop −7,7 %, TP1 +11,5 %, TP2 +22,8 % au plafond).",
+      "fix": "Afficher le R/R au pire fill (1:1,50 / 1:2,97) en premier dans la tuile et aligner entry sur 83,94, ou écrire « ≈ ».",
+      "evidence": "analyses/CCJ/_data/bars.json (barre 2026-10-16 : haut 83,93 ; barre 2026-10-22 : bas 78,2701)."
+    },
+    {
+      "path": "filingsReview.filings[15] (6-K 0001193125-26-295796)",
+      "problem": "Date mélangée : le tableau donne 2026-07-02 (date du communiqué) alors que l’accession 0001193125-26-295796 est déposée le 2026-07-06 sur EDGAR (le 6-K du 2 juillet est 0001193125-26-293855, Cigar Lake arrêt). Les autres lignes utilisent la date de dépôt.",
+      "fix": "Dater 2026-07-06 (dépôt) en précisant « communiqué du 2 juillet ».",
+      "evidence": "analyses/CCJ/_primary/submissions.json."
+    },
+    {
+      "path": "rendu : légende du nuage de corrélation (blastChart)",
+      "problem": "Les libellés de légende sont tronqués à la partie après le tiret cadratin : « copropriétaire, concurrents et fournisseurs » (groupe Westinghouse — …), « uranium physique », « petits réacteurs ». Le premier est incompréhensible sans « Westinghouse ».",
+      "fix": "Renommer les groupes en un libellé autosuffisant sans tiret (« Westinghouse : copropriétaire, concurrents, fournisseurs »).",
+      "evidence": "analyses/CCJ/index.html, script blastChart (groups[].name)."
+    },
+    {
+      "path": "rendu : formats numériques (tuile R/R, tableau de corrélation, technique, tableau complet des rendements)",
+      "problem": "Séparateurs décimaux mixtes : « 1:1.88 TP1 / 1:3.57 TP2 », « 0.93 », « -13.4% », « $84.03 », « -10.22 % » à côté de « 1:1,88 » et « −10,2 % ». Même défaut sur la fiche FICO de référence : défaut de moteur, pas de contenu.",
+      "fix": "Corriger dans tools/render-analysis.js (virgule, signe moins typographique, « 84,03 $ ») hors de cette fiche ; sans correction moteur, laisser tel quel.",
+      "evidence": "analyses/FICO/index.html (« 1:1.88 TP1 », « EMA 20 $777.42 »)."
+    },
+    {
+      "path": "insiders (section « Initiés et institutions »)",
+      "problem": "La section ne dit rien des institutions : le fournisseur donne 70,1 % du capital détenu par des institutions et 0,14 % par des initiés ; aucun 13F lu. Titre de section promet plus que le contenu.",
+      "fix": "Ajouter « Institutions : 70,1 % du capital selon le fournisseur ; détail des 13F non lu » ou renommer « Initiés ».",
+      "evidence": "analyses/CCJ/_data/instrument.json items[16] (institutionsPercent 70.115 ; insidersPercent 0.141)."
+    },
+    {
+      "path": "meta.tags (« nucleaire »)",
+      "problem": "Le tag « nucleaire » n’est enregistré ni dans assets/core.js ni dans index.html (tagMeta) et n’est utilisé par aucune autre fiche ; il s’affichera en puce neutre sans libellé de catégorie.",
+      "fix": "Soit enregistrer « nucleaire » dans les deux registres, soit le retirer (energy, commodity, materials suffisent).",
+      "evidence": "grep nucleaire assets/core.js index.html : 0 occurrence."
+    },
+    {
+      "path": "blastRadius.groups[3].symbols[VST].readThrough",
+      "problem": "« Prolonge trois centrales grâce à un prêt fédéral annoncé le 6 octobre » : le 6 octobre le DOE a offert un prêt conditionnel de 4,2 Md$ US pour des hausses de puissance (433 MW) et la modernisation de Beaver Valley, Davis-Besse et Perry ; la prolongation de 20 ans passe par des demandes de renouvellement de licence à venir, pas par le prêt.",
+      "fix": "« Prêt conditionnel du DOE de 4,2 Md$ US (6 octobre) pour augmenter la puissance de trois centrales et préparer vingt ans de plus ».",
+      "evidence": "https://www.ans.org/news/2026-10-06/article-8464/vistra-gets-42b-doe-loan-for-planned-uprates-in-ohio-pennsylvania/"
+    },
+    {
+      "path": "process : tools/check-freshness.js analyses/CCJ/_data/harness.json",
+      "problem": "Exécuté à ~12 h 35 UTC : 25 sources vérifiées, 1 bloquante, « status : STALE 2,3 h > max 2 h » (as_of 2026-10-27T10:15:42Z). Les autres sources passent. La publication échouera au gate tant que status n’est pas relu.",
+      "fix": "Relire GetStatus (lecture) avant publication et mettre à jour la source status du manifeste, ou republier avant 12 h 15 UTC.",
+      "evidence": "node tools/check-freshness.js analyses/CCJ/_data/harness.json (exit 1)."
+    }
+  ],
+  "verified_ok": [
+    "Barres : clôture 79,07 (+0,598 %), EMA20/50 (84,03 / 89,16), RSI 34,67, MACD −3,44/−3,11, ATR 3,14, 52 sem. 76,92–135,24, record de clôture 134,09 (28/01), −41,0 %, rendements 5 j (−2,02 %) et 21 j (−10,22 %) recalculés exacts ; EMA200 fournisseur 95,95 (mon recalcul sur 300 barres : 96,82, écart de graine, non bloquant).",
+    "Niveaux : déclencheur 83,93 = haut du 16/10, stop 78,2701 = bas du 22/10, abandon 76,92 = bas du 23/10, TP1 94,55 = haut du 06/10, TP2 104,12 = haut du 08/09, R1 87,09 = haut du 13/10, S3 68,96 = bas du 20/08/2025 ; plafond (94,55 + 1,5 × 78,27)/2,5 = 84,78 ; risque 6,51 (7,7 %) ; 153 actions / 12 971 $ pour 1 000 $ de perte ; écart d’ouverture −6,1556 % le 03/03 appliqué à 84,78 = 79,56 ; amplitude de séance 10,08 % le 05/05.",
+    "Réactions de résultats : −1,76 % (05/11/2025), −3,00 % (13/02), −3,21 % (05/05), −2,10 % (31/07) ; ouvertures +3,34 % et +2,72 % effacées ; communiqués avant ouverture, appel à 8 h ET = 13 h Paris ; heures de clôture 21 h puis 22 h (Paris) correctes autour du 1er novembre.",
+    "Agrégats douze mois (exercice 2025 + S1 2026 − S1 2025, en milliers de CAD) : chiffre d’affaires 3 474 622 ; résultat d’exploitation 514 355 ; amortissements 285 278 ; résultat net 354 865 ; EBITDA ajusté 1 929 + 899 − 1 029 = 1 799 (dont 780 + 284 − 445 = 619 Westinghouse) ; conversions à 1,4210 : 2,45 Md$, 362 M$, 563 M$, 1 266 M$, 250 M$ ; trésorerie 783 M$, dette 701 M$, 1,84 Md$ US pour Westinghouse (4,21 $/action) ; EV 34 356 M$ ; 27,1× ; 61,1× ; P/E 138× ; SOTP 36,61 $, 41,31 $, 86,03 $ / 93,35 $ (bon de souscription 20 % × (V − 17,5 Md$) conforme au 6-K du 28/10/2025) ; plancher 34,02 $.",
+    "Multiples de pairs (CEG 14,311 ; VST 10,552 ; BWXT 28,19 ; GEV 55,998 ; TLN 43,899, médiane 28,19) et ratios fournisseur (43,3× EV/EBITDA, 89× vu dans la presse) : le fournisseur divise une valeur d’entreprise en USD par un EBITDA en CAD ; la fiche ne les reprend pas, à raison.",
+    "Propagation : corrélation, bêta, R², 179 observations, rendements 5 j/21 j des 22 comparables recalculés à l’identique ; médiane des 22 références −10,03 %, rang 12/23 exacts.",
+    "Positions vendeuses 9 109 439 / flottant 434 478 989 = 2,10 % ; 2,44 jours ; put/call en volume 10 081 / 2 037 ; 245 M$ de volume médian sur vingt séances ; séance du 18/09 à 3,2× la moyenne.",
+    "Capital : 435 532 978 actions (11/02 et 29/07), ATM de 500 M$ US jusqu’au 12/12/2026, F-10 de 2,0 Md$ US, aucun F-10/S-3/424B depuis le 12/11/2024 (submissions.json), pas d’émission visible au premier semestre ; 1,5 % et 5,8 % de la capitalisation exacts.",
+    "Gates : qa-content --strict 32 OK / 0 erreur ; check-ai-tells --strict 0 finding ; check-analysis-editorial-quality --strict --pre-review 0 erreur ; validate-analysis-evidence PASS (627 claims). Gabarit respecté : graphique avant tableau (échelle EV/EBITDA, barres de performance, nuage de propagation), cinq groupes de fondamentaux, tribunal en dernière section (6 manches, accusation en premier), échéancier daté et sourcé, aucune section vide, aucun NaN, aucun terme interne bloquant (« provenance hashée » est présent aussi sur la fiche FICO de référence)."
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "ticker": "IOVA",
+  "role": "senior_qa",
+  "verdict": "Chiffres vérifiés exacts (52 semaines 1,76–15,37 $, trésorerie 297,7 M$, capitalisation 6,24 Md$, agrégats douze mois, corrélations) et gabarit conforme, mais 2 blocages à lever avant publication : R/R et pourcentages du plan affichés au déclencheur 15,37 $ au lieu du pire fill 15,89 $, et affirmation fausse « sans historique daté » sur les positions vendeuses alors que la série FINRA, présente dans la collecte, montre −43 % depuis août.",
+  "blocks": [
+    {
+      "path": "tradeIdea.rr, tradeIdea.stopPct, tradeIdea.tp1Pct, tradeIdea.tp2Pct (cartes Stop, Objectif 1, Objectif 2 et Risque/rendement de la section Plan de trade)",
+      "problem": "R/R et pourcentages sont calculés depuis le déclencheur 15,37 $ (compose-iova-body.cjs l.103-104 : pct(…, entry) et (tp − entry)/(entry − stop)), alors que l’ordre d’achat peut s’exécuter jusqu’à 15,89 $. La carte affiche stop −13,3 %, TP1 +28,5 %, TP2 +42,7 %, R/R 1:2,14 · 1:3,21, pendant que entryNote écrit juste dessous « R/R de 1 pour 1,50 au plafond » et « risque de 2,57 $ par action, soit 16 % ». Incohérence visible dans la même section et R/R gonflé de 43 % (2,14 contre 1,50 au pire fill) : même défaut que l’incident TLN du 19/07/2026 (règle 3 de feedback_analysis_senior_review_first : le R/R s’atteste au pire fill de la zone).",
+      "fix": "Attester au pire fill 15,89 $ avec stop 13,3234 $ : risque 2,5666 $. stopPct « -16.2% » ; tp1Pct « +24.3% » (19,75/15,89) ; tp2Pct « +38.1% » (21,94/15,89) ; rr « 1:1.50 TP1 / 1:2.36 TP2 » (3,86/2,5666 et 6,05/2,5666). Conserver 1:2,14 · 1:3,21 uniquement comme mention « au déclencheur 15,37 $ » dans entryNote. Corriger la fabrique (compose-iova-body.cjs l.103-104) pour que la cohérence tienne au prochain rendu, puis régénérer le sidecar de preuves.",
+      "evidence": "analyses/IOVA/_runs/20261027/compose-iova-body.cjs l.103-104 ; data/analyses-data/IOVA.json tradeIdea.entry=15.37, tradeIdea.stop=13.3234, tradeIdea.entryNote (plafond 15,89 $) ; analyses/IOVA/index.html section #trade ; analyses/IOVA/_data/bars.json (barre 2026-10-26 : bas 13,3234)."
+    },
+    {
+      "path": "shortInterest.trend, shortInterest.squeezeScore, shortInterest.ctb ; blastRadius.scenarios[0].secondOrder ; tribunal.rounds[3] ; bottomEstimation.confluences[3] ",
+      "problem": "La fiche écrit « sans historique daté dans les sources certifiées : aucune tendance affirmée ». C’est faux : analyses/IOVA/_data/short_squeeze.json (source déclarée et hachée dans _data/harness.json) contient la série FINRA officielle de 24 règlements bimensuels. Elle montre une chute nette : 131 334 639 actions (33,3 % du flottant) le 13 février, 102 940 590 (26,1 %) le 14 août, 87 127 871 (22,1 %) le 15 septembre, 64 827 030 (16,4 %) le 30 septembre, 58 925 298 (14,9 %) le 15 octobre, soit −44,0 M d’actions (−43 %) depuis le 14 août et −55 % depuis le pic. Les arguments « 14,9 % du flottant reste vendu à découvert : une bonne surprise forcerait des rachats » (défense), « les vendeurs à découvert, encore environ un septième du flottant, rachètent et amplifient le mouvement » (scénario haussier) et « un appui possible pour un rebond » omettent que l’essentiel des rachats a déjà eu lieu pendant la hausse. Le même fichier porte la série d’emprunt (frais 0,27 et 10 M d’actions disponibles au 26 octobre) alors que la fiche affiche « Coût d’emprunt non retenu » : pas de tension d’emprunt visible.",
+      "fix": "Réécrire trend : « 58 925 298 actions (14,9 % du flottant) au 15 octobre, contre 102 940 590 (26,1 %) au 14 août et un pic de 131 334 639 (33,3 %) au 13 février : −43 % depuis la mi-août, une grande partie des vendeurs à découvert a déjà couvert pendant la hausse. » Ramener squeezeScore à « Faible à modéré : le carburant s’est réduit de moitié, ce n’est pas une thèse ». Retirer ou conditionner l’argument de rachats forcés dans tribunal.rounds[3], scenarios[0].secondOrder et confluences[3]. ctb : soit afficher la série d’emprunt avec sa source et sa date, soit laisser « non retenu » sans en tirer d’argument de tension.",
+      "evidence": "analyses/IOVA/_data/short_squeeze.json (results[data_type=short_interest].data[0].points, 24 points ; data_type=ctb.data[0].history jusqu’au 2026-10-26) ; analyses/IOVA/_data/harness.json source short_squeeze (sha256 4e1b85ff…) ; analyses/IOVA/_runs/20261027/compose-iova-body.cjs l.86 (texte écrit en dur)."
+    }
+  ],
+  "fixes": [
+    {
+      "path": "meta.description, meta.ogDescription, timeline.keyWindow.label, tradeIdea.banner, tribunal.verdict, tradeIdea.thesis",
+      "problem": "« résultats annoncés le 5 novembre » sans réserve. La société n’a rien annoncé : le 8-K du 29 septembre dit « early November 2026 » et le calendrier est à source unique (date_confidence single_source, report_time TNS). Les blocs statusNote, nextEarnings, summary et la pastille de la frise le qualifient bien, pas les textes repris par les descriptions publiques, la bannière et le verdict du tribunal.",
+      "fix": "Remplacer par « attendus vers le 5 novembre (date non confirmée) » ou « annoncés pour le 5 novembre selon un seul calendrier » dans ces six champs, surtout meta.description et ogDescription (repris par Telegram et les partages).",
+      "evidence": "analyses/IOVA/_data/earnings_risk.json (events[0]) ; analyses/IOVA/_primary/text/2026-09-29-8-K-111583-tm2626507d1_ex99-1.htm.txt (« in early November 2026 »)."
+    },
+    {
+      "path": "capitalStructure.shareHistory, filingsReview.contrarianRisks[3], filingsReview.filings (S-3ASR), bottomEstimation.confluences[4]",
+      "problem": "Options citées au 31 mars (17 713 664 à 14,99 $) alors que le 10-Q du 30 juin, déjà cité dans la fiche, donne 17 566 321 options à 14,85 $ de prix moyen, dont 14 570 654 exerçables à 17,08 $, pour une valeur intrinsèque totale de 4,0 M$. L’inférence « de l’offre d’actions là où le plan veut acheter » / « forment une offre d’actions au-dessus de 15 $ » repose sur une moyenne pondérée, pas sur une concentration de prix d’exercice : non prouvée.",
+      "fix": "Utiliser les chiffres du 30 juin (17 566 321 ; 14,85 $ ; 14 570 654 exerçables à 17,08 $) et reformuler en « les options exerçables ont un prix moyen de 17,08 $ : un cours au-dessus de 15 $ rapproche une partie d’entre elles du profit, sans qu’on connaisse la répartition des prix d’exercice ».",
+      "evidence": "analyses/IOVA/_primary/text/2026-08-06-10-Q-091716-iova-20260630x10q.htm.txt (note options : « Outstanding at June 30, 2026 17,566,321 $14.85 … exercisable 14,570,654 $17.08 »)."
+    },
+    {
+      "path": "tradeIdea.catalysts[3], tradeIdea.horizon, blastRadius.missingData[2], timeline.note",
+      "problem": "« résultats de l’essai pivot dans le cancer du poumon, promis pour le quatrième trimestre » : le communiqué du 6 août écrit « Enrollment is nearly complete in the pivotal cohorts and program updates are expected in 4Q26 ». La société promet une mise à jour du programme IOV-LUN-202, pas les résultats de l’essai pivot.",
+      "fix": "Écrire « mise à jour du programme IOV-LUN-202 (poumon) attendue au quatrième trimestre, contenu et date non précisés ». Le risque d’événement reste valide pour la fenêtre du plan.",
+      "evidence": "analyses/IOVA/_primary/text/2026-08-06-8-K-091619-tm2622322d1_ex99-1.htm.txt (rubrique IOV-LUN-202)."
+    },
+    {
+      "path": "filingsReview.contrarianRisks[0], risks.pedagogy",
+      "problem": "Deux approximations qui gonflent le propos : « un cours quatre fois supérieur au prix moyen du premier semestre » (13,78/3,88 = 3,55×) et « les ventes ont presque doublé en un an » (+66 % au deuxième trimestre ; +61 % sur l’exercice 2025).",
+      "fix": "« plus de trois fois et demie le prix moyen du premier semestre (3,55×) » ; « les ventes ont augmenté de deux tiers en un an ».",
+      "evidence": "analyses/IOVA/_data/bars.json (clôture 13,78) ; 10-Q T2 2026 (99 313 contre 59 952 k$)."
+    },
+    {
+      "path": "blastRadius.contradictions[0], filingsReview.contrarianRisks, risks.riskCards[0].points[0]",
+      "problem": "Horizons dépareillés : « +66 % de chiffre d’affaires » (sur un an) face à « +10 % d’actions en six mois ». À horizon égal le 10-Q donne 341 919 364 actions au 30 juin 2025 contre 452 971 016 au 30 juin 2026 (+32,5 %), moyenne pondérée du T2 450,189 M contre 334,511 M (+34,6 %). Chiffre d’affaires par action au T2 : 0,2206 $ contre 0,1792 $, soit +23 % et non +66 %. La dilution réelle est sous-évaluée dans la phrase qui la résume.",
+      "fix": "Écrire « +66 % de chiffre d’affaires mais +32,5 % d’actions en un an : le chiffre d’affaires par action progresse de 23 % ». Garder « +10,0 % en six mois » comme chiffre séparé.",
+      "evidence": "10-Q T2 2026 : état des capitaux propres (Balance June 30, 2025 : 341,919,364 ; June 30, 2026 : 452,971,016) et compte de résultat (450,189 et 334,511 milliers d’actions pondérées)."
+    },
+    {
+      "path": "fundamentals.rows[16] (scénario à 7 fois, note), bottomEstimation.confluences[0]",
+      "problem": "« multiple médian des lanceurs cellulaires (2,7×) » : la médiane de Legend 2,6, Immunocore 2,7 et Autolus 4,9 est celle d’un groupe où Immunocore n’est pas une thérapie cellulaire (la fiche le décrit elle-même comme récepteurs T solubles dans le moat). Sur les deux seuls lanceurs cellulaires, Legend 2,568 et Autolus 4,885, la médiane est 3,73×, soit 3,33 $ par action sur douze mois et 4,07 $ sur la prévision 2026 au lieu de 2,60 $ et 3,14 $.",
+      "fix": "Soit renommer « médiane de Legend, Immunocore et Autolus (2,7×) », soit recalculer sur Legend et Autolus (3,7× ; 3,33 $ et 4,07 $) et ajuster le texte du plancher.",
+      "evidence": "analyses/IOVA/_data/comparison_context.json (enterpriseToRevenue : LEGN 2.568, IMCR 2.706, AUTL 4.885)."
+    },
+    {
+      "path": "tribunal.rounds[3], bottomEstimation.confluences[1]",
+      "problem": "« Ces multiples rémunèrent des sociétés qui croissent moins » : exact pour Legend (+51,9 %), Gilead (+10,2 %), Immunocore (+18,3 %), faux pour Autolus (+118,4 % de croissance du chiffre d’affaires pour 4,9× l’EV/CA), pourtant utilisé dans la même fiche pour la comparaison 2,9 à 5,6×. Le pair le plus défavorable à la défense est omis, ce qui affaiblit la clause « tribunal honnête ».",
+      "fix": "Ajouter à l’accusation : « Autolus croît plus vite (+118 %) et vaut 4,9 fois ses revenus », ou nuancer la défense en la limitant à Legend, Gilead et Immunocore.",
+      "evidence": "analyses/IOVA/_data/comparison_context.json (instrument_comprehensive_stats : revenueGrowth AUTL 1.184, LEGN 0.519, GILD 0.102, IMCR 0.183 ; IOVA 0.657 dans fundamentals.json)."
+    },
+    {
+      "path": "risks.riskCards, filingsReview.contrarianRisks (risque omis)",
+      "problem": "Aucune ligne sur la gouvernance : les communiqués du 6 août et du 29 septembre citent Frederick Vogt comme « Interim President and Chief Executive Officer » (aussi directeur juridique dans les Forms 4), et le 8-K du 7 mai annonce le départ du directeur médical en juin 2026 sans successeur nommé. Un Form 3 et un Form 4 déposés le 2 octobre (période du 30 septembre) ne sont pas identifiés.",
+      "fix": "Ajouter une ligne à la carte « Autorisation et concurrence » : « Direction générale assurée par un PDG par intérim ; directeur médical parti en juin 2026 ». Ouvrir le Form 3 du 2 octobre pour dire s’il s’agit d’un nouveau dirigeant.",
+      "evidence": "analyses/IOVA/_primary/text/2026-08-06-8-K-091619-tm2622322d1_ex99-1.htm.txt ; 2026-05-07-8-K-056782…ex99-1.htm.txt (« Chief Medical Officer, will retire from Iovance in June 2026 ») ; analyses/IOVA/_data/insider_current.json ; analyses/IOVA/_primary/submissions.json (2026-10-02, formulaires 3 et 4)."
+    },
+    {
+      "path": "insiders (section Initiés et institutions), business.coverageMatrix",
+      "problem": "Le titre de section promet les institutions mais aucune ligne ne les traite, alors que le 13F a été collecté (institutional_holdings). Il couvre seulement 18 gérants suivis, donc ne permet pas de conclure sur la concentration ; Millennium 8 525 919 actions au T2 (−888 373), AQR 3 869 584 (+3 245 416), Citadel 2 104 990 (−506 355).",
+      "fix": "Ajouter une phrase : « Le relevé 13F ne couvre que 18 gérants suivis (Millennium 8,5 M d’actions au T2, AQR 3,9 M, Citadel 2,1 M) : insuffisant pour mesurer la concentration » et une ligne dans coverageMatrix.",
+      "evidence": "analyses/IOVA/_data/insiders.json (results[data_type=institutional_holdings].data[0], filers_tracked 18)."
+    },
+    {
+      "path": "header.metrics.marketCap",
+      "problem": "6,24 Md$ = 452 971 432 actions au 29 juillet × 13,78 $ ; le libellé ne date pas le nombre d’actions et les ventes au fil de l’eau d’août à octobre sont inconnues. Sans écart matériel (le reliquat de 89,7 M$ pèse au plus 1,4 % du capital), mais la valeur est présentée comme actuelle.",
+      "fix": "Libeller « Capitalisation (actions au 29 juillet) » ou ajouter l’infobulle équivalente.",
+      "evidence": "analyses/IOVA/_data/instrument.json (marketCap 6 241 946 332,96 ; marketCapPointInTime false ; sharesOutstanding 452 971 432) ; 10-Q T2 2026, page de couverture."
+    },
+    {
+      "path": "fundamentals.rows[14], fundamentals.rows[15]",
+      "problem": "L’EV d’IOVA est calculée par la fiche (capitalisation − trésorerie et placements = 5,944 Md$, soit 18,3×) alors que les multiples des pairs viennent de l’agrégateur (définition différente). Le même agrégateur donne pour IOVA 18,9× (EV 6,153 Md$). Écart de 3 % non expliqué dans une comparaison présentée comme homogène.",
+      "fix": "Préciser sous le tableau : « EV d’Iovance = capitalisation moins trésorerie et placements, loyers exclus ; multiples des pairs d’après l’agrégateur, définition proche mais non identique (même agrégateur : 18,9× pour Iovance) ».",
+      "evidence": "analyses/IOVA/_data/instrument.json (enterpriseToRevenue 18.935, enterpriseValue 6153347072)."
+    },
+    {
+      "path": "filingsReview.filings (8-K du 7 mai), business.moat",
+      "problem": "« bien avant dans 2028 » est présenté entre guillemets comme une citation alors que la source écrit « well into 2028 » (traduction maladroite). « en 31 jours au plus selon la société » : la présentation du 5 octobre dit « continually improving end-to-end commercial turnaround (~31 days) », un délai moyen en amélioration, pas un maximum.",
+      "fix": "« jusque bien avant dans l’année 2028 » sans guillemets ; « environ 31 jours, en baisse continue, selon la société ».",
+      "evidence": "analyses/IOVA/_primary/text/2026-05-07-8-K-056782-tm2613648d1_ex99-1.htm.txt ; 2026-10-05-8-K-113763-tm2627047d1_ex99-1.htm.txt."
+    },
+    {
+      "path": "risks.riskCards[2].points[1]",
+      "problem": "« Flux de trésorerie libre de −66,3 M$ négatifs » : double négation (signe moins et « négatifs »).",
+      "fix": "« Flux de trésorerie libre de −66,3 M$ au deuxième trimestre ».",
+      "evidence": "analyses/IOVA/index.html section #risques."
+    },
+    {
+      "path": "timeline.chains[0].steps[2], timeline.chains[1].steps[2]",
+      "problem": "Le rendu lit « Dilution ↓ en baisse » et « Moins d’émissions ↑ en hausse » : la flèche et le texte d’accessibilité décrivent la quantité (dilution qui baisse = bonne nouvelle), alors que la couleur dit l’effet pour l’actionnaire. Le lecteur comprend l’inverse de l’intention.",
+      "fix": "Remplacer par « Actions en plus » (tone down) et « Émissions évitées » (tone up), ou retirer le tone de ces deux pastilles.",
+      "evidence": "analyses/IOVA/index.html section #echeancier (evt-tl-step tone-down / tone-up)."
+    },
+    {
+      "path": "tradeIdea.horizon",
+      "problem": "Exécution : « ordre stop valable jusqu’à révocation » sur la position et « ordre de vente limité à 19,75 $ sur la moitié ». Si le stop couvre 100 % et que la limite exécute 50 %, le stop devient supérieur à la position restante et peut être refusé ou, chez certains courtiers, créer une vente à découvert involontaire.",
+      "fix": "Préciser : stop sur 100 % à l’achat, limite TP1 sur 50 % ; dès l’exécution du TP1 annuler le stop initial et poser un nouveau stop sur la moitié restante au prix d’achat (ou ordre OCO si le courtier le propose).",
+      "evidence": "data/analyses-data/IOVA.json tradeIdea.horizon."
+    },
+    {
+      "path": "Rendu commun (renderer) : provenance, formats, FAB",
+      "problem": "Défauts de gabarit communs à FICO, LITE, HOOD et IOVA, non propres à cette fiche : « Données de marché datées (provenance hashée) » ×7 et « ouvertes et hachées » (filingsReview.summary) sont du vocabulaire d’infrastructure dans un contenu publié ; tableaux et héros en format anglais sur une page française (« +25.27 % », « $13.55 », « 0.260 », « 56.4 », « $13.78 -2.20% ») ; entrée de FAB « Bottom » pour une section intitulée « Estimation du plancher ».",
+      "fix": "À corriger dans tools/render-analysis.js et dans les libellés de sourceRefs : « Données de marché datées et sourcées », virgule décimale et signe moins typographique, « Plancher » dans le FAB. Pour IOVA, remplacer au moins « ouvertes et hachées » par « ouvertes et lues ».",
+      "evidence": "analyses/IOVA/index.html ; analyses/FICO/index.html (mêmes occurrences)."
+    },
+    {
+      "path": "Publication : analyses/IOVA/archive/",
+      "problem": "git status : archive/20260806/ non suivi et archive/20260814/index.html modifié. Le HEAD contenait la version du 6 août sous le dossier 20260814 ; ce run range la version du 14 août sous 20260814 et celle du 6 août sous 20260806. Cohérent avec la modale Historique, mais un stage partiel casserait deux liens de la modale.",
+      "fix": "Stager ensemble analyses/IOVA/archive/20260806/, archive/20260814/index.html et index.html ; vérifier les liens archive/20260806/ et archive/20260814/ après déploiement.",
+      "evidence": "git status ; git show HEAD:analyses/IOVA/archive/20260814/index.html (titre « 6 août 2026 »)."
+    }
+  ]
+}

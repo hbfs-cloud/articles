@@ -1,0 +1,250 @@
+{
+  "contract_version": "1.0",
+  "workflow": "squeeze-radar",
+  "plan": "plans/squeeze.json",
+  "plan_sha256": "6c4f65489e6942d30e9b61b87872e8c08077e0bfd8f84afe9deb427ed67218b5",
+  "input_sha256": "c385856722a05e09f17aa1fa84704821ab902685157353170ed2b86608417d28",
+  "resolved_input": {
+    "artifact": "data/workflow-runs/squeeze/20261027/verify",
+    "equity_reference_close": "2026-10-26",
+    "crypto_completed_refdate": null,
+    "as_of_timestamp": "2026-10-27T12:51:14.922Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 1,
+              "required": true
+            },
+            "assert": {
+              "equity_reference_close": "2026-10-26"
+            }
+          }
+        ]
+      },
+      {
+        "name": "governing-evidence",
+        "calls": [
+          {
+            "as": "ctb_top",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "ctb_top"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          },
+          {
+            "as": "short_evidence",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "short_interest,ctb,ftd_threshold",
+              "symbols": "IOVA",
+              "days": 365,
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            }
+          },
+          {
+            "as": "bars",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "IOVA",
+              "limit": 120,
+              "force_async": true,
+              "as_of_timestamp": "2026-10-27T12:51:14.922Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-10-26"
+            }
+          },
+          {
+            "as": "sec_flags",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "sec_filings,flags",
+              "symbols": "IOVA",
+              "days": 180,
+              "end_date": "2026-10-26",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 168,
+              "required": true
+            }
+          },
+          {
+            "as": "earnings_window",
+            "server": "marketdata",
+            "tool": "GetEarningsCalendarFiltered",
+            "args": {
+              "days_ahead": 14,
+              "include_implied_move": true,
+              "symbols": "IOVA"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "optional-flow-context",
+        "detached": true,
+        "calls": [
+          {
+            "as": "flow_context",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "unusual_options,dark_pool,max_pain",
+              "symbols": "IOVA",
+              "force_async": true
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": false
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "data/workflow-runs/squeeze/20261027/verify",
+  "reference_date": "2026-10-26",
+  "equity_reference_close": "2026-10-26",
+  "crypto_completed_refdate": null,
+  "started_at": "2026-10-27T12:51:14.922Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 376,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 374,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "a3bb33e1a336ffb30f194ebd44d1c1b8f39152d2545f8e9e261b3523b96f8f1d"
+        }
+      ]
+    },
+    {
+      "name": "governing-evidence",
+      "ms": 7665,
+      "calls": [
+        {
+          "as": "ctb_top",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1394,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "1e4546d97f70a8291f2f7a3058d3f5b06cc620b33dbb681374dce0992a139b41"
+        },
+        {
+          "as": "short_evidence",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2365,
+          "wait_ms": 696,
+          "error": null,
+          "output_sha256": "e8ac8bd2e6c1697093e297846f592a3c78fca4558eac8dc17578a40e287320e0"
+        },
+        {
+          "as": "bars",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 4382,
+          "wait_ms": 1707,
+          "error": null,
+          "output_sha256": "e7901e30c6bf90f8c44e6d8bf5270642655f6fda9ed5ecbf54d4271fa4884a8a"
+        },
+        {
+          "as": "sec_flags",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": false,
+          "ms": 6372,
+          "wait_ms": 2681,
+          "error": "marketdata QueryData incomplete: sec_filings[IOVA]: sec_filings is current-only; historical start_date/end_date are not supported because the provider cannot reconstruct a point-in-time snapshot; sec_filings is current-only; historical start_date/end_date are not supported because the provider cannot reconstruct a point-in-time snapshot",
+          "output_sha256": "f65fcf34d37c4b92939566751fd670b77868c14254e00722aa6a930b51a6b483",
+          "artifact_preserved": true
+        },
+        {
+          "as": "earnings_window",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 4983,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "6058385bdf3df8f2c968a195924c749efc571d903651cc3ab0554f5a25010de4"
+        }
+      ]
+    },
+    {
+      "name": "optional-flow-context",
+      "ms": 1993,
+      "calls": [
+        {
+          "as": "flow_context",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": false,
+          "detached": true,
+          "ok": true,
+          "ms": 1993,
+          "wait_ms": 995,
+          "error": null,
+          "output_sha256": "b7695391c8f8478f10e64572cae04106139cf7fce8abfd20d28e33c98d8e6c7a"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-10-27T12:51:24.987Z",
+  "failures": 1,
+  "executed_calls": 7,
+  "skipped_calls": 0
+}
