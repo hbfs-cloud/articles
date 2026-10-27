@@ -1182,7 +1182,10 @@ function renderTradeIdea(d) {
     { label: isDormant ? tx(d, 'Previous target 1', 'Ancien objectif 1') : tx(d, 'Target 1', 'Objectif 1'),   value: money(t.tp1),   note: pctTxt(t.tp1Pct),   color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' },
   ];
   if (t.tp2) cards.push({ label: isDormant ? tx(d, 'Previous target 2', 'Ancien objectif 2') : tx(d, 'Target 2', 'Objectif 2'), value: money(t.tp2), note: pctTxt(t.tp2Pct), color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' });
-  cards.push({ label: isDormant ? tx(d, 'Dormant ratio', 'Ratio inactif') : tx(d, 'Risk/Reward', 'Risque/rendement'), value: rrValue, note: rrOk && t.tp2 ? 'TP1 · TP2' : '', color: '#7c3aed', bg: '#f5f3ff', tc: '#7c3aed', small: true });
+  // Un plan « watch » achète au-dessus du déclencheur : le ratio de la carte est celui du déclencheur, le pire prix
+  // d'achat (plafond) est attesté dans le détail du R/R sous les cartes (règle TLN, relectures du 27 octobre 2026).
+  const rrNote = [isTrigger && rrOk ? tx(d, 'at trigger', 'au déclencheur') : '', rrOk && t.tp2 ? 'TP1 · TP2' : ''].filter(Boolean).join(' · ');
+  cards.push({ label: isDormant ? tx(d, 'Dormant ratio', 'Ratio inactif') : tx(d, 'Risk/Reward', 'Risque/rendement'), value: rrValue, note: rrNote, color: '#7c3aed', bg: '#f5f3ff', tc: '#7c3aed', small: true });
 
   // Conditions (statusNote) en liste de phrases, exécution (entryNote) en paragraphes.
   const sentences = s => String(s || '').split(/(?<=[.!?])\s+(?=[A-ZÀ-ÖØ-Þ«(])/).map(x => x.trim()).filter(x => x.length > 14);
@@ -1195,7 +1198,7 @@ function renderTradeIdea(d) {
   const execHtml = execParas.length
     ? `\n        <details class="pedagogy-box" style="margin-top:1rem;${op}"><summary style="cursor:pointer;font-weight:700;"><i class="fa-solid fa-gears"></i> ${tx(d, 'Execution detail: entry, sizing, gaps', 'Détail de l’exécution : achat, taille, gaps')}</summary>${execParas.map(p => `<p style="font-size:0.9rem;margin:0.6rem 0 0;">${esc(p)}</p>`).join('')}</details>` : '';
   const extraLines = [
-    rrOk && t.rr && String(t.rr).length > rrShort.length + 12 ? `<p style="font-size:0.82rem;color:#64748b;margin:0.5rem 0 0;"><strong>${tx(d, 'Risk/reward detail', 'Détail du R/R')} :</strong> ${esc(t.rr)}</p>` : '',
+    rrOk && t.rr && String(t.rr).length > rrShort.length + 12 ? `<p style="font-size:0.82rem;color:#64748b;margin:0.5rem 0 0;"><strong>${isTrigger ? tx(d, 'Risk/reward detail, worst fill included', 'Détail du R/R, pire prix d’achat inclus') : tx(d, 'Risk/reward detail', 'Détail du R/R')} :</strong> ${esc(t.rr)}</p>` : '',
     t.horizon ? `<p style="font-size:0.85rem;margin:0.5rem 0 0;"><strong>${tx(d, 'Horizon', 'Horizon')} :</strong> ${esc(t.horizon)}</p>` : '',
   ].join('');
 
