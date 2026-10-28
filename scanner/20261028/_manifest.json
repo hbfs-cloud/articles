@@ -1,0 +1,751 @@
+{
+  "regime_engine": "switcher_analyzer",
+  "technicals_source": "derived_completed_window",
+  "requires_supplement": false,
+  "regime_score_scale": "bullish_0_100",
+  "scan_date": "2026-10-28",
+  "reference_close": "2026-10-27",
+  "regime": "RECOVERY",
+  "regime_score": 59.9,
+  "regime_authority": "scanner/20261028/_data/regime_authority.json#facets.regime.dtx_regime",
+  "horizon_days": 10,
+  "execution_gate": "Ordre à cours limité au prix publié, valable la séance, posé après l'ouverture de New York (14 h 30, heure de Paris, le mercredi 28 octobre). Ouverture sous l'invalidation : ne le passez pas.",
+  "execution_gate_breakout": "Ordre posé après l'ouverture (14 h 30, heure de Paris, le mercredi 28 octobre) : stop-limite, déclenchement et plafond au prix publié, si le cours est sous ce prix ; ordre à cours limité au même prix s'il est déjà au-dessus. Valable la séance. Ouverture sous l'invalidation : ne le passez pas.",
+  "universe": "Actions et ETF cotés aux États-Unis, clôture de référence du 27 octobre 2026.",
+  "_score_caveat": "Score plat, aucun classement affirmé. Les scores de criblage viennent de familles de formules différentes et restent dans selection_evidence pour l'audit.",
+  "_score_caveat_public": "Les six lignes portent le même score (80) : il ne les classe pas entre elles.",
+  "_entry_policy": "Cassures et suivis de tendance : stop-limite au prix publié, ou limite au même prix si le cours est déjà au-dessus. Replis : ordre limité au prix publié. Stop mesuré depuis le prix publié ; rapport gain/risque calculé au même prix.",
+  "_entry_policy_public": "<strong>Entrée</strong>, mercredi 28 octobre seulement. New York ouvre à 14 h 30, heure de Paris, jusqu'au vendredi 30 octobre.</p><ol><li>Après 14 h 30, regardez le premier cours de New York, en temps réel : un cours différé de quinze minutes fausse le choix de l'ordre. S'il est sous le niveau d'invalidation, ne faites rien. Même règle si vous arrivez plus tard : cours sous l'invalidation au moment de poser l'ordre, pas d'ordre ; pour un repli, un ordre limité posé sous l'invalidation achèterait aussitôt un titre déjà invalidé.</li><li>Suivis de tendance (American Eagle, Columbia Banking, BNO) et cassure (PagerDuty) : cours sous le prix publié, ordre d'achat stop-limite, déclenchement et plafond au prix publié ; cours déjà au-dessus, ordre à cours limité au prix publié, qui n'achète que si le cours redescend. Sous le prix publié, elles s'achètent quand le cours remonte jusqu'à lui ; au-dessus, quand il redescend jusqu'à lui. Replis (TJX, 3M) : ordre à cours limité au prix publié dans tous les cas. Si le cours est déjà sous le prix publié mais au-dessus de l'invalidation, l'ordre s'exécute tout de suite, moins cher que le prix publié ; s'il est au-dessus, il attend que le cours redescende. Un repli s'achète sur la baisse. Valable ce jour seulement. Vous ne payez jamais plus que le prix publié, et jamais au marché. Beaucoup de courtiers refusent un stop d'achat sous le cours du moment : c'est pour cela que l'ordre limité prend le relais au-dessus. Si votre courtier ne propose pas d'ordre stop-limite (appelé aussi « ordre à plage de déclenchement ») : alerte au prix publié, puis ordre limité à ce prix.</li><li><strong>Sorties</strong>, posées dès l'achat : un stop de vente au marché au niveau publié (un stop-limite peut ne pas s'exécuter sur un écart d'ouverture) et un ordre limité de vente à l'objectif, liés en OCO (l'un annule l'autre) si votre courtier le propose. Sinon : le stop seul, plus une alerte de prix à l'objectif. À l'alerte, annulez le stop et posez aussitôt un ordre limité de vente à l'objectif ; s'il n'est pas exécuté dans les minutes qui suivent, annulez-le et remettez le stop. Donnez au stop et à l'objectif une validité longue, « à révocation » ou « jusqu'au 10 novembre », jamais « jour » : un ordre « jour » disparaît le soir même et laisse la ligne sans protection. Vérifiez chaque matin qu'ils sont toujours actifs.</li><li>Chaque soir, lisez le cours de clôture : 21 h, heure de Paris, du mercredi 28 au vendredi 30 octobre ; 22 h du lundi 2 au lundi 9 novembre. Clôture sous l'invalidation : à l'ouverture de la séance suivante (le lundi après un vendredi), annulez le stop et l'objectif, puis vendez au marché : 14 h 30, heure de Paris, les jeudi 29 et vendredi 30 octobre, puis 15 h 30 à partir du lundi 2 novembre (les États-Unis passent à l'heure d'hiver le 1er novembre). L'interdiction du marché ne vaut que pour l'achat.</li><li>Toujours en position le mardi 10 novembre : annulez le stop et l'objectif, vendez au marché avant 21 h 45, heure de Paris (New York ferme à 22 h). La Réserve fédérale annonce sa décision ce mercredi 28 octobre à 19 h, heure de Paris, pendant la séance d'entrée ; l'indice des prix à la consommation américain sort le mardi 10 novembre à 14 h 30, une heure avant l'ouverture du dernier jour. Pas de sortie partielle. Un écart d'ouverture peut donner un prix moins bon que le stop affiché.</li></ol><p><strong>Rapport gain/risque</strong> : Columbia Banking 1,00, BNO 1,00, PagerDuty 1,00, American Eagle 0,99, TJX 0,97, 3M 0,78. Pour TJX, le plancher de 3 % éloigne le stop au-delà de 1,5 fois la variation quotidienne moyenne ; pour 3M, l'objectif est un plus haut récent, plus proche que le stop ; pour American Eagle, l'arrondi au cent laisse l'objectif un cent plus près que le stop : le rapport passe sous 1. Pour TJX (0,09 %), 3M (0,53 %), Columbia Banking (0,68 %) et BNO (0,75 %), les frais de change aller-retour peuvent dépasser à eux seuls l'écart entre l'entrée et l'invalidation. Les niveaux sont en dollars, sur la cotation américaine : si votre courtier ne propose qu'une cotation en euros, passez votre tour, ces niveaux ne se convertissent pas. Les six lignes sont hors PEA et exposées au change dollar-euro.",
+  "_editorial_note": "Cinq actions et un fonds, issus de 135 lignes de candidats (132 symboles distincts) : 47 rejetées par les cribles, 6 sans verdict numérique, 82 passées numériquement, soit 81 symboles. Six écartés avant vérification : Fortive, GE HealthCare, NiSource, Glaukos, O'Reilly et Microsoft publient leurs résultats le 28 octobre. Soixante-quinze symboles vérifiés sur 300 séances en deux passes, 74 actions et 1 fonds, chacun publié ou écarté pour une raison écrite. Cinquante-trois actions écartées pour des résultats : 45 publient du 28 octobre au 13 novembre, fin de la fenêtre d'exclusion, 8 ont publié les 26 et 27 octobre, dans les trois séances qui précèdent l'entrée. Six autres n'ont pas de date de résultats suivante. Sept émetteurs étrangers. Medtronic est la ligne du 27 octobre, vendue à l'ouverture du 28 : la republier reviendrait à racheter dans la séance une position que la règle vient de couper. Avec elle, la liste aurait compté huit lignes et Amentum serait resté. Kohl's sort sur le plafond de deux lignes par secteur (consommation discrétionnaire, après TJX et American Eagle) et Amentum sur le plafond de la moitié de la liste pour une même famille. Côté fonds, un seul des trente du crible passe : BNO. Cinq actions et un fonds, sous le minimum de six actions et deux fonds, par dérogation pour cette seule séance (scanner/20261028/_basket-minimum-waiver.json). PFG et NWSA n'ont pas d'historique certifiable (barre invalide en avril) ; NAVN n'a pas assez de séances.",
+  "_pipelineOrder": {
+    "earnings_screened_at": "2026-10-28T08:50:47.697111442Z",
+    "enrichment_started_at": "2026-10-28T08:56:03.286Z",
+    "candidates_screened": "135",
+    "_proof": "Le calendrier des résultats du vivier a été capturé à 08:50:47Z le 28 octobre ; l'enrichissement des barres retenu pour ce scan a démarré à 08:56:03Z. Les dépôts ont été inventoriés après ce vivier, sur trois ans jusqu'au 28 octobre 2026, formulaires 425, S-4 et SC TO compris."
+  },
+  "editorial_rejections": [
+    {
+      "ticker": "ABNB",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "AIG",
+      "reason": "[résultats] Publication prévue le 3 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "AMCR",
+      "reason": "[résultats] Publication prévue le 4 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "AMRX",
+      "reason": "[résultats] Publication prévue le 3 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "AMTM",
+      "reason": "[plafond] Suivi de tendance, résultats attendus le 23 novembre : il passe les cribles numériques et la fenêtre des résultats. Sans Medtronic et Kohl's, quatre des sept lignes restantes seraient des suivis de tendance ; la moitié de sept, arrondie à l'unité inférieure, plafonne une famille à trois, et Amentum est le moins bien classé des quatre (rang 34 sur 40)."
+    },
+    {
+      "ticker": "AON",
+      "reason": "[résultats] Publication prévue le 28 octobre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "AVTR",
+      "reason": "[résultats] Publication prévue le 28 octobre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "BEP",
+      "reason": "[résultats] Publication prévue le 4 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "BSY",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "BUD",
+      "reason": "[résultats] Publication prévue le 29 octobre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "CAH",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "CERT",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "CL",
+      "reason": "[résultats] Publication prévue le 30 octobre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "COP",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "CSX",
+      "reason": "[résultats] Dernière publication le 21 octobre (8-K item 2.02, accession 0000277948-26-000039) ; aucune date suivante dans le calendrier collecté : la fenêtre d'exclusion ne peut pas être vérifiée."
+    },
+    {
+      "ticker": "DOCS",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "DUK",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "ED",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "ENOV",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "EQT",
+      "reason": "[résultats] Résultats publiés le 27 octobre (8-K item 2.02, accession 0000033213-26-000054), dans les trois séances qui précèdent l'entrée ; aucune date suivante dans le calendrier collecté."
+    },
+    {
+      "ticker": "ERIC",
+      "reason": "[émetteur étranger] Rapport annuel 20-F et rapports 6-K : la dilution d'un émetteur étranger n'est pas contrôlée par ce scan."
+    },
+    {
+      "ticker": "EVRG",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "FER",
+      "reason": "[émetteur étranger] Rapport annuel 20-F et rapports 6-K : la dilution d'un émetteur étranger n'est pas contrôlée par ce scan."
+    },
+    {
+      "ticker": "HHH",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "HR",
+      "reason": "[résultats] Publication prévue le 29 octobre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "IBN",
+      "reason": "[émetteur étranger] Rapport annuel 20-F et rapports 6-K : la dilution d'un émetteur étranger n'est pas contrôlée par ce scan."
+    },
+    {
+      "ticker": "ITW",
+      "reason": "[résultats] Résultats publiés le 27 octobre (8-K item 2.02, accession 0000049826-26-000057), dans les trois séances qui précèdent l'entrée ; aucune date suivante dans le calendrier collecté."
+    },
+    {
+      "ticker": "JCI",
+      "reason": "[résultats] Résultats publiés le 27 octobre (8-K item 2.02, accession 0000833444-26-000101), dans les trois séances qui précèdent l'entrée ; aucune date suivante dans le calendrier collecté."
+    },
+    {
+      "ticker": "KO",
+      "reason": "[résultats] Résultats publiés le 27 octobre (8-K item 2.02, accession 0001628280-26-067403), dans les trois séances qui précèdent l'entrée ; aucune date suivante dans le calendrier collecté."
+    },
+    {
+      "ticker": "KSS",
+      "reason": "[plafond] Suivi de tendance, résultats attendus le 24 novembre : il passe les cribles numériques, la fenêtre des résultats et les dépôts (lus le 27 octobre). Une grappe sectorielle porte deux lignes au plus, et la consommation discrétionnaire en compte déjà deux, TJX et American Eagle, mieux classés. La ligne Kohl's du 27 octobre n'a pas été passée : ouverture à 23,26 $, sous son invalidation (23,55 $)."
+    },
+    {
+      "ticker": "LIN",
+      "reason": "[résultats] Publication prévue le 29 octobre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "LNG",
+      "reason": "[résultats] Publication prévue le 29 octobre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "LTH",
+      "reason": "[résultats] Publication prévue le 29 octobre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "LYB",
+      "reason": "[résultats] Publication prévue le 30 octobre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "MDLZ",
+      "reason": "[résultats] Publication prévue le 29 octobre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "MDT",
+      "reason": "[doublon] Ligne du 27 octobre, exécutée à 94,25 $ : elle a clôturé à 93,95 $, sous son invalidation (94,09 $), et la règle publiée la fait vendre à l'ouverture du 28. La republier ferait vendre le titre à l'ouverture puis le racheter dans la même séance au prix publié, alors que la règle vient de couper la position ; sa nouvelle invalidation serait 20 centimes plus bas. Avec Medtronic, la liste aurait compté huit lignes et Amentum serait resté."
+    },
+    {
+      "ticker": "MET",
+      "reason": "[résultats] Publication prévue le 4 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "NUE",
+      "reason": "[résultats] Résultats publiés le 26 octobre (8-K item 2.02, accession 0001193125-26-432117), dans les trois séances qui précèdent l'entrée ; prochaine publication le 25 janvier 2027 d'après le calendrier collecté."
+    },
+    {
+      "ticker": "NVS",
+      "reason": "[émetteur étranger] Rapport annuel 20-F et rapports 6-K, résultats publiés le 27 octobre d'après le calendrier collecté : la dilution d'un émetteur étranger n'est pas contrôlée par ce scan."
+    },
+    {
+      "ticker": "NXPI",
+      "reason": "[résultats] Résultats publiés le 27 octobre (8-K item 2.02, accession 0001413447-26-000057), dans les trois séances qui précèdent l'entrée ; aucune date suivante dans le calendrier collecté."
+    },
+    {
+      "ticker": "OUT",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "OVV",
+      "reason": "[résultats] Publication prévue le 3 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "PAGP",
+      "reason": "[résultats] Publication prévue le 6 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "PEB",
+      "reason": "[résultats] Publication prévue le 29 octobre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "PK",
+      "reason": "[résultats] Publication prévue le 4 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "PSNL",
+      "reason": "[résultats] Publication prévue le 3 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "ROKU",
+      "reason": "[résultats] Publication prévue le 2 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "RTO",
+      "reason": "[émetteur étranger] Rapport annuel 20-F et rapports 6-K : la dilution d'un émetteur étranger n'est pas contrôlée par ce scan."
+    },
+    {
+      "ticker": "RVTY",
+      "reason": "[résultats] Publication prévue le 3 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "RYN",
+      "reason": "[résultats] Publication prévue le 4 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "SAP",
+      "reason": "[émetteur étranger] Rapport annuel 20-F et rapports 6-K : la dilution d'un émetteur étranger n'est pas contrôlée par ce scan."
+    },
+    {
+      "ticker": "SOFI",
+      "reason": "[résultats] Résultats publiés le 27 octobre (8-K item 2.02, accession 0001818874-26-000065), dans les trois séances qui précèdent l'entrée ; aucune date suivante dans le calendrier collecté."
+    },
+    {
+      "ticker": "TDC",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "TIC",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "TNDM",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "TTEK",
+      "reason": "[résultats] Publication prévue le 11 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "TXN",
+      "reason": "[résultats] Dernière publication le 21 octobre (8-K item 2.02, accession 0000097476-26-000165) ; aucune date suivante dans le calendrier collecté : la fenêtre d'exclusion ne peut pas être vérifiée."
+    },
+    {
+      "ticker": "UL",
+      "reason": "[émetteur étranger] Rapport annuel 20-F et rapports 6-K, sans date de résultats suivante dans le calendrier collecté : la dilution d'un émetteur étranger n'est pas contrôlée par ce scan."
+    },
+    {
+      "ticker": "UNP",
+      "reason": "[résultats] Dernière publication le 22 octobre (8-K item 2.02, accession 0000100885-26-000319) ; aucune date suivante dans le calendrier collecté : la fenêtre d'exclusion ne peut pas être vérifiée."
+    },
+    {
+      "ticker": "VFC",
+      "reason": "[résultats] Publication prévue le 28 octobre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "VLTO",
+      "reason": "[résultats] Publication prévue le 29 octobre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "VLY",
+      "reason": "[résultats] Dernière publication le 22 octobre (8-K item 2.02, accession 0000714310-26-000045) ; aucune date suivante dans le calendrier collecté : la fenêtre d'exclusion ne peut pas être vérifiée."
+    },
+    {
+      "ticker": "WCN",
+      "reason": "[résultats] Dernière publication le 21 octobre (8-K item 2.02, accession 0001104659-26-117838) ; aucune date suivante dans le calendrier collecté : la fenêtre d'exclusion ne peut pas être vérifiée."
+    },
+    {
+      "ticker": "WEC",
+      "reason": "[résultats] Publication prévue le 29 octobre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "WM",
+      "reason": "[résultats] Résultats publiés le 27 octobre (8-K item 2.02, accession 0001104659-26-119188), dans les trois séances qui précèdent l'entrée ; aucune date suivante dans le calendrier collecté."
+    },
+    {
+      "ticker": "WMB",
+      "reason": "[résultats] Publication prévue le 2 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "WRB",
+      "reason": "[résultats] Dernière publication le 19 octobre (8-K item 2.02, accession 0000011544-26-000046) ; aucune date suivante dans le calendrier collecté : la fenêtre d'exclusion ne peut pas être vérifiée."
+    },
+    {
+      "ticker": "WSC",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "ZTS",
+      "reason": "[résultats] Publication prévue le 5 novembre, dans la fenêtre d'exclusion qui court jusqu'au 13 novembre."
+    },
+    {
+      "ticker": "FTV",
+      "reason": "[résultats] Publication prévue le 28 octobre avant l'ouverture, le jour de l'entrée, d'après le calendrier des résultats du vivier. Écarté avant vérification."
+    },
+    {
+      "ticker": "GEHC",
+      "reason": "[résultats] Publication prévue le 28 octobre avant l'ouverture, le jour de l'entrée, d'après le calendrier des résultats du vivier. Écarté avant vérification."
+    },
+    {
+      "ticker": "NI",
+      "reason": "[résultats] Publication prévue le 28 octobre avant l'ouverture, le jour de l'entrée, d'après le calendrier des résultats du vivier. Écarté avant vérification."
+    },
+    {
+      "ticker": "GKOS",
+      "reason": "[résultats] Publication prévue le 28 octobre après la clôture, le soir de l'entrée, d'après le calendrier des résultats du vivier. Écarté avant vérification."
+    },
+    {
+      "ticker": "ORLY",
+      "reason": "[résultats] Publication prévue le 28 octobre après la clôture, le soir de l'entrée, d'après le calendrier des résultats du vivier. Écarté avant vérification."
+    },
+    {
+      "ticker": "MSFT",
+      "reason": "[résultats] Publication prévue le 28 octobre après la clôture, le soir de l'entrée, d'après le calendrier des résultats du vivier. Écarté avant vérification."
+    }
+  ],
+  "picks": [
+    {
+      "ticker": "AEO",
+      "name": "American Eagle Outfitters",
+      "strategy": "Momentum",
+      "region": "US",
+      "source_artifact": "scanner/20261028/_data/screen_momentum_us.json",
+      "thesis": "Vêtements et accessoires, sous les marques American Eagle et Aerie, aux États-Unis et à l'international : 19,42 $ mardi, +3,24 %, après +5,03 % lundi, sur 7,3 millions de titres mardi, 1,5 fois la moyenne de vingt séances. +9,04 % sur cinq séances ; +38,7 % depuis son plus bas sur un an (14,00 $, 10 septembre, au lendemain de ses résultats), mais encore 30,0 % sous son plus haut sur un an (27,74 $, 6 janvier). 8,9 % au-dessus de sa moyenne exponentielle à vingt séances, RSI 69,3, sous le plafond de 72 : le mouvement est déjà tendu. Variation quotidienne moyenne de 3,47 % ; stop à 18,40 $ (−5,25 %), objectif 20,43 $ (+5,20 %), rapport gain/risque 0,99. L'objectif est une formule de volatilité ; l'arrondi au cent laisse l'objectif un cent plus près que le stop : le rapport passe juste sous 1. L'invalidation est à 18,76 $, plus bas de mardi, 66 centimes sous l'entrée (−3,40 %) : sur 299 séances, le titre a perdu au moins autant en un jour 30 fois (10,0 %). Aucune annonce de la société n'accompagne la hausse de lundi et mardi dans nos sources : ni communiqué ni 8-K depuis les résultats du 9 septembre, seulement le rapport trimestriel du 10 septembre et des déclarations de dirigeants début octobre (formulaires 4 et 144). Si American Eagle ouvre au-dessus de 19,42 $, ne courez pas après : l'ordre limité attend un retour à ce prix ; sans retour, pas d'achat. Selon le dernier relevé disponible, 12,6 % du flottant est vendu à découvert : un rachat de ces positions peut prolonger la hausse, une mauvaise nouvelle peut accélérer la baisse. Aucune autorisation d'émettre depuis trois ans ; le 8-K de juin porte sur une ligne de crédit. Dividende de 0,125 $, détaché le 9 octobre. Résultats attendus le 1er décembre.",
+      "invalidation": "Clôture sous 18,76 $, le plus bas de la séance du 27 octobre, 66 centimes sous le prix d'entrée : vente au marché à l'ouverture suivante, à 14 h 30, heure de Paris, le jeudi 29 ou le vendredi 30 octobre ; à 15 h 30 à partir du lundi 2 novembre. Une clôture du vendredi 30 se vend le lundi 2 à 15 h 30."
+    },
+    {
+      "ticker": "COLB",
+      "name": "Columbia Banking System",
+      "strategy": "Momentum",
+      "region": "US",
+      "source_artifact": "scanner/20261028/_data/screen_momentum_us.json",
+      "thesis": "Banque régionale américaine (Columbia Bank), agrandie en août 2025 par sa fusion avec Pacific Premier : 31,04 $ mardi, −0,06 %. +3,85 % depuis la clôture du 22 octobre, date de ses résultats du troisième trimestre ; encore 6,7 % sous son plus haut sur un an (33,27 $, 16 juillet). 5,3 % au-dessus de sa moyenne exponentielle à vingt séances, RSI 68,7. Variation quotidienne moyenne de 2,01 % ; stop à 30,10 $ (−3,03 %), objectif 31,98 $ (+3,03 %), rapport gain/risque 1,00. Le stop est à 1,50 fois cette variation, à peine au-delà du plancher de 3 % ; l'objectif est une formule de volatilité. L'invalidation est à 30,83 $, plus bas de mardi, 21 centimes sous l'entrée (−0,68 %) : sur 299 séances, le titre a perdu au moins autant en un jour 96 fois (32,1 %). Mardi, le titre a ouvert à son plus haut et fini à 21 centimes de son plus bas : l'invalidation est presque collée à l'entrée. Si vous détenez Home BancShares, ligne du 26 octobre encore ouverte, Columbia Banking double votre exposition aux banques régionales : corrélation de 0,72 sur 120 séances ; sur un petit compte, gardez la ligne déjà ouverte et passez votre tour sur celle-ci. Le 8-K du 27 octobre, lu, annonce qu'un coprésident de la banque deviendra conseiller le 1er juillet 2027. La fusion avec Pacific Premier a été payée en actions et achevée le 31 août 2025, avant la fenêtre de contrôle ; son autorisation d'émettre de décembre 2024 n'a jamais été tirée. Dividende trimestriel de 0,37 $, détaché fin novembre au rythme habituel, après l'horizon. Prochains résultats le 21 janvier 2027.",
+      "invalidation": "Clôture sous 30,83 $, le plus bas de la séance du 27 octobre, 21 centimes sous le prix d'entrée : vente au marché à l'ouverture suivante, à 14 h 30, heure de Paris, le jeudi 29 ou le vendredi 30 octobre ; à 15 h 30 à partir du lundi 2 novembre. Une clôture du vendredi 30 se vend le lundi 2 à 15 h 30."
+    },
+    {
+      "ticker": "PD",
+      "name": "PagerDuty",
+      "strategy": "Breakout",
+      "region": "US",
+      "source_artifact": "scanner/20261028/_data/screen_breakout_us.json",
+      "thesis": "Logiciel de gestion des incidents informatiques : 17,75 $ mardi, −0,39 %, après un plus haut sur un an à 17,88 $ dans la séance. +59,9 % sur soixante séances : le titre a plus que triplé depuis son plus bas sur un an (5,70 $, 10 avril). 7,7 % au-dessus de sa moyenne exponentielle à vingt séances, 19,1 % au-dessus de celle à cinquante, pour un plafond de 25 %, et 46 % au-dessus de celle à deux cents séances, pour un plafond de 50 % ; RSI 71,1, sous le plafond de 72 : c'est la ligne la plus tendue du panier. Si PagerDuty passe au-dessus de 17,75 $ sans exécuter votre ordre, ne montez pas le prix : pas d'achat ce jour-là. Variation quotidienne moyenne de 3,26 % ; stop à 16,88 $ (−4,90 %), objectif 18,62 $ (+4,90 %), rapport gain/risque 1,00. L'objectif est une formule de volatilité. L'invalidation est à 17,29 $, plus bas de mardi, 46 centimes sous l'entrée (−2,59 %) : sur 299 séances, le titre a perdu au moins autant en un jour 50 fois (16,7 %). Petite capitalisation, environ 1,4 Md$. Selon le dernier relevé disponible, 12,0 % du flottant est vendu à découvert. PagerDuty a 402,5 M$ d'obligations convertibles à échéance 2028, émises en octobre 2023, avant la fenêtre de contrôle de six mois, donc décrites et non éliminatoires : la conversion se fait vers 27,35 $ l'action, 54 % au-dessus du cours, soit environ 14,7 millions d'actions, près de 19 % des actions actuelles, et des options d'achat plafonnées à 42,90 $ en limitent l'effet. La société rachète ses actions : 72,9 M$ sur le semestre clos fin juillet. Pas de dividende. Résultats attendus le 24 novembre.",
+      "invalidation": "Clôture sous 17,29 $, le plus bas de la séance du 27 octobre, 46 centimes sous le prix d'entrée : vente au marché à l'ouverture suivante, à 14 h 30, heure de Paris, le jeudi 29 ou le vendredi 30 octobre ; à 15 h 30 à partir du lundi 2 novembre. Une clôture du vendredi 30 se vend le lundi 2 à 15 h 30."
+    },
+    {
+      "ticker": "TJX",
+      "name": "The TJX Companies",
+      "strategy": "Pullback",
+      "region": "US",
+      "source_artifact": "scanner/20261028/_data/screen_pullback_us.json",
+      "thesis": "Magasins de vêtements et d'articles de maison à prix réduits (enseignes Marmaxx, HomeGoods, au Canada et à l'international) : 140,20 $ mardi, −2,44 %, clôture à 13 centimes du plus bas de la séance (140,07 $). −4,62 % sur cinq séances, −10,7 % sur soixante ; 17,3 % sous son plus haut sur un an (169,47 $, 11 juin). Le titre est 4,2 % sous sa moyenne exponentielle à deux cents séances et juste sous celles à vingt et à cinquante : c'est un repli après le rebond parti du plus bas du 16 septembre (122,78 $), dans une tendance longue qui reste orientée à la baisse. RSI 49,3. Variation quotidienne moyenne de 1,95 % ; stop à 135,99 $ (−3,00 %), objectif 144,29 $ (+2,92 %), rapport gain/risque 0,97. Le stop tombe au plancher de 3 %, à 1,54 fois cette variation, alors que l'objectif, une formule de volatilité, reste à 1,5 fois : le rapport passe sous 1. L'invalidation est à 140,07 $, plus bas de mardi, 13 centimes sous l'entrée (−0,09 %) : sur 299 séances, le titre a perdu au moins autant en un jour 136 fois (45,5 %). Presque une séance sur deux suffit donc à la déclencher : 136 des 148 clôtures en baisse de la période passent sous ce seuil. La ligne TJX du 22 octobre a été invalidée le 23 et vendue le 26. Le 8-K du 20 octobre, lu, annonce le départ à la retraite prévu d'un président de groupe. Son autorisation d'émettre de mai ne couvre que de la dette. Dividende trimestriel de 0,48 $, détaché vers le 12 novembre au rythme habituel, après l'horizon. Résultats attendus le 18 novembre.",
+      "invalidation": "Clôture sous 140,07 $, le plus bas de la séance du 27 octobre, 13 centimes sous le prix d'entrée : vente au marché à l'ouverture suivante, à 14 h 30, heure de Paris, le jeudi 29 ou le vendredi 30 octobre ; à 15 h 30 à partir du lundi 2 novembre. Une clôture du vendredi 30 se vend le lundi 2 à 15 h 30."
+    },
+    {
+      "ticker": "MMM",
+      "name": "3M",
+      "strategy": "Pullback",
+      "region": "US",
+      "source_artifact": "scanner/20261028/_data/screen_pullback_us.json",
+      "thesis": "Conglomérat industriel : sécurité et industrie, transports et électronique, grand public. 171,58 $ mardi, −0,70 %. +1,83 % sur vingt séances ; 6,8 % sous son plus haut sur un an (184,09 $, 28 juillet). 1,9 % au-dessus de sa moyenne exponentielle à vingt séances, RSI 56,7. Résultats du troisième trimestre publiés le 20 octobre, six séances avant l'entrée. Variation quotidienne moyenne de 2,30 % ; stop à 165,65 $ (−3,46 %), objectif 176,18 $ (+2,68 %), rapport gain/risque 0,78. L'objectif est le plus haut du jeudi 22 octobre, à 1,16 fois la variation quotidienne moyenne, plus près que le stop : le rapport passe sous 1. L'invalidation est à 170,67 $, plus bas de mardi, 91 centimes sous l'entrée (−0,53 %) : sur 299 séances, le titre a perdu au moins autant en un jour 111 fois (37,1 %). En septembre, 3M a emprunté 1,5 Md€ en obligations à échéance 2028, 2031 et 2034, sans émettre d'actions ; son nombre d'actions baisse (516,7 millions au 30 septembre). Le dernier rapport trimestriel détaille les procédures en cours sur les PFAS. Dividende de 0,78 $, détaché vers le 13 novembre au rythme habituel, après l'horizon. Prochains résultats le 19 janvier 2027.",
+      "invalidation": "Clôture sous 170,67 $, le plus bas de la séance du 27 octobre, 91 centimes sous le prix d'entrée : vente au marché à l'ouverture suivante, à 14 h 30, heure de Paris, le jeudi 29 ou le vendredi 30 octobre ; à 15 h 30 à partir du lundi 2 novembre. Une clôture du vendredi 30 se vend le lundi 2 à 15 h 30."
+    },
+    {
+      "ticker": "BNO",
+      "name": "United States Brent Oil Fund",
+      "strategy": "Momentum",
+      "region": "ETF",
+      "source_artifact": "scanner/20261028/_data/autoscreen_etf.json",
+      "thesis": "Fonds coté qui suit les contrats à terme sur le pétrole Brent : 69,67 $ mardi, −0,57 %, après un plus haut sur un an à 71,28 $ vendredi 23 octobre. +18,59 % sur vingt séances, +45,7 % sur soixante ; le fonds a plus que doublé depuis son plus bas sur un an (27,14 $, 16 décembre 2025). 5,8 % au-dessus de sa moyenne exponentielle à vingt séances, RSI 69,9. Variation quotidienne moyenne de 2,76 % ; stop à 66,78 $ (−4,15 %), objectif 72,56 $ (+4,15 %), rapport gain/risque 1,00. L'objectif est une formule de volatilité : à 72,56 $, il est au-dessus du plus haut sur un an de vendredi (71,28 $), frôlé de nouveau lundi (71,15 $) ; il faut un nouveau plus haut pour l'atteindre. L'invalidation est à 69,15 $, plus bas de mardi, 52 centimes sous l'entrée (−0,75 %) : sur 299 séances, le fonds a perdu au moins autant en un jour 94 fois (31,4 %). Le cours suit le pétrole, donc la guerre entre l'Iran et les États-Unis, toujours sans accord de paix selon un article de Stocktwits repris par Yahoo Finance le 28 octobre : un accord peut faire chuter le pétrole en une séance. Fonds de contrats à terme, sans effet de levier ; il suit ces contrats, pas le prix du baril au comptant, et ne distribue rien. Si vous détenez FCG (ligne du 26 octobre) ou XLE (22 octobre), BNO ajoute de l'énergie : corrélation de 0,76 avec FCG et de 0,72 avec XLE sur 120 séances ; sur un petit compte, gardez la ligne déjà ouverte et passez votre tour sur BNO. Fonds américain sans document d'informations clés : la plupart des courtiers européens en refusent l'achat à un particulier ; si le vôtre refuse, passez votre tour.",
+      "invalidation": "Clôture sous 69,15 $, le plus bas de la séance du 27 octobre, 52 centimes sous le prix d'entrée : vente au marché à l'ouverture suivante, à 14 h 30, heure de Paris, le jeudi 29 ou le vendredi 30 octobre ; à 15 h 30 à partir du lundi 2 novembre. Une clôture du vendredi 30 se vend le lundi 2 à 15 h 30.",
+      "lookthrough": {
+        "factor": "brent_crude",
+        "clusters": [
+          "energy"
+        ],
+        "note": "Contrats à terme sur le pétrole Brent, échéance la plus proche, selon son profil collecté. Seule ligne de la grappe énergie du scan ; les lignes XLE du 22 octobre et FCG du 26 octobre, encore ouvertes, sont dans la même grappe (corrélation 0,719 et 0,761 sur 120 séances)."
+      }
+    }
+  ],
+  "editorial": {
+    "generated_at": "2026-10-28T09:47:51Z",
+    "freshness": {
+      "equity_reference_close": "2026-10-27",
+      "crypto_completed_refdate": null,
+      "marketdata_contract_status": "certified",
+      "marketdata_completion_policy": "completed_only"
+    },
+    "risk_gating": {
+      "crisis_prob_5d": "0.0676",
+      "max_pair_correlation": "0.2651",
+      "max_pair_symbols": "AEO / TJX",
+      "min_pair_correlation": "-0.3563",
+      "min_pair_symbols": "AEO / BNO",
+      "max_abs_pair_correlation": "0.3563",
+      "max_abs_pair_symbols": "AEO / BNO",
+      "avg_off_diagonal_correlation": "-0.0287",
+      "correlation_observations": "120",
+      "correlation_method": "Pearson sur rendements logarithmiques appariés par date",
+      "correlation_window_days": "120",
+      "correlation_universe": [
+        "AEO",
+        "COLB",
+        "PD",
+        "TJX",
+        "MMM",
+        "BNO"
+      ],
+      "correlation_source": "120 rendements logarithmiques appariés, du 7 mai au 27 octobre 2026, sur les barres vérifiées des six lignes.",
+      "regime_bullish_score": "59.9",
+      "regime_scale_note": "Score haussier de 59,9 sur cent, arrêté à la clôture du 27 octobre. Échelle haussière de 0 à 100.",
+      "sizing_status": "not_run"
+    },
+    "tags": [
+      "scanner",
+      "us",
+      "technique",
+      "consumer",
+      "financials",
+      "tech",
+      "industrials",
+      "energy",
+      "commodity"
+    ],
+    "kpis": {
+      "vix": {
+        "value": "17.52",
+        "label": "Volatilité implicite",
+        "color": "#0ea5e9"
+      },
+      "dominant_patterns": [
+        "Momentum",
+        "Breakout",
+        "Pullback"
+      ]
+    },
+    "alerts": [
+      {
+        "type": "warning",
+        "title": "F.N.B., Medtronic et Kroger : vendez mercredi à 14 h 30",
+        "text": "Trois lignes ont clôturé mardi sous leur invalidation : F.N.B. (18,24 $ contre 18,25 $) et Medtronic (93,95 $ contre 94,09 $), achetées mardi, et Kroger (65,87 $ contre 66,35 $), ligne du 26 octobre. Si vous les détenez, annulez leur stop et leur objectif, puis vendez-les au marché mercredi 28 octobre à 14 h 30, heure de Paris. Academy Sports et Walt Disney, achetés mardi, Home BancShares et FCG (26 octobre) et XLE (22 octobre) restent ouverts, avec le plan de leur édition ; ils ne sont pas republiés. Costco et BJ's n'ont pas été exécutés ; Kohl's a ouvert sous son invalidation, l'ordre ne se passait pas. UnitedHealth a été vendu mardi à l'ouverture, 412,72 $, pour un achat à 418,09 $. Pour toutes les lignes encore ouvertes, une vente à l'ouverture jeudi ou vendredi se passe à 14 h 30, quelle que soit l'heure écrite dans leur édition."
+      },
+      {
+        "type": "warning",
+        "title": "New York ouvre à 14 h 30, heure de Paris, jusqu'à vendredi",
+        "text": "La France est passée à l'heure d'hiver le 25 octobre, les États-Unis le feront le 1er novembre. Du mercredi 28 au vendredi 30 octobre, New York ouvre à 14 h 30 et ferme à 21 h, heure de Paris ; à partir du lundi 2 novembre, de nouveau 15 h 30 et 22 h. Ne posez rien avant 14 h 30 mercredi."
+      },
+      {
+        "type": "warning",
+        "title": "Cinq actions et un fonds",
+        "text": "Le minimum habituel est de six actions et deux fonds. Aujourd'hui, un seul fonds passe nos filtres, BNO. Côté actions, Medtronic, vendue à l'ouverture, n'est pas republiée : la racheter dans la séance reviendrait à reprendre une position que la règle vient de couper. Kohl's sort sur le plafond de deux lignes par secteur. Sans Medtronic, Amentum sort sur le plafond de la moitié de la liste pour une même famille ; avec elle, il serait resté. Nous n'avons pas complété la liste. Les six lignes se répartissent entre trois suivis de tendance, une cassure et deux replis."
+      },
+      {
+        "type": "warning",
+        "title": "La sortie la plus fréquente est l'invalidation",
+        "text": "Une seule clôture sous l'invalidation, n'importe quel jour jusqu'au lundi 9 novembre, fait vendre à l'ouverture suivante. Elle est à 13 centimes sous l'entrée pour TJX, 21 centimes pour Columbia Banking, 46 centimes pour PagerDuty, 52 centimes pour BNO, 66 centimes pour American Eagle et 91 centimes pour 3M. Sur 291 périodes de neuf séances du passé de ces titres, ils sont descendus aussi bas une fois sur deux à trois fois sur quatre (51 % pour American Eagle, 73 % pour Columbia Banking, 62 % pour PagerDuty, 74 % pour TJX, 74 % pour 3M, 67 % pour BNO). La sortie peut tomber dès jeudi à 14 h 30. Ce que vous perdez dépend du prix de vente à l'ouverture suivante, pas de ces quelques centimes ; ajoutez les frais de change."
+      },
+      {
+        "type": "warning",
+        "title": "Banques et énergie : attention aux doublons",
+        "text": "Si vous détenez Home BancShares (ligne du 26 octobre), Columbia Banking s'y ajoute : corrélation de 0,72 sur 120 séances, deux banques régionales. Si vous détenez FCG (26 octobre) ou XLE (22 octobre), BNO ajoute de l'énergie : corrélation de 0,76 avec FCG et de 0,72 avec XLE. Sur un petit compte, gardez la ligne déjà ouverte et passez votre tour sur la nouvelle ; ne vendez pas l'ancienne pour acheter la nouvelle."
+      },
+      {
+        "type": "warning",
+        "title": "Réserve fédérale ce soir, inflation le dernier jour",
+        "text": "La Réserve fédérale annonce sa décision ce mercredi 28 octobre à 19 h, heure de Paris, pendant la séance d'entrée ; conférence de presse à 19 h 30. Jeudi 29 à 13 h 30 : indice des prix PCE hors alimentation et énergie, PIB et inscriptions au chômage ; la Banque centrale européenne décide à 14 h 15. Les élections de mi-mandat ont lieu le mardi 3 novembre ; la Bourse de New York est ouverte ce jour-là. L'indice des prix à la consommation sort le mardi 10 novembre à 14 h 30, heure de Paris, une heure avant l'ouverture du jour de la sortie forcée. Microsoft publie ses résultats mercredi soir, après la clôture. Un ordre d'achat non exécuté reste actif jusqu'à 21 h, donc pendant la décision de 19 h : il peut s'exécuter dans le mouvement qui suit. Si vous ne voulez pas acheter sur la réaction à la Réserve fédérale, annulez-le avant 19 h. Vous pouvez vendre avant ces rendez-vous ; le plan, lui, garde la position, stop en place."
+      }
+    ],
+    "intro": "<p>Six plans conditionnels pour la séance du mercredi 28 octobre : cinq actions américaines et un fonds. Deux suivis de tendance (American Eagle, Columbia Banking), une cassure (PagerDuty), deux replis (TJX, 3M) et un fonds de pétrole Brent (BNO), lui aussi en suivi de tendance. Avant tout : si vous détenez F.N.B., Medtronic ou Kroger, vendez-les au marché mercredi à 14 h 30, heure de Paris ; ils ont clôturé mardi sous leur invalidation. Clôture de référence : mardi 27 octobre. Le régime est une reprise, à 59,9 sur cent, contre 57,7 lundi. New York ouvre à 14 h 30, heure de Paris, jusqu'à vendredi. Les ordres d'achat valent cette seule séance et se posent après l'ouverture ; le stop et l'objectif restent actifs jusqu'au 10 novembre (validité « à révocation », jamais « jour »). Sans stop, objectif ni invalidation touchés, vendez le mardi 10 novembre avant 21 h 45, heure de Paris. La Réserve fédérale décide ce mercredi à 19 h, heure de Paris, pendant la séance d'entrée. Les niveaux sont en dollars : si votre courtier ne cote ces titres qu'en euros, passez votre tour.</p>",
+    "regime_prose": "<p>Au 27 octobre, le régime est une reprise, score 59,9 sur cent, échelle haussière, contre 57,7 à la clôture du 26 octobre. La volatilité implicite est à 17,52. La probabilité de bascule vers une crise à cinq jours est de 6,8 %. Sur cinq séances, les services aux collectivités (+2,32 %), la technologie (+2,18 %) et les matériaux (+1,07 %) mènent ; la communication recule de 6,00 %. Sur vingt séances, l'énergie mène (+10,84 %), devant les services aux collectivités (+7,91 %) et la consommation de base (+6,48 %) ; la communication (−7,08 %), la technologie (−2,58 %) et l'industrie (−0,72 %) reculent. L'horizon est de dix séances, du 28 octobre au 10 novembre.</p>",
+    "strategy": "135 lignes de candidats, 132 symboles distincts. 47 ont été écartées par les cribles, 6 n'ont pas pu être chiffrées, 82 sont passées, soit 81 symboles. Soixante-quinze ont été vérifiés sur 300 séances, en deux passes : la première a pris les 48 mieux classés ; la seconde, le reste et les noms que la première n'avait pas tranchés. Six ont été écartés avant : ils publient leurs résultats mercredi. Cinquante-trois actions publient leurs résultats d'ici le 13 novembre ou viennent de le faire ; six autres n'ont pas de date suivante ; sept sont des émetteurs étrangers. Restent huit actions et un fonds. Medtronic, ligne du 27 octobre, a clôturé sous son invalidation et se vend à l'ouverture : la republier reviendrait à racheter dans la séance une position que notre règle vient de couper. Le classement prend les autres dans l'ordre de leur rang normalisé dans leur famille, deux lignes par secteur au plus et la moitié de la liste au plus pour une même famille : BNO, TJX, American Eagle, Columbia Banking, PagerDuty, 3M. Kohl's passe les cribles mais sort sur le plafond de deux lignes par secteur. Sans Medtronic, la liste compte sept lignes, dont quatre suivis de tendance ; la moitié de sept plafonne la famille à trois, et Amentum, le moins bien classé, sort. Avec Medtronic, Amentum serait resté. Trois des six lignes sont des suivis de tendance, la famille dont le dernier bilan disponible, arrêté au 28 août, toutes cotations confondues, est négatif : sur 22 lignes allées à leur terme, 31,8 % ont fini en gain, pour un résultat moyen de −0,24 fois le risque engagé ; l'échantillon est petit.",
+    "market_snapshot": [
+      {
+        "name": "Volatilité implicite",
+        "value": "17,52",
+        "change": "au 27 octobre",
+        "dir": "",
+        "note": "Niveau à la clôture du 27 octobre."
+      },
+      {
+        "name": "Services aux collectivités (XLU)",
+        "value": "42,85",
+        "change": "+2,32 % sur cinq séances",
+        "dir": "up",
+        "note": "Cours de l'ETF sectoriel au 27 octobre."
+      },
+      {
+        "name": "Technologie (XLK)",
+        "value": "189,49",
+        "change": "+2,18 % sur cinq séances",
+        "dir": "up",
+        "note": "Cours de l'ETF sectoriel au 27 octobre."
+      },
+      {
+        "name": "Matériaux (XLB)",
+        "value": "51,78",
+        "change": "+1,07 % sur cinq séances",
+        "dir": "up",
+        "note": "Cours de l'ETF sectoriel au 27 octobre."
+      },
+      {
+        "name": "Industrie (XLI)",
+        "value": "167,92",
+        "change": "+0,67 % sur cinq séances",
+        "dir": "up",
+        "note": "Cours de l'ETF sectoriel au 27 octobre."
+      },
+      {
+        "name": "Énergie (XLE)",
+        "value": "68,21",
+        "change": "+0,35 % sur cinq séances",
+        "dir": "up",
+        "note": "Cours de l'ETF sectoriel au 27 octobre."
+      },
+      {
+        "name": "Financières (XLF)",
+        "value": "55,88",
+        "change": "+0,29 % sur cinq séances",
+        "dir": "up",
+        "note": "Cours de l'ETF sectoriel au 27 octobre."
+      },
+      {
+        "name": "Immobilier (XLRE)",
+        "value": "42,44",
+        "change": "+0,14 % sur cinq séances",
+        "dir": "up",
+        "note": "Cours de l'ETF sectoriel au 27 octobre."
+      },
+      {
+        "name": "Consommation discrétionnaire (XLY)",
+        "value": "115,45",
+        "change": "−0,04 % sur cinq séances",
+        "dir": "",
+        "note": "Cours de l'ETF sectoriel au 27 octobre."
+      },
+      {
+        "name": "Santé (XLV)",
+        "value": "179,18",
+        "change": "−0,36 % sur cinq séances",
+        "dir": "down",
+        "note": "Cours de l'ETF sectoriel au 27 octobre."
+      },
+      {
+        "name": "Consommation de base (XLP)",
+        "value": "87,15",
+        "change": "−0,68 % sur cinq séances",
+        "dir": "down",
+        "note": "Cours de l'ETF sectoriel au 27 octobre."
+      },
+      {
+        "name": "Communication (XLC)",
+        "value": "103,58",
+        "change": "−6,00 % sur cinq séances",
+        "dir": "down",
+        "note": "Cours de l'ETF sectoriel au 27 octobre."
+      }
+    ],
+    "macro_calendar": [
+      {
+        "date": "28 octobre",
+        "date_iso": "2026-10-28",
+        "event": "Décision de taux de la Réserve fédérale (FOMC)",
+        "impact": "élevé",
+        "note": "Décision attendue à 19 h, heure de Paris, pendant la séance d'entrée ; conférence de presse à 19 h 30.",
+        "short": "Fed",
+        "category": "macro",
+        "icon": "bank"
+      },
+      {
+        "date": "29 octobre",
+        "date_iso": "2026-10-29",
+        "event": "Indice des prix PCE hors alimentation et énergie, PIB, inscriptions au chômage",
+        "impact": "élevé",
+        "note": "13 h 30, heure de Paris, une heure avant l'ouverture.",
+        "short": "PCE, PIB",
+        "category": "macro",
+        "icon": "data"
+      },
+      {
+        "date": "29 octobre",
+        "date_iso": "2026-10-29",
+        "event": "Décision de taux de la Banque centrale européenne",
+        "impact": "moyen",
+        "note": "14 h 15, heure de Paris.",
+        "short": "BCE",
+        "category": "macro",
+        "icon": "bank"
+      },
+      {
+        "date": "30 octobre",
+        "date_iso": "2026-10-30",
+        "event": "Zone euro : inflation et croissance (estimations rapides)",
+        "impact": "moyen",
+        "note": "11 h, heure de Paris.",
+        "short": "Zone euro",
+        "category": "macro",
+        "icon": "data"
+      },
+      {
+        "date": "2 novembre",
+        "date_iso": "2026-11-02",
+        "event": "Indice ISM manufacturier (États-Unis)",
+        "impact": "moyen",
+        "note": "16 h, heure de Paris ; les États-Unis sont passés à l'heure d'hiver la veille.",
+        "short": "ISM",
+        "category": "macro",
+        "icon": "data"
+      },
+      {
+        "date": "10 novembre",
+        "date_iso": "2026-11-10",
+        "event": "Indice des prix à la consommation (États-Unis), référence octobre",
+        "impact": "élevé",
+        "note": "14 h 30, heure de Paris, une heure avant l'ouverture du jour de la sortie forcée (date publiée par le Bureau of Labor Statistics).",
+        "short": "Inflation US",
+        "category": "macro",
+        "icon": "data"
+      }
+    ],
+    "sector_rotation": [
+      {
+        "sector": "Services aux collectivités (XLU)",
+        "perf": "+2,32 %",
+        "dir": "up",
+        "signal": "Cinq séances au 27 octobre",
+        "exposure": "Aucune : Duke Energy, Evergy, Consolidated Edison, WEC Energy et Brookfield Renewable publient pendant la fenêtre ; NiSource publie mercredi."
+      },
+      {
+        "sector": "Technologie (XLK)",
+        "perf": "+2,18 %",
+        "dir": "up",
+        "signal": "Cinq séances au 27 octobre",
+        "exposure": "PagerDuty. Bentley Systems et Teradata publient pendant la fenêtre, Microsoft mercredi soir ; NXP a publié le 27 octobre ; Texas Instruments n'a pas de date suivante ; SAP et Ericsson sont des émetteurs étrangers."
+      },
+      {
+        "sector": "Matériaux (XLB)",
+        "perf": "+1,07 %",
+        "dir": "up",
+        "signal": "Cinq séances au 27 octobre",
+        "exposure": "Aucune : Linde et LyondellBasell publient pendant la fenêtre ; Nucor a publié le 26 octobre."
+      },
+      {
+        "sector": "Industrie (XLI)",
+        "perf": "+0,67 %",
+        "dir": "up",
+        "signal": "Cinq séances au 27 octobre",
+        "exposure": "3M. Amentum sort sur le plafond de famille ; Veralto, Tetra Tech et deux autres industriels publient pendant la fenêtre ; Illinois Tool Works, Johnson Controls et Waste Management ont publié le 27 octobre ; Union Pacific, CSX et Waste Connections n'ont pas de date suivante ; Ferrovial et Rentokil sont des émetteurs étrangers ; Fortive publie mercredi."
+      },
+      {
+        "sector": "Énergie (XLE)",
+        "perf": "+0,35 %",
+        "dir": "up",
+        "signal": "Cinq séances au 27 octobre",
+        "exposure": "BNO, fonds de pétrole Brent. Les lignes XLE du 22 octobre et FCG du 26 sont ouvertes (corrélation de 0,72 et de 0,76 avec BNO) ; ConocoPhillips, Cheniere, Ovintiv, Plains GP et Williams publient pendant la fenêtre ; EQT a publié le 27 octobre."
+      },
+      {
+        "sector": "Financières (XLF)",
+        "perf": "+0,29 %",
+        "dir": "up",
+        "signal": "Cinq séances au 27 octobre",
+        "exposure": "Columbia Banking. La ligne Home BancShares du 26 octobre est ouverte (corrélation de 0,72 avec Columbia Banking) ; AIG, MetLife et Aon publient pendant la fenêtre ; SoFi a publié le 27 octobre ; Valley National et W. R. Berkley n'ont pas de date suivante ; ICICI Bank est un émetteur étranger."
+      },
+      {
+        "sector": "Immobilier (XLRE)",
+        "perf": "+0,14 %",
+        "dir": "up",
+        "signal": "Cinq séances au 27 octobre",
+        "exposure": "Aucune : Howard Hughes, Healthcare Realty, Outfront, Pebblebrook, Park Hotels et Rayonier publient pendant la fenêtre."
+      },
+      {
+        "sector": "Consommation discrétionnaire (XLY)",
+        "perf": "−0,04 %",
+        "dir": "",
+        "signal": "Cinq séances au 27 octobre",
+        "exposure": "TJX et American Eagle. La ligne Academy Sports du 27 octobre est ouverte ; Kohl's sort sur le plafond de deux lignes ; Airbnb, Life Time, V.F. et Amcor publient pendant la fenêtre ; O'Reilly publie mercredi."
+      },
+      {
+        "sector": "Santé (XLV)",
+        "perf": "−0,36 %",
+        "dir": "down",
+        "signal": "Cinq séances au 27 octobre",
+        "exposure": "Aucune. La ligne Medtronic du 27 octobre est vendue mercredi à l'ouverture ; Zoetis, Cardinal Health, Revvity, Avantor et six autres publient pendant la fenêtre ; GE HealthCare et Glaukos publient mercredi ; Novartis est un émetteur étranger."
+      },
+      {
+        "sector": "Consommation de base (XLP)",
+        "perf": "−0,68 %",
+        "dir": "down",
+        "signal": "Cinq séances au 27 octobre",
+        "exposure": "Aucune : Mondelez, Colgate-Palmolive et AB InBev publient pendant la fenêtre ; Coca-Cola a publié le 27 octobre ; Unilever est un émetteur étranger."
+      },
+      {
+        "sector": "Communication (XLC)",
+        "perf": "−6,00 %",
+        "dir": "down",
+        "signal": "Cinq séances au 27 octobre",
+        "exposure": "Aucune : Roku publie pendant la fenêtre. La ligne Walt Disney du 27 octobre est ouverte."
+      }
+    ],
+    "macro_thesis": "<p>Trois rendez-vous américains de premier rang encadrent l'horizon : la décision de taux de ce mercredi 28 octobre, 19 h, heure de Paris, pendant la séance d'entrée ; le jeudi 29 à 13 h 30, l'indice des prix PCE hors alimentation et énergie, le PIB et les inscriptions au chômage, avec la Banque centrale européenne à 14 h 15 ; enfin l'indice des prix à la consommation du mardi 10 novembre, 14 h 30, le matin de la sortie forcée. Les élections de mi-mandat du mardi 3 novembre tombent entre les deux. Les six lignes bougent peu ensemble : corrélation moyenne de −0,03 sur 120 séances ; la paire la plus liée est American Eagle et TJX (0,27), deux enseignes d'habillement, et BNO évolue à rebours d'American Eagle (−0,36). Le risque tient surtout à des invalidations très proches de l'entrée : dans le passé de ces titres, au moins quatre des six auraient clôturé sous leur invalidation dans 70 % des périodes de neuf séances (291 périodes). Ce chiffre vient de la fréquence de chaque sortie, pas d'un lien entre les titres. Une mauvaise surprise sur les taux ce soir peut faire clôturer plusieurs lignes sous leur invalidation dès mercredi, toutes vendues jeudi à 14 h 30. Les cinq actions retenues ont été vérifiées une par une jusqu'au 13 novembre pour leurs résultats. Notre agenda économique s'arrête au <time datetime=\"2026-11-02\">2 novembre</time>, avec l'indice ISM ; le registre officiel ajoute l'indice des prix du 10 novembre. Un autre chiffre américain publié entre le 3 et le 10 novembre, comme le rapport mensuel sur l'emploi, dont nous n'avons pas vérifié la date, peut faire bouger les cours, sans changer le plan. Le consensus de ces chiffres n'est pas disponible à la publication.</p>",
+    "pedagogy": {
+      "title": "Comment lire une ligne",
+      "content": "<p>Le prix publié est la clôture du 27 octobre, pas un niveau tracé sur un graphique. Rien ne se pose avant 14 h 30, heure de Paris, mercredi. Une cassure ou un suivi de tendance s'achète avec un ordre stop-limite si le cours est dessous, un ordre limité au même prix s'il est déjà au-dessus ; un repli s'achète par ordre limité au prix publié. Vous ne payez jamais plus que le prix publié. Le stop est calé sur la variation habituelle du titre : au moins 3 % et 1,5 fois sa variation quotidienne moyenne. L'objectif est la première résistance encore intacte des quarante dernières séances, entre 1 et 2 fois cette variation, sinon 1,5 fois. Un seul objectif est une résistance : le plus haut de 3M du jeudi 22 octobre, à 1,16 fois la variation quotidienne moyenne ; les cinq autres sont une formule de volatilité, à 1,5 fois, pas une lecture de graphique. L'invalidation est le plus bas de la séance du 27 octobre : une clôture en dessous fait vendre à l'ouverture suivante, même si le stop n'a pas été touché. Les moyennes citées dans les fiches sont exponentielles. Le RSI mesure la surchauffe d'un titre sur quatorze séances ; au-delà de 72, la ligne est écartée.</p>"
+    },
+    "confirmations": {
+      "AEO": [
+        "Ouverture du 28 octobre au-dessus de 18,76 $.",
+        "Cours sous 19,42 $ : ordre d'achat stop-limite, déclenchement et plafond à 19,42 $. Cours déjà au-dessus : ordre à cours limité à 19,42 $, qui n'achète que sur un retour à ce prix. Valable mercredi seulement."
+      ],
+      "COLB": [
+        "Ouverture du 28 octobre au-dessus de 30,83 $.",
+        "Cours sous 31,04 $ : ordre d'achat stop-limite, déclenchement et plafond à 31,04 $. Cours déjà au-dessus : ordre à cours limité à 31,04 $, qui n'achète que sur un retour à ce prix. Valable mercredi seulement."
+      ],
+      "PD": [
+        "Ouverture du 28 octobre au-dessus de 17,29 $.",
+        "Cours sous 17,75 $ : ordre d'achat stop-limite, déclenchement et plafond à 17,75 $. Cours déjà au-dessus : ordre à cours limité à 17,75 $, qui n'achète que sur un retour à ce prix. Valable mercredi seulement."
+      ],
+      "TJX": [
+        "Ouverture du 28 octobre au-dessus de 140,07 $.",
+        "Ordre à cours limité à 140,20 $, valable mercredi seulement : achat immédiat si le cours est entre 140,07 $ et 140,20 $, sinon sur une baisse jusqu'à 140,20 $."
+      ],
+      "MMM": [
+        "Ouverture du 28 octobre au-dessus de 170,67 $.",
+        "Ordre à cours limité à 171,58 $, valable mercredi seulement : achat immédiat si le cours est entre 170,67 $ et 171,58 $, sinon sur une baisse jusqu'à 171,58 $."
+      ],
+      "BNO": [
+        "Ouverture du 28 octobre au-dessus de 69,15 $.",
+        "Cours sous 69,67 $ : ordre d'achat stop-limite, déclenchement et plafond à 69,67 $. Cours déjà au-dessus : ordre à cours limité à 69,67 $, qui n'achète que sur un retour à ce prix. Valable mercredi seulement."
+      ]
+    },
+    "descriptions": {
+      "AEO": "Habillement, +9,0 % en cinq séances, sans annonce de la société dans nos sources ; 12,6 % du flottant vendu à découvert. Invalidation 18,76 $.",
+      "COLB": "Banque régionale, +3,8 % depuis ses résultats du 22 octobre ; s'ajoute à Home BancShares. Invalidation 30,83 $.",
+      "PD": "Logiciel, plus haut sur un an mardi, plus que triplé depuis avril ; ligne la plus tendue. Invalidation 17,29 $.",
+      "TJX": "Habillement à prix réduits, repli sous la moyenne de deux cents séances, 13 centimes au-dessus de l'invalidation. Invalidation 140,07 $.",
+      "MMM": "Conglomérat industriel, objectif au plus haut du 22 octobre ; rapport gain/risque 0,78. Invalidation 170,67 $.",
+      "BNO": "Pétrole Brent, +45,7 % en soixante séances ; suit la guerre entre l'Iran et les États-Unis (article de Stocktwits repris par Yahoo Finance le 28 octobre). Invalidation 69,15 $."
+    },
+    "disclaimer_extra": "Ces six plans sont distincts. Ils ne sont pas une allocation, et aucun dimensionnement de portefeuille n'a été calculé. Les performances passées des sélections de ce type sont hypothétiques et brutes de frais. La paire la plus liée, American Eagle et TJX, a une corrélation de 0,27 sur 120 séances ; la moyenne des paires est de −0,03. À 1 000 € engagés sur American Eagle, le stop coûte environ 53 €, davantage sur un écart d'ouverture, frais en plus.",
+    "gates_summary": "Chaque ligne s'achète après l'ouverture, 14 h 30, heure de Paris, mercredi : stop-limite au prix publié si le cours est dessous, ordre à cours limité au même prix s'il est déjà au-dessus, pour la cassure et les suivis de tendance ; ordre à cours limité au prix publié pour les replis. Les cinq actions publient leurs prochains résultats après la fenêtre d'exclusion qui finit le 13 novembre : TJX le 18 novembre, PagerDuty le 24, American Eagle le 1er décembre, 3M le 19 janvier 2027, Columbia Banking le 21 janvier 2027. Columbia Banking a publié le 22 octobre et 3M le 20, avant les trois séances qui précèdent l'entrée. Les dépôts d'actions ont été lus sur le document primaire. L'autorisation d'émettre de TJX, déposée dans la fenêtre, ne couvre que de la dette et n'a pas été tirée. 3M a tiré son autorisation universelle de février pour 1,5 Md€ d'obligations en septembre, sans émettre d'actions. Columbia Banking a payé en actions sa fusion avec Pacific Premier, achevée le 31 août 2025, avant la fenêtre ; son autorisation universelle de décembre 2024 n'a jamais été tirée. PagerDuty a des obligations convertibles émises en 2023, convertibles vers 27,35 $ l'action ; American Eagle n'a aucune autorisation d'émettre, seulement un avenant à sa ligne de crédit. BNO est un fonds : pas de dilution d'émetteur. Aucun dividende ne se détache dans l'horizon."
+  }
+}

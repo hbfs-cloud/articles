@@ -29,6 +29,32 @@ function parisOpenLabel(isoDate) {
   return '15 h 30';
 }
 
+/** Dernier moment de la sortie forcée : 15 h 45 à New York (quinze minutes avant la clôture),
+ *  exprimé à Paris pour la séance YYYY-MM-DD : 21 h 45 d'ordinaire, 20 h 45 quand l'Europe a changé
+ *  d'heure avant les États-Unis. */
+function parisExitLabel(isoDate) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(isoDate || '').slice(0, 10));
+  if (!m) return null;
+  for (const utcHour of [19, 20, 21]) {
+    const dt = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], utcHour, 45));
+    const ny = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false }).format(dt);
+    if (ny === '15:45') {
+      const [h, mi] = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hour12: false }).format(dt).split(':');
+      return `${+h} h ${mi}`;
+    }
+  }
+  return null;
+}
+function forcedExitSentence(dd) {
+  const horizon = Number(dd.setups && dd.setups[0] && dd.setups[0].horizon_days) || 10;
+  const exit = require('./lib/market-calendar').addUSTradingDays(dd.date, horizon - 1);
+  const label = require('./lib/fr-calendar').renderFrenchDate(exit, 'weekday_day_month');
+  const hour = parisExitLabel(exit);
+  return label && hour
+    ? `Sans stop, objectif ni invalidation touchés, vendez au marché le ${label} avant ${hour}, heure de Paris.`
+    : `Sans objectif ni stop atteint, vendez avant la clôture de la ${horizon}e séance, à l'heure donnée dans le plan.`;
+}
+
 // Libellé de régime explicite sur son échelle. Un « score » sans unité a déjà permis de publier
 // une confiance d'état (0,685 → « 68,5 % ») sous le nom de score de régime, alors que l'autorité
 // donnait une défensivité de 7,7/100. L'échelle voyage donc avec la valeur.
@@ -274,7 +300,7 @@ const belowOne = (d.setups || []).map(s => {
   return `${s.ticker} ${r.toFixed(2) === '1.00' ? r.toFixed(3).replace('.', ',') : r.toFixed(2).replace('.', ',')}`;
 }).filter(Boolean);
 const rrBelowOne = nBelowOne
-  ? ` ; ${belowOne.length} ligne${belowOne.length > 1 ? 's' : ''} vise${belowOne.length > 1 ? 'nt' : ''} un peu moins qu'elle${belowOne.length > 1 ? 's ne risquent' : ' ne risque'} (${belowOne.join(', ')}), le stop, calé sur la variation habituelle, est plus large que l'objectif`
+  ? ` ; ${belowOne.length} ligne${belowOne.length > 1 ? 's' : ''} vise${belowOne.length > 1 ? 'nt' : ''} moins qu'elle${belowOne.length > 1 ? 's ne risquent' : ' ne risque'} (${belowOne.join(', ')}), le stop, calé sur la variation habituelle, est plus large que l'objectif`
   : '';
 
 /** Le dimensionnement n'est affirmé que s'il a été calculé. `sizing_status: not_run` signifiait
@@ -795,7 +821,7 @@ function scannerTimeline(d) {
         impact: /HIGH|[ÉE]LEV|fort/i.test(impact) ? 'strong' : 'medium', label: r.short || (known ? known[1] : r.event),
         icon: r.icon || (known ? known[2] : 'data'), href: '#macro' });
     }
-    if (setups.length && exit <= to) events.push({ date: exit, category: 'plan', impact: 'strong', label: 'Sortie forcée', detail: 'avant la clôture, sans stop ni objectif touché', icon: 'exit', href: '#synthese' });
+    if (setups.length && exit <= to) events.push({ date: exit, category: 'plan', impact: 'strong', label: 'Sortie forcée', detail: parisExitLabel(exit) ? `avant ${parisExitLabel(exit)}, sans stop ni objectif touché` : 'avant la clôture, sans stop ni objectif touché', icon: 'exit', href: '#synthese' });
     events.sort((a, b) => a.date.localeCompare(b.date));
     return renderEventTimeline({
       id: 'echeancier', asof: d.date, from: d.date, to, events,
@@ -1168,7 +1194,7 @@ ${sectorRotationTable(d.sector_rotation)}
   <div class="content-card">
     <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés sur la clôture de référence. ${hasEntryZone
       ? `Tous les setups restent non exécutables avant l'observation du VWAP de la prochaine séance.`
-      : stopLimit ? `Tous les ordres se posent après l'ouverture, et aucun si l'ouverture se fait sous l'invalidation. Cassures et suivis de tendance : stop-limite au prix publié si le cours est dessous, ordre limité au même prix s'il est déjà au-dessus${hasPullback ? ' ; replis : ordre limité au prix publié' : ''}. Si le prix n'est pas atteint, il n'y a pas de trade.` : `L'entrée est un prix unique : un ordre à cours limité valable la séance, sans condition de VWAP. Si le prix n'est pas touché, il n'y a pas de trade.`}${sizingSentence}</p>
+      : stopLimit ? `Les ordres d'achat se posent après l'ouverture, et aucun si l'ouverture se fait sous l'invalidation ; le stop et l'objectif se posent dès l'achat, avec une validité « à révocation ». Cassures et suivis de tendance : stop-limite au prix publié si le cours est dessous, ordre limité au même prix s'il est déjà au-dessus${hasPullback ? ' ; replis : ordre limité au prix publié' : ''}. Si le prix n'est pas atteint, il n'y a pas de trade.` : `L'entrée est un prix unique : un ordre à cours limité valable la séance, sans condition de VWAP. Si le prix n'est pas touché, il n'y a pas de trade.`}${sizingSentence}</p>
 ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div class="pedagogy-box" style="border-left:4px solid #b45309;">
       <h4><i class="fas fa-list-ol"></i> Ordre d'exécution et hiérarchie des sorties</h4>
       <p>${esc(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy))}</p>
@@ -1179,13 +1205,13 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
       <p>${hasEntryZone
         ? `Entrée = zone conditionnelle à l'ouverture (9h30–9h45 ET), uniquement si le prix s'y trouve et tient le VWAP observé.`
         : stopLimit
-          ? `Rien ne se pose avant l'ouverture de New York (${parisOpenLabel(d.date)}, heure de Paris). Ouverture sous le niveau d'invalidation : pas d'ordre. Cassures et suivis de tendance : si le cours est sous le prix publié, ordre d'achat stop-limite, déclenchement et plafond au prix publié ; s'il est déjà au-dessus, ordre à cours limité au prix publié, qui n'achète que si le cours redescend. Beaucoup de courtiers refusent un stop d'achat sous le cours du moment. ${hasPullback ? 'Replis : ordre à cours limité au prix publié. ' : ''}Ne relevez jamais le prix, n'achetez jamais au marché. Les ordres valent la seule séance. Aucune cotation d'avant-ouverture n'a été relevée : rien ne garantit que ces prix seront traités.`
-          : `Entrée = un prix unique, en ordre à cours limité valable la séance. Pas de zone, pas de condition de VWAP, pas de poursuite : si le marché ouvre au-dessus et n'y revient pas, la ligne ne se déclenche simplement pas.`} Le stop se place dans le système du courtier dès l'achat. ${hasEntryZone
+          ? `Rien ne se pose avant l'ouverture de New York (${parisOpenLabel(d.date)}, heure de Paris). Ouverture sous le niveau d'invalidation : pas d'ordre ; même règle si vous arrivez plus tard, cours sous l'invalidation au moment de poser l'ordre : pas d'ordre. Cassures et suivis de tendance : si le cours est sous le prix publié, ordre d'achat stop-limite, déclenchement et plafond au prix publié ; s'il est déjà au-dessus, ordre à cours limité au prix publié, qui n'achète que si le cours redescend. Beaucoup de courtiers refusent un stop d'achat sous le cours du moment. ${hasPullback ? 'Replis : ordre à cours limité au prix publié. ' : ''}Ne relevez jamais le prix, n'achetez jamais au marché. Les ordres d'achat valent la seule séance. Aucune cotation d'avant-ouverture n'a été relevée : rien ne garantit que ces prix seront atteints.`
+          : `Entrée = un prix unique, en ordre à cours limité valable la séance. Pas de zone, pas de condition de VWAP, pas de poursuite : si le marché ouvre au-dessus et n'y revient pas, la ligne ne se déclenche simplement pas.`} Le stop et l'objectif se placent dans le système du courtier dès l'achat, avec une validité longue (« à révocation », ou jusqu'à la date de sortie forcée), jamais « jour » : un ordre « jour » disparaît le soir même et laisse la ligne sans protection. ${hasEntryZone
         ? `Le R/R du tableau est calculé au HAUT de la zone d'entrée, soit le pire remplissage autorisé; le plancher du scan est 1:${minRR}.`
         : `L’ordre a un plafond unique ; le prix moyen réellement payé peut être inférieur. Le calcul utilise le prix limite, soit le prix maximal autorisé ; une exécution à un prix inférieur modifie le risque réel et le rapport gain/risque.`
       } Aucune quantité n’est proposée : le budget de perte, le cash et les expositions doivent être vérifiés avant achat. ${hasEntryZone
         ? `Si l'ouverture dépasse le haut de la zone de 2%, l'entrée directe est annulée et seul un retour au VWAP peut réarmer la ligne.`
-        : `Si le prix n'est pas touché pendant la séance, la ligne expire : elle n'est pas reportée au lendemain. Sorties : le stop, l'objectif en totalité, ou une clôture sous le niveau d'invalidation (sortie à l'ouverture suivante). Aucune sortie partielle n'est prévue par le plan. Sans objectif ni stop atteint, vendez avant la clôture de la ${d.setups && d.setups[0] && d.setups[0].horizon_days ? d.setups[0].horizon_days : 10}e séance, à l'heure donnée dans le plan.`} ${overextensionNote(d)}</p>
+        : `Si le prix n'est pas touché pendant la séance, la ligne expire : elle n'est pas reportée au lendemain. Sorties : le stop, l'objectif en totalité, ou une clôture sous le niveau d'invalidation (sortie à l'ouverture suivante). Aucune sortie partielle n'est prévue par le plan. ${forcedExitSentence(d)}`} ${overextensionNote(d)}</p>
       <p style="font-size:0.85rem;color:#64748b;margin-top:0.5rem;">${(d.setups || []).some(s => s.sharia === true) ? `Badges : <span class="badge badge-green" style="font-size:.68rem">&#x262A;</span> ligne dont le secteur d'activité est conforme aux critères de finance islamique retenus ici (l'endettement, quand vérifié, est précisé ligne par ligne dans les invalidations — non systématiquement audité).` : 'Aucun contrôle de conformité à la finance islamique n’a été réalisé pour cette sélection.'}</p>
     </div>
   </div>
@@ -1211,7 +1237,7 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
       <h4>4. Calcul des niveaux techniques</h4>
       <p>Entrée / stop / TP / R/R calculés sur les données de clôture réelles. ${geometryNote} ${hasEntryZone
         ? `Une ligne ne devient exécutable qu'après confirmation du VWAP de la séance suivante.`
-        : stopLimit ? `Les cassures et suivis de tendance s'exécutent en ordre stop-limite déclenché au prix publié et plafonné à ce prix, ou en ordre limité au même prix si le cours est déjà au-dessus${hasPullback ? ' ; les replis en ordre limité' : ''}. Tous les ordres se posent après l'ouverture et valent la séance visée ; aucun ne se pose si l'ouverture se fait sous l'invalidation ; leur exécution n'est pas garantie.` : `Un ordre limité est valable uniquement pendant la séance visée et sous réserve des contrôles publiés ; son exécution au prix limite ou à un prix inférieur n’est pas garantie.`}</p>
+        : stopLimit ? `Les cassures et suivis de tendance s'exécutent en ordre stop-limite déclenché au prix publié et plafonné à ce prix, ou en ordre limité au même prix si le cours est déjà au-dessus${hasPullback ? ' ; les replis en ordre limité' : ''}. Les ordres d'achat se posent après l'ouverture et valent la séance visée ; aucun ne se pose si l'ouverture se fait sous l'invalidation ; leur exécution n'est pas garantie.` : `Un ordre limité est valable uniquement pendant la séance visée et sous réserve des contrôles publiés ; son exécution au prix limite ou à un prix inférieur n’est pas garantie.`}</p>
     </div>
 ${Array.isArray(d.gates_report) && d.gates_report.length ? `    <div class="pedagogy-box">
       <h4>Contrôles de publication</h4>
@@ -1222,7 +1248,7 @@ ${d.gates_report.map(g => `        <li><strong>${esc(g.id)} — ${esc(g.name)}</
 ` : ''}${d.gates_summary ? `    <p><strong>${esc(d.gates_summary)}</strong></p>
 ` : ''}    <div class="pedagogy-box">
       <h4>5. Anti-dilution &amp; ranking</h4>
-      <p>Le contrôle SEC doit distinguer les offres d’actions, la dette et les opérations mixtes en lisant les dépôts primaires. Les émetteurs privés étrangers déposent également auprès de la SEC, notamment des 20-F et des 6-K : leur statut ne les dispense pas du contrôle. Les ETF suivent un régime distinct de celui des sociétés opérationnelles. La fenêtre effectivement documentée est celle des preuves de chaque ligne ; un contrôle limité à 90 jours ne permet pas d’exclure des instruments dilutifs plus anciens encore actifs. Un dépôt de nature inconnue écarte la ligne. Depuis le 24 septembre 2026, un S-8 de plan d'actions salariés ne suffit plus à écarter une valeur ; les augmentations de capital, programmes d'émission au fil de l'eau, convertibles et placements privés restent éliminatoires. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Le R/R affiché est calculé au plafond d’achat ; un prix payé inférieur modifie ce rapport, avant frais et glissement. Il s'échelonne de 1:${minRR} à 1:${maxRR} selon les lignes${rrBelowOne}.`}${shariaSentence}</p>
+      <p>Le contrôle SEC doit distinguer les offres d’actions, la dette et les opérations mixtes en lisant les dépôts primaires. Les émetteurs privés étrangers déposent également auprès de la SEC, notamment des 20-F et des 6-K : leur statut ne les dispense pas du contrôle. Les ETF suivent un régime distinct de celui des sociétés opérationnelles. La fenêtre effectivement documentée est celle des preuves de chaque ligne ; un contrôle limité à 90 jours ne permet pas d’exclure des instruments dilutifs plus anciens encore actifs. Un dépôt de nature inconnue écarte la ligne. Depuis le 24 septembre 2026, un S-8 de plan d'actions salariés ne suffit plus à écarter une valeur ; les augmentations de capital, programmes d'émission au fil de l'eau, convertibles et placements privés réalisés dans la fenêtre de contrôle restent éliminatoires ; plus anciens, ils sont décrits ligne par ligne. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Le R/R affiché est calculé au plafond d’achat ; un prix payé inférieur modifie ce rapport, avant frais et glissement. Il s'échelonne de 1:${minRR} à 1:${maxRR} selon les lignes${rrBelowOne}.`}${shariaSentence}</p>
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:1rem;">
       <h4 style="margin:0 0 0.5rem;">Sources de données</h4>
