@@ -24,3 +24,18 @@ Grille A+ validée empiriquement sur cohorte 29 setups réels (10/06–21/06/202
 **How to apply:** Appliquer dans tous les pipelines de notation : skill aplus-setups, scanner-pipeline, analyses, routine cloud Setup A+. Les 4 éliminatoires sont des gates durs. Mis à jour dans les 3 skills + mémoire MCP (priority=critical).
 
 Liens : [[aplus-screening-dsl]], [[no-hallucination]]
+
+**Mise à jour du 29 octobre 2026 (décision du propriétaire) — vivier A+ vide depuis le 10 août.**
+Deux causes structurelles, pas un marché sans A+ :
+1. `earnings_surprises` et `earnings_quarterly` (Yahoo) ne servent que 4 trimestres : « ≥5 beats » est
+   indémontrable (21 dossiers à 4/4 rejetés du 13 au 29 octobre). Règle provisoire : 4 beats sur 4 trimestres
+   servis passent, avec `eps_beats_provisional: true` et `eps_quarters_served: 4`, mention « historique limité »
+   sur la fiche ; retour à 5 dès qu'une source sert 5 trimestres (`tools/lib/trade-idea-gates.js` l'impose).
+   Aucune autre source ne comble : `earnings_reactions` a 8 publications sans BPA ni consensus, la SEC n'a pas
+   le consensus.
+2. Le crible Fortress filtrait la liquidité en ACTIONS (`vol>2500000`) : vivier de titres à 17-25 $ médian,
+   jamais de compounder. Remplacé par `close*sma(vol,20)>2e7` (≥ 20 M$/jour) : 199 noms au lieu de 53 sur la
+   clôture du 28 octobre, 78 à 4/4 beats et PER prévisionnel < 35 contre 16.
+
+**How to apply (complément) :** si le vivier A+ reste vide plus de deux semaines hors saison des résultats,
+chercher d'abord un critère indémontrable par la donnée servie avant de conclure à l'absence de setup.

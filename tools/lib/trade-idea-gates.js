@@ -1,5 +1,8 @@
 'use strict';
 
+// Nombre de trimestres que servent aujourd'hui earnings_surprises et earnings_quarterly (Yahoo).
+const EPS_SOURCE_CAP_QUARTERS = 4;
+
 function finitePositive(value) {
   return typeof value === 'number' && Number.isFinite(value) && value > 0;
 }
@@ -126,8 +129,19 @@ function validateAplus(payload) {
     if (candidate.guidance_raised !== true) errors.push(`${ticker}: guidance_raised must be true`);
     if (!String(candidate.guidance_source || '').trim() || !(candidate.source_ids || []).includes('guidance')) errors.push(`${ticker}: raised guidance needs a primary guidance source`);
     if (!(candidate.source_ids || []).includes('corporate_actions')) errors.push(`${ticker}: source_ids is missing corporate_actions`);
-    if (!Number.isInteger(candidate.eps_beats_consecutive) || candidate.eps_beats_consecutive < 5) errors.push(`${ticker}: fewer than five consecutive EPS beats`);
-    if (!String(candidate.eps_beats_source || '').trim() || !(candidate.source_ids || []).includes('eps_history')) errors.push(`${ticker}: five-beat history needs a bound primary source`);
+    // Décision du propriétaire du 29 octobre 2026 : les sources de résultats ne servent que 4 trimestres,
+    // ce qui rendait « 5 beats consécutifs » indémontrable. Tant qu'elles plafonnent à 4, 4 beats sur
+    // 4 trimestres servis passent, marqués provisoires ; une source qui sert 5 trimestres ou plus exige 5.
+    const epsProvisional = candidate.eps_beats_provisional === true;
+    if (epsProvisional && candidate.eps_quarters_served !== EPS_SOURCE_CAP_QUARTERS) {
+      errors.push(`${ticker}: provisional EPS pass requires eps_quarters_served=${EPS_SOURCE_CAP_QUARTERS} (source cap)`);
+    }
+    const epsBeatsPass = Number.isInteger(candidate.eps_beats_consecutive) && (epsProvisional
+      ? candidate.eps_quarters_served === EPS_SOURCE_CAP_QUARTERS && candidate.eps_beats_consecutive === EPS_SOURCE_CAP_QUARTERS
+      : candidate.eps_beats_consecutive >= 5);
+    const minBeatQuarters = epsProvisional ? EPS_SOURCE_CAP_QUARTERS : 5;
+    if (!epsBeatsPass) errors.push(epsProvisional ? `${ticker}: provisional EPS pass needs 4 beats on the 4 served quarters` : `${ticker}: fewer than five consecutive EPS beats`);
+    if (!String(candidate.eps_beats_source || '').trim() || !(candidate.source_ids || []).includes('eps_history')) errors.push(`${ticker}: EPS beat history needs a bound primary source`);
     const guidanceProof = candidate.guidance_proof;
     if (!guidanceProof || guidanceProof.ticker !== ticker || guidanceProof.action !== 'raised'
       || guidanceProof.primary !== true || guidanceProof.source_id !== 'guidance'
@@ -136,8 +150,8 @@ function validateAplus(payload) {
       errors.push(`${ticker}: guidance_proof must be a dated primary raised-guidance observation`);
     }
     const beatProof = candidate.eps_beat_proof;
-    if (!Array.isArray(beatProof) || beatProof.length < 5) {
-      errors.push(`${ticker}: eps_beat_proof needs at least five quarterly observations`);
+    if (!Array.isArray(beatProof) || beatProof.length < minBeatQuarters) {
+      errors.push(`${ticker}: eps_beat_proof needs at least ${minBeatQuarters} quarterly observations`);
     } else {
       const dates = new Set();
       for (const observation of beatProof) {
@@ -150,7 +164,7 @@ function validateAplus(payload) {
         if (observation && dates.has(observation.date)) errors.push(`${ticker}: duplicate EPS proof quarter ${observation.date}`);
         if (observation) dates.add(observation.date);
       }
-      if (dates.size < 5) errors.push(`${ticker}: eps_beat_proof needs five unique quarters`);
+      if (dates.size < minBeatQuarters) errors.push(`${ticker}: eps_beat_proof needs ${minBeatQuarters} unique quarters`);
     }
     const secReview = candidate.sec_review;
     if (!secReview || secReview.ticker !== ticker || secReview.source_id !== 'sec'
@@ -192,7 +206,7 @@ function validateAplus(payload) {
 
     const expectedComponents = {
       guidance_gate: candidate.guidance_raised === true ? 5 : 0,
-      eps_beats_gate: Number.isInteger(candidate.eps_beats_consecutive) && candidate.eps_beats_consecutive >= 5 ? 5 : 0,
+      eps_beats_gate: epsBeatsPass ? 5 : 0,
       valuation_gate: pePass || exceptionPass ? 5 : 0,
       extension_gate: typeof candidate.ema20_extension_pct === 'number' && candidate.ema20_extension_pct <= 3 ? 5 : 0,
       peg: finitePositive(candidate.peg) && candidate.peg < 1.5 ? 15 : 0,
@@ -232,4 +246,4 @@ function validateAplus(payload) {
   return [...new Set(errors)];
 }
 
-module.exports = { checkEvidence, checkLevels, validateAplus, validateTradeIdeas };
+module.exports = { EPS_SOURCE_CAP_QUARTERS, checkEvidence, checkLevels, validateAplus, validateTradeIdeas };

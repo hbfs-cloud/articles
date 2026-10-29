@@ -32,7 +32,9 @@ symbole et un tie-break ticker stable. Les plans dates archives ne sont jamais r
 Pour chaque candidat:
 
 1. Guidance explicitement relevee, liee a une source primaire.
-2. Au moins cinq beats EPS consecutifs, historique lie a une source.
+2. Au moins cinq beats EPS consecutifs, historique lie a une source. Provisoire (decision du proprietaire,
+   29 octobre 2026) : tant que les sources ne servent que 4 trimestres, 4 beats sur 4 passent avec
+   `eps_beats_provisional: true` et `eps_quarters_served: 4`, mention « historique limite » sur la fiche.
 3. Forward PE <35, ou exception documentee exigeant monopole mondial, croissance EPS >25% et PEG <2.
 4. Extension EMA20 <=3%.
 5. Au moins 10 seances avant earnings.

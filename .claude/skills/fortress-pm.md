@@ -211,10 +211,22 @@ Badge par ligne retenue : ✅ Halal / ❓ Débattu (crypto) — jamais de ⚠️
   de leadership (non étendu) vs déjà cuit.
 
 **3.2 POOL LIQUIDE — loose screen** (ne PAS gater sur l'EMA stack → 0 résultat)
-`RunScreener pass_expr="rsi14>48 && rsi14<60 && macd>0 && vol>2500000" top_k=90` (async → poll
-`Jobs(job_id=...)`, canonique, ex-CheckJobStatus). `abs()` interdit en score_expr. Candidats = symbol/last_price/market_cap/rsi/
-macd/atr/vol. Post-filtre : market_cap 2-20 G$ ; restreindre aux LEADING GROUPS ; retirer tickers
-déjà au book / couverts le mois passé.
+`RunScreener pass_expr="rsi14>48 && rsi14<60 && macd>0 && close*sma(vol,20)>2e7 && market_cap>2e9 && market_cap<2e10" top_k=1000`
+(async → poll `Jobs(job_id=...)`, canonique, ex-CheckJobStatus). `abs()` interdit en score_expr. Candidats = symbol/last_price/market_cap/rsi/
+macd/atr/vol. Post-filtre : restreindre aux LEADING GROUPS ; retirer tickers déjà au book / couverts le mois passé.
+
+**Liquidité en DOLLARS, jamais en actions** (décision du propriétaire, 29 octobre 2026). L'ancien filtre
+`vol>2500000` (actions échangées) ne gardait que des titres bon marché et très échangés : prix médian du
+vivier de 17 à 25 $ du 13 au 29 octobre 2026, au plus un titre au-dessus de 100 $, aucune entreprise du type
+des A+ de juin (AMGN, KLAC, ASML, ACA). Sur la clôture du 28 octobre, `close*sma(vol,20)>2e7` (≥ 20 M$
+échangés par jour en moyenne sur vingt séances) sert 199 noms au lieu de 53, prix médian 55 $, 54 titres
+au-dessus de 100 $, et contient 51 des 53 noms de l'ancien vivier ; 78 noms y affichent 4 beats sur 4 et un
+PE forward < 35, contre 16 dans l'ancien. `top_k` doit couvrir tout le vivier.
+Backtest relatif du 29 octobre (RunBacktest, `rsi14>48 && rsi14<60 && macd>0`, 50 noms de chaque vivier,
+jusqu'au 2026-10-28) : sur 30 jours, profit factor 1,99 contre 1,37, Sharpe 1,60 contre 0,49, creux 19,8 %
+contre 29,9 % ; sur deux ans, profit factor 0,80 contre 1,01 et 49,1 % de gagnants contre 51,1 %. Le
+signal technique seul n'est pas l'edge (§0bis) : le vivier alimente les éliminatoires, il ne se trade pas.
+Suivre le rendement des appels A+ produits par le nouveau vivier pour juger le changement.
 
 **3.3 LES 4 ÉLIMINATOIRES** — par-ticker, données réelles
 Les quatre gates restent obligatoires pour `FortressA+`. Si une preuve est indisponible, y compris
@@ -223,7 +235,15 @@ la conformité Sharia, le dossier reste dans `fortress_watch_pool` avec `grade:"
 exclut le dossier. Une watchlist ne produit jamais d'ordre.
 1. **GUIDANCE RELEVÉE** au dernier trimestre (QueryData earnings/news). #1 discriminant (100% des
    A+, 91% des A ne l'ont pas). Preuve absente → watchlist, jamais A+.
-2. **≥5 BEATS EPS consécutifs** (QueryData earnings_quarterly limit=8). Série incomplète → watchlist.
+2. **≥5 BEATS EPS consécutifs** (QueryData earnings_surprises + earnings_quarterly limit=8). Série incomplète → watchlist.
+   **Passage provisoire 4/4** (décision du propriétaire, 29 octobre 2026) : les deux sources ne servent que
+   4 trimestres (`quarters_available` = 4 ; note serveur « Yahoo caps history at 4 quarters »), donc 5 beats
+   ne sont jamais démontrables ; c'est ce qui a vidé le vivier A+ depuis le 10 août 2026. Tant que la source
+   plafonne à 4, **4 beats sur les 4 trimestres servis passent l'éliminatoire**, avec
+   `eps_beats_provisional: true` et `eps_quarters_served: 4` dans le dossier et la mention « 4 sur 4,
+   historique limité par la source » sur la fiche. 3 sur 4 échoue. Dès qu'une source sert 5 trimestres ou
+   plus, la règle des 5 s'applique à nouveau (le validateur `tools/lib/trade-idea-gates.js` refuse le
+   provisoire quand `eps_quarters_served` ≠ 4). Les trois autres éliminatoires ne bougent pas.
 3. **PE forward < 35** (QueryData stats forwardPE). Exception : monopole techno mondial + EPS
    >25%/an + PEG<2.
 4. **EXTENSION EMA20 ≤ 3%** : ext% = (price/ema20−1)×100. >3% = watchlist, PAS A+ au spot.
@@ -350,6 +370,10 @@ seulement (jamais dans un article) ; aucun chiffre sans source MCP ; signaler �
 ## 9. DSL GOTCHAS (vérifiés)
 ema/sma à 2 args : `ema(close,20)`. `abs()` interdit en score_expr (→0 silencieux). Ne PAS gater
 le screen sur l'EMA stack (→0) — vérifier par-ticker. `RunAutoScreener` = regime only.
-`RunScreener` candidats = symbol/last_price/market_cap/rsi/macd/atr/vol uniquement. trend_strength
+`RunScreener` candidats = symbol/last_price/market_cap/rsi/macd/atr/vol uniquement. Liquidité en dollars :
+`close*sma(vol,20)>2e7` est accepté par le moteur (vérifié le 2026-10-29). Barres : pour certains titres
+(RXRX, PATH, TOST… en octobre 2026), `bars_daily` renvoie une barre isolée de juillet 2024 suivie d'un trou
+de 281 séances ; ne calculer les moyennes que sur le dernier segment continu et ne rejeter pour « barres
+incomplètes » que si ce segment fait moins de 250 séances ou si un trou touche les 250 dernières. trend_strength
 réel ~0,05-0,10. RunScreener/RunBacktest async → poll `Jobs(job_id=...)` (canonique, ex-CheckJobStatus). Backtest = comparaisons
 RELATIVES uniquement (cf. §0).

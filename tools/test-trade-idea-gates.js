@@ -115,6 +115,29 @@ const correlated = {
 };
 assert(validateTradeIdeas(correlated).some(e => e.includes('exceeds 0.70')));
 
+// 4 beats sur 4 trimestres servis : passage provisoire tant que la source plafonne à 4 trimestres.
+const provisional = structuredClone(aplus);
+provisional.eps_beats_consecutive = 4;
+provisional.eps_quarters_served = 4;
+provisional.eps_beats_provisional = true;
+provisional.eps_beat_proof = provisional.eps_beat_proof.slice(0, 4);
+assert.deepStrictEqual(validateAplus({ reference_close: '2026-08-28', status: 'ready', candidates: [provisional] }), []);
+
+const provisionalMiss = structuredClone(provisional);
+provisionalMiss.eps_beats_consecutive = 3;
+provisionalMiss.eps_beat_proof = provisionalMiss.eps_beat_proof.slice(0, 3);
+const missErrors = validateAplus({ reference_close: '2026-08-28', status: 'ready', candidates: [provisionalMiss] });
+assert(missErrors.some(e => e.includes('4 beats on the 4 served quarters')));
+assert(missErrors.some(e => e.includes('differs from recomputed')));
+
+const provisionalDeepSource = structuredClone(provisional);
+provisionalDeepSource.eps_quarters_served = 8;
+assert(validateAplus({ reference_close: '2026-08-28', status: 'ready', candidates: [provisionalDeepSource] }).some(e => e.includes('source cap')));
+
+const fourWithoutFlag = structuredClone(provisional);
+delete fourWithoutFlag.eps_beats_provisional;
+assert(validateAplus({ reference_close: '2026-08-28', status: 'ready', candidates: [fourWithoutFlag] }).some(e => e.includes('fewer than five')));
+
 assert.deepStrictEqual(validateAplus({ reference_close: '2026-08-28', status: 'no_setup', candidates: [] }), []);
 
 console.log('trade idea gate tests: PASS');

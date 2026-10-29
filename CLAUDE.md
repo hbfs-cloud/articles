@@ -366,6 +366,9 @@ Règles critiques issues de feedbacks et incidents passés. S'appliquent à tout
 - **Fortress Mandate** : Fortress = participer au upside AVEC parachute, PAS un mode low-return. Trailing + décorrélation + de-risk.
 - **Mode Success Criteria** : Modes doivent battre SPY ≥3× chaque semaine, max DD ≤8%.
 - **A+ Grading** : 4 éliminatoires (guidance relevée, ≥5 EPS beats, PE fwd <35x, ext EMA20 ≤3%) + scoring /100.
+  Provisoire depuis le 29 octobre 2026 : les sources de résultats ne servent que 4 trimestres, donc 4 beats sur
+  4 passent, marqués `eps_beats_provisional` (fiche : « historique limité ») ; la règle des 5 revient dès qu'une
+  source sert 5 trimestres. Crible Fortress : liquidité en dollars (`close*sma(vol,20)>2e7`), jamais en actions.
 
 ### Publication
 - **Content QA Gate** : AVANT tout `add_card.js`/commit d'un article éditorial (analyse, daily, weekly), passer le gate structurel : `node tools/qa-content.js <path> --strict` (exit 1 = bloquant). Complète `tools/qa-check.js` (scanner). Fact-check MCP = étape runtime séparée (voir en-tête du script).

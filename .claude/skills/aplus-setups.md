@@ -32,7 +32,11 @@ Every published candidate must prove, through referenced evidence artifacts:
 - at least one reviewed SEC accession present in the certified SEC artifact;
 
 - explicit raised guidance from a primary IR filing/release;
-- at least five consecutive EPS beats, each represented as a dated actual/estimate observation;
+- at least five consecutive EPS beats, each represented as a dated actual/estimate observation.
+  Provisional rule (owner decision, 2026-10-29): `earnings_surprises` and `earnings_quarterly` serve only
+  4 quarters, so while that cap holds, 4 beats on the 4 served quarters pass with
+  `eps_beats_provisional: true` and `eps_quarters_served: 4`, labelled as limited history on the card;
+  a source serving 5+ quarters requires 5 again (enforced by `tools/lib/trade-idea-gates.js`);
 - forward PE below 35, or the fully documented exception in the command contract;
 - EMA20 extension at or below 3%;
 - at least ten US sessions before earnings;
