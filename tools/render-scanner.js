@@ -821,7 +821,7 @@ function scannerTimeline(d) {
         impact: /HIGH|[ÉE]LEV|fort/i.test(impact) ? 'strong' : 'medium', label: r.short || (known ? known[1] : r.event),
         icon: r.icon || (known ? known[2] : 'data'), href: '#macro' });
     }
-    if (setups.length && exit <= to) events.push({ date: exit, category: 'plan', impact: 'strong', label: 'Sortie forcée', detail: parisExitLabel(exit) ? `avant ${parisExitLabel(exit)}, sans stop ni objectif touché` : 'avant la clôture, sans stop ni objectif touché', icon: 'exit', href: '#synthese' });
+    if (setups.length && exit <= to) events.push({ date: exit, category: 'plan', impact: 'strong', label: 'Sortie forcée', detail: parisExitLabel(exit) ? `avant ${parisExitLabel(exit)}, sans stop, objectif ni invalidation touchés` : 'avant la clôture, sans stop, objectif ni invalidation touchés', icon: 'exit', href: '#synthese' });
     events.sort((a, b) => a.date.localeCompare(b.date));
     return renderEventTimeline({
       id: 'echeancier', asof: d.date, from: d.date, to, events,
@@ -1008,7 +1008,7 @@ function buildPage(d) {
   const PATTERN_SUB = {
     Momentum: 'suivi de tendance, achat sur force',
     Breakout: 'cassure ou test de résistance',
-    Pullback: 'repli dans une tendance longue',
+    Pullback: 'repli vers les moyennes',
     'Combiné': 'panier diversifié multi-secteurs',
   };
   const groups = {};
@@ -1194,7 +1194,7 @@ ${sectorRotationTable(d.sector_rotation)}
   <div class="content-card">
     <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés sur la clôture de référence. ${hasEntryZone
       ? `Tous les setups restent non exécutables avant l'observation du VWAP de la prochaine séance.`
-      : stopLimit ? `Les ordres d'achat se posent après l'ouverture, et aucun si l'ouverture se fait sous l'invalidation ; le stop et l'objectif se posent dès l'achat, avec une validité « à révocation ». Cassures et suivis de tendance : stop-limite au prix publié si le cours est dessous, ordre limité au même prix s'il est déjà au-dessus${hasPullback ? ' ; replis : ordre limité au prix publié' : ''}. Si le prix n'est pas atteint, il n'y a pas de trade.` : `L'entrée est un prix unique : un ordre à cours limité valable la séance, sans condition de VWAP. Si le prix n'est pas touché, il n'y a pas de trade.`}${sizingSentence}</p>
+      : stopLimit ? `Les ordres d'achat se posent après l'ouverture, et aucun si l'ouverture se fait sous l'invalidation ; le stop et l'objectif se posent dès l'achat, avec une validité « à révocation ». Cassures et suivis de tendance : stop-limite au prix publié si le cours est dessous, ordre limité au même prix s'il est déjà au-dessus${hasPullback ? ' ; replis : ordre limité au prix publié' : ''}. Si le prix n'est pas atteint, il n'y a pas d'achat.` : `L'entrée est un prix unique : un ordre à cours limité valable la séance, sans condition de VWAP. Si le prix n'est pas touché, il n'y a pas d'achat.`}${sizingSentence}</p>
 ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div class="pedagogy-box" style="border-left:4px solid #b45309;">
       <h4><i class="fas fa-list-ol"></i> Ordre d'exécution et hiérarchie des sorties</h4>
       <p>${esc(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy))}</p>
@@ -1205,7 +1205,7 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
       <p>${hasEntryZone
         ? `Entrée = zone conditionnelle à l'ouverture (9h30–9h45 ET), uniquement si le prix s'y trouve et tient le VWAP observé.`
         : stopLimit
-          ? `Rien ne se pose avant l'ouverture de New York (${parisOpenLabel(d.date)}, heure de Paris). Ouverture sous le niveau d'invalidation : pas d'ordre ; même règle si vous arrivez plus tard, cours sous l'invalidation au moment de poser l'ordre : pas d'ordre. Cassures et suivis de tendance : si le cours est sous le prix publié, ordre d'achat stop-limite, déclenchement et plafond au prix publié ; s'il est déjà au-dessus, ordre à cours limité au prix publié, qui n'achète que si le cours redescend. Beaucoup de courtiers refusent un stop d'achat sous le cours du moment. ${hasPullback ? 'Replis : ordre à cours limité au prix publié. ' : ''}Ne relevez jamais le prix, n'achetez jamais au marché. Les ordres d'achat valent la seule séance. Aucune cotation d'avant-ouverture n'a été relevée : rien ne garantit que ces prix seront atteints.`
+          ? `Rien ne se pose avant l'ouverture de New York (${parisOpenLabel(d.date)}, heure de Paris). Ouverture sous le niveau d'invalidation : pas d'ordre. Si vous arrivez plus tard, vérifiez deux cours, l'ouverture du jour et le cours du moment : l'un des deux sous l'invalidation, pas d'ordre, même si le cours est remonté depuis. Cassures et suivis de tendance : si le cours est sous le prix publié, ordre d'achat stop-limite, déclenchement et plafond au prix publié ; s'il est déjà au-dessus, ordre à cours limité au prix publié, qui n'achète que si le cours redescend. Beaucoup de courtiers refusent un stop d'achat sous le cours du moment. ${hasPullback ? 'Replis : ordre à cours limité au prix publié. ' : ''}Ne relevez jamais le prix, n'achetez jamais au marché. Les ordres d'achat valent la seule séance. Aucune cotation d'avant-ouverture n'a été relevée : rien ne garantit que ces prix seront atteints.`
           : `Entrée = un prix unique, en ordre à cours limité valable la séance. Pas de zone, pas de condition de VWAP, pas de poursuite : si le marché ouvre au-dessus et n'y revient pas, la ligne ne se déclenche simplement pas.`} Le stop et l'objectif se placent dans le système du courtier dès l'achat, avec une validité longue (« à révocation », ou jusqu'à la date de sortie forcée), jamais « jour » : un ordre « jour » disparaît le soir même et laisse la ligne sans protection. ${hasEntryZone
         ? `Le R/R du tableau est calculé au HAUT de la zone d'entrée, soit le pire remplissage autorisé; le plancher du scan est 1:${minRR}.`
         : `L’ordre a un plafond unique ; le prix moyen réellement payé peut être inférieur. Le calcul utilise le prix limite, soit le prix maximal autorisé ; une exécution à un prix inférieur modifie le risque réel et le rapport gain/risque.`
@@ -1227,7 +1227,7 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
     </div>
     <div class="pedagogy-box">
       <h4>2. Screening multi-stratégie</h4>
-      <p>Trois filtres de sélection complémentaires : Momentum (tendance + volume), Breakout (cassure ou test de résistance), Pullback (repli dans une tendance longue). Short Squeeze exclu depuis le 20 mars 2026.</p>
+      <p>Trois filtres de sélection complémentaires : Momentum (tendance + volume), Breakout (cassure ou test de résistance), Pullback (repli vers les moyennes). Short Squeeze exclu depuis le 20 mars 2026.</p>
     </div>
     <div class="pedagogy-box">
       <h4>3. Scoring composite</h4>
