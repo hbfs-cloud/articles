@@ -1809,6 +1809,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "MRVL",
+    "exchange": "NASDAQ · Semi-conducteurs pour centres de données",
+    "name": "MRVL — Marvell paie Lumentum en actions : 458 millions d’actions nouvelles, une indemnité régl...",
+    "title": "MRVL — Marvell paie Lumentum en actions : 458 millions d’actions nouvelles, une indemnité régl...",
+    "desc": "Marvell rachète Lumentum en actions (4,5 actions par action, 33 % du nouvel ensemble, clôture visée en 2028) et perd 22 % en deux séances. Cours affiché : clôture du 30 octobre. Rien à acheter ; niveaux provisoires, à recalculer sur la clôture certifiée du 2 novembre.",
+    "tags": "us,semis,ai,ai-chain,trade-idea",
+    "grade": "C",
+    "href": "/analyses/MRVL/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "LITE",
     "exchange": "NASDAQ · Lasers et modules optiques pour les centres de données de l’IA",
     "name": "LITE — Lumentum vendue à Marvell (4,5 actions MRVL par action). Garder, vendre ou passer en Ma...",
@@ -2376,19 +2389,6 @@ window.searchDataPrebuilt = [
     "tags": "us,equities,ai-chain,semis,technology",
     "grade": "B-",
     "href": "/analyses/AVGO/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "MRVL",
-    "exchange": "NASDAQ · Semi-conducteurs pour centres de données",
-    "name": "MRVL — Marvell : les centres de données accélèrent, le capital se dilue au profit de Google, N...",
-    "title": "MRVL — Marvell : les centres de données accélèrent, le capital se dilue au profit de Google, N...",
-    "desc": "Marvell : +37 % de croissance, un accord avec Google payé en bons de souscription et près de 12 % de dilution potentielle. Dossier au close du 23 septembre 2026, statut surveiller.",
-    "tags": "us,equities,ai-chain,semis,technology",
-    "grade": "B-",
-    "href": "/analyses/MRVL/",
     "date": ""
   },
   {
