@@ -90,6 +90,24 @@
       }
     },
 
+    "liveSession": {
+      "type": "object",
+      "description": "Section facultative « Séance en cours » : cotations de séance horodatées, NON certifiées, publiées quand un événement majeur tombe avant la clôture certifiée. Aucun niveau du plan n'en dérive. Rendue juste après le verdict.",
+      "required": ["title", "capturedAt", "status", "rows", "points"],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string", "minLength": 10, "maxLength": 120 },
+        "capturedAt": { "type": "string", "description": "Horodatage UTC du relevé (ISO 8601)." },
+        "capturedAtDisplay": { "type": "string", "maxLength": 160 },
+        "status": { "type": "string", "minLength": 10, "maxLength": 200 },
+        "rows": { "type": "array", "minItems": 1, "maxItems": 12, "items": { "type": "object", "required": ["ticker", "price", "change"], "additionalProperties": false, "properties": {
+          "ticker": { "type": "string" }, "label": { "type": "string" }, "price": { "type": "string" }, "change": { "type": "string" }, "time": { "type": "string" } } } },
+        "points": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "type": "string" } },
+        "note": { "type": "string" },
+        "sourceRefs": { "$ref": "#/$defs/sourceRefs" }
+      }
+    },
+
     "timeline": {
       "type": "object",
       "description": "Échéancier (format du 2026-10-26, tools/templates/event-timeline.md) : rendez-vous datés et vérifiés de la fenêtre utile, rendus par tools/lib/event-timeline.cjs.",
@@ -790,6 +808,7 @@
         "archiveReferenceClose": {"type": "string", "pattern": "^20[0-9]{2}-[0-9]{2}-[0-9]{2}$"},
         "entry":       { "type": "number" },
         "entryNote":   { "type": "string", "description": "e.g. 'Momentum entry'" },
+        "triggerNotBefore": { "type": "string", "pattern": "^20[0-9]{2}-[0-9]{2}-[0-9]{2}$", "description": "Première séance dont la clôture compte pour le déclenchement (plan conditionné à un événement daté, ex. des résultats). Lu par tools/analyses-lifecycle.js." },
         "stop":        { "type": "number" },
         "stopPct":     { "type": "string", "description": "e.g. '-6.2% risk'" },
         "tp1":         { "type": "number" },

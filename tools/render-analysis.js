@@ -471,6 +471,28 @@ function renderTimeline(d) {
       </div>`;
 }
 
+// Séance en cours (bloc facultatif) : cotations horodatées, non certifiées, quand un événement majeur tombe avant la
+// clôture certifiée. Aucun niveau du plan n'en dérive ; le bandeau le dit avant les chiffres.
+function renderLiveSession(d) {
+  const s = d.liveSession;
+  if (!s) return '';
+  return `
+      <div id="seance" class="content-card">
+        <h2><i class="fa-solid fa-tower-broadcast"></i> ${esc(s.title)}</h2>
+        <div class="data-empty-state"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>${esc(s.status)}</strong>${s.capturedAtDisplay ? `<p>${esc(s.capturedAtDisplay)}</p>` : ''}</div></div>
+        <table class="data-table">
+          <thead><tr><th>${tx(d, 'Ticker', 'Titre')}</th><th>${tx(d, 'Price', 'Cours')}</th><th>${tx(d, 'Change', 'Variation')}</th><th>${tx(d, 'Time', 'Heure')}</th></tr></thead>
+          <tbody>
+${s.rows.map(r => `            <tr><td><strong>${esc(r.ticker)}</strong>${r.label ? ` <span style="color:#64748b;font-size:0.8rem;">${esc(r.label)}</span>` : ''}</td><td>${esc(r.price)}</td><td>${esc(r.change)}</td><td>${esc(r.time || '')}</td></tr>`).join('\n')}
+          </tbody>
+        </table>
+        <ul style="margin:1rem 0 0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.5rem;">
+${s.points.map(p => `          <li style="font-size:0.9rem;line-height:1.5;">${esc(p)}</li>`).join('\n')}
+        </ul>
+        ${s.note ? `<div class="pedagogy-box"><p>${esc(s.note)}</p></div>` : ''}${sourceRefsHtml(s.sourceRefs)}
+      </div>`;
+}
+
 function renderBusiness(d) {
   if (!d.business) return '';
   const b = d.business;
@@ -1418,6 +1440,7 @@ function render(data) {
     renderHeader(data),
     '\n    <div class="container">',
     renderVerdict(data),
+    renderLiveSession(data),
     renderTimeline(data),
     renderTradeIdea(data),
     progressiveDeepDive,

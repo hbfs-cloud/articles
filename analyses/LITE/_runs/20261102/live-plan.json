@@ -1,0 +1,10 @@
+{
+ "artifact": "analyses/$symbol/index.html",
+ "description": "Relevé horodaté des cotations de SÉANCE (non certifiées) pour la section « Séance en cours » d'une fiche ; aucun niveau n'en dérive.",
+ "waves": [
+  { "name": "preflight", "gate": true, "calls": [
+   { "as": "status", "server": "marketdata", "tool": "GetStatus", "args": {}, "freshness": { "max_age_h": 2, "required": true }, "assert": { "equity_reference_close": "$refdate" } } ] },
+  { "name": "session", "calls": [
+   { "as": "live_quote", "server": "marketdata", "tool": "QueryData", "args": { "types": "realtime_quote,quote", "symbols": "$symbols" }, "freshness": { "max_age_h": 2, "required": true } } ] }
+ ]
+}

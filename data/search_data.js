@@ -1809,6 +1809,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "LITE",
+    "exchange": "NASDAQ · Lasers et modules optiques pour les centres de données de l’IA",
+    "name": "LITE — Lumentum vendue à Marvell (4,5 actions MRVL par action). Garder, vendre ou passer en Ma...",
+    "title": "LITE — Lumentum vendue à Marvell (4,5 actions MRVL par action). Garder, vendre ou passer en Ma...",
+    "desc": "Marvell rachète Lumentum contre 4,5 actions Marvell par action, clôture visée au premier semestre 2028. Garder Lumentum, c’est porter Marvell jusque-là avec un rabais pour risque de rupture. Aucun ordre ; trois options chiffrées.",
+    "tags": "us,semis,ai,earnings",
+    "grade": "C",
+    "href": "/analyses/LITE/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "GOOGL",
     "exchange": "NASDAQ · Recherche, publicité, nuage et puces d’IA",
     "name": "GOOGL — Alphabet à 316,80 $, 5 baisses de suite avant ses résultats du 28 octobre : bénéfice go...",
@@ -1973,19 +1986,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,consumer,ai,earnings,trade-idea",
     "grade": "B-",
     "href": "/analyses/AMZN/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "LITE",
-    "exchange": "NASDAQ · Lasers et modules optiques pour les centres de données de l’IA",
-    "name": "LITE — Lumentum à 818,10 $ (+8,2 %) après −33,6 % en douze séances : demande supérieure à l’of...",
-    "title": "LITE — Lumentum à 818,10 $ (+8,2 %) après −33,6 % en douze séances : demande supérieure à l’of...",
-    "desc": "Lumentum a perdu un tiers de sa valeur en douze séances sans mauvaise nouvelle propre, avec toute l’optique de l’IA. Rien à acheter avant les résultats du 5 novembre, puis seulement sur une clôture à 840,48 $ ou plus ; une clôture sous 736,01 $ abandonne le plan.",
-    "tags": "us,semis,ai,earnings,trade-idea",
-    "grade": "C",
-    "href": "/analyses/LITE/",
     "date": ""
   },
   {

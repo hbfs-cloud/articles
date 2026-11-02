@@ -64,9 +64,23 @@ function parseHorizonSessions(h) {
  * Rejoue le plan publié sur les clôtures. Retourne {status, note, closeDate, close} ou null
  * (= rien à changer). Long et short gérés par symétrie (side = signe de tp1 - entry).
  */
+// Un plan qui n'autorise l'entrée qu'après un événement (résultats…) doit porter
+// `tradeIdea.triggerNotBefore` (YYYY-MM-DD, première séance dont la clôture compte). Sans ce champ,
+// une telle condition écrite seulement en prose bloque le déclenchement automatique : le 29 octobre
+// 2026, LITE et NBIS sont passés « active » sur une clôture antérieure à leurs résultats.
+const PROSE_EVENT_CONDITION = /apr[eè]s (la publication des |la publication de ses |les |ses )?r[ée]sultats|apr[eè]s la publication|after (the )?(earnings|results)/i;
+
+function conditionalTriggerWithoutDate(t) {
+  if (t.triggerNotBefore) return false;
+  return PROSE_EVENT_CONDITION.test([t.banner, t.entryNote, t.trigger].filter(Boolean).join(' '));
+}
+
 function replayPlan(t, pubPrice, closes, horizon, startStatus) {
   const entry = t.entry, stop = t.stop, tp1 = t.tp1 ?? null, tp2 = t.tp2 ?? null;
   if (!(entry > 0) || !(stop > 0)) return null;
+  const notBefore = /^\d{4}-\d{2}-\d{2}$/.test(String(t.triggerNotBefore || '')) ? t.triggerNotBefore : null;
+  if (!notBefore && (startStatus === 'pending' || startStatus === 'watch') && conditionalTriggerWithoutDate(t)) return null;
+  let eligibleSessions = 0; // séances qui comptent pour le déclenchement et la fenêtre d'attente
   const side = (tp1 != null ? tp1 : entry * (stop < entry ? 1.01 : 0.99)) >= entry ? 1 : -1;
   // Zone d'entrée : « retracement » si l'entrée est du côté opposé au sens du trade par rapport
   // au prix de publication (on attend le repli), « extension » sinon (on attend la cassure).
@@ -78,10 +92,12 @@ function replayPlan(t, pubPrice, closes, horizon, startStatus) {
   for (let i = 0; i < closes.length; i++) {
     const c = closes[i].close, d = closes[i].date;
     if (!triggered) {
+      if (notBefore && d < notBefore) continue; // clôture antérieure à l'événement : ne compte pas
+      eligibleSessions++;
       const hit = retracement ? (side === 1 ? c <= entry : c >= entry)
                               : (side === 1 ? c >= entry : c <= entry);
       if (hit) { triggered = true; triggerIdx = i; }
-      else if (i + 1 >= horizon) {
+      else if (eligibleSessions >= horizon) {
         return { status: 'expired', note: `jamais déclenché — fenêtre de ${horizon} séances écoulée le ${d}`, closeDate: d, close: c, event: { type: 'expired_untriggered', date: d, close: c, horizon } };
       }
       if (!triggered) continue;
@@ -259,4 +275,5 @@ async function main() {
   if (!transitions.length) console.log('  (aucune transition ce soir)');
 }
 
-main().catch(e => { console.error('[lifecycle] ÉCHEC:', e.message); process.exit(1); });
+if (require.main === module) main().catch(e => { console.error('[lifecycle] ÉCHEC:', e.message); process.exit(1); });
+module.exports = { replayPlan, conditionalTriggerWithoutDate };
