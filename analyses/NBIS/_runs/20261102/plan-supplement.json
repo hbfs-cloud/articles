@@ -1,0 +1,48 @@
+{
+  "artifact": "analyses/$symbol/index.html",
+  "waves": [
+    {
+      "name": "preflight",
+      "gate": true,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "args": {},
+          "freshness": { "max_age_h": 2, "required": true },
+          "assert": { "equity_reference_close": "$refdate" }
+        }
+      ]
+    },
+    {
+      "name": "live-session",
+      "calls": [
+        {
+          "as": "live_quote",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": { "types": "quote", "symbols": "$symbol" },
+          "freshness": { "max_age_h": 1, "required": true },
+          "note": "Cotation de séance pour la section « Séance du 2 novembre en cours » d'une fiche publiée avant la certification de la clôture (décision du propriétaire du 2026-11-02). Aucun niveau du plan n'en dérive."
+        },
+        {
+          "as": "live_options",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "args": { "types": "options_chain", "symbols": "$symbol", "expiries": "2026-11-13", "moneyness_min": 0.8, "moneyness_max": 1.2 },
+          "freshness": { "max_age_h": 1, "required": true },
+          "note": "Chaîne de l'échéance du 13 novembre, lendemain des résultats, relevée pendant la séance : straddle et asymétrie de séance, non certifiés."
+        },
+        {
+          "as": "calendar30",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "args": { "symbols": "$symbol,CRWV,IREN,NVDA,MSFT,META,DELL,SMCI,VRT,BE,LITE,COHR,MRVL,APLD,CIFR,WULF,CORZ,ORCL,PLTR", "days_ahead": 30, "include_implied_move": false },
+          "freshness": { "max_age_h": 24, "required": true },
+          "note": "Calendrier de résultats sur trente jours : Nvidia publie le 17 novembre, hors de la fenêtre de quatorze jours du plan analyse."
+        }
+      ]
+    }
+  ]
+}

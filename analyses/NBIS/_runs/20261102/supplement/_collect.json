@@ -1,0 +1,156 @@
+{
+  "contract_version": "1.0",
+  "workflow": null,
+  "plan": "analyses/NBIS/_runs/20261102/plan-supplement.json",
+  "plan_sha256": "85bdd3f5d4febeceb38849b9efbc15a5779f12560fa4f01cdde929794594fbbd",
+  "input_sha256": "54f73b186183a8e4fa88a129555e33d055e83cbbceae8eeb4aaf3c967a991fd2",
+  "resolved_input": {
+    "artifact": "analyses/NBIS/index.html",
+    "equity_reference_close": "2026-10-30",
+    "crypto_completed_refdate": null,
+    "as_of_timestamp": "2026-11-02T20:10:30.224Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "equity_reference_close": "2026-10-30"
+            }
+          }
+        ]
+      },
+      {
+        "name": "live-session",
+        "calls": [
+          {
+            "as": "live_quote",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "quote",
+              "symbols": "NBIS"
+            },
+            "freshness": {
+              "max_age_h": 1,
+              "required": true
+            },
+            "note": "Cotation de séance pour la section « Séance du 2 novembre en cours » d'une fiche publiée avant la certification de la clôture (décision du propriétaire du 2026-11-02). Aucun niveau du plan n'en dérive."
+          },
+          {
+            "as": "live_options",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "options_chain",
+              "symbols": "NBIS",
+              "expiries": "2026-11-13",
+              "moneyness_min": 0.8,
+              "moneyness_max": 1.2
+            },
+            "freshness": {
+              "max_age_h": 1,
+              "required": true
+            },
+            "note": "Chaîne de l'échéance du 13 novembre, lendemain des résultats, relevée pendant la séance : straddle et asymétrie de séance, non certifiés."
+          },
+          {
+            "as": "calendar30",
+            "server": "marketdata",
+            "tool": "GetEarningsCalendarFiltered",
+            "args": {
+              "symbols": "NBIS,CRWV,IREN,NVDA,MSFT,META,DELL,SMCI,VRT,BE,LITE,COHR,MRVL,APLD,CIFR,WULF,CORZ,ORCL,PLTR",
+              "days_ahead": 30,
+              "include_implied_move": false
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true
+            },
+            "note": "Calendrier de résultats sur trente jours : Nvidia publie le 17 novembre, hors de la fenêtre de quatorze jours du plan analyse."
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "analyses/NBIS/index.html",
+  "reference_date": "2026-10-30",
+  "equity_reference_close": "2026-10-30",
+  "crypto_completed_refdate": null,
+  "started_at": "2026-11-02T20:10:30.224Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 533,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 532,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "55f9cbb36cf2e656f0b767a0011afeb99eff369b6949b87bad479ed80c814be4"
+        }
+      ]
+    },
+    {
+      "name": "live-session",
+      "ms": 4613,
+      "calls": [
+        {
+          "as": "live_quote",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 726,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "a5b5a1b2cc669a643356803f725767ccd22f19cb919d713ce3c09805dc18b4ee"
+        },
+        {
+          "as": "live_options",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 2612,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "c5571680ab82f76385bc90eda570b25c687584a0cbd49138d0696a15b38424ce"
+        },
+        {
+          "as": "calendar30",
+          "server": "marketdata",
+          "tool": "GetEarningsCalendarFiltered",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 4613,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "1f2fc824e61ba238aea059923c92f4142597df3d27027876e730fabea60c7f51"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-11-02T20:10:35.391Z",
+  "failures": 0,
+  "executed_calls": 4,
+  "skipped_calls": 0
+}

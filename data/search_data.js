@@ -1809,6 +1809,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "NBIS",
+    "exchange": "NASDAQ · Location de calcul pour l’intelligence artificielle (cloud IA)",
+    "name": "NBIS — Nebius à 154,14 $ le 30 octobre (−10,4 %), sous 145,80 $ en séance le 2 novembre. Résul...",
+    "title": "NBIS — Nebius à 154,14 $ le 30 octobre (−10,4 %), sous 145,80 $ en séance le 2 novembre. Résul...",
+    "desc": "Nebius a rendu en deux séances le rebond du 28 octobre. Résultats le 12 novembre avant l’ouverture, date confirmée : rien à acheter avant, puis seulement sur une clôture à 178,86 $ ou plus ; une clôture sous 145,80 $ abandonne le plan.",
+    "tags": "us,tech,ai,ai-chain,earnings,trade-idea",
+    "grade": "C",
+    "href": "/analyses/NBIS/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "MRVL",
     "exchange": "NASDAQ · Semi-conducteurs pour centres de données",
     "name": "MRVL — Marvell paie Lumentum en actions : 458 millions d’actions nouvelles, une indemnité régl...",
@@ -1947,19 +1960,6 @@ window.searchDataPrebuilt = [
     "tags": "us,software,tech,ai,momentum,trade-idea",
     "grade": "C+",
     "href": "/analyses/CRWD/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "NBIS",
-    "exchange": "NASDAQ · Location de calcul pour l’intelligence artificielle (cloud IA)",
-    "name": "NBIS — Nebius à 153,27 $ (−3,4 %, −39 % depuis le 6 octobre) : 37,5 Md$ de carnet, 5,75 Md$ de...",
-    "title": "NBIS — Nebius à 153,27 $ (−3,4 %, −39 % depuis le 6 octobre) : 37,5 Md$ de carnet, 5,75 Md$ de...",
-    "desc": "Nebius a perdu 39 % depuis le 6 octobre avec CoreWeave et IREN : le marché vend la dette des loueurs de calcul, pas leur carnet. Rien à acheter avant les résultats du 10 novembre (date non confirmée), puis seulement sur une clôture à 178,86 $ ou plus ; une clôture sous 145,80 $ abandonne le plan.",
-    "tags": "us,tech,ai,ai-chain,earnings,trade-idea",
-    "grade": "C",
-    "href": "/analyses/NBIS/",
     "date": ""
   },
   {

@@ -1,34 +1,34 @@
 {
-  "captured_at": "2026-10-27T12:30:18.920272851Z",
-  "commit": "c58d8c83fe0919728b74dcde9cb8a2855721760a",
-  "deployment_id": "c58d8c83fe09-ace",
-  "intent_id": "7d9e83cd-023f-487d-8afe-076f9cda0a1b",
+  "captured_at": "2026-11-02T19:58:38.781988839Z",
+  "commit": "6c18c9ef3d654f28a42c7bd15792ddc9e59f58af",
+  "deployment_id": "6c18c9ef3d65-ace",
+  "intent_id": "062b6f8e-9435-483a-8aa7-a5ef929358b6",
   "results": [
     {
       "symbol": "NBIS",
-      "opportunity_score": 27.935334166305424,
+      "opportunity_score": 10.332009706596068,
       "risk_score": 0,
-      "squeeze_score": 37.5,
+      "squeeze_score": 39.9,
       "opportunities": [
         {
           "name": "bullish_put_call",
-          "score": 27.935334166305424,
+          "score": 10.332009706596068,
           "detail": "Bullish put/call ratio"
         }
       ],
       "risks": [],
       "squeeze": {
-        "score": 37.5,
+        "score": 39.9,
         "components": [
           {
             "name": "short_float",
-            "value": 19.54398,
-            "sub_score": 65.1
+            "value": 20.83091,
+            "sub_score": 69.4
           },
           {
             "name": "ctb",
-            "value": 0.357,
-            "sub_score": 0.7
+            "value": 0.2803,
+            "sub_score": 0.6
           }
         ],
         "note": "composite of short_float+ctb over the inputs present (see components); FINRA daily short-sale volume is intentionally excluded because it is non-directional, and days-to-cover/short_ratio is not exposed on this fast path"
@@ -37,9 +37,9 @@
         "symbol": "NBIS",
         "status": "unvalidated",
         "active_measured": 0,
-        "active_unmeasured": 0,
-        "unknown": 1,
-        "active_count": 0,
+        "active_unmeasured": 1,
+        "unknown": 0,
+        "active_count": 1,
         "components": [
           {
             "name": "bearish_analyst",
@@ -51,7 +51,7 @@
               "reliable_bullish_views": 0
             },
             "source": "Seeking Alpha contributors passing the reliability gate (GetAnalystTradeIdeas)",
-            "as_of": "2026-10-27",
+            "as_of": "2026-11-02",
             "history": "about 13 months of article history; reliability is scored on the same history, so only the point-in-time rebuild in the event study is out-of-sample"
           },
           {
@@ -64,22 +64,22 @@
               "downgrades": 0
             },
             "source": "Finviz per-symbol dated analyst actions (analysts.Service)",
-            "as_of": "2026-10-27",
+            "as_of": "2026-11-02",
             "history": "about 2 years of dated actions per symbol (Finviz); the event study used a 6-year Yahoo crawl"
           },
           {
             "name": "insider_selling",
-            "state": "unknown",
+            "state": "inactive",
             "measured": true,
             "definition": ">= 2 distinct insiders sold on the open market for >= $1000000 in total, and no open-market purchase, in filings public in the last 30 days",
             "value": {
               "bought_usd": 0,
+              "coverage_certified": true,
               "sellers": 0,
               "sold_usd": 0
             },
-            "detail": "SEC coverage of the last 30 days is not certified complete (coverage_pct_expected=80.0); a quiet read does not prove no selling",
             "source": "SEC EDGAR Form 4 (local corpus; official filings only)",
-            "as_of": "2026-10-27",
+            "as_of": "2026-11-02",
             "history": "corpus history is only partly certified (13 of 5820 index days at the time of writing), so live reads are coverage-gated; the event study used SEC's public Form 345 datasets (2020-2026) instead"
           },
           {
@@ -89,15 +89,15 @@
             "definition": "close below SMA200 AND 12-1 month momentum < 0 AND 63-session return below SPY's",
             "value": {
               "below_sma200": true,
-              "close": 153.27,
-              "momentum_12_1": 1.2356,
+              "close": 154.14,
+              "momentum_12_1": 0.8568,
               "negative_momentum": false,
-              "rel_strength_63_vs_spy": -0.1298,
-              "sma200": 176.1608,
+              "rel_strength_63_vs_spy": -0.2723,
+              "sma200": 177.4921,
               "weaker_than_spy": true
             },
             "source": "daily bars (stock and SPY)",
-            "as_of": "2026-10-26",
+            "as_of": "2026-10-30",
             "history": "years of daily bars (point in time by construction)"
           },
           {
@@ -105,20 +105,20 @@
             "state": "inactive",
             "measured": false,
             "definition": "put/call volume ratio > 1.5 (the risk detector's threshold)",
-            "value": 0.4206,
+            "value": 0.5967,
             "source": "Yahoo options chain, current snapshot",
-            "as_of": "2026-10-27",
+            "as_of": "2026-11-02",
             "history": "none: only today's chain is read; no stored history",
             "unmeasured_reason": "current snapshot only, no point-in-time history to test"
           },
           {
             "name": "high_short_float",
-            "state": "inactive",
+            "state": "active",
             "measured": false,
             "definition": "short float >= 20% of float (descriptive level, not fitted; can also mean squeeze risk)",
-            "value": 19.544,
+            "value": 20.8309,
             "source": "static data short float, current snapshot",
-            "as_of": "2026-10-27",
+            "as_of": "2026-11-02",
             "history": "none: the daily snapshot store does not record short interest",
             "unmeasured_reason": "current snapshot only, no point-in-time history to test"
           },
@@ -127,9 +127,9 @@
             "state": "inactive",
             "measured": false,
             "definition": "cost to borrow > 30% (the risk detector's threshold)",
-            "value": 0.357,
+            "value": 0.2803,
             "source": "iBorrowDesk, current snapshot (US only)",
-            "as_of": "2026-10-27",
+            "as_of": "2026-11-02",
             "history": "none: only the current rate is read",
             "unmeasured_reason": "current snapshot only, no point-in-time history to test"
           },
@@ -141,7 +141,7 @@
             "value": 0,
             "detail": "change over 30 recorded days",
             "source": "StockAnalysis consensus via the daily snapshot store",
-            "as_of": "2026-10-27",
+            "as_of": "2026-11-02",
             "history": "forward-only: recording started with the snapshot worker (about 5 weeks at the time of writing)",
             "unmeasured_reason": "too short a history for an event study"
           }
@@ -163,7 +163,7 @@
       "verdict": "No combination of components beats matched controls out of sample. The only measured effect is the technical damage component on its own; the analyst, sell-side and insider components should be read as context, not as evidence that the stock will fall."
     }
   },
-  "server_version": "c58d8c83fe09-ace",
+  "server_version": "6c18c9ef3d65-ace",
   "status": "completed",
-  "trace_id": "dea0ba11-1e08-4057-b0e3-daa0f28fc97a"
+  "trace_id": "4f06384e-8146-4341-973f-5afd828d8b30"
 }
