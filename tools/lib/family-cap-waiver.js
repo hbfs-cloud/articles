@@ -15,7 +15,14 @@ const crypto = require('crypto');
 
 // LISTE FERMÉE des séances pour lesquelles le propriétaire a levé le plafond. Ajouter une date est
 // un acte délibéré et relu, jamais un effet de bord d'un run.
-const ALLOWED_DATES = Object.freeze(['2026-10-26']);
+// 2026-11-03 : précédent du 26 octobre appliqué au même blocage (seuls des suivis de tendance
+// restent), atteint par une autre cause. Le 26 octobre (régime RECOVERY 55,1), les cassures et
+// replis tombaient sur les résultats, la dilution, le statut d'émetteur étranger ou l'absence de
+// date de résultats ; le 3 novembre (régime EARLY RISK-OFF), ce sont les portes du régime qui les
+// ferment (cassures interdites, aucun repli à 60 % de confiance). Appliqué sur la consigne
+// permanente du propriétaire du 2026-10-20 d'appliquer ses précédents sans redemander ; révocable
+// par lui. Voir scanner/20261103/_family-cap-waiver.json.
+const ALLOWED_DATES = Object.freeze(['2026-10-26', '2026-11-03']);
 
 const KEYS = ['all_other_gates_required', 'date', 'max_share_pct', 'provenance', 'public_notice', 'reason', 'refdate', 'user_instruction'];
 
