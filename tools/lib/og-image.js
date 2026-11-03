@@ -52,11 +52,11 @@ function listImages(absDir) {
 // carte générique un jour.
 const GENERIC_BY_TYPE = {
   scanner() {
-    // Carte neutre /og-card.png (tools/generate-og-card.cjs) : ni date ni chiffre, donc jamais
+    // Carte neutre /assets/og-card.png (tools/generate-og-card.cjs) : ni date ni chiffre, donc jamais
     // périmée. /scanner-daily-card.png et scanner/status/daily-card-*.png ne sont plus utilisés :
     // leur générateur échoue sans bruit depuis le 2 septembre 2026 et toutes les notifications
     // Telegram du scanner montraient le tableau de bord du 27 mars 2026 (signalé le 3 novembre).
-    if (fs.existsSync(path.join(ROOT, 'og-card.png'))) return toAbsoluteUrl('og-card.png');
+    if (fs.existsSync(path.join(ROOT, 'assets', 'og-card.png'))) return toAbsoluteUrl('assets/og-card.png');
     return null;
   },
   analyses(ctx) {

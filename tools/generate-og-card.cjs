@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 'use strict';
-// generate-og-card.cjs — carte d'aperçu neutre /og-card.png (1200×630) pour les liens partagés
+// generate-og-card.cjs — carte d'aperçu neutre /assets/og-card.png (1200×630) pour les liens partagés
 // (Telegram, WhatsApp, X). Aucune date, aucun chiffre : elle ne peut pas devenir périmée, à la
 // différence de l'ancienne /scanner-daily-card.png restée figée sur le tableau de bord du 27 mars 2026.
 // Logo réel /logo.svg embarqué en data-URI.
 //
-// Usage : node tools/generate-og-card.cjs [sortie.png]   (défaut : og-card.png à la racine)
+// Usage : node tools/generate-og-card.cjs [sortie.png]   (défaut : assets/og-card.png)
 
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 
 const ROOT = path.resolve(__dirname, '..');
-const OUT = path.resolve(process.argv[2] || path.join(ROOT, 'og-card.png'));
+const OUT = path.resolve(process.argv[2] || path.join(ROOT, 'assets', 'og-card.png'));
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 (async () => {
