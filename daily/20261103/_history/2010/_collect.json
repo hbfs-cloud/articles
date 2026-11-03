@@ -1,0 +1,110 @@
+{
+  "contract_version": "1.0",
+  "workflow": "daily",
+  "plan": "plans/daily-20261103-midterms-history.json",
+  "plan_sha256": "9391b03ec57ab1bde1302c996cde5e38ff3232b0289afcec55ac4bf6adcfd097",
+  "input_sha256": "8d02ac9bec7c49aabb17d817c87c1798704a3ef4daef62fd2fe28ab557302934",
+  "resolved_input": {
+    "artifact": "daily/20261103/index.html",
+    "equity_reference_close": "2011-02-10",
+    "crypto_completed_refdate": null,
+    "as_of_timestamp": "2011-02-10T23:00:00Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "covers_close": "2011-02-10"
+            }
+          }
+        ]
+      },
+      {
+        "name": "midterms-history",
+        "calls": [
+          {
+            "as": "bars_history",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "SPY,QQQ,IWM,XLV,XLE,XLF,XLI,XLK",
+              "start_date": "2010-09-18",
+              "end_date": "2011-02-10",
+              "limit": 200,
+              "force_async": true,
+              "as_of_timestamp": "2011-02-10T23:00:00Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2011-02-10",
+              "historical_window": true
+            },
+            "note": "Édition spéciale midterms du 3 novembre 2026 (demande du propriétaire) : une fenêtre historique close par élection de mi-mandat depuis 1994 (début = jour du vote − 45 jours ; $refdate = dernière séance de la fenêtre ; as_of_timestamp borné à cette séance), en mode historique covers_close comme la rétrospective. Aucun niveau de trade n'en dérive."
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "daily/20261103/index.html",
+  "reference_date": "2011-02-10",
+  "equity_reference_close": "2011-02-10",
+  "crypto_completed_refdate": null,
+  "started_at": "2011-02-10T23:00:00Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 262,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 261,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "82e8826b59395c3c80a4ab55698662ce7d726c21f32e9ff4f37da2cac04e53b3"
+        }
+      ]
+    },
+    {
+      "name": "midterms-history",
+      "ms": 1789,
+      "calls": [
+        {
+          "as": "bars_history",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1788,
+          "wait_ms": 996,
+          "error": null,
+          "output_sha256": "4f48440871078ba7b7f9a108e8d23c8112c6d080f273243f326e08c23111f5b5"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-11-03T08:12:51.590Z",
+  "failures": 0,
+  "executed_calls": 2,
+  "skipped_calls": 0
+}

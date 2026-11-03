@@ -12,7 +12,7 @@ const ROOT = path.resolve(__dirname, '..');
 // Liste CLOSE des références autoritaires du dépôt. Toute addition
 // doit être un acte délibéré : c'est la seule voie par laquelle un chiffre publié peut se passer
 // d'une provenance de collecte.
-const REGISTRY_SOURCES = new Set(['data/scheduled-events.json', 'daily/20260912/primary-reference.json', 'daily/20260916/primary-reference.json', 'daily/20260917/primary-reference.json', 'daily/20260924/primary-reference.json', 'daily/20261022/primary-reference.json']);
+const REGISTRY_SOURCES = new Set(['data/scheduled-events.json', 'daily/20260912/primary-reference.json', 'daily/20260916/primary-reference.json', 'daily/20260917/primary-reference.json', 'daily/20260924/primary-reference.json', 'daily/20261022/primary-reference.json', 'daily/20261103/primary-reference.json']);
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
 // Résolution de pointeur JSON. Sur un tableau, seuls les index numériques sont acceptés : sans
 // cela, « /bars/length » publiait le nombre de barres comme s'il s'agissait d'une mesure, et
@@ -389,7 +389,26 @@ function validate(manifest, root = ROOT) {
         if (!authority[field]) { errors.push(`${claim.id}: l'autorité « ${claim.authority} » n'a pas de ${field}`); }
       }
     } else {
-      const collectedErrors = validateCollectedArtifact(sourcePath, claim.source_sha256, manifest.reference_close, root);
+      // FENÊTRE HISTORIQUE (ajoutée le 2026-11-03, édition midterms). Une mesure sur une fenêtre
+      // close du passé (par exemple la Bourse autour du vote de 2010) ne peut pas porter la clôture
+      // de référence du jour. Le claim déclare alors `historical_reference_close`, qui doit être
+      // antérieure à celle du manifeste ET avoir été collectée en mode historique : préflight
+      // GetStatus `covers_close` sur cette date et appel bars_daily `historical_window`.
+      let referenceClose = manifest.reference_close;
+      if (claim.historical_reference_close !== undefined) {
+        const hist = String(claim.historical_reference_close);
+        let journal = null;
+        try { journal = JSON.parse(fs.readFileSync(path.join(path.dirname(sourcePath), '_collect.json'), 'utf8')); } catch { /* signalé ci-dessous */ }
+        const calls = ((journal && journal.resolved_input && journal.resolved_input.waves) || []).flatMap(wave => wave.calls || []);
+        const covers = calls.some(c => c.tool === 'GetStatus' && c.assert && c.assert.covers_close === hist);
+        const windowCall = calls.find(c => c.as === path.basename(sourcePath, '.json'));
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(hist) || !(hist < manifest.reference_close) || !covers
+          || !windowCall || !windowCall.freshness || windowCall.freshness.historical_window !== true || windowCall.args.end_date !== hist) {
+          errors.push(`${claim.id}: historical_reference_close requires an earlier close collected as a covers_close historical window`); continue;
+        }
+        referenceClose = hist;
+      }
+      const collectedErrors = validateCollectedArtifact(sourcePath, claim.source_sha256, referenceClose, root);
       if (collectedErrors.length) { errors.push(`${claim.id}: source collector provenance invalid: ${collectedErrors.join('; ')}`); continue; }
     }
     const observed = pointerGet(source, claim.source_pointer);

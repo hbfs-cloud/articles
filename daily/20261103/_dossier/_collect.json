@@ -1,0 +1,150 @@
+{
+  "contract_version": "1.0",
+  "workflow": "daily",
+  "plan": "plans/daily-dossier.json",
+  "plan_sha256": "876d562898c24fae2b0e117fba0f2f809bad23c8bdf4c5e9e089fcdcb219260b",
+  "input_sha256": "4f728301ad77db4ae7374bdcf6c6cb5584f7abe0f223d9182967e33900af4713",
+  "resolved_input": {
+    "artifact": "daily/20261103/midterms/index.html",
+    "equity_reference_close": "2026-11-02",
+    "crypto_completed_refdate": "2026-11-02",
+    "as_of_timestamp": "2026-11-03T08:05:12.126Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "equity_reference_close": "2026-11-02"
+            }
+          }
+        ]
+      },
+      {
+        "name": "dossier-close",
+        "calls": [
+          {
+            "as": "bars_dossier",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "CRWD,IGV,CNC,JCI,UNH,OKTA,MSFT,CRM,FAST,AMD,ANET,ORCL,NVDA,META,GOOGL,AMZN,AAPL,ITA,KRE,XBI,IHF,XOP,TAN,ICLN,PAVE,SMH,HUM,ELV,LMT,NOC",
+              "limit": 22,
+              "force_async": true,
+              "as_of_timestamp": "2026-11-03T08:05:12.126Z",
+              "completion_policy": "completed_only",
+              "source": "tiingo"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-11-02"
+            },
+            "note": "Dossier spécial : évolution depuis une édition passée. Barres tiingo certifiées completed_only (l'historique yahoo présente des trous sur plusieurs valeurs de la chaîne IA, cf. mémoire yahoo-store-holes-pin-source)."
+          }
+        ]
+      },
+      {
+        "name": "dossier-crypto",
+        "calls": [
+          {
+            "as": "bars_crypto",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "BTC-USD,ETH-USD,SOL-USD,XRP-USD",
+              "limit": 34,
+              "as_of_timestamp": "2026-11-03T08:05:12.126Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "crypto_24_7_utc",
+              "expected_completed_end": "2026-11-02"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "daily/20261103/midterms/index.html",
+  "reference_date": "2026-11-02",
+  "equity_reference_close": "2026-11-02",
+  "crypto_completed_refdate": "2026-11-02",
+  "started_at": "2026-11-03T08:05:12.126Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 404,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 403,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "02c5ad5a220b95f42ad558a9f2fa0f9f24721575b225890a424db2dde14e5220"
+        }
+      ]
+    },
+    {
+      "name": "dossier-close",
+      "ms": 7877,
+      "calls": [
+        {
+          "as": "bars_dossier",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 7876,
+          "wait_ms": 7228,
+          "error": null,
+          "output_sha256": "3749695bdb9e6fdef9a7d0a3b821a5c8d5a298199449623a59ae3810323cdac6"
+        }
+      ]
+    },
+    {
+      "name": "dossier-crypto",
+      "ms": 783,
+      "calls": [
+        {
+          "as": "bars_crypto",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 783,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "84771fe50199c3c931a502cd1375448bffc93bd36d47ade9ac3036d85cf55143"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-11-03T08:05:21.269Z",
+  "failures": 0,
+  "executed_calls": 3,
+  "skipped_calls": 0
+}

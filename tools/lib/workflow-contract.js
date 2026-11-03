@@ -279,7 +279,17 @@ function validatePlan(plan, rawSpec = {}, policy = readConfig().policy) {
       if (!call.freshness || call.freshness.expects_close !== true) errors.push(`${label}: bars_daily must declare freshness.expects_close=true`);
       if (!call.args || call.args.as_of_timestamp !== '$as_of_timestamp') errors.push(`${label}: bars_daily as_of_timestamp must equal $as_of_timestamp`);
       if (!call.args || call.args.completion_policy !== 'completed_only') errors.push(`${label}: bars_daily completion_policy must equal completed_only`);
-      if (call.args && Object.prototype.hasOwnProperty.call(call.args, 'end_date')) errors.push(`${label}: bars_daily end_date is forbidden; use as_of_timestamp`);
+      // Exception unique : une fenêtre HISTORIQUE close (édition midterms du 2026-11-03). Le serveur
+      // ne borne as_of_timestamp que si end_date est fourni ; la fenêtre doit alors finir exactement
+      // sur la clôture attendue du harnais, et le préflight doit être en mode historique covers_close.
+      const historicalWindow = call.freshness && call.freshness.historical_window === true;
+      if (call.args && Object.prototype.hasOwnProperty.call(call.args, 'end_date')) {
+        const preflightCovers = (plan.waves || []).some(wave => (wave.calls || []).some(c => c.tool === 'GetStatus'
+          && c.assert && c.assert.covers_close && c.assert.covers_close === (call.freshness && call.freshness.expected_completed_end)));
+        if (!historicalWindow || call.args.end_date !== call.freshness.expected_completed_end || !preflightCovers) {
+          errors.push(`${label}: bars_daily end_date is forbidden; use as_of_timestamp (historical_window requires end_date = expected_completed_end and a covers_close preflight)`);
+        }
+      }
       if (call.args && call.args.include_partial === true) errors.push(`${label}: bars_daily close gates must not request include_partial=true`);
       const calendar = call.freshness && call.freshness.asset_calendar;
       if (!['us_equity_exchange_sessions', 'crypto_24_7_utc'].includes(calendar)) {

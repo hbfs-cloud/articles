@@ -406,5 +406,41 @@ try {
       '<div data-calendar-event>Annonce <span data-claim="late">01h00</span></div>'), [at('late', '/late', '2026-10-28T20:00:00-04:00', '01h00')]), []);
   }
 
+  // ── fenêtre historique (2026-11-03) ─────────────────────────────────────────
+  // Une mesure sur une fenêtre close du passé porte sa propre clôture, à condition d'avoir été
+  // collectée en mode historique ; sans ce mode, la date déclarée est refusée.
+  {
+    const dir = path.join(root, 'hist'); fs.mkdirSync(dir, { recursive: true });
+    const histSource = JSON.stringify({ bars: [['2010-11-02', 1, 1, 1, 100, 1], ['2010-11-03', 1, 1, 1, 102, 1]] });
+    const histHash = crypto.createHash('sha256').update(histSource).digest('hex');
+    fs.writeFileSync(path.join(dir, 'bars_history.json'), histSource);
+    const histPlan = '{}'; fs.writeFileSync(path.join(root, 'hist-plan.json'), histPlan);
+    const write = (covers, windowFlag) => {
+      const input = { artifact: 'article', refdate: '2011-02-10', waves: [
+        { calls: [{ as: 'status', server: 'marketdata', tool: 'GetStatus', assert: covers ? { covers_close: '2011-02-10' } : {} }] },
+        { calls: [{ as: 'bars_history', server: 'marketdata', tool: 'QueryData', args: { end_date: '2011-02-10' }, freshness: { historical_window: windowFlag } }] }] };
+      const ih = crypto.createHash('sha256').update(stableStringify(input)).digest('hex');
+      const ph = crypto.createHash('sha256').update(histPlan).digest('hex');
+      fs.writeFileSync(path.join(dir, 'harness.json'), JSON.stringify({ reference_close: '2011-02-10', plan: 'hist-plan.json', plan_sha256: ph, input_sha256: ih,
+        sources: [{ name: 'bars_history', sha256: histHash, required: true }] }));
+      fs.writeFileSync(path.join(dir, '_collect.json'), JSON.stringify({ reference_date: '2011-02-10', plan: 'hist-plan.json', plan_sha256: ph, input_sha256: ih, resolved_input: input,
+        waves: [{ calls: [{ as: 'bars_history', server: 'marketdata', tool: 'QueryData', ok: true, output_sha256: histHash }] }] }));
+    };
+    const html = '<!doctype html><main><p>Vote <span data-claim="h">+2,0 %</span></p></main>';
+    const histClaim = { id: 'h', rendered_text: '+2,0 %', source_artifact: 'hist/bars_history.json', source_sha256: histHash, source_pointer: '/bars/1/4', source_value: 102,
+      render: { scale: 1, decimals: 1, sign: 'always', suffix: ' %', format: 'fr' },
+      formula: { operation: 'ratio_pct', numerator_pointer: '/bars/1/4', denominator_pointer: '/bars/0/4', result: 2.0000000000000018 }, historical_reference_close: '2011-02-10' };
+    write(true, true);
+    assert.deepStrictEqual(validate(build(html, [histClaim]), root), []);
+    // sans la déclaration, la clôture du jour ne correspond pas au harnais historique
+    assert(validate(build(html, [{ ...histClaim, historical_reference_close: undefined }]), root).some(e => e.includes('reference close differs')));
+    // un harnais collecté sans covers_close ne peut pas servir de fenêtre historique
+    write(false, true);
+    assert(validate(build(html, [histClaim]), root).some(e => e.includes('historical_reference_close requires')));
+    // un appel qui ne se déclare pas fenêtre historique non plus
+    write(true, false);
+    assert(validate(build(html, [histClaim]), root).some(e => e.includes('historical_reference_close requires')));
+  }
+
   console.log('content claims tests: PASS');
 } finally { fs.rmSync(root, { recursive: true, force: true }); }

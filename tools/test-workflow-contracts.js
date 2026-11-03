@@ -142,6 +142,20 @@ const partialBars = structuredClone(base);
 partialBars.waves[1].calls[0].args.include_partial = true;
 assert(contract.validatePlan(partialBars, spec, config.policy).some(e => e.includes('must not request include_partial=true')));
 
+// Fenêtre historique close (2026-11-03) : end_date n'est admis qu'avec historical_window, une fin
+// égale à la clôture attendue et un préflight covers_close sur la même variable.
+const historical = structuredClone(base);
+historical.waves[0].calls[0].assert = { covers_close: '$refdate' };
+historical.waves[1].calls[0].args.end_date = '$refdate';
+historical.waves[1].calls[0].freshness.historical_window = true;
+assert.deepStrictEqual(contract.validatePlan(historical, spec, config.policy), []);
+const noFlag = structuredClone(historical); delete noFlag.waves[1].calls[0].freshness.historical_window;
+assert(contract.validatePlan(noFlag, spec, config.policy).some(e => e.includes('end_date is forbidden')));
+const noCovers = structuredClone(historical); noCovers.waves[0].calls[0].assert = { equity_reference_close: '$refdate' };
+assert(contract.validatePlan(noCovers, spec, config.policy).some(e => e.includes('end_date is forbidden')));
+const wrongEnd = structuredClone(historical); wrongEnd.waves[1].calls[0].args.end_date = '$date';
+assert(contract.validatePlan(wrongEnd, spec, config.policy).some(e => e.includes('end_date is forbidden')));
+
 const legacyEndDate = structuredClone(base);
 legacyEndDate.waves[1].calls[0].args.end_date = '$refdate';
 assert(contract.validatePlan(legacyEndDate, spec, config.policy).some(e => e.includes('end_date is forbidden')));
