@@ -52,18 +52,11 @@ function listImages(absDir) {
 // carte générique un jour.
 const GENERIC_BY_TYPE = {
   scanner() {
-    // Cible canonique (cf. tools/generate-scanner-image.js) : /scanner-daily-card.png
-    // à la racine est réécrasé à CHAQUE génération de carte scanner — c'est le fix de
-    // l'incident "aperçu Telegram/WhatsApp figé sur une carte périmée" (le fichier
-    // n'était mis à jour que par les copies datées de scanner/status/). Toujours
-    // préférer ce chemin evergreen ; les daily-card-<ts>.png de scanner/status/ ne
-    // servent qu'au cache-busting du dashboard et sont un filet de secours si jamais
-    // le fichier racine n'existe pas encore.
-    const rootCard = path.join(ROOT, 'scanner-daily-card.png');
-    if (fs.existsSync(rootCard)) return toAbsoluteUrl('scanner-daily-card.png');
-    const statusDir = path.join(ROOT, 'scanner', 'status');
-    const cards = listImages(statusDir).filter(f => /^daily-card-/i.test(f.name));
-    if (cards.length) return toAbsoluteUrl(path.relative(ROOT, cards[0].full));
+    // Carte neutre /og-card.png (tools/generate-og-card.cjs) : ni date ni chiffre, donc jamais
+    // périmée. /scanner-daily-card.png et scanner/status/daily-card-*.png ne sont plus utilisés :
+    // leur générateur échoue sans bruit depuis le 2 septembre 2026 et toutes les notifications
+    // Telegram du scanner montraient le tableau de bord du 27 mars 2026 (signalé le 3 novembre).
+    if (fs.existsSync(path.join(ROOT, 'og-card.png'))) return toAbsoluteUrl('og-card.png');
     return null;
   },
   analyses(ctx) {
