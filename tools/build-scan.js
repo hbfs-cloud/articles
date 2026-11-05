@@ -281,6 +281,14 @@ function buildLevels(sym, t, strategy) {
   // Tout ce qui suit dérive des ARRONDIS publiés.
   const risk = entryHigh - stop;
   const reward = tp1 - entryHigh;
+  // Un rapport réel SOUS 1 qui s'arrondit à 1,00 se publie à trois décimales, en centimes
+  // entiers : même règle que rrDisplay()/centsRatio() de render-scanner.js. Sans elle, CP
+  // (3,00 $ visés pour 3,01 $ risqués, scan du 2026-11-05) sortait « 1:1.00 » dans
+  // signals.json et dans la fiche, « 0,997 » dans le tableau et la méthodologie.
+  const gainC = Math.round(reward * 100), riskC = Math.round(risk * 100);
+  const centsRR = riskC > 0 ? gainC / riskC : NaN;
+  const threeDec = gainC < riskC && centsRR.toFixed(2) === '1.00' && centsRR.toFixed(3) !== '1.000';
+  const rrEntry = threeDec ? Math.round(centsRR * 1000) / 1000 : r2(reward / risk);
   return {
     close, entry: entryHigh, entry_low: entryLow, entry_high: entryHigh,
     stop, stopBasis,
@@ -289,7 +297,8 @@ function buildLevels(sym, t, strategy) {
     tp1, tp1Basis,
     tp1_atr_multiple: Math.round(((tp1 - entryHigh) / atr) * 1000) / 1000,
     tp2: r2(entryHigh + TP.max_atr_multiple * atr),
-    rr_entry: r2(reward / risk),
+    rr_entry: rrEntry,
+    rr_label: threeDec ? rrEntry.toFixed(3) : rrEntry.toFixed(2),
     atr, atrPct: r2(atr / close * 100),
   };
 }
@@ -392,7 +401,7 @@ for (const pick of manifest.picks) {
       strategy: pick.strategy,
       price: L.close, entry: L.entry, entry_low: L.entry_low, entry_high: L.entry_high,
       stop: L.stop, tp1: L.tp1, tp2: L.tp2,
-      rr: `1:${L.rr_entry.toFixed(2)}`, rr_entry: L.rr_entry,
+      rr: `1:${L.rr_label}`, rr_entry: L.rr_entry,
       tp1_atr_multiple: L.tp1_atr_multiple,
       horizon: manifest.horizon_days,
       region: pick.region, sector, sharia: false,
