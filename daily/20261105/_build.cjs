@@ -30,7 +30,8 @@ const sources = {
   cry: `${REL}/_data/bars_crypto.json`, off: `${REL}/_data/off_hours.json`, eco: `${REL}/_data/economic_events.json`,
   st: `${REL}/_data/status.json`, opt: `${REL}/_data/options_sentiment.json`, ern: `${REL}/_data/earnings_today.json`,
   fb: `${REL}/_focus/focus_bars.json`, ta: `${REL}/_themes_a/bars_themes.json`, tb: `${REL}/_themes_b/bars_themes.json`,
-  tc: `${REL}/_themes_c/bars_themes.json`, td: `${REL}/_themes_d/bars_themes.json`
+  tc: `${REL}/_themes_c/bars_themes.json`, td: `${REL}/_themes_d/bars_themes.json`,
+  te: `${REL}/_themes_e/bars_themes.json`
 };
 const D = Object.fromEntries(Object.entries(sources).map(([k, v]) => [k, JSON.parse(fs.readFileSync(path.join(ROOT, v), 'utf8'))]));
 const primary = JSON.parse(fs.readFileSync(path.join(ROOT, PRIMARY), 'utf8'));
@@ -80,7 +81,7 @@ const frSigned = (v, d, suffix = ' %') => suffix === ' R' ? `${renderValue(v, fr
 const usd = v => lit(`${frNum(v, Number.isInteger(v) ? 0 : (String(v).split('.')[1] || '').length)} $`);
 
 // ── Barres ───────────────────────────────────────────────────────────────────
-const SERIES_KEYS = ['idx', 'dia', 'sec', 'cry', 'fb', 'ta', 'tb', 'tc', 'td'];
+const SERIES_KEYS = ['idx', 'dia', 'sec', 'cry', 'fb', 'ta', 'tb', 'tc', 'td', 'te'];
 function series(symbol, last = REF) {
   for (const key of SERIES_KEYS) {
     const h = walk(D[key], x => x && x.symbol === symbol && Array.isArray(x.bars) && x.bars.length);
@@ -350,6 +351,54 @@ sections.push(section('rotation', 'La rotation', 'Qui a gagné, qui a perdu, et 
   + `<p class="section-intro">Notre lecture, faite sur les prix et sans donnée de flux pour la prouver : ce qui monte est ce qu’un Congrès démocrate peut financer (soins des ménages modestes, logement, solaire), ce qui baisse est ce qu’il peut freiner (guerre, centres de données, pétrole). La rotation ne s’est pas faite contre les grands indices : ${lit(String(SECT_UP))} de nos ${lit('onze')} fonds sectoriels ont monté. La technologie (XLK) a fini à plat, à ${chg('XLK', D3, REF, 2, 'xlk_r')}, l’industrie (XLI) à ${chg('XLI', D3, REF, 1, 'xli_r')} et l’énergie (XLE) à ${chg('XLE', D3, REF, 1, 'xle_r')}.</p>`
   + `<p class="provenance">Variations mesurées sur nos cours vérifiés, du ${lit('3')} au ${lit('4 novembre')}. La colonne « attribution » cite la dépêche ; elle ne prouve pas la cause, elle dit qui l’affirme.</p>`));
 
+// 4 bis. Ajout du 5 novembre en fin de matinée : la rotation recalculée titre par titre (instantané figé
+// rotation-indices.json, produit par tools/gen-rotation-indices.js sur les clôtures du 4 novembre).
+const RO = JSON.parse(fs.readFileSync(path.join(DIR, 'rotation-indices.json'), 'utf8'));
+if (RO.asof !== REF || RO.event.base !== D3) throw new Error('instantané de rotation désaligné');
+const W1 = '2026-10-28';
+if (RO.windows.find(w => w.key === '1w').base !== W1) throw new Error('base une semaine désalignée');
+// La prose décrit ces agrégats sans les chiffrer ; chaque phrase est vérifiée ici contre l'instantané
+// (relectures du 5 novembre : un texte qui contredit le graphique placé dessous est bloquant).
+const M1 = RO.windows.find(w => w.key === '1m').base;
+{
+  const sp = RO.indices.sp500, st = k => sp.dims.style.find(g => g.key === k).ret, q5 = sp.dims.vol.find(g => g.key === 'q5').ret;
+  const con = (side, sym) => sp.contributors.event[side].find(x => x.s === sym).contrib;
+  const secBy = w => sp.dims.sector.slice().sort((a, b) => b.ret[w].cw - a.ret[w].cw).map(g => g.key);
+  const capBest = sp.dims.cap.slice().sort((a, b) => b.ret.event.cw - a.ret.event.cw)[0].key;
+  const US = new Set(['SPY', 'DIA', 'QQQ', 'IWM']);
+  const worst1m = RO.etfs.filter(e => e.kind === 'region' && !US.has(e.symbol)).sort((a, b) => a.ret['1m'] - b.ret['1m']).slice(0, 3).map(e => e.symbol).sort().join(',');
+  const tech = sp.dims.sector.find(g => g.key === 'technology').series, im = RO.dates.indexOf(M1);
+  const checks = {
+    ew_close_to_cw_event: Math.abs(sp.total.ret.event.ew - sp.total.ret.event.cw) < 0.5,
+    mega_lead_event: capBest === 'c1',
+    msft_aapl_each_beat_nvda: Math.min(con('top', 'MSFT'), con('top', 'AAPL')) > -con('bottom', 'NVDA'),
+    defensive_beats_cyclical_event: st('defensive').event.cw > st('cyclical').event.cw,
+    top2_sectors_event: secBy('event').slice(0, 2).join() === 'consumer_discretionary,financials',
+    bottom2_sectors_event: secBy('event').slice(-2).sort().join() === 'energy,industrials',
+    q5_slightly_down_event: q5.event.cw < 0 && q5.event.cw > -0.5,
+    tech_peak_at_1m_base: M1 === '2026-10-06' && tech[im] === Math.max(...tech),
+    cw_down_ew_up_1m: sp.total.ret['1m'].cw < 0 && sp.total.ret['1m'].ew > 0,
+    defensive_first_growth_last_1m: st('defensive')['1m'].cw > st('cyclical')['1m'].cw && st('cyclical')['1m'].cw > st('growth')['1m'].cw,
+    tech_comm_bottom_1m: secBy('1m').slice(-2).sort().join() === 'communication_services,technology',
+    worst_places_1m: worst1m === 'EWT,EWY,EWZ',
+    scan_lines: LINES.map(x => x.ticker).sort().join() === 'ADSK,CP,HCA,NKE,PHM,TRV,XLB,XLP',
+  };
+  const bad = Object.entries(checks).filter(([, ok]) => !ok).map(([k]) => k);
+  if (bad.length) throw new Error(`prose de rotation contredite par l'instantané : ${bad.join(', ')}`);
+}
+const rotWin = `<div class="rot-windowbar" role="toolbar" aria-label="Fenêtre de calcul"><span class="rot-windowbar-label">Fenêtre</span><div class="rotation-tabs" id="rotWinTabs"></div></div>`;
+const rotChart = (id, title, aria, h) => `<div class="rotation-chart-block"><div class="rotation-chart-title">${title}</div>${id === 'rotRisk' ? '' : `<div class="rot-controls" id="${id}Ctl"></div>`}<div id="${id}" class="rotation-chart-host rot-auto" role="img" aria-label="${aria}" style="height:${h}px"></div></div>`;
+sections.push(section('rotation-indices', `Ajout du ${lit('5 novembre')}, ${lit('11 h 50')} · la rotation indice par indice`, 'Le lendemain du vote, la séance a suivi une rotation entamée début octobre', pill('MESURÉ'), 'validated',
+  `<p class="section-intro">Nous avons recalculé le S&amp;P 500, le Nasdaq-100 et le Dow Jones titre par titre ; les places étrangères passent par leur ETF coté à New York. Les graphiques ci-dessous rejouent la course séance par séance. Mercredi, poids lourds et titre moyen ont avancé presque au même pas : l’ETF du S&amp;P 500 équipondéré (RSP) a pris ${chg('RSP', D3, REF, 2, 'rx_rsp_e')}, contre ${chg('SPY', D3, REF, 2, 'rx_spy_e')} pour SPY. Les plus grosses sociétés ont même mené les tranches de taille : Microsoft et Apple ont chacune apporté davantage à la performance de l’indice que Nvidia n’en a retiré.</p>`
+  + `<p class="section-intro">Par famille, les défensives ont fait mieux que les cycliques, portées par la santé, la consommation de base et l’immobilier. Les deux meilleurs secteurs sont pourtant cycliques : consommation discrétionnaire et finance. L’énergie et l’industrie ferment la marche, la technologie reste presque à plat, et le cinquième le plus volatil de l’indice a fini à peine en baisse. Mercredi, l’Euro Stoxx ${lit('50')} (FEZ, en dollars) a pris ${chg('FEZ', D3, REF, 1, 'rx_fez_e')}, la Corée (EWY) ${chg('EWY', D3, REF, 1, 'rx_ewy_e')}.</p>`
+  + `<p class="section-intro">La séance a prolongé la sortie de la technologie et du bêta engagée depuis le pic de la technologie du ${lit('6 octobre')} ; elle n’a creusé que de peu l’avance du titre moyen, comme le montre l’écart entre RSP et SPY. Choisissez la fenêtre « ${lit('1 mois')} » : l’indice pondéré recule pendant que la moyenne simple de ses titres monte, les défensives sont en tête, la technologie et la communication ferment la marche. Hors des États-Unis, les trois places les plus faibles sur cette fenêtre sont le Brésil, la Corée et Taïwan, ces deux dernières très liées à la puce. Ce sont des mesures du passé, pas une prévision.</p>`
+  + `<div class="quality-note"><strong>Le repère à suivre jusqu’au ${lit('18 novembre')}, date de sortie forcée des lignes du scan.</strong> Mercredi, le S&amp;P 500 à bêta élevé (SPHB) a fait ${chg('SPHB', D3, REF, 1, 'rx_sphb_e')} et sa version à faible volatilité (SPLV) ${chg('SPLV', D3, REF, 1, 'rx_splv_e')}. Une clôture de SPHB au-dessus de ${px('SPHB', D3, 'close', 2, 'rx_sphb3')}, son niveau du ${lit('3 novembre')}, effacerait la séance de mercredi pour les titres à fort bêta. Ce serait un premier indice, à confirmer sur la courbe SPHB/SPLV de la page Rotations : si ce rapport repasse au-dessus de son niveau du ${lit('3 novembre')}, le goût du risque revient. Le scan n’est pas un panier défensif. HCA, le fonds de la consommation de base (XLP) et Travelers, un assureur peu sensible au bêta, vont dans le sens de la rotation ; PulteGroup, Autodesk, Canadian Pacific, Nike et le fonds des matériaux (XLB) sont cycliques ou de croissance, et une poursuite de la sortie du bêta pourrait les freiner. Ce repère ne change ni les stops ni la sortie forcée : il sert de contexte au prochain scan. Pour le suivre chaque soir : <a href="/rotation/?w=1w">page Rotations, fenêtre « ${lit('1 semaine')} »</a>.</div>`
+  + `<div class="rotation-page rot-embed">${rotWin}<div class="rot-grid-2">`
+  + rotChart('rotSect', 'S&amp;P 500 par secteur, pondéré par les capitalisations', 'Course des secteurs du S&amp;P 500, variation cumulée depuis la base de la fenêtre', 360)
+  + rotChart('rotPlaces', 'Places boursières (ETF cotés à New York, en dollars)', 'Course des ETF des places boursières, variation cumulée depuis la base de la fenêtre', 560)
+  + `</div>` + rotChart('rotRisk', 'Thermomètre du risque : rapports entre ETF, rebasés à zéro à la base', 'Rapports entre ETF de risque, rebasés à la date de base de la fenêtre', 380) + `</div>`
+  + `<p class="provenance">Instantané figé des clôtures du ${lit('4 novembre')}, calculé ce jeudi matin (<a href="/daily/20261105/rotation-indices.json">données</a>) : composition actuelle des indices (léger biais en faveur des sociétés restées dans l’indice), pondération par la capitalisation de début de fenêtre avec le nombre d’actions actuel, cours hors dividendes. Les chiffres de RSP, SPY, FEZ, EWY, SPHB et SPLV cités ci-dessus sont ceux des ETF ; les graphiques montrent le recalcul titre par titre, très proche. Les places étrangères passent par leur ETF coté à New York, change compris ; EWY suit le MSCI Korea, proche du Kospi sans lui être identique. Thèmes, tailles, volatilité, Nasdaq-100 et Dow Jones : <a href="/rotation/?w=event">page Rotations</a>, mise à jour chaque soir.</p>`));
+
 // 5. Ce que valait l'édition du 3 novembre
 const sxRows = [
   ['Congrès démocrate, scénario de base', `${reg('/facts/election/senate_flipped', fr(0), 'sen_c', 'cnbc_results_20261104')} sièges repris au Sénat, au moins ${reg('/facts/election/house_flipped_min', fr(0), 'house_c', 'cnbc_results_20261104')} circonscriptions reprises à la Chambre, ${reg('/facts/election/house_uncalled', fr(0), 'unc_c', 'cnbc_results_20261104')} non attribuées (CNBC)`, verdict('Vrai', 'vrai')],
@@ -553,7 +602,7 @@ const chartSpecs = [
 // ── Page ─────────────────────────────────────────────────────────────────────
 const title = 'Après la vague démocrate, la puce recule, l’hôpital et la maison bondissent';
 const description = `Daily du 5 novembre 2026. Mercredi, le Dow Jones (DIA) a pris ${frSigned(chgV('DIA'), 1)}, les semi-conducteurs ${frSigned(chgV('SMH'), 1)} et le pétrole ${frSigned(chgV('USO'), 1)}. Nos scénarios du 3 novembre confrontés au vote, le bilan des neuf plans du 31 octobre compté de deux façons (${frSigned(sumR, 2, ' R')} avec un stop posé, ${frSigned(sumRc, 2, ' R')} avec la règle de clôture du 3 novembre) et les huit lignes du scan post-élections, avec leurs règles de sortie complètes.`;
-const badges = [`Dow ${frSigned(chgV('DIA'), 1)} mercredi`, `Puces ${frSigned(chgV('SMH'), 1)}`, `Pétrole ${frSigned(chgV('USO'), 1)}`, `Bilan du 31 octobre : ${frSigned(sumR, 2, ' R')}, dont ${frSigned(realizedR, 2, ' R')} encaissés`, 'Scan : 8 lignes'];
+const badges = [`Dow ${frSigned(chgV('DIA'), 1)} mercredi`, `Puces ${frSigned(chgV('SMH'), 1)}`, `Pétrole ${frSigned(chgV('USO'), 1)}`, `Bilan du 31 octobre : ${frSigned(sumR, 2, ' R')}, dont ${frSigned(realizedR, 2, ' R')} encaissés`, 'Scan : 8 lignes', 'Ajout 11 h 50 : la rotation indice par indice'];
 const css = fs.readFileSync(path.join(DIR, '_style.css'), 'utf8');
 const html = `<!DOCTYPE html>
 <html lang="fr" data-tags="us,macro,geopolitique,healthcare,semis,energy,trade-idea,retrospective,formation" data-tab="daily">
@@ -585,10 +634,18 @@ const html = `<!DOCTYPE html>
 ${sections.join('\n')}
 </div></main>
 
-<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#alerte" class="fnav-item" data-section="alerte"><i class="fas fa-bullhorn"></i><span>L’essentiel</span></a><a href="#vote" class="fnav-item" data-section="vote"><i class="fas fa-landmark"></i><span>Le verdict</span></a><a href="#suite" class="fnav-item" data-section="suite"><i class="fas fa-clock-rotate-left"></i><span>Nos scénarios</span></a><a href="#bilan" class="fnav-item" data-section="bilan"><i class="fas fa-list-check"></i><span>Bilan du 31 octobre</span></a><a href="#trade" class="fnav-item" data-section="trade"><i class="fas fa-crosshairs"></i><span>Le scan</span></a><a href="#agenda" class="fnav-item" data-section="agenda"><i class="fas fa-calendar"></i><span>Agenda</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#alerte" class="fnav-item" data-section="alerte"><i class="fas fa-bullhorn"></i><span>L’essentiel</span></a><a href="#vote" class="fnav-item" data-section="vote"><i class="fas fa-landmark"></i><span>Le verdict</span></a><a href="#rotation-indices" class="fnav-item" data-section="rotation-indices"><i class="fas fa-arrows-rotate"></i><span>La rotation</span></a><a href="#bilan" class="fnav-item" data-section="bilan"><i class="fas fa-list-check"></i><span>Bilan du 31 octobre</span></a><a href="#trade" class="fnav-item" data-section="trade"><i class="fas fa-crosshairs"></i><span>Le scan</span></a><a href="#agenda" class="fnav-item" data-section="agenda"><i class="fas fa-calendar"></i><span>Agenda</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
 <footer class="article-footer">&copy; 2026 DailyTickers. Clôtures du 4 novembre 2026 ; contrats à terme et cotes relevés le 5 novembre au matin. Ceci n&rsquo;est pas un conseil financier.<br><a href="/" title="Accueil" aria-label="Accueil"><i class="fas fa-house"></i></a></footer>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
 <script>const CHART_SPECS=${JSON.stringify(chartSpecs)};(function(){if(typeof echarts==='undefined')return;var xs=[];CHART_SPECS.forEach(function(c){var el=document.getElementById(c.id);if(!el)return;var x=echarts.init(el);x.setOption(Object.assign({animation:false,textStyle:{fontFamily:'Inter,system-ui,sans-serif'},tooltip:{trigger:'axis'}},c.spec));xs.push(x);});window.addEventListener('resize',function(){xs.forEach(function(x){x.resize();});});})();</script>
+<script src="/assets/rotation-race.js"></script>
+<script>(function(){var R=window.DTRotation;if(!R||typeof echarts==='undefined')return;var D,W='1w',rc={};var SECT=['technology','communication_services','consumer_discretionary','financials','industrials','materials','energy','healthcare','consumer_staples','utilities','real_estate'];var RAT=[['SPHB','SPLV'],['RSP','SPY'],['IWM','SPY'],['FEZ','SPY'],['EWY','SPY']];
+function e(s){return D.etfs.find(function(x){return x.symbol===s})}function base(){return D.windows.find(function(w){return w.key===W}).base}
+function race(id,items){if(rc[id])rc[id].dispose();var el=document.getElementById(id);el.style.height=Math.max(260,items.length*(el.clientWidth<520?24:27)+56)+'px';rc[id]=R.race(el,{dates:D.dates,base:base(),items:items,controls:R.controls(document.getElementById(id+'Ctl'))})}
+function draw(){var sp=D.indices.sp500.dims.sector;race('rotSect',sp.map(function(g){return{name:g.label,series:g.series,sub:g.n+' titres'}}));race('rotPlaces',D.etfs.filter(function(x){return x.kind==='region'}).map(function(x){return{name:x.symbol+' · '+x.label,series:x.series}}));
+R.lines(document.getElementById('rotRisk'),{dates:D.dates,base:base(),lead:10,baseLabel:'base',items:RAT.map(function(r){var a=e(r[0]),b=e(r[1]);return{name:r[0]+'/'+r[1],series:a.series.map(function(v,i){return v/b.series[i]*100})}})});
+var t=document.getElementById('rotWinTabs');t.innerHTML=D.windows.map(function(w){return '<button type="button" class="rotation-tab'+(w.key===W?' active':'')+'" aria-pressed="'+(w.key===W)+'" data-k="'+w.key+'">'+w.label+'</button>'}).join('');Array.prototype.forEach.call(t.children,function(b){b.onclick=function(){W=b.dataset.k;draw()}})}
+R.load('/daily/20261105/rotation-indices.json').then(function(d){D=d;draw()}).catch(function(){var n=document.querySelector('.rot-embed');if(n)n.innerHTML='<p class="provenance">Graphiques de rotation indisponibles pour le moment.</p>'})})();</script>
 <script src="/assets/echarts-responsive.js"></script>
 <script src="/assets/core.js"></script>
 <script src="/assets/tag-renderer.js"></script>

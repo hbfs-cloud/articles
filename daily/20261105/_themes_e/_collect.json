@@ -1,0 +1,106 @@
+{
+  "contract_version": "1.0",
+  "workflow": "daily",
+  "plan": "plans/daily-themes.json",
+  "plan_sha256": "84bc875e9993906668f1f8d2d5998b8967a6335d10a7ea513e4f8bb1c1efd741",
+  "input_sha256": "9222c8b8e3a63d8dadc6d7ebeb158bc0bc7275d8ea39cb141c56846a8cc8298b",
+  "resolved_input": {
+    "artifact": "daily/20261105/index.html",
+    "equity_reference_close": "2026-11-04",
+    "crypto_completed_refdate": null,
+    "as_of_timestamp": "2026-11-05T10:49:18.620Z",
+    "waves": [
+      {
+        "name": "preflight",
+        "gate": true,
+        "calls": [
+          {
+            "as": "status",
+            "server": "marketdata",
+            "tool": "GetStatus",
+            "args": {},
+            "freshness": {
+              "max_age_h": 2,
+              "required": true
+            },
+            "assert": {
+              "equity_reference_close": "2026-11-04"
+            }
+          }
+        ]
+      },
+      {
+        "name": "theme-close",
+        "calls": [
+          {
+            "as": "bars_themes",
+            "server": "marketdata",
+            "tool": "QueryData",
+            "args": {
+              "types": "bars_daily",
+              "symbols": "FEZ,EWY,EWT,SPHB,SPLV,RSP",
+              "limit": 15,
+              "force_async": true,
+              "as_of_timestamp": "2026-11-05T10:49:18.620Z",
+              "completion_policy": "completed_only"
+            },
+            "freshness": {
+              "max_age_h": 24,
+              "required": true,
+              "expects_close": true,
+              "asset_calendar": "us_equity_exchange_sessions",
+              "expected_completed_end": "2026-11-04"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": "daily/20261105/index.html",
+  "reference_date": "2026-11-04",
+  "equity_reference_close": "2026-11-04",
+  "crypto_completed_refdate": null,
+  "started_at": "2026-11-05T10:49:18.620Z",
+  "waves": [
+    {
+      "name": "preflight",
+      "ms": 324,
+      "calls": [
+        {
+          "as": "status",
+          "server": "marketdata",
+          "tool": "GetStatus",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 323,
+          "wait_ms": 0,
+          "error": null,
+          "output_sha256": "49dd74df51d23c4d2b366dcba8482ec06254d20a9c3efc5e21b858caa895a490"
+        }
+      ]
+    },
+    {
+      "name": "theme-close",
+      "ms": 1734,
+      "calls": [
+        {
+          "as": "bars_themes",
+          "server": "marketdata",
+          "tool": "QueryData",
+          "required": true,
+          "detached": false,
+          "ok": true,
+          "ms": 1734,
+          "wait_ms": 1011,
+          "error": null,
+          "output_sha256": "9800e2c92d7962bb489f8093d9122b3f1f6febe80c7bb67f54f2e4dd43b32456"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-11-05T10:49:20.707Z",
+  "failures": 0,
+  "executed_calls": 2,
+  "skipped_calls": 0
+}

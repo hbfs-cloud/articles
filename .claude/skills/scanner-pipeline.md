@@ -72,7 +72,9 @@ quotas. Collect 300 completed sessions for the full discovery universe. Run
 continuity even when source coverage says complete. Retain valid symbols and record rejected
 histories separately; an individually usable history is not a fully validated trade.
 
-Rotation stages locally via `gen-rotation-beta.js --out-dir scanner/<session>/_rotation`.
+Rotation stages locally via `gen-rotation-beta.js --out-dir scanner/<session>/_rotation`. Chain D then refreshes `data/rotation-indices.json` with `gen-rotation-indices.js` (non-blocking;
+stage it with `data/rotation-beta.json`; membership cache `config/rotation/membership.json`, active event window
+`config/rotation/event.json`).
 Its failure receipt is a failure, never a refreshed public rotation. Tracking/lifecycle/sweep use
 certified MCP completed bars with explicit reference dates and timestamp. No Yahoo/Binance/proxy
 fallback or synthetic bar is permitted. Chain C stops at its first failed stage.

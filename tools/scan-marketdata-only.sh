@@ -143,6 +143,11 @@ fi
       cp "$DIR/_rotation/rotation-beta.json" "$TARGET.$$.tmp" && mv "$TARGET.$$.tmp" "$TARGET" || D_RC=1
     done
   fi
+  # Rotation dans les grands indices (page /rotation/, data/rotation-indices.json). Non bloquante : un échec
+  # laisse la version précédente en place, avec sa date visible sur la page, et se lit dans le journal D.
+  if [ "$D_RC" -eq 0 ]; then
+    REFDATE="$REF" node tools/gen-rotation-indices.js >> "$D_LOG" 2>&1 || echo "[D] rotation des indices non rafraîchie (non bloquant)" >> "$D_LOG"
+  fi
   echo "D rc=$D_RC" > "$D_STATUS"
   exit "$D_RC"
 ) & PD=$!
