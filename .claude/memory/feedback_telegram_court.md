@@ -24,5 +24,12 @@ comprendre chaque ligne sans cliquer.
 - Rien d'important en fin d'énumération compressée — chaque nom clé a SA ligne.
 - Complet ≠ long : complet = tous les noms actifs/nouveaux/re-notés couverts, chacun en une ligne.
 
+**Calibrage du 5 novembre 2026 (notif « la tech plonge »)** : environ 3 500 caractères sans image = « trop
+long, pas une seule image ». Proposer 5 lignes + image = « caricatural ». Le bon point : **environ 1 500
+caractères + un visuel daté**. Les chiffres titre par titre vont sur l'image, et le texte garde le
+raisonnement : causes sourcées, pourquoi c'est sérieux, ce qu'on fait, dates, « on a tort si ». Image en aperçu
+de lien (`<a href="raw…/<sha>/…png">&#8205;</a>` en tête, URL épinglée sur le commit, car le cache de
+`raw…/main/` répond 404 pendant quelques minutes après le push).
+
 **How to apply** : ce format vaut pour tous les canaux (analysis, alerts, learning, daily) et doit
 être copié dans les prompts des publishers de workflows.
