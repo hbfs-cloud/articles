@@ -372,6 +372,9 @@ async function main() {
   for (const e of ETFS) {
     const m = barsOf[e.symbol];
     if (!m || !dates.every(d => m.get(d))) { etfMissing.push(e.symbol); continue; }
+    // Garde-fou fractionnement des ETF (MTUM et QUAL divisés par quatre le 5 novembre 2026, cours non
+    // ajustés) : aucun de ces fonds ne perd 40 % ni ne gagne 67 % en une séance.
+    if (dates.some((d, i) => i && (m.get(d) / m.get(dates[i - 1]) < 0.6 || m.get(d) / m.get(dates[i - 1]) > 1.67))) { splitSuspects.push(e.symbol); etfMissing.push(e.symbol); continue; }
     const ret = {}; for (const w of windows) ret[w.key] = r2((m.get(o.refdate) / m.get(w.base) - 1) * 100);
     etfs.push({ ...e, last: r2(m.get(o.refdate)), series: dates.map(d => r2(m.get(d) / m.get(dates[0]) * 100)), ret });
   }

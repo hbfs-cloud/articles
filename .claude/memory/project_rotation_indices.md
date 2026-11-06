@@ -16,6 +16,7 @@ Livré le 5 novembre 2026 (demande du propriétaire : « charts qui montent de f
   - la quote donne la capitalisation de toute la société pour chaque catégorie d'actions (GOOG/GOOGL, FOX/FOXA, NWS/NWSA) → liste explicite, jamais d'heuristique (HON/HONA est une scission 1 pour 1, deux sociétés) ;
   - bêta contre SPY sur 71 séances instable (AAPL corrélation 0,09) → volatilité réalisée ;
   - ECharts `realtimeSort` trie sur la longueur dessinée (valeur absolue) → barres décalées depuis le bord gauche, zéro en trait.
+  - fractionnement d'ETF non ajusté (MTUM et QUAL divisés par quatre le 5 novembre 2026, affichés à −75 %) → garde-fou : tout ETF qui perd 40 % ou gagne 67 % en une séance est écarté et nommé dans `method.splits`.
 - **Daily** : les agrégats titre par titre ne passent pas `validate-content-claims.js` (aucune formule d'agrégat). La prose ne les chiffre pas : chaque phrase qualitative est vérifiée par une assertion dans `_build.cjs`, et les chiffres d'ETF passent par une collecte `daily-themes` (6 symboles au plus, 15 séances).
 
 **Why:** une page « fiable » ne doit jamais publier un indice local non certifié ni un agrégat faussé par une double catégorie d'actions.

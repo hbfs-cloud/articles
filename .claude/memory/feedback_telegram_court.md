@@ -31,5 +31,7 @@ raisonnement : causes sourcées, pourquoi c'est sérieux, ce qu'on fait, dates, 
 de lien (`<a href="raw…/<sha>/…png">&#8205;</a>` en tête, URL épinglée sur le commit, car le cache de
 `raw…/main/` répond 404 pendant quelques minutes après le push).
 
+**Notif en séance (leçon du 5 novembre 2026)** : la notif de 17 h titrait « les valeurs solides tiennent » ; à la clôture, 4 sur 7 avaient fini en baisse. Un relevé de séance se titre avec son heure (« à 17 h ») et ne promet jamais que ça « tient » ; le daily du lendemain confronte chaque relevé publié à la clôture.
+
 **How to apply** : ce format vaut pour tous les canaux (analysis, alerts, learning, daily) et doit
 être copié dans les prompts des publishers de workflows.
