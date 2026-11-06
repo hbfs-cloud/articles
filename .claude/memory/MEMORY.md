@@ -172,6 +172,7 @@
 - [Mandat — site une page (différé)](project_mandat_single_page_site.md) — page statique unique du portefeuille dtx mandat (ordres/trades/equity/metrics + jauge 60-85%), plomberie et vigilances actées 2026-08-14
 - [Token diet](feedback_token_diet.md) — tiering modèles workflows, panels scriptés d'abord, payloads MCP en fichiers, 1 session = 1 produit (2026-08-14)
 - [Telegram court](feedback_telegram_court.md) — notifs courtes, sans liens, essentiel (2026-08-14)
+- [Notif = marché, pas nos positions](feedback_notif_marche_pas_positions.md) — visuel public simple sur le marché (indices, secteurs, faits datés) + lien vers le daily ; jamais nos lignes, R ou stops (2026-11-06)
 - [Fortress à sec aout 2026](project_fortress_starvation_aug2026.md) — incident 0 entrée 07-16/08, étape fortress-pm perdue par le dédup commande/skill
 - [Gate R/R aligné plancher éditorial](decision_rr_gate_aligned.md) — décision 16/08 : gate tracker par ère (1,5 avant 10/08, 0,7 depuis), voir MCP memory rr-gate-aligned-editorial-floor
 - [Cycle de vie des analyses](project_analyses_lifecycle.md) — statuts sur clôtures + endpoint analyses-status.json + garde-fou JS core.js (2026-08-26)
