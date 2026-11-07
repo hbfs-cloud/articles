@@ -21,3 +21,5 @@ Livré le 5 novembre 2026 (demande du propriétaire : « charts qui montent de f
 
 **Why:** une page « fiable » ne doit jamais publier un indice local non certifié ni un agrégat faussé par une double catégorie d'actions.
 **How to apply:** pour réutiliser ces graphiques dans un article, figer un instantané avec `--snapshot`. Voir [[rotation-beta-page]].
+
+7 novembre 2026, partie beta (/rotation/) : 19 thèmes vides publiés après des 429 RankBeta (quota de 500/h partagé avec scanner, daily et hebdo lancés ensemble ; `allowEmpty` laisse passer) → compter les `references[].rows` vides avant de promouvoir et rejouer `gen-rotation-beta.js --out-dir` plus tard. Data centers : VPN a changé de ticker (DTCR) ; VPN rendait 404 et un cours de thème aberrant (820,92 $). Un thème vide ou un cours aberrant sur un fonds = vérifier un changement de ticker. Data centers est le thème le plus important pour le propriétaire.
