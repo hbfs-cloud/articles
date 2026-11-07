@@ -327,6 +327,9 @@ const escAttr = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;'
 const esc = s => String(s ?? '');
 
 /** badge(text, color) → <span class="badge badge-{color}">{text}</span> */
+// Accord du nombre : « 1 setup », « 2 setups » (scan d'une seule ligne, séance du 9 novembre 2026).
+const setupsLabel = n => `${n} setup${n > 1 ? 's' : ''}`;
+
 function badge(text, color) {
   return `<span class="badge badge-${color}">${text}</span>`;
 }
@@ -966,7 +969,7 @@ function strategyTable(title, subtitle, rows) {
   <div style="overflow-x:auto">
     <table class="compare-table setups-table">
       <thead>
-        <tr><th>Ticker</th><th>Setup</th><th>Entrée</th><th>Stop</th><th>TP</th><th>R/R</th><th>Volume moyen/jour</th></tr>
+        <tr><th>Ticker</th><th>Setup</th><th>Entrée</th><th>Stop</th><th>Objectif</th><th>Gain/risque</th><th>Dollars échangés/jour</th></tr>
       </thead>
       <tbody>
 ${trs}
@@ -1000,13 +1003,17 @@ function buildPage(d) {
   // (dérivé VIX/S&P). On ne ré-ajuste QUE si le score est clairement sur l'échelle 0-100.
   const scoreOn100 = (typeof d.regime_score === 'number' && d.regime_score >= 38 && d.regime_score <= 100);
   const regime = scoreOn100 ? adjustRegimeLabel(rawRegime, d.regime_score) : rawRegime;
+  // Libellé lisible du régime (revue du 7 novembre 2026 : pas de jargon anglais visible). Le jeton anglais
+  // reste dans <title> et og:description, que lisent qa-content et add_card.
+  const REGIME_FR = { 'RISK-ON': 'appétit pour le risque', 'RECOVERY': 'reprise', 'NEUTRAL': 'neutre', 'EARLY RISK-OFF': 'début d’aversion au risque', 'RISK-OFF': 'aversion au risque' };
+  const regimeFr = REGIME_FR[regime] || regime;
   const REGIME_COLORS = { 'RISK-ON': 'var(--pos)', 'RECOVERY': '#3b82f6', 'NEUTRAL': '#94a3b8', 'EARLY RISK-OFF': '#f59e0b', 'RISK-OFF': '#ef4444' };
   const regColor = REGIME_COLORS[regime] || d.regime_color || 'var(--pos)';
 
   // ── Group setups by strategy (compact tables — no per-card charts) ──────────
   const PATTERN_ORDER = ['Momentum', 'Breakout', 'Pullback', 'Combiné'];
   const PATTERN_SUB = {
-    Momentum: 'suivi de tendance, achat sur force',
+    Momentum: 'achat sur force',
     Breakout: 'cassure ou test de résistance',
     Pullback: 'repli vers les moyennes',
     'Combiné': 'panier diversifié multi-secteurs',
@@ -1017,7 +1024,7 @@ function buildPage(d) {
     (groups[p] = groups[p] || []).push(s);
   }
   const strategyTablesHtml = PATTERN_ORDER
-    .map(p => strategyTable(p, PATTERN_SUB[p], groups[p]))
+    .map(p => strategyTable(({ Momentum: 'Suivi de tendance (Momentum)', Breakout: 'Cassure (Breakout)', Pullback: 'Repli (Pullback)' })[p] || p, PATTERN_SUB[p], groups[p]))
     .filter(Boolean)
     .join('\n\n');
 
@@ -1035,9 +1042,9 @@ function buildPage(d) {
   // ── Hero badges ────────────────────────────────────────────────────────────
   const regimeDot = regime === 'RISK-ON' ? '&#x1F7E2;' : regime.includes('RISK-OFF') ? '&#x1F534;' : '&#x1F7E1;';
   const heroBadges = [
-    badge(`${regimeDot} ${regime}`, regimeBadgeColor(regime)),
+    badge(`${regimeDot} ${regimeFr}`, regimeBadgeColor(regime)),
     badge(d.session_label || d.date || '', 'blue'),
-    badge(suspensionLabel || `${setups.length} setups conditionnels`, suspended.length ? 'amber' : 'green'),
+    badge(suspensionLabel || `${setupsLabel(setups.length)} conditionnel${setups.length > 1 ? 's' : ''}`, suspended.length ? 'amber' : 'green'),
     ...(d.alerts || []).map(a => badge(`&#x26A0; ${a.title}`, 'amber'))
   ].join('\n    ');
 
@@ -1067,10 +1074,10 @@ function buildPage(d) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${suspensionLabel || `Top ${setups.length} conditionnel ${regime} · ${setups.slice(0,10).map(s=>s.ticker).join(', ')}`} | DailyTickers Scanner</title>
-  <meta name="description" content="Scanner ${d.session_label || d.date} &middot; ${regime} (${regimeScoreLabel(d)}). ${suspended.length ? `${suspensionLabel}. Validation du panier bloquée.` : `${setups.length} setups conditionnels, niveaux techniques publiés.`}">
+  <title>${suspensionLabel || `${setups.length === 1 ? `Une ligne conditionnelle, ${regimeFr} (${regime})` : `Top ${setups.length} conditionnel ${regime}`} · ${setups.slice(0,10).map(s=>s.ticker).join(', ')}`} | DailyTickers Scanner</title>
+  <meta name="description" content="Scanner ${d.session_label || d.date} &middot; ${regime} (${regimeScoreLabel(d)}). ${suspended.length ? `${suspensionLabel}. Validation du panier bloquée.` : `${setupsLabel(setups.length)} conditionnel${setups.length > 1 ? 's' : ''}, niveaux techniques publiés.`}">
   <meta property="og:title" content="Scanner DailyTickers &middot; ${d.session_label || d.date} &middot; ${suspensionLabel || setups.slice(0,10).map(s=>s.ticker).join(', ')}">
-  <meta property="og:description" content="Régime ${regime}. ${d.session_label || d.date}. ${suspended.length ? `${suspensionLabel}. Validation du panier bloquée.` : `${setups.length} setups conditionnels.`}">
+  <meta property="og:description" content="Régime ${regime}. ${d.session_label || d.date}. ${suspended.length ? `${suspensionLabel}. Validation du panier bloquée.` : `${setupsLabel(setups.length)} conditionnel${setups.length > 1 ? 's' : ''}.`}">
   <meta property="og:image" content="${ogImage}">
   <meta property="og:url" content="${d.url || `https://articles.dailytickers.com/scanner/${d.date}/`}">
   <meta property="og:type" content="article">
@@ -1124,12 +1131,12 @@ function buildPage(d) {
     ${heroBadges}
   </div>
   <h1 class="ticker-name">Scanner DailyTickers — ${d.session_label || d.date}</h1>
-  <p class="ticker-subtitle">${suspensionLabel || `Top ${setups.length} conditionnel ${regime}`} — ${suspended.length ? 'validation du panier bloquée ; niveaux initiaux conservés' : `${setups.length} thèses, leurs objections et les niveaux à surveiller`}</p>
+  <p class="ticker-subtitle">${suspensionLabel || (setups.length === 1 ? `Une ligne conditionnelle, ${regimeFr}` : `Top ${setups.length} conditionnel ${regime}`)} — ${suspended.length ? 'validation du panier bloquée ; niveaux initiaux conservés' : `${setups.length === 1 ? 'une thèse, ses' : `${setups.length} thèses, leurs`} objections et les niveaux à surveiller`}</p>
   <div class="ticker-metrics">
-    <div class="ticker-metric"><div class="tm-value" style="color:${regColor};">${regime}</div><div class="tm-label">Régime</div></div>
+    <div class="ticker-metric"><div class="tm-value" style="color:${regColor};">${regimeFr}</div><div class="tm-label">Régime</div></div>
     <div class="ticker-metric"><div class="tm-value">${Math.max(...setups.map(s => s.horizon_days || 10))}</div><div class="tm-label">Séances max.</div></div>
-    <div class="ticker-metric"><div class="tm-value">${suspended.length ? remainingCount : setups.length}</div><div class="tm-label">${suspended.length ? 'Autres plans conditionnels' : 'Setups'}</div></div>
-    <div class="ticker-metric"><div class="tm-value">${new Set(setups.map(s => s.pattern)).size}</div><div class="tm-label">Stratégies</div></div>
+    <div class="ticker-metric"><div class="tm-value">${suspended.length ? remainingCount : setups.length}</div><div class="tm-label">${suspended.length ? 'Autres plans conditionnels' : (setups.length > 1 ? 'Setups' : 'Setup')}</div></div>
+    <div class="ticker-metric"><div class="tm-value">${new Set(setups.map(s => s.pattern)).size}</div><div class="tm-label">${new Set(setups.map(s => s.pattern)).size > 1 ? 'Stratégies' : 'Stratégie'}</div></div>
     ${vixVal ? `<div class="ticker-metric"><div class="tm-value" style="color:${vixColor};">${vixVal}</div><div class="tm-label">VIX</div></div>` : ''}
     ${spxVal ? `<div class="ticker-metric"><div class="tm-value" style="color:${spxColor};">${spxVal}</div><div class="tm-label">SPX</div></div>` : ''}
   </div>
@@ -1150,7 +1157,7 @@ ${alertsHtml(d.alerts)}
 
 <!-- REGIME -->
 <section id="regime" class="section-block">
-  <div class="section-header"><h2><i class="fas fa-gauge"></i> Régime de marché : ${regime} (${regimeScoreLabel(d)})</h2></div>
+  <div class="section-header"><h2><i class="fas fa-gauge"></i> Régime de marché : ${regimeFr} (${regimeScoreLabel(d)})</h2></div>
   <div class="content-card">
     <h3 style="margin:1.25rem 0 0.6rem;font-weight:700;">Tableau de marché (${d.session_label || d.date})</h3>
     <div class="data-table-wrap"><table class="data-table">
@@ -1176,10 +1183,10 @@ ${scannerTimeline(d)}
         <h3 style="font-weight:700;margin-bottom:0.6rem;">Calendrier des événements</h3>
 ${macroCalendarTable(d.macro_calendar)}
       </div>
-      <div>
+${sectorRotationTable(d.sector_rotation) ? `      <div>
         <h3 style="font-weight:700;margin-bottom:0.6rem;">Rotation sectorielle</h3>
 ${sectorRotationTable(d.sector_rotation)}
-      </div>
+      </div>` : ''}
     </div>
     ${d.macro_thesis ? `<div class="pedagogy-box">
       <h4><i class="fas fa-info-circle"></i> Thèse de la semaine</h4>
@@ -1190,9 +1197,9 @@ ${sectorRotationTable(d.sector_rotation)}
 
 <!-- ===================== SIGNAUX (TABLEAUX COMPACTS) ===================== -->
 <section id="synthese" class="section-block">
-  <div class="section-header"><h2><i class="fas fa-table-list"></i> ${suspended.length ? `Sélection initiale — ${setups.length} lignes, dont ${suspended.length} suspendue${suspended.length > 1 ? 's' : ''}` : `Signaux du jour — ${setups.length} setups, classés par stratégie`}</h2></div>
+  <div class="section-header"><h2><i class="fas fa-table-list"></i> ${suspended.length ? `Sélection initiale — ${setups.length} lignes, dont ${suspended.length} suspendue${suspended.length > 1 ? 's' : ''}` : (setups.length > 1 ? `Signaux du jour — ${setupsLabel(setups.length)}, classés par stratégie` : `Signal du jour — ${setupsLabel(setups.length)}`)}</h2></div>
   <div class="content-card">
-    <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés sur la clôture de référence. ${hasEntryZone
+    <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, objectif, gain visé / perte risquée) calculés sur la clôture de référence. ${hasEntryZone
       ? `Tous les setups restent non exécutables avant l'observation du VWAP de la prochaine séance.`
       : stopLimit ? `Les ordres d'achat se posent après l'ouverture, et aucun si l'ouverture se fait sous l'invalidation ; le stop et l'objectif se posent dès l'achat, avec une validité « à révocation ». Cassures et suivis de tendance : stop-limite au prix publié si le cours est dessous, ordre limité au même prix s'il est déjà au-dessus${hasPullback ? ' ; replis : ordre limité au prix publié' : ''}. Si le prix n'est pas atteint, il n'y a pas d'achat.` : `L'entrée est un prix unique : un ordre à cours limité valable la séance, sans condition de VWAP. Si le prix n'est pas touché, il n'y a pas d'achat.`}${sizingSentence}</p>
 ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div class="pedagogy-box" style="border-left:4px solid #b45309;">
@@ -1227,7 +1234,7 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
     </div>
     <div class="pedagogy-box">
       <h4>2. Screening multi-stratégie</h4>
-      <p>Trois filtres de sélection complémentaires : Momentum (tendance + volume), Breakout (cassure ou test de résistance), Pullback (repli vers les moyennes). Short Squeeze exclu depuis le 20 mars 2026.</p>
+      <p>Trois filtres de sélection complémentaires : suivi de tendance (Momentum : tendance et volume), cassure (Breakout : cassure ou test de résistance), repli (Pullback : retour vers les moyennes). Short Squeeze exclu depuis le 20 mars 2026.</p>
     </div>
     <div class="pedagogy-box">
       <h4>3. Scoring composite</h4>
@@ -1235,7 +1242,7 @@ ${(d.entry_policy || (d.engine_meta && d.engine_meta.entry_policy)) ? `    <div 
     </div>
     <div class="pedagogy-box">
       <h4>4. Calcul des niveaux techniques</h4>
-      <p>Entrée / stop / TP / R/R calculés sur les données de clôture réelles. ${geometryNote} ${hasEntryZone
+      <p>Entrée, stop, objectif et rapport gain visé / perte risquée calculés sur les données de clôture réelles. ${geometryNote} ${hasEntryZone
         ? `Une ligne ne devient exécutable qu'après confirmation du VWAP de la séance suivante.`
         : stopLimit ? `Les cassures et suivis de tendance s'exécutent en ordre stop-limite déclenché au prix publié et plafonné à ce prix, ou en ordre limité au même prix si le cours est déjà au-dessus${hasPullback ? ' ; les replis en ordre limité' : ''}. Les ordres d'achat se posent après l'ouverture et valent la séance visée ; aucun ne se pose si l'ouverture se fait sous l'invalidation ; leur exécution n'est pas garantie.` : `Un ordre limité est valable uniquement pendant la séance visée et sous réserve des contrôles publiés ; son exécution au prix limite ou à un prix inférieur n’est pas garantie.`}</p>
     </div>
@@ -1248,7 +1255,7 @@ ${d.gates_report.map(g => `        <li><strong>${esc(g.id)} — ${esc(g.name)}</
 ` : ''}${d.gates_summary ? `    <p><strong>${esc(d.gates_summary)}</strong></p>
 ` : ''}    <div class="pedagogy-box">
       <h4>5. Anti-dilution &amp; ranking</h4>
-      <p>Le contrôle SEC doit distinguer les offres d’actions, la dette et les opérations mixtes en lisant les dépôts primaires. Les émetteurs privés étrangers déposent également auprès de la SEC, notamment des 20-F et des 6-K : leur statut ne les dispense pas du contrôle. Les ETF suivent un régime distinct de celui des sociétés opérationnelles. La fenêtre effectivement documentée est celle des preuves de chaque ligne ; un contrôle limité à 90 jours ne permet pas d’exclure des instruments dilutifs plus anciens encore actifs. Un dépôt de nature inconnue écarte la ligne. Depuis le 24 septembre 2026, un S-8 de plan d'actions salariés ne suffit plus à écarter une valeur ; les augmentations de capital, programmes d'émission au fil de l'eau, convertibles et placements privés réalisés dans la fenêtre de contrôle restent éliminatoires ; plus anciens, ils sont décrits ligne par ligne. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Le R/R affiché est calculé au plafond d’achat ; un prix payé inférieur modifie ce rapport, avant frais et glissement. Il s'échelonne de 1:${minRR} à 1:${maxRR} selon les lignes${rrBelowOne}.`}${shariaSentence}</p>
+      <p>Le contrôle SEC doit distinguer les offres d’actions, la dette et les opérations mixtes en lisant les dépôts primaires. Les émetteurs privés étrangers déposent également auprès de la SEC, notamment des 20-F et des 6-K : leur statut ne les dispense pas du contrôle. Les ETF suivent un régime distinct de celui des sociétés opérationnelles. La fenêtre effectivement documentée est celle des preuves de chaque ligne ; un contrôle limité à 90 jours ne permet pas d’exclure des instruments dilutifs plus anciens encore actifs. Un dépôt de nature inconnue écarte la ligne. Depuis le 24 septembre 2026, un S-8 de plan d'actions salariés ne suffit plus à écarter une valeur ; les augmentations de capital, programmes d'émission au fil de l'eau, convertibles et placements privés réalisés dans la fenêtre de contrôle restent éliminatoires ; plus anciens, ils sont décrits ligne par ligne. ${hasEntryZone ? `Le seuil R/R actif en RISK-ON est 1:0,70 au pire remplissage; le plus faible R/R effectivement observé dans ce panier est 1:${minRR}.` : `Le rapport gain visé / perte risquée affiché est calculé au plafond d’achat ; un prix payé inférieur modifie ce rapport, avant frais et glissement. ${minRR === maxRR ? `Il vaut 1:${minRR}${rrBelowOne}.` : `Il s'échelonne de 1:${minRR} à 1:${maxRR} selon les lignes${rrBelowOne}.`}`}${shariaSentence}</p>
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:1rem;">
       <h4 style="margin:0 0 0.5rem;">Sources de données</h4>

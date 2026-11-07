@@ -520,7 +520,9 @@ const rrTally = {};
 signals.forEach(s => { const k = s.rr_entry.toFixed(2); rrTally[k] = (rrTally[k] || 0) + 1; });
 for (const [k, n] of Object.entries(rrTally)) {
   if (Number(k) === expectedRR) continue;
-  if (signals.length && n / signals.length * 100 > SL.rr_uniformity_threshold_pct) {
+  // Même effectif minimal que validate-scan.js (règle 9 : au moins cinq signaux) : sur une liste
+  // d'une seule ligne, « 1/1 au même R/R » est toujours vrai et ne dit rien de la méthode.
+  if (signals.length >= 5 && n / signals.length * 100 > SL.rr_uniformity_threshold_pct) {
     problems.push(`${n}/${signals.length} signaux au R/R ${k} — cible probablement rétro-calculée`);
   }
 }

@@ -175,7 +175,24 @@ for (const pick of selection.picks) {
     continue;
   }
   const cal = fund[pick.ticker]?.instrument_comprehensive_calendar;
-  if (!cal || cal.earningsCalendarStatus !== 'available' || !cal.nextEarningsDate) throw new Error(`${pick.ticker}: calendrier prévisionnel indisponible`);
+  if (!cal || cal.earningsCalendarStatus !== 'available' || !cal.nextEarningsDate) {
+    // Calendrier indisponible : rejet, sauf preuve primaire datée et fermée (tools/lib/earnings-date-proof.js).
+    const proof = require('./lib/earnings-date-proof').proofFor({ root: ROOT, dirRel: path.relative(ROOT, DIR),
+      date: String(selection.session || '').replace(/-/g, ''), refdate: selection.reference_close, ticker: pick.ticker });
+    if (!proof) throw new Error(`${pick.ticker}: calendrier prévisionnel indisponible`);
+    if (proof.exclusion_window_end !== exclusionEndIso) throw new Error(`${pick.ticker}: preuve de date établie pour une fenêtre finissant le ${proof.exclusion_window_end}, pas le ${exclusionEndIso}`);
+    const proofPath = path.join(DIR, '_earnings-date-proof.json');
+    earningsTickers[pick.ticker] = {
+      event_found: false,
+      next_earnings: null,
+      result: `aucune date prévisionnelle dans la source ; prochaine publication déduite après le ${exclusionEndIso} des 8-K item 2.02 du ${proof.recent_8k_202.date} et, l'an dernier, du ${proof.prior_year_q4_8k_202.date}`,
+      calendar_status: 'proven_by_primary_filings',
+      primary_proof: { recent_8k_202: proof.recent_8k_202, prior_year_q4_8k_202: proof.prior_year_q4_8k_202 },
+      source: path.relative(ROOT, proofPath),
+      source_sha256: sha(proofPath),
+    };
+    continue;
+  }
   const next = cal.nextEarningsDate.slice(0, 10);
   const eventFound = next <= exclusionEndIso;
   earningsTickers[pick.ticker] = {

@@ -14,7 +14,9 @@ const crypto = require('crypto');
 // LISTE FERMÉE des séances pour lesquelles le propriétaire a accordé une dérogation. Un fichier
 // déposé pour une autre séance est refusé, même bien formé : ajouter une date ici est un acte
 // délibéré et relu, jamais un effet de bord d'un run.
-const ALLOWED_DATES = Object.freeze(['2026-09-24', '2026-10-15', '2026-10-20', '2026-10-21', '2026-10-22', '2026-10-23', '2026-10-26', '2026-10-27', '2026-10-28', '2026-10-29', '2026-11-03']);
+// 2026-11-09 : décision du propriétaire du 7 novembre 2026 (« il faut faire le scan du 9 ») ; en aversion au risque,
+// après la chute du score (63,4 → 37,7), une seule ligne passe : plancher abaissé à 1 action + 0 fonds.
+const ALLOWED_DATES = Object.freeze(['2026-09-24', '2026-10-15', '2026-10-20', '2026-10-21', '2026-10-22', '2026-10-23', '2026-10-26', '2026-10-27', '2026-10-28', '2026-10-29', '2026-11-03', '2026-11-09']);
 
 const KEYS = ['all_other_gates_required', 'date', 'min_etf_count', 'min_us_count', 'provenance', 'public_notice', 'reason', 'refdate', 'user_instruction'];
 

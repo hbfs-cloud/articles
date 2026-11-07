@@ -22,7 +22,9 @@ const crypto = require('crypto');
 // ferment (cassures interdites, aucun repli à 60 % de confiance). Appliqué sur la consigne
 // permanente du propriétaire du 2026-10-20 d'appliquer ses précédents sans redemander ; révocable
 // par lui. Voir scanner/20261103/_family-cap-waiver.json.
-const ALLOWED_DATES = Object.freeze(['2026-10-26', '2026-11-03']);
+// 2026-11-09 : même cause que le 3 novembre (portes du régime : seuls les suivis de tendance restent),
+// décision du propriétaire du 7 novembre 2026 (« il faut faire le scan du 9 »).
+const ALLOWED_DATES = Object.freeze(['2026-10-26', '2026-11-03', '2026-11-09']);
 
 const KEYS = ['all_other_gates_required', 'date', 'max_share_pct', 'provenance', 'public_notice', 'reason', 'refdate', 'user_instruction'];
 
