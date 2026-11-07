@@ -86,20 +86,22 @@ for (let i = 0; i < selected.length; i++) {
       start: dates[0], end: dates[dates.length - 1] });
   }
 }
-const maxPair = pairs.reduce((a, b) => b.correlation > a.correlation ? b : a);
-const maxAbsPair = pairs.reduce((a, b) => Math.abs(b.correlation) > Math.abs(a.correlation) ? b : a);
-const minPair = pairs.reduce((a, b) => b.correlation < a.correlation ? b : a);
-const avgCorrelation = pairs.reduce((sum, x) => sum + x.correlation, 0) / pairs.length;
+// Une liste d'une seule ligne (séance du 9 novembre 2026 : un fonds, aucune action) n'a aucune paire :
+// les métriques de corrélation sont sans objet et valent null, jamais une valeur inventée.
+const maxPair = pairs.length ? pairs.reduce((a, b) => b.correlation > a.correlation ? b : a) : null;
+const maxAbsPair = pairs.length ? pairs.reduce((a, b) => Math.abs(b.correlation) > Math.abs(a.correlation) ? b : a) : null;
+const minPair = pairs.length ? pairs.reduce((a, b) => b.correlation < a.correlation ? b : a) : null;
+const avgCorrelation = pairs.length ? pairs.reduce((sum, x) => sum + x.correlation, 0) / pairs.length : null;
 write('risk-gating.json', {
   reference_close: selection.reference_close,
   correlation_universe: selected,
   correlation_method: 'pearson_log_returns_pairwise_common_dates',
-  correlation_observations: 120,
-  correlation_window: { start: pairs[0].start, end: selection.reference_close },
+  correlation_observations: pairs.length ? 120 : null,
+  correlation_window: pairs.length ? { start: pairs[0].start, end: selection.reference_close } : null,
   max_pair: maxPair,
   max_abs_pair: maxAbsPair,
   min_pair: minPair,
-  avg_off_diagonal_correlation: Math.round(avgCorrelation * 10000) / 10000,
+  avg_off_diagonal_correlation: avgCorrelation == null ? null : Math.round(avgCorrelation * 10000) / 10000,
   pairs,
   sources: historySources,
 });
