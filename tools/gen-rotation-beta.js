@@ -33,7 +33,9 @@ const THEMES = [
   { rank:4, key:'copper', minCorr:0.75, label:'Mines de cuivre', ref:'COPX', group:'Énergie & ressources' },
   { rank:5, key:'ai_broad', label:'IA large / Big Data', ref:'AIQ', group:'IA & numérique' },
   { rank:6, key:'cyber', label:'Cybersécurité', ref:'CIBR', group:'IA & numérique' },
-  { rank:7, key:'datacenters', label:'Data centers', ref:'VPN', group:'Infrastructure' },
+  // VPN a été remplacé par DTCR (même fonds Global X, nouveau ticker) : VPN rend un 404 « delisted » chez la
+  // source et ses barres de thème ressortaient à 820,92 $, un autre instrument (constaté le 7 novembre 2026).
+  { rank:7, key:'datacenters', label:'Data centers', ref:'DTCR', group:'Infrastructure' },
   { rank:8, key:'robotics', label:'Robotique / automatisation', ref:'BOTZ', group:'Industrie & rupture' },
   { rank:9, key:'rareearth', label:'Terres rares / métaux stratégiques', ref:'REMX', group:'Énergie & ressources' },
   { rank:10, key:'goldminers', minCorr:0.75, label:"Mines d'or", ref:'GDX', group:'Énergie & ressources' },
