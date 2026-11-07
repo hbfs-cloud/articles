@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Mardi, l’inflation puis CoreWeave",
+    "desc": "La chute des puces du 5 novembre n’a pas été rattrapée : vendredi, le rebond est resté faible. Mardi, l’inflation d’octobre puis les comptes de CoreWeave diront si le coût de l’argent et le financement des centres de données pèsent encore.",
+    "tags": "us,asia,macro,earnings,tech,semis,ai,gold,crypto,commodity",
+    "grade": "",
+    "href": "/weekly/20261109/",
+    "date": "9 novembre 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "La Fed et Microsoft le même soir",
     "desc": "Jeudi dernier, au lendemain des comptes de Meta et de Lam Research, toute la chaîne de l’IA a baissé. Mercredi soir, la Fed puis Microsoft et Alphabet diront si la Bourse accepte encore leurs dépenses.",
     "tags": "us,eu,asia,macro,earnings,tech,semis,ai,gold,crypto,etf",
@@ -492,6 +505,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/weekly/20251229/",
     "date": "29 décembre 2025 - 3 janvier 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Les puces rebondissent sans convaincre : lundi, aucun achat",
+    "desc": "Daily du samedi 7 novembre 2026. Vendredi, les semi-conducteurs ont repris +3,6 % et le Nasdaq-100 +1,4 %, mais la séance a fini près de ses plus-bas après un emploi bien plus fort que prévu. Notre seuil sur les semi-conducteurs est raté, aucun feu vert n’est allumé. Bilan de la semaine, rotation recalculée, et le statut de nos plans du 31 octobre et du scan du 5 novembre.",
+    "tags": "us,macro,semis,ai,retrospective,formation",
+    "grade": "",
+    "href": "/daily/20261107/",
+    "date": "7 novembre 2026"
   },
   {
     "type": "daily",
